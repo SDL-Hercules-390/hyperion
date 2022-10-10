@@ -1,4 +1,4 @@
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     1
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     1
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
@@ -54,7 +54,7 @@ ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)       
                                               50 *                 to complete the TRTE instruction
                                               51 *
                                               52 ***********************************************************************
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     2
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     2
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
@@ -64,904 +64,656 @@ ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)       
                                               55 *
                                               56 *  Example Hercules Testcase:
                                               57 *
-                                              58 *
-                                              59 *        *Testcase TRTE-02-performance (Test TRTE instructions)
-                                              60 *        diag8cmd enable      #used for message to Hercules console
-                                              61 *
-                                              62 *        archlvl  S/370
-                                              63 *        facility enable  HERC_370_EXTENSION
-                                              64 *
-                                              65 *        mainsize    16
-                                              66 *        numcpu      1
-                                              67 *        sysclear
-                                              68 *
-                                              69 *        loadcore    "$(testpath)/TRTE-02-performance"
+                                              58 *     *Testcase TRTE-02-performance (Test TRTE instructions)
+                                              59 *     mainsize    16
+                                              60 *     numcpu      1
+                                              61 *     sysclear
+                                              62 *     archlvl     z/Arch
+                                              63 *
+                                              64 *     loadcore    "$(testpath)/TRTE-02-performance.core" 0x0
+                                              65 *
+                                              66 *     diag8cmd    enable    # (needed for messages to Hercules console)
+                                              67 *     #r           408=ff    # (enable timing tests)
+                                              68 *     runtest     200       # (test duration, depends on host)
+                                              69 *     diag8cmd    disable   # (reset back to default)
                                               70 *
-                                              71 *        r           408=ff   # (enable timing tests)
-                                              72 *        runtest     20       # (depends on the host)
-                                              73 *
-                                              74 *        diag8cmd disable
-                                              75 *        *Done
-                                              76 *
-                                              77 *
-                                              78 ***********************************************************************
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     3
+                                              71 *     *Done
+                                              72 *
+                                              73 ***********************************************************************
+
+
+
+                            000000  0C3BED    75 TRTE2TST START 0
+000000                      000000            76          USING TRTE2TST,R0            Low core addressability
+
+
+
+
+000000                      000000  0001A0    78          ORG   TRTE2TST+X'1A0'        z/Architecure RESTART PSW
+0001A0  00000001 80000000                     79          DC    X'0000000180000000'
+0001A8  00000000 00000200                     80          DC    AD(BEGIN)
+
+
+0001B0                      0001B0  0001D0    82          ORG   TRTE2TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+0001D0  00020001 80000000                     83          DC    X'0002000180000000'
+0001D8  00000000 0000DEAD                     84          DC    AD(X'DEAD')
+
+
+
+
+0001E0                      0001E0  000200    86          ORG   TRTE2TST+X'200'        Start of actual test program...
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     3
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                                              80          PRINT OFF
-                                            3461          PRINT ON
+                                              88 ***********************************************************************
+                                              89 *               The actual "TRTE2TST" program itself...
+                                              90 ***********************************************************************
+                                              91 *
+                                              92 *  Architecture Mode: z/Arch
+                                              93 *  Register Usage:
+                                              94 *
+                                              95 *   R0       (work)
+                                              96 *   R1       (work)
+                                              97 *   R2       (work) or MSG subroutine call
+                                              98 *   R3       (work)
+                                              99 *   R4       (work)
+                                             100 *   R5       TRTETEST Base (of current test)
+                                             101 *   R5-R7    (work)
+                                             102 *   R8       (work)
+                                             103 *   R9       Second base register
+                                             104 *   R10-R12  (work)
+                                             105 *   R13      First base register
+                                             106 *   R14      Subroutine call
+                                             107 *   R15      Secondary Subroutine call or work
+                                             108 *
+                                             109 ***********************************************************************
 
-                                            3463 ***********************************************************************
-                                            3464 *        SATK prolog stuff...
-                                            3465 ***********************************************************************
+000200                      000200           111          USING  BEGIN,R13        FIRST Base Register
+000200                      001200           112          USING  BEGIN+4096,R9   SECOND Base Register
 
-                                            3467          ARCHLVL  SET=2,ZARCH=NO,MNOTE=NO
-                                            3469+$AL      OPSYN AL
-                                            3470+$ALR     OPSYN ALR
-                                            3471+$B       OPSYN B
-                                            3472+$BAS     OPSYN BAS
-                                            3473+$BASR    OPSYN BASR
-                                            3474+$BC      OPSYN BC
-                                            3475+$BCTR    OPSYN BCTR
-                                            3476+$BE      OPSYN BE
-                                            3477+$BH      OPSYN BH
-                                            3478+$BL      OPSYN BL
-                                            3479+$BM      OPSYN BM
-                                            3480+$BNE     OPSYN BNE
-                                            3481+$BNH     OPSYN BNH
-                                            3482+$BNL     OPSYN BNL
-                                            3483+$BNM     OPSYN BNM
-                                            3484+$BNO     OPSYN BNO
-                                            3485+$BNP     OPSYN BNP
-                                            3486+$BNZ     OPSYN BNZ
-                                            3487+$BO      OPSYN BO
-                                            3488+$BP      OPSYN BP
-                                            3489+$BXLE    OPSYN BXLE
-                                            3490+$BZ      OPSYN BZ
-                                            3491+$CH      OPSYN CH
-                                            3492+$L       OPSYN L
-                                            3493+$LH      OPSYN LH
-                                            3494+$LM      OPSYN LM
-                                            3495+$LPSW    OPSYN LPSW
-                                            3496+$LR      OPSYN LR
-                                            3497+$LTR     OPSYN LTR
-                                            3498+$NR      OPSYN NR
-                                            3499+$SL      OPSYN SL
-                                            3500+$SLR     OPSYN SLR
-                                            3501+$SR      OPSYN SR
-                                            3502+$ST      OPSYN ST
-                                            3503+$STM     OPSYN STM
-                                            3504+$X       OPSYN X
+000200  05D0                                 114 BEGIN    BALR  R13,0             Initalize FIRST base register
+000202  06D0                                 115          BCTR  R13,0             Initalize FIRST base register
+000204  06D0                                 116          BCTR  R13,0             Initalize FIRST base register
 
+000206  4190 D800                   000800   118          LA    R9,2048(,R13)     Initalize SECOND base register
+00020A  4190 9800                   000800   119          LA    R9,2048(,R9)     Initalize SECOND base register
 
-                                            3506 ***********************************************************************
-                                            3507 *        Initiate the TRTE2TST CSECT in the CODE region
-                                            3508 *        with the location counter at 0
-                                            3509 ***********************************************************************
-
-                                            3511 TRTE2TST ASALOAD  REGION=CODE
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     4
+                                             121 *
+                                             122 **       Run the performance tests...
+                                             123 *
+00020E  45E0 D328                   000528   124          BAL   R14,TEST91       Time TRTE   instruction  (speed test)
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     4
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                            000000  0C3BDD  3512+TRTE2TST START 0,CODE
-000000  000A0000 00000008                   3514+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
-000008                      000008  000058  3515+         ORG   TRTE2TST+X'058'
-000058  000A0000 00000018                   3517+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
-000060  000A0000 00000020                   3518+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
-000068  000A0000 00000028                   3519+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
-000070  000A0000 00000030                   3520+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
-000078  000A0000 00000038                   3521+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
-000080                      000080  000200  3522+         ORG   TRTE2TST+512
+                                             126 ***********************************************************************
+                                             127 *         Test for normal or unexpected test completion...
+                                             128 ***********************************************************************
+
+000212  95FF D208                   000408   130          CLI   TIMEOPT,X'FF'    Was this a timing run?
+000216  4770 DD58                   000F58   131          BNE   EOJ              No, timing run; just go end normally
+
+00021A  95FC D200                   000400   133          CLI   TESTNUM,X'FC'    Did we end on expected test?
+00021E  4770 DD70                   000F70   134          BNE   FAILTEST         No?! Then FAIL the test!
+
+000222  9599 D201                   000401   136          CLI   SUBTEST,X'99'    Did we end on expected SUB-test?
+000226  4770 DD70                   000F70   137          BNE   FAILTEST         No?! Then FAIL the test!
+
+00022A  47F0 DD58                   000F58   139          B     EOJ              Yes, then normal completion!
 
 
 
-                                            3524 ***********************************************************************
-                                            3525 *        Create IPL (restart) PSW
-                                            3526 ***********************************************************************
 
-                                            3528          ASAIPL   IA=BEGIN
-                            000000  0C3BDD  3529+TRTE2TST CSECT
-000200                      000200  000000  3530+         ORG   TRTE2TST
-000000  00080000 00000200                   3531+         PSW   0,0,0,0,BEGIN,24
-000008                      000008  000200  3532+         ORG   TRTE2TST+512     Reset CSECT to end of assigned storage area
-                            000000  0C3BDD  3533+TRTE2TST CSECT
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     5
+                                             141 ***********************************************************************
+                                             142 *        Fixed test storage locations ...
+                                             143 ***********************************************************************
 
- LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                                            3535 ***********************************************************************
-                                            3536 *               The actual "TRTE2TST" program itself...
-                                            3537 ***********************************************************************
-                                            3538 *
-                                            3539 *  Architecture Mode: 370
-                                            3540 *  Register Usage:
-                                            3541 *
-                                            3542 *   R0       (work)
-                                            3543 *   R1       (work)
-                                            3544 *   R2       (work) or MSG subroutine call
-                                            3545 *   R3       (work)
-                                            3546 *   R4       (work)
-                                            3547 *   R5       TRTETEST Base (of current test)
-                                            3548 *   R5-R7    (work)
-                                            3549 *   R8       (work)
-                                            3550 *   R9       Second base register
-                                            3551 *   R10-R12  (work)
-                                            3552 *   R13      First base register
-                                            3553 *   R14      Subroutine call
-                                            3554 *   R15      Secondary Subroutine call or work
-                                            3555 *
-                                            3556 ***********************************************************************
+00022E                      00022E  000400   145          ORG   BEGIN+X'200'
+                                             146
+000400                                       147 TESTADDR DS    0D         Where test/subtest numbers will go
+000400  99                                   148 TESTNUM  DC    X'99'      Test number of active test
+000401  99                                   149 SUBTEST  DC    X'99'      Active test sub-test number
 
-000200                      000000          3558          USING  ASA,R0          Low core addressability
-000200                      000200          3559          USING  BEGIN,R13        FIRST Base Register
-000200                      001200          3560          USING  BEGIN+4096,R9   SECOND Base Register
 
-000200  05D0                                3562 BEGIN    BALR  R13,0             Initalize FIRST base register
-000202  06D0                                3563          BCTR  R13,0             Initalize FIRST base register
-000204  06D0                                3564          BCTR  R13,0             Initalize FIRST base register
+000408                                       151          DS    0D
+000408  00                                   152 TIMEOPT  DC    X'00'      Set to non-zero to run timing tests
 
-000206  4190 D800                   000800  3566          LA    R9,2048(,R13)     Initalize SECOND base register
-00020A  4190 9800                   000800  3567          LA    R9,2048(,R9)     Initalize SECOND base register
 
-                                            3569 *
-                                            3570 **       Run the performance tests...
-                                            3571 *
-00020E  45E0 D328                   000528  3572          BAL   R14,TEST91       Time TRTE   instruction  (speed test)
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     6
+000410                                       154          DS    0D
+000410  00000000 00000000                    155 SAVE1T4  DC    4F'0'
+000420  00000000                             156 SAVER2   DC    F'0'
+000424  00000000                             157 SAVER5   DC    F'0'
+
+
+000428                      000428  000528   159          ORG   *+X'100'
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     5
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                                            3574 ***********************************************************************
-                                            3575 *         Test for normal or unexpected test completion...
-                                            3576 ***********************************************************************
+                                             161 ***********************************************************************
+                                             162 *        TEST91                 Time TRTE instruction  (speed test)
+                                             163 ***********************************************************************
 
-000212  95FF D208                   000408  3578          CLI   TIMEOPT,X'FF'    Was this a timing run?
-000216  4770 DD42                   000F42  3579          BNE   EOJ              No, timing run; just go end normally
+000528  91FF D208                   000408   165 TEST91   TM    TIMEOPT,X'FF'      Is timing tests option enabled?
+00052C  078E                                 166          BZR   R14                No, skip timing tests
 
-00021A  95FC D200                   000400  3581          CLI   TESTNUM,X'FC'    Did we end on expected test?
-00021E  4770 DD50                   000F50  3582          BNE   FAILTEST         No?! Then FAIL the test!
-
-000222  9599 D201                   000401  3584          CLI   SUBTEST,X'99'    Did we end on expected SUB-test?
-000226  4770 DD50                   000F50  3585          BNE   FAILTEST         No?! Then FAIL the test!
-
-00022A  47F0 DD42                   000F42  3587          B     EOJ              Yes, then normal completion!
-
-
-
-
-                                            3589 ***********************************************************************
-                                            3590 *        Fixed test storage locations ...
-                                            3591 ***********************************************************************
-
-
-00022E                      00022E  000400  3593          ORG   BEGIN+X'200'
-                                            3594
-000400                                      3595 TESTADDR DS    0D                Where test/subtest numbers will go
-000400  99                                  3596 TESTNUM  DC    X'99'      Test number of active test
-000401  99                                  3597 SUBTEST  DC    X'99'      Active test sub-test number
-
-
-000408                                      3599          DS    0D
-000408  00                                  3600 TIMEOPT  DC    X'00'      Set to non-zero to run timing tests
+00052E  4150 DE18                   001018   168          LA    R5,TRTEPERF        Point R5 --> testing control table
+000532                      000000           169          USING TRTETEST,R5        What each table entry looks like
+                                             170 *
+                            000532  000001   171 TST91LOP EQU   *
+000532  5050 D224                   000424   172          ST    R5,SAVER5          save current pref table base
+                                             173 *
+000536  4360 5000                   000000   174          IC    R6,TNUM            Set test number
+00053A  4260 D200                   000400   175          STC   R6,TESTNUM
+                                             176 *
+                                             177 **       Initialize operand data  (move data to testing address)
+                                             178 *
+00053E  58A0 5018                   000018   179          L     R10,OP1WHERE        Where to move operand-1 data to
+000542  58B0 5008                   000008   180          L     R11,OP1LEN          operand-1 length
+000546  50B0 501C                   00001C   181          ST    R11,OP1WLEN            and save for later
+00054A  5860 5004                   000004   182          L     R6,OP1DATA          Where op1 data is right now
+00054E  5870 5008                   000008   183          L     R7,OP1LEN           How much of it there is
+000552  0EA6                                 184          MVCL  R10,R6
+                                             185 *
+000554  58A0 5014                   000014   186          L     R10,OP2WHERE        Where to move operand-2 data to
+000558  58B0 5010                   000010   187          L     R11,OP2LEN          How much of it there is
+00055C  5860 500C                   00000C   188          L     R6,OP2DATA          Where op2 data is right now
+000560  5870 5010                   000010   189          L     R7,OP2LEN           How much of it there is
+000564  0EA6                                 190          MVCL  R10,R6
 
 
-000410                                      3602          DS    0D
-000410  00000000 00000000                   3603 SAVE1T4  DC    4F'0'
-000420  00000000                            3604 SAVER2   DC    F'0'
-000424  00000000                            3605 SAVER5   DC    F'0'
-
-
-000428                      000428  000528  3607          ORG   *+X'100'
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     7
-
- LOC       OBJECT CODE      ADDR1   ADDR2   STMT
-
-                                            3609 ***********************************************************************
-                                            3610 *        TEST91                 Time TRTE instruction  (speed test)
-                                            3611 ***********************************************************************
-
-000528  91FF D208                   000408  3613 TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
-00052C  078E                                3614          BZR   R14              No, skip timing tests
-
-00052E  4150 DE08                   001008  3616          LA    R5,TRTEPERF         Point R5 --> testing control table
-000532                      000000          3617          USING TRTETEST,R5         What each table entry looks like
-                                            3618 *
-                            000532  000001  3619 TST91LOP EQU   *
-000532  5050 D224                   000424  3620          ST    R5,SAVER5          save current pref table base
-                                            3621 *
-000536  4360 5000                   000000  3622          IC    R6,TNUM            Set test number
-00053A  4260 D200                   000400  3623          STC   R6,TESTNUM
-                                            3624 *
-                                            3625 **       Initialize operand data  (move data to testing address)
-                                            3626 *
-00053E  58A0 5018                   000018  3627          L     R10,OP1WHERE         Where to move operand-1 data to
-000542  58B0 5008                   000008  3628          L     R11,OP1LEN           operand-1 length
-000546  50B0 501C                   00001C  3629          ST    R11,OP1WLEN            and save for later
-00054A  5860 5004                   000004  3630          L     R6,OP1DATA           Where op1 data is right now
-00054E  5870 5008                   000008  3631          L     R7,OP1LEN            How much of it there is
-000552  0EA6                                3632          MVCL  R10,R6
-                                            3633 *
-000554  58A0 5014                   000014  3634          L     R10,OP2WHERE         Where to move operand-2 data to
-000558  58B0 5010                   000010  3635          L     R11,OP2LEN           How much of it there is
-00055C  5860 500C                   00000C  3636          L     R6,OP2DATA           Where op2 data is right now
-000560  5870 5010                   000010  3637          L     R7,OP2LEN             How much of it there is
-000564  0EA6                                3638          MVCL  R10,R6
-
-
-                                            3640 *
-                                            3641 **       Next, time the overhead...
-                                            3642 *
-000566  5870 DD78                   000F78  3643          L     R7,NUMLOOPS
-00056A  B205 DD80                   000F80  3644          STCK  BEGCLOCK
-00056E  9014 D210                   000410  3645          STM   R1,R4,SAVE1T4
-000572  0560                                3646          BALR  R6,0
-                                            3647
-000574  9814 5014                   000014  3648          LM    R1,R4,OPSWHERE     get TRTE operands
-000578  4710 D374                   000574  3649          BC    B'0001',*-4            not finished
-00057C  9814 5014                   000014  3650          LM    R1,R4,OPSWHERE
-000580  4710 D384                   000584  3651          BC    B'0001',*+4
-                                            3652 *        .........ETC.........
-                                            3653          PRINT OFF
-                                            3848          PRINT ON
-000884  9814 5014                   000014  3849          LM    R1,R4,OPSWHERE
-000888  4710 D68C                   00088C  3850          BC    B'0001',*+4
-00088C  9814 5014                   000014  3851          LM    R1,R4,OPSWHERE
-000890  4710 D694                   000894  3852          BC    B'0001',*+4
-                                            3853 *
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     8
+                                             192 *
+                                             193 **       Next, time the overhead...
+                                             194 *
+000566  5870 DD8C                   000F8C   195          L     R7,NUMLOOPS
+00056A  B205 DD90                   000F90   196          STCK  BEGCLOCK
+00056E  9014 D210                   000410   197          STM   R1,R4,SAVE1T4
+000572  0560                                 198          BALR  R6,0
+                                             199
+000574  9814 5014                   000014   200          LM    R1,R4,OPSWHERE     get TRTE operands
+000578  4710 D374                   000574   201          BC    B'0001',*-4            not finished
+00057C  9814 5014                   000014   202          LM    R1,R4,OPSWHERE
+000580  4710 D384                   000584   203          BC    B'0001',*+4
+                                             204 *        .........ETC.........
+                                             205          PRINT OFF
+                                             400          PRINT ON
+000884  9814 5014                   000014   401          LM    R1,R4,OPSWHERE
+000888  4710 D68C                   00088C   402          BC    B'0001',*+4
+00088C  9814 5014                   000014   403          LM    R1,R4,OPSWHERE
+000890  4710 D694                   000894   404          BC    B'0001',*+4
+                                             405 *
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     6
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-000894  0676                                3854          BCTR  R7,R6
-000896  B205 DD88                   000F88  3855          STCK  ENDCLOCK
-00089A  45F0 DC08                   000E08  3856          BAL   R15,CALCDUR
-00089E  D207 DD98 DD90      000F98  000F90  3857          MVC   OVERHEAD,DURATION
-                                            3858 *
-                                            3859 **       Now do the actual timing run...
-                                            3860 *
-0008A4  5870 DD78                   000F78  3861          L     R7,NUMLOOPS
-0008A8  B205 DD80                   000F80  3862          STCK  BEGCLOCK
-0008AC  0560                                3863          BALR  R6,0
-                                            3864 *
-0008AE  9814 5014                   000014  3865          LM    R1,R4,OPSWHERE           Load TRTE operands
-0008B2  B9BF C024                           3866          TRTE  R2,R4,12                 do TRTE
-0008B6  4710 D6B2                   0008B2  3867          BC    B'0001',*-4                   not finished?
-0008BA  9814 5014                   000014  3868          LM    R1,R4,OPSWHERE           Load TRTE operands
-0008BE  B9BF C024                           3869          TRTE  R2,R4,12                 do TRTE
-0008C2  4710 D6BE                   0008BE  3870          BC    B'0001',*-4                   not finished?
-                                            3871 *        .........ETC.........
-                                            3872          PRINT OFF
-                                            4173          PRINT ON
-000D46  9814 5014                   000014  4174          LM    R1,R4,OPSWHERE
-000D4A  B9BF C024                           4175          TRTE  R2,R4,12
-000D4E  4710 DB4A                   000D4A  4176          BC    B'0001',*-4
-000D52  9814 5014                   000014  4177          LM    R1,R4,OPSWHERE
-000D56  B9BF C024                           4178          TRTE  R2,R4,12
-000D5A  4710 DB56                   000D56  4179          BC    B'0001',*-4
-                                            4180 *
-000D5E  0676                                4181          BCTR  R7,R6
-000D60  B205 DD88                   000F88  4182          STCK  ENDCLOCK
-                                            4183 *
-000D64  9814 D210                   000410  4184          LM    R1,R4,SAVE1T4
-000D68  D204 DDD9 DD6C      000FD9  000F6C  4185          MVC   PRTLINE+33(5),=CL5'TRTE'
-000D6E  45F0 DB86                   000D86  4186          BAL   R15,RPTSPEED
-                                            4187 *
-                                            4188 *  more performance tests
-                                            4189 *
-000D72  5850 D224                   000424  4190          L     R5,SAVER5          restore perf table base
-000D76  4150 5034                   000034  4191          LA    R5,TRTENEXT        Go on to next table entry
-000D7A  D503 DD60 5000      000F60  000000  4192          CLC   =F'0',0(R5)        End of table?
-000D80  4770 D332                   000532  4193          BNE   TST91LOP           No, loop...
-000D84  07FE                                4194          BR    R14                Return to caller or FAILTEST
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page     9
+000894  0676                                 406          BCTR  R7,R6
+000896  B205 DD98                   000F98   407          STCK  ENDCLOCK
+00089A  45F0 DC08                   000E08   408          BAL   R15,CALCDUR
+00089E  D207 DDA8 DDA0      000FA8  000FA0   409          MVC   OVERHEAD,DURATION
+                                             410 *
+                                             411 **       Now do the actual timing run...
+                                             412 *
+0008A4  5870 DD8C                   000F8C   413          L     R7,NUMLOOPS
+0008A8  B205 DD90                   000F90   414          STCK  BEGCLOCK
+0008AC  0560                                 415          BALR  R6,0
+                                             416 *
+0008AE  9814 5014                   000014   417          LM    R1,R4,OPSWHERE           Load TRTE operands
+0008B2  B9BF C024                            418          TRTE  R2,R4,12                 do TRTE
+0008B6  4710 D6B2                   0008B2   419          BC    B'0001',*-4                   not finished?
+0008BA  9814 5014                   000014   420          LM    R1,R4,OPSWHERE           Load TRTE operands
+0008BE  B9BF C024                            421          TRTE  R2,R4,12                 do TRTE
+0008C2  4710 D6BE                   0008BE   422          BC    B'0001',*-4                   not finished?
+                                             423 *        .........ETC.........
+                                             424          PRINT OFF
+                                             725          PRINT ON
+000D46  9814 5014                   000014   726          LM    R1,R4,OPSWHERE
+000D4A  B9BF C024                            727          TRTE  R2,R4,12
+000D4E  4710 DB4A                   000D4A   728          BC    B'0001',*-4
+000D52  9814 5014                   000014   729          LM    R1,R4,OPSWHERE
+000D56  B9BF C024                            730          TRTE  R2,R4,12
+000D5A  4710 DB56                   000D56   731          BC    B'0001',*-4
+                                             732 *
+000D5E  0676                                 733          BCTR  R7,R6
+000D60  B205 DD98                   000F98   734          STCK  ENDCLOCK
+                                             735 *
+000D64  9814 D210                   000410   736          LM    R1,R4,SAVE1T4
+000D68  D204 DDE9 DD80      000FE9  000F80   737          MVC   PRTLINE+33(5),=CL5'TRTE'
+000D6E  45F0 DB86                   000D86   738          BAL   R15,RPTSPEED
+                                             739 *
+                                             740 *  more performance tests
+                                             741 *
+000D72  5850 D224                   000424   742          L     R5,SAVER5          restore perf table base
+000D76  4150 5034                   000034   743          LA    R5,TRTENEXT        Go on to next table entry
+000D7A  D503 DD74 5000      000F74  000000   744          CLC   =F'0',0(R5)        End of table?
+000D80  4770 D332                   000532   745          BNE   TST91LOP           No, loop...
+000D84  07FE                                 746          BR    R14                Return to caller or FAILTEST
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     7
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                                            4196 ***********************************************************************
-                                            4197 *        RPTSPEED                 Report instruction speed
-                                            4198 ***********************************************************************
+                                             748 ***********************************************************************
+                                             749 *        RPTSPEED                 Report instruction speed
+                                             750 ***********************************************************************
 
-000D86  50F0 DBF0                   000DF0  4200 RPTSPEED ST    R15,RPTSAVE        Save return address
-000D8A  5050 DBF4                   000DF4  4201          ST    R5,RPTSVR5         Save R5
-                                            4202 *
-000D8E  45F0 DC08                   000E08  4203          BAL   R15,CALCDUR        Calculate duration
-                                            4204 *
-000D92  4150 DD98                   000F98  4205          LA    R5,OVERHEAD        Subtract overhead
-000D96  4160 DD90                   000F90  4206          LA    R6,DURATION        From raw timing
-000D9A  4170 DD90                   000F90  4207          LA    R7,DURATION        Yielding true instruction timing
-000D9E  45F0 DC5C                   000E5C  4208          BAL   R15,SUBDWORD       Do it
-                                            4209 *
-000DA2  98AB DD90                   000F90  4210          LM    R10,R11,DURATION   Convert to...
-000DA6  8CA0 000C                   00000C  4211          SRDL  R10,12             ... microseconds
-                                            4212 *
-000DAA  4EA0 DDA0                   000FA0  4213          CVD   R10,TICKSAAA       convert HIGH part to decimal
-000DAE  4EB0 DDA8                   000FA8  4214          CVD   R11,TICKSBBB       convert LOW  part to decimal
-                                            4215 *
-000DB2  F877 DDB0 DDA0      000FB0  000FA0  4216          ZAP   TICKSTOT,TICKSAAA            Calculate...
-000DB8  FC75 DDB0 DD71      000FB0  000F71  4217          MP    TICKSTOT,=P'4294967296'      ...decimal...
-000DBE  FA77 DDB0 DDA8      000FB0  000FA8  4218          AP    TICKSTOT,TICKSBBB            ...microseconds
-                                            4219 *
-000DC4  D20B DDE3 DDFC      000FE3  000FFC  4220          MVC   PRTLINE+43(L'EDIT),EDIT          (edit into...
-000DCA  DE0B DDE3 DDB3      000FE3  000FB3  4221          ED    PRTLINE+43(L'EDIT),TICKSTOT+3     ...print line)
-
-
-
-                                            4223 *
-                                            4224 *        Use Hercules Diagnose for Message to console
-                                            4225 *
-000DD0  9002 DBF8                   000DF8  4226          STM   R0,R2,RPTDWSAV       save regs used by MSG
-000DD4  4100 0044                   000044  4227          LA    R0,PRTLNG            message length
-000DD8  4110 DDB8                   000FB8  4228          LA    R1,PRTLINE           messagfe address
-000DDC  4520 DC90                   000E90  4229          BAL   R2,MSG               call Hercules console MSG display
-000DE0  9802 DBF8                   000DF8  4230          LM    R0,R2,RPTDWSAV       restore regs
-
-
-000DE4  5850 DBF4                   000DF4  4232          L     R5,RPTSVR5         Restore R5
-000DE8  58F0 DBF0                   000DF0  4233          L     R15,RPTSAVE        Restore return address
-000DEC  07FF                                4234          BR    R15                Return to caller
-
-000DF0  00000000                            4236 RPTSAVE  DC    F'0'               R15 save area
-000DF4  00000000                            4237 RPTSVR5  DC    F'0'               R5 save area
-
-000DF8  00000000 00000000                   4239 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    10
-
- LOC       OBJECT CODE      ADDR1   ADDR2   STMT
-
-                                            4241 ***********************************************************************
-                                            4242 *        CALCDUR                  Calculate DURATION
-                                            4243 ***********************************************************************
-
-000E08  50F0 DC4C                   000E4C  4245 CALCDUR  ST    R15,CALCRET        Save return address
-000E0C  9057 DC50                   000E50  4246          STM   R5,R7,CALCWORK     Save work registers
-                                            4247 *
-000E10  9867 DD80                   000F80  4248          LM    R6,R7,BEGCLOCK     Remove CPU number from clock value
-000E14  8C60 0006                   000006  4249          SRDL  R6,6                            "
-000E18  8D60 0006                   000006  4250          SLDL  R6,6                            "
-000E1C  9067 DD80                   000F80  4251          STM   R6,R7,BEGCLOCK                  "
-                                            4252 *
-000E20  9867 DD88                   000F88  4253          LM    R6,R7,ENDCLOCK     Remove CPU number from clock value
-000E24  8C60 0006                   000006  4254          SRDL  R6,6                            "
-000E28  8D60 0006                   000006  4255          SLDL  R6,6                            "
-000E2C  9067 DD88                   000F88  4256          STM   R6,R7,ENDCLOCK                  "
-                                            4257 *
-000E30  4150 DD80                   000F80  4258          LA    R5,BEGCLOCK        Starting time
-000E34  4160 DD88                   000F88  4259          LA    R6,ENDCLOCK        Ending time
-000E38  4170 DD90                   000F90  4260          LA    R7,DURATION        Difference
-000E3C  45F0 DC5C                   000E5C  4261          BAL   R15,SUBDWORD       Calculate duration
-                                            4262 *
-000E40  9857 DC50                   000E50  4263          LM    R5,R7,CALCWORK     Restore work registers
-000E44  58F0 DC4C                   000E4C  4264          L     R15,CALCRET        Restore return address
-000E48  07FF                                4265          BR    R15                Return to caller
-
-000E4C  00000000                            4267 CALCRET  DC    F'0'               R15 save area
-000E50  00000000 00000000                   4268 CALCWORK DC    3F'0'              R5-R7 save area
+000D86  50F0 DBF0                   000DF0   752 RPTSPEED ST    R15,RPTSAVE        Save return address
+000D8A  5050 DBF4                   000DF4   753          ST    R5,RPTSVR5         Save R5
+                                             754 *
+000D8E  45F0 DC08                   000E08   755          BAL   R15,CALCDUR        Calculate duration
+                                             756 *
+000D92  4150 DDA8                   000FA8   757          LA    R5,OVERHEAD        Subtract overhead
+000D96  4160 DDA0                   000FA0   758          LA    R6,DURATION        From raw timing
+000D9A  4170 DDA0                   000FA0   759          LA    R7,DURATION        Yielding true instruction timing
+000D9E  45F0 DC5C                   000E5C   760          BAL   R15,SUBDWORD       Do it
+                                             761 *
+000DA2  98AB DDA0                   000FA0   762          LM    R10,R11,DURATION   Convert to...
+000DA6  8CA0 000C                   00000C   763          SRDL  R10,12             ... microseconds
+                                             764 *
+000DAA  4EA0 DDB0                   000FB0   765          CVD   R10,TICKSAAA       convert HIGH part to decimal
+000DAE  4EB0 DDB8                   000FB8   766          CVD   R11,TICKSBBB       convert LOW  part to decimal
+                                             767 *
+000DB2  F877 DDC0 DDB0      000FC0  000FB0   768          ZAP   TICKSTOT,TICKSAAA            Calculate...
+000DB8  FC75 DDC0 DD85      000FC0  000F85   769          MP    TICKSTOT,=P'4294967296'      ...decimal...
+000DBE  FA77 DDC0 DDB8      000FC0  000FB8   770          AP    TICKSTOT,TICKSBBB            ...microseconds
+                                             771 *
+000DC4  D20B DDF3 DE0C      000FF3  00100C   772          MVC   PRTLINE+43(L'EDIT),EDIT          (edit into...
+000DCA  DE0B DDF3 DDC3      000FF3  000FC3   773          ED    PRTLINE+43(L'EDIT),TICKSTOT+3     ...print line)
 
 
 
+                                             775 *
+                                             776 *        Use Hercules Diagnose for Message to console
+                                             777 *
+000DD0  9002 DBF8                   000DF8   778          STM   R0,R2,RPTDWSAV       save regs used by MSG
+000DD4  4100 0044                   000044   779          LA    R0,PRTLNG            message length
+000DD8  4110 DDC8                   000FC8   780          LA    R1,PRTLINE           messagfe address
+000DDC  4520 DC90                   000E90   781          BAL   R2,MSG               call Hercules console MSG display
+000DE0  9802 DBF8                   000DF8   782          LM    R0,R2,RPTDWSAV       restore regs
 
-                                            4270 ***********************************************************************
-                                            4271 *        SUBDWORD                 Subtract two doublewords
-                                            4272 *        R5 --> subtrahend, R6 --> minuend, R7 --> result
-                                            4273 ***********************************************************************
 
-000E5C  9014 DC80                   000E80  4275 SUBDWORD STM   R1,R4,SUBDWSAV   Save registers
-                                            4276 *
-000E60  9812 5000                   000000  4277          LM    R1,R2,0(R5)      Subtrahend  (value to subtract)
-000E64  9834 6000                   000000  4278          LM    R3,R4,0(R6)      Minuend     (what to subtract FROM)
-000E68  1F42                                4279          SLR   R4,R2            Subtract LOW part
-000E6A  47B0 DC72                   000E72  4280          BNM   *+4+4              (branch if no borrow)
-000E6E  5F30 DD64                   000F64  4281          SL    R3,=F'1'          (otherwise do borrow)
-000E72  1F31                                4282          SLR   R3,R1            Subtract HIGH part
-000E74  9034 7000                   000000  4283          STM   R3,R4,0(R7)      Store results
-                                            4284 *
-000E78  9814 DC80                   000E80  4285          LM    R1,R4,SUBDWSAV   Restore registers
-000E7C  07FF                                4286          BR    R15                Return to caller
+000DE4  5850 DBF4                   000DF4   784          L     R5,RPTSVR5         Restore R5
+000DE8  58F0 DBF0                   000DF0   785          L     R15,RPTSAVE        Restore return address
+000DEC  07FF                                 786          BR    R15                Return to caller
 
-000E80  00000000 00000000                   4288 SUBDWSAV DC    2D'0'              R1-R4 save area
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    11
+000DF0  00000000                             788 RPTSAVE  DC    F'0'               R15 save area
+000DF4  00000000                             789 RPTSVR5  DC    F'0'               R5 save area
+
+000DF8  00000000 00000000                    791 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     8
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                                            4290 ***********************************************************************
-                                            4291 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
-                                            4292 *              R2 = return address
-                                            4293 ***********************************************************************
+                                             793 ***********************************************************************
+                                             794 *        CALCDUR                  Calculate DURATION
+                                             795 ***********************************************************************
 
-000E90  4900 DD68                   000F68  4295 MSG      CH    R0,=H'0'               Do we even HAVE a message?
-000E94  07D2                                4296          BNHR  R2                     No, ignore
+000E08  50F0 DC4C                   000E4C   797 CALCDUR  ST    R15,CALCRET        Save return address
+000E0C  9057 DC50                   000E50   798          STM   R5,R7,CALCWORK     Save work registers
+                                             799 *
+000E10  9867 DD90                   000F90   800          LM    R6,R7,BEGCLOCK     Remove CPU number from clock value
+000E14  8C60 0006                   000006   801          SRDL  R6,6                            "
+000E18  8D60 0006                   000006   802          SLDL  R6,6                            "
+000E1C  9067 DD90                   000F90   803          STM   R6,R7,BEGCLOCK                  "
+                                             804 *
+000E20  9867 DD98                   000F98   805          LM    R6,R7,ENDCLOCK     Remove CPU number from clock value
+000E24  8C60 0006                   000006   806          SRDL  R6,6                            "
+000E28  8D60 0006                   000006   807          SLDL  R6,6                            "
+000E2C  9067 DD98                   000F98   808          STM   R6,R7,ENDCLOCK                  "
+                                             809 *
+000E30  4150 DD90                   000F90   810          LA    R5,BEGCLOCK        Starting time
+000E34  4160 DD98                   000F98   811          LA    R6,ENDCLOCK        Ending time
+000E38  4170 DDA0                   000FA0   812          LA    R7,DURATION        Difference
+000E3C  45F0 DC5C                   000E5C   813          BAL   R15,SUBDWORD       Calculate duration
+                                             814 *
+000E40  9857 DC50                   000E50   815          LM    R5,R7,CALCWORK     Restore work registers
+000E44  58F0 DC4C                   000E4C   816          L     R15,CALCRET        Restore return address
+000E48  07FF                                 817          BR    R15                Return to caller
 
-000E96  9002 DCC8                   000EC8  4298          STM   R0,R2,MSGSAVE          Save registers
-
-000E9A  4900 DD6A                   000F6A  4300          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
-000E9E  47D0 DCA6                   000EA6  4301          BNH   MSGOK                  Yes, continue
-000EA2  4100 005F                   00005F  4302          LA    R0,L'MSGMSG            No, set to maximum
-
-000EA6  1820                                4304 MSGOK    LR    R2,R0                  Copy length to work register
-000EA8  0620                                4305          BCTR  R2,0                   Minus-1 for execute
-000EAA  4420 DCD4                   000ED4  4306          EX    R2,MSGMVC              Copy message to O/P buffer
-
-000EAE  4120 200A                   00000A  4308          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
-000EB2  4110 DCDA                   000EDA  4309          LA    R1,MSGCMD              Point to true command
-
-000EB6  83120008                            4311          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
-000EBA  4780 DCC0                   000EC0  4312          BZ    MSGRET                 Return if successful
-000EBE  0000                                4313          DC    H'0'                   CRASH for debugging purposes
-
-000EC0  9802 DCC8                   000EC8  4315 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
-000EC4  07F2                                4316          BR    R2                     Return to caller
-
-
-
-
-
-
-000EC8  00000000 00000000                   4318 MSGSAVE  DC    3F'0'                  Registers save area
-000ED4  D200 DCE3 1000      000EE3  000000  4319 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
-
-
-000EDA  D4E2C7D5 D6C8405C                   4321 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
-000EE3  40404040 40404040                   4322 MSGMSG   DC    CL95' '                The message text to be displayed
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    12
-
- LOC       OBJECT CODE      ADDR1   ADDR2   STMT
-
-                                            4324 ***********************************************************************
-                                            4325 *        Normal completion or Abnormal termination PSWs
-                                            4326 ***********************************************************************
+000E4C  00000000                             819 CALCRET  DC    F'0'               R15 save area
+000E50  00000000 00000000                    820 CALCWORK DC    3F'0'              R5-R7 save area
 
 
 
 
+                                             822 ***********************************************************************
+                                             823 *        SUBDWORD                 Subtract two doublewords
+                                             824 *        R5 --> subtrahend, R6 --> minuend, R7 --> result
+                                             825 ***********************************************************************
 
-                                            4328 EOJ      DWAITEND LOAD=YES          Normal completion
-000F42                                      4330+EOJ      DS    0H
-000F42  8200 DD48                   000F48  4331+         LPSW  DWAT0008
-000F48  000A0000 00000000                   4332+DWAT0008 PSW   0,0,2,0,X'000000'
+000E5C  9014 DC80                   000E80   827 SUBDWORD STM   R1,R4,SUBDWSAV   Save registers
+                                             828 *
+000E60  9812 5000                   000000   829          LM    R1,R2,0(R5)      Subtrahend  (value to subtract)
+000E64  9834 6000                   000000   830          LM    R3,R4,0(R6)      Minuend     (what to subtract FROM)
+000E68  1F42                                 831          SLR   R4,R2            Subtract LOW part
+000E6A  47B0 DC72                   000E72   832          BNM   *+4+4              (branch if no borrow)
+000E6E  5F30 DD78                   000F78   833          SL    R3,=F'1'          (otherwise do borrow)
+000E72  1F31                                 834          SLR   R3,R1            Subtract HIGH part
+000E74  9034 7000                   000000   835          STM   R3,R4,0(R7)      Store results
+                                             836 *
+000E78  9814 DC80                   000E80   837          LM    R1,R4,SUBDWSAV   Restore registers
+000E7C  07FF                                 838          BR    R15                Return to caller
 
-
-
-
-
-                                            4334 FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
-000F50                                      4335+FAILTEST DS    0H
-000F50  8200 DD58                   000F58  4336+         LPSW  DWAT0009
-000F58  000A0000 00010BAD                   4337+DWAT0009 PSW   0,0,2,0,X'010BAD'
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    13
+000E80  00000000 00000000                    840 SUBDWSAV DC    2D'0'              R1-R4 save area
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page     9
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                                            4339 ***********************************************************************
-                                            4340 *        Working Storage
-                                            4341 ***********************************************************************
+                                             842 ***********************************************************************
+                                             843 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                             844 *              R2 = return address
+                                             845 ***********************************************************************
 
+000E90  4900 DD7C                   000F7C   847 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000E94  07D2                                 848          BNHR  R2                     No, ignore
 
-000F60                                      4343          LTORG ,                Literals pool
-000F60  00000000                            4344                =F'0'
-000F64  00000001                            4345                =F'1'
-000F68  0000                                4346                =H'0'
-000F6A  005F                                4347                =AL2(L'MSGMSG)
-000F6C  E3D9E3C5 40                         4348                =CL5'TRTE'
-000F71  04294967 296C                       4349                =P'4294967296'
+000E96  9002 DCC8                   000EC8   850          STM   R0,R2,MSGSAVE          Save registers
 
-                            000400  000001  4351 K        EQU   1024             One KB
-                            001000  000001  4352 PAGE     EQU   (4*K)            Size of one page
-                            010000  000001  4353 K64      EQU   (64*K)           64 KB
-                            100000  000001  4354 MB       EQU   (K*K)             1 MB
+000E9A  4900 DD7E                   000F7E   852          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000E9E  47D0 DCA6                   000EA6   853          BNH   MSGOK                  Yes, continue
+000EA2  4100 005F                   00005F   854          LA    R0,L'MSGMSG            No, set to maximum
 
-000F78  00002710                            4356 NUMLOOPS DC    F'10000'         10,000 * 100 = 1,000,000
+000EA6  1820                                 856 MSGOK    LR    R2,R0                  Copy length to work register
+000EA8  0620                                 857          BCTR  R2,0                   Minus-1 for execute
+000EAA  4420 DCD4                   000ED4   858          EX    R2,MSGMVC              Copy message to O/P buffer
 
-000F80  BBBBBBBB BBBBBBBB                   4358 BEGCLOCK DC    0D'0',8X'BB'     Begin
-000F88  EEEEEEEE EEEEEEEE                   4359 ENDCLOCK DC    0D'0',8X'EE'     End
-000F90  DDDDDDDD DDDDDDDD                   4360 DURATION DC    0D'0',8X'DD'     Diff
-000F98  FFFFFFFF FFFFFFFF                   4361 OVERHEAD DC    0D'0',8X'FF'     Overhead
+000EAE  4120 200A                   00000A   860          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+000EB2  4110 DCDA                   000EDA   861          LA    R1,MSGCMD              Point to true command
 
-000FA0  00000000 0000000C                   4363 TICKSAAA DC    PL8'0'           Clock ticks high part
-000FA8  00000000 0000000C                   4364 TICKSBBB DC    PL8'0'           Clock ticks low part
-000FB0  00000000 0000000C                   4365 TICKSTOT DC    PL8'0'           Total clock ticks
+000EB6  83120008                             863          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+000EBA  4780 DCC0                   000EC0   864          BZ    MSGRET                 Return if successful
+000EBE  0000                                 865          DC    H'0'                   CRASH for debugging purposes
 
-000FB8  40404040 40404040                   4367 PRTLINE  DC    C'         1,000,000 iterations of XXXXX'
-000FDE  40A39696 9240F9F9                   4368          DC    C' took 999,999,999 microseconds'
-                            000044  000001  4369 PRTLNG   EQU   *-PRTLINE
-000FFC  40202020 6B202020                   4370 EDIT     DC    X'402020206B2020206B202120'
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    14
-
- LOC       OBJECT CODE      ADDR1   ADDR2   STMT
-
-                                            4372 ***********************************************************************
-                                            4373 *        TRTETEST DSECT
-                                            4374 ***********************************************************************
-
-
-                                            4376 TRTETEST DSECT ,
-000000  00                                  4377 TNUM     DC    X'00'          TRTE table Number
-000001  00                                  4378          DC    X'00'
-000002  00                                  4379          DC    X'00'
-000003  00                                  4380 M3       DC    X'00'          M3 byte stored into TRTE instruction
-
-
-
-000004  00000000                            4382 OP1DATA  DC    A(0)           Pointer to Operand-1 data
-000008  00000000                            4383 OP1LEN   DC    F'0'           How much data is there - 1
-00000C  00000000                            4384 OP2DATA  DC    A(0)           Pointer to FC table data
-000010  00000000                            4385 OP2LEN   DC    F'0'           How much data is there - FC Table
-
-
-                            000014  000001  4387 OPSWHERE EQU   *
-000014  00000000                            4388 OP2WHERE DC    A(0)           Where FC Table  data should be placed
-000018  00000000                            4389 OP1WHERE DC    A(0)           Where Operand-1 data should be placed
-00001C  00000000                            4390 OP1WLEN  DC    F'0'           How much data is there - 1
-000020  00000000                            4391          DC    A(0)           pollute - found FC
-
-
-000024  00000000                            4393 FAILMASK DC    A(0)           Failure Branch on Condition mask
-
-
-                                            4395 *                             Ending register values
-000028  00000000                            4396 ENDREGS  DC    A(0)              Operand 1 address
-00002C  00000000                            4397          DC    A(0)              Operand 1 length
-000030  00000000                            4398          DC    A(0)              Function Code
-
-
-                            000034  000001  4400 TRTENEXT EQU   *              Start of next table entry...
+000EC0  9802 DCC8                   000EC8   867 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+000EC4  07F2                                 868          BR    R2                     Return to caller
 
 
 
 
 
 
-                            BBCCDD  000001  4402 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
-                            0000DD  000001  4403 REG2LOW  EQU         X'DD'    (last byte above)
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    15
+000EC8  00000000 00000000                    870 MSGSAVE  DC    3F'0'                  Registers save area
+000ED4  D200 DCE3 1000      000EE3  000000   871 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+000EDA  D4E2C7D5 D6C8405C                    873 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+000EE3  40404040 40404040                    874 MSGMSG   DC    CL95' '                The message text to be displayed
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    10
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                            000000  0C3BDD  4405 TRTE2TST CSECT ,
-                                            4406 ***********************************************************************
-                                            4407 *        TRTE Performace Test data...
-                                            4408 ***********************************************************************
-001008                                      4409 TRTEPERF DC    0A(0)      start of table
+                                             876 ***********************************************************************
+                                             877 *        Normal completion or Abnormal termination PSWs
+                                             878 ***********************************************************************
 
 
 
 
-                                            4411 ***********************************************************************
-                                            4412 *        tests with   M3: A=1,F=1,L=0, reserved=0    (12)
-                                            4413 *                     FC Table : SIZE: 131,072 (2 BYTE ARGUMENT)
-                                            4414 *                                Function Code is 2 bytes
-                                            4415 *
-                                            4416 *              Note: Op1 length must be a multiple of 2
-                                            4417 ***********************************************************************
 
+000F48  00020001 80000000                    880 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
 
-001008                                      4419 F12T8    DS    0F
-001008  F8                                  4420          DC    X'F8'                       Test Num
-001009  0000                                4421          DC    X'00',X'00'
-00100B  C0                                  4422          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
-00100C  000013E0 00000200                   4423          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
-001014  000A39DE 00020000                   4424          DC    A(TRTOPCF1),A(2*K64)        Source - FC Table & length
-                                            4425 *                                          Target -
-00101C  00710000 00910000                   4426          DC    A(7*MB+(1*K64)),A(9*MB+(1*K64)),A(0)  FC, Op1, Op1L
-001028  AABBCCDD                            4427          DC    A(REG2PATT)
-00102C  0000000B                            4428          DC    A(11) CC1
-001030  009101FE 00000002                   4429          DC    A(9*MB+(1*K64)+510),A(2),XL4'F1'
+000F58  B2B2 DD48                   000F48   882 EOJ      LPSWE EOJPSW               Normal completion
 
 
 
 
-00103C                                      4431 F12T8A   DS    0F
-00103C  F9                                  4432          DC    X'F9'                       Test Num
-00103D  0000                                4433          DC    X'00',X'00'
-00103F  C0                                  4434          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
-001040  000013E0 00000200                   4435          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
-001048  000A39DE 00020000                   4436          DC    A(TRTOPCF1),A(2*K64)        Source - FC Table & length
-                                            4437 *                                          Target - FC, Op1, Op1L
-001050  0072FF81 0092FF81                   4438          DC    A(7*MB+(3*K64)-127),A(9*MB+(3*K64)-127),A(0)
-00105C  AABBCCDD                            4439          DC    A(REG2PATT)
-001060  0000000A                            4440          DC    A(10) CC1 or CC3
-001064  0093017F 00000002                   4441          DC    A(9*MB+(3*K64)-127+510),A(2),XL4'F1'
 
+000F60  00020001 80000000                    884 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
 
-
-
-001070                                      4443 F12T11   DS    0F
-001070  FB                                  4444          DC    X'FB'                       Test Num
-001071  0000                                4445          DC    X'00',X'00'
-001073  C0                                  4446          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    16
+000F70  B2B2 DD60                   000F60   886 FAILTEST LPSWE FAILPSW              Abnormal termination
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    11
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-001074  000025E0 00000800                   4447          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
-00107C  000837E0 00020000                   4448          DC    A(TRTOPCF0),A(2*K64)        Source - FC Table & length
-                                            4449 *                                          Target -
-001084  00760000 00960000                   4450          DC    A(7*MB+(6*K64)),A(9*MB+(6*K64)),A(0) FC, Op1, Op1L
-001090  AABBCCDD                            4451          DC    A(REG2PATT)
-001094  0000000B                            4452          DC    A(11) CC1
-001098  009607FE 00000002                   4453          DC    A(9*MB+(6*K64)+2048-2),A(2),XL4'F0'
+                                             888 ***********************************************************************
+                                             889 *        Working Storage
+                                             890 ***********************************************************************
 
 
+000F74                                       892          LTORG ,                Literals pool
+000F74  00000000                             893                =F'0'
+000F78  00000001                             894                =F'1'
+000F7C  0000                                 895                =H'0'
+000F7E  005F                                 896                =AL2(L'MSGMSG)
+000F80  E3D9E3C5 40                          897                =CL5'TRTE'
+000F85  04294967 296C                        898                =P'4294967296'
 
+                            000400  000001   900 K        EQU   1024             One KB
+                            001000  000001   901 PAGE     EQU   (4*K)            Size of one page
+                            010000  000001   902 K64      EQU   (64*K)           64 KB
+                            100000  000001   903 MB       EQU   (K*K)             1 MB
 
-0010A4                                      4455 F12T11A  DS    0F
-0010A4  FC                                  4456          DC    X'FC'                       Test Num
-0010A5  0000                                4457          DC    X'00',X'00'
-0010A7  C0                                  4458          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
-0010A8  000025E0 00000800                   4459          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
-0010B0  000837E0 00020000                   4460          DC    A(TRTOPCF0),A(2*K64)        Source - FC Table & length
-                                            4461 *                                          Target - FC, Op1, Op1L
-0010B8  0078FE1F 0098FE1F                   4462          DC    A(7*MB+(9*K64)-481),A(9*MB+(9*K64)-481),A(0)
-0010C4  AABBCCDD                            4463          DC    A(REG2PATT)
-0010C8  0000000A                            4464          DC    A(10) CC1 or CC3
-0010CC  0099061D 00000002                   4465          DC    A(9*MB+(9*K64)-481+2048-2),A(2),XL4'F0'
+000F8C  00002710                             905 NUMLOOPS DC    F'10000'         10,000 * 100 = 1,000,000
 
+000F90  BBBBBBBB BBBBBBBB                    907 BEGCLOCK DC    0D'0',8X'BB'     Begin
+000F98  EEEEEEEE EEEEEEEE                    908 ENDCLOCK DC    0D'0',8X'EE'     End
+000FA0  DDDDDDDD DDDDDDDD                    909 DURATION DC    0D'0',8X'DD'     Diff
+000FA8  FFFFFFFF FFFFFFFF                    910 OVERHEAD DC    0D'0',8X'FF'     Overhead
 
+000FB0  00000000 0000000C                    912 TICKSAAA DC    PL8'0'           Clock ticks high part
+000FB8  00000000 0000000C                    913 TICKSBBB DC    PL8'0'           Clock ticks low part
+000FC0  00000000 0000000C                    914 TICKSTOT DC    PL8'0'           Total clock ticks
 
-
-0010D8  00000000                            4467          DC    A(0)        end of table
-0010DC  00000000                            4468          DC    A(0)        end of table
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    17
-
- LOC       OBJECT CODE      ADDR1   ADDR2   STMT
-
-                                            4470 ***********************************************************************
-                                            4471 *        TRTE op1 scan data...
-                                            4472 ***********************************************************************
-
-0010E0  78125634 78125634                   4474 TRTOP10  DC    64XL4'78125634'    (CC0)
-
-0011E0  78125634 78125634                   4476 TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
-
-0012E0  78125634 78125634                   4478 TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC1)
-
-0013E0  78125634 78125634                   4480 TRTOP1F1 DC    127XL4'78125634',X'000000F1'    (CC1)
-
-0015E0  98765432 98765432                   4482 TRTO1L0  DC    512XL4'98765432'    (CC0)
-
-001DE0  98765432 98765432                   4484 TRTO1L11 DC    256XL4'98765432',X'00110000',255XL4'98765432'    (CC1)
-
-0025E0  98765432 98765432                   4486 TRTO1LF0 DC    511XL4'98765432',X'000000F0'    (CC1)
-                                            4487
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    18
+000FC8  40404040 40404040                    916 PRTLINE  DC    C'         1,000,000 iterations of XXXXX'
+000FEE  40A39696 9240F9F9                    917          DC    C' took 999,999,999 microseconds'
+                            000044  000001   918 PRTLNG   EQU   *-PRTLINE
+00100C  40202020 6B202020                    919 EDIT     DC    X'402020206B2020206B202120'
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    12
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-                                            4489 ***********************************************************************
-                                            4490 *        Function Code (FC) Tables (GR1)
-                                            4491 ***********************************************************************
+                                             921 ***********************************************************************
+                                             922 *        TRTETEST DSECT
+                                             923 ***********************************************************************
 
-002DE0  00000000 00000000                   4493 TRTOP20  DC    256X'00'            no stop
-002EE0                      002EE0  022EE0  4494          ORG   *+2*K64
 
-022EE0  00000000 00000000                   4496 TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
+                                             925 TRTETEST DSECT ,
+000000  00                                   926 TNUM     DC    X'00'          TRTE table Number
+000001  00                                   927          DC    X'00'
+000002  00                                   928          DC    X'00'
+000003  00                                   929 M3       DC    X'00'          M3 byte stored into TRTE instruction
 
-022FE0  00000000 00000000                   4498 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
 
-0230E0  00000000 00000000                   4500 TRTOP411 DC    34X'00',X'0011',476X'00'   stop on X'11'
 
-0232E0  00000000 00000000                   4502 TRTOP4F0 DC    480X'00',X'00F0',30X'00'     stop on X'F0'
+000004  00000000                             931 OP1DATA  DC    A(0)           Pointer to Operand-1 data
+000008  00000000                             932 OP1LEN   DC    F'0'           How much data is there - 1
+00000C  00000000                             933 OP2DATA  DC    A(0)           Pointer to FC table data
+000010  00000000                             934 OP2LEN   DC    F'0'           How much data is there - FC Table
 
-0234E0  00000000 00000000                   4504 TRTOP811 DC    17X'00',X'11',238X'00'       stop on X'11'
-0235E0                      0235E0  0435E0  4505          ORG   *+2*K64
 
-0435E0  00000000 00000000                   4507 TRTOP8F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
-0436E0                      0436E0  0636E0  4508          ORG   *+2*K64
+                            000014  000001   936 OPSWHERE EQU   *
+000014  00000000                             937 OP2WHERE DC    A(0)           Where FC Table  data should be placed
+000018  00000000                             938 OP1WHERE DC    A(0)           Where Operand-1 data should be placed
+00001C  00000000                             939 OP1WLEN  DC    F'0'           How much data is there - 1
+000020  00000000                             940          DC    A(0)           pollute - found FC
 
-0636E0  00000000 00000000                   4510 TRTOP8F1 DC    240X'00',X'00',X'F1',14X'00' stop on X'F1'
-0637E0                      0637E0  0837E0  4511          ORG   *+2*K64
-                                            4512
-0837E0  00000000 00000000                   4513 TRTOPCF0 DC    480X'00',X'00F0',28X'00'     stop on X'F0'
-0839DE                      0839DE  0A39DE  4514          ORG   *+2*K64
-                                            4515 *                                           stop on X'F1'
-0A39DE  00000000 00000000                   4516 TRTOPCF1 DC    480X'00',X'0000',X'00F1',28X'00'
-0A3BDE                      0A3BDE  0C3BDE  4517          ORG   *+2*K64
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    19
 
- LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+000024  00000000                             942 FAILMASK DC    A(0)           Failure Branch on Condition mask
 
-                                            4519 ***********************************************************************
-                                            4520 *        (other DSECTS needed by SATK)
-                                            4521 ***********************************************************************
 
-                                            4523          DSECTS PRINT=ON,NAME=(ASA)
-                                            4524+         PUSH  PRINT
-                                            4525+         PRINT ON
-                                            4527+ASA      DSECT
-                            000000  000001  4528+ASBEGIN  EQU   *                   Start of absolute/real assigned storage areas
-000000  00000000 00000000                   4529+IPLPSW   DC    FD'0'        000 A  Initial Program Load Program Status Word
-000008  00000000 00000000                   4530+IPLCCW1  DC    FD'0'        008 A  Initial Program Load first Channel Command Word
-000010  00000000 00000000                   4531+IPLCCW2  DC    FD'0'        010 A  Initial program Load second Channel Command Word
-                                            4532+* RESTART RELATED PROGRAM STATUS WORDS
-000018                      000018  000000  4533+         ORG   ASBEGIN
-000000  00000000 00000000                   4534+RSTNPSW  DC    FD'0'        000 R  Restart New PSW
-000008  00000000 00000000                   4535+RSTOPSW  DC    FD'0'        008 R  Restart Old PSW
-000010  00000000 00000000                   4536+UA0      DC    FD'0'        010 R  Unassigned Area 0
-                                            4537+* INTERRUPTION OLD PROGRAM STATUS WORD SAVE AREAS
-000018  00000000 00000000                   4538+EXTOPSW  DC    FD'0'        018 R  External Interrupt Old PSW
-000020  00000000 00000000                   4539+SVCOPSW  DC    FD'0'        020 R  Supervisor Call Old PSW
-000028  00000000 00000000                   4540+PGMOPSW  DC    FD'0'        028 R  Program Old PSW
-000030  00000000 00000000                   4541+MCKOPSW  DC    FD'0'        030 R  Machine Check Old PSW
-000038  00000000 00000000                   4542+IOOPSW   DC    FD'0'        038 R  Input/Output Old PSW
-                                            4543+* System/360 or System/370 Basic Control Mode INTERRUPTION INFORMATION
-000040                      000040  00001A  4544+         ORG   EXTOPSW+2
-00001A  0000                                4545+BCEXTCOD DC    H'0'         01A R  External Interuption Code
-00001C                      00001C  000022  4546+         ORG   SVCOPSW+2
-000022  0000                                4547+BCSVCCOD DC    H'00'        022 R  Supervisor Call Interruption Code
-000024                      000024  00002A  4548+         ORG   PGMOPSW+2
-00002A  0000                                4549+BCPGMCOD DC    H'0'         02A R  Program Interruption Code
-00002C                      00002C  000032  4550+         ORG   MCKOPSW+2
-000032  0000                                4551+BCMCKCOD DC    H'0'         032 R  Machine Check Interruption Code
-000034                      000034  00003A  4552+         ORG   IOOPSW+2
-00003A  0000                                4553+BCIOCOD  DC    H'0'         03A R  Input/Output Interruption Code (Device CCUU)
-00003C                      00003C  000040  4554+         ORG   *+4
-                                            4555+* CHANNEL-BASED INPUT/OUTPUT INTERRUPT RELATED
-000040  00000000 00000000                   4556+CSW      DC    FD'0'        040 R  Channel Status Word
-000048                                      4557+CAW      DC    0F'0'        048 R  Channel Address Word
-000048  00                                  4558+CAWKEY   DC    X'00'        048 R  Channel Storage Key (bits 0-3)
-                            000008  000001  4559+CAWSUSP  EQU   X'08'        048 R  Suspend Control (bit 4)
-000049  000000                              4560+CAWADDR  DC    AL3(0)       049 R  Channel Command Address
-00004C  00000000                            4561+UA1      DC    F'0'         04C R  Unassigend Area 1
-                                            4562+* MISCELANEOUS AREAS
-000050  00000000                            4563+TIMER    DC    F'0'         050 R  System/360 and System/370 Interval Timer
-000054  00000000                            4564+TTDES    DC    F'0'         054 R  System/370 Trace-Table-Designation
-                                            4565+* INTERRUPTION NEW PROGRAM STATUS WORD AREAS
-000058  00000000 00000000                   4566+EXTNPSW  DC    FD'0'        058 R  External New PSW
-000060  00000000 00000000                   4567+SVCNPSW  DC    FD'0'        060 R  Supervisor Call New PSW
-000068  00000000 00000000                   4568+PGMNPSW  DC    FD'0'        068 R  Program New PSW
-000070  00000000 00000000                   4569+MCKNPSW  DC    FD'0'        070 R  Machine Check New PSW
-000078  00000000 00000000                   4570+IONPSW   DC    FD'0'        078 R  Input/Output New PSW
-                                            4571+* System/360 Diagnostic Scanout Area
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    20
+                                             944 *                             Ending register values
+000028  00000000                             945 ENDREGS  DC    A(0)              Operand 1 address
+00002C  00000000                             946          DC    A(0)              Operand 1 length
+000030  00000000                             947          DC    A(0)              Function Code
+
+
+                            000034  000001   949 TRTENEXT EQU   *              Start of next table entry...
+
+
+
+
+
+
+                            BBCCDD  000001   951 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                            0000DD  000001   952 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    13
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-000080                                      4572+SCANOUT  DS    0X           080 A  System/360 Diagnostic Scanout Area
-                            000000  000001  4573+SCANOUTL EQU   *-SCANOUT           System/360 Diagnostic Scanout Area Length
-                                            4574+* EXTERNAL INTERRUPTION INFORMATION
-000080                      000080  000080  4575+         ORG   ASBEGIN+X'80'
-000080  00000000                            4576+EXTIPARM DC    F'0'         080 R  External-interruption Parameter
-000084  0000                                4577+EXTCPUAD DC    H'0'         084 R  External-interruption CPU Address
-000086  0000                                4578+EXTICODE DC    H'0'         086 R  External-interruption Code
-                                            4579+* SUPERVISOR CALL INTERRUPTION INFORMATION
-000088                                      4580+SVCIID   DC    0F'0'        088 R  Supervisor-Call Interuption Identification
-000088  00                                  4581+         DC    X'00'        088 R  not-used - zeros stored
-000089  00                                  4582+SVCIILC  DC    X'00'        089 R  Supervisor-Call instruction length code
-                            00000C  000001  4583+SVCIILCM EQU   B'00001100'         Supervisor-Call ILC mask, zeros stored in other bits
-00008A  0000                                4584+SVCICODE DC    H'0'         08A R  Supervisor-Call Interruption Code
-                                            4585+* PROGRAM INTERRUPTION INFORMATION
-00008C                                      4586+PGMIID   DC    0F'0'        08C R  Program-interruption identification
-00008C  00                                  4587+         DC    X'00'        08C R  not-used - zeros stored
-00008D  00                                  4588+PGMIILC  DC    X'00'        08D R  Program instruction lengh code
-                            00000C  000001  4589+PGMIILCM EQU   B'00001100'         Progrtam ILC mask, zeros stored in other bits
-00008E  0000                                4590+PGMICODE DC    H'0'         08E R  Program Interruption Code
-000090                                      4591+PGMDXC   DC    0F'0'        090 R  Data-Exception Code
-000090  00000000                            4592+PGMTRX   DC    F'0'         090 R  Translation-Exception Identification
-000094                                      4593+MONCLS   DC    0H'0'        094 R  Monitor-Class Number
-000094  00                                  4594+         DC    X'00'        094 R  not-used - zeros stored
-000095  00                                  4595+MONNUMBR DC    X'00'        095 R  Monitor-Class Number stored
-000096  00                                  4596+PERCODE  DC    X'00'        096 R  Program-Event-Recording Code
-                            0000F0  000001  4597+PERCODMK EQU   B'11110000'         Program-Event-Recordind Code mask in bits 0-3
-000097  00                                  4598+         DC    X'00'        097 R  PER Code not used - zeros stored
-000098  00000000                            4599+PERADDR  DC    F'0'         098 R  PER Address
-00009C  00000000                            4600+MONCODE  DC    F'0'         09C R  Monitor Event Code in bytes 1-3, zeros in byte 0
-0000A0  00                                  4601+PGMACCID DC    X'00'        0A0 R  Exception accress identification
-0000A1  00                                  4602+PERACCID DC    X'00'        0A1 R  PER access identification
-0000A2  00                                  4603+MPGACCID DC    X'00'        0A2 R  MOVE PAGE Operand access identification
-0000A3                                      4604+SSARCHMD DC    0X'00'       0A3 A  Store Status Architectural Mode Identification
-0000A3  00                                  4605+MKARCHMD DC    X'00'        0A3 R  Machine-Check Architectural Mode Identification
-0000A4  00000000                            4606+UA2      DC    F'0'         0A4 R  Unused area
-                                            4607+* z/Architecture PROGRAM INTERRUPTION INFORMATION
-0000A8  00000000 00000000                   4608+ZPGMTRX  DC    FD'0'        0A8 R  Translation Exception information
-0000B0  00000000 00000000                   4609+ZMONCODE DC    FD'0'        0B0 R  Monitor Code
-                                            4610+* System/370 CHANNEL INPUT/OUTPUT INFORMATION
-0000B8                      0000B8  0000A8  4611+         ORG   ASBEGIN+X'A8'
-0000A8  00000000                            4612+CHANID   DC    F'0'         0A8 R  System/370 STORE CHANNEL ID location
-0000AC  00000000                            4613+IOELADDR DC    F'0'         0AC R  System/370 I/O Extended Logout Address
-0000B0  00000000                            4614+LCHANLOG DC    F'0'         0B0 R  System/370 Limited Channel Logout Area
-0000B4  00000000                            4615+UA3      DC    F'0'         0B4 R  unused by System/370
-0000B8  00                                  4616+UA4      DC    X'00'        0B8 R  unused by System/370
-0000B9  00                                  4617+MEASUREB DC    X'00'        0B9 R  System/370 Measurement Byte
-0000BA  0000                                4618+IOICODE  DC    H'0'         0BA R  System/370 Input/Output Interruption Device Address
-                                            4619+* CHANNEL SUBSYSTEM INPUT/OUTPUT INFORMATION
-0000BC                      0000BC  0000B8  4620+         ORG   ASBEGIN+X'B8'
-0000B8  00000000                            4621+IOSSID   DC    F'0'         0B8 R  Channel subsystem-identification word
-0000BC  00000000                            4622+IOIPARM  DC    F'0'         0BC R  Channel subsystem I/O Interruption parameter
-0000C0  00000000                            4623+IOIID    DC    F'0'         0C0 R  Channel subsystem I/O Interruption Identification
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    21
+                            000000  0C3BED   954 TRTE2TST CSECT ,
+                                             955 ***********************************************************************
+                                             956 *        TRTE Performace Test data...
+                                             957 ***********************************************************************
+001018                                       958 TRTEPERF DC    0A(0)      start of table
+
+
+
+
+                                             960 ***********************************************************************
+                                             961 *        tests with   M3: A=1,F=1,L=0, reserved=0    (12)
+                                             962 *                     FC Table : SIZE: 131,072 (2 BYTE ARGUMENT)
+                                             963 *                                Function Code is 2 bytes
+                                             964 *
+                                             965 *              Note: Op1 length must be a multiple of 2
+                                             966 ***********************************************************************
+
+
+001018                                       968 F12T8    DS    0F
+001018  F8                                   969          DC    X'F8'                       Test Num
+001019  0000                                 970          DC    X'00',X'00'
+00101B  C0                                   971          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+00101C  000013F0 00000200                    972          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
+001024  000A39EE 00020000                    973          DC    A(TRTOPCF1),A(2*K64)        Source - FC Table & length
+                                             974 *                                          Target -
+00102C  00710000 00910000                    975          DC    A(7*MB+(1*K64)),A(9*MB+(1*K64)),A(0)  FC, Op1, Op1L
+001038  AABBCCDD                             976          DC    A(REG2PATT)
+00103C  0000000B                             977          DC    A(11) CC1
+001040  009101FE 00000002                    978          DC    A(9*MB+(1*K64)+510),A(2),XL4'F1'
+
+
+
+
+00104C                                       980 F12T8A   DS    0F
+00104C  F9                                   981          DC    X'F9'                       Test Num
+00104D  0000                                 982          DC    X'00',X'00'
+00104F  C0                                   983          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+001050  000013F0 00000200                    984          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
+001058  000A39EE 00020000                    985          DC    A(TRTOPCF1),A(2*K64)        Source - FC Table & length
+                                             986 *                                          Target - FC, Op1, Op1L
+001060  0072FF81 0092FF81                    987          DC    A(7*MB+(3*K64)-127),A(9*MB+(3*K64)-127),A(0)
+00106C  AABBCCDD                             988          DC    A(REG2PATT)
+001070  0000000A                             989          DC    A(10) CC1 or CC3
+001074  0093017F 00000002                    990          DC    A(9*MB+(3*K64)-127+510),A(2),XL4'F1'
+
+
+
+
+001080                                       992 F12T11   DS    0F
+001080  FB                                   993          DC    X'FB'                       Test Num
+001081  0000                                 994          DC    X'00',X'00'
+001083  C0                                   995          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    14
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-0000C4  00000000                            4624+PCFETO   DC    A(0)         0C4 R  ESA/390 PROGRAM CALL FAST Entry Table Origin
-0000C8  00000000                            4625+STFLDATA DC    F'0'         0C8 R  STORE FACILITY LIST storage area
-0000CC  00000000 00000000                   4626+UA5      DC    XL8'00'      0CC R  unused area
-                                            4627+* MACHINE-CHECK INTERRUPTION INFORMATION
-0000D4  00000000                            4628+MKXSAA   DC    F'0'         0D4 R  Machine-Check Extended Save Area Address
-0000D8  00000000 00000000                   4629+MKCPUTIM DC    FD'0'        0D8 R  Machine-Check CPU timer save area
-0000E0  00000000 00000000                   4630+MKCLKCMP DC    FD'0'        0E0 R  Machine-Check clock comparator save area
-0000E8  00000000                            4631+MKICODE  DC    F'0'         0E8 R  Machine-Check interruption code
-0000EC  00000000 00000000                   4632+UA6      DC    XL8'00'      0EC R  unused area
-0000F4  00000000                            4633+MKDMGCOD DC    F'0'         0F4 R  Machine-Check external damage code
-0000F8                                      4634+ZMKFAILA DC    0FD'0'       0F8 R  Machine-Check failing storage address
-0000F8  00000000                            4635+MKFAILA  DC    F'0'         0F8 R  Machine-Check failing storage address
-0000FC  00000000                            4636+MKMODEL  DC    F'0'         0FC R  Machine-Check model dependent information
-000100  00000000 00000000                   4637+MKLOGOUT DC    4F'0'        100 R  ESA machine-check fixed logout area
-000110                      000110  000100  4638+         ORG   ASBEGIN+X'100'
-000100  00000000 00000000                   4639+ZEMONCTR DC    AD(0)        100 R  Enhanced-Monitor Counter-Array Origin
-000108  00000000                            4640+ZEMONSIZ DC    F'0'         108 R  Enhanced-Monitor Counter-Array Size
-00010C  00000000                            4641+ZEMONCNT DC    F'0'         10C R  Enhanced-Monitor Exception Count
-000110  00000000 00000000                   4642+ZBRKADDR DC    AD(0)        110 R  Breaking-Event Address
-000118  00000000 00000000                   4643+UA7      DC    FD'0'        118 R  unused area
-000120  00000000 00000000                   4644+MKARS    DC    16F'0'       120 R  Machine-Check access register save area
-000160                      000160  000100  4645+         ORG   ASBEGIN+X'100'
-000100  00000000 00000000                   4646+MCKLOG   DC    24F'0'       100 R  System/370, 370-XA machine-Check fixed logout area.
-000160  00000000 00000000                   4647+MKFPRS   DC    4D'0'        160 R  Machine-Check floating point register save area
-000180  00000000 00000000                   4648+NKGRS    DC    16F'0'       180 R  Machine-Check general register save area
-0001C0  00000000 00000000                   4649+MKCRS    DC    16F'0'       1C0 R  Machine-Check control register save area
-                                            4650+* STORE/STATUS SAVE AREAS
-000200                      000200  0000D4  4651+         ORG   ASBEGIN+X'D4'
-0000D4  00000000                            4652+SSXSAA   DC    A(0)         0D4 A  Store Status Extended Save Area Address
-0000D8  00000000 00000000                   4653+SSCPUTIM DC    FD'0'        0D8 A  CPU Timer save area
-0000E0  00000000 00000000                   4654+SSCLKCMP DC    FD'0'        0E0 A  Clock-Comparator save area
-0000E8                      0000E8  000100  4655+         ORG   ASBEGIN+X'100'
-000100  00000000 00000000                   4656+SSPSW    DC    FD'0'        100 A  Program-Status Word save area
-000108  00000000                            4657+SSPREFIX DC    F'0'         108 A  Prefix save area
-00010C  00000000                            4658+SSMODEL  DC    F'0'         10C A  Model-dependent save area
-000110                      000110  000120  4659+         ORG   ASBEGIN+X'120'
-000120  00000000 00000000                   4660+SSARS    DC    16F'0'       120 A  Access-register save area
-000160  00000000 00000000                   4661+SSFPRS   DC    4D'0'        160 A  Floating-point register save area
-000180  00000000 00000000                   4662+SSGRS    DC    16F'0'       180 A  General register save area
-0001C0  00000000 00000000                   4663+SSCRS    DC    16F'0'       1C0 A  Control register save area
-                                            4664+* z/Architecture OLD PROGRAM STATUS WORDS
-000200                      000200  000120  4665+         ORG   ASBEGIN+X'120'
-000120  00000000 00000000                   4666+ZRSTOPSW DC    XL16'00'     120 R  Restart Old PSW
-000130  00000000 00000000                   4667+ZEXTOPSW DC    XL16'00'     130 R  External Old PSW
-000140  00000000 00000000                   4668+ZSVCOPSW DC    XL16'00'     140 R  Supervisor-Call Old PSW
-000150  00000000 00000000                   4669+ZPGMOPSW DC    XL16'00'     150 R  Program Old PSW
-000160  00000000 00000000                   4670+ZMCKOPSW DC    XL16'00'     160 R  Machine-Check Old PSW
-000170  00000000 00000000                   4671+ZIOOPSW  DC    XL16'00'     170 R  Input-Output Old PSW
-000180  00000000 00000000                   4672+UA8      DC    XL32'00'     180 R  z/Architecture unused area
-                                            4673+* z/Architecture NEW PROGRAM STATUS WORD AREAS
-0001A0  00000000 00000000                   4674+ZRSTNPSW DC    XL16'00'     1A0 R  Restart New PSW
-0001B0  00000000 00000000                   4675+ZEXTNPSW DC    XL16'00'     1B0 R  External New PSW
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    22
+001084  000025F0 00000800                    996          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+00108C  000837F0 00020000                    997          DC    A(TRTOPCF0),A(2*K64)        Source - FC Table & length
+                                             998 *                                          Target -
+001094  00760000 00960000                    999          DC    A(7*MB+(6*K64)),A(9*MB+(6*K64)),A(0) FC, Op1, Op1L
+0010A0  AABBCCDD                            1000          DC    A(REG2PATT)
+0010A4  0000000B                            1001          DC    A(11) CC1
+0010A8  009607FE 00000002                   1002          DC    A(9*MB+(6*K64)+2048-2),A(2),XL4'F0'
+
+
+
+
+0010B4                                      1004 F12T11A  DS    0F
+0010B4  FC                                  1005          DC    X'FC'                       Test Num
+0010B5  0000                                1006          DC    X'00',X'00'
+0010B7  C0                                  1007          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+0010B8  000025F0 00000800                   1008          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+0010C0  000837F0 00020000                   1009          DC    A(TRTOPCF0),A(2*K64)        Source - FC Table & length
+                                            1010 *                                          Target - FC, Op1, Op1L
+0010C8  0078FE1F 0098FE1F                   1011          DC    A(7*MB+(9*K64)-481),A(9*MB+(9*K64)-481),A(0)
+0010D4  AABBCCDD                            1012          DC    A(REG2PATT)
+0010D8  0000000A                            1013          DC    A(10) CC1 or CC3
+0010DC  0099061D 00000002                   1014          DC    A(9*MB+(9*K64)-481+2048-2),A(2),XL4'F0'
+
+
+
+
+0010E8  00000000                            1016          DC    A(0)        end of table
+0010EC  00000000                            1017          DC    A(0)        end of table
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    15
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
-0001C0  00000000 00000000                   4676+ZSVCNPSW DC    XL16'00'     1C0 R  Supervisor-Call New PSW
-0001D0  00000000 00000000                   4677+ZPGMNPSW DC    XL16'00'     1D0 R  Program New PSW
-0001E0  00000000 00000000                   4678+ZMCKNPSW DC    XL16'00'     1E0 R  Machine-Check New PSW
-0001F0  00000000 00000000                   4679+ZIONPSW  DC    XL16'00'     1F0 R  Input/Output New PSW
-                            0011C0  000001  4680+ZSASDISP EQU   X'11C0'   Displacement to save areas defined by ASAZAREA macro
-                            000200  000001  4681+ASEND    EQU   *                   End of absolute/real assigned storage areas
-                            000200  000001  4682+ASLENGTH EQU   ASEND-ASBEGIN       Length of absolute/real assigned storage area
-                                            4683+* LOGICAL ADDRESS USAGE
-                            00031B  000001  4684+CPUID    EQU   *+X'11B'     31B L  System/370 CPU Identity used during DAS tracing
-                                            4685+         POP   PRINT
-                                            4686          PRINT ON
+                                            1019 ***********************************************************************
+                                            1020 *        TRTE op1 scan data...
+                                            1021 ***********************************************************************
 
-                                            4688 ***********************************************************************
-                                            4689 *        Register equates
-                                            4690 ***********************************************************************
+0010F0  78125634 78125634                   1023 TRTOP10  DC    64XL4'78125634'    (CC0)
+
+0011F0  78125634 78125634                   1025 TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
+
+0012F0  78125634 78125634                   1027 TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC1)
+
+0013F0  78125634 78125634                   1029 TRTOP1F1 DC    127XL4'78125634',X'000000F1'    (CC1)
+
+0015F0  98765432 98765432                   1031 TRTO1L0  DC    512XL4'98765432'    (CC0)
+
+001DF0  98765432 98765432                   1033 TRTO1L11 DC    256XL4'98765432',X'00110000',255XL4'98765432'    (CC1)
+
+0025F0  98765432 98765432                   1035 TRTO1LF0 DC    511XL4'98765432',X'000000F0'    (CC1)
+                                            1036
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    16
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            1038 ***********************************************************************
+                                            1039 *        Function Code (FC) Tables (GR1)
+                                            1040 ***********************************************************************
+
+002DF0  00000000 00000000                   1042 TRTOP20  DC    256X'00'            no stop
+002EF0                      002EF0  022EF0  1043          ORG   *+2*K64
+
+022EF0  00000000 00000000                   1045 TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
+
+022FF0  00000000 00000000                   1047 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+
+0230F0  00000000 00000000                   1049 TRTOP411 DC    34X'00',X'0011',476X'00'   stop on X'11'
+
+0232F0  00000000 00000000                   1051 TRTOP4F0 DC    480X'00',X'00F0',30X'00'     stop on X'F0'
+
+0234F0  00000000 00000000                   1053 TRTOP811 DC    17X'00',X'11',238X'00'       stop on X'11'
+0235F0                      0235F0  0435F0  1054          ORG   *+2*K64
+
+0435F0  00000000 00000000                   1056 TRTOP8F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+0436F0                      0436F0  0636F0  1057          ORG   *+2*K64
+
+0636F0  00000000 00000000                   1059 TRTOP8F1 DC    240X'00',X'00',X'F1',14X'00' stop on X'F1'
+0637F0                      0637F0  0837F0  1060          ORG   *+2*K64
+                                            1061
+0837F0  00000000 00000000                   1062 TRTOPCF0 DC    480X'00',X'00F0',28X'00'     stop on X'F0'
+0839EE                      0839EE  0A39EE  1063          ORG   *+2*K64
+                                            1064 *                                           stop on X'F1'
+0A39EE  00000000 00000000                   1065 TRTOPCF1 DC    480X'00',X'0000',X'00F1',28X'00'
+0A3BEE                      0A3BEE  0C3BEE  1066          ORG   *+2*K64
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    17
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            1068 ***********************************************************************
+                                            1069 *        Register equates
+                                            1070 ***********************************************************************
 
 
-                            000000  000001  4692 R0       EQU   0
-                            000001  000001  4693 R1       EQU   1
-                            000002  000001  4694 R2       EQU   2
-                            000003  000001  4695 R3       EQU   3
-                            000004  000001  4696 R4       EQU   4
-                            000005  000001  4697 R5       EQU   5
-                            000006  000001  4698 R6       EQU   6
-                            000007  000001  4699 R7       EQU   7
-                            000008  000001  4700 R8       EQU   8
-                            000009  000001  4701 R9       EQU   9
-                            00000A  000001  4702 R10      EQU   10
-                            00000B  000001  4703 R11      EQU   11
-                            00000C  000001  4704 R12      EQU   12
-                            00000D  000001  4705 R13      EQU   13
-                            00000E  000001  4706 R14      EQU   14
-                            00000F  000001  4707 R15      EQU   15
+                            000000  000001  1072 R0       EQU   0
+                            000001  000001  1073 R1       EQU   1
+                            000002  000001  1074 R2       EQU   2
+                            000003  000001  1075 R3       EQU   3
+                            000004  000001  1076 R4       EQU   4
+                            000005  000001  1077 R5       EQU   5
+                            000006  000001  1078 R6       EQU   6
+                            000007  000001  1079 R7       EQU   7
+                            000008  000001  1080 R8       EQU   8
+                            000009  000001  1081 R9       EQU   9
+                            00000A  000001  1082 R10      EQU   10
+                            00000B  000001  1083 R11      EQU   11
+                            00000C  000001  1084 R12      EQU   12
+                            00000D  000001  1085 R13      EQU   13
+                            00000E  000001  1086 R14      EQU   14
+                            00000F  000001  1087 R15      EQU   15
 
 
 
@@ -970,378 +722,214 @@ ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)       
 
 
 
-                                            4709          END
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    23
+                                            1089          END
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    18
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
-ASA                 4    00000000         512  4527  3558
-ASBEGIN             U    00000000           1  4528  4533  4575  4611  4620  4638  4645  4651  4655  4659  4665  4682
-ASEND               U    00000200           1  4681  4682
-ASLENGTH            U    00000200           1  4682
-BCEXTCOD            H    0000001A           2  4545
-BCIOCOD             H    0000003A           2  4553
-BCMCKCOD            H    00000032           2  4551
-BCPGMCOD            H    0000002A           2  4549
-BCSVCCOD            H    00000022           2  4547
-BEGCLOCK            D    00000F80           8  4358  3644  3862  4248  4251  4258
-BEGIN               I    00000200           2  3562  3593  3531  3559  3560
-CALCDUR             I    00000E08           4  4245  3856  4203
-CALCRET             F    00000E4C           4  4267  4245  4264
-CALCWORK            F    00000E50           4  4268  4246  4263
-CAW                 F    00000048           4  4557
-CAWADDR             R    00000049           3  4560
-CAWKEY              X    00000048           1  4558
-CAWSUSP             U    00000008           1  4559
-CHANID              F    000000A8           4  4612
-CODE                2    00000000      801758  3512
-CPUID               U    0000031B           1  4684
-CSW                 F    00000040           8  4556
-DURATION            D    00000F90           8  4360  3857  4206  4207  4210  4260
-DWAT0008            3    00000F48           8  4332  4331
-DWAT0009            3    00000F58           8  4337  4336
-EDIT                X    00000FFC          12  4370  4220  4221
-ENDCLOCK            D    00000F88           8  4359  3855  4182  4253  4256  4259
-ENDREGS             A    00000028           4  4396
-EOJ                 H    00000F42           2  4330  3579  3587
-EXTCPUAD            H    00000084           2  4577
-EXTICODE            H    00000086           2  4578
-EXTIPARM            F    00000080           4  4576
-EXTNPSW             F    00000058           8  4566
-EXTOPSW             F    00000018           8  4538  4544
-F12T11              F    00001070           4  4443
-F12T11A             F    000010A4           4  4455
-F12T8               F    00001008           4  4419
-F12T8A              F    0000103C           4  4431
-FAILMASK            A    00000024           4  4393
-FAILTEST            H    00000F50           2  4335  3582  3585
-IMAGE               1    00000000      801758     0
-IOELADDR            F    000000AC           4  4613
-IOICODE             H    000000BA           2  4618
-IOIID               F    000000C0           4  4623
-IOIPARM             F    000000BC           4  4622
-IONPSW              F    00000078           8  4570
-IOOPSW              F    00000038           8  4542  4552
-IOSSID              F    000000B8           4  4621
-IPLCCW1             F    00000008           8  4530
-IPLCCW2             F    00000010           8  4531
-IPLPSW              F    00000000           8  4529
-K                   U    00000400           1  4351  4352  4353  4354
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    24
+BEGCLOCK            D    00000F90           8   907   196   414   800   803   810
+BEGIN               I    00000200           2   114   145    80   111   112
+CALCDUR             I    00000E08           4   797   408   755
+CALCRET             F    00000E4C           4   819   797   816
+CALCWORK            F    00000E50           4   820   798   815
+DURATION            D    00000FA0           8   909   409   758   759   762   812
+EDIT                X    0000100C          12   919   772   773
+ENDCLOCK            D    00000F98           8   908   407   734   805   808   811
+ENDREGS             A    00000028           4   945
+EOJ                 I    00000F58           4   882   131   139
+EOJPSW              D    00000F48           8   880   882
+F12T11              F    00001080           4   992
+F12T11A             F    000010B4           4  1004
+F12T8               F    00001018           4   968
+F12T8A              F    0000104C           4   980
+FAILMASK            A    00000024           4   942
+FAILPSW             D    00000F60           8   884   886
+FAILTEST            I    00000F70           4   886   134   137
+IMAGE               1    00000000      801774     0
+K                   U    00000400           1   900   901   902   903
+K64                 U    00010000           1   902  1043  1054  1057  1060  1063  1066   973   975   978   985   987   990   997
+                                                      999  1002  1009  1011  1014
+M3                  X    00000003           1   929
+MB                  U    00100000           1   903   975   978   987   990   999  1002  1011  1014
+MSG                 I    00000E90           4   847   781
+MSGCMD              C    00000EDA           9   873   860   861
+MSGMSG              C    00000EE3          95   874   854   871   852
+MSGMVC              I    00000ED4           6   871   858
+MSGOK               I    00000EA6           2   856   853
+MSGRET              I    00000EC0           4   867   864
+MSGSAVE             F    00000EC8           4   870   850   867
+NUMLOOPS            F    00000F8C           4   905   195   413
+OP1DATA             A    00000004           4   931   182
+OP1LEN              F    00000008           4   932   180   183
+OP1WHERE            A    00000018           4   938   179
+OP1WLEN             F    0000001C           4   939   181
+OP2DATA             A    0000000C           4   933   188
+OP2LEN              F    00000010           4   934   187   189
+OP2WHERE            A    00000014           4   937   186
+OPSWHERE            U    00000014           1   936   200   202   207   209   211   213   215   217   219   221   223   225   227
+                                                      229   231   233   235   237   239   241   243   245   247   249   251   253
+                                                      255   257   259   261   263   265   267   269   271   273   275   277   279
+                                                      281   283   285   287   289   291   293   295   297   299   301   303   305
+                                                      307   309   311   313   315   317   319   321   323   325   327   329   331
+                                                      333   335   337   339   341   343   345   347   349   351   353   355   357
+                                                      359   361   363   365   367   369   371   373   375   377   379   381   383
+                                                      385   387   389   391   393   395   397   401   403   417   420   427   430
+                                                      433   436   439   442   445   448   451   454   458   461   464   467   470
+                                                      473   476   479   482   485   489   492   495   498   501   504   507   510
+                                                      513   516   520   523   526   529   532   535   538   541   544   547   551
+                                                      554   557   560   563   566   569   572   575   578   582   585   588   591
+                                                      594   597   600   603   606   609   613   616   619   622   625   628   631
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    19
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
-K64                 U    00010000           1  4353  4494  4505  4508  4511  4514  4517  4424  4426  4429  4436  4438  4441  4448
-                                                     4450  4453  4460  4462  4465
-LCHANLOG            F    000000B0           4  4614
-M3                  X    00000003           1  4380
-MB                  U    00100000           1  4354  4426  4429  4438  4441  4450  4453  4462  4465
-MCKLOG              F    00000100           4  4646
-MCKNPSW             F    00000070           8  4569
-MCKOPSW             F    00000030           8  4541  4550
-MEASUREB            X    000000B9           1  4617
-MKARCHMD            X    000000A3           1  4605
-MKARS               F    00000120           4  4644
-MKCLKCMP            F    000000E0           8  4630
-MKCPUTIM            F    000000D8           8  4629
-MKCRS               F    000001C0           4  4649
-MKDMGCOD            F    000000F4           4  4633
-MKFAILA             F    000000F8           4  4635
-MKFPRS              D    00000160           8  4647
-MKICODE             F    000000E8           4  4631
-MKLOGOUT            F    00000100           4  4637
-MKMODEL             F    000000FC           4  4636
-MKXSAA              F    000000D4           4  4628
-MONCLS              H    00000094           2  4593
-MONCODE             F    0000009C           4  4600
-MONNUMBR            X    00000095           1  4595
-MPGACCID            X    000000A2           1  4603
-MSG                 I    00000E90           4  4295  4229
-MSGCMD              C    00000EDA           9  4321  4308  4309
-MSGMSG              C    00000EE3          95  4322  4302  4319  4300
-MSGMVC              I    00000ED4           6  4319  4306
-MSGOK               I    00000EA6           2  4304  4301
-MSGRET              I    00000EC0           4  4315  4312
-MSGSAVE             F    00000EC8           4  4318  4298  4315
-NKGRS               F    00000180           4  4648
-NUMLOOPS            F    00000F78           4  4356  3643  3861
-OP1DATA             A    00000004           4  4382  3630
-OP1LEN              F    00000008           4  4383  3628  3631
-OP1WHERE            A    00000018           4  4389  3627
-OP1WLEN             F    0000001C           4  4390  3629
-OP2DATA             A    0000000C           4  4384  3636
-OP2LEN              F    00000010           4  4385  3635  3637
-OP2WHERE            A    00000014           4  4388  3634
-OPSWHERE            U    00000014           1  4387  3648  3650  3655  3657  3659  3661  3663  3665  3667  3669  3671  3673  3675
-                                                     3677  3679  3681  3683  3685  3687  3689  3691  3693  3695  3697  3699  3701
-                                                     3703  3705  3707  3709  3711  3713  3715  3717  3719  3721  3723  3725  3727
-                                                     3729  3731  3733  3735  3737  3739  3741  3743  3745  3747  3749  3751  3753
-                                                     3755  3757  3759  3761  3763  3765  3767  3769  3771  3773  3775  3777  3779
-                                                     3781  3783  3785  3787  3789  3791  3793  3795  3797  3799  3801  3803  3805
-                                                     3807  3809  3811  3813  3815  3817  3819  3821  3823  3825  3827  3829  3831
-                                                     3833  3835  3837  3839  3841  3843  3845  3849  3851  3865  3868  3875  3878
-                                                     3881  3884  3887  3890  3893  3896  3899  3902  3906  3909  3912  3915  3918
-                                                     3921  3924  3927  3930  3933  3937  3940  3943  3946  3949  3952  3955  3958
-                                                     3961  3964  3968  3971  3974  3977  3980  3983  3986  3989  3992  3995  3999
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    25
+                                                      634   637   640   644   647   650   653   656   659   662   665   668   671
+                                                      675   678   681   684   687   690   693   696   699   702   706   709   712
+                                                      715   718   721   726   729
+OVERHEAD            D    00000FA8           8   910   409   757
+PAGE                U    00001000           1   901
+PRTLINE             C    00000FC8          38   916   918   737   772   773   780
+PRTLNG              U    00000044           1   918   779
+R0                  U    00000000           1  1072    76   778   779   782   847   850   852   854   856   867
+R1                  U    00000001           1  1073   197   200   202   207   209   211   213   215   217   219   221   223   225
+                                                      227   229   231   233   235   237   239   241   243   245   247   249   251
+                                                      253   255   257   259   261   263   265   267   269   271   273   275   277
+                                                      279   281   283   285   287   289   291   293   295   297   299   301   303
+                                                      305   307   309   311   313   315   317   319   321   323   325   327   329
+                                                      331   333   335   337   339   341   343   345   347   349   351   353   355
+                                                      357   359   361   363   365   367   369   371   373   375   377   379   381
+                                                      383   385   387   389   391   393   395   397   401   403   417   420   427
+                                                      430   433   436   439   442   445   448   451   454   458   461   464   467
+                                                      470   473   476   479   482   485   489   492   495   498   501   504   507
+                                                      510   513   516   520   523   526   529   532   535   538   541   544   547
+                                                      551   554   557   560   563   566   569   572   575   578   582   585   588
+                                                      591   594   597   600   603   606   609   613   616   619   622   625   628
+                                                      631   634   637   640   644   647   650   653   656   659   662   665   668
+                                                      671   675   678   681   684   687   690   693   696   699   702   706   709
+                                                      712   715   718   721   726   729   736   780   827   829   834   837   861
+                                                      871
+R10                 U    0000000A           1  1082   179   184   186   190   762   763   765
+R11                 U    0000000B           1  1083   180   181   187   762   766
+R12                 U    0000000C           1  1084
+R13                 U    0000000D           1  1085   111   114   115   116   118
+R14                 U    0000000E           1  1086   124   166   746
+R15                 U    0000000F           1  1087   408   738   752   755   760   785   786   797   813   816   817   838
+R2                  U    00000002           1  1074   418   421   428   431   434   437   440   443   446   449   452   455   459
+                                                      462   465   468   471   474   477   480   483   486   490   493   496   499
+                                                      502   505   508   511   514   517   521   524   527   530   533   536   539
+                                                      542   545   548   552   555   558   561   564   567   570   573   576   579
+                                                      583   586   589   592   595   598   601   604   607   610   614   617   620
+                                                      623   626   629   632   635   638   641   645   648   651   654   657   660
+                                                      663   666   669   672   676   679   682   685   688   691   694   697   700
+                                                      703   707   710   713   716   719   722   727   730   778   781   782   829
+                                                      831   848   850   856   857   858   860   867   868
+R3                  U    00000003           1  1075   830   833   834   835
+R4                  U    00000004           1  1076   197   200   202   207   209   211   213   215   217   219   221   223   225
+                                                      227   229   231   233   235   237   239   241   243   245   247   249   251
+                                                      253   255   257   259   261   263   265   267   269   271   273   275   277
+                                                      279   281   283   285   287   289   291   293   295   297   299   301   303
+                                                      305   307   309   311   313   315   317   319   321   323   325   327   329
+                                                      331   333   335   337   339   341   343   345   347   349   351   353   355
+                                                      357   359   361   363   365   367   369   371   373   375   377   379   381
+                                                      383   385   387   389   391   393   395   397   401   403   417   418   420
+                                                      421   427   428   430   431   433   434   436   437   439   440   442   443
+                                                      445   446   448   449   451   452   454   455   458   459   461   462   464
+                                                      465   467   468   470   471   473   474   476   477   479   480   482   483
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    20
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
-                                                     4002  4005  4008  4011  4014  4017  4020  4023  4026  4030  4033  4036  4039
-                                                     4042  4045  4048  4051  4054  4057  4061  4064  4067  4070  4073  4076  4079
-                                                     4082  4085  4088  4092  4095  4098  4101  4104  4107  4110  4113  4116  4119
-                                                     4123  4126  4129  4132  4135  4138  4141  4144  4147  4150  4154  4157  4160
-                                                     4163  4166  4169  4174  4177
-OVERHEAD            D    00000F98           8  4361  3857  4205
-PAGE                U    00001000           1  4352
-PCFETO              A    000000C4           4  4624
-PERACCID            X    000000A1           1  4602
-PERADDR             F    00000098           4  4599
-PERCODE             X    00000096           1  4596
-PERCODMK            U    000000F0           1  4597
-PGMACCID            X    000000A0           1  4601
-PGMDXC              F    00000090           4  4591
-PGMICODE            H    0000008E           2  4590
-PGMIID              F    0000008C           4  4586
-PGMIILC             X    0000008D           1  4588
-PGMIILCM            U    0000000C           1  4589
-PGMNPSW             F    00000068           8  4568
-PGMOPSW             F    00000028           8  4540  4548
-PGMTRX              F    00000090           4  4592
-PRTLINE             C    00000FB8          38  4367  4369  4185  4220  4221  4228
-PRTLNG              U    00000044           1  4369  4227
-R0                  U    00000000           1  4692  3558  4226  4227  4230  4295  4298  4300  4302  4304  4315
-R1                  U    00000001           1  4693  3645  3648  3650  3655  3657  3659  3661  3663  3665  3667  3669  3671  3673
-                                                     3675  3677  3679  3681  3683  3685  3687  3689  3691  3693  3695  3697  3699
-                                                     3701  3703  3705  3707  3709  3711  3713  3715  3717  3719  3721  3723  3725
-                                                     3727  3729  3731  3733  3735  3737  3739  3741  3743  3745  3747  3749  3751
-                                                     3753  3755  3757  3759  3761  3763  3765  3767  3769  3771  3773  3775  3777
-                                                     3779  3781  3783  3785  3787  3789  3791  3793  3795  3797  3799  3801  3803
-                                                     3805  3807  3809  3811  3813  3815  3817  3819  3821  3823  3825  3827  3829
-                                                     3831  3833  3835  3837  3839  3841  3843  3845  3849  3851  3865  3868  3875
-                                                     3878  3881  3884  3887  3890  3893  3896  3899  3902  3906  3909  3912  3915
-                                                     3918  3921  3924  3927  3930  3933  3937  3940  3943  3946  3949  3952  3955
-                                                     3958  3961  3964  3968  3971  3974  3977  3980  3983  3986  3989  3992  3995
-                                                     3999  4002  4005  4008  4011  4014  4017  4020  4023  4026  4030  4033  4036
-                                                     4039  4042  4045  4048  4051  4054  4057  4061  4064  4067  4070  4073  4076
-                                                     4079  4082  4085  4088  4092  4095  4098  4101  4104  4107  4110  4113  4116
-                                                     4119  4123  4126  4129  4132  4135  4138  4141  4144  4147  4150  4154  4157
-                                                     4160  4163  4166  4169  4174  4177  4184  4228  4275  4277  4282  4285  4309
-                                                     4319
-R10                 U    0000000A           1  4702  3627  3632  3634  3638  4210  4211  4213
-R11                 U    0000000B           1  4703  3628  3629  3635  4210  4214
-R12                 U    0000000C           1  4704
-R13                 U    0000000D           1  4705  3559  3562  3563  3564  3566
-R14                 U    0000000E           1  4706  3572  3614  4194
-R15                 U    0000000F           1  4707  3856  4186  4200  4203  4208  4233  4234  4245  4261  4264  4265  4286
-R2                  U    00000002           1  4694  3866  3869  3876  3879  3882  3885  3888  3891  3894  3897  3900  3903  3907
-                                                     3910  3913  3916  3919  3922  3925  3928  3931  3934  3938  3941  3944  3947
-                                                     3950  3953  3956  3959  3962  3965  3969  3972  3975  3978  3981  3984  3987
-                                                     3990  3993  3996  4000  4003  4006  4009  4012  4015  4018  4021  4024  4027
-                                                     4031  4034  4037  4040  4043  4046  4049  4052  4055  4058  4062  4065  4068
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    26
+                                                      485   486   489   490   492   493   495   496   498   499   501   502   504
+                                                      505   507   508   510   511   513   514   516   517   520   521   523   524
+                                                      526   527   529   530   532   533   535   536   538   539   541   542   544
+                                                      545   547   548   551   552   554   555   557   558   560   561   563   564
+                                                      566   567   569   570   572   573   575   576   578   579   582   583   585
+                                                      586   588   589   591   592   594   595   597   598   600   601   603   604
+                                                      606   607   609   610   613   614   616   617   619   620   622   623   625
+                                                      626   628   629   631   632   634   635   637   638   640   641   644   645
+                                                      647   648   650   651   653   654   656   657   659   660   662   663   665
+                                                      666   668   669   671   672   675   676   678   679   681   682   684   685
+                                                      687   688   690   691   693   694   696   697   699   700   702   703   706
+                                                      707   709   710   712   713   715   716   718   719   721   722   726   727
+                                                      729   730   736   827   830   831   835   837
+R5                  U    00000005           1  1077   168   169   172   742   743   744   753   757   784   798   810   815   829
+R6                  U    00000006           1  1078   174   175   182   184   188   190   198   406   415   733   758   800   801
+                                                      802   803   805   806   807   808   811   830
+R7                  U    00000007           1  1079   183   189   195   406   413   733   759   798   800   803   805   808   812
+                                                      815   835
+R8                  U    00000008           1  1080
+R9                  U    00000009           1  1081   112   118   119
+REG2LOW             U    000000DD           1   952
+REG2PATT            U    AABBCCDD           1   951   976   988  1000  1012
+RPTDWSAV            D    00000DF8           8   791   778   782
+RPTSAVE             F    00000DF0           4   788   752   785
+RPTSPEED            I    00000D86           4   752   738
+RPTSVR5             F    00000DF4           4   789   753   784
+SAVE1T4             F    00000410           4   155   197   736
+SAVER2              F    00000420           4   156
+SAVER5              F    00000424           4   157   172   742
+SUBDWORD            I    00000E5C           4   827   760   813
+SUBDWSAV            D    00000E80           8   840   827   837
+SUBTEST             X    00000401           1   149   136
+TEST91              I    00000528           4   165   124
+TESTADDR            D    00000400           8   147
+TESTNUM             X    00000400           1   148   133   175
+TICKSAAA            P    00000FB0           8   912   765   768
+TICKSBBB            P    00000FB8           8   913   766   770
+TICKSTOT            P    00000FC0           8   914   768   769   770   773
+TIMEOPT             X    00000408           1   152   130   165
+TNUM                X    00000000           1   926   174
+TRTE2TST            J    00000000      801774    75    78    82    86    76
+TRTENEXT            U    00000034           1   949   743
+TRTEPERF            A    00001018           4   958   168
+TRTETEST            4    00000000          52   925   169
+TRTO1L0             X    000015F0           4  1031
+TRTO1L11            X    00001DF0           4  1033
+TRTO1LF0            X    000025F0           4  1035   996  1008
+TRTOP10             X    000010F0           4  1023
+TRTOP111            X    000011F0           4  1025
+TRTOP1F0            X    000012F0           4  1027
+TRTOP1F1            X    000013F0           4  1029   972   984
+TRTOP20             X    00002DF0           1  1042
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    21
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
-                                                     4071  4074  4077  4080  4083  4086  4089  4093  4096  4099  4102  4105  4108
-                                                     4111  4114  4117  4120  4124  4127  4130  4133  4136  4139  4142  4145  4148
-                                                     4151  4155  4158  4161  4164  4167  4170  4175  4178  4226  4229  4230  4277
-                                                     4279  4296  4298  4304  4305  4306  4308  4315  4316
-R3                  U    00000003           1  4695  4278  4281  4282  4283
-R4                  U    00000004           1  4696  3645  3648  3650  3655  3657  3659  3661  3663  3665  3667  3669  3671  3673
-                                                     3675  3677  3679  3681  3683  3685  3687  3689  3691  3693  3695  3697  3699
-                                                     3701  3703  3705  3707  3709  3711  3713  3715  3717  3719  3721  3723  3725
-                                                     3727  3729  3731  3733  3735  3737  3739  3741  3743  3745  3747  3749  3751
-                                                     3753  3755  3757  3759  3761  3763  3765  3767  3769  3771  3773  3775  3777
-                                                     3779  3781  3783  3785  3787  3789  3791  3793  3795  3797  3799  3801  3803
-                                                     3805  3807  3809  3811  3813  3815  3817  3819  3821  3823  3825  3827  3829
-                                                     3831  3833  3835  3837  3839  3841  3843  3845  3849  3851  3865  3866  3868
-                                                     3869  3875  3876  3878  3879  3881  3882  3884  3885  3887  3888  3890  3891
-                                                     3893  3894  3896  3897  3899  3900  3902  3903  3906  3907  3909  3910  3912
-                                                     3913  3915  3916  3918  3919  3921  3922  3924  3925  3927  3928  3930  3931
-                                                     3933  3934  3937  3938  3940  3941  3943  3944  3946  3947  3949  3950  3952
-                                                     3953  3955  3956  3958  3959  3961  3962  3964  3965  3968  3969  3971  3972
-                                                     3974  3975  3977  3978  3980  3981  3983  3984  3986  3987  3989  3990  3992
-                                                     3993  3995  3996  3999  4000  4002  4003  4005  4006  4008  4009  4011  4012
-                                                     4014  4015  4017  4018  4020  4021  4023  4024  4026  4027  4030  4031  4033
-                                                     4034  4036  4037  4039  4040  4042  4043  4045  4046  4048  4049  4051  4052
-                                                     4054  4055  4057  4058  4061  4062  4064  4065  4067  4068  4070  4071  4073
-                                                     4074  4076  4077  4079  4080  4082  4083  4085  4086  4088  4089  4092  4093
-                                                     4095  4096  4098  4099  4101  4102  4104  4105  4107  4108  4110  4111  4113
-                                                     4114  4116  4117  4119  4120  4123  4124  4126  4127  4129  4130  4132  4133
-                                                     4135  4136  4138  4139  4141  4142  4144  4145  4147  4148  4150  4151  4154
-                                                     4155  4157  4158  4160  4161  4163  4164  4166  4167  4169  4170  4174  4175
-                                                     4177  4178  4184  4275  4278  4279  4283  4285
-R5                  U    00000005           1  4697  3616  3617  3620  4190  4191  4192  4201  4205  4232  4246  4258  4263  4277
-R6                  U    00000006           1  4698  3622  3623  3630  3632  3636  3638  3646  3854  3863  4181  4206  4248  4249
-                                                     4250  4251  4253  4254  4255  4256  4259  4278
-R7                  U    00000007           1  4699  3631  3637  3643  3854  3861  4181  4207  4246  4248  4251  4253  4256  4260
-                                                     4263  4283
-R8                  U    00000008           1  4700
-R9                  U    00000009           1  4701  3560  3566  3567
-REG2LOW             U    000000DD           1  4403
-REG2PATT            U    AABBCCDD           1  4402  4427  4439  4451  4463
-RPTDWSAV            D    00000DF8           8  4239  4226  4230
-RPTSAVE             F    00000DF0           4  4236  4200  4233
-RPTSPEED            I    00000D86           4  4200  4186
-RPTSVR5             F    00000DF4           4  4237  4201  4232
-RSTNPSW             F    00000000           8  4534
-RSTOPSW             F    00000008           8  4535
-SAVE1T4             F    00000410           4  3603  3645  4184
-SAVER2              F    00000420           4  3604
-SAVER5              F    00000424           4  3605  3620  4190
-SCANOUT             X    00000080           1  4572  4573
-SCANOUTL            U    00000000           1  4573
-SSARCHMD            X    000000A3           1  4604
-SSARS               F    00000120           4  4660
-SSCLKCMP            F    000000E0           8  4654
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    27
+TRTOP211            X    00022EF0           1  1045
+TRTOP2F0            X    00022FF0           1  1047
+TRTOP411            X    000230F0           1  1049
+TRTOP4F0            X    000232F0           1  1051
+TRTOP811            X    000234F0           1  1053
+TRTOP8F0            X    000435F0           1  1056
+TRTOP8F1            X    000636F0           1  1059
+TRTOPCF0            X    000837F0           1  1062   997  1009
+TRTOPCF1            X    000A39EE           1  1065   973   985
+TST91LOP            U    00000532           1   171   745
+=AL2(L'MSGMSG)      R    00000F7E           2   896   852
+=CL5'TRTE'          C    00000F80           5   897   737
+=F'0'               F    00000F74           4   893   744
+=F'1'               F    00000F78           4   894   833
+=H'0'               H    00000F7C           2   895   847
+=P'4294967296'      P    00000F85           6   898   769
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    22
 
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+MACRO   DEFN  REFERENCES
 
-SSCPUTIM            F    000000D8           8  4653
-SSCRS               F    000001C0           4  4663
-SSFPRS              D    00000160           8  4661
-SSGRS               F    00000180           4  4662
-SSMODEL             F    0000010C           4  4658
-SSPREFIX            F    00000108           4  4657
-SSPSW               F    00000100           8  4656
-SSXSAA              A    000000D4           4  4652
-STFLDATA            F    000000C8           4  4625
-SUBDWORD            I    00000E5C           4  4275  4208  4261
-SUBDWSAV            D    00000E80           8  4288  4275  4285
-SUBTEST             X    00000401           1  3597  3584
-SVCICODE            H    0000008A           2  4584
-SVCIID              F    00000088           4  4580
-SVCIILC             X    00000089           1  4582
-SVCIILCM            U    0000000C           1  4583
-SVCNPSW             F    00000060           8  4567
-SVCOPSW             F    00000020           8  4539  4546
-TEST91              I    00000528           4  3613  3572
-TESTADDR            D    00000400           8  3595
-TESTNUM             X    00000400           1  3596  3581  3623
-TICKSAAA            P    00000FA0           8  4363  4213  4216
-TICKSBBB            P    00000FA8           8  4364  4214  4218
-TICKSTOT            P    00000FB0           8  4365  4216  4217  4218  4221
-TIMEOPT             X    00000408           1  3600  3578  3613
-TIMER               F    00000050           4  4563
-TNUM                X    00000000           1  4377  3622
-TRTE2TST            J    00000000      801758  3512  3515  3522  3530  3532
-TRTENEXT            U    00000034           1  4400  4191
-TRTEPERF            A    00001008           4  4409  3616
-TRTETEST            4    00000000          52  4376  3617
-TRTO1L0             X    000015E0           4  4482
-TRTO1L11            X    00001DE0           4  4484
-TRTO1LF0            X    000025E0           4  4486  4447  4459
-TRTOP10             X    000010E0           4  4474
-TRTOP111            X    000011E0           4  4476
-TRTOP1F0            X    000012E0           4  4478
-TRTOP1F1            X    000013E0           4  4480  4423  4435
-TRTOP20             X    00002DE0           1  4493
-TRTOP211            X    00022EE0           1  4496
-TRTOP2F0            X    00022FE0           1  4498
-TRTOP411            X    000230E0           1  4500
-TRTOP4F0            X    000232E0           1  4502
-TRTOP811            X    000234E0           1  4504
-TRTOP8F0            X    000435E0           1  4507
-TRTOP8F1            X    000636E0           1  4510
-TRTOPCF0            X    000837E0           1  4513  4448  4460
-TRTOPCF1            X    000A39DE           1  4516  4424  4436
-TST91LOP            U    00000532           1  3619  4193
-TTDES               F    00000054           4  4564
-UA0                 F    00000010           8  4536
-UA1                 F    0000004C           4  4561
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    28
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
-UA2                 F    000000A4           4  4606
-UA3                 F    000000B4           4  4615
-UA4                 X    000000B8           1  4616
-UA5                 X    000000CC           8  4626
-UA6                 X    000000EC           8  4632
-UA7                 F    00000118           8  4643
-UA8                 X    00000180          32  4672
-ZBRKADDR            A    00000110           8  4642
-ZEMONCNT            F    0000010C           4  4641
-ZEMONCTR            A    00000100           8  4639
-ZEMONSIZ            F    00000108           4  4640
-ZEXTNPSW            X    000001B0          16  4675
-ZEXTOPSW            X    00000130          16  4667
-ZIONPSW             X    000001F0          16  4679
-ZIOOPSW             X    00000170          16  4671
-ZMCKNPSW            X    000001E0          16  4678
-ZMCKOPSW            X    00000160          16  4670
-ZMKFAILA            F    000000F8           8  4634
-ZMONCODE            F    000000B0           8  4609
-ZPGMNPSW            X    000001D0          16  4677
-ZPGMOPSW            X    00000150          16  4669
-ZPGMTRX             F    000000A8           8  4608
-ZRSTNPSW            X    000001A0          16  4674
-ZRSTOPSW            X    00000120          16  4666
-ZSASDISP            U    000011C0           1  4680
-ZSVCNPSW            X    000001C0          16  4676
-ZSVCOPSW            X    00000140          16  4668
-=AL2(L'MSGMSG)      R    00000F6A           2  4347  4300
-=CL5'TRTE'          C    00000F6C           5  4348  4185
-=F'0'               F    00000F60           4  4344  4192
-=F'1'               F    00000F64           4  4345  4281
-=H'0'               H    00000F68           2  4346  4295
-=P'4294967296'      P    00000F71           6  4349  4217
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    29
-
- MACRO     DEFN  REFERENCES
-
-ANTR        146
-APROB       278
-ARCHIND     438   3468
-ARCHLVL     579   3467
-ASAIPL      705   3528
-ASALOAD     785   3511
-ASAREA      840   4526
-ASAZAREA   1025
-CPUWAIT    1108
-DSECTS     1434   4523
-DWAIT      1637   4329   4334
-DWAITEND   1694   4328
-ENADEV     1702
-ESA390     1802
-IOCB       1813
-IOCBDS     1989
-IOFMT      2023
-IOINIT     2361
-IOTRFR     2402
-ORB        2450
-POINTER    2639
-PSWFMT     2667
-RAWAIT     2801
-RAWIO      2897
-SIGCPU     3055
-SMMGR      3113
-SMMGRB     3213
-TRAP128    3262
-TRAP64     3239   3513   3516
-TRAPS      3275
-ZARCH      3349
-ZEROH      3361
-ZEROL      3389
-ZEROLH     3417
-ZEROLL     3440
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    30
+No defined macros
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    23
 
    DESC     SYMBOL    SIZE       POS          ADDR
 
 Entry: 0
 
-Image      IMAGE     801758  00000-C3BDD  00000-C3BDD
-  Region   CODE      801758  00000-C3BDD  00000-C3BDD
-    CSECT  TRTE2TST  801758  00000-C3BDD  00000-C3BDD
-ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           08 Oct 2022 13:18:57  Page    31
+Image      IMAGE     801774  00000-C3BED  00000-C3BED
+  Region             801774  00000-C3BED  00000-C3BED
+    CSECT  TRTE2TST  801774  00000-C3BED  00000-C3BED
+ASMA Ver. 0.2.1              TRTE-02-performance (Test TRTE instructions)                           09 Oct 2022 18:37:28  Page    24
 
    STMT                         FILE NAME
 
 1     /devstor/dev/satk/samples/tests/TRTE-02-performance.asm
-2     /home/tn529/dev/satk/srcasm/satk.mac
 
 
 ** NO ERRORS FOUND **

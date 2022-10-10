@@ -55,56 +55,41 @@
 *
 *  Example Hercules Testcase:
 *
+*     *Testcase TRTE-02-performance (Test TRTE instructions)
+*     mainsize    16
+*     numcpu      1
+*     sysclear
+*     archlvl     z/Arch
 *
-*        *Testcase TRTE-02-performance (Test TRTE instructions)
-*        diag8cmd enable      #used for message to Hercules console
+*     loadcore    "$(testpath)/TRTE-02-performance.core" 0x0
 *
-*        archlvl  S/370
-*        facility enable  HERC_370_EXTENSION
+*     diag8cmd    enable    # (needed for messages to Hercules console)
+*     #r           408=ff    # (enable timing tests)
+*     runtest     200       # (test duration, depends on host)
+*     diag8cmd    disable   # (reset back to default)
 *
-*        mainsize    16
-*        numcpu      1
-*        sysclear
-*
-*        loadcore    "$(testpath)/TRTE-02-performance"
-*
-*        r           408=ff   # (enable timing tests)
-*        runtest     20       # (depends on the host)
-*
-*        diag8cmd disable
-*        *Done
-*
+*     *Done
 *
 ***********************************************************************
-                                                                EJECT
-         PRINT OFF
-         COPY  'satk.mac'
-         PRINT ON
-                                                                SPACE
-***********************************************************************
-*        SATK prolog stuff...
-***********************************************************************
-                                                                SPACE
-         ARCHLVL  SET=2,ZARCH=NO,MNOTE=NO
-                                                                SPACE 2
-***********************************************************************
-*        Initiate the TRTE2TST CSECT in the CODE region
-*        with the location counter at 0
-***********************************************************************
-                                                                SPACE
-TRTE2TST ASALOAD  REGION=CODE
                                                                 SPACE 3
-***********************************************************************
-*        Create IPL (restart) PSW
-***********************************************************************
-                                                                SPACE
-         ASAIPL   IA=BEGIN
+TRTE2TST START 0
+         USING TRTE2TST,R0            Low core addressability
+                                                                SPACE 4
+         ORG   TRTE2TST+X'1A0'        z/Architecure RESTART PSW
+         DC    X'0000000180000000'
+         DC    AD(BEGIN)
+                                                                SPACE 2
+         ORG   TRTE2TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+         DC    X'0002000180000000'
+         DC    AD(X'DEAD')
+                                                                SPACE 4
+         ORG   TRTE2TST+X'200'        Start of actual test program...
                                                                 EJECT
 ***********************************************************************
 *               The actual "TRTE2TST" program itself...
 ***********************************************************************
 *
-*  Architecture Mode: 370
+*  Architecture Mode: z/Arch
 *  Register Usage:
 *
 *   R0       (work)
@@ -123,7 +108,6 @@ TRTE2TST ASALOAD  REGION=CODE
 *
 ***********************************************************************
                                                                 SPACE
-         USING  ASA,R0          Low core addressability
          USING  BEGIN,R13        FIRST Base Register
          USING  BEGIN+4096,R9   SECOND Base Register
                                                                 SPACE
@@ -160,7 +144,7 @@ BEGIN    BALR  R13,0             Initalize FIRST base register
                                                                SPACE 2
          ORG   BEGIN+X'200'
 
-TESTADDR DS    0D                Where test/subtest numbers will go
+TESTADDR DS    0D         Where test/subtest numbers will go
 TESTNUM  DC    X'99'      Test number of active test
 SUBTEST  DC    X'99'      Active test sub-test number
                                                                SPACE 2
@@ -178,11 +162,11 @@ SAVER5   DC    F'0'
 *        TEST91                 Time TRTE instruction  (speed test)
 ***********************************************************************
                                                                 SPACE
-TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
-         BZR   R14              No, skip timing tests
+TEST91   TM    TIMEOPT,X'FF'      Is timing tests option enabled?
+         BZR   R14                No, skip timing tests
                                                                 SPACE
-         LA    R5,TRTEPERF         Point R5 --> testing control table
-         USING TRTETEST,R5         What each table entry looks like
+         LA    R5,TRTEPERF        Point R5 --> testing control table
+         USING TRTETEST,R5        What each table entry looks like
 *
 TST91LOP EQU   *
          ST    R5,SAVER5          save current pref table base
@@ -192,17 +176,17 @@ TST91LOP EQU   *
 *
 **       Initialize operand data  (move data to testing address)
 *
-         L     R10,OP1WHERE         Where to move operand-1 data to
-         L     R11,OP1LEN           operand-1 length
+         L     R10,OP1WHERE        Where to move operand-1 data to
+         L     R11,OP1LEN          operand-1 length
          ST    R11,OP1WLEN            and save for later
-         L     R6,OP1DATA           Where op1 data is right now
-         L     R7,OP1LEN            How much of it there is
+         L     R6,OP1DATA          Where op1 data is right now
+         L     R7,OP1LEN           How much of it there is
          MVCL  R10,R6
 *
-         L     R10,OP2WHERE         Where to move operand-2 data to
-         L     R11,OP2LEN           How much of it there is
-         L     R6,OP2DATA           Where op2 data is right now
-         L     R7,OP2LEN             How much of it there is
+         L     R10,OP2WHERE        Where to move operand-2 data to
+         L     R11,OP2LEN          How much of it there is
+         L     R6,OP2DATA          Where op2 data is right now
+         L     R7,OP2LEN           How much of it there is
          MVCL  R10,R6
                                                                 SPACE 2
 *
@@ -893,9 +877,13 @@ MSGMSG   DC    CL95' '                The message text to be displayed
 *        Normal completion or Abnormal termination PSWs
 ***********************************************************************
                                                                 SPACE 5
-EOJ      DWAITEND LOAD=YES          Normal completion
+EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+                                                                SPACE
+EOJ      LPSWE EOJPSW               Normal completion
                                                                 SPACE 5
-FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
+FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+                                                                SPACE
+FAILTEST LPSWE FAILPSW              Abnormal termination
                                                                 EJECT
 ***********************************************************************
 *        Working Storage
@@ -1071,13 +1059,6 @@ TRTOPCF0 DC    480X'00',X'00F0',28X'00'     stop on X'F0'
 TRTOPCF1 DC    480X'00',X'0000',X'00F1',28X'00'
          ORG   *+2*K64
                                                                  EJECT
-***********************************************************************
-*        (other DSECTS needed by SATK)
-***********************************************************************
-                                                                SPACE
-         DSECTS PRINT=ON,NAME=(ASA)
-         PRINT ON
-                                                                SPACE
 ***********************************************************************
 *        Register equates
 ***********************************************************************

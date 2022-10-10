@@ -1,7 +1,7 @@
  TITLE '            TRTE-01-basic (Test TRTE instructions)'
 ***********************************************************************
 *
-*            TRTE instruction tests
+*        TRTE instruction tests
 *
 *        NOTE: This test is based the CLCL-et-al Test
 *              modified to only test the TRTE instruction.
@@ -25,62 +25,44 @@
 *
 *  Example Hercules Testcase:
 *
-*         *Testcase TRTE-01-basic (Test TRTE instruction)
+*        *Testcase TRTE-01-basic (Test TRTE instruction)
 *
 *        # ------------------------------------------------------------
-*        # This tests only the basic function of the TRTE instruction.
-*        # Specification exceptions are NOT tested.
+*        #  This tests only the basic function of the TRTE instruction.
+*        #  Specification Exceptions are NOT tested.
 *        # ------------------------------------------------------------
 *
-*        # ------------------------------------------------------------
-*        # need facility bit 26 enabled for:
-*        #       026_PARSING_ENHANCE      *Parsing-Enhancement Facility
-*        #       which is not included in archlvl 390
-*        #       so use backport to 370
-*        # ------------------------------------------------------------
-*
-*        archlvl  S/370
-*        facility enable  HERC_370_EXTENSION
 *        mainsize    16
 *        numcpu      1
-*
 *        sysclear
-*        loadcore    "TRTE-01-basic.core" 0x0
+*        archlvl     z/Arch
+*
+*        loadcore    "$(testpath)/TRTE-01-basic.core" 0x0
 *
 *        runtest     1
 *
 *        *Done
 *
 ***********************************************************************
-                                                                EJECT
-         PRINT OFF
-         COPY  'satk.mac'
-         PRINT ON
-                                                                SPACE
-***********************************************************************
-*        SATK prolog stuff...
-***********************************************************************
-                                                                SPACE
-         ARCHLVL  SET=2,ZARCH=NO,MNOTE=NO
-                                                                EJECT
-***********************************************************************
-*        Initiate the TRTE1TST CSECT in the CODE region
-*        with the location counter at 0
-***********************************************************************
-                                                                SPACE
-TRTE1TST ASALOAD  REGION=CODE
+                                                                SPACE 2
+TRTE1TST START 0
+         USING TRTE1TST,R0            Low core addressability
+                                                                SPACE 2
+         ORG   TRTE1TST+X'1A0'        z/Architecure RESTART PSW
+         DC    X'0000000180000000'
+         DC    AD(BEGIN)
+                                                                SPACE 2
+         ORG   TRTE1TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+         DC    X'0002000180000000'
+         DC    AD(X'DEAD')
                                                                 SPACE 3
-***********************************************************************
-*        Create IPL (restart) PSW
-***********************************************************************
-                                                                SPACE
-         ASAIPL   IA=BEGIN
+         ORG   TRTE1TST+X'200'        Start of actual test program...
                                                                 EJECT
 ***********************************************************************
 *               The actual "TRTE1TST" program itself...
 ***********************************************************************
 *
-*  Architecture Mode: 370
+*  Architecture Mode: z/Arch
 *  Register Usage:
 *
 *   R0       (work)
@@ -98,10 +80,9 @@ TRTE1TST ASALOAD  REGION=CODE
 *
 ***********************************************************************
                                                                 SPACE
-         USING  ASA,R0          Low core addressability
          USING  BEGIN,R8        FIRST Base Register
          USING  BEGIN+4096,R9   SECOND Base Register
-                                                              SPACE
+                                                                SPACE
 BEGIN    BALR  R8,0             Initalize FIRST base register
          BCTR  R8,0             Initalize FIRST base register
          BCTR  R8,0             Initalize FIRST base register
@@ -132,7 +113,7 @@ BEGIN    BALR  R8,0             Initalize FIRST base register
                                                                SPACE 2
          ORG   BEGIN+X'200'
 
-TESTADDR DS    0D                Where test/subtest numbers will go
+TESTADDR DS    0D         Where test/subtest numbers will go
 TESTNUM  DC    X'99'      Test number of active test
 SUBTEST  DC    X'99'      Active test sub-test number
                                                                SPACE 2
@@ -220,10 +201,14 @@ SAVETRT  DC    4D'0'               (saved R1/R4 from TRT results)
 *        Normal completion or Abnormal termination PSWs
 ***********************************************************************
                                                                 SPACE 5
-EOJ      DWAITEND LOAD=YES          Normal completion
+EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+                                                                SPACE
+EOJ      LPSWE EOJPSW               Normal completion
                                                                 SPACE 5
-FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
-                                                                SPACE 5
+FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+                                                                SPACE
+FAILTEST LPSWE FAILPSW              Abnormal termination
+                                                                SPACE 7
 ***********************************************************************
 *        Working Storage
 ***********************************************************************
@@ -1231,13 +1216,6 @@ TRTOPCF0 DC    480X'00',X'00F0',28X'00'     stop on X'F0'
 TRTOPCF1 DC    480X'00',X'0000',X'00F1',28X'00'     stop on X'F1'
          ORG   *+2*K64
                                                                  EJECT
-***********************************************************************
-*        (other DSECTS needed by SATK)
-***********************************************************************
-                                                                SPACE
-         DSECTS PRINT=OFF,NAME=(ASA)
-         PRINT ON
-                                                                SPACE
 ***********************************************************************
 *        Register equates
 ***********************************************************************
