@@ -1,0 +1,3439 @@
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     1
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                               2 ***********************************************************************
+                                               3 *
+                                               4 *        TRTE instruction tests
+                                               5 *
+                                               6 *        NOTE: This test is based the CLCL-et-al Test
+                                               7 *              modified to only test the TRTE instruction.
+                                               8 *
+                                               9 *        James Wekel October 2022
+                                              10 ***********************************************************************
+
+
+                                              12 ***********************************************************************
+                                              13 *
+                                              14 *            TRTE basic instruction tests
+                                              15 *
+                                              16 ***********************************************************
+                                              17 *  This program tests proper functioning of the TRTE
+                                              18 *  instructions. Specification exceptions are not tested.
+                                              19 *
+                                              20 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                              21 *  obvious coding errors.  None of the tests are thorough.  They are
+                                              22 *  NOT designed to test all aspects of any of the instructions.
+                                              23 *
+                                              24 ***********************************************************************
+                                              25 *
+                                              26 *  Example Hercules Testcase:
+                                              27 *
+                                              28 *        *Testcase TRTE-01-basic (Test TRTE instruction)
+                                              29 *
+                                              30 *        # ------------------------------------------------------------
+                                              31 *        #  This tests only the basic function of the TRTE instruction.
+                                              32 *        #  Specification Exceptions are NOT tested.
+                                              33 *        # ------------------------------------------------------------
+                                              34 *
+                                              35 *        mainsize    16
+                                              36 *        numcpu      1
+                                              37 *        sysclear
+                                              38 *        archlvl     z/Arch
+                                              39 *
+                                              40 *        loadcore    "$(testpath)/TRTE-01-basic.core" 0x0
+                                              41 *
+                                              42 *        runtest     1
+                                              43 *
+                                              44 *        *Done
+                                              45 *
+                                              46 ***********************************************************************
+
+
+                            000000  0E3F59    48 TRTE1TST START 0
+000000                      000000            49          USING TRTE1TST,R0            Low core addressability
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     2
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000000                      000000  0001A0    51          ORG   TRTE1TST+X'1A0'        z/Architecure RESTART PSW
+0001A0  00000001 80000000                     52          DC    X'0000000180000000'
+0001A8  00000000 00000200                     53          DC    AD(BEGIN)
+
+
+0001B0                      0001B0  0001D0    55          ORG   TRTE1TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+0001D0  00020001 80000000                     56          DC    X'0002000180000000'
+0001D8  00000000 0000DEAD                     57          DC    AD(X'DEAD')
+
+
+
+0001E0                      0001E0  000200    59          ORG   TRTE1TST+X'200'        Start of actual test program...
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     3
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                              61 ***********************************************************************
+                                              62 *               The actual "TRTE1TST" program itself...
+                                              63 ***********************************************************************
+                                              64 *
+                                              65 *  Architecture Mode: z/Arch
+                                              66 *  Register Usage:
+                                              67 *
+                                              68 *   R0       (work)
+                                              69 *   R1       TRTE - Function-Code Table Address
+                                              70 *   R2       TRTE - First-Operand Address
+                                              71 *   R3       TRTE - First-Operand Length
+                                              72 *   R4       TRTE - Function-Code
+                                              73 *   R5       Testing control table - base current entry
+                                              74 *   R6-R7    (work)
+                                              75 *   R8       First base register
+                                              76 *   R9       Second base register
+                                              77 *   R10-R13  (work)
+                                              78 *   R14      Subroutine call
+                                              79 *   R15      Secondary Subroutine call or work
+                                              80 *
+                                              81 ***********************************************************************
+
+000200                      000200            83          USING  BEGIN,R8        FIRST Base Register
+000200                      001200            84          USING  BEGIN+4096,R9   SECOND Base Register
+
+000200  0580                                  86 BEGIN    BALR  R8,0             Initalize FIRST base register
+000202  0680                                  87          BCTR  R8,0             Initalize FIRST base register
+000204  0680                                  88          BCTR  R8,0             Initalize FIRST base register
+
+000206  4190 8800                   000800    90          LA    R9,2048(,R8)     Initalize SECOND base register
+00020A  4190 9800                   000800    91          LA    R9,2048(,R9)     Initalize SECOND base register
+                                              92 *
+                                              93 **       Run the tests...
+                                              94 *
+00020E  45E0 8302                   000502    95          BAL   R14,TEST01       Test TRTE   instruction
+                                              96 *
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     4
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                              98 ***********************************************************************
+                                              99 *         Test for normal or unexpected test completion...
+                                             100 ***********************************************************************
+
+000212  95FC 8200                   000400   102          CLI   TESTNUM,X'FC'    Did we end on expected test?
+000216  4770 83F0                   0005F0   103          BNE   FAILTEST         No?! Then FAIL the test!
+
+00021A  9503 8201                   000401   105          CLI   SUBTEST,X'03'    Did we end on expected SUB-test?
+00021E  4770 83F0                   0005F0   106          BNE   FAILTEST         No?! Then FAIL the test!
+
+000222  47F0 83D8                   0005D8   108          B     EOJ              Yes, then normal completion!
+
+
+
+
+                                             110 ***********************************************************************
+                                             111 *        Fixed test storage locations ...
+                                             112 ***********************************************************************
+
+
+000226                      000226  000400   114          ORG   BEGIN+X'200'
+                                             115
+000400                                       116 TESTADDR DS    0D         Where test/subtest numbers will go
+000400  99                                   117 TESTNUM  DC    X'99'      Test number of active test
+000401  99                                   118 SUBTEST  DC    X'99'      Active test sub-test number
+
+
+000402                      000402  000502   120          ORG   *+X'100'
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     5
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             122 ***********************************************************************
+                                             123 *        TEST01                   Test TRTE instruction
+                                             124 ***********************************************************************
+
+000502  9201 8200                   000400   126 TEST01   MVI   TESTNUM,X'01'
+                                             127
+000506  4150 83F8                   0005F8   128          LA    R5,TRTECTL          Point R5 --> testing control table
+00050A                      000000           129          USING TRTETEST,R5         What each table entry looks like
+                                             130
+                            00050A  000001   131 TST1LOOP EQU   *
+00050A  4360 5000                   000000   132          IC    R6,TNUM            Set test number
+00050E  4260 8200                   000400   133          STC   R6,TESTNUM
+                                             134 *
+                                             135 **       Initialize operand data  (move data to testing address)
+                                             136 *
+000512  58A0 5018                   000018   137          L     R10,OP1WHERE         Where to move operand-1 data to
+000516  58B0 5008                   000008   138          L     R11,OP1LEN           operand-1 length
+00051A  50B0 501C                   00001C   139          ST    R11,OP1WLEN            and save for later
+00051E  5860 5004                   000004   140          L     R6,OP1DATA           Where op1 data is right now
+000522  5870 5008                   000008   141          L     R7,OP1LEN            How much of it there is
+000526  0EA6                                 142          MVCL  R10,R6
+                                             143 *
+000528  58A0 5014                   000014   144          L     R10,OP2WHERE         Where to move operand-2 data to
+00052C  58B0 5010                   000010   145          L     R11,OP2LEN           How much of it there is
+000530  5860 500C                   00000C   146          L     R6,OP2DATA           Where op2 data is right now
+000534  5870 5010                   000010   147          L     R7,OP2LEN             How much of it there is
+000538  0EA6                                 148          MVCL  R10,R6
+
+
+
+                                             150 **       Execute TRTE instruction and check for expected condition code
+
+00053A  9814 5014                   000014   152          LM    R1,R4,OPSWHERE     get TRTE input
+                                             153
+00053E  1B77                                 154          SR    R7,R7              get M3 bits for TRTE
+000540  4370 5003                   000003   155          IC    R7,M3              (M3)
+000544  4270 8356                   000556   156          STC   R7,TRTEMOD+2       DYNAMICALLY MODIFIED CODE
+                                             157
+000548  58B0 5024                   000024   158          L     R11,FAILMASK       (failure CC)
+00054C  89B0 0004                   000004   159          SLL   R11,4              (shift to BC instr CC position)
+                                             160
+000550  9200 8201                   000401   161          MVI   SUBTEST,X'00'      (primary TRT)
+000554  B9BF 0024                            162 TRTEMOD  TRTE  R2,R4,0             Start with TRTE and m3=0
+                                             163
+000558  9014 83A8                   0005A8   164          STM   R1,R4,SAVETRT      (save R1/R4 results)
+00055C  44B0 839E                   00059E   165          EX    R11,TRTEBC          fail if...
+000560  4710 8354                   000554   166          BC    B'0001',TRTEMOD     cc=3, not finished
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     6
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             168 **       Verify R2,R3,R4 contain (or still contain!) expected values
+                                             169
+000564  98AC 5028                   000028   170          LM    R10,R12,ENDREGS
+                                             171
+000568  9201 8201                   000401   172          MVI   SUBTEST,X'01'      (R2 result - op1 found addr)
+00056C  152A                                 173          CLR   R2,R10              R2 correct?
+00056E  4770 8398                   000598   174          BNE   TRTEFAIL           No, FAILTEST!
+                                             175
+000572  9202 8201                   000401   176          MVI   SUBTEST,X'02'      (R3 result - op1 remaining len)
+000576  153B                                 177          CLR   R3,R11              R3 correct
+000578  4770 8398                   000598   178          BNE   TRTEFAIL           No, FAILTEST!
+                                             179
+00057C  9203 8201                   000401   180          MVI   SUBTEST,X'03'      (R4 result - FC code)
+000580  154C                                 181          CLR   R4,R12              R4 correct
+000582  4770 8398                   000598   182          BNE   TRTEFAIL           No, FAILTEST!
+                                             183
+000586  4150 5034                   000034   184          LA    R5,TRTENEXT        Go on to next table entry
+00058A  D503 83F4 5000      0005F4  000000   185          CLC   =F'0',0(R5)        End of table?
+000590  4770 830A                   00050A   186          BNE   TST1LOOP           No, loop...
+000594  47F0 839C                   00059C   187          B     TRTEDONE            Done! (success!)
+
+
+000598  41E0 83F0                   0005F0   189 TRTEFAIL LA    R14,FAILTEST       Unexpected results!
+00059C  07FE                                 190 TRTEDONE BR    R14                Return to caller or FAILTEST
+
+
+00059E  4700 8398                   000598   192 TRTEBC   BC    0,TRTEFAIL          (fail if unexpected condition code)
+
+
+0005A8  00000000 00000000                    194 SAVETRT  DC    4D'0'               (saved R1/R4 from TRT results)
+
+
+0005C8                                       196          DROP  R5
+0005C8                                       197          DROP  R15
+0005C8                      000200           198          USING BEGIN,R8
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     7
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             200 ***********************************************************************
+                                             201 *        Normal completion or Abnormal termination PSWs
+                                             202 ***********************************************************************
+
+
+
+
+
+0005C8  00020001 80000000                    204 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+0005D8  B2B2 83C8                   0005C8   206 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+0005E0  00020001 80000000                    208 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+0005F0  B2B2 83E0                   0005E0   210 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                             212 ***********************************************************************
+                                             213 *        Working Storage
+                                             214 ***********************************************************************
+
+
+0005F4                                       216          LTORG ,                Literals pool
+0005F4  00000000                             217                =F'0'
+
+                            000400  000001   219 K        EQU   1024             One KB
+                            001000  000001   220 PAGE     EQU   (4*K)            Size of one page
+                            010000  000001   221 K64      EQU   (64*K)           64 KB
+                            100000  000001   222 MB       EQU   (K*K)             1 MB
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     8
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                            000000  0E3F59   224 TRTE1TST CSECT ,
+
+
+                                             226 ***********************************************************************
+                                             227 *        TRTETEST DSECT
+                                             228 ***********************************************************************
+
+
+                                             230 TRTETEST DSECT ,
+000000  00                                   231 TNUM     DC    X'00'          TRTE table Number
+000001  00                                   232          DC    X'00'
+000002  00                                   233          DC    X'00'
+000003  00                                   234 M3       DC    X'00'          M3 byte stored into TRTE instruction
+
+
+
+000004  00000000                             236 OP1DATA  DC    A(0)           Pointer to Operand-1 data
+000008  00000000                             237 OP1LEN   DC    F'0'           How much data is there - 1
+00000C  00000000                             238 OP2DATA  DC    A(0)           Pointer to FC table data
+000010  00000000                             239 OP2LEN   DC    F'0'           How much data is there - FC Table
+
+
+                            000014  000001   241 OPSWHERE EQU   *
+000014  00000000                             242 OP2WHERE DC    A(0)           Where FC Table  data should be placed
+000018  00000000                             243 OP1WHERE DC    A(0)           Where Operand-1 data should be placed
+00001C  00000000                             244 OP1WLEN  DC    F'0'           How much data is there - 1
+000020  00000000                             245          DC    A(0)           pollute - found FC
+
+
+000024  00000000                             247 FAILMASK DC    A(0)           Failure Branch on Condition mask
+
+
+                                             249 *                             Ending register values
+000028  00000000                             250 ENDREGS  DC    A(0)              Operand 1 address
+00002C  00000000                             251          DC    A(0)              Operand 1 length
+000030  00000000                             252          DC    A(0)              Function Code
+
+
+                            000034  000001   254 TRTENEXT EQU   *              Start of next table entry...
+
+
+
+
+
+
+                            BBCCDD  000001   256 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                            0000DD  000001   257 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page     9
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                            000000  0E3F59   259 TRTE1TST CSECT ,
+
+
+                                             261 ***********************************************************************
+                                             262 *        TRTE Testing Control tables   (ref: TRTETEST DSECT)
+                                             263 ***********************************************************************
+                                             264          PRINT DATA
+0005F8                                       265 TRTECTL  DC    0A(0)    start of table
+
+
+                                             267 ***********************************************************************
+                                             268 *        tests with   M3: A=0,F=0,L=0, reserved=0    (0)
+                                             269 *                            FC Table = 1 byte
+                                             270 ***********************************************************************
+
+
+
+
+0005F8                                       272 M0T1     DS    0F
+0005F8  01                                   273          DC    X'01'                       Test Num
+0005F9  0000                                 274          DC    X'00',X'00'
+0005FB  00                                   275          DC    X'00'                       M3: A=0,F=0,L=0
+0005FC  00001438 00000001                    276          DC    A(TRTOP10),A(001)           Source - Op 1 & length
+000604  00003138 00000100                    277          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             278 *                                          Target -
+00060C  00110000 00210000                    279          DC    A(1*MB+(1*K64)),A(2*MB+(1*K64)),A(0)  FC, Op1, Op1L
+000614  00000000
+000618  AABBCCDD                             280          DC    A(REG2PATT)
+00061C  00000007                             281          DC    A(7) CC0
+000620  00210001 00000000                    282          DC    A(2*MB+(1*K64)+001),A(000),A(0)
+000628  00000000
+
+
+
+
+00062C                                       284 M0T2     DS    0F
+00062C  02                                   285          DC    X'02'                       Test Num
+00062D  0000                                 286          DC    X'00',X'00'
+00062F  00                                   287          DC    X'00'                       M3: A=0,F=0,L=0
+000630  00001438 00000002                    288          DC    A(TRTOP10),A(002)           Source - Op 1 & length
+000638  00003138 00000100                    289          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             290 *                                          Target -
+000640  00120000 00220000                    291          DC    A(MB+(2*K64)),A(2*MB+(2*K64)),A(0)  FC, Op1, Op1L
+000648  00000000
+00064C  AABBCCDD                             292          DC    A(REG2PATT)
+000650  00000007                             293          DC    A(7) CC0
+000654  00220002 00000000                    294          DC    A(2*MB+(2*K64)+002),A(000),A(0)
+00065C  00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    10
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000660                                       296 M0T3     DS    0F
+000660  03                                   297          DC    X'03'                       Test Num
+000661  0000                                 298          DC    X'00',X'00'
+000663  00                                   299          DC    X'00'                       M3: A=0,F=0,L=0
+000664  00001438 00000004                    300          DC    A(TRTOP10),A(004)           Source - Op 1 & length
+00066C  00003138 00000100                    301          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             302 *                                          Target -
+000674  00130000 00230000                    303          DC    A(MB+(3*K64)),A(2*MB+(3*K64)),A(0)  FC, Op1, Op1L
+00067C  00000000
+000680  AABBCCDD                             304          DC    A(REG2PATT)
+000684  00000007                             305          DC    A(7) CC0
+000688  00230004 00000000                    306          DC    A(2*MB+(3*K64)+004),A(000),A(0)
+000690  00000000
+
+
+
+
+000694                                       308 M0T4     DS    0F
+000694  04                                   309          DC    X'04'                       Test Num
+000695  0000                                 310          DC    X'00',X'00'
+000697  00                                   311          DC    X'00'                       M3: A=0,F=0,L=0
+000698  00001438 00000008                    312          DC    A(TRTOP10),A(008)           Source - Op 1 & length
+0006A0  00003138 00000100                    313          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             314 *                                          Target -
+0006A8  00140000 00240000                    315          DC    A(MB+(4*K64)),A(2*MB+(4*K64)),A(0)  FC, Op1, Op1L
+0006B0  00000000
+0006B4  AABBCCDD                             316          DC    A(REG2PATT)
+0006B8  00000007                             317          DC    A(7) CC0
+0006BC  00240008 00000000                    318          DC    A(2*MB+(4*K64)+008),A(000),A(0)
+0006C4  00000000
+
+
+
+
+0006C8                                       320 M0T5     DS    0F
+0006C8  05                                   321          DC    X'05'                       Test Num
+0006C9  0000                                 322          DC    X'00',X'00'
+0006CB  00                                   323          DC    X'00'                       M3: A=0,F=0,L=0
+0006CC  00001438 00000100                    324          DC    A(TRTOP10),A(256)           Source - Op 1 & length
+0006D4  00003138 00000100                    325          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             326 *                                          Target -
+0006DC  00150000 00250000                    327          DC    A(MB+(5*K64)),A(2*MB+(5*K64)),A(0)  FC, Op1, Op1L
+0006E4  00000000
+0006E8  AABBCCDD                             328          DC    A(REG2PATT)
+0006EC  00000007                             329          DC    A(7) CC0
+0006F0  00250100 00000000                    330          DC    A(2*MB+(5*K64)+256),A(000),A(0)
+0006F8  00000000
+
+
+
+
+0006FC                                       332 M0T6     DS    0F
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    11
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0006FC  06                                   333          DC    X'06'                       Test Num
+0006FD  0000                                 334          DC    X'00',X'00'
+0006FF  00                                   335          DC    X'00'                       M3: A=0,F=0,L=0
+000700  00001538 00000100                    336          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+000708  00023238 00000100                    337          DC    A(TRTOP211),A(256)          Source - FC Table & length
+                                             338 *                                          Target -
+000710  0015FFE0 0025FFF4                    339          DC    A(MB+(6*K64)-32),A(2*MB+(6*K64)-12),A(0)  FC, Op1, Op1L
+000718  00000000
+00071C  AABBCCDD                             340          DC    A(REG2PATT)
+000720  0000000A                             341          DC    A(10) CC1 or CC3
+000724  00260005 000000EF                    342          DC    A(2*MB+(6*K64)-12+X'11'),A(256-X'11'),XL4'11'
+00072C  00000011
+
+
+
+
+000730                                       344 M0T7     DS    0F
+000730  07                                   345          DC    X'07'                       Test Num
+000731  0000                                 346          DC    X'00',X'00'
+000733  00                                   347          DC    X'00'                       M3: A=0,F=0,L=0
+000734  00001638 00000100                    348          DC    A(TRTOP1F0),A(256)          Source - Op 1 & length
+00073C  00023338 00000100                    349          DC    A(TRTOP2F0),A(256)          Source - FC Table & length
+                                             350 *                                          Target -
+000744  00170000 0026FFF4                    351          DC    A(MB+(7*K64)),A(2*MB+(7*K64)-12),A(0)   FC, Op1, Op1L
+00074C  00000000
+000750  AABBCCDD                             352          DC    A(REG2PATT)
+000754  0000000A                             353          DC    A(10) CC1 or CC3
+000758  002700F3 00000001                    354          DC    A(2*MB+(7*K64)-12+255),A(256-255),XL4'F0'
+000760  000000F0
+                                             355
+
+
+
+
+000764                                       357 M0T8     DS    0F
+000764  08                                   358          DC    X'08'                       Test Num
+000765  0000                                 359          DC    X'00',X'00'
+000767  00                                   360          DC    X'00'                       M3: A=0,F=0,L=0
+000768  00001538 00000100                    361          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+000770  00023238 00000100                    362          DC    A(TRTOP211),A(256)          Source - FC Table & length
+                                             363 *                                          Target -
+000778  0017FFE0 00280000                    364          DC    A(MB+(8*K64)-32),A(2*MB+(8*K64)),A(0)  FC, Op1, Op1L
+000780  00000000
+000784  AABBCCDD                             365          DC    A(REG2PATT)
+000788  0000000B                             366          DC    A(11) CC1
+00078C  00280011 000000EF                    367          DC    A(2*MB+(8*K64)+X'11'),A(256-X'11'),XL4'11'
+000794  00000011
+
+
+
+
+000798                                       369 M0T9     DS    0F
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    12
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000798  09                                   370          DC    X'09'                       Test Num
+000799  0000                                 371          DC    X'00',X'00'
+00079B  00                                   372          DC    X'00'                       M3: A=0,F=0,L=0
+00079C  00001938 00000800                    373          DC    A(TRTO1L0),A(2048)          Source - Op 1 & length
+0007A4  00003138 00000100                    374          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             375 *                                          Target -
+0007AC  00190000 00290000                    376          DC    A(MB+(9*K64)),A(2*MB+(9*K64)),A(0)  FC, Op1, Op1L
+0007B4  00000000
+0007B8  AABBCCDD                             377          DC    A(REG2PATT)
+0007BC  00000007                             378          DC    A(7) CC0
+0007C0  00290800 00000000                    379          DC    A(2*MB+(9*K64)+2048),A(000),A(0)
+0007C8  00000000
+
+
+
+
+0007CC                                       381 M0T10    DS    0F
+0007CC  0A                                   382          DC    X'0A'                       Test Num
+0007CD  0000                                 383          DC    X'00',X'00'
+0007CF  00                                   384          DC    X'00'                       M3: A=0,F=0,L=0
+0007D0  00002138 00000800                    385          DC    A(TRTO1L11),A(2048)         Source - Op 1 & length
+0007D8  00023238 00000100                    386          DC    A(TRTOP211),A(256)          Source - FC Table & length
+                                             387 *                                          Target -
+0007E0  001A0000 0029FF38                    388          DC    A(MB+(10*K64)),A(2*MB+(10*K64)-200),A(0)  FC, Op1, Op1L
+0007E8  00000000
+0007EC  AABBCCDD                             389          DC    A(REG2PATT)
+0007F0  0000000A                             390          DC    A(10) CC1 or CC3
+0007F4  002A0339 000003FF                    391          DC    A(2*MB+(10*K64)-200+(4*256)+1),A(1023),Xl4'11'
+0007FC  00000011
+
+
+
+
+000800                                       393 M0T11    DS    0F
+000800  0B                                   394          DC    X'0B'                       Test Num
+000801  0000                                 395          DC    X'00',X'00'
+000803  00                                   396          DC    X'00'                       M3: A=0,F=0,L=0
+000804  00002938 00000800                    397          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+00080C  00023338 00000100                    398          DC    A(TRTOP2F0),A(256)          Source - FC Table & length
+                                             399 *                                          Target -
+000814  001AFFC0 002B0000                    400          DC    A(MB+(11*K64)-64),A(2*MB+(11*K64)),A(0) FC, Op1, Op1L
+00081C  00000000
+000820  AABBCCDD                             401          DC    A(REG2PATT)
+000824  0000000B                             402          DC    A(11) CC1
+000828  002B07FF 00000001                    403          DC    A(2*MB+(11*K64)+2048-1),A(1),Xl4'F0'
+000830  000000F0
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    13
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             405 ***********************************************************************
+                                             406 *        tests with   M3: A=0,F=1,L=0, reserved=0    (4)
+                                             407 *                            FC Table = 2 bytes
+                                             408 ***********************************************************************
+
+
+000834                                       410 M4T1     DS    0F
+000834  41                                   411          DC    X'41'                       Test Num
+000835  0000                                 412          DC    X'00',X'00'
+000837  40                                   413          DC    X'40'                       M3: A=0,F=1,L=0
+000838  00001438 00000001                    414          DC    A(TRTOP10),A(001)           Source - Op 1 & length
+000840  00003138 00000200                    415          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                             416 *                                          Target -
+000848  00310000 00410000                    417          DC    A(3*MB+(1*K64)),A(4*MB+(1*K64)),A(0)  FC, Op1, Op1L
+000850  00000000
+000854  AABBCCDD                             418          DC    A(REG2PATT)
+000858  00000007                             419          DC    A(7) CC0
+00085C  00410001 00000000                    420          DC    A(4*MB+(1*K64)+001),A(000),A(0)
+000864  00000000
+
+
+
+
+000868                                       422 M4T2     DS    0F
+000868  42                                   423          DC    X'42'                       Test Num
+000869  0000                                 424          DC    X'00',X'00'
+00086B  40                                   425          DC    X'40'                       M3: A=0,F=1,L=0
+00086C  00001438 00000002                    426          DC    A(TRTOP10),A(002)           Source - Op 1 & length
+000874  00003138 00000200                    427          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                             428 *                                          Target -
+00087C  00320000 00420000                    429          DC    A(3*MB+(2*K64)),A(4*MB+(2*K64)),A(0)  FC, Op1, Op1L
+000884  00000000
+000888  AABBCCDD                             430          DC    A(REG2PATT)
+00088C  00000007                             431          DC    A(7) CC0
+000890  00420002 00000000                    432          DC    A(4*MB+(2*K64)+002),A(000),A(0)
+000898  00000000
+
+
+
+
+00089C                                       434 M4T3     DS    0F
+00089C  43                                   435          DC    X'43'                       Test Num
+00089D  0000                                 436          DC    X'00',X'00'
+00089F  40                                   437          DC    X'40'                       M3: A=0,F=1,L=0
+0008A0  00001438 00000004                    438          DC    A(TRTOP10),A(004)           Source - Op 1 & length
+0008A8  00003138 00000200                    439          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                             440 *                                          Target -
+0008B0  00340000 00440000                    441          DC    A(3*MB+(4*K64)),A(4*MB+(4*K64)),A(0)  FC, Op1, Op1L
+0008B8  00000000
+0008BC  AABBCCDD                             442          DC    A(REG2PATT)
+0008C0  00000007                             443          DC    A(7) CC0
+0008C4  00440004 00000000                    444          DC    A(4*MB+(4*K64)+004),A(000),A(0)
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    14
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0008CC  00000000
+
+
+
+
+0008D0                                       446 M4T4     DS    0F
+0008D0  44                                   447          DC    X'44'                       Test Num
+0008D1  0000                                 448          DC    X'00',X'00'
+0008D3  40                                   449          DC    X'40'                       M3: A=0,F=1,L=0
+0008D4  00001438 00000008                    450          DC    A(TRTOP10),A(008)           Source - Op 1 & length
+0008DC  00003138 00000200                    451          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                             452 *                                          Target -
+0008E4  00340000 00440000                    453          DC    A(3*MB+(4*K64)),A(4*MB+(4*K64)),A(0)  FC, Op1, Op1L
+0008EC  00000000
+0008F0  AABBCCDD                             454          DC    A(REG2PATT)
+0008F4  00000007                             455          DC    A(7) CC0
+0008F8  00440008 00000000                    456          DC    A(4*MB+(4*K64)+008),A(000),A(0)
+000900  00000000
+
+
+
+
+000904                                       458 M4T5     DS    0F
+000904  45                                   459          DC    X'45'                       Test Num
+000905  0000                                 460          DC    X'00',X'00'
+000907  40                                   461          DC    X'40'                       M3: A=0,F=1,L=0
+000908  00001438 00000100                    462          DC    A(TRTOP10),A(256)           Source - Op 1 & length
+000910  00003138 00000200                    463          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                             464 *                                          Target -
+000918  00350000 00450000                    465          DC    A(3*MB+(5*K64)),A(4*MB+(5*K64)),A(0)  FC, Op1, Op1L
+000920  00000000
+000924  AABBCCDD                             466          DC    A(REG2PATT)
+000928  00000007                             467          DC    A(7) CC0
+00092C  00450100 00000000                    468          DC    A(4*MB+(5*K64)+256),A(000),A(0)
+000934  00000000
+
+
+
+
+000938                                       470 M4T6     DS    0F
+000938  46                                   471          DC    X'46'                       Test Num
+000939  0000                                 472          DC    X'00',X'00'
+00093B  40                                   473          DC    X'40'                       M3: A=0,F=1,L=0
+00093C  00001538 00000100                    474          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+000944  00023438 00000200                    475          DC    A(TRTOP411),A(512)          Source - FC Table & length
+                                             476 *                                          Target -
+00094C  0035FFE0 0045FFF4                    477          DC    A(3*MB+(6*K64)-32),A(4*MB+(6*K64)-12),A(0) FC, Op1, Op1L
+000954  00000000
+000958  AABBCCDD                             478          DC    A(REG2PATT)
+00095C  0000000A                             479          DC    A(10) CC1 or CC3
+000960  00460005 000000EF                    480          DC    A(4*MB+(6*K64)-12+X'11'),A(256-X'11'),XL4'11'
+000968  00000011
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    15
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+
+
+
+
+00096C                                       482 M4T7     DS    0F
+00096C  47                                   483          DC    X'47'                       Test Num
+00096D  0000                                 484          DC    X'00',X'00'
+00096F  40                                   485          DC    X'40'                       M3: A=0,F=1,L=0
+000970  00001638 00000100                    486          DC    A(TRTOP1F0),A(256)          Source - Op 1 & length
+000978  00023638 00000200                    487          DC    A(TRTOP4F0),A(512)          Source - FC Table & length
+                                             488 *                                          Target -
+000980  00370000 0046FFF4                    489          DC    A(3*MB+(7*K64)),A(4*MB+(7*K64)-12),A(0) FC, Op1, Op1L
+000988  00000000
+00098C  AABBCCDD                             490          DC    A(REG2PATT)
+000990  0000000A                             491          DC    A(10) CC1 or CC3
+000994  004700F3 00000001                    492          DC    A(4*MB+(7*K64)-12+255),A(256-255),XL4'F0'
+00099C  000000F0
+
+
+
+
+0009A0                                       494 M4T8     DS    0F
+0009A0  48                                   495          DC    X'48'                       Test Num
+0009A1  0000                                 496          DC    X'00',X'00'
+0009A3  40                                   497          DC    X'40'                       M3: A=0,F=1,L=0
+0009A4  00001538 00000100                    498          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+0009AC  00023438 00000200                    499          DC    A(TRTOP411),A(512)          Source - FC Table & length
+                                             500 *                                          Target -
+0009B4  0037FFE0 00480000                    501          DC    A(3*MB+(8*K64)-32),A(4*MB+(8*K64)),A(0) FC, Op1, Op1L
+0009BC  00000000
+0009C0  AABBCCDD                             502          DC    A(REG2PATT)
+0009C4  0000000B                             503          DC    A(11) CC1
+0009C8  00480011 000000EF                    504          DC    A(4*MB+(8*K64)+X'11'),A(256-X'11'),XL4'11'
+0009D0  00000011
+
+
+
+
+0009D4                                       506 M4T9     DS    0F
+0009D4  49                                   507          DC    X'49'                       Test Num
+0009D5  0000                                 508          DC    X'00',X'00'
+0009D7  40                                   509          DC    X'40'                       M3: A=0,F=1,L=0
+0009D8  00001938 00000800                    510          DC    A(TRTO1L0),A(2048)          Source - Op 1 & length
+0009E0  00003138 00000200                    511          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                             512 *                                          Target -
+0009E8  00390000 00490000                    513          DC    A(3*MB+(9*K64)),A(4*MB+(9*K64)),A(0) FC, Op1, Op1L
+0009F0  00000000
+0009F4  AABBCCDD                             514          DC    A(REG2PATT)
+0009F8  00000007                             515          DC    A(7) CC0
+0009FC  00490800 00000000                    516          DC    A(4*MB+(9*K64)+2048),A(000),A(0)
+000A04  00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    16
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000A08                                       518 M4T10    DS    0F
+000A08  4A                                   519          DC    X'4A'                       Test Num
+000A09  0000                                 520          DC    X'00',X'00'
+000A0B  40                                   521          DC    X'40'                       M3: A=0,F=1,L=0
+000A0C  00002138 00000800                    522          DC    A(TRTO1L11),A(2048)         Source - Op 1 & length
+000A14  00023438 00000200                    523          DC    A(TRTOP411),A(512)          Source - FC Table & length
+                                             524 *                                          Target -
+000A1C  003A0000 0049FF38                    525          DC    A(3*MB+(10*K64)),A(4*MB+(10*K64)-200),A(0) FC, Op1, Op1L
+000A24  00000000
+000A28  AABBCCDD                             526          DC    A(REG2PATT)
+000A2C  0000000A                             527          DC    A(10) CC1 or CC3
+000A30  004A0339 000003FF                    528          DC    A(4*MB+(10*K64)-200+(4*256)+1),A(1023),XL4'11'
+000A38  00000011
+
+
+
+
+000A3C                                       530 M4T11    DS    0F
+000A3C  4B                                   531          DC    X'4B'                       Test Num
+000A3D  0000                                 532          DC    X'00',X'00'
+000A3F  40                                   533          DC    X'40'                       M3: A=0,F=1,L=0
+000A40  00002938 00000800                    534          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+000A48  00023638 00000200                    535          DC    A(TRTOP4F0),A(512)          Source - FC Table & length
+                                             536 *                                          Target -
+000A50  003AFFC0 004B0000                    537          DC    A(3*MB+(11*K64)-64),A(4*MB+(11*K64)),A(0) FC, Op1, Op1L
+000A58  00000000
+000A5C  AABBCCDD                             538          DC    A(REG2PATT)
+000A60  0000000B                             539          DC    A(11) CC1
+000A64  004B07FF 00000001                    540          DC    A(4*MB+(11*K64)+2048-1),A(1),XL4'F0'
+000A6C  000000F0
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    17
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             542 ***********************************************************************
+                                             543 *        tests with   M3: A=1,F=0,L=0, reserved=0    (8)
+                                             544 *                     FC Table : SIZE: 65,536 (2 BYTE ARGUMENT)
+                                             545 *
+                                             546 *              Note: Op1 length must be a multiple of 2
+                                             547 ***********************************************************************
+
+
+000A70                                       549 M8T1     DS    0F
+000A70  81                                   550          DC    X'81'                       Test Num
+000A71  0000                                 551          DC    X'00',X'00'
+000A73  80                                   552          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000A74  00001438 00000002                    553          DC    A(TRTOP10),A(002)           Source - Op 1 & length
+000A7C  00003138 00010000                    554          DC    A(TRTOP20),A(K64)           Source - FC Table & length
+                                             555 *                                          Target -
+000A84  00510000 00610000                    556          DC    A(5*MB+(1*K64)),A(6*MB+(1*K64)),A(0)  FC, Op1, Op1L
+000A8C  00000000
+000A90  AABBCCDD                             557          DC    A(REG2PATT)
+000A94  00000007                             558          DC    A(7) CC0
+000A98  00610002 00000000                    559          DC    A(6*MB+(1*K64)+002),A(000),A(0)
+000AA0  00000000
+                                             560
+
+
+
+
+000AA4                                       562 M8T2     DS    0F
+000AA4  82                                   563          DC    X'82'                       Test Num
+000AA5  0000                                 564          DC    X'00',X'00'
+000AA7  80                                   565          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000AA8  00001438 00000004                    566          DC    A(TRTOP10),A(004)           Source - Op 1 & length
+000AB0  00003138 00010000                    567          DC    A(TRTOP20),A(K64)           Source - FC Table & length
+                                             568 *                                          Target -
+000AB8  00520000 00620000                    569          DC    A(5*MB+(2*K64)),A(6*MB+(2*K64)),A(0)  FC, Op1, Op1L
+000AC0  00000000
+000AC4  AABBCCDD                             570          DC    A(REG2PATT)
+000AC8  00000007                             571          DC    A(7) CC0
+000ACC  00620004 00000000                    572          DC    A(6*MB+(2*K64)+004),A(000),A(0)
+000AD4  00000000
+
+
+
+
+000AD8                                       574 M8T3     DS    0F
+000AD8  83                                   575          DC    X'83'                       Test Num
+000AD9  0000                                 576          DC    X'00',X'00'
+000ADB  80                                   577          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000ADC  00001438 00000008                    578          DC    A(TRTOP10),A(008)           Source - Op 1 & length
+000AE4  00003138 00010000                    579          DC    A(TRTOP20),A(K64)           Source - FC Table & length
+                                             580 *                                          Target -
+000AEC  00530000 00630000                    581          DC    A(5*MB+(3*K64)),A(6*MB+(3*K64)),A(0)  FC, Op1, Op1L
+000AF4  00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    18
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000AF8  AABBCCDD                             582          DC    A(REG2PATT)
+000AFC  00000007                             583          DC    A(7) CC0
+000B00  00630008 00000000                    584          DC    A(6*MB+(3*K64)+008),A(000),A(0)
+000B08  00000000
+
+
+
+
+000B0C                                       586 M8T4     DS    0F
+000B0C  84                                   587          DC    X'84'                       Test Num
+000B0D  0000                                 588          DC    X'00',X'00'
+000B0F  80                                   589          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000B10  00001438 00000100                    590          DC    A(TRTOP10),A(256)           Source - Op 1 & length
+000B18  00003138 00010000                    591          DC    A(TRTOP20),A(K64)           Source - FC Table & length
+                                             592 *                                          Target -
+000B20  00540000 00640000                    593          DC    A(5*MB+(4*K64)),A(6*MB+(4*K64)),A(0)  FC, Op1, Op1L
+000B28  00000000
+000B2C  AABBCCDD                             594          DC    A(REG2PATT)
+000B30  00000007                             595          DC    A(7) CC0
+000B34  00640100 00000000                    596          DC    A(6*MB+(4*K64)+256),A(000),A(0)
+000B3C  00000000
+
+
+
+
+000B40                                       598 M8T5     DS    0F
+000B40  85                                   599          DC    X'85'                       Test Num
+000B41  0000                                 600          DC    X'00',X'00'
+000B43  80                                   601          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000B44  00001538 00000100                    602          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+000B4C  00023838 00010000                    603          DC    A(TRTOP811),A(K64)          Source - FC Table & length
+                                             604 *                                          Target -
+000B54  00550000 0064FFF4                    605          DC    A(5*MB+(5*K64)),A(6*MB+(5*K64)-12),A(0)  FC, Op1, Op1L
+000B5C  00000000
+000B60  AABBCCDD                             606          DC    A(REG2PATT)
+000B64  0000000A                             607          DC    A(10) CC1 or CC3
+000B68  00650004 000000F0                    608          DC    A(6*MB+(5*K64)-12+X'10'),A(256-X'10'),XL4'11'
+000B70  00000011
+
+
+
+
+000B74                                       610 M8T6     DS    0F
+000B74  86                                   611          DC    X'86'                       Test Num
+000B75  0000                                 612          DC    X'00',X'00'
+000B77  80                                   613          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000B78  00001638 00000100                    614          DC    A(TRTOP1F0),A(256)          Source - Op 1 & length
+000B80  00043938 00010000                    615          DC    A(TRTOP8F0),A(K64)          Source - FC Table & length
+                                             616 *                                          Target -
+000B88  00560000 0065FFF4                    617          DC    A(5*MB+(6*K64)),A(6*MB+(6*K64)-12),A(0)  FC, Op1, Op1L
+000B90  00000000
+000B94  AABBCCDD                             618          DC    A(REG2PATT)
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    19
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000B98  0000000A                             619          DC    A(10) CC1 or CC3
+000B9C  006600F2 00000002                    620          DC    A(6*MB+(6*K64)-12+(256-2)),A(2),XL4'F0'
+000BA4  000000F0
+
+
+
+
+000BA8                                       622 M8T7     DS    0F
+000BA8  87                                   623          DC    X'87'                       Test Num
+000BA9  0000                                 624          DC    X'00',X'00'
+000BAB  80                                   625          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000BAC  00001538 00000100                    626          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+000BB4  00023838 00010000                    627          DC    A(TRTOP811),A(K64)          Source - FC Table & length
+                                             628 *                                          Target -
+000BBC  0057FFE0 00680000                    629          DC    A(5*MB+(8*K64)-32),A(6*MB+(8*K64)),A(0)  FC, Op1, Op1L
+000BC4  00000000
+000BC8  AABBCCDD                             630          DC    A(REG2PATT)
+000BCC  0000000B                             631          DC    A(11) CC1
+000BD0  00680010 000000F0                    632          DC    A(6*MB+(8*K64)+X'10'),A(256-X'10'),XL4'11'
+000BD8  00000011
+
+
+
+
+000BDC                                       634 M8T8     DS    0F
+000BDC  88                                   635          DC    X'88'                       Test Num
+000BDD  0000                                 636          DC    X'00',X'00'
+000BDF  80                                   637          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000BE0  00001738 00000200                    638          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
+000BE8  00063A38 00010000                    639          DC    A(TRTOP8F1),A(K64)          Source - FC Table & length
+                                             640 *                                          Target -
+000BF0  0058FFE0 00690000                    641          DC    A(5*MB+(9*K64)-32),A(6*MB+(9*K64)),A(0)  FC, Op1, Op1L
+000BF8  00000000
+000BFC  AABBCCDD                             642          DC    A(REG2PATT)
+000C00  0000000B                             643          DC    A(11) CC1
+000C04  006901FE 00000002                    644          DC    A(6*MB+(9*K64)+510),A(2),XL4'F1'
+000C0C  000000F1
+
+
+
+
+000C10                                       646 M8T9     DS    0F
+000C10  89                                   647          DC    X'89'                       Test Num
+000C11  0000                                 648          DC    X'00',X'00'
+000C13  80                                   649          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000C14  00001938 00000800                    650          DC    A(TRTO1L0),A(2048)          Source - Op 1 & length
+000C1C  00003138 00010000                    651          DC    A(TRTOP20),A(K64)           Source - FC Table & length
+                                             652 *                                          Target -
+000C24  005A0000 006A0000                    653          DC    A(5*MB+(10*K64)),A(6*MB+(10*K64)),A(0)  FC, Op1, Op1L
+000C2C  00000000
+000C30  AABBCCDD                             654          DC    A(REG2PATT)
+000C34  00000007                             655          DC    A(7) CC0
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    20
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000C38  006A0800 00000000                    656          DC    A(6*MB+(10*K64)+2048),A(0),XL4'00'
+000C40  00000000
+
+
+
+
+000C44                                       658 M8T10    DS    0F
+000C44  8A                                   659          DC    X'8A'                       Test Num
+000C45  0000                                 660          DC    X'00',X'00'
+000C47  80                                   661          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000C48  00002138 00000800                    662          DC    A(TRTO1L11),A(2048)         Source - Op 1 & length
+000C50  00023838 00010000                    663          DC    A(TRTOP811),A(K64)          Source - FC Table & length
+                                             664 *                                          Target -
+000C58  005C0000 006BFF39                    665          DC    A(5*MB+(12*K64)),A(6*MB+(12*K64)-199),A(0) FC, Op1, Op1L
+000C60  00000000
+000C64  AABBCCDD                             666          DC    A(REG2PATT)
+000C68  0000000A                             667          DC    A(10) CC1 or CC3
+000C6C  006C0339 00000400                    668          DC    A(6*MB+(12*K64)-199+(4*256)),A(1024),XL4'11'
+000C74  00000011
+
+
+
+
+000C78                                       670 M8T11    DS    0F
+000C78  8B                                   671          DC    X'8B'                       Test Num
+000C79  0000                                 672          DC    X'00',X'00'
+000C7B  80                                   673          DC    X'80'                       M3: A=1,F=0,L=0,--=0
+000C7C  00002938 00000800                    674          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+000C84  00043938 00010000                    675          DC    A(TRTOP8F0),A(K64)          Source - FC Table & length
+                                             676 *                                          Target -
+000C8C  005DFFC1 006E0000                    677          DC    A(5*MB+(14*K64)-63),A(6*MB+(14*K64)),A(0) FC, Op1, Op1L
+000C94  00000000
+000C98  AABBCCDD                             678          DC    A(REG2PATT)
+000C9C  0000000B                             679          DC    A(11) CC1
+000CA0  006E07FE 00000002                    680          DC    A(6*MB+(14*K64)+2048-2),A(2),XL4'F0'
+000CA8  000000F0
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    21
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             682 ***********************************************************************
+                                             683 *        tests with   M3: A=1,F=0,L=1, reserved=0    (10)
+                                             684 *                     FC Table : SIZE: 256 (2 BYTE ARGUMENT)
+                                             685 *                                Function Code is 1 byte
+                                             686 *                                Limit arg to 255
+                                             687 *
+                                             688 *              Note: Op1 length must be a multiple of 2
+                                             689 ***********************************************************************
+
+
+000CAC                                       691 M10T1    DS    0F
+000CAC  A1                                   692          DC    X'A1'                       Test Num
+000CAD  0000                                 693          DC    X'00',X'00'
+000CAF  A0                                   694          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000CB0  00001438 00000002                    695          DC    A(TRTOP10),A(002)           Source - Op 1 & length
+000CB8  00003138 00000100                    696          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             697 *                                          Target -
+000CC0  00A00000 00B00000                    698          DC    A(10*MB+(0*K64)),A(11*MB+(0*K64)),A(0)  FC, Op1, Op1L
+000CC8  00000000
+000CCC  AABBCCDD                             699          DC    A(REG2PATT)
+000CD0  00000007                             700          DC    A(7) CC0
+000CD4  00B00002 00000000                    701          DC    A(11*MB+(0*K64)+002),A(000),A(0)
+000CDC  00000000
+
+
+
+
+000CE0                                       703 M10T2    DS    0F
+000CE0  A2                                   704          DC    X'A2'                       Test Num
+000CE1  0000                                 705          DC    X'00',X'00'
+000CE3  A0                                   706          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000CE4  00001438 00000004                    707          DC    A(TRTOP10),A(004)           Source - Op 1 & length
+000CEC  00003138 00000100                    708          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             709 *                                          Target -
+000CF4  00A10000 00B10000                    710          DC    A(10*MB+(1*K64)),A(11*MB+(1*K64)),A(0)  FC, Op1, Op1L
+000CFC  00000000
+000D00  AABBCCDD                             711          DC    A(REG2PATT)
+000D04  00000007                             712          DC    A(7) CC0
+000D08  00B10004 00000000                    713          DC    A(11*MB+(1*K64)+004),A(000),A(0)
+000D10  00000000
+
+
+
+
+000D14                                       715 M10T3    DS    0F
+000D14  A3                                   716          DC    X'A3'                       Test Num
+000D15  0000                                 717          DC    X'00',X'00'
+000D17  A0                                   718          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000D18  00001438 00000008                    719          DC    A(TRTOP10),A(008)           Source - Op 1 & length
+000D20  00003138 00000100                    720          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             721 *                                          Target -
+000D28  00A20000 00B20000                    722          DC    A(10*MB+(2*K64)),A(11*MB+(2*K64)),A(0)  FC, Op1, Op1L
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    22
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000D30  00000000
+000D34  AABBCCDD                             723          DC    A(REG2PATT)
+000D38  00000007                             724          DC    A(7) CC0
+000D3C  00B20008 00000000                    725          DC    A(11*MB+(2*K64)+008),A(000),A(0)
+000D44  00000000
+
+
+
+
+000D48                                       727 M10T4    DS    0F
+000D48  A4                                   728          DC    X'A4'                       Test Num
+000D49  0000                                 729          DC    X'00',X'00'
+000D4B  A0                                   730          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000D4C  00001438 00000100                    731          DC    A(TRTOP10),A(256)           Source - Op 1 & length
+000D54  00003138 00000100                    732          DC    A(TRTOP20),A(256)           Source - FC Table & length
+                                             733 *                                          Target -
+000D5C  00A30000 00B30000                    734          DC    A(10*MB+(3*K64)),A(11*MB+(3*K64)),A(0)  FC, Op1, Op1L
+000D64  00000000
+000D68  AABBCCDD                             735          DC    A(REG2PATT)
+000D6C  00000007                             736          DC    A(7) CC0
+000D70  00B30100 00000000                    737          DC    A(11*MB+(3*K64)+256),A(000),A(0)
+000D78  00000000
+
+
+
+
+000D7C                                       739 M10T5    DS    0F
+000D7C  A5                                   740          DC    X'A5'                       Test Num
+000D7D  0000                                 741          DC    X'00',X'00'
+000D7F  A0                                   742          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000D80  00001538 00000100                    743          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+000D88  00023238 00000100                    744          DC    A(TRTOP211),A(256)          Source - FC Table & length
+                                             745 *                                          Target -
+000D90  00A40000 00B3FFF4                    746          DC    A(10*MB+(4*K64)),A(11*MB+(4*K64)-12),A(0)  FC, Op1, Op1L
+000D98  00000000
+000D9C  AABBCCDD                             747          DC    A(REG2PATT)
+000DA0  0000000A                             748          DC    A(10) CC1 or CC3
+000DA4  00B40004 000000F0                    749          DC    A(11*MB+(4*K64)-12+X'10'),A(256-X'10'),XL4'11'
+000DAC  00000011
+
+
+
+
+000DB0                                       751 M10T6    DS    0F
+000DB0  A6                                   752          DC    X'A6'                       Test Num
+000DB1  0000                                 753          DC    X'00',X'00'
+000DB3  A0                                   754          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000DB4  00001638 00000100                    755          DC    A(TRTOP1F0),A(256)          Source - Op 1 & length
+000DBC  00023338 00000100                    756          DC    A(TRTOP2F0),A(256)          Source - FC Table & length
+                                             757 *                                          Target -
+000DC4  00A50000 00B4FFF4                    758          DC    A(10*MB+(5*K64)),A(11*MB+(5*K64)-12),A(0)  FC, Op1, Op1L
+000DCC  00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    23
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000DD0  AABBCCDD                             759          DC    A(REG2PATT)
+000DD4  0000000A                             760          DC    A(10) CC1 or CC3
+000DD8  00B500F2 00000002                    761          DC    A(11*MB+(5*K64)-12+(256-2)),A(2),XL4'F0'
+000DE0  000000F0
+
+
+
+
+000DE4                                       763 M10T7    DS    0F
+000DE4  A7                                   764          DC    X'A7'                       Test Num
+000DE5  0000                                 765          DC    X'00',X'00'
+000DE7  A0                                   766          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000DE8  00001538 00000100                    767          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+000DF0  00023238 00000100                    768          DC    A(TRTOP211),A(256)          Source - FC Table & length
+                                             769 *                                          Target -
+000DF8  00A5FFE0 00B60000                    770          DC    A(10*MB+(6*K64-32)),A(11*MB+(6*K64)),A(0)  FC, Op1, Op1L
+000E00  00000000
+000E04  AABBCCDD                             771          DC    A(REG2PATT)
+000E08  0000000B                             772          DC    A(11) CC1
+000E0C  00B60010 000000F0                    773          DC    A(11*MB+(6*K64)+X'10'),A(256-X'10'),XL4'11'
+000E14  00000011
+
+
+
+
+000E18                                       775 M10T8    DS    0F
+000E18  A8                                   776          DC    X'A8'                       Test Num
+000E19  0000                                 777          DC    X'00',X'00'
+000E1B  A0                                   778          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000E1C  00001738 00000200                    779          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
+000E24  00063A38 00000100                    780          DC    A(TRTOP8F1),A(256)          Source - FC Table & length
+                                             781 *                                          Target -
+000E2C  00A70000 00B70000                    782          DC    A(10*MB+(7*K64)),A(11*MB+(7*K64)),A(0)  FC, Op1, Op1L
+000E34  00000000
+000E38  AABBCCDD                             783          DC    A(REG2PATT)
+000E3C  0000000B                             784          DC    A(11) CC1
+000E40  00B701FE 00000002                    785          DC    A(11*MB+(7*K64)+510),A(2),XL4'F1'
+000E48  000000F1
+
+
+
+
+000E4C                                       787 M10T9    DS    0F
+000E4C  A9                                   788          DC    X'A9'                       Test Num
+000E4D  0000                                 789          DC    X'00',X'00'
+000E4F  A0                                   790          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000E50  00001938 00000800                    791          DC    A(TRTO1L0),A(2048)          Source - Op 1 & length
+000E58  00003138 00000100                    792          DC    A(TRTOP20),A(256)          Source - FC Table & length
+                                             793 *                                          Target -
+000E60  00A80000 00B80000                    794          DC    A(10*MB+(8*K64)),A(11*MB+(8*K64)),A(0)  FC, Op1, Op1L
+000E68  00000000
+000E6C  AABBCCDD                             795          DC    A(REG2PATT)
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    24
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000E70  00000007                             796          DC    A(7) CC0
+000E74  00B80800 00000000                    797          DC    A(11*MB+(8*K64)+2048),A(0),XL4'00'
+000E7C  00000000
+
+
+
+
+000E80                                       799 M10T10   DS    0F
+000E80  AA                                   800          DC    X'AA'                       Test Num
+000E81  0000                                 801          DC    X'00',X'00'
+000E83  A0                                   802          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000E84  00002138 00000800                    803          DC    A(TRTO1L11),A(2048)         Source - Op 1 & length
+000E8C  00023238 00000100                    804          DC    A(TRTOP211),A(256)          Source - FC Table & length
+                                             805 *                                          Target -
+000E94  00A90000 00B8FF39                    806          DC    A(10*MB+(9*K64)),A(11*MB+(9*K64)-199),A(0) FC, Op1, Op1L
+000E9C  00000000
+000EA0  AABBCCDD                             807          DC    A(REG2PATT)
+000EA4  0000000A                             808          DC    A(10) CC1 or CC3
+000EA8  00B90339 00000400                    809          DC    A(11*MB+(9*K64)-199+(4*256)),A(1024),XL4'11'
+000EB0  00000011
+
+
+
+
+000EB4                                       811 M10T11   DS    0F
+000EB4  AB                                   812          DC    X'AB'                       Test Num
+000EB5  0000                                 813          DC    X'00',X'00'
+000EB7  A0                                   814          DC    X'A0'                       M3: A=1,F=0,L=1,--=0
+000EB8  00002938 00000800                    815          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+000EC0  00023338 00000100                    816          DC    A(TRTOP2F0),A(256)          Source - FC Table & length
+                                             817 *                                          Target - FC, Op1, Op1L
+000EC8  00A9FE1F 00BA0000                    818          DC    A(10*MB+(10*K64)-481),A(11*MB+(10*K64)),A(0)
+000ED0  00000000
+000ED4  AABBCCDD                             819          DC    A(REG2PATT)
+000ED8  0000000B                             820          DC    A(11) CC1
+000EDC  00BA07FE 00000002                    821          DC    A(11*MB+(10*K64)+2048-2),A(2),XL4'F0'
+000EE4  000000F0
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    25
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             823 ***********************************************************************
+                                             824 *        tests with   M3: A=1,F=1,L=0, reserved=0    (12)
+                                             825 *                     FC Table : SIZE: 131,072 (2 BYTE ARGUMENT)
+                                             826 *                                Function Code is 2 bytes
+                                             827 *
+                                             828 *              Note: Op1 length must be a multiple of 2
+                                             829 ***********************************************************************
+
+
+000EE8                                       831 M12T1    DS    0F
+000EE8  C1                                   832          DC    X'C1'                       Test Num
+000EE9  0000                                 833          DC    X'00',X'00'
+000EEB  C0                                   834          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+000EEC  00001438 00000002                    835          DC    A(TRTOP10),A(002)           Source - Op 1 & length
+000EF4  00003138 00020000                    836          DC    A(TRTOP20),A(2*K64)         Source - FC Table & length
+                                             837 *                                          Target -
+000EFC  00700000 00900000                    838          DC    A(7*MB+(0*K64)),A(9*MB+(0*K64)),A(0)  FC, Op1, Op1L
+000F04  00000000
+000F08  AABBCCDD                             839          DC    A(REG2PATT)
+000F0C  00000007                             840          DC    A(7) CC0
+000F10  00900002 00000000                    841          DC    A(9*MB+(0*K64)+002),A(000),A(0)
+000F18  00000000
+                                             842
+
+
+
+
+000F1C                                       844 M12T2    DS    0F
+000F1C  C2                                   845          DC    X'C2'                       Test Num
+000F1D  0000                                 846          DC    X'00',X'00'
+000F1F  C0                                   847          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+000F20  00001438 00000004                    848          DC    A(TRTOP10),A(004)           Source - Op 1 & length
+000F28  00003138 00020000                    849          DC    A(TRTOP20),A(2*K64)         Source - FC Table & length
+                                             850 *                                          Target -
+000F30  00720000 00910000                    851          DC    A(7*MB+(2*K64)),A(9*MB+(1*K64)),A(0)  FC, Op1, Op1L
+000F38  00000000
+000F3C  AABBCCDD                             852          DC    A(REG2PATT)
+000F40  00000007                             853          DC    A(7) CC0
+000F44  00910004 00000000                    854          DC    A(9*MB+(1*K64)+004),A(000),A(0)
+000F4C  00000000
+
+
+
+
+000F50                                       856 M12T3    DS    0F
+000F50  C3                                   857          DC    X'C3'                       Test Num
+000F51  0000                                 858          DC    X'00',X'00'
+000F53  C0                                   859          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+000F54  00001438 00000008                    860          DC    A(TRTOP10),A(008)           Source - Op 1 & length
+000F5C  00003138 00020000                    861          DC    A(TRTOP20),A(2*K64)         Source - FC Table & length
+                                             862 *                                          Target -
+000F64  00740000 00920000                    863          DC    A(7*MB+(4*K64)),A(9*MB+(2*K64)),A(0)  FC, Op1, Op1L
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    26
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000F6C  00000000
+000F70  AABBCCDD                             864          DC    A(REG2PATT)
+000F74  00000007                             865          DC    A(7) CC0
+000F78  00920008 00000000                    866          DC    A(9*MB+(2*K64)+008),A(000),A(0)
+000F80  00000000
+
+
+
+
+000F84                                       868 M12T4    DS    0F
+000F84  C4                                   869          DC    X'C4'                       Test Num
+000F85  0000                                 870          DC    X'00',X'00'
+000F87  C0                                   871          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+000F88  00001438 00000100                    872          DC    A(TRTOP10),A(256)           Source - Op 1 & length
+000F90  00003138 00020000                    873          DC    A(TRTOP20),A(2*K64)         Source - FC Table & length
+                                             874 *                                          Target -
+000F98  00760000 00930000                    875          DC    A(7*MB+(6*K64)),A(9*MB+(3*K64)),A(0)  FC, Op1, Op1L
+000FA0  00000000
+000FA4  AABBCCDD                             876          DC    A(REG2PATT)
+000FA8  00000007                             877          DC    A(7) CC0
+000FAC  00930100 00000000                    878          DC    A(9*MB+(3*K64)+256),A(000),A(0)
+000FB4  00000000
+
+
+
+
+000FB8                                       880 M12T5    DS    0F
+000FB8  C5                                   881          DC    X'C5'                       Test Num
+000FB9  0000                                 882          DC    X'00',X'00'
+000FBB  C0                                   883          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+000FBC  00001538 00000100                    884          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+000FC4  00083B38 00020000                    885          DC    A(TRTOPC11),A(2*K64)        Source - FC Table & length
+                                             886 *                                          Target -
+000FCC  00780000 0093FFF4                    887          DC    A(7*MB+(8*K64)),A(9*MB+(4*K64)-12),A(0)  FC, Op1, Op1L
+000FD4  00000000
+000FD8  AABBCCDD                             888          DC    A(REG2PATT)
+000FDC  0000000A                             889          DC    A(10) CC1 or CC3
+000FE0  00940004 000000F0                    890          DC    A(9*MB+(4*K64)-12+X'10'),A(256-X'10'),XL4'11'
+000FE8  00000011
+
+
+
+
+000FEC                                       892 M12T6    DS    0F
+000FEC  C6                                   893          DC    X'C6'                       Test Num
+000FED  0000                                 894          DC    X'00',X'00'
+000FEF  C0                                   895          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+000FF0  00001638 00000100                    896          DC    A(TRTOP1F0),A(256)          Source - Op 1 & length
+000FF8  000A3B5C 00020000                    897          DC    A(TRTOPCF0),A(2*K64)        Source - FC Table & length
+                                             898 *                                          Target -
+001000  007A0000 0094FFF4                    899          DC    A(7*MB+(10*K64)),A(9*MB+(5*K64)-12),A(0)  FC, Op1, Op1L
+001008  00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    27
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+00100C  AABBCCDD                             900          DC    A(REG2PATT)
+001010  0000000A                             901          DC    A(10) CC1 or CC3
+001014  009500F2 00000002                    902          DC    A(9*MB+(5*K64)-12+(256-2)),A(2),XL4'F0'
+00101C  000000F0
+
+
+
+
+001020                                       904 M12T7    DS    0F
+001020  C7                                   905          DC    X'C7'                       Test Num
+001021  0000                                 906          DC    X'00',X'00'
+001023  C0                                   907          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+001024  00001538 00000100                    908          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+00102C  00083B38 00020000                    909          DC    A(TRTOPC11),A(2*K64)        Source - FC Table & length
+                                             910 *                                          Target -
+001034  007CFFE0 00960000                    911          DC    A(7*MB+(13*K64)-32),A(9*MB+(6*K64)),A(0)  FC, Op1, Op1L
+00103C  00000000
+001040  AABBCCDD                             912          DC    A(REG2PATT)
+001044  0000000B                             913          DC    A(11) CC1
+001048  00960010 000000F0                    914          DC    A(9*MB+(6*K64)+X'10'),A(256-X'10'),XL4'11'
+001050  00000011
+
+
+
+
+001054                                       916 M12T8    DS    0F
+001054  C8                                   917          DC    X'C8'                       Test Num
+001055  0000                                 918          DC    X'00',X'00'
+001057  C0                                   919          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+001058  00001738 00000200                    920          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
+001060  000C3D5A 00020000                    921          DC    A(TRTOPCF1),A(2*K64)        Source - FC Table & length
+                                             922 *                                          Target -
+001068  007F0000 00970000                    923          DC    A(7*MB+(15*K64)),A(9*MB+(7*K64)),A(0)  FC, Op1, Op1L
+001070  00000000
+001074  AABBCCDD                             924          DC    A(REG2PATT)
+001078  0000000B                             925          DC    A(11) CC1
+00107C  009701FE 00000002                    926          DC    A(9*MB+(7*K64)+510),A(2),XL4'F1'
+001084  000000F1
+
+
+
+
+001088                                       928 M12T9    DS    0F
+001088  C9                                   929          DC    X'C9'                       Test Num
+001089  0000                                 930          DC    X'00',X'00'
+00108B  C0                                   931          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+00108C  00001938 00000800                    932          DC    A(TRTO1L0),A(2048)          Source - Op 1 & length
+001094  00003138 00020000                    933          DC    A(TRTOP20),A(2*K64)         Source - FC Table & length
+                                             934 *                                          Target -
+00109C  00810000 00980000                    935          DC    A(7*MB+(17*K64)),A(9*MB+(8*K64)),A(0)  FC, Op1, Op1L
+0010A4  00000000
+0010A8  AABBCCDD                             936          DC    A(REG2PATT)
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    28
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0010AC  00000007                             937          DC    A(7) CC0
+0010B0  00980800 00000000                    938          DC    A(9*MB+(8*K64)+2048),A(0),XL4'00'
+0010B8  00000000
+
+
+
+
+0010BC                                       940 M12T10   DS    0F
+0010BC  CA                                   941          DC    X'CA'                       Test Num
+0010BD  0000                                 942          DC    X'00',X'00'
+0010BF  C0                                   943          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+0010C0  00002138 00000800                    944          DC    A(TRTO1L11),A(2048)         Source - Op 1 & length
+0010C8  00083B38 00020000                    945          DC    A(TRTOPC11),A(2*K64)        Source - FC Table & length
+                                             946 *                                          Target -
+0010D0  00830000 0098FF39                    947          DC    A(7*MB+(19*K64)),A(9*MB+(9*K64)-199),A(0)  FC, Op1, Op1L
+0010D8  00000000
+0010DC  AABBCCDD                             948          DC    A(REG2PATT)
+0010E0  0000000A                             949          DC    A(10) CC1 or CC3
+0010E4  00990339 00000400                    950          DC    A(9*MB+(9*K64)-199+(4*256)),A(1024),XL4'11'
+0010EC  00000011
+
+
+
+
+0010F0                                       952 M12T11   DS    0F
+0010F0  CB                                   953          DC    X'CB'                       Test Num
+0010F1  0000                                 954          DC    X'00',X'00'
+0010F3  C0                                   955          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+0010F4  00002938 00000800                    956          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+0010FC  000A3B5C 00020000                    957          DC    A(TRTOPCF0),A(2*K64)        Source - FC Table & length
+                                             958 *                                          Target -
+001104  0085FE1F 009A0000                    959          DC    A(7*MB+(22*K64)-481),A(9*MB+(10*K64)),A(0) FC, Op1, Op1L
+00110C  00000000
+001110  AABBCCDD                             960          DC    A(REG2PATT)
+001114  0000000B                             961          DC    A(11) CC1
+001118  009A07FE 00000002                    962          DC    A(9*MB+(10*K64)+2048-2),A(2),XL4'F0'
+001120  000000F0
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    29
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             964 ***********************************************************************
+                                             965 *        tests with   M3: A=1,F=1,L=1, reserved=0    (14)
+                                             966 *                     FC Table : SIZE: 512 (2 BYTE ARGUMENT)
+                                             967 *                                Function Code is 2 byte
+                                             968 *                                Limit arg to 255
+                                             969 *
+                                             970 *              Note: Op1 length must be a multiple of 2
+                                             971 ***********************************************************************
+
+
+001124                                       973 M14T1    DS    0F
+001124  E1                                   974          DC    X'E1'                       Test Num
+001125  0000                                 975          DC    X'00',X'00'
+001127  E0                                   976          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+001128  00001438 00000002                    977          DC    A(TRTOP10),A(002)           Source - Op 1 & length
+001130  00003138 00000200                    978          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                             979 *                                          Target -
+001138  00B00000 00C00000                    980          DC    A(11*MB+(0*K64)),A(12*MB+(0*K64)),A(0)  FC, Op1, Op1L
+001140  00000000
+001144  AABBCCDD                             981          DC    A(REG2PATT)
+001148  00000007                             982          DC    A(7) CC0
+00114C  00C00002 00000000                    983          DC    A(12*MB+(0*K64)+002),A(000),A(0)
+001154  00000000
+
+
+
+
+001158                                       985 M14T2    DS    0F
+001158  E2                                   986          DC    X'E2'                       Test Num
+001159  0000                                 987          DC    X'00',X'00'
+00115B  E0                                   988          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+00115C  00001438 00000004                    989          DC    A(TRTOP10),A(004)           Source - Op 1 & length
+001164  00003138 00000200                    990          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                             991 *                                          Target -
+00116C  00B10000 00C10000                    992          DC    A(11*MB+(1*K64)),A(12*MB+(1*K64)),A(0)  FC, Op1, Op1L
+001174  00000000
+001178  AABBCCDD                             993          DC    A(REG2PATT)
+00117C  00000007                             994          DC    A(7) CC0
+001180  00C10004 00000000                    995          DC    A(12*MB+(1*K64)+004),A(000),A(0)
+001188  00000000
+
+
+
+
+00118C                                       997 M14T3    DS    0F
+00118C  E3                                   998          DC    X'E3'                       Test Num
+00118D  0000                                 999          DC    X'00',X'00'
+00118F  E0                                  1000          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+001190  00001438 00000008                   1001          DC    A(TRTOP10),A(008)           Source - Op 1 & length
+001198  00003138 00000200                   1002          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                            1003 *                                          Target -
+0011A0  00B20000 00C20000                   1004          DC    A(11*MB+(2*K64)),A(12*MB+(2*K64)),A(0)  FC, Op1, Op1L
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    30
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0011A8  00000000
+0011AC  AABBCCDD                            1005          DC    A(REG2PATT)
+0011B0  00000007                            1006          DC    A(7) CC0
+0011B4  00C20008 00000000                   1007          DC    A(12*MB+(2*K64)+008),A(000),A(0)
+0011BC  00000000
+
+
+
+
+0011C0                                      1009 M14T4    DS    0F
+0011C0  E4                                  1010          DC    X'E4'                       Test Num
+0011C1  0000                                1011          DC    X'00',X'00'
+0011C3  E0                                  1012          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+0011C4  00001438 00000100                   1013          DC    A(TRTOP10),A(256)           Source - Op 1 & length
+0011CC  00003138 00000200                   1014          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                            1015 *                                          Target -
+0011D4  00B30000 00C30000                   1016          DC    A(11*MB+(3*K64)),A(12*MB+(3*K64)),A(0)  FC, Op1, Op1L
+0011DC  00000000
+0011E0  AABBCCDD                            1017          DC    A(REG2PATT)
+0011E4  00000007                            1018          DC    A(7) CC0
+0011E8  00C30100 00000000                   1019          DC    A(12*MB+(3*K64)+256),A(000),A(0)
+0011F0  00000000
+
+
+
+
+0011F4                                      1021 M14T5    DS    0F
+0011F4  E5                                  1022          DC    X'E5'                       Test Num
+0011F5  0000                                1023          DC    X'00',X'00'
+0011F7  E0                                  1024          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+0011F8  00001538 00000100                   1025          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+001200  00023438 00000200                   1026          DC    A(TRTOP411),A(512)          Source - FC Table & length
+                                            1027 *                                          Target -
+001208  00B40000 00C3FFF4                   1028          DC    A(11*MB+(4*K64)),A(12*MB+(4*K64)-12),A(0)  FC, Op1, Op1L
+001210  00000000
+001214  AABBCCDD                            1029          DC    A(REG2PATT)
+001218  0000000A                            1030          DC    A(10) CC1 or CC3
+00121C  00C40004 000000F0                   1031          DC    A(12*MB+(4*K64)-12+X'10'),A(256-X'10'),XL4'11'
+001224  00000011
+
+
+
+
+001228                                      1033 M14T6    DS    0F
+001228  E6                                  1034          DC    X'E6'                       Test Num
+001229  0000                                1035          DC    X'00',X'00'
+00122B  E0                                  1036          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+00122C  00001638 00000100                   1037          DC    A(TRTOP1F0),A(256)          Source - Op 1 & length
+001234  00023638 00000200                   1038          DC    A(TRTOP4F0),A(512)          Source - FC Table & length
+                                            1039 *                                          Target -
+00123C  00B50000 00C4FFF4                   1040          DC    A(11*MB+(5*K64)),A(12*MB+(5*K64)-12),A(0)  FC, Op1, Op1L
+001244  00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    31
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+001248  AABBCCDD                            1041          DC    A(REG2PATT)
+00124C  0000000A                            1042          DC    A(10) CC1 or CC3
+001250  00C500F2 00000002                   1043          DC    A(12*MB+(5*K64)-12+254),A(2),XL4'F0'
+001258  000000F0
+
+
+
+
+00125C                                      1045 M14T7    DS    0F
+00125C  E7                                  1046          DC    X'E7'                       Test Num
+00125D  0000                                1047          DC    X'00',X'00'
+00125F  E0                                  1048          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+001260  00001538 00000100                   1049          DC    A(TRTOP111),A(256)          Source - Op 1 & length
+001268  00023438 00000200                   1050          DC    A(TRTOP411),A(512)          Source - FC Table & length
+                                            1051 *                                          Target -
+001270  00B5FFE0 00C60000                   1052          DC    A(11*MB+(6*K64)-32),A(12*MB+(6*K64)),A(0)  FC, Op1, Op1L
+001278  00000000
+00127C  AABBCCDD                            1053          DC    A(REG2PATT)
+001280  0000000B                            1054          DC    A(11) CC1
+001284  00C60010 000000F0                   1055          DC    A(12*MB+(6*K64)+X'10'),A(256-X'10'),XL4'11'
+00128C  00000011
+
+
+
+
+001290                                      1057 M14T8    DS    0F
+001290  E8                                  1058          DC    X'E8'                       Test Num
+001291  0000                                1059          DC    X'00',X'00'
+001293  E0                                  1060          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+001294  00001738 00000200                   1061          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
+00129C  000C3D5A 00000200                   1062          DC    A(TRTOPCF1),A(512)          Source - FC Table & length
+                                            1063 *                                          Target -
+0012A4  00B70000 00C70000                   1064          DC    A(11*MB+(7*K64)),A(12*MB+(7*K64)),A(0)  FC, Op1, Op1L
+0012AC  00000000
+0012B0  AABBCCDD                            1065          DC    A(REG2PATT)
+0012B4  0000000B                            1066          DC    A(11) CC1
+0012B8  00C701FE 00000002                   1067          DC    A(12*MB+(7*K64)+510),A(2),XL4'F1'
+0012C0  000000F1
+
+
+
+
+0012C4                                      1069 M14T9    DS    0F
+0012C4  E9                                  1070          DC    X'E9'                       Test Num
+0012C5  0000                                1071          DC    X'00',X'00'
+0012C7  E0                                  1072          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+0012C8  00001938 00000800                   1073          DC    A(TRTO1L0),A(2048)          Source - Op 1 & length
+0012D0  00003138 00000200                   1074          DC    A(TRTOP20),A(512)           Source - FC Table & length
+                                            1075 *                                          Target -
+0012D8  00B80000 00C80000                   1076          DC    A(11*MB+(8*K64)),A(12*MB+(8*K64)),A(0)  FC, Op1, Op1L
+0012E0  00000000
+0012E4  AABBCCDD                            1077          DC    A(REG2PATT)
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    32
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0012E8  00000007                            1078          DC    A(7) CC0
+0012EC  00C80800 00000000                   1079          DC    A(12*MB+(8*K64)+2048),A(000),A(0)
+0012F4  00000000
+
+
+
+
+0012F8                                      1081 M14T10   DS    0F
+0012F8  EA                                  1082          DC    X'EA'                       Test Num
+0012F9  0000                                1083          DC    X'00',X'00'
+0012FB  E0                                  1084          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+0012FC  00002138 00000800                   1085          DC    A(TRTO1L11),A(2048)         Source - Op 1 & length
+001304  00023438 00000200                   1086          DC    A(TRTOP411),A(512)          Source - FC Table & length
+                                            1087 *                                          Target -
+00130C  00B90000 00C8FF38                   1088          DC    A(11*MB+(9*K64)),A(12*MB+(9*K64)-200),A(0) FC, Op1, Op1L
+001314  00000000
+001318  AABBCCDD                            1089          DC    A(REG2PATT)
+00131C  0000000A                            1090          DC    A(10) CC1 or CC3
+001320  00C90338 00000400                   1091          DC    A(12*MB+(9*K64)-200+(4*256)),A(1024),XL4'11'
+001328  00000011
+
+
+
+
+00132C                                      1093 M14T11   DS    0F
+00132C  EB                                  1094          DC    X'EB'                       Test Num
+00132D  0000                                1095          DC    X'00',X'00'
+00132F  E0                                  1096          DC    X'E0'                       M3: A=1,F=1,L=1,--=0
+001330  00002938 00000800                   1097          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+001338  00023638 00000200                   1098          DC    A(TRTOP4F0),A(512)          Source - FC Table & length
+                                            1099 *                                          Target -  FC, Op1, Op1L
+001340  00B9FFC0 00CA0000                   1100          DC    A(11*MB+(10*K64)-64),A(12*MB+(10*K64)),A(0)
+001348  00000000
+00134C  AABBCCDD                            1101          DC    A(REG2PATT)
+001350  0000000B                            1102          DC    A(11) CC1
+001354  00CA07FE 00000002                   1103          DC    A(12*MB+(10*K64)+2048-2),A(2),XL4'F0'
+00135C  000000F0
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    33
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            1105 ***********************************************************************
+                                            1106 *        Check performance tests are valid.
+                                            1107 *        tests with   M3: A=1,F=1,L=0, reserved=0    (12)
+                                            1108 *                     FC Table : SIZE: 131,072 (2 BYTE ARGUMENT)
+                                            1109 *                                Function Code is 2 bytes
+                                            1110 *
+                                            1111 *              Note: Op1 length must be a multiple of 2
+                                            1112 ***********************************************************************
+
+
+001360                                      1114 F12T8    DS    0F
+001360  F8                                  1115          DC    X'F8'                       Test Num
+001361  0000                                1116          DC    X'00',X'00'
+001363  C0                                  1117          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+001364  00001738 00000200                   1118          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
+00136C  000C3D5A 00020000                   1119          DC    A(TRTOPCF1),A(2*K64)        Source - FC Table & length
+                                            1120 *                                          Target -
+001374  00710000 00910000                   1121          DC    A(7*MB+(1*K64)),A(9*MB+(1*K64)),A(0)  FC, Op1, Op1L
+00137C  00000000
+001380  AABBCCDD                            1122          DC    A(REG2PATT)
+001384  0000000B                            1123          DC    A(11) CC1
+001388  009101FE 00000002                   1124          DC    A(9*MB+(1*K64)+510),A(2),XL4'F1'
+001390  000000F1
+
+
+
+
+001394                                      1126 F12T8A   DS    0F
+001394  F9                                  1127          DC    X'F9'                       Test Num
+001395  0000                                1128          DC    X'00',X'00'
+001397  C0                                  1129          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+001398  00001738 00000200                   1130          DC    A(TRTOP1F1),A(512)          Source - Op 1 & length
+0013A0  000C3D5A 00020000                   1131          DC    A(TRTOPCF1),A(2*K64)        Source - FC Table & length
+                                            1132 *                                          Target - FC, Op1, Op1L
+0013A8  0072FF81 0092FF81                   1133          DC    A(7*MB+(3*K64)-127),A(9*MB+(3*K64)-127),A(0)
+0013B0  00000000
+0013B4  AABBCCDD                            1134          DC    A(REG2PATT)
+0013B8  0000000A                            1135          DC    A(10) CC1 or CC3
+0013BC  0093017F 00000002                   1136          DC    A(9*MB+(3*K64)-127+510),A(2),XL4'F1'
+0013C4  000000F1
+
+
+
+
+0013C8                                      1138 F12T11   DS    0F
+0013C8  FB                                  1139          DC    X'FB'                       Test Num
+0013C9  0000                                1140          DC    X'00',X'00'
+0013CB  C0                                  1141          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+0013CC  00002938 00000800                   1142          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+0013D4  000A3B5C 00020000                   1143          DC    A(TRTOPCF0),A(2*K64)        Source - FC Table & length
+                                            1144 *                                          Target -
+0013DC  00760000 00960000                   1145          DC    A(7*MB+(6*K64)),A(9*MB+(6*K64)),A(0) FC, Op1, Op1L
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    34
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0013E4  00000000
+0013E8  AABBCCDD                            1146          DC    A(REG2PATT)
+0013EC  0000000B                            1147          DC    A(11) CC1
+0013F0  009607FE 00000002                   1148          DC    A(9*MB+(6*K64)+2048-2),A(2),XL4'F0'
+0013F8  000000F0
+
+
+
+
+0013FC                                      1150 F12T11A  DS    0F
+0013FC  FC                                  1151          DC    X'FC'                       Test Num
+0013FD  0000                                1152          DC    X'00',X'00'
+0013FF  C0                                  1153          DC    X'C0'                       M3: A=1,F=1,L=0,--=0
+001400  00002938 00000800                   1154          DC    A(TRTO1LF0),A(2048)         Source - Op 1 & length
+001408  000A3B5C 00020000                   1155          DC    A(TRTOPCF0),A(2*K64)        Source - FC Table & length
+                                            1156 *                                          Target - FC, Op1, Op1L
+001410  0078FE1F 0098FE1F                   1157          DC    A(7*MB+(9*K64)-481),A(9*MB+(9*K64)-481),A(0)
+001418  00000000
+00141C  AABBCCDD                            1158          DC    A(REG2PATT)
+001420  0000000A                            1159          DC    A(10) CC1 or CC3
+001424  0099061D 00000002                   1160          DC    A(9*MB+(9*K64)-481+2048-2),A(2),XL4'F0'
+00142C  000000F0
+                                            1161
+                                            1162
+                                            1163
+001430  00000000                            1164          DC    A(0)     end of table
+001434  00000000                            1165          DC    A(0)     end of table
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    35
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            1167 ***********************************************************************
+                                            1168 *        TRTE op1 scan data...
+                                            1169 ***********************************************************************
+
+001438  78125634 78125634                   1171 TRTOP10  DC    64XL4'78125634'    (CC0)
+001440  78125634 78125634
+001448  78125634 78125634
+001450  78125634 78125634
+001458  78125634 78125634
+001460  78125634 78125634
+001468  78125634 78125634
+001470  78125634 78125634
+001478  78125634 78125634
+001480  78125634 78125634
+001488  78125634 78125634
+001490  78125634 78125634
+001498  78125634 78125634
+0014A0  78125634 78125634
+0014A8  78125634 78125634
+0014B0  78125634 78125634
+0014B8  78125634 78125634
+0014C0  78125634 78125634
+0014C8  78125634 78125634
+0014D0  78125634 78125634
+0014D8  78125634 78125634
+0014E0  78125634 78125634
+0014E8  78125634 78125634
+0014F0  78125634 78125634
+0014F8  78125634 78125634
+001500  78125634 78125634
+001508  78125634 78125634
+001510  78125634 78125634
+001518  78125634 78125634
+001520  78125634 78125634
+001528  78125634 78125634
+001530  78125634 78125634
+
+001538  78125634 78125634                   1173 TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
+001540  78125634 78125634
+001548  00110000 78125634
+001550  78125634 78125634
+001558  78125634 78125634
+001560  78125634 78125634
+001568  78125634 78125634
+001570  78125634 78125634
+001578  78125634 78125634
+001580  78125634 78125634
+001588  78125634 78125634
+001590  78125634 78125634
+001598  78125634 78125634
+0015A0  78125634 78125634
+0015A8  78125634 78125634
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    36
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0015B0  78125634 78125634
+0015B8  78125634 78125634
+0015C0  78125634 78125634
+0015C8  78125634 78125634
+0015D0  78125634 78125634
+0015D8  78125634 78125634
+0015E0  78125634 78125634
+0015E8  78125634 78125634
+0015F0  78125634 78125634
+0015F8  78125634 78125634
+001600  78125634 78125634
+001608  78125634 78125634
+001610  78125634 78125634
+001618  78125634 78125634
+001620  78125634 78125634
+001628  78125634 78125634
+001630  78125634 78125634
+
+001638  78125634 78125634                   1175 TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC1)
+001640  78125634 78125634
+001648  78125634 78125634
+001650  78125634 78125634
+001658  78125634 78125634
+001660  78125634 78125634
+001668  78125634 78125634
+001670  78125634 78125634
+001678  78125634 78125634
+001680  78125634 78125634
+001688  78125634 78125634
+001690  78125634 78125634
+001698  78125634 78125634
+0016A0  78125634 78125634
+0016A8  78125634 78125634
+0016B0  78125634 78125634
+0016B8  78125634 78125634
+0016C0  78125634 78125634
+0016C8  78125634 78125634
+0016D0  78125634 78125634
+0016D8  78125634 78125634
+0016E0  78125634 78125634
+0016E8  78125634 78125634
+0016F0  78125634 78125634
+0016F8  78125634 78125634
+001700  78125634 78125634
+001708  78125634 78125634
+001710  78125634 78125634
+001718  78125634 78125634
+001720  78125634 78125634
+001728  78125634 78125634
+001730  78125634 000000F0
+
+001738  78125634 78125634                   1177 TRTOP1F1 DC    127XL4'78125634',X'000000F1'    (CC1)
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    37
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+001740  78125634 78125634
+001748  78125634 78125634
+001750  78125634 78125634
+001758  78125634 78125634
+001760  78125634 78125634
+001768  78125634 78125634
+001770  78125634 78125634
+001778  78125634 78125634
+001780  78125634 78125634
+001788  78125634 78125634
+001790  78125634 78125634
+001798  78125634 78125634
+0017A0  78125634 78125634
+0017A8  78125634 78125634
+0017B0  78125634 78125634
+0017B8  78125634 78125634
+0017C0  78125634 78125634
+0017C8  78125634 78125634
+0017D0  78125634 78125634
+0017D8  78125634 78125634
+0017E0  78125634 78125634
+0017E8  78125634 78125634
+0017F0  78125634 78125634
+0017F8  78125634 78125634
+001800  78125634 78125634
+001808  78125634 78125634
+001810  78125634 78125634
+001818  78125634 78125634
+001820  78125634 78125634
+001828  78125634 78125634
+001830  78125634 78125634
+001838  78125634 78125634
+001840  78125634 78125634
+001848  78125634 78125634
+001850  78125634 78125634
+001858  78125634 78125634
+001860  78125634 78125634
+001868  78125634 78125634
+001870  78125634 78125634
+001878  78125634 78125634
+001880  78125634 78125634
+001888  78125634 78125634
+001890  78125634 78125634
+001898  78125634 78125634
+0018A0  78125634 78125634
+0018A8  78125634 78125634
+0018B0  78125634 78125634
+0018B8  78125634 78125634
+0018C0  78125634 78125634
+0018C8  78125634 78125634
+0018D0  78125634 78125634
+0018D8  78125634 78125634
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    38
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0018E0  78125634 78125634
+0018E8  78125634 78125634
+0018F0  78125634 78125634
+0018F8  78125634 78125634
+001900  78125634 78125634
+001908  78125634 78125634
+001910  78125634 78125634
+001918  78125634 78125634
+001920  78125634 78125634
+001928  78125634 78125634
+001930  78125634 000000F1
+
+001938  98765432 98765432                   1179 TRTO1L0  DC    512XL4'98765432'    (CC0)
+001940  98765432 98765432
+001948  98765432 98765432
+001950  98765432 98765432
+001958  98765432 98765432
+001960  98765432 98765432
+001968  98765432 98765432
+001970  98765432 98765432
+001978  98765432 98765432
+001980  98765432 98765432
+001988  98765432 98765432
+001990  98765432 98765432
+001998  98765432 98765432
+0019A0  98765432 98765432
+0019A8  98765432 98765432
+0019B0  98765432 98765432
+0019B8  98765432 98765432
+0019C0  98765432 98765432
+0019C8  98765432 98765432
+0019D0  98765432 98765432
+0019D8  98765432 98765432
+0019E0  98765432 98765432
+0019E8  98765432 98765432
+0019F0  98765432 98765432
+0019F8  98765432 98765432
+001A00  98765432 98765432
+001A08  98765432 98765432
+001A10  98765432 98765432
+001A18  98765432 98765432
+001A20  98765432 98765432
+001A28  98765432 98765432
+001A30  98765432 98765432
+001A38  98765432 98765432
+001A40  98765432 98765432
+001A48  98765432 98765432
+001A50  98765432 98765432
+001A58  98765432 98765432
+001A60  98765432 98765432
+001A68  98765432 98765432
+001A70  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    39
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+001A78  98765432 98765432
+001A80  98765432 98765432
+001A88  98765432 98765432
+001A90  98765432 98765432
+001A98  98765432 98765432
+001AA0  98765432 98765432
+001AA8  98765432 98765432
+001AB0  98765432 98765432
+001AB8  98765432 98765432
+001AC0  98765432 98765432
+001AC8  98765432 98765432
+001AD0  98765432 98765432
+001AD8  98765432 98765432
+001AE0  98765432 98765432
+001AE8  98765432 98765432
+001AF0  98765432 98765432
+001AF8  98765432 98765432
+001B00  98765432 98765432
+001B08  98765432 98765432
+001B10  98765432 98765432
+001B18  98765432 98765432
+001B20  98765432 98765432
+001B28  98765432 98765432
+001B30  98765432 98765432
+001B38  98765432 98765432
+001B40  98765432 98765432
+001B48  98765432 98765432
+001B50  98765432 98765432
+001B58  98765432 98765432
+001B60  98765432 98765432
+001B68  98765432 98765432
+001B70  98765432 98765432
+001B78  98765432 98765432
+001B80  98765432 98765432
+001B88  98765432 98765432
+001B90  98765432 98765432
+001B98  98765432 98765432
+001BA0  98765432 98765432
+001BA8  98765432 98765432
+001BB0  98765432 98765432
+001BB8  98765432 98765432
+001BC0  98765432 98765432
+001BC8  98765432 98765432
+001BD0  98765432 98765432
+001BD8  98765432 98765432
+001BE0  98765432 98765432
+001BE8  98765432 98765432
+001BF0  98765432 98765432
+001BF8  98765432 98765432
+001C00  98765432 98765432
+001C08  98765432 98765432
+001C10  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    40
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+001C18  98765432 98765432
+001C20  98765432 98765432
+001C28  98765432 98765432
+001C30  98765432 98765432
+001C38  98765432 98765432
+001C40  98765432 98765432
+001C48  98765432 98765432
+001C50  98765432 98765432
+001C58  98765432 98765432
+001C60  98765432 98765432
+001C68  98765432 98765432
+001C70  98765432 98765432
+001C78  98765432 98765432
+001C80  98765432 98765432
+001C88  98765432 98765432
+001C90  98765432 98765432
+001C98  98765432 98765432
+001CA0  98765432 98765432
+001CA8  98765432 98765432
+001CB0  98765432 98765432
+001CB8  98765432 98765432
+001CC0  98765432 98765432
+001CC8  98765432 98765432
+001CD0  98765432 98765432
+001CD8  98765432 98765432
+001CE0  98765432 98765432
+001CE8  98765432 98765432
+001CF0  98765432 98765432
+001CF8  98765432 98765432
+001D00  98765432 98765432
+001D08  98765432 98765432
+001D10  98765432 98765432
+001D18  98765432 98765432
+001D20  98765432 98765432
+001D28  98765432 98765432
+001D30  98765432 98765432
+001D38  98765432 98765432
+001D40  98765432 98765432
+001D48  98765432 98765432
+001D50  98765432 98765432
+001D58  98765432 98765432
+001D60  98765432 98765432
+001D68  98765432 98765432
+001D70  98765432 98765432
+001D78  98765432 98765432
+001D80  98765432 98765432
+001D88  98765432 98765432
+001D90  98765432 98765432
+001D98  98765432 98765432
+001DA0  98765432 98765432
+001DA8  98765432 98765432
+001DB0  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    41
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+001DB8  98765432 98765432
+001DC0  98765432 98765432
+001DC8  98765432 98765432
+001DD0  98765432 98765432
+001DD8  98765432 98765432
+001DE0  98765432 98765432
+001DE8  98765432 98765432
+001DF0  98765432 98765432
+001DF8  98765432 98765432
+001E00  98765432 98765432
+001E08  98765432 98765432
+001E10  98765432 98765432
+001E18  98765432 98765432
+001E20  98765432 98765432
+001E28  98765432 98765432
+001E30  98765432 98765432
+001E38  98765432 98765432
+001E40  98765432 98765432
+001E48  98765432 98765432
+001E50  98765432 98765432
+001E58  98765432 98765432
+001E60  98765432 98765432
+001E68  98765432 98765432
+001E70  98765432 98765432
+001E78  98765432 98765432
+001E80  98765432 98765432
+001E88  98765432 98765432
+001E90  98765432 98765432
+001E98  98765432 98765432
+001EA0  98765432 98765432
+001EA8  98765432 98765432
+001EB0  98765432 98765432
+001EB8  98765432 98765432
+001EC0  98765432 98765432
+001EC8  98765432 98765432
+001ED0  98765432 98765432
+001ED8  98765432 98765432
+001EE0  98765432 98765432
+001EE8  98765432 98765432
+001EF0  98765432 98765432
+001EF8  98765432 98765432
+001F00  98765432 98765432
+001F08  98765432 98765432
+001F10  98765432 98765432
+001F18  98765432 98765432
+001F20  98765432 98765432
+001F28  98765432 98765432
+001F30  98765432 98765432
+001F38  98765432 98765432
+001F40  98765432 98765432
+001F48  98765432 98765432
+001F50  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    42
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+001F58  98765432 98765432
+001F60  98765432 98765432
+001F68  98765432 98765432
+001F70  98765432 98765432
+001F78  98765432 98765432
+001F80  98765432 98765432
+001F88  98765432 98765432
+001F90  98765432 98765432
+001F98  98765432 98765432
+001FA0  98765432 98765432
+001FA8  98765432 98765432
+001FB0  98765432 98765432
+001FB8  98765432 98765432
+001FC0  98765432 98765432
+001FC8  98765432 98765432
+001FD0  98765432 98765432
+001FD8  98765432 98765432
+001FE0  98765432 98765432
+001FE8  98765432 98765432
+001FF0  98765432 98765432
+001FF8  98765432 98765432
+002000  98765432 98765432
+002008  98765432 98765432
+002010  98765432 98765432
+002018  98765432 98765432
+002020  98765432 98765432
+002028  98765432 98765432
+002030  98765432 98765432
+002038  98765432 98765432
+002040  98765432 98765432
+002048  98765432 98765432
+002050  98765432 98765432
+002058  98765432 98765432
+002060  98765432 98765432
+002068  98765432 98765432
+002070  98765432 98765432
+002078  98765432 98765432
+002080  98765432 98765432
+002088  98765432 98765432
+002090  98765432 98765432
+002098  98765432 98765432
+0020A0  98765432 98765432
+0020A8  98765432 98765432
+0020B0  98765432 98765432
+0020B8  98765432 98765432
+0020C0  98765432 98765432
+0020C8  98765432 98765432
+0020D0  98765432 98765432
+0020D8  98765432 98765432
+0020E0  98765432 98765432
+0020E8  98765432 98765432
+0020F0  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    43
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0020F8  98765432 98765432
+002100  98765432 98765432
+002108  98765432 98765432
+002110  98765432 98765432
+002118  98765432 98765432
+002120  98765432 98765432
+002128  98765432 98765432
+002130  98765432 98765432
+
+002138  98765432 98765432                   1181 TRTO1L11 DC    256XL4'98765432',X'00110000',255XL4'98765432'    (CC1)
+002140  98765432 98765432
+002148  98765432 98765432
+002150  98765432 98765432
+002158  98765432 98765432
+002160  98765432 98765432
+002168  98765432 98765432
+002170  98765432 98765432
+002178  98765432 98765432
+002180  98765432 98765432
+002188  98765432 98765432
+002190  98765432 98765432
+002198  98765432 98765432
+0021A0  98765432 98765432
+0021A8  98765432 98765432
+0021B0  98765432 98765432
+0021B8  98765432 98765432
+0021C0  98765432 98765432
+0021C8  98765432 98765432
+0021D0  98765432 98765432
+0021D8  98765432 98765432
+0021E0  98765432 98765432
+0021E8  98765432 98765432
+0021F0  98765432 98765432
+0021F8  98765432 98765432
+002200  98765432 98765432
+002208  98765432 98765432
+002210  98765432 98765432
+002218  98765432 98765432
+002220  98765432 98765432
+002228  98765432 98765432
+002230  98765432 98765432
+002238  98765432 98765432
+002240  98765432 98765432
+002248  98765432 98765432
+002250  98765432 98765432
+002258  98765432 98765432
+002260  98765432 98765432
+002268  98765432 98765432
+002270  98765432 98765432
+002278  98765432 98765432
+002280  98765432 98765432
+002288  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    44
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+002290  98765432 98765432
+002298  98765432 98765432
+0022A0  98765432 98765432
+0022A8  98765432 98765432
+0022B0  98765432 98765432
+0022B8  98765432 98765432
+0022C0  98765432 98765432
+0022C8  98765432 98765432
+0022D0  98765432 98765432
+0022D8  98765432 98765432
+0022E0  98765432 98765432
+0022E8  98765432 98765432
+0022F0  98765432 98765432
+0022F8  98765432 98765432
+002300  98765432 98765432
+002308  98765432 98765432
+002310  98765432 98765432
+002318  98765432 98765432
+002320  98765432 98765432
+002328  98765432 98765432
+002330  98765432 98765432
+002338  98765432 98765432
+002340  98765432 98765432
+002348  98765432 98765432
+002350  98765432 98765432
+002358  98765432 98765432
+002360  98765432 98765432
+002368  98765432 98765432
+002370  98765432 98765432
+002378  98765432 98765432
+002380  98765432 98765432
+002388  98765432 98765432
+002390  98765432 98765432
+002398  98765432 98765432
+0023A0  98765432 98765432
+0023A8  98765432 98765432
+0023B0  98765432 98765432
+0023B8  98765432 98765432
+0023C0  98765432 98765432
+0023C8  98765432 98765432
+0023D0  98765432 98765432
+0023D8  98765432 98765432
+0023E0  98765432 98765432
+0023E8  98765432 98765432
+0023F0  98765432 98765432
+0023F8  98765432 98765432
+002400  98765432 98765432
+002408  98765432 98765432
+002410  98765432 98765432
+002418  98765432 98765432
+002420  98765432 98765432
+002428  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    45
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+002430  98765432 98765432
+002438  98765432 98765432
+002440  98765432 98765432
+002448  98765432 98765432
+002450  98765432 98765432
+002458  98765432 98765432
+002460  98765432 98765432
+002468  98765432 98765432
+002470  98765432 98765432
+002478  98765432 98765432
+002480  98765432 98765432
+002488  98765432 98765432
+002490  98765432 98765432
+002498  98765432 98765432
+0024A0  98765432 98765432
+0024A8  98765432 98765432
+0024B0  98765432 98765432
+0024B8  98765432 98765432
+0024C0  98765432 98765432
+0024C8  98765432 98765432
+0024D0  98765432 98765432
+0024D8  98765432 98765432
+0024E0  98765432 98765432
+0024E8  98765432 98765432
+0024F0  98765432 98765432
+0024F8  98765432 98765432
+002500  98765432 98765432
+002508  98765432 98765432
+002510  98765432 98765432
+002518  98765432 98765432
+002520  98765432 98765432
+002528  98765432 98765432
+002530  98765432 98765432
+002538  00110000 98765432
+002540  98765432 98765432
+002548  98765432 98765432
+002550  98765432 98765432
+002558  98765432 98765432
+002560  98765432 98765432
+002568  98765432 98765432
+002570  98765432 98765432
+002578  98765432 98765432
+002580  98765432 98765432
+002588  98765432 98765432
+002590  98765432 98765432
+002598  98765432 98765432
+0025A0  98765432 98765432
+0025A8  98765432 98765432
+0025B0  98765432 98765432
+0025B8  98765432 98765432
+0025C0  98765432 98765432
+0025C8  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    46
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0025D0  98765432 98765432
+0025D8  98765432 98765432
+0025E0  98765432 98765432
+0025E8  98765432 98765432
+0025F0  98765432 98765432
+0025F8  98765432 98765432
+002600  98765432 98765432
+002608  98765432 98765432
+002610  98765432 98765432
+002618  98765432 98765432
+002620  98765432 98765432
+002628  98765432 98765432
+002630  98765432 98765432
+002638  98765432 98765432
+002640  98765432 98765432
+002648  98765432 98765432
+002650  98765432 98765432
+002658  98765432 98765432
+002660  98765432 98765432
+002668  98765432 98765432
+002670  98765432 98765432
+002678  98765432 98765432
+002680  98765432 98765432
+002688  98765432 98765432
+002690  98765432 98765432
+002698  98765432 98765432
+0026A0  98765432 98765432
+0026A8  98765432 98765432
+0026B0  98765432 98765432
+0026B8  98765432 98765432
+0026C0  98765432 98765432
+0026C8  98765432 98765432
+0026D0  98765432 98765432
+0026D8  98765432 98765432
+0026E0  98765432 98765432
+0026E8  98765432 98765432
+0026F0  98765432 98765432
+0026F8  98765432 98765432
+002700  98765432 98765432
+002708  98765432 98765432
+002710  98765432 98765432
+002718  98765432 98765432
+002720  98765432 98765432
+002728  98765432 98765432
+002730  98765432 98765432
+002738  98765432 98765432
+002740  98765432 98765432
+002748  98765432 98765432
+002750  98765432 98765432
+002758  98765432 98765432
+002760  98765432 98765432
+002768  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    47
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+002770  98765432 98765432
+002778  98765432 98765432
+002780  98765432 98765432
+002788  98765432 98765432
+002790  98765432 98765432
+002798  98765432 98765432
+0027A0  98765432 98765432
+0027A8  98765432 98765432
+0027B0  98765432 98765432
+0027B8  98765432 98765432
+0027C0  98765432 98765432
+0027C8  98765432 98765432
+0027D0  98765432 98765432
+0027D8  98765432 98765432
+0027E0  98765432 98765432
+0027E8  98765432 98765432
+0027F0  98765432 98765432
+0027F8  98765432 98765432
+002800  98765432 98765432
+002808  98765432 98765432
+002810  98765432 98765432
+002818  98765432 98765432
+002820  98765432 98765432
+002828  98765432 98765432
+002830  98765432 98765432
+002838  98765432 98765432
+002840  98765432 98765432
+002848  98765432 98765432
+002850  98765432 98765432
+002858  98765432 98765432
+002860  98765432 98765432
+002868  98765432 98765432
+002870  98765432 98765432
+002878  98765432 98765432
+002880  98765432 98765432
+002888  98765432 98765432
+002890  98765432 98765432
+002898  98765432 98765432
+0028A0  98765432 98765432
+0028A8  98765432 98765432
+0028B0  98765432 98765432
+0028B8  98765432 98765432
+0028C0  98765432 98765432
+0028C8  98765432 98765432
+0028D0  98765432 98765432
+0028D8  98765432 98765432
+0028E0  98765432 98765432
+0028E8  98765432 98765432
+0028F0  98765432 98765432
+0028F8  98765432 98765432
+002900  98765432 98765432
+002908  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    48
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+002910  98765432 98765432
+002918  98765432 98765432
+002920  98765432 98765432
+002928  98765432 98765432
+002930  98765432 98765432
+
+002938  98765432 98765432                   1183 TRTO1LF0 DC    511XL4'98765432',X'000000F0'    (CC1)
+002940  98765432 98765432
+002948  98765432 98765432
+002950  98765432 98765432
+002958  98765432 98765432
+002960  98765432 98765432
+002968  98765432 98765432
+002970  98765432 98765432
+002978  98765432 98765432
+002980  98765432 98765432
+002988  98765432 98765432
+002990  98765432 98765432
+002998  98765432 98765432
+0029A0  98765432 98765432
+0029A8  98765432 98765432
+0029B0  98765432 98765432
+0029B8  98765432 98765432
+0029C0  98765432 98765432
+0029C8  98765432 98765432
+0029D0  98765432 98765432
+0029D8  98765432 98765432
+0029E0  98765432 98765432
+0029E8  98765432 98765432
+0029F0  98765432 98765432
+0029F8  98765432 98765432
+002A00  98765432 98765432
+002A08  98765432 98765432
+002A10  98765432 98765432
+002A18  98765432 98765432
+002A20  98765432 98765432
+002A28  98765432 98765432
+002A30  98765432 98765432
+002A38  98765432 98765432
+002A40  98765432 98765432
+002A48  98765432 98765432
+002A50  98765432 98765432
+002A58  98765432 98765432
+002A60  98765432 98765432
+002A68  98765432 98765432
+002A70  98765432 98765432
+002A78  98765432 98765432
+002A80  98765432 98765432
+002A88  98765432 98765432
+002A90  98765432 98765432
+002A98  98765432 98765432
+002AA0  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    49
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+002AA8  98765432 98765432
+002AB0  98765432 98765432
+002AB8  98765432 98765432
+002AC0  98765432 98765432
+002AC8  98765432 98765432
+002AD0  98765432 98765432
+002AD8  98765432 98765432
+002AE0  98765432 98765432
+002AE8  98765432 98765432
+002AF0  98765432 98765432
+002AF8  98765432 98765432
+002B00  98765432 98765432
+002B08  98765432 98765432
+002B10  98765432 98765432
+002B18  98765432 98765432
+002B20  98765432 98765432
+002B28  98765432 98765432
+002B30  98765432 98765432
+002B38  98765432 98765432
+002B40  98765432 98765432
+002B48  98765432 98765432
+002B50  98765432 98765432
+002B58  98765432 98765432
+002B60  98765432 98765432
+002B68  98765432 98765432
+002B70  98765432 98765432
+002B78  98765432 98765432
+002B80  98765432 98765432
+002B88  98765432 98765432
+002B90  98765432 98765432
+002B98  98765432 98765432
+002BA0  98765432 98765432
+002BA8  98765432 98765432
+002BB0  98765432 98765432
+002BB8  98765432 98765432
+002BC0  98765432 98765432
+002BC8  98765432 98765432
+002BD0  98765432 98765432
+002BD8  98765432 98765432
+002BE0  98765432 98765432
+002BE8  98765432 98765432
+002BF0  98765432 98765432
+002BF8  98765432 98765432
+002C00  98765432 98765432
+002C08  98765432 98765432
+002C10  98765432 98765432
+002C18  98765432 98765432
+002C20  98765432 98765432
+002C28  98765432 98765432
+002C30  98765432 98765432
+002C38  98765432 98765432
+002C40  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    50
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+002C48  98765432 98765432
+002C50  98765432 98765432
+002C58  98765432 98765432
+002C60  98765432 98765432
+002C68  98765432 98765432
+002C70  98765432 98765432
+002C78  98765432 98765432
+002C80  98765432 98765432
+002C88  98765432 98765432
+002C90  98765432 98765432
+002C98  98765432 98765432
+002CA0  98765432 98765432
+002CA8  98765432 98765432
+002CB0  98765432 98765432
+002CB8  98765432 98765432
+002CC0  98765432 98765432
+002CC8  98765432 98765432
+002CD0  98765432 98765432
+002CD8  98765432 98765432
+002CE0  98765432 98765432
+002CE8  98765432 98765432
+002CF0  98765432 98765432
+002CF8  98765432 98765432
+002D00  98765432 98765432
+002D08  98765432 98765432
+002D10  98765432 98765432
+002D18  98765432 98765432
+002D20  98765432 98765432
+002D28  98765432 98765432
+002D30  98765432 98765432
+002D38  98765432 98765432
+002D40  98765432 98765432
+002D48  98765432 98765432
+002D50  98765432 98765432
+002D58  98765432 98765432
+002D60  98765432 98765432
+002D68  98765432 98765432
+002D70  98765432 98765432
+002D78  98765432 98765432
+002D80  98765432 98765432
+002D88  98765432 98765432
+002D90  98765432 98765432
+002D98  98765432 98765432
+002DA0  98765432 98765432
+002DA8  98765432 98765432
+002DB0  98765432 98765432
+002DB8  98765432 98765432
+002DC0  98765432 98765432
+002DC8  98765432 98765432
+002DD0  98765432 98765432
+002DD8  98765432 98765432
+002DE0  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    51
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+002DE8  98765432 98765432
+002DF0  98765432 98765432
+002DF8  98765432 98765432
+002E00  98765432 98765432
+002E08  98765432 98765432
+002E10  98765432 98765432
+002E18  98765432 98765432
+002E20  98765432 98765432
+002E28  98765432 98765432
+002E30  98765432 98765432
+002E38  98765432 98765432
+002E40  98765432 98765432
+002E48  98765432 98765432
+002E50  98765432 98765432
+002E58  98765432 98765432
+002E60  98765432 98765432
+002E68  98765432 98765432
+002E70  98765432 98765432
+002E78  98765432 98765432
+002E80  98765432 98765432
+002E88  98765432 98765432
+002E90  98765432 98765432
+002E98  98765432 98765432
+002EA0  98765432 98765432
+002EA8  98765432 98765432
+002EB0  98765432 98765432
+002EB8  98765432 98765432
+002EC0  98765432 98765432
+002EC8  98765432 98765432
+002ED0  98765432 98765432
+002ED8  98765432 98765432
+002EE0  98765432 98765432
+002EE8  98765432 98765432
+002EF0  98765432 98765432
+002EF8  98765432 98765432
+002F00  98765432 98765432
+002F08  98765432 98765432
+002F10  98765432 98765432
+002F18  98765432 98765432
+002F20  98765432 98765432
+002F28  98765432 98765432
+002F30  98765432 98765432
+002F38  98765432 98765432
+002F40  98765432 98765432
+002F48  98765432 98765432
+002F50  98765432 98765432
+002F58  98765432 98765432
+002F60  98765432 98765432
+002F68  98765432 98765432
+002F70  98765432 98765432
+002F78  98765432 98765432
+002F80  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    52
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+002F88  98765432 98765432
+002F90  98765432 98765432
+002F98  98765432 98765432
+002FA0  98765432 98765432
+002FA8  98765432 98765432
+002FB0  98765432 98765432
+002FB8  98765432 98765432
+002FC0  98765432 98765432
+002FC8  98765432 98765432
+002FD0  98765432 98765432
+002FD8  98765432 98765432
+002FE0  98765432 98765432
+002FE8  98765432 98765432
+002FF0  98765432 98765432
+002FF8  98765432 98765432
+003000  98765432 98765432
+003008  98765432 98765432
+003010  98765432 98765432
+003018  98765432 98765432
+003020  98765432 98765432
+003028  98765432 98765432
+003030  98765432 98765432
+003038  98765432 98765432
+003040  98765432 98765432
+003048  98765432 98765432
+003050  98765432 98765432
+003058  98765432 98765432
+003060  98765432 98765432
+003068  98765432 98765432
+003070  98765432 98765432
+003078  98765432 98765432
+003080  98765432 98765432
+003088  98765432 98765432
+003090  98765432 98765432
+003098  98765432 98765432
+0030A0  98765432 98765432
+0030A8  98765432 98765432
+0030B0  98765432 98765432
+0030B8  98765432 98765432
+0030C0  98765432 98765432
+0030C8  98765432 98765432
+0030D0  98765432 98765432
+0030D8  98765432 98765432
+0030E0  98765432 98765432
+0030E8  98765432 98765432
+0030F0  98765432 98765432
+0030F8  98765432 98765432
+003100  98765432 98765432
+003108  98765432 98765432
+003110  98765432 98765432
+003118  98765432 98765432
+003120  98765432 98765432
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    53
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+003128  98765432 98765432
+003130  98765432 000000F0
+                                            1184
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    54
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            1186 ***********************************************************************
+                                            1187 *        Function Code (FC) Tables (GR1)
+                                            1188 ***********************************************************************
+
+003138  00000000 00000000                   1190 TRTOP20  DC    256X'00'            no stop
+003140  00000000 00000000
+003148  00000000 00000000
+003150  00000000 00000000
+003158  00000000 00000000
+003160  00000000 00000000
+003168  00000000 00000000
+003170  00000000 00000000
+003178  00000000 00000000
+003180  00000000 00000000
+003188  00000000 00000000
+003190  00000000 00000000
+003198  00000000 00000000
+0031A0  00000000 00000000
+0031A8  00000000 00000000
+0031B0  00000000 00000000
+0031B8  00000000 00000000
+0031C0  00000000 00000000
+0031C8  00000000 00000000
+0031D0  00000000 00000000
+0031D8  00000000 00000000
+0031E0  00000000 00000000
+0031E8  00000000 00000000
+0031F0  00000000 00000000
+0031F8  00000000 00000000
+003200  00000000 00000000
+003208  00000000 00000000
+003210  00000000 00000000
+003218  00000000 00000000
+003220  00000000 00000000
+003228  00000000 00000000
+003230  00000000 00000000
+003238                      003238  023238  1191          ORG   *+2*K64
+
+023238  00000000 00000000                   1193 TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
+023240  00000000 00000000
+023248  00110000 00000000
+023250  00000000 00000000
+023258  00000000 00000000
+023260  00000000 00000000
+023268  00000000 00000000
+023270  00000000 00000000
+023278  00000000 00000000
+023280  00000000 00000000
+023288  00000000 00000000
+023290  00000000 00000000
+023298  00000000 00000000
+0232A0  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    55
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0232A8  00000000 00000000
+0232B0  00000000 00000000
+0232B8  00000000 00000000
+0232C0  00000000 00000000
+0232C8  00000000 00000000
+0232D0  00000000 00000000
+0232D8  00000000 00000000
+0232E0  00000000 00000000
+0232E8  00000000 00000000
+0232F0  00000000 00000000
+0232F8  00000000 00000000
+023300  00000000 00000000
+023308  00000000 00000000
+023310  00000000 00000000
+023318  00000000 00000000
+023320  00000000 00000000
+023328  00000000 00000000
+023330  00000000 00000000
+
+023338  00000000 00000000                   1195 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+023340  00000000 00000000
+023348  00000000 00000000
+023350  00000000 00000000
+023358  00000000 00000000
+023360  00000000 00000000
+023368  00000000 00000000
+023370  00000000 00000000
+023378  00000000 00000000
+023380  00000000 00000000
+023388  00000000 00000000
+023390  00000000 00000000
+023398  00000000 00000000
+0233A0  00000000 00000000
+0233A8  00000000 00000000
+0233B0  00000000 00000000
+0233B8  00000000 00000000
+0233C0  00000000 00000000
+0233C8  00000000 00000000
+0233D0  00000000 00000000
+0233D8  00000000 00000000
+0233E0  00000000 00000000
+0233E8  00000000 00000000
+0233F0  00000000 00000000
+0233F8  00000000 00000000
+023400  00000000 00000000
+023408  00000000 00000000
+023410  00000000 00000000
+023418  00000000 00000000
+023420  00000000 00000000
+023428  F0000000 00000000
+023430  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    56
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+023438  00000000 00000000                   1197 TRTOP411 DC    34X'00',X'0011',476X'00'   stop on X'11'
+023440  00000000 00000000
+023448  00000000 00000000
+023450  00000000 00000000
+023458  00000011 00000000
+023460  00000000 00000000
+023468  00000000 00000000
+023470  00000000 00000000
+023478  00000000 00000000
+023480  00000000 00000000
+023488  00000000 00000000
+023490  00000000 00000000
+023498  00000000 00000000
+0234A0  00000000 00000000
+0234A8  00000000 00000000
+0234B0  00000000 00000000
+0234B8  00000000 00000000
+0234C0  00000000 00000000
+0234C8  00000000 00000000
+0234D0  00000000 00000000
+0234D8  00000000 00000000
+0234E0  00000000 00000000
+0234E8  00000000 00000000
+0234F0  00000000 00000000
+0234F8  00000000 00000000
+023500  00000000 00000000
+023508  00000000 00000000
+023510  00000000 00000000
+023518  00000000 00000000
+023520  00000000 00000000
+023528  00000000 00000000
+023530  00000000 00000000
+023538  00000000 00000000
+023540  00000000 00000000
+023548  00000000 00000000
+023550  00000000 00000000
+023558  00000000 00000000
+023560  00000000 00000000
+023568  00000000 00000000
+023570  00000000 00000000
+023578  00000000 00000000
+023580  00000000 00000000
+023588  00000000 00000000
+023590  00000000 00000000
+023598  00000000 00000000
+0235A0  00000000 00000000
+0235A8  00000000 00000000
+0235B0  00000000 00000000
+0235B8  00000000 00000000
+0235C0  00000000 00000000
+0235C8  00000000 00000000
+0235D0  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    57
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0235D8  00000000 00000000
+0235E0  00000000 00000000
+0235E8  00000000 00000000
+0235F0  00000000 00000000
+0235F8  00000000 00000000
+023600  00000000 00000000
+023608  00000000 00000000
+023610  00000000 00000000
+023618  00000000 00000000
+023620  00000000 00000000
+023628  00000000 00000000
+023630  00000000 00000000
+
+023638  00000000 00000000                   1199 TRTOP4F0 DC    480X'00',X'00F0',30X'00'     stop on X'F0'
+023640  00000000 00000000
+023648  00000000 00000000
+023650  00000000 00000000
+023658  00000000 00000000
+023660  00000000 00000000
+023668  00000000 00000000
+023670  00000000 00000000
+023678  00000000 00000000
+023680  00000000 00000000
+023688  00000000 00000000
+023690  00000000 00000000
+023698  00000000 00000000
+0236A0  00000000 00000000
+0236A8  00000000 00000000
+0236B0  00000000 00000000
+0236B8  00000000 00000000
+0236C0  00000000 00000000
+0236C8  00000000 00000000
+0236D0  00000000 00000000
+0236D8  00000000 00000000
+0236E0  00000000 00000000
+0236E8  00000000 00000000
+0236F0  00000000 00000000
+0236F8  00000000 00000000
+023700  00000000 00000000
+023708  00000000 00000000
+023710  00000000 00000000
+023718  00000000 00000000
+023720  00000000 00000000
+023728  00000000 00000000
+023730  00000000 00000000
+023738  00000000 00000000
+023740  00000000 00000000
+023748  00000000 00000000
+023750  00000000 00000000
+023758  00000000 00000000
+023760  00000000 00000000
+023768  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    58
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+023770  00000000 00000000
+023778  00000000 00000000
+023780  00000000 00000000
+023788  00000000 00000000
+023790  00000000 00000000
+023798  00000000 00000000
+0237A0  00000000 00000000
+0237A8  00000000 00000000
+0237B0  00000000 00000000
+0237B8  00000000 00000000
+0237C0  00000000 00000000
+0237C8  00000000 00000000
+0237D0  00000000 00000000
+0237D8  00000000 00000000
+0237E0  00000000 00000000
+0237E8  00000000 00000000
+0237F0  00000000 00000000
+0237F8  00000000 00000000
+023800  00000000 00000000
+023808  00000000 00000000
+023810  00000000 00000000
+023818  00F00000 00000000
+023820  00000000 00000000
+023828  00000000 00000000
+023830  00000000 00000000
+                                            1200
+023838  00000000 00000000                   1201 TRTOP811 DC    17X'00',X'11',238X'00'       stop on X'11'
+023840  00000000 00000000
+023848  00110000 00000000
+023850  00000000 00000000
+023858  00000000 00000000
+023860  00000000 00000000
+023868  00000000 00000000
+023870  00000000 00000000
+023878  00000000 00000000
+023880  00000000 00000000
+023888  00000000 00000000
+023890  00000000 00000000
+023898  00000000 00000000
+0238A0  00000000 00000000
+0238A8  00000000 00000000
+0238B0  00000000 00000000
+0238B8  00000000 00000000
+0238C0  00000000 00000000
+0238C8  00000000 00000000
+0238D0  00000000 00000000
+0238D8  00000000 00000000
+0238E0  00000000 00000000
+0238E8  00000000 00000000
+0238F0  00000000 00000000
+0238F8  00000000 00000000
+023900  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    59
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+023908  00000000 00000000
+023910  00000000 00000000
+023918  00000000 00000000
+023920  00000000 00000000
+023928  00000000 00000000
+023930  00000000 00000000
+023938                      023938  043938  1202          ORG   *+2*K64
+                                            1203
+043938  00000000 00000000                   1204 TRTOP8F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+043940  00000000 00000000
+043948  00000000 00000000
+043950  00000000 00000000
+043958  00000000 00000000
+043960  00000000 00000000
+043968  00000000 00000000
+043970  00000000 00000000
+043978  00000000 00000000
+043980  00000000 00000000
+043988  00000000 00000000
+043990  00000000 00000000
+043998  00000000 00000000
+0439A0  00000000 00000000
+0439A8  00000000 00000000
+0439B0  00000000 00000000
+0439B8  00000000 00000000
+0439C0  00000000 00000000
+0439C8  00000000 00000000
+0439D0  00000000 00000000
+0439D8  00000000 00000000
+0439E0  00000000 00000000
+0439E8  00000000 00000000
+0439F0  00000000 00000000
+0439F8  00000000 00000000
+043A00  00000000 00000000
+043A08  00000000 00000000
+043A10  00000000 00000000
+043A18  00000000 00000000
+043A20  00000000 00000000
+043A28  F0000000 00000000
+043A30  00000000 00000000
+043A38                      043A38  063A38  1205          ORG   *+2*K64
+                                            1206
+063A38  00000000 00000000                   1207 TRTOP8F1 DC    240X'00',X'00',X'F1',14X'00'     stop on X'F1'
+063A40  00000000 00000000
+063A48  00000000 00000000
+063A50  00000000 00000000
+063A58  00000000 00000000
+063A60  00000000 00000000
+063A68  00000000 00000000
+063A70  00000000 00000000
+063A78  00000000 00000000
+063A80  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    60
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+063A88  00000000 00000000
+063A90  00000000 00000000
+063A98  00000000 00000000
+063AA0  00000000 00000000
+063AA8  00000000 00000000
+063AB0  00000000 00000000
+063AB8  00000000 00000000
+063AC0  00000000 00000000
+063AC8  00000000 00000000
+063AD0  00000000 00000000
+063AD8  00000000 00000000
+063AE0  00000000 00000000
+063AE8  00000000 00000000
+063AF0  00000000 00000000
+063AF8  00000000 00000000
+063B00  00000000 00000000
+063B08  00000000 00000000
+063B10  00000000 00000000
+063B18  00000000 00000000
+063B20  00000000 00000000
+063B28  00F10000 00000000
+063B30  00000000 00000000
+063B38                      063B38  083B38  1208          ORG   *+2*K64
+                                            1209
+083B38  00000000 00000000                   1210 TRTOPC11 DC    34X'00',X'0011'        stop on X'11'
+083B40  00000000 00000000
+083B48  00000000 00000000
+083B50  00000000 00000000
+083B58  00000011
+083B5C                      083B5C  0A3B5C  1211          ORG   *+2*K64
+                                            1212
+                                            1213
+0A3B5C  00000000 00000000                   1214 TRTOPCF0 DC    480X'00',X'00F0',28X'00'     stop on X'F0'
+0A3B64  00000000 00000000
+0A3B6C  00000000 00000000
+0A3B74  00000000 00000000
+0A3B7C  00000000 00000000
+0A3B84  00000000 00000000
+0A3B8C  00000000 00000000
+0A3B94  00000000 00000000
+0A3B9C  00000000 00000000
+0A3BA4  00000000 00000000
+0A3BAC  00000000 00000000
+0A3BB4  00000000 00000000
+0A3BBC  00000000 00000000
+0A3BC4  00000000 00000000
+0A3BCC  00000000 00000000
+0A3BD4  00000000 00000000
+0A3BDC  00000000 00000000
+0A3BE4  00000000 00000000
+0A3BEC  00000000 00000000
+0A3BF4  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    61
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0A3BFC  00000000 00000000
+0A3C04  00000000 00000000
+0A3C0C  00000000 00000000
+0A3C14  00000000 00000000
+0A3C1C  00000000 00000000
+0A3C24  00000000 00000000
+0A3C2C  00000000 00000000
+0A3C34  00000000 00000000
+0A3C3C  00000000 00000000
+0A3C44  00000000 00000000
+0A3C4C  00000000 00000000
+0A3C54  00000000 00000000
+0A3C5C  00000000 00000000
+0A3C64  00000000 00000000
+0A3C6C  00000000 00000000
+0A3C74  00000000 00000000
+0A3C7C  00000000 00000000
+0A3C84  00000000 00000000
+0A3C8C  00000000 00000000
+0A3C94  00000000 00000000
+0A3C9C  00000000 00000000
+0A3CA4  00000000 00000000
+0A3CAC  00000000 00000000
+0A3CB4  00000000 00000000
+0A3CBC  00000000 00000000
+0A3CC4  00000000 00000000
+0A3CCC  00000000 00000000
+0A3CD4  00000000 00000000
+0A3CDC  00000000 00000000
+0A3CE4  00000000 00000000
+0A3CEC  00000000 00000000
+0A3CF4  00000000 00000000
+0A3CFC  00000000 00000000
+0A3D04  00000000 00000000
+0A3D0C  00000000 00000000
+0A3D14  00000000 00000000
+0A3D1C  00000000 00000000
+0A3D24  00000000 00000000
+0A3D2C  00000000 00000000
+0A3D34  00000000 00000000
+0A3D3C  00F00000 00000000
+0A3D44  00000000 00000000
+0A3D4C  00000000 00000000
+0A3D54  00000000 0000
+0A3D5A                      0A3D5A  0C3D5A  1215          ORG   *+2*K64
+                                            1216
+0C3D5A  00000000 00000000                   1217 TRTOPCF1 DC    480X'00',X'0000',X'00F1',28X'00'     stop on X'F1'
+0C3D62  00000000 00000000
+0C3D6A  00000000 00000000
+0C3D72  00000000 00000000
+0C3D7A  00000000 00000000
+0C3D82  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    62
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0C3D8A  00000000 00000000
+0C3D92  00000000 00000000
+0C3D9A  00000000 00000000
+0C3DA2  00000000 00000000
+0C3DAA  00000000 00000000
+0C3DB2  00000000 00000000
+0C3DBA  00000000 00000000
+0C3DC2  00000000 00000000
+0C3DCA  00000000 00000000
+0C3DD2  00000000 00000000
+0C3DDA  00000000 00000000
+0C3DE2  00000000 00000000
+0C3DEA  00000000 00000000
+0C3DF2  00000000 00000000
+0C3DFA  00000000 00000000
+0C3E02  00000000 00000000
+0C3E0A  00000000 00000000
+0C3E12  00000000 00000000
+0C3E1A  00000000 00000000
+0C3E22  00000000 00000000
+0C3E2A  00000000 00000000
+0C3E32  00000000 00000000
+0C3E3A  00000000 00000000
+0C3E42  00000000 00000000
+0C3E4A  00000000 00000000
+0C3E52  00000000 00000000
+0C3E5A  00000000 00000000
+0C3E62  00000000 00000000
+0C3E6A  00000000 00000000
+0C3E72  00000000 00000000
+0C3E7A  00000000 00000000
+0C3E82  00000000 00000000
+0C3E8A  00000000 00000000
+0C3E92  00000000 00000000
+0C3E9A  00000000 00000000
+0C3EA2  00000000 00000000
+0C3EAA  00000000 00000000
+0C3EB2  00000000 00000000
+0C3EBA  00000000 00000000
+0C3EC2  00000000 00000000
+0C3ECA  00000000 00000000
+0C3ED2  00000000 00000000
+0C3EDA  00000000 00000000
+0C3EE2  00000000 00000000
+0C3EEA  00000000 00000000
+0C3EF2  00000000 00000000
+0C3EFA  00000000 00000000
+0C3F02  00000000 00000000
+0C3F0A  00000000 00000000
+0C3F12  00000000 00000000
+0C3F1A  00000000 00000000
+0C3F22  00000000 00000000
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    63
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0C3F2A  00000000 00000000
+0C3F32  00000000 00000000
+0C3F3A  000000F1 00000000
+0C3F42  00000000 00000000
+0C3F4A  00000000 00000000
+0C3F52  00000000 00000000
+0C3F5A                      0C3F5A  0E3F5A  1218          ORG   *+2*K64
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    64
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            1220 ***********************************************************************
+                                            1221 *        Register equates
+                                            1222 ***********************************************************************
+
+
+                            000000  000001  1224 R0       EQU   0
+                            000001  000001  1225 R1       EQU   1
+                            000002  000001  1226 R2       EQU   2
+                            000003  000001  1227 R3       EQU   3
+                            000004  000001  1228 R4       EQU   4
+                            000005  000001  1229 R5       EQU   5
+                            000006  000001  1230 R6       EQU   6
+                            000007  000001  1231 R7       EQU   7
+                            000008  000001  1232 R8       EQU   8
+                            000009  000001  1233 R9       EQU   9
+                            00000A  000001  1234 R10      EQU   10
+                            00000B  000001  1235 R11      EQU   11
+                            00000C  000001  1236 R12      EQU   12
+                            00000D  000001  1237 R13      EQU   13
+                            00000E  000001  1238 R14      EQU   14
+                            00000F  000001  1239 R15      EQU   15
+
+
+
+
+
+
+
+
+                                            1241          END
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    65
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2    86   114    53    83    84   198
+ENDREGS             A    00000028           4   250   170
+EOJ                 I    000005D8           4   206   108
+EOJPSW              D    000005C8           8   204   206
+F12T11              F    000013C8           4  1138
+F12T11A             F    000013FC           4  1150
+F12T8               F    00001360           4  1114
+F12T8A              F    00001394           4  1126
+FAILMASK            A    00000024           4   247   158
+FAILPSW             D    000005E0           8   208   210
+FAILTEST            I    000005F0           4   210   103   106   189
+IMAGE               1    00000000      933722     0
+K                   U    00000400           1   219   220   221   222
+K64                 U    00010000           1   221  1191  1202  1205  1208  1211  1215  1218   279   282   291   294   303   306
+                                                      315   318   327   330   339   342   351   354   364   367   376   379   388
+                                                      391   400   403   417   420   429   432   441   444   453   456   465   468
+                                                      477   480   489   492   501   504   513   516   525   528   537   540   554
+                                                      556   559   567   569   572   579   581   584   591   593   596   603   605
+                                                      608   615   617   620   627   629   632   639   641   644   651   653   656
+                                                      663   665   668   675   677   680   698   701   710   713   722   725   734
+                                                      737   746   749   758   761   770   773   782   785   794   797   806   809
+                                                      818   821   836   838   841   849   851   854   861   863   866   873   875
+                                                      878   885   887   890   897   899   902   909   911   914   921   923   926
+                                                      933   935   938   945   947   950   957   959   962   980   983   992   995
+                                                     1004  1007  1016  1019  1028  1031  1040  1043  1052  1055  1064  1067  1076
+                                                     1079  1088  1091  1100  1103  1119  1121  1124  1131  1133  1136  1143  1145
+                                                     1148  1155  1157  1160
+M0T1                F    000005F8           4   272
+M0T10               F    000007CC           4   381
+M0T11               F    00000800           4   393
+M0T2                F    0000062C           4   284
+M0T3                F    00000660           4   296
+M0T4                F    00000694           4   308
+M0T5                F    000006C8           4   320
+M0T6                F    000006FC           4   332
+M0T7                F    00000730           4   344
+M0T8                F    00000764           4   357
+M0T9                F    00000798           4   369
+M10T1               F    00000CAC           4   691
+M10T10              F    00000E80           4   799
+M10T11              F    00000EB4           4   811
+M10T2               F    00000CE0           4   703
+M10T3               F    00000D14           4   715
+M10T4               F    00000D48           4   727
+M10T5               F    00000D7C           4   739
+M10T6               F    00000DB0           4   751
+M10T7               F    00000DE4           4   763
+M10T8               F    00000E18           4   775
+M10T9               F    00000E4C           4   787
+M12T1               F    00000EE8           4   831
+M12T10              F    000010BC           4   940
+M12T11              F    000010F0           4   952
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    66
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+M12T2               F    00000F1C           4   844
+M12T3               F    00000F50           4   856
+M12T4               F    00000F84           4   868
+M12T5               F    00000FB8           4   880
+M12T6               F    00000FEC           4   892
+M12T7               F    00001020           4   904
+M12T8               F    00001054           4   916
+M12T9               F    00001088           4   928
+M14T1               F    00001124           4   973
+M14T10              F    000012F8           4  1081
+M14T11              F    0000132C           4  1093
+M14T2               F    00001158           4   985
+M14T3               F    0000118C           4   997
+M14T4               F    000011C0           4  1009
+M14T5               F    000011F4           4  1021
+M14T6               F    00001228           4  1033
+M14T7               F    0000125C           4  1045
+M14T8               F    00001290           4  1057
+M14T9               F    000012C4           4  1069
+M3                  X    00000003           1   234   155
+M4T1                F    00000834           4   410
+M4T10               F    00000A08           4   518
+M4T11               F    00000A3C           4   530
+M4T2                F    00000868           4   422
+M4T3                F    0000089C           4   434
+M4T4                F    000008D0           4   446
+M4T5                F    00000904           4   458
+M4T6                F    00000938           4   470
+M4T7                F    0000096C           4   482
+M4T8                F    000009A0           4   494
+M4T9                F    000009D4           4   506
+M8T1                F    00000A70           4   549
+M8T10               F    00000C44           4   658
+M8T11               F    00000C78           4   670
+M8T2                F    00000AA4           4   562
+M8T3                F    00000AD8           4   574
+M8T4                F    00000B0C           4   586
+M8T5                F    00000B40           4   598
+M8T6                F    00000B74           4   610
+M8T7                F    00000BA8           4   622
+M8T8                F    00000BDC           4   634
+M8T9                F    00000C10           4   646
+MB                  U    00100000           1   222   279   282   291   294   303   306   315   318   327   330   339   342   351
+                                                      354   364   367   376   379   388   391   400   403   417   420   429   432
+                                                      441   444   453   456   465   468   477   480   489   492   501   504   513
+                                                      516   525   528   537   540   556   559   569   572   581   584   593   596
+                                                      605   608   617   620   629   632   641   644   653   656   665   668   677
+                                                      680   698   701   710   713   722   725   734   737   746   749   758   761
+                                                      770   773   782   785   794   797   806   809   818   821   838   841   851
+                                                      854   863   866   875   878   887   890   899   902   911   914   923   926
+                                                      935   938   947   950   959   962   980   983   992   995  1004  1007  1016
+                                                     1019  1028  1031  1040  1043  1052  1055  1064  1067  1076  1079  1088  1091
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    67
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                     1100  1103  1121  1124  1133  1136  1145  1148  1157  1160
+OP1DATA             A    00000004           4   236   140
+OP1LEN              F    00000008           4   237   138   141
+OP1WHERE            A    00000018           4   243   137
+OP1WLEN             F    0000001C           4   244   139
+OP2DATA             A    0000000C           4   238   146
+OP2LEN              F    00000010           4   239   145   147
+OP2WHERE            A    00000014           4   242   144
+OPSWHERE            U    00000014           1   241   152
+PAGE                U    00001000           1   220
+R0                  U    00000000           1  1224    49
+R1                  U    00000001           1  1225   152   164
+R10                 U    0000000A           1  1234   137   142   144   148   170   173
+R11                 U    0000000B           1  1235   138   139   145   158   159   165   177
+R12                 U    0000000C           1  1236   170   181
+R13                 U    0000000D           1  1237
+R14                 U    0000000E           1  1238    95   189   190
+R15                 U    0000000F           1  1239   197
+R2                  U    00000002           1  1226   162   173
+R3                  U    00000003           1  1227   177
+R4                  U    00000004           1  1228   152   162   164   181
+R5                  U    00000005           1  1229   128   129   184   185   196
+R6                  U    00000006           1  1230   132   133   140   142   146   148
+R7                  U    00000007           1  1231   141   147   154   155   156
+R8                  U    00000008           1  1232    83    86    87    88    90   198
+R9                  U    00000009           1  1233    84    90    91
+REG2LOW             U    000000DD           1   257
+REG2PATT            U    AABBCCDD           1   256   280   292   304   316   328   340   352   365   377   389   401   418   430
+                                                      442   454   466   478   490   502   514   526   538   557   570   582   594
+                                                      606   618   630   642   654   666   678   699   711   723   735   747   759
+                                                      771   783   795   807   819   839   852   864   876   888   900   912   924
+                                                      936   948   960   981   993  1005  1017  1029  1041  1053  1065  1077  1089
+                                                     1101  1122  1134  1146  1158
+SAVETRT             D    000005A8           8   194   164
+SUBTEST             X    00000401           1   118   105   161   172   176   180
+TEST01              I    00000502           4   126    95
+TESTADDR            D    00000400           8   116
+TESTNUM             X    00000400           1   117   102   126   133
+TNUM                X    00000000           1   231   132
+TRTE1TST            J    00000000      933722    48    51    55    59    49
+TRTEBC              I    0000059E           4   192   165
+TRTECTL             A    000005F8           4   265   128
+TRTEDONE            I    0000059C           2   190   187
+TRTEFAIL            I    00000598           4   189   174   178   182   192
+TRTEMOD             I    00000554           4   162   156   166
+TRTENEXT            U    00000034           1   254   184
+TRTETEST            4    00000000          52   230   129
+TRTO1L0             X    00001938           4  1179   373   510   650   791   932  1073
+TRTO1L11            X    00002138           4  1181   385   522   662   803   944  1085
+TRTO1LF0            X    00002938           4  1183   397   534   674   815   956  1097  1142  1154
+TRTOP10             X    00001438           4  1171   276   288   300   312   324   414   426   438   450   462   553   566   578
+                                                      590   695   707   719   731   835   848   860   872   977   989  1001  1013
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    68
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+TRTOP111            X    00001538           4  1173   336   361   474   498   602   626   743   767   884   908  1025  1049
+TRTOP1F0            X    00001638           4  1175   348   486   614   755   896  1037
+TRTOP1F1            X    00001738           4  1177   638   779   920  1061  1118  1130
+TRTOP20             X    00003138           1  1190   277   289   301   313   325   374   415   427   439   451   463   511   554
+                                                      567   579   591   651   696   708   720   732   792   836   849   861   873
+                                                      933   978   990  1002  1014  1074
+TRTOP211            X    00023238           1  1193   337   362   386   744   768   804
+TRTOP2F0            X    00023338           1  1195   349   398   756   816
+TRTOP411            X    00023438           1  1197   475   499   523  1026  1050  1086
+TRTOP4F0            X    00023638           1  1199   487   535  1038  1098
+TRTOP811            X    00023838           1  1201   603   627   663
+TRTOP8F0            X    00043938           1  1204   615   675
+TRTOP8F1            X    00063A38           1  1207   639   780
+TRTOPC11            X    00083B38           1  1210   885   909   945
+TRTOPCF0            X    000A3B5C           1  1214   897   957  1143  1155
+TRTOPCF1            X    000C3D5A           1  1217   921  1062  1119  1131
+TST1LOOP            U    0000050A           1   131   186
+=F'0'               F    000005F4           4   217   185
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    69
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    70
+
+   DESC     SYMBOL    SIZE       POS          ADDR
+
+Entry: 0
+
+Image      IMAGE     933722  00000-E3F59  00000-E3F59
+  Region             933722  00000-E3F59  00000-E3F59
+    CSECT  TRTE1TST  933722  00000-E3F59  00000-E3F59
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 09 Oct 2022 18:37:56  Page    71
+
+   STMT                      FILE NAME
+
+1     /devstor/dev/satk/samples/tests/TRTE-01-basic.asm
+
+
+** NO ERRORS FOUND **
+
+

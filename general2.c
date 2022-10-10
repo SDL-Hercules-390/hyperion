@@ -3071,104 +3071,218 @@ DEF_INST(translate_and_test_reverse)
 }
 #endif /* defined( FEATURE_022_EXT_TRANSL_FACILITY_3 ) */
 
+
 #ifdef FEATURE_026_PARSING_ENHANCE_FACILITY
+
+#undef TRTE_FC_REAL_MAX_PAGES
+#define TRTE_FC_REAL_MAX_PAGES (((128*1024) / PAGEFRAME_PAGESIZE ) + 1 )
 /*-------------------------------------------------------------------*/
 /* B9BF TRTE - Translate and Test Extended                   [RRF-c] */
 /*-------------------------------------------------------------------*/
-DEF_INST(translate_and_test_extended)
+DEF_INST( translate_and_test_extended )
 {
-    int a_bit;                /* Argument-Character Control (A)      */
-    U32 arg_ch;               /* Argument character                  */
-    VADR buf_addr;            /* first argument address              */
-    GREG buf_len;             /* First argument length               */
-    int f_bit;                /* Function-Code Control (F)           */
-    U32 fc;                   /* Function-Code                       */
-    VADR fct_addr;            /* Function-code table address         */
-    int l_bit;                /* Argument-Character Limit (L)        */
+    int a_bit;                  /* Argument-Character Control (A)      */
+    U32 arg_ch;                 /* Argument character                  */
+    VADR buf_addr;              /* first argument address              */
+    GREG buf_len;               /* First argument length               */
+    int f_bit;                  /* Function-Code Control (F)           */
+    U32 fc;                     /* Function-Code                       */
+    VADR fct_addr;              /* Function-code table address         */
+    int l_bit;                  /* Argument-Character Limit (L)        */
     int m3;
-    int processed;            /* # bytes processed                   */
+    int processed;              /* # bytes processed                   */
     int r1;
     int r2;
 
-    RRF_M(inst, regs, r1, r2, m3);
+    int max_process;            /* maximun on current page to be processed */
+    Byte* buf_main_addr;        /* buffer real address */
+
+    VADR fc_page_no;            /* Function-Code - page number        */
+    VADR fc_addr;               /* Function-Code - address            */
+    VADR fct_page_no;           /* Function-Code Table - page number  */
+    VADR fct_page_addr;         /* Function-Code TABLE - page addr    */
+                                /* Fuction Code Table - real page adr */
+    CACHE_ALIGN Byte* fct_real_page_addr[ TRTE_FC_REAL_MAX_PAGES ];
+
+    VADR fct_work_end_addr;   /* temp */
+    VADR fct_work_page_addr;  /* temp */
+
+    int i;                    /* temp */
+    U16 temp_l;               /* temp - low byte */
+    U16 temp_h;               /* temp - high byte */
+
+    /* Function Code Table length for m3 A, F, L bits */
+    static const int fct_table_lengths[ 8 ] =
+    {
+        256,                    /* a-bit = 0; f-bit=0 ; l-bit = 0 */
+        256,                    /* a-bit = 0; f-bit=0 ; l-bit = 1 */
+        512,                    /* a-bit = 0; f-bit=1 ; l-bit = 0 */
+        512,                    /* a-bit = 0; f-bit=1 ; l-bit = 1 */
+        64*1024,                /* a-bit = 1; f-bit=0 ; l-bit = 0 */
+        256,                    /* a-bit = 1; f-bit=0 ; l-bit = 1 */
+        128*1024,               /* a-bit = 1; f-bit=1 ; l-bit = 0 */
+        512                     /* a-bit = 1; f-bit=1 ; l-bit = 1 */
+    };
+
+    RRF_M( inst, regs, r1, r2, m3 );
     PER_ZEROADDR_CHECK( regs, 1 );
     PER_ZEROADDR_LCHECK( regs, r1, r1+1 );
 
     TXFC_INSTR_CHECK( regs );
 
-    a_bit = ((m3 & 0x08) ? 1 : 0);
-    f_bit = ((m3 & 0x04) ? 1 : 0);
-    l_bit = ((m3 & 0x02) ? 1 : 0);
+    a_bit = ( (m3 & 0x08) ? 1 : 0 );
+    f_bit = ( (m3 & 0x04) ? 1 : 0 );
+    l_bit = ( (m3 & 0x02) ? 1 : 0 );
 
-    buf_addr = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    buf_len = GR_A(r1 + 1, regs);
-
-    fct_addr = regs->GR(1) & ADDRESS_MAXWRAP(regs);
+    buf_addr = regs->GR( r1 ) & ADDRESS_MAXWRAP(regs);
+    buf_len = GR_A( r1 + 1, regs );
 
     if (unlikely((a_bit && (buf_len & 1)) || r1 & 0x01))
-    regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* fast exit path */
+    if ( buf_len == 0 ) {
+        regs->psw.cc =  0;
+        return;
+    }
+
+    /* initialize fct_... variables */
+    fct_addr = regs->GR( 1 ) & ADDRESS_MAXWRAP(regs);
+
+    fct_work_end_addr = fct_addr + fct_table_lengths[ m3 >> 1 ];
+    fct_page_addr = fct_addr  & PAGEFRAME_PAGEMASK;
+    fct_page_no = fct_page_addr >> PAGEFRAME_PAGESHIFT;
+
+    fct_work_page_addr = fct_page_addr;
+
+    /* build function code table - real page address table (only pages that cover the FC table) */
+    i = 0;
+    while ( fct_work_page_addr < fct_work_end_addr )
+    {
+        fct_real_page_addr[i] = MADDRL( fct_work_page_addr & ADDRESS_MAXWRAP(regs), PAGEFRAME_PAGESIZE, 1, regs, ACCTYPE_READ, regs->psw.pkey );
+        fct_work_page_addr += PAGEFRAME_PAGESIZE;
+        i++;
+    }
+
+    /*  Determine CC=3 length */
+    /*  POP : SA22-7832-13 Page 7-418
+        The amount of processing that results in the setting
+        of condition code 3 is determined by the CPU on the
+        basis of improving system performance, and it may
+        be a different amount each time the instruction is
+        executed.
+
+        CC=3 :  Processed first operand to end of page and
+                indicate more data remaining.
+    */
+
+    /* get on-page maximum process length */
+    max_process = PAGEFRAME_PAGESIZE - ( buf_addr  & PAGEFRAME_BYTEMASK );
+
+    /* get buffer real main memory address */
+    buf_main_addr = MADDRL( buf_addr, (a_bit ? 2 : 1) , r1, regs, ACCTYPE_READ, regs->psw.pkey );
 
     fc = 0;
     processed = 0;
-    while(buf_len && !fc && processed < 16384)
+    while ( buf_len && !fc && processed < max_process )
     {
         if(a_bit)
         {
-            arg_ch = ARCH_DEP(vfetch2)(buf_addr, r1, regs);
+            // arg_ch = ARCH_DEP(vfetch2)(buf_addr, r1, regs);
+            /* does arg cross page boundary? */
+            if ( (buf_addr  & PAGEFRAME_BYTEMASK) ==  PAGEFRAME_BYTEMASK )
+            {
+                /* yes! piece together argument */
+                temp_l = *buf_main_addr;
+                temp_h = * MADDRL( buf_addr+1, 1 , r1, regs, ACCTYPE_READ, regs->psw.pkey );
+                arg_ch =  CSWAP16 ( (temp_h << 8) | temp_l) ;
+            }
+            else
+            {
+                arg_ch = CSWAP16( * (U16*) buf_main_addr );
+            }
         }
         else
         {
-            arg_ch = ARCH_DEP(vfetchb)(buf_addr, r1, regs);
+            // arg_ch = ARCH_DEP(vfetchb)(buf_addr, r1, regs);
+            arg_ch = *buf_main_addr;
         }
 
         if(l_bit && arg_ch > 255)
             fc = 0;
         else
         {
-            if(f_bit)
-                fc = ARCH_DEP(vfetch2)((fct_addr + (arg_ch * 2)) & ADDRESS_MAXWRAP(regs), 1, regs);
+            if ( f_bit )
+            {
+                // fc = ARCH_DEP(vfetch2)((fct_addr + (arg_ch * 2)) & ADDRESS_MAXWRAP(regs), 1, regs);
+                fc_addr = fct_addr + (arg_ch * 2);
+                fc_page_no = fc_addr >> PAGEFRAME_PAGESHIFT;
+
+                /* shouldn't need this check as the FC table should be double word aligned, but it might not be! */
+                /* does fc cross page boundary? */
+                if ( (fc_addr & PAGEFRAME_BYTEMASK) ==  PAGEFRAME_BYTEMASK )
+                {
+                /* yes! piece together fc */
+                temp_l = * ( fct_real_page_addr [ fc_page_no - fct_page_no] + PAGEFRAME_BYTEMASK ); /* last byte of page */
+                temp_h = * ( fct_real_page_addr [ fc_page_no - fct_page_no +1] );                  /* first byte of next page */
+                fc =  CSWAP16 ( (temp_h << 8) | temp_l ) ;
+                }
+
+                else
+                {
+                fc =  CSWAP16( * (U16*) ( fct_real_page_addr [ fc_page_no - fct_page_no] + (fc_addr & PAGEFRAME_BYTEMASK) ) );
+                }
+            }
             else
-                fc = ARCH_DEP(vfetchb)((fct_addr + arg_ch) & ADDRESS_MAXWRAP(regs), 1, regs);
+            {
+                // fc = ARCH_DEP(vfetchb)((fct_addr + arg_ch) & ADDRESS_MAXWRAP(regs), 1, regs);
+                fc_addr = fct_addr + arg_ch;
+                fc_page_no = fc_addr >> PAGEFRAME_PAGESHIFT;
+                fc = * ( fct_real_page_addr [ fc_page_no - fct_page_no] + (fc_addr & PAGEFRAME_BYTEMASK) );
+            }
         }
 
-        if(!fc)
+        if( !fc )
         {
-            if(a_bit)
+            if( a_bit )
             {
                 buf_len -= 2;
                 processed += 2;
                 buf_addr = (buf_addr + 2) & ADDRESS_MAXWRAP(regs);
+                buf_main_addr += 2;
             }
             else
             {
                 buf_len--;
                 processed++;
                 buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP(regs);
+                buf_main_addr += 1;
             }
         }
-    }
+    }  /* end while */
 
     /* Commit registers */
-    SET_GR_A(r1, regs, buf_addr);
-    SET_GR_A(r1 + 1, regs, buf_len);
+    SET_GR_A( r1, regs, buf_addr );
+    SET_GR_A( r1 + 1, regs, buf_len );
 
     /* Check if CPU determined number of bytes have been processed */
-    if(buf_len && !fc)
+    if ( buf_len && !fc )
     {
         regs->psw.cc = 3;
         return;
     }
 
     /* Set function code */
-    if(likely(r2 != r1 && r2 != r1 + 1))
-        SET_GR_A(r2, regs, fc);
+    if (likely(r2 != r1 && r2 != r1 + 1))
+        SET_GR_A( r2, regs, fc );
 
     /* Set condition code */
-    if(fc)
+    if ( fc )
         regs->psw.cc = 1;
     else
         regs->psw.cc = 0;
 }
+
 
 /*-------------------------------------------------------------------*/
 /* B9BD TRTRE - Translate and Test Reverse Extended          [RRF-c] */
@@ -3265,6 +3379,7 @@ DEF_INST(translate_and_test_reverse_extended)
     else
         regs->psw.cc = 0;
 }
+
 #endif /* FEATURE_026_PARSING_ENHANCE_FACILITY */
 
 #if !defined( _GEN_ARCH )
