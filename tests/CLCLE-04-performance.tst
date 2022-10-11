@@ -1,4 +1,4 @@
-*Testcase CLCE-04-performance (Test CLCLE instructions)
+*Testcase CLCLE-04-performance (Test CLCLE instructions)
 
 #  ----------------------------------------------------------------------------------
 #  This ONLY tests the performance of the CLCLE instruction.

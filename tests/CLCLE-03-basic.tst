@@ -1,4 +1,4 @@
-*Testcase CLCE-03-basic (Test CLCLE instructions)
+*Testcase CLCLE-03-basic (Test CLCLE instructions)
 
 archlvl     390
 mainsize    3
