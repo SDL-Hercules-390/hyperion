@@ -1736,6 +1736,12 @@
     <None Include="tests\TRTE-02-performance.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\TRTRE-01-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\FAC53.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2129,6 +2135,12 @@
     <None Include="tests\TRTE-02-performance.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\TRTRE-01-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
@@ -2277,6 +2289,12 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\TRTE-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRTRE-01-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\3211.list">
@@ -2490,6 +2508,18 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\TRTE-02-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTRE-01-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTRE-01-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="hercules.cnf">
