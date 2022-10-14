@@ -3803,7 +3803,7 @@ DEF_INST(convert_dfp_ext_to_packed)
 
 
 /*-------------------------------------------------------------------*/
-/* EDAC CZDT  - Convert to packed from DFP Long               [RSL-b] */
+/* EDAC CPDT  - Convert to packed from DFP Long               [RSL-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_dfp_long_to_packed)
 {
