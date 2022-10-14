@@ -3543,6 +3543,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\TRTRE-01-basic.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\TRTRE-02-performance.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\TXFPER.core"
 						>
 					</File>
@@ -4674,6 +4682,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\TRTRE-01-basic.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\TRTRE-02-performance.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\TXFPER.tst"
 							>
 						</File>
@@ -4983,6 +4999,14 @@
 						</File>
 						<File
 							RelativePath=".\tests\TRTE-02-performance.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\TRTRE-01-basic.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\TRTRE-02-performance.asm"
 							>
 						</File>
 						<File
@@ -5434,6 +5458,22 @@
 							</File>
 							<File
 								RelativePath=".\tests\TRTE-02-performance.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\TRTRE-01-basic.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\TRTRE-01-basic.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\TRTRE-02-performance.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\TRTRE-02-performance.pdf"
 								>
 							</File>
 							<File

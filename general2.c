@@ -3074,13 +3074,19 @@ DEF_INST(translate_and_test_reverse)
 
 #ifdef FEATURE_026_PARSING_ENHANCE_FACILITY
 
-#undef  TRTE_FC_REAL_MAX_PAGES
-#define TRTE_FC_REAL_MAX_PAGES (((128*1024) / PAGEFRAME_PAGESIZE ) + 1 )
+/* Function Code Table - # pages to cover table */
+#undef FCT_REAL_MAX_PAGES
+#define FCT_REAL_MAX_PAGES (((128*1024) / PAGEFRAME_PAGESIZE ) + 1 )
 
 /*-------------------------------------------------------------------*/
-/* B9BF TRTE - Translate and Test Extended                   [RRF-c] */
+/* Translate and Test Extended - Forward and Reverse                 */
 /*-------------------------------------------------------------------*/
-DEF_INST( translate_and_test_extended )
+/* Subroutine is called by TRTE and TRTRE instructions               */
+/*-------------------------------------------------------------------*/
+/* B9BF TRTE - Translate and Test Extended                   [RRF-c] */
+/* B9BD TRTRE - Translate and Test Reverse Extended          [RRF-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( translate_and_test_xxx_extended )
 {
     int   r1;                   /* Operand-1 register number         */
     int   r2;                   /* Operand-2 register number         */
@@ -3089,6 +3095,7 @@ DEF_INST( translate_and_test_extended )
     bool  a_bit;                /* (A) Argument-Character Control    */
     bool  f_bit;                /* (F) Function-Code Control         */
     bool  l_bit;                /* (L) Argument-Character Limit      */
+    bool  isReverse;            /* is this a TRTRE instruction       */
     int   i;                    /* Work iterator                     */
 
     U32   arg_ch;               /* Argument character                */
@@ -3114,7 +3121,7 @@ DEF_INST( translate_and_test_extended )
     VADR  fct_work_end_addr;    /* Work                              */
 
     CACHE_ALIGN                 /* FC Table - direct mainstor addrs  */
-    BYTE* fct_main_page_addr[ TRTE_FC_REAL_MAX_PAGES ];
+    BYTE* fct_main_page_addr[ FCT_REAL_MAX_PAGES ];
 
     /* Function Code Table Lengths lookup table indexed by 'm3' mask */
 
@@ -3140,6 +3147,7 @@ DEF_INST( translate_and_test_extended )
     a_bit = ((m3 & 0x08) ? true : false);
     f_bit = ((m3 & 0x04) ? true : false);
     l_bit = ((m3 & 0x02) ? true : false);
+    isReverse = inst[1] == 0XBD;        // TRTRE instruction?
 
     buf_addr = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
     buf_len  = GR_A( r1 + 1, regs );
@@ -3189,8 +3197,13 @@ DEF_INST( translate_and_test_extended )
                 indicate more data remaining.
     */
 
-    /* Get on-page maximum process length */
-    max_process = PAGEFRAME_PAGESIZE - (buf_addr & PAGEFRAME_BYTEMASK);
+    /* get on-page maximum process length */
+    if (isReverse)
+        /* TRTRE instruction */
+        max_process = (buf_addr  & PAGEFRAME_BYTEMASK) +1;
+    else
+        /* TRTE instruction */
+        max_process = PAGEFRAME_PAGESIZE - ( buf_addr  & PAGEFRAME_BYTEMASK );
 
     /* Get buffer mainstor address */
     buf_main_addr = MADDRL( buf_addr, (a_bit ? 2 : 1), r1, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -3254,21 +3267,41 @@ DEF_INST( translate_and_test_extended )
 
         if (!fc)
         {
-            if (a_bit)
+            if (isReverse)
             {
-                buf_len       -= 2;
-                processed     += 2;
-                buf_main_addr += 2;
-
-                buf_addr = (buf_addr + 2) & ADDRESS_MAXWRAP( regs );
+                /* TRTRE instruction */
+                if(a_bit)
+                {
+                    buf_len -= 2;
+                    processed += 2;
+                    buf_addr = (buf_addr - 2) & ADDRESS_MAXWRAP(regs);
+                    buf_main_addr -= 2;
+                }
+                else
+                {
+                    buf_len--;
+                    processed++;
+                    buf_addr = (buf_addr - 1) & ADDRESS_MAXWRAP(regs);
+                    buf_main_addr -= 1;
+                }
             }
             else
             {
-                buf_len       -= 1;
-                processed     += 1;
-                buf_main_addr += 1;
-
-                buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP( regs );
+                /* TRTE instruction */
+                if( a_bit )
+                {
+                    buf_len -= 2;
+                    processed += 2;
+                    buf_addr = (buf_addr + 2) & ADDRESS_MAXWRAP(regs);
+                    buf_main_addr += 2;
+                }
+                else
+                {
+                    buf_len--;
+                    processed++;
+                    buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP(regs);
+                    buf_main_addr += 1;
+                }
             }
         }
     } /* end while */
@@ -3295,101 +3328,20 @@ DEF_INST( translate_and_test_extended )
         regs->psw.cc = 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* B9BF TRTE - Translate and Test Extended                   [RRF-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( translate_and_test_extended )
+{
+    ARCH_DEP( translate_and_test_xxx_extended )( inst, regs );
+}
 
 /*-------------------------------------------------------------------*/
 /* B9BD TRTRE - Translate and Test Reverse Extended          [RRF-c] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test_reverse_extended)
 {
-    int a_bit;                /* Argument-Character Control (A)      */
-    U32 arg_ch;               /* Argument character                  */
-    VADR buf_addr;            /* first argument address              */
-    GREG buf_len;             /* First argument length               */
-    int f_bit;                /* Function-Code Control (F)           */
-    U32 fc;                   /* Function-Code                       */
-    VADR fct_addr;            /* Function-code table address         */
-    int l_bit;                /* Argument-Character Limit (L)        */
-    int m3;
-    int processed;            /* # bytes processed                   */
-    int r1;
-    int r2;
-
-    RRF_M(inst, regs, r1, r2, m3);
-
-    TXFC_INSTR_CHECK( regs );
-
-    a_bit = ((m3 & 0x08) ? 1 : 0);
-    f_bit = ((m3 & 0x04) ? 1 : 0);
-    l_bit = ((m3 & 0x02) ? 1 : 0);
-
-    buf_addr = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    buf_len = GR_A(r1 + 1, regs);
-
-    fct_addr = regs->GR(1) & ADDRESS_MAXWRAP(regs);
-
-    if (unlikely((a_bit && (buf_len & 1)) || r1 & 0x01))
-    regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
-
-    fc = 0;
-    processed = 0;
-    while(buf_len && !fc && processed < 16384)
-    {
-        if(a_bit)
-        {
-            arg_ch = ARCH_DEP(vfetch2)(buf_addr, r1, regs);
-        }
-        else
-        {
-            arg_ch = ARCH_DEP(vfetchb)(buf_addr, r1, regs);
-        }
-
-        if(l_bit && arg_ch > 255)
-            fc = 0;
-        else
-        {
-            if(f_bit)
-                fc = ARCH_DEP(vfetch2)((fct_addr + (arg_ch * 2)) & ADDRESS_MAXWRAP(regs), 1, regs);
-            else
-                fc = ARCH_DEP(vfetchb)((fct_addr + arg_ch) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-
-        if(!fc)
-        {
-            if(a_bit)
-            {
-                buf_len -= 2;
-                processed += 2;
-                buf_addr = (buf_addr - 2) & ADDRESS_MAXWRAP(regs);
-            }
-            else
-            {
-                buf_len--;
-                processed++;
-                buf_addr = (buf_addr - 1) & ADDRESS_MAXWRAP(regs);
-            }
-        }
-    }
-
-    /* Commit registers */
-    SET_GR_A(r1, regs, buf_addr);
-    SET_GR_A(r1 + 1, regs, buf_len);
-
-    /* Check if CPU determined number of bytes have been processed */
-    if(buf_len && !fc)
-    {
-        regs->psw.cc = 3;
-        return;
-    }
-
-    /* Set function code */
-    if(likely(r2 != r1 && r2 != r1 + 1))
-        SET_GR_A(r2, regs, fc);
-
-    /* Set condition code */
-    if(fc)
-        regs->psw.cc = 1;
-    else
-        regs->psw.cc = 0;
+    ARCH_DEP( translate_and_test_xxx_extended )( inst, regs );
 }
 
 #endif /* FEATURE_026_PARSING_ENHANCE_FACILITY */
