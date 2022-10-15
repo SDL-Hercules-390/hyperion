@@ -3095,8 +3095,8 @@ DEF_INST( translate_and_test_xxx_extended )
     bool  a_bit;                /* (A) Argument-Character Control    */
     bool  f_bit;                /* (F) Function-Code Control         */
     bool  l_bit;                /* (L) Argument-Character Limit      */
-    bool  isReverse;            /* is this a TRTRE instruction       */
-    int   i;                    /* Work iterator                     */
+
+    bool  isReverse;            /* true == TRTRE, false == TRTE      */
 
     U32   arg_ch;               /* Argument character                */
     U32   fc;                   /* Function-Code                     */
@@ -3105,6 +3105,7 @@ DEF_INST( translate_and_test_xxx_extended )
 
     int   processed;            /* # bytes processed                 */
     int   max_process;          /* Max to process on current page    */
+    int   i;                    /* Work iterator                     */
 
     VADR  buf_addr;             /* First argument address            */
     GREG  buf_len;              /* First argument length             */
@@ -3147,7 +3148,8 @@ DEF_INST( translate_and_test_xxx_extended )
     a_bit = ((m3 & 0x08) ? true : false);
     f_bit = ((m3 & 0x04) ? true : false);
     l_bit = ((m3 & 0x02) ? true : false);
-    isReverse = inst[1] == 0XBD;        // TRTRE instruction?
+
+    isReverse = (inst[1] == 0XBD);  // TRTRE instruction?
 
     buf_addr = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
     buf_len  = GR_A( r1 + 1, regs );
@@ -3173,14 +3175,11 @@ DEF_INST( translate_and_test_xxx_extended )
     /* Build function code table mainstor address table
        (but only for the pages that cover the FC table)
     */
-    i = 0;
-    while (fct_work_page_addr < fct_work_end_addr)
+    for (i=0; fct_work_page_addr < fct_work_end_addr; fct_work_page_addr += PAGEFRAME_PAGESIZE, ++i)
     {
         fct_main_page_addr[i] = MADDRL( fct_work_page_addr & ADDRESS_MAXWRAP( regs ),
                                         PAGEFRAME_PAGESIZE, 1, regs, ACCTYPE_READ,
                                         regs->psw.pkey );
-        fct_work_page_addr += PAGEFRAME_PAGESIZE;
-        i++;
     }
 
     /*  Determine CC=3 length:
@@ -3197,13 +3196,13 @@ DEF_INST( translate_and_test_xxx_extended )
                 indicate more data remaining.
     */
 
-    /* get on-page maximum process length */
+    /* Get on-page maximum process length */
     if (isReverse)
         /* TRTRE instruction */
-        max_process = (buf_addr  & PAGEFRAME_BYTEMASK) +1;
+        max_process = (buf_addr & PAGEFRAME_BYTEMASK) + 1;
     else
         /* TRTE instruction */
-        max_process = PAGEFRAME_PAGESIZE - ( buf_addr  & PAGEFRAME_BYTEMASK );
+        max_process = PAGEFRAME_PAGESIZE - ( buf_addr & PAGEFRAME_BYTEMASK );
 
     /* Get buffer mainstor address */
     buf_main_addr = MADDRL( buf_addr, (a_bit ? 2 : 1), r1, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -3267,42 +3266,40 @@ DEF_INST( translate_and_test_xxx_extended )
 
         if (!fc)
         {
-            if (isReverse)
+            if (a_bit)
             {
-                /* TRTRE instruction */
-                if(a_bit)
+                processed          +=  2;
+                buf_len            -=  2;
+
+                if (isReverse)
                 {
-                    buf_len -= 2;
-                    processed += 2;
-                    buf_addr = (buf_addr - 2) & ADDRESS_MAXWRAP(regs);
-                    buf_main_addr -= 2;
+                    buf_main_addr  -=  2;
+                    buf_addr       -=  2;
                 }
                 else
                 {
-                    buf_len--;
-                    processed++;
-                    buf_addr = (buf_addr - 1) & ADDRESS_MAXWRAP(regs);
-                    buf_main_addr -= 1;
+                    buf_main_addr  +=  2;
+                    buf_addr       +=  2;
                 }
             }
             else
             {
-                /* TRTE instruction */
-                if( a_bit )
+                processed          +=  1;
+                buf_len            -=  1;
+
+                if (isReverse)
                 {
-                    buf_len -= 2;
-                    processed += 2;
-                    buf_addr = (buf_addr + 2) & ADDRESS_MAXWRAP(regs);
-                    buf_main_addr += 2;
+                    buf_main_addr  -=  1;
+                    buf_addr       -=  1;
                 }
                 else
                 {
-                    buf_len--;
-                    processed++;
-                    buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP(regs);
-                    buf_main_addr += 1;
+                    buf_main_addr  +=  1;
+                    buf_addr       +=  1;
                 }
             }
+
+            buf_addr &= ADDRESS_MAXWRAP( regs );
         }
     } /* end while */
 
