@@ -1546,7 +1546,7 @@ dfp_number_to_packed(decNumber* dn, decNumber* dc, char* packed, int len,
     int             pwlen;                  /* Length of pwork string    */
     int             pwind;                  /* Index into pwork string   */
     int             pSigned;                /* packed field is signed    */
-    unsigned char   pSign;                  /* packed sign               */
+    unsigned char   pSign = 0x0C;           /* packed sign               */
     int             pDigits;                /* number of packed digits   */
 
     UNREFERENCED(pset);
