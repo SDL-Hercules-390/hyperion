@@ -45,9 +45,8 @@
 *
 *     r           21fd=ff   # (enable timing tests)
 *     runtest     20        # (depends on the host)
-*qui
-*     *Done
 *
+*     *Done
 *
 ***********************************************************************
                                                                 EJECT
@@ -115,7 +114,7 @@ BEGIN    BALR  R2,0             Initalize FIRST base register
 **       Run the tests...
 *
          BAL   R14,TEST91       Time TRE   instruction  (speed test)
-*
+                                                                EJECT
 ***********************************************************************
 *         Test for normal or unexpected test completion...
 ***********************************************************************
@@ -130,13 +129,12 @@ BEGIN    BALR  R2,0             Initalize FIRST base register
          BNE   FAILTEST         No?! Then FAIL the test!
                                                                 SPACE
          B     EOJ              Yes, then normal completion!
-                                                                EJECT
-
+                                                                SPACE 3
 SAVER1   DC    F'0'
 SAVER2   DC    F'0'
 SAVER5   DC    F'0'
 SAVETRT  DC    D'0'               (saved R1/R2 from TRT results)
-
+                                                                SPACE 3
          DROP  R15
                                                                 EJECT
 ***********************************************************************
@@ -147,7 +145,6 @@ TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          BZR   R14              No, skip timing tests
                                                                 SPACE
          LA    R5,TREPERF         Point R5 --> testing control table
-
          USING TRETEST,R5         What each table entry looks like
 *
 TST91LOP EQU   *
@@ -172,13 +169,12 @@ TST91LOP EQU   *
 *
          IC    R0,TBYTE           Set test byte
                                                                 SPACE 2
-*
 **       Next, time the overhead...
-*
+                                                                SPACE
          L     R7,NUMLOOPS
          STCK  BEGCLOCK
          BALR  R6,0
-
+                                                                SPACE
          LM    R10,R12,OPSWHERE     get TRE operands
          TRE   R10,R12                do TRE
          BC    B'0001',*-4            not finished
@@ -385,7 +381,7 @@ TST91LOP EQU   *
          BC    B'0001',*+4
          LM    R10,R12,OPSWHERE
          BC    B'0001',*+4
-
+                                                                EJECT
          BCTR  R7,R6
          STCK  ENDCLOCK
          BAL   R15,CALCDUR
@@ -396,7 +392,7 @@ TST91LOP EQU   *
          L     R7,NUMLOOPS
          STCK  BEGCLOCK
          BALR  R6,0
-
+                                                                SPACE
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -406,6 +402,7 @@ TST91LOP EQU   *
 *        .........ETC.........
          PRINT OFF
 *                                   96 sets of instructions
+*                                   1-10
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -436,6 +433,7 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
+*                                   11-20
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -466,6 +464,7 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
+*                                   21-30
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -496,6 +495,7 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
+*                                   31-40
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -526,6 +526,7 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
+*                                   41-50
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -556,6 +557,7 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
+*                                   51-60
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -586,6 +588,7 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
+*                                   61-70
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -616,6 +619,7 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
+*                                   71-80
          LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
@@ -646,6 +650,38 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
+*                                   81-90
+         LM    R10,R12,OPSWHERE           Load TRE operands
+         TRE   R10,R12                       do TRE
+         BC    B'0001',*-4                   not finished?
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+*                                   91-96
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
@@ -672,20 +708,20 @@ TST91LOP EQU   *
          LM    R10,R12,OPSWHERE
          TRE   R10,R12
          BC    B'0001',*-4
-
-
+                                                                SPACE 2
          BCTR  R7,R6
          STCK  ENDCLOCK
-*
+                                                                SPACE
          MVC   PRTLINE+33(5),=CL5'TRE'
          BAL   R15,RPTSPEED
-*
+                                                                SPACE
 *  more performance tests
-*
+                                                                SPACE
          L     R5,SAVER5          restore perf table base
          LA    R5,TRENEXT         Go on to next table entry
          CLC   =F'0',0(R5)        End of table?
          BNE   TST91LOP           No, loop...
+                                                                SPACE
          L     R1,SAVER1          Restore register 1
          L     R2,SAVER2          Restore first base register
          BR    R14                Return to caller or FAILTEST
@@ -834,14 +870,6 @@ MB       EQU   (K*K)             1 MB
 TESTADDR EQU   (2*PAGE+X'200'-2)  Where test/subtest numbers will go
 TIMEADDR EQU   (TESTADDR-1)       Address of timing tests option flag
                                                                 SPACE
-MAINSIZE EQU   (2*MB)                   Minimum required storage size
-NUMPGTBS EQU   ((MAINSIZE+K64-1)/K64)   Number of Page Tables needed
-NUMSEGTB EQU   ((NUMPGTBS*4)/(16*4))    Number of Segment Tables
-SEGTABLS EQU   (3*PAGE)                 Segment Tables Origin
-PAGETABS EQU   (SEGTABLS+(NUMPGTBS*4))  Page Tables Origin
-CRLREG0  DC    0A(0),XL4'00B00060'      Control Register 0
-CTLREG1  DC    A(SEGTABLS+NUMSEGTB)     Control Register 1
-                                                                SPACE
 NUMLOOPS DC    F'10000'         10,000 * 100 = 1,000,000
                                                                 SPACE
 BEGCLOCK DC    0D'0',8X'BB'     Begin
@@ -887,9 +915,9 @@ TRENEXT  EQU   *              Start of next table entry...
                                                                 SPACE 6
 REG2PATT EQU   X'AABBCCDD'    Register 2 starting/ending CC0 value
 REG2LOW  EQU         X'DD'    (last byte above)
-                                                                SPACE 8
-TRE02TST CSECT ,
                                                                 EJECT
+TRE02TST CSECT ,
+                                                                SPACE 2
 ***********************************************************************
 *        TRE Performace Test data...
 ***********************************************************************
@@ -934,7 +962,7 @@ TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC1)
 
                                                                 SPACE
 TRELOP10 DC    512XL4'78125634'               (CC0)
-                                                                EJECT
+                                                                SPACE 5
 ***********************************************************************
 *        TRE op2 stop tables...
 ***********************************************************************
@@ -959,10 +987,7 @@ TIMEOPT  DC    X'00'      Set to non-zero to run timing tests
                                                                 SPACE
 TESTNUM  DC    X'00'      Test number of active test
 SUBTEST  DC    X'00'      Active test sub-test number
-                                                                SPACE 9
-         ORG   TRE02TST+SEGTABLS      (s/b @ X'3000')
-                                                                SPACE
-DATTABS  DC    X'00'      Segment and Page Tables will go here...
+
                                                                 EJECT
 ***********************************************************************
 *        IOCB DSECT
