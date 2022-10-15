@@ -1,7 +1,7 @@
  TITLE '            TRTE-01-basic (Test TRTE instructions)'
 ***********************************************************************
 *
-*                  TRTE basic instruction tests
+*                   TRTE basic instruction tests
 *
 ***********************************************************************
 *
@@ -10,7 +10,7 @@
 *
 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
 *  obvious coding errors.  None of the tests are thorough.  They are
-*  NOT designed to test all aspects of any of the instructions.
+*  NOT designed to test all aspects of the instruction.
 *
 *  NOTE: This test is based on the CLCL-et-al Test but modified to
 *        only test the TRTE instruction.  --  James Wekel October 2022
@@ -31,7 +31,7 @@
 *      numcpu      1
 *      sysclear
 *      archlvl     z/Arch
-*      loadcore    "TRTE-01-basic.core" 0x0
+*      loadcore    "$(testpath)/TRTE-01-basic.core" 0x0
 *      runtest     1
 *      *Done
 *

@@ -1,10 +1,10 @@
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     1
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
                                                      2 ***********************************************************************
                                                      3 *
-                                                     4 *                  TRTE basic instruction tests
+                                                     4 *                   TRTE basic instruction tests
                                                      5 *
                                                      6 ***********************************************************************
                                                      7 *
@@ -13,7 +13,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
                                                     10 *
                                                     11 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
                                                     12 *  obvious coding errors.  None of the tests are thorough.  They are
-                                                    13 *  NOT designed to test all aspects of any of the instructions.
+                                                    13 *  NOT designed to test all aspects of the instruction.
                                                     14 *
                                                     15 *  NOTE: This test is based on the CLCL-et-al Test but modified to
                                                     16 *        only test the TRTE instruction.  --  James Wekel October 2022
@@ -34,7 +34,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
                                                     31 *      numcpu      1
                                                     32 *      sysclear
                                                     33 *      archlvl     z/Arch
-                                                    34 *      loadcore    "TRTE-01-basic.core" 0x0
+                                                    34 *      loadcore    "$(testpath)/TRTE-01-basic.core" 0x0
                                                     35 *      runtest     1
                                                     36 *      *Done
                                                     37 *
@@ -58,7 +58,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 
 
 000001E0                      000001E0  00000200    52          ORG   TRTE1TST+X'200'        Start of actual test program...
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     2
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -113,7 +113,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 0000021E  4770 83F0                     000005F0   100          BNE   FAILTEST         No?! Then FAIL the test!
 
 00000222  47F0 83D8                     000005D8   102          B     EOJ              Yes, then normal completion!
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     3
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -135,7 +135,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 
 
 00000402                      00000402  00000502   114          ORG   *+X'100'
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     4
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -187,7 +187,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000558  9014 83A8                     000005A8   159          STM   R1,R4,SAVETRT      (save R1/R4 results)
 0000055C  44B0 839E                     0000059E   160          EX    R11,TRTEBC         fail if...
 00000560  4710 8354                     00000554   161          BC    B'0001',TRTEMOD    cc=3, not finished
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     5
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -227,7 +227,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000005C8                                           192          DROP  R5
 000005C8                                           193          DROP  R15
 000005C8                      00000200             194          USING BEGIN,R8
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     6
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -271,7 +271,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
                               00001000  00000001   216 PAGE     EQU   (4*K)            Size of one page
                               00010000  00000001   217 K64      EQU   (64*K)           64 KB
                               00100000  00000001   218 MB       EQU   (K*K)             1 MB
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     7
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -322,7 +322,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 
                               AABBCCDD  00000001   252 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
                               000000DD  00000001   253 REG2LOW  EQU         X'DD'    (last byte above)
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     8
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -380,7 +380,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000684  00000007                                 301          DC    A(7) CC0
 00000688  00230004 00000000                        302          DC    A(2*MB+(3*K64)+004),A(000),A(0)
 00000690  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page     9
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page     9
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -431,7 +431,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000720  0000000A                                 337          DC    A(10) CC1 or CC3
 00000724  00260005 000000EF                        338          DC    A(2*MB+(6*K64)-12+X'11'),A(256-X'11'),XL4'11'
 0000072C  00000011
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    10
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    10
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -482,7 +482,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000007BC  00000007                                 373          DC    A(7) CC0
 000007C0  00290800 00000000                        374          DC    A(2*MB+(9*K64)+2048),A(000),A(0)
 000007C8  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    11
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    11
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -516,7 +516,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000824  0000000B                                 397          DC    A(11) CC1
 00000828  002B07FF 00000001                        398          DC    A(2*MB+(11*K64)+2048-1),A(1),Xl4'F0'
 00000830  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    12
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    12
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -573,7 +573,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000008C0  00000007                                 438          DC    A(7) CC0
 000008C4  00440004 00000000                        439          DC    A(4*MB+(4*K64)+004),A(000),A(0)
 000008CC  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    13
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    13
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -624,7 +624,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 0000095C  0000000A                                 474          DC    A(10) CC1 or CC3
 00000960  00460005 000000EF                        475          DC    A(4*MB+(6*K64)-12+X'11'),A(256-X'11'),XL4'11'
 00000968  00000011
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    14
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    14
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -675,7 +675,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000009F8  00000007                                 510          DC    A(7) CC0
 000009FC  00490800 00000000                        511          DC    A(4*MB+(9*K64)+2048),A(000),A(0)
 00000A04  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    15
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    15
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -709,7 +709,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000A60  0000000B                                 534          DC    A(11) CC1
 00000A64  004B07FF 00000001                        535          DC    A(4*MB+(11*K64)+2048-1),A(1),XL4'F0'
 00000A6C  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    16
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    16
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -768,7 +768,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000AFC  00000007                                 577          DC    A(7) CC0
 00000B00  00630008 00000000                        578          DC    A(6*MB+(3*K64)+008),A(000),A(0)
 00000B08  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    17
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    17
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -819,7 +819,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000B98  0000000A                                 613          DC    A(10) CC1 or CC3
 00000B9C  006600F2 00000002                        614          DC    A(6*MB+(6*K64)-12+(256-2)),A(2),XL4'F0'
 00000BA4  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    18
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    18
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -870,7 +870,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000C34  00000007                                 649          DC    A(7) CC0
 00000C38  006A0800 00000000                        650          DC    A(6*MB+(10*K64)+2048),A(0),XL4'00'
 00000C40  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    19
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    19
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -904,7 +904,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000C9C  0000000B                                 673          DC    A(11) CC1
 00000CA0  006E07FE 00000002                        674          DC    A(6*MB+(14*K64)+2048-2),A(2),XL4'F0'
 00000CA8  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    20
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    20
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -963,7 +963,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000D38  00000007                                 718          DC    A(7) CC0
 00000D3C  00B20008 00000000                        719          DC    A(11*MB+(2*K64)+008),A(000),A(0)
 00000D44  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    21
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    21
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1014,7 +1014,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000DD4  0000000A                                 754          DC    A(10) CC1 or CC3
 00000DD8  00B500F2 00000002                        755          DC    A(11*MB+(5*K64)-12+(256-2)),A(2),XL4'F0'
 00000DE0  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    22
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    22
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1065,7 +1065,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000E70  00000007                                 790          DC    A(7) CC0
 00000E74  00B80800 00000000                        791          DC    A(11*MB+(8*K64)+2048),A(0),XL4'00'
 00000E7C  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    23
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    23
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1099,7 +1099,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000ED8  0000000B                                 814          DC    A(11) CC1
 00000EDC  00BA07FE 00000002                        815          DC    A(11*MB+(10*K64)+2048-2),A(2),XL4'F0'
 00000EE4  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    24
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    24
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1157,7 +1157,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00000F74  00000007                                 858          DC    A(7) CC0
 00000F78  00920008 00000000                        859          DC    A(9*MB+(2*K64)+008),A(000),A(0)
 00000F80  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    25
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    25
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1208,7 +1208,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00001010  0000000A                                 894          DC    A(10) CC1 or CC3
 00001014  009500F2 00000002                        895          DC    A(9*MB+(5*K64)-12+(256-2)),A(2),XL4'F0'
 0000101C  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    26
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    26
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1259,7 +1259,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000010AC  00000007                                 930          DC    A(7) CC0
 000010B0  00980800 00000000                        931          DC    A(9*MB+(8*K64)+2048),A(0),XL4'00'
 000010B8  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    27
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    27
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1293,7 +1293,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00001114  0000000B                                 954          DC    A(11) CC1
 00001118  009A07FE 00000002                        955          DC    A(9*MB+(10*K64)+2048-2),A(2),XL4'F0'
 00001120  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    28
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    28
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1352,7 +1352,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000011B0  00000007                                 999          DC    A(7) CC0
 000011B4  00C20008 00000000                       1000          DC    A(12*MB+(2*K64)+008),A(000),A(0)
 000011BC  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    29
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    29
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1403,7 +1403,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 0000124C  0000000A                                1035          DC    A(10) CC1 or CC3
 00001250  00C500F2 00000002                       1036          DC    A(12*MB+(5*K64)-12+254),A(2),XL4'F0'
 00001258  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    30
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    30
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1454,7 +1454,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000012E8  00000007                                1071          DC    A(7) CC0
 000012EC  00C80800 00000000                       1072          DC    A(12*MB+(8*K64)+2048),A(000),A(0)
 000012F4  00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    31
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    31
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1488,7 +1488,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00001350  0000000B                                1095          DC    A(11) CC1
 00001354  00CA07FE 00000002                       1096          DC    A(12*MB+(10*K64)+2048-2),A(2),XL4'F0'
 0000135C  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    32
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    32
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1547,7 +1547,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000013EC  0000000B                                1140          DC    A(11) CC1
 000013F0  009607FE 00000002                       1141          DC    A(9*MB+(6*K64)+2048-2),A(2),XL4'F0'
 000013F8  000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    33
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    33
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1568,7 +1568,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 
 00001430  00000000                                1155          DC    A(0)     end of table
 00001434  00000000                                1156          DC    A(0)     end of table
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    34
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    34
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1628,7 +1628,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000015B8  78125634 78125634
 000015C0  78125634 78125634
 000015C8  78125634 78125634
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    35
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    35
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1688,7 +1688,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00001768  78125634 78125634
 00001770  78125634 78125634
 00001778  78125634 78125634
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    36
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    36
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1747,7 +1747,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00001920  78125634 78125634
 00001928  78125634 78125634
 00001930  78125634 000000F1
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    37
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    37
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1807,7 +1807,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00001AE0  98765432 98765432
 00001AE8  98765432 98765432
 00001AF0  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    38
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    38
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1867,7 +1867,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00001CA0  98765432 98765432
 00001CA8  98765432 98765432
 00001CB0  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    39
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    39
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1927,7 +1927,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00001E60  98765432 98765432
 00001E68  98765432 98765432
 00001E70  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    40
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    40
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1987,7 +1987,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00002020  98765432 98765432
 00002028  98765432 98765432
 00002030  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    41
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    41
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2047,7 +2047,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000021D8  98765432 98765432
 000021E0  98765432 98765432
 000021E8  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    42
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    42
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2107,7 +2107,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00002398  98765432 98765432
 000023A0  98765432 98765432
 000023A8  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    43
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    43
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2167,7 +2167,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00002558  98765432 98765432
 00002560  98765432 98765432
 00002568  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    44
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    44
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2227,7 +2227,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00002718  98765432 98765432
 00002720  98765432 98765432
 00002728  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    45
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    45
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2287,7 +2287,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000028D8  98765432 98765432
 000028E0  98765432 98765432
 000028E8  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    46
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    46
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2347,7 +2347,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00002A90  98765432 98765432
 00002A98  98765432 98765432
 00002AA0  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    47
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    47
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2407,7 +2407,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00002C50  98765432 98765432
 00002C58  98765432 98765432
 00002C60  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    48
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    48
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2467,7 +2467,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00002E10  98765432 98765432
 00002E18  98765432 98765432
 00002E20  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    49
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    49
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2527,7 +2527,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00002FD0  98765432 98765432
 00002FD8  98765432 98765432
 00002FE0  98765432 98765432
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    50
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    50
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2573,7 +2573,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00003120  98765432 98765432
 00003128  98765432 98765432
 00003130  98765432 000000F0
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    51
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    51
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2633,7 +2633,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000232B0  00000000 00000000
 000232B8  00000000 00000000
 000232C0  00000000 00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    52
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    52
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2693,7 +2693,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00023460  00000000 00000000
 00023468  00000000 00000000
 00023470  00000000 00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    53
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    53
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2753,7 +2753,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00023620  00000000 00000000
 00023628  00000000 00000000
 00023630  00000000 00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    54
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    54
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2813,7 +2813,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000237D8  00000000 00000000
 000237E0  00000000 00000000
 000237E8  00000000 00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    55
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    55
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2873,7 +2873,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00043980  00000000 00000000
 00043988  00000000 00000000
 00043990  00000000 00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    56
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    56
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2932,7 +2932,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 00063B28  00F10000 00000000
 00063B30  00000000 00000000
 00063B38                      00063B38  00083B38  1198          ORG   *+2*K64
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    57
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    57
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2992,7 +2992,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000A3CCC  00000000 00000000
 000A3CD4  00000000 00000000
 000A3CDC  00000000 00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    58
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    58
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3052,7 +3052,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000C3E7A  00000000 00000000
 000C3E82  00000000 00000000
 000C3E8A  00000000 00000000
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    59
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    59
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3082,7 +3082,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 000C3F4A  00000000 00000000
 000C3F52  00000000 00000000
 000C3F5A                      000C3F5A  000E3F5A  1207          ORG   *+2*K64
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    60
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    60
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3112,7 +3112,7 @@ ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)             
 
 
                                                   1230          END
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    61
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    61
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -3172,7 +3172,7 @@ M12T2               F    00000F1C           4   837
 M12T3               F    00000F50           4   849
 M12T4               F    00000F84           4   861
 M12T5               F    00000FB8           4   873
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    62
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    62
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -3232,7 +3232,7 @@ OP1WLEN             F    0000001C           4   240   133
 OP2DATA             A    0000000C           4   234   140
 OP2LEN              F    00000010           4   235   139   141
 OP2WHERE            A    00000014           4   238   138
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    63
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    63
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -3292,7 +3292,7 @@ TRTOP411            X    00023438           1  1187   470   494   518  1019  104
 TRTOP4F0            X    00023638           1  1189   482   530  1031  1091
 TRTOP811            X    00023838           1  1191   597   621   657
 TRTOP8F0            X    00043938           1  1194   609   669
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    64
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    64
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -3302,12 +3302,12 @@ TRTOPCF0            X    000A3B5C           1  1203   890   950  1136  1148
 TRTOPCF1            X    000C3D5A           1  1206   914  1055  1112  1124
 TST1LOOP            U    0000050A           1   125   182
 =F'0'               F    000005F4           4   213   181
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    65
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    65
 
 MACRO  DEFN  REFERENCES
 
 No defined macros
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    66
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    66
 
    DESC     SYMBOL    SIZE       POS          ADDR
 
@@ -3316,7 +3316,7 @@ Entry: 0
 Image      IMAGE     933722  00000-E3F59  00000-E3F59
   Region             933722  00000-E3F59  00000-E3F59
     CSECT  TRTE1TST  933722  00000-E3F59  00000-E3F59
-ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 10 Oct 2022 14:46:34  Page    67
+ASMA Ver. 0.2.1              TRTE-01-basic (Test TRTE instructions)                                 15 Oct 2022 14:46:26  Page    67
 
    STMT                                                FILE NAME
 

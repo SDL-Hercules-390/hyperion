@@ -33,7 +33,7 @@ sysclear
 
 loadcore    "$(testpath)/TRE-02-performance.core" 0x0
 
-#r           21fd=ff   # (uncomment to enable timing tests!)
+#r           21fd=ff    # (uncomment to enable timing tests!)
 runtest     10         # (test duration, depends on host)
 
 *Done

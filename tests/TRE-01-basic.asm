@@ -98,12 +98,12 @@ BEGIN    BALR  R2,0             Initalize FIRST base register
                                                                 SPACE
          LA    R9,2048(,R2)     Initalize SECOND base register
          LA    R9,2048(,R9)     Initalize SECOND base register
-*
-**       Run the tests...
-*
+                                                                SPACE 2
+***********************************************************************
+*        Run the tests...
+***********************************************************************
          BAL   R14,TEST01       Test TRE   instruction
-*
-                                                                EJECT
+                                                                SPACE 2
 ***********************************************************************
 *         Test for normal or unexpected test completion...
 ***********************************************************************
@@ -121,84 +121,83 @@ BEGIN    BALR  R2,0             Initalize FIRST base register
 ***********************************************************************
                                                                 SPACE
 TEST01   DS    0F
-
+                                                                SPACE
          ST    R1,SAVER1          Save register 1
          LR    R15,R2             Save first base register
-
+                                                                SPACE
          DROP  R2                 Temporarily drop addressability
          USING BEGIN,R15          Establish temporary addressability
-*
+                                                                SPACE
          LA    R5,TRECTL          Point R5 --> testing control table
          USING TRETEST,R5         What each table entry looks like
-*
+                                                                SPACE
 TST1LOOP EQU   *
-*
+                                                                SPACE
          IC    R6,TNUM            Set test number
          STC   r6,TESTNUM
 *
 **       Initialize operand data  (move data to testing address)
 *
          L     R10,OP1WHERE       Where to move operand-1 data to
-         L     R11,OP1LEN           operand-1 length
+         L     R11,OP1LEN         Get operand-1 length
          L     R6,OP1DATA         Where op1 data is right now
          L     R7,OP1LEN          How much of it there is
          MVCL  R10,R6
-*
+                                                                SPACE
          L     R12,OP2WHERE       Where to move operand-2 data to
          L     R13,=A(OP2LEN)     How much of it there is
          L     R6,OP2DATA         Where op2 data is right now
-         L     R7,=A(OP2LEN)          How much of it there is
+         L     R7,=A(OP2LEN)      How much of it there is
          MVCL  R12,R6
-*
+                                                                SPACE
          IC    R0,TBYTE           Set test byte
                                                                 SPACE 2
 *
 **       Execute TRE instruction and check for expected condition code
 *
          MVI   SUBTEST,X'00'      (primary TRE)
-
-         L     R7,FAILMASK       (failure CC)
-         SLL   R7,4              (shift to BC instr CC position)
-
-         LM    R10,R12,OPSWHERE     get TRE operands
+                                                                SPACE
+         L     R7,FAILMASK        (failure CC)
+         SLL   R7,4               (shift to BC instr CC position)
+                                                                SPACE
+         LM    R10,R12,OPSWHERE   Get TRE operands
 TREMORE  TRE   R10,R12              TRE...
-         EX    R7,TREBC                fail if..not an expected cc?
-         BC    B'0001',TREMORE             not finished
-
+         EX    R7,TREBC                Fail if..not an expected cc?
+         BC    B'0001',TREMORE             Not finished
+                                                                EJECT
 *
 **       Verify end conditions R10 and expected main store
-*        (last 4 bytes)
+**       (last 4 bytes)
 *
          L     R6,ENDREG
-
+                                                                SPACE
          MVI   SUBTEST,X'01'      (R10 result)
          CLR   R10,R6             R10 correct?
          BNE   TREFAIL            No, FAILTEST!
-
+                                                                SPACE
          MVI   SUBTEST,X'02'      (end store)
          LR    R6,R10
          S     R6,=F'4'
-         CLC   ENDSTOR,0(R6)      end storage correct?
+         CLC   ENDSTOR,0(R6)      End storage correct?
          BNE   TREFAIL            No, FAILTEST!
-
-*
+                                                                SPACE
          LA    R5,TRENEXT         Go on to next table entry
          CLC   =F'0',0(R5)        End of table?
          BNE   TST1LOOP           No, loop...
          B     TREDONE            Done! (success!)
-
+                                                                SPACE
 TREFAIL  LA    R14,FAILTEST       Unexpected results!
 TREDONE  L     R1,SAVER1          Restore register 1
          LR    R2,R15             Restore first base register
          BR    R14                Return to caller or FAILTEST
-
+                                                                SPACE
 TREBC    BC    0,TREFAIL          (fail if unexpected condition code)
-
+                                                                SPACE
 SAVER1   DC    F'0'
 SAVER2   DC    F'0'
 SAVER5   DC    F'0'
 SAVETRT  DC    D'0'               (saved R1/R2 from TRT results)
-
+                                                                SPACE
          DROP  R5
          DROP  R15
          USING BEGIN,R2
@@ -206,19 +205,19 @@ SAVETRT  DC    D'0'               (saved R1/R2 from TRT results)
 ***********************************************************************
 *        Normal completion or Abnormal termination PSWs
 ***********************************************************************
-                                                                SPACE 5
+                                                                SPACE 2
 EOJ      DWAITEND LOAD=YES          Normal completion
-                                                                SPACE 5
+                                                                SPACE 4
 FAILDEV  DWAIT LOAD=YES,CODE=01     ENADEV failed
-                                                                SPACE 5
+                                                                SPACE 4
 FAILIO   DWAIT LOAD=YES,CODE=02     RAWIO failed
-                                                                SPACE 5
+                                                                SPACE 4
 FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
-                                                                SPACE 5
+                                                                SPACE 4
 ***********************************************************************
 *        Working Storage
 ***********************************************************************
-                                                                SPACE 2
+                                                                SPACE
          LTORG ,                Literals pool
                                                                 SPACE
 K        EQU   1024             One KB
@@ -241,7 +240,7 @@ TBYTE    DC    X'00'          TRE Testbyte
                                                                 SPACE 2
 OP1DATA  DC    A(0)           Pointer to Operand-1 data
 OP2DATA  DC    A(0)           Pointer to Operand-2 data
-
+                                                                SPACE
 OPSWHERE EQU   *              Where TRE Operands are located
 OP1WHERE DC    A(0)           Where Operand-1 data should be placed
 OP1LEN   DC    F'0'           How much data is there - 1
@@ -254,16 +253,15 @@ ENDREG   DC    A(0)           Ending R10 register value
 ENDSTOR  DC    XL4'00'        Ending TRE main store value
                                                                 SPACE 2
 TRENEXT  EQU   *              Start of next table entry...
-                                                                SPACE 8
-TRE01TST CSECT ,
                                                                 EJECT
 ***********************************************************************
 *        TRE Testing Control tables   (ref: TRETEST DSECT)
 ***********************************************************************
          PRINT DATA
+TRE01TST CSECT ,
 TRECTL   DC    0A(0)    start of table
-
-                                                                SPACE 4
+                                                                SPACE
+                                                                SPACE 2
 TRE1     DS    0F
          DC    X'01',X'00',X'00',X'00'
          DC    A(TRTOP10),A(TRTOP20)
@@ -319,7 +317,7 @@ TREOP2   DS    0F
          DC    A(00+(8*K64)),A(256),A(MB+(8*K64)-34)   only op2 crosses
          DC    A(10) CC1 = stop, scan incomplete or CC=3
          DC    A(00+(8*K64)+X'11'),X'00000000'
-                                                                SPACE 4
+                                                                EJECT
 TRELOP1  DS    0F
          DC    X'09',X'00',X'00',X'00'
          DC    A(TRTOP10),A(TRELOP20)
@@ -346,8 +344,8 @@ TRTOP10  DC    1150XL4'78125634'
 TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
                                                                 SPACE
 TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC1)
-
-
+                                                                SPACE
+                                                                SPACE
                                                                 EJECT
 ***********************************************************************
 *        TRE op2 stop tables...
@@ -360,29 +358,28 @@ TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
                                                                 SPACE
 TRELOP20 DC    X'FF',255X'00'
-
+                                                                SPACE
 TRELOP21 DC    256X'FF'
                                                                 EJECT
 ***********************************************************************
 *        Fixed storage locations
 ***********************************************************************
-                                                                SPACE 5
+                                                                SPACE 2
          ORG   TRE01TST+TESTADDR      (s/b @ X'21FE', X'21FF')
                                                                 SPACE
 TESTNUM  DC    X'00'      Test number of active test
 SUBTEST  DC    X'00'      Active test sub-test number
-                                                                SPACE 9
+                                                                SPACE 3
 ***********************************************************************
 *        (other DSECTS needed by SATK)
 ***********************************************************************
                                                                 SPACE
          DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1,CSW)
          PRINT ON
-                                                                SPACE
 ***********************************************************************
 *        Register equates
 ***********************************************************************
-                                                                SPACE 2
+                                                                SPACE
 R0       EQU   0
 R1       EQU   1
 R2       EQU   2
@@ -399,5 +396,5 @@ R12      EQU   12
 R13      EQU   13
 R14      EQU   14
 R15      EQU   15
-                                                                SPACE 8
+                                                                SPACE 2
          END

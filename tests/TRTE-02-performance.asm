@@ -162,10 +162,10 @@ TEST91   TM    TIMEOPT,X'FF'        Is timing tests option enabled?
                                                                 SPACE
          LA    R5,TRTEPERF          Point R5 --> testing control table
          USING TRTETEST,R5          What each table entry looks like
-*
+                                                                SPACE
 TST91LOP EQU   *
          ST    R5,SAVER5            Save current pref table base
-*
+                                                                SPACE
          IC    R6,TNUM              Set test number
          STC   R6,TESTNUM
 *
@@ -177,566 +177,97 @@ TST91LOP EQU   *
          L     R6,OP1DATA           Where op1 data is right now
          L     R7,OP1LEN            How much of it there is
          MVCL  R10,R6
-*
+                                                                SPACE
          L     R10,OP2WHERE         Where to move operand-2 data to
          L     R11,OP2LEN           How much of it there is
          L     R6,OP2DATA           Where op2 data is right now
          L     R7,OP2LEN            How much of it there is
          MVCL  R10,R6
-                                                                SPACE 2
+                                                                                                                                EJECT
+                                                                SPACE 3
+***********************************************************************
+*     Define come helpful macros to ensure our counts are correct
+***********************************************************************
+                                                                SPACE 4
+         MACRO
+         OVERONLY &NUM              &NUM = number of sets
+         LCLA  &CTR
+&CTR     SETA  &NUM
+.LOOP    ANOP
+.*
 *
-**       Next, time the overhead...
+         LM    R1,R4,OPSWHERE
+         BC    B'0001',*+4
+.*
+&CTR     SETA  &CTR-1
+         AIF   (&CTR GT 0).LOOP
+         MEND
+                                                                SPACE 5
+         MACRO
+         DOINSTR &NUM               &NUM = number of sets
+         LCLA  &CTR
+&CTR     SETA  &NUM
+.LOOP    ANOP
+.*
 *
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+.*
+&CTR     SETA  &CTR-1
+         AIF   (&CTR GT 0).LOOP
+         MEND
+                                                                EJECT
+***********************************************************************
+*        Next, time the overhead...
+***********************************************************************
+                                                                SPACE
          L     R7,NUMLOOPS
          STCK  BEGCLOCK
          STM   R1,R4,SAVE1T4
          BALR  R6,0
+*                                   100 sets of overhead
+         OVERONLY 2                 (first 2)
                                                                 SPACE
-         LM    R1,R4,OPSWHERE       Get TRTE operands
-         BC    B'0001',*-4          Not finished
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
 *        .........ETC.........
                                                                 SPACE
          PRINT OFF
-*                                   96 sets of overhead
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-*
+         OVERONLY 96                (3-98)
          PRINT ON
                                                                 SPACE
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-         LM    R1,R4,OPSWHERE
-         BC    B'0001',*+4
-*
+         OVERONLY 2                 (last 2)
+                                                                SPACE
          BCTR  R7,R6
          STCK  ENDCLOCK
          BAL   R15,CALCDUR
          MVC   OVERHEAD,DURATION
-*
-**       Now do the actual timing run...
-*
+                                                                EJECT
+***********************************************************************
+*        Now do the actual timing run...
+***********************************************************************
+                                                                SPACE
          L     R7,NUMLOOPS
          STCK  BEGCLOCK
          BALR  R6,0
-*
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12             Do TRTE
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12             Do TRTE
-         BC    B'0001',*-4          Not finished?
+*                                   100 sets of instructions
+         DOINSTR 2                  (first 2)
+                                                                SPACE
 *        .........ETC.........
                                                                 SPACE
          PRINT OFF
-*                                   96 sets of instructions
-*                                   1-10
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   11-20
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   21-30
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   31-40
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   41-50
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   51-60
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   61-70
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   71-80
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   81-90
-         LM    R1,R4,OPSWHERE       Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4          Not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*                                   91-96
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*
+         DOINSTR 96                 (3-98)
          PRINT ON
                                                                 SPACE
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-*
+         DOINSTR 2                  (last 2)
+                                                                SPACE
          BCTR  R7,R6
          STCK  ENDCLOCK
-*
+                                                                SPACE
          LM    R1,R4,SAVE1T4
          MVC   PRTLINE+33(5),=CL5'TRTE'
          BAL   R15,RPTSPEED
 *
-*  more performance tests
+**       More performance tests?
 *
          L     R5,SAVER5          Restore perf table base
          LA    R5,TRTENEXT        Go on to next table entry
@@ -750,24 +281,24 @@ TST91LOP EQU   *
                                                                 SPACE
 RPTSPEED ST    R15,RPTSAVE        Save return address
          ST    R5,RPTSVR5         Save R5
-*
+                                                                SPACE
          BAL   R15,CALCDUR        Calculate duration
-*
+                                                                SPACE
          LA    R5,OVERHEAD        Subtract overhead
          LA    R6,DURATION        From raw timing
          LA    R7,DURATION        Yielding true instruction timing
          BAL   R15,SUBDWORD       Do it
-*
+                                                                SPACE
          LM    R10,R11,DURATION   Convert to...
          SRDL  R10,12             ... microseconds
-*
+                                                                SPACE
          CVD   R10,TICKSAAA       Convert HIGH part to decimal
          CVD   R11,TICKSBBB       Convert LOW  part to decimal
-*
+                                                                SPACE
          ZAP   TICKSTOT,TICKSAAA            Calculate...
          MP    TICKSTOT,=P'4294967296'      ...decimal...
          AP    TICKSTOT,TICKSBBB            ...microseconds
-*
+                                                                SPACE
          MVC   PRTLINE+43(L'EDIT),EDIT          (edit into...
          ED    PRTLINE+43(L'EDIT),TICKSTOT+3     ...print line)
                                                                 SPACE 3
@@ -795,22 +326,22 @@ RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
                                                                 SPACE
 CALCDUR  ST    R15,CALCRET        Save return address
          STM   R5,R7,CALCWORK     Save work registers
-*
+                                                                SPACE
          LM    R6,R7,BEGCLOCK     Remove CPU number from clock value
          SRDL  R6,6                            "
          SLDL  R6,6                            "
          STM   R6,R7,BEGCLOCK                  "
-*
+                                                                SPACE
          LM    R6,R7,ENDCLOCK     Remove CPU number from clock value
          SRDL  R6,6                            "
          SLDL  R6,6                            "
          STM   R6,R7,ENDCLOCK                  "
-*
+                                                                SPACE
          LA    R5,BEGCLOCK        Starting time
          LA    R6,ENDCLOCK        Ending time
          LA    R7,DURATION        Difference
          BAL   R15,SUBDWORD       Calculate duration
-*
+                                                                SPACE
          LM    R5,R7,CALCWORK     Restore work registers
          L     R15,CALCRET        Restore return address
          BR    R15                Return to caller
@@ -824,7 +355,7 @@ CALCWORK DC    3F'0'              R5-R7 save area
 ***********************************************************************
                                                                 SPACE
 SUBDWORD STM   R1,R4,SUBDWSAV     Save registers
-*
+                                                                SPACE
          LM    R1,R2,0(R5)        Subtrahend  (value to subtract)
          LM    R3,R4,0(R6)        Minuend     (what to subtract FROM)
          SLR   R4,R2              Subtract LOW part
@@ -832,7 +363,7 @@ SUBDWORD STM   R1,R4,SUBDWSAV     Save registers
          SL    R3,=F'1'           (otherwise do borrow)
          SLR   R3,R1              Subtract HIGH part
          STM   R3,R4,0(R7)        Store results
-*
+                                                                SPACE
          LM    R1,R4,SUBDWSAV     Restore registers
          BR    R15                Return to caller
                                                                 SPACE
@@ -875,21 +406,21 @@ MSGMSG   DC    CL95' '                The message text to be displayed
 ***********************************************************************
 *        Normal completion or Abnormal termination PSWs
 ***********************************************************************
-                                                                SPACE 5
+                                                                SPACE 2
 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
                                                                 SPACE
 EOJ      LPSWE EOJPSW               Normal completion
-                                                                SPACE 5
+                                                                SPACE 3
 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
                                                                 SPACE
 FAILTEST LPSWE FAILPSW              Abnormal termination
-                                                                EJECT
+                                                                SPACE 4
 ***********************************************************************
 *        Working Storage
 ***********************************************************************
-                                                                SPACE 2
+                                                                SPACE
          LTORG ,                Literals pool
-                                                                SPACE 3
+                                                                SPACE 2
 K        EQU   1024             One KB
 PAGE     EQU   (4*K)            Size of one page
 K64      EQU   (64*K)           64 KB
@@ -1027,7 +558,7 @@ TRTO1L0  DC    512XL4'98765432'                              (CC0)
 TRTO1L11 DC    256XL4'98765432',X'00110000',255XL4'98765432' (CC1)
                                                                 SPACE
 TRTO1LF0 DC    511XL4'98765432',X'000000F0'                  (CC1)
-                                                                EJECT
+                                                                SPACE 4
 ***********************************************************************
 *        Function Code (FC) Tables (GR1)
 ***********************************************************************
