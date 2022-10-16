@@ -1612,6 +1612,8 @@
   "are performed. When the \"clear\" argument is given then this command is\n"  \
   "identical in functionality to the \"sysclear\" command.\n"
 
+#define sysgport_cmd_desc       "Define SYSG console port"
+
 #define tminus_cmd_desc         "Turn off instruction tracing"
 #define t_cmd_desc              "Set tracing range or Query tracing"
 #define t_cmd_help              \
@@ -1978,6 +1980,7 @@ COMMAND( "model",                   stsi_model_cmd,         SYSCFGNDIAG8,       
 COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       plant_cmd_desc,         NULL                )
 COMMAND( "shcmdopt",                shcmdopt_cmd,           SYSCFGNDIAG8,       shcmdopt_cmd_desc,      shcmdopt_cmd_help   )
 COMMAND( "sysepoch",                sysepoch_cmd,           SYSCFGNDIAG8,       sysepoch_cmd_desc,      NULL                )
+COMMAND( "sysgport",                sysgport_cmd,           SYSCFGNDIAG8,       sysgport_cmd_desc,      NULL                )
 COMMAND( "tzoffset",                tzoffset_cmd,           SYSCFGNDIAG8,       tzoffset_cmd_desc,      NULL                )
 COMMAND( "xpndsize",                xpndsize_cmd,           SYSCFGNDIAG8,       xpndsize_cmd_desc,      xpndsize_cmd_help   )
 COMMAND( "yroffset",                yroffset_cmd,           SYSCFGNDIAG8,       yroffset_cmd_desc,      NULL                )

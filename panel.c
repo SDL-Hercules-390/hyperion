@@ -1383,7 +1383,10 @@ static void NP_update(REGS *regs)
         {
             set_pos (DEV_LINE+i, 43);
             set_color (busy ? COLOR_LIGHT_YELLOW : COLOR_LIGHT_GREY, COLOR_BLACK);
-            MSGBUF (buf, "%4.4X", dev->devnum);
+            if (dev == sysblk.sysgdev)
+                STRLCPY( buf, "SYSG" );
+            else
+                MSGBUF (buf, "%4.4X", dev->devnum);
             draw_text (buf);
             NPdevnum[i] = dev->devnum;
             NPbusy[i] = busy;

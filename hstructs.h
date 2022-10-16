@@ -1120,6 +1120,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 #endif // defined( OPTION_INSTRUCTION_COUNTING )
 
         char    *cnslport;              /* console port string       */
+        char    *sysgport;              /* SYSG console port string  */
         char    **herclogo;             /* Constructed logo screen   */
         char    *logofile;              /* File name of logo file    */
         size_t  logolines;              /* Logo file number of lines */
@@ -1219,6 +1220,7 @@ struct TELNET {
         char    tgroup[16];             /* Terminal group name       */
         char    clientid[32];           /* Client Id string          */
         int     csock;                  /* Client socket             */
+        bool    sysg;                   /* SYSG port connection      */
 
         unsigned int  sendbuf_size;     /* One shot send buffer size */
         char         *sendbuf;          /* One shot send buffer      */

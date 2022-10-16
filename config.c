@@ -1803,9 +1803,9 @@ static int parse_lcss( const char* spec, char** rest, int verbose )
 }
 
 /*-------------------------------------------------------------------*/
-/*               parse_single_devnum__INTERNAL                       */
+/*               parse_single_devnum_INTERNAL                       */
 /*-------------------------------------------------------------------*/
-static int parse_single_devnum__INTERNAL
+static int parse_single_devnum_INTERNAL
 (
     const char*  spec,
     U16*         p_lcss,
@@ -1822,6 +1822,15 @@ static int parse_single_devnum__INTERNAL
         return -1;
 
     lcss = rc;
+
+    if (str_caseless_eq( r, "sysg" ))
+    {
+        *p_devnum = 0;
+        *p_lcss   = lcss;
+        free( r );
+        return 0;
+    }
+
     rc = strtoul( r, &strptr, 16 );
 
     if (0
@@ -1875,7 +1884,7 @@ static int parse_single_devnum__INTERNAL
 DLL_EXPORT int parse_single_devnum( const char* spec, U16* lcss, U16* devnum )
 {
     int verbose = TRUE;
-    return parse_single_devnum__INTERNAL( spec, lcss, devnum, verbose );
+    return parse_single_devnum_INTERNAL( spec, lcss, devnum, verbose );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1884,7 +1893,7 @@ DLL_EXPORT int parse_single_devnum( const char* spec, U16* lcss, U16* devnum )
 int parse_single_devnum_silent( const char* spec, U16* lcss, U16* devnum )
 {
     int verbose = FALSE;
-    return parse_single_devnum__INTERNAL( spec, lcss, devnum, verbose );
+    return parse_single_devnum_INTERNAL( spec, lcss, devnum, verbose );
 }
 
 /*-------------------------------------------------------------------*/

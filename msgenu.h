@@ -872,7 +872,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC01021 (available)
 #define HHC01022 "%1d:%04X COMM: client %s devtype %4.4X: connection closed by client"
 #define HHC01023 "Waiting for port %u to become free for console connections"
-#define HHC01024 "Waiting for console connections on port %u"
+#define HHC01024 "Waiting for %sconsole connections on port %u"
 #define HHC01025 "%1d:%04X COMM: duplicate SYSG console definition"
 #define HHC01026 "%1d:%04X COMM: enter console input"
 #define HHC01027 "Hercules version %s, built on %s %s"
@@ -1082,7 +1082,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC01450 (available)
 #define HHC01451 "Invalid value %s specified for %s"
 #define HHC01452 "Default port %s being used for %s"
-//efine HHC01453 (available)
+#define HHC01453 "%s cannot be the same as %s"
 //efine HHC01454 (available)
 #define HHC01455 "Invalid number of arguments for %s"
 #define HHC01456 "Invalid syntax %s for %s"
@@ -2477,7 +2477,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 
 // reserve 17000-17499 messages command processing
 #define HHC17000 "Missing or invalid argument(s)"
-#define HHC17001 "%s server listening %s"
+#define HHC17001 "%s server %slistening %s"
 #define HHC17002 "%s server inactive"
 #define HHC17003 "%-8s storage is %s (%ssize); storage is %slocked"
 #define HHC17004 "%-6s: CPUID  = %16.16"PRIX64

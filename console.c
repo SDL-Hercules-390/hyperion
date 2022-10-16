@@ -874,14 +874,14 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
     /* Extra initialisation for the SYSG console */
     if (strcasecmp( dev->typname, "SYSG" ) == 0)
     {
-        dev->pmcw.flag5 &= ~PMCW5_V;  // (not a regular device)
-
         if (sysblk.sysgdev != NULL)
         {
             // "%1d:%04X COMM: duplicate SYSG console definition"
             WRMSG( HHC01025, "E", LCSS_DEVNUM );
             return -1;
         }
+
+        dev->pmcw.flag5 &= ~PMCW5_V;  // (not a regular device)
     }
 #endif
 
@@ -3004,6 +3004,14 @@ size_t                  logoheight;     /* Logo file number of lines */
     /* Look for an available console device */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        /* Loop if they want the SYSG device and this isn't it,
+           or they DON'T want the SYSG device and this IS it. */
+        if (0
+            || ( tn->sysg && dev != sysblk.sysgdev)
+            || (!tn->sysg && dev == sysblk.sysgdev)
+        )
+            continue;
+
         /* Loop if the device is invalid */
         if ( !dev->allocated )
             continue;
@@ -3193,7 +3201,7 @@ size_t                  logoheight;     /* Logo file number of lines */
 
 #if defined( _FEATURE_INTEGRATED_3270_CONSOLE )
         if  (dev == sysblk.sysgdev)
-            strncpy( (char*) buf, "SYSG", sizeof( buf ));
+            STRLCPY( buf, "SYSG" );
         else
 #endif
         MSGBUF( buf, "%4.4X", dev->devnum );           set_symbol( "DEVN",    buf );
@@ -3289,7 +3297,7 @@ static void consto()    // (select timeout)
 /*-------------------------------------------------------------------*/
 /*      Obtain a new console_connection_handler listening socket     */
 /*-------------------------------------------------------------------*/
-static int get_listening_socket()
+static int get_listening_socket( const char* stmt, const char* typ, const char* port )
 {
 int                    rc = 0;          /* Return code               */
 int                    lsock;           /* Socket for listening      */
@@ -3319,10 +3327,10 @@ struct sockaddr_in    *server;          /* Server address structure  */
     }
 
     /* Prepare the sockaddr structure for the bind */
-    if (!(server = parse_sockspec( sysblk.cnslport )))
+    if (!(server = parse_sockspec( port )))
     {
         char msgbuf[64];
-        MSGBUF( msgbuf, "%s = %s", "CNSLPORT", sysblk.cnslport );
+        MSGBUF( msgbuf, "%s = %s", stmt, port );
         // "COMM: invalid parameter %s"
         WRMSG( HHC01017, "E", msgbuf );
         close_socket( lsock );
@@ -3363,8 +3371,8 @@ struct sockaddr_in    *server;          /* Server address structure  */
         return -1;
     }
 
-    // "Waiting for console connections on port %u"
-    WRMSG( HHC01024, "I", ntohs( server->sin_port ));
+    // "Waiting for %sconsole connections on port %u"
+    WRMSG( HHC01024, "I", typ, ntohs( server->sin_port ));
     free( server );
     return lsock;
 }
@@ -3375,8 +3383,10 @@ struct sockaddr_in    *server;          /* Server address structure  */
 static void* console_connection_handler( void* arg )
 {
 int                    rc = 0;          /* Return code               */
-int                    lsock;           /* Socket for listening      */
+int                    lsock;           /* Console listening socket  */
+int                    lsock2;          /* SYSG listening socket     */
 int                    csock;           /* Socket for conversation   */
+bool                   sysg;            /* SYSG port connection      */
 fd_set                 readset;         /* Read bit map for pselect  */
 int                    maxfd;           /* Highest fd for pselect    */
 int                    scan_complete;   /* DEVBLK scan complete      */
@@ -3386,6 +3396,7 @@ DEVBLK                *dev;             /* -> Device block           */
 BYTE                   unitstat;        /* Status after receive data */
 TELNET                *tn;              /* Telnet Control Block      */
 const char*            curr_cnslport;   /* Current sysblk.cnslport   */
+const char*            curr_sysgport;   /* Current sysblk.sysgport   */
 
 int prev_rlen3270;
 
@@ -3407,7 +3418,12 @@ int prev_rlen3270;
     /* Save starting sysblk.cnslport value
        and create starting listening socket */
     curr_cnslport = strdup( sysblk.cnslport );
-    lsock = get_listening_socket();
+    lsock = get_listening_socket( "CNSLPORT", "", sysblk.cnslport );
+
+    /* Save starting sysblk.sysgport value
+       and create starting listening socket */
+    curr_sysgport  = strdup( sysblk.sysgport );
+    lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
 
     /* Handle connection requests and attention interrupts */
     while (console_cnslcnt > 0)
@@ -3421,7 +3437,19 @@ int prev_rlen3270;
             close_socket( lsock );
             free( curr_cnslport );
             curr_cnslport = strdup( sysblk.cnslport );
-            lsock = get_listening_socket();
+            lsock = get_listening_socket( "CNSLPORT", "", sysblk.cnslport );
+        }
+
+        /* Did they set a new SYSGPORT value? */
+        if (strcmp( curr_sysgport, sysblk.sysgport ) != 0)
+        {
+            /* Close the current listening socket, save
+               the new SYSGPORT value and obtain a fresh
+               listening socket. */
+            close_socket( lsock2 );
+            free( curr_sysgport );
+            curr_sysgport  = strdup( sysblk.sysgport );
+            lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
         }
 
         /* Initialize scan flags */
@@ -3433,8 +3461,16 @@ int prev_rlen3270;
         {
             /* Initialize the pselect parameters */
             FD_ZERO( &readset );
-            FD_SET( lsock, &readset );
-            maxfd = lsock;
+            FD_SET( lsock,  &readset ); // (normal local 3270 devices)
+
+            /* Only one SYSG device allowed */
+            if (sysblk.sysgdev && sysblk.sysgdev->connected)
+                maxfd = lsock;
+            else
+            {
+                FD_SET( lsock2, &readset );
+                maxfd = MAX( lsock, lsock2 );
+            }
 
             SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, &readset );
 
@@ -3595,10 +3631,22 @@ int prev_rlen3270;
         } /* end log pselect error */
 
         /* Accept incoming client connections */
-        if (FD_ISSET( lsock, &readset ))
+        if (0
+            || FD_ISSET( lsock2, &readset )
+            || FD_ISSET( lsock,  &readset )
+        )
         {
             /* Accept a connection and create conversation socket */
-            csock = accept( lsock, NULL, NULL );
+            if (FD_ISSET( lsock2, &readset ))
+            {
+                csock = accept( lsock2, NULL, NULL );
+                sysg = true;
+            }
+            else
+            {
+                csock = accept( lsock,  NULL, NULL );
+                sysg = false;
+            }
 
             if (csock < 0)
             {
@@ -3656,6 +3704,7 @@ int prev_rlen3270;
             {
                 static U32 clid = 0;
                 tn->csock = csock;
+                tn->sysg  = sysg;
                 MSGBUF( tn->clientid, "client %u", clid++ );
 
                 /* Initialize libtelnet package */
@@ -3832,6 +3881,7 @@ int prev_rlen3270;
     } /* end while (console_cnslcnt > 0) */
 
     free( curr_cnslport );
+    free( curr_sysgport );
 
     /* Initialize scan flags */
     scan_complete = TRUE;
@@ -3900,8 +3950,9 @@ int prev_rlen3270;
 
     } /* end close all connected consoles */
 
-    /* Close the listening socket */
-    close_socket( lsock );
+    /* Close the listening sockets */
+    close_socket( lsock  );
+    close_socket( lsock2 );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
     LOG_THREAD_END( CON_CONN_THREAD_NAME  );

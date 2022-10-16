@@ -891,8 +891,9 @@ int     rc;
 
     sysblk.sysgroup = DEFAULT_SYSGROUP;
 
-    /* set default console port address */
+    /* set default console port addresses */
     sysblk.cnslport = strdup("3270");
+    sysblk.sysgport = strdup("3278");
 
     /* Initialize automatic creation of missing tape file to default */
     sysblk.auto_tape_create = DEF_AUTO_TAPE_CREATE;
