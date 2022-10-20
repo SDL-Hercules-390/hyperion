@@ -3004,13 +3004,16 @@ size_t                  logoheight;     /* Logo file number of lines */
     /* Look for an available console device */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        /* Loop if they want the SYSG device and this isn't it,
-           or they DON'T want the SYSG device and this IS it. */
-        if (0
-            || ( tn->sysg && dev != sysblk.sysgdev)
-            || (!tn->sysg && dev == sysblk.sysgdev)
-        )
-            continue;
+        if (sysblk.sysgport)
+        {
+            /* Loop if they want the SYSG device and this isn't it,
+               or they DON'T want the SYSG device and this IS it. */
+            if (0
+                || ( tn->sysg && dev != sysblk.sysgdev)
+                || (!tn->sysg && dev == sysblk.sysgdev)
+            )
+                continue;
+        }
 
         /* Loop if the device is invalid */
         if ( !dev->allocated )
@@ -3382,21 +3385,21 @@ struct sockaddr_in    *server;          /* Server address structure  */
 /*-------------------------------------------------------------------*/
 static void* console_connection_handler( void* arg )
 {
-int                    rc = 0;          /* Return code               */
-int                    lsock;           /* Console listening socket  */
-int                    lsock2;          /* SYSG listening socket     */
-int                    csock;           /* Socket for conversation   */
-bool                   sysg;            /* SYSG port connection      */
-fd_set                 readset;         /* Read bit map for pselect  */
-int                    maxfd;           /* Highest fd for pselect    */
-int                    scan_complete;   /* DEVBLK scan complete      */
-int                    scan_retries;    /* DEVBLK scan retries       */
-TID                    tidneg;          /* Negotiation thread id     */
-DEVBLK                *dev;             /* -> Device block           */
-BYTE                   unitstat;        /* Status after receive data */
-TELNET                *tn;              /* Telnet Control Block      */
-const char*            curr_cnslport;   /* Current sysblk.cnslport   */
-const char*            curr_sysgport;   /* Current sysblk.sysgport   */
+int           rc = 0;                   /* Return code               */
+int           lsock;                    /* Console listening socket  */
+int           lsock2 = 0;               /* SYSG listening socket     */
+int           csock;                    /* Socket for conversation   */
+bool          sysg = false;             /* SYSG port connection      */
+fd_set        readset;                  /* Read bit map for pselect  */
+int           maxfd;                    /* Highest fd for pselect    */
+int           scan_complete;            /* DEVBLK scan complete      */
+int           scan_retries;             /* DEVBLK scan retries       */
+TID           tidneg;                   /* Negotiation thread id     */
+DEVBLK*       dev;                      /* -> Device block           */
+BYTE          unitstat;                 /* Status after receive data */
+TELNET*       tn;                       /* Telnet Control Block      */
+const char*   curr_cnslport;            /* Current sysblk.cnslport   */
+const char*   curr_sysgport = NULL;     /* Current sysblk.sysgport   */
 
 int prev_rlen3270;
 
@@ -3420,10 +3423,13 @@ int prev_rlen3270;
     curr_cnslport = strdup( sysblk.cnslport );
     lsock = get_listening_socket( "CNSLPORT", "", sysblk.cnslport );
 
-    /* Save starting sysblk.sysgport value
-       and create starting listening socket */
-    curr_sysgport  = strdup( sysblk.sysgport );
-    lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
+    if (sysblk.sysgport)
+    {
+        /* Save starting sysblk.sysgport value
+           and create starting listening socket */
+        curr_sysgport = strdup( sysblk.sysgport );
+        lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
+    }
 
     /* Handle connection requests and attention interrupts */
     while (console_cnslcnt > 0)
@@ -3441,12 +3447,15 @@ int prev_rlen3270;
         }
 
         /* Did they set a new SYSGPORT value? */
-        if (strcmp( curr_sysgport, sysblk.sysgport ) != 0)
+        if (0
+            || sysblk.sysgport && !curr_sysgport
+            || sysblk.sysgport && strcmp( curr_sysgport, sysblk.sysgport ) != 0
+        )
         {
             /* Close the current listening socket, save
                the new SYSGPORT value and obtain a fresh
                listening socket. */
-            close_socket( lsock2 );
+            if (lsock2) close_socket( lsock2 );
             free( curr_sysgport );
             curr_sysgport  = strdup( sysblk.sysgport );
             lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
@@ -3461,12 +3470,12 @@ int prev_rlen3270;
         {
             /* Initialize the pselect parameters */
             FD_ZERO( &readset );
-            FD_SET( lsock,  &readset ); // (normal local 3270 devices)
+            FD_SET( lsock, &readset ); // (normal local 3270 devices)
 
             /* Only one SYSG device allowed */
             if (sysblk.sysgdev && sysblk.sysgdev->connected)
                 maxfd = lsock;
-            else
+            else if (lsock2)
             {
                 FD_SET( lsock2, &readset );
                 maxfd = MAX( lsock, lsock2 );
@@ -3632,12 +3641,12 @@ int prev_rlen3270;
 
         /* Accept incoming client connections */
         if (0
-            || FD_ISSET( lsock2, &readset )
+            || (lsock2 && FD_ISSET( lsock2, &readset ))
             || FD_ISSET( lsock,  &readset )
         )
         {
             /* Accept a connection and create conversation socket */
-            if (FD_ISSET( lsock2, &readset ))
+            if (lsock2 && FD_ISSET( lsock2, &readset ))
             {
                 csock = accept( lsock2, NULL, NULL );
                 sysg = true;
@@ -3952,7 +3961,7 @@ int prev_rlen3270;
 
     /* Close the listening sockets */
     close_socket( lsock  );
-    close_socket( lsock2 );
+    if (lsock2) close_socket( lsock2 );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
     LOG_THREAD_END( CON_CONN_THREAD_NAME  );

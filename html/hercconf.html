@@ -376,25 +376,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <code>host:port</code>, where <code>host</code> identifies the
     IP address of the host interface the telnet console server should
     bind to (listen for connections on). If not specified the server
-    will accept connections from any host interface.
-    <p>
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
-    for additional information about setting up a telnet or tn3270 client.
-    <p>
-
-<a  name="SYSGPORT"></a>
-<dt><code>SYSGPORT &nbsp; <i><u>3278</u></i> &nbsp;<i>-or-</i> &nbsp;<i>nnnn</i> &nbsp;<i>-or-</i> &nbsp;<i>host:port</i></code>
-<dd><p>
-    Specifies (typically) the port number (in decimal) to which tn3270
-    and telnet clients should use to connect to a <a href="#SYSG">SYSG</a>
-    console device. If an invalid value is specified Hercules defaults
-    to port number <u>3278</u>.
-    <p>
-    The <code>SYSGPORT</code> statement may also be specified as
-    <code>host:port</code>, where <code>host</code> identifies the
-    IP address of the host interface the telnet console server should
-    bind to (listen for connections on). If not specified the server
-    will accept connections from any host interface.
+    will accept connections on the port from any host interface.
     <p>
     See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a telnet or tn3270 client.
@@ -1569,6 +1551,26 @@ a real System/390.  The configuration file is an ASCII text file.
     statement.
     <p>
 
+<a name="SYSGPORT"></a>
+<dt><code>SYSGPORT &nbsp; <i><u>NO</u></i> &nbsp;<i>-or-</i> &nbsp;<i>3278</i> &nbsp;<i>-or-</i> &nbsp;<i>nnnn</i> &nbsp;<i>-or-</i> &nbsp;<i>host:port</i></code>
+<dd><p>
+    Specifies (typically) the port number (in decimal) to which tn3270
+    and telnet clients should use to connect to a <a href="#SYSG">SYSG</a>
+    console device or the value <code>NO</code>. The default is
+    <code><u>NO</u></code>, meaning no separate listening socket
+    will be created for SYSG console connections. If an invalid value
+    is specified Hercules defaults to port number <u>3278</u>.
+    <p>
+    The <code>SYSGPORT</code> statement may also be specified as
+    <code>host:port</code>, where <code>host</code> identifies the
+    IP address of the host interface the telnet console server should
+    bind to (listen for connections on). If not specified the server
+    will accept connections on the port from any host interface.
+    <p>
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
+    for additional information about setting up a telnet or tn3270 client.
+    <p>
+
 <a name="TIMERINT"></a>
 <dt><code>TIMERINT &nbsp; DEFAULT &#124; <em>nnnn</em></code>
 <dd><p>
@@ -2500,25 +2502,29 @@ a real System/390.  The configuration file is an ASCII text file.
     The integrated 3270 (SYSG) console is similar to a <a href="#loc3270">local non-SNA
     3270</a> device, except that it is not addressed by subchannel number and it is
     supported only by certain system control programs. The SYSG console is defined
-    like a 3270 device except that the device type is SYSG and the device number is
-    ignored. Only one SYSG console can be defined in a configuration.
+    like a 3270 device except that the device number is ignored (but is usually specified
+    as 0000) and the device type is specified as "SYSG". Only one SYSG console device
+    may be defined in a configuration.
     <p>
 
     Use tn3270 client software to connect to the SYSG console device via the port number
-    specified on the <a href="#SYSGPORT">SYSGPORT</a> statement, just as you would connect
-    to a regular local non-SNA 3270 device.
+    specified on the <a href="#SYSGPORT">SYSGPORT</a> statement if specified <i>(or to
+    the port number specified on the <a href="#CNSLPORT">CNSLPORT</a> statement if not
+    specified)</i>, just as you would connect to a regular local non-SNA 3270 device.
     See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a tn3270 client.
     <p>
 
-    The SYSG console configuration statement recognizes optional arguments which specify
-    <a href="#loc3270group">group name</a> and <a href="#loc3270ipaddr">IP address</a>
-    in the same way as previously described for a <a href="#loc3270">local non-SNA
-    3270</a> device. These optional arguments provide a means to ensure that a given
-    tn3270 client can connect directly to the SYSG device. If the group name and IP
-    address arguments are not specified, then the SYSG console is considered to be a
-    member of the general pool of devices eligible for connection by any incoming
-    tn3270 client.
+    The SYSG console device configuration statement recognizes optional arguments
+    which specify <a href="#loc3270group">group name</a> and
+    <a href="#loc3270ipaddr">IP address</a> in the same way as previously described
+    for a <a href="#loc3270">local non-SNA 3270</a> devices. When the
+    <a href="#SYSGPORT">SYSGPORT</a> statement is not specified, these optional
+    arguments provide an alternate way to ensure that a given tn3270 client
+    can connect directly to the SYSG device. If the group name and IP address
+    arguments are not specified (and no <a href="#SYSGPORT">SYSGPORT</a> statement
+    is specified), then the SYSG console is considered to be a member of the general
+    pool of devices eligible for connection by any incoming tn3270 client.
     <p>
 
 <hr width="50%"><p>

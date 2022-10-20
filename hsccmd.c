@@ -4149,7 +4149,7 @@ int cnslport_cmd( int argc, char* argv[], char* cmdline )
     {
         const char* port = (rc == -1) ? def_port : argv[1];
 
-        if (str_eq( port, sysblk.sysgport ))
+        if (sysblk.sysgport && str_eq( port, sysblk.sysgport ))
         {
             // "%s cannot be the same as %s"
             WRMSG( HHC01453, "E", argv[0], "SYSGPORT" );
@@ -4186,6 +4186,7 @@ int cnslport_cmd( int argc, char* argv[], char* cmdline )
 int sysgport_cmd( int argc, char* argv[], char* cmdline )
 {
     static char const* def_port = "3278";
+    bool disabled = false;
     int rc = 0;
     int i;
 
@@ -4198,106 +4199,127 @@ int sysgport_cmd( int argc, char* argv[], char* cmdline )
         WRMSG( HHC01455, "E", argv[0] );
         rc = -1;
     }
-    else if (argc == 1)
+    else if (argc == 1) // Display current value
     {
-        // Display current value
-
         char buf[128];
 
-        if (strchr( sysblk.sysgport, ':' ) == NULL)
+        if (sysblk.sysgport && strchr( sysblk.sysgport, ':' ) == NULL)
         {
-            MSGBUF( buf, "on port %s", sysblk.sysgport);
+            MSGBUF( buf, "on port %s", sysblk.sysgport );
         }
-        else
+        else // (!sysblk.sysgport || host:port specified)
         {
-            char* serv;
-            char* host = NULL;
-            char* port = strdup( sysblk.sysgport );
-
-            if ((serv = strchr( port, ':' )))
+            if (sysblk.sysgport)
             {
-                *serv++ = '\0';
+                char* serv = NULL;
+                char* host = NULL;
+                char* port = NULL;
 
-                if (*port)
-                    host = port;
+                port = strdup( sysblk.sysgport );
+
+                if ((serv = strchr( port, ':' )))
+                {
+                    *serv++ = '\0';
+
+                    if (*port)
+                        host = port;
+                }
+
+                MSGBUF( buf, "for host %s on port %s", host, serv );
+                free( port );
             }
-
-            MSGBUF( buf, "for host %s on port %s", host, serv);
-            free( port );
         }
 
-        // "%s server %slistening %s"
-        WRMSG( HHC17001, "I", "SYSG console", "", buf);
+        // If SYSGPORT specified -AND- no SYSG device connected yet...
+        if (sysblk.sysgport && (!sysblk.sysgdev || !sysblk.sysgdev->connected))
+        {
+            // "%s server %slistening %s"
+            WRMSG( HHC17001, "I", "SYSG console", "", buf );
+        }
+        else // SYSGPORT NOT specified -OR- SYSG device already connected
+        {
+            // "%s server %slistening %s"
+            WRMSG( HHC17001, "I", "SYSG console", "NOT ", "on any port" );
+        }
         rc = 0;
     }
-    else
+    else // Set new value
     {
-        // Set new value
-
-        char* port;
-        char* host = strdup( argv[1] );
-
-        if ((port = strchr( host, ':' )) == NULL)
-            port = host;
+        if (str_caseless_eq( argv[1], "NO" ))
+        {
+            disabled = true;
+            rc = 1;
+        }
         else
-            *port++ = '\0';
-
-        for (i=0; i < (int) strlen( port ); i++)
         {
-            if (!isdigit( port[i] ))
-            {
-                // "Invalid value %s specified for %s"
-                WRMSG( HHC01451, "E", port, argv[0] );
-                rc = -1;
-                break;
-            }
-        }
+            char* port;
+            char* host = strdup( argv[1] );
 
-        if (rc != -1)
-        {
-            i = atoi( port );
-
-            if (i < 0 || i > 65535)
-            {
-                // "Invalid value %s specified for %s"
-                WRMSG( HHC01451, "E", port, argv[0] );
-                rc = -1;
-            }
+            if ((port = strchr( host, ':' )) == NULL)
+                port = host;
             else
-                rc = 1;
-        }
+                *port++ = '\0';
 
-        free( host );
+            for (i=0; i < (int) strlen( port ); i++)
+            {
+                if (!isdigit( port[i] ))
+                {
+                    // "Invalid value %s specified for %s"
+                    WRMSG( HHC01451, "E", port, argv[0] );
+                    rc = -1;
+                    break;
+                }
+            }
+
+            if (rc != -1)  // (if no parsing error)
+            {
+                i = atoi( port );
+
+                if (i < 0 || i > 65535)
+                {
+                    // "Invalid value %s specified for %s"
+                    WRMSG( HHC01451, "E", port, argv[0] );
+                    rc = -1;
+                }
+                else
+                    rc = 1;
+            }
+
+            free( host );
+        }
     }
 
-    if (rc != 0)
+    if (rc != 0) // (new value specified or error)
     {
         const char* port = (rc == -1) ? def_port : argv[1];
 
-        if (str_eq( port, sysblk.cnslport ))
+        if (!disabled && str_eq( port, sysblk.cnslport ))
         {
             // "%s cannot be the same as %s"
             WRMSG( HHC01453, "E", argv[0], "CNSLPORT" );
             rc = -1;
         }
-        else
+        else // (disabled || port okay)
         {
             free( sysblk.sysgport );
             sysblk.sysgport = NULL;
 
-            if (rc == -1)
+            if (!disabled && rc == -1)
             {
                 // "Default port %s being used for %s"
                 WRMSG( HHC01452, "W", def_port, argv[0] );
                 sysblk.sysgport = strdup( def_port );
                 rc = 1;
             }
-            else
+            else // (disabled || rc != -1)
             {
-                sysblk.sysgport = strdup( argv[1] );
-                rc = 0;
+                if (!disabled)
+                    sysblk.sysgport = strdup( argv[1] );
+
                 // "%-14s set to %s"
-                WRMSG( HHC02204, "I", argv[0], sysblk.sysgport );
+                WRMSG( HHC02204, "I", argv[0],
+                    disabled ? "NO" : sysblk.sysgport );
+                rc = 0;
             }
         }
     }
@@ -9035,30 +9057,33 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
 
     // SYSG CONSOLE...
 
-    if (!strchr( sysblk.sysgport, ':' ))
+    if (sysblk.sysgport)
     {
-        MSGBUF( buf, "on port %s", sysblk.sysgport );
-    }
-    else
-    {
-        char* serv;
-        char* host = NULL;
-        char* port = strdup( sysblk.sysgport );
-
-        if ((serv = strchr( port, ':' )))
+        if (!strchr( sysblk.sysgport, ':' ))
         {
-            *serv++ = '\0';
-            if (*port)
-                host = port;
+            MSGBUF( buf, "on port %s", sysblk.sysgport );
+        }
+        else
+        {
+            char* serv;
+            char* host = NULL;
+            char* port = strdup( sysblk.sysgport );
+
+            if ((serv = strchr( port, ':' )))
+            {
+                *serv++ = '\0';
+                if (*port)
+                    host = port;
+            }
+
+            MSGBUF( buf, "for host %s on port %s", host, serv );
+            free( port );
         }
 
-        MSGBUF( buf, "for host %s on port %s", host, serv );
-        free( port );
+        // "%s server %slistening %s"
+        WRMSG( HHC17001, "I", "SYSG console",
+            sysblk.sysgdev && sysblk.sysgdev->connected ? "NOT " : "", buf );
     }
-
-    // "%s server %slistening %s"
-    WRMSG( HHC17001, "I", "SYSG console",
-        sysblk.sysgdev && sysblk.sysgdev->connected ? "NOT " : "", buf );
 
     return 0;
 }
