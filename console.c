@@ -3448,8 +3448,8 @@ int prev_rlen3270;
 
         /* Did they set a new SYSGPORT value? */
         if (0
-            || sysblk.sysgport && !curr_sysgport
-            || sysblk.sysgport && strcmp( curr_sysgport, sysblk.sysgport ) != 0
+            || (sysblk.sysgport && !curr_sysgport)
+            || (sysblk.sysgport && strcmp( curr_sysgport, sysblk.sysgport ) != 0)
         )
         {
             /* Close the current listening socket, save
