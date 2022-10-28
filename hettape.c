@@ -391,7 +391,13 @@ int             rc;                     /* Return code               */
         {
             char msgbuf[128];
             MSGBUF( msgbuf, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-            WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "het", "het_fsb()", (off_t)dev->hetb->cblk, msgbuf);
+
+            if (dev->hetb) // (could be null! see GitHub Issue #515!)
+                // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
+                WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "het", "het_fsb()", (off_t)dev->hetb->cblk, msgbuf);
+            else
+                // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+                WRMSG( HHC00205, "E", LCSS_DEVNUM, dev->filename, "het", "het_fsb()", msgbuf );
         }
         /* Set unit check with equipment check */
         if(rc==HETE_EOT)
