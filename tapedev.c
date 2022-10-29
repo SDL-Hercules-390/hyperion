@@ -1325,13 +1325,14 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     char        msg[80];
     int         i;                      /* Loop control              */
     int         rc, optrc;              /* various rtns return codes */
+    bool        lock_obtained = false;
 
     union {                                 /* Parser results        */
         U32  num;                           /* Parser results        */
         BYTE str[ MAX_PARSER_STRLEN + 1 ];  /* Parser results        */
     } res;                                  /* Parser results        */
 
-    obtain_lock( &dev->lock );
+    lock_obtained = (try_obtain_lock( &dev->lock ) == 0);
 
     /* Release the previous OMA descriptor array if allocated */
     if (dev->omadesc != NULL)
@@ -1723,7 +1724,8 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
     if (0 != rc)
     {
-        release_lock( &dev->lock );
+        if (lock_obtained)
+            release_lock( &dev->lock );
         return -1;
     }
 
@@ -1757,7 +1759,8 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         }
     }
 
-    release_lock( &dev->lock );
+    if (lock_obtained)
+        release_lock( &dev->lock );
 
     UpdateDisplay(dev);
     rc = ReqAutoMount(dev);
