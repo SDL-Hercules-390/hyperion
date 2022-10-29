@@ -1756,10 +1756,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             dev->tapedisptype = TAPEDISPTYP_IDLE;
         }
     }
+
+    release_lock( &dev->lock );
+
     UpdateDisplay(dev);
     rc = ReqAutoMount(dev);
 
-    release_lock( &dev->lock );
     return rc;
 
 } /* end function mountnewtape */
