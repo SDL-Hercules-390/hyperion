@@ -1331,6 +1331,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         BYTE str[ MAX_PARSER_STRLEN + 1 ];  /* Parser results        */
     } res;                                  /* Parser results        */
 
+    obtain_lock( &dev->lock );
 
     /* Release the previous OMA descriptor array if allocated */
     if (dev->omadesc != NULL)
@@ -1721,7 +1722,10 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     } // end for (i = 1; i < argc; i++)
 
     if (0 != rc)
+    {
+        release_lock( &dev->lock );
         return -1;
+    }
 
 #if defined(OPTION_SCSI_TAPE)
     if (dev->tapedevt == TAPEDEVT_SCSITAPE)
@@ -1754,6 +1758,8 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     }
     UpdateDisplay(dev);
     rc = ReqAutoMount(dev);
+
+    release_lock( &dev->lock );
     return rc;
 
 } /* end function mountnewtape */
@@ -2822,23 +2828,27 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
 
     int rc;
 
-    /* Do it the hard way: rewind to load-point and then
-       keep doing fsb, fsb, fsb... until we find our block
-    */
-    if ((rc = dev->tmh->rewind( dev, unitstat, code)) >= 0)
+    obtain_lock( &dev->lock );
     {
-        /* Reset position counters to start of file */
+        /* Do it the hard way: rewind to load-point and then
+           keep doing fsb, fsb, fsb... until we find our block
+        */
+        if ((rc = dev->tmh->rewind( dev, unitstat, code)) >= 0)
+        {
+            /* Reset position counters to start of file */
 
-        dev->curfilen   =  1;
-        dev->nxtblkpos  =  0;
-        dev->prvblkpos  = -1;
-        dev->blockid    =  0;
+            dev->curfilen   =  1;
+            dev->nxtblkpos  =  0;
+            dev->prvblkpos  = -1;
+            dev->blockid    =  0;
 
-        /* Do it the hard way */
+            /* Do it the hard way */
 
-        while ( dev->blockid < blockid && ( rc >= 0 ) )
-            rc = dev->tmh->fsb( dev, unitstat, code );
+            while ( dev->blockid < blockid && ( rc >= 0 ) )
+                rc = dev->tmh->fsb( dev, unitstat, code );
+        }
     }
+    release_lock( &dev->lock );
 
     return rc;
 }

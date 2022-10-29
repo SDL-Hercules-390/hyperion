@@ -37,87 +37,92 @@ DLL_EXPORT int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
     int   rc;                           /* Return code               */
     char  pathname[MAX_PATH];           /* file path in host format  */
 
-    /* Check for no tape in drive */
-
-    if (strcmp( dev->filename, TAPE_UNLOADED ) == 0)
+    obtain_lock( &dev->lock );
     {
-        build_senseX( TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code );
-        return -1;
-    }
+        /* Check for no tape in drive */
 
-    /* Open the HET file */
+        if (strcmp( dev->filename, TAPE_UNLOADED ) == 0)
+        {
+            build_senseX( TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code );
+            release_lock( &dev->lock );
+            return -1;
+        }
 
-    hostpath( pathname, dev->filename, sizeof( pathname ));
+        /* Open the HET file */
 
-    rc = het_open( &dev->hetb, pathname,
-                   dev->tdparms.logical_readonly ? HETOPEN_READONLY
-                   : sysblk.auto_tape_create ? HETOPEN_CREATE : 0 );
+        hostpath( pathname, dev->filename, sizeof( pathname ));
 
-    if (rc >= 0)
-    {
-        /* Keep file descriptor and handle synchronized */
-        dev->fd = dev->hetb->fd;
-        dev->fh = dev->hetb->fh;
-
-        if (dev->hetb->writeprotect)
-            dev->readonly = 1;
-
-        rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
-            dev->tdparms.compress );
+        rc = het_open( &dev->hetb, pathname,
+                       dev->tdparms.logical_readonly ? HETOPEN_READONLY
+                       : sysblk.auto_tape_create ? HETOPEN_CREATE : 0 );
 
         if (rc >= 0)
         {
-            rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_METHOD,
-                dev->tdparms.method );
+            /* Keep file descriptor and handle synchronized */
+            dev->fd = dev->hetb->fd;
+            dev->fh = dev->hetb->fh;
+
+            if (dev->hetb->writeprotect)
+                dev->readonly = 1;
+
+            rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
+                dev->tdparms.compress );
 
             if (rc >= 0)
             {
-                rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_LEVEL,
-                    dev->tdparms.level );
+                rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_METHOD,
+                    dev->tdparms.method );
 
                 if (rc >= 0)
                 {
-                    rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE,
-                        dev->tdparms.chksize );
+                    rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_LEVEL,
+                        dev->tdparms.level );
+
+                    if (rc >= 0)
+                    {
+                        rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE,
+                            dev->tdparms.chksize );
+                    }
                 }
             }
         }
-    }
 
-    /* Check for open failure */
+        /* Check for open failure */
 
-    if (rc < 0)
-    {
-        int save_errno = errno;
-        het_close( &dev->hetb );
-        dev->fd = -1;
-        dev->fh = NULL;
-        errno = save_errno;
-
+        if (rc < 0)
         {
-            char msgbuf[128];
-            MSGBUF( msgbuf, "Het error '%s': '%s'",
-                het_error( rc ), strerror( errno ));
+            int save_errno = errno;
+            het_close( &dev->hetb );
+            dev->fd = -1;
+            dev->fh = NULL;
+            errno = save_errno;
 
-            // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-            WRMSG( HHC00205, "E", LCSS_DEVNUM,
-                    dev->filename, "het", "het_open()", msgbuf );
+            {
+                char msgbuf[128];
+                MSGBUF( msgbuf, "Het error '%s': '%s'",
+                    het_error( rc ), strerror( errno ));
+
+                // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+                WRMSG( HHC00205, "E", LCSS_DEVNUM,
+                        dev->filename, "het", "het_open()", msgbuf );
+            }
+
+            STRLCPY( dev->filename, TAPE_UNLOADED );
+            build_senseX( TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code );
+            release_lock( &dev->lock );
+            return -1;
         }
 
-        STRLCPY( dev->filename, TAPE_UNLOADED );
-        build_senseX( TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code );
-        return -1;
+        /* Open success */
+
+        if (sysblk.auto_tape_create && dev->hetb->created)
+        {
+            if (!dev->batch || !dev->quiet)
+                // "%1d:%04X Tape file %s, type %s: tape created"
+                WRMSG( HHC00235, "I", LCSS_DEVNUM, dev->filename, "het" );
+        }
     }
-
-    /* Open success */
-
-    if (sysblk.auto_tape_create && dev->hetb->created)
-    {
-        if (!dev->batch || !dev->quiet)
-            // "%1d:%04X Tape file %s, type %s: tape created"
-            WRMSG( HHC00235, "I", LCSS_DEVNUM, dev->filename, "het" );
-    }
-
+    release_lock( &dev->lock );
     return 0;
 
 } /* end function open_het */
@@ -129,21 +134,24 @@ DLL_EXPORT int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void close_het( DEVBLK* dev )
 {
-    if (dev->fd >= 0)
+    obtain_lock( &dev->lock );
     {
-        if (!dev->batch || !dev->quiet)
-            // "%1d:%04X Tape file %s, type %s: tape closed"
-            WRMSG( HHC00201, "I", LCSS_DEVNUM, dev->filename, "het" );
+        if (dev->fd >= 0)
+        {
+            if (!dev->batch || !dev->quiet)
+                // "%1d:%04X Tape file %s, type %s: tape closed"
+                WRMSG( HHC00201, "I", LCSS_DEVNUM, dev->filename, "het" );
+        }
+
+        het_close( &dev->hetb );
+        STRLCPY( dev->filename, TAPE_UNLOADED );
+
+        dev->fh      = NULL;
+        dev->fd      = -1;
+        dev->blockid =  0;
+        dev->fenced  =  0;
     }
-
-    het_close( &dev->hetb );
-    STRLCPY( dev->filename, TAPE_UNLOADED );
-
-    dev->fh      = NULL;
-    dev->fd      = -1;
-    dev->blockid =  0;
-    dev->fenced  =  0;
-
+    release_lock( &dev->lock );
     return;
 
 } /* end function close_het */
