@@ -31,98 +31,96 @@
 /*                                                                   */
 /* If successful, the het control blk is stored in the device block  */
 /* and the return value is zero.  Otherwise the return value is -1.  */
+/*                                                                   */
+/* NOTE: called with dev->lock held by either hsccmd.c "devinit_cmd" */
+/*       or by tapeccws.c "0x4B = SET DIAGNOSE" ccw function.        */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
 {
     int   rc;                           /* Return code               */
     char  pathname[MAX_PATH];           /* file path in host format  */
 
-    obtain_lock( &dev->lock );
+    /* Check for no tape in drive */
+
+    if (strcmp( dev->filename, TAPE_UNLOADED ) == 0)
     {
-        /* Check for no tape in drive */
+        build_senseX( TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code );
+        return -1;
+    }
 
-        if (strcmp( dev->filename, TAPE_UNLOADED ) == 0)
-        {
-            build_senseX( TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code );
-            release_lock( &dev->lock );
-            return -1;
-        }
+    /* Open the HET file */
 
-        /* Open the HET file */
+    hostpath( pathname, dev->filename, sizeof( pathname ));
 
-        hostpath( pathname, dev->filename, sizeof( pathname ));
+    rc = het_open( &dev->hetb, pathname,
+                   dev->tdparms.logical_readonly ? HETOPEN_READONLY
+                   : sysblk.auto_tape_create ? HETOPEN_CREATE : 0 );
 
-        rc = het_open( &dev->hetb, pathname,
-                       dev->tdparms.logical_readonly ? HETOPEN_READONLY
-                       : sysblk.auto_tape_create ? HETOPEN_CREATE : 0 );
+    if (rc >= 0)
+    {
+        /* Keep file descriptor and handle synchronized */
+        dev->fd = dev->hetb->fd;
+        dev->fh = dev->hetb->fh;
+
+        if (dev->hetb->writeprotect)
+            dev->readonly = 1;
+
+        rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
+            dev->tdparms.compress );
 
         if (rc >= 0)
         {
-            /* Keep file descriptor and handle synchronized */
-            dev->fd = dev->hetb->fd;
-            dev->fh = dev->hetb->fh;
-
-            if (dev->hetb->writeprotect)
-                dev->readonly = 1;
-
-            rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
-                dev->tdparms.compress );
+            rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_METHOD,
+                dev->tdparms.method );
 
             if (rc >= 0)
             {
-                rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_METHOD,
-                    dev->tdparms.method );
+                rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_LEVEL,
+                    dev->tdparms.level );
 
                 if (rc >= 0)
                 {
-                    rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_LEVEL,
-                        dev->tdparms.level );
-
-                    if (rc >= 0)
-                    {
-                        rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE,
-                            dev->tdparms.chksize );
-                    }
+                    rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE,
+                        dev->tdparms.chksize );
                 }
             }
         }
-
-        /* Check for open failure */
-
-        if (rc < 0)
-        {
-            int save_errno = errno;
-            het_close( &dev->hetb );
-            dev->fd = -1;
-            dev->fh = NULL;
-            errno = save_errno;
-
-            {
-                char msgbuf[128];
-                MSGBUF( msgbuf, "Het error '%s': '%s'",
-                    het_error( rc ), strerror( errno ));
-
-                // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-                WRMSG( HHC00205, "E", LCSS_DEVNUM,
-                        dev->filename, "het", "het_open()", msgbuf );
-            }
-
-            STRLCPY( dev->filename, TAPE_UNLOADED );
-            build_senseX( TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code );
-            release_lock( &dev->lock );
-            return -1;
-        }
-
-        /* Open success */
-
-        if (sysblk.auto_tape_create && dev->hetb->created)
-        {
-            if (!dev->batch || !dev->quiet)
-                // "%1d:%04X Tape file %s, type %s: tape created"
-                WRMSG( HHC00235, "I", LCSS_DEVNUM, dev->filename, "het" );
-        }
     }
-    release_lock( &dev->lock );
+
+    /* Check for open failure */
+
+    if (rc < 0)
+    {
+        int save_errno = errno;
+        het_close( &dev->hetb );
+        dev->fd = -1;
+        dev->fh = NULL;
+        errno = save_errno;
+
+        {
+            char msgbuf[128];
+            MSGBUF( msgbuf, "Het error '%s': '%s'",
+                het_error( rc ), strerror( errno ));
+
+            // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+            WRMSG( HHC00205, "E", LCSS_DEVNUM,
+                    dev->filename, "het", "het_open()", msgbuf );
+        }
+
+        STRLCPY( dev->filename, TAPE_UNLOADED );
+        build_senseX( TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code );
+        return -1;
+    }
+
+    /* Open success */
+
+    if (sysblk.auto_tape_create && dev->hetb->created)
+    {
+        if (!dev->batch || !dev->quiet)
+            // "%1d:%04X Tape file %s, type %s: tape created"
+            WRMSG( HHC00235, "I", LCSS_DEVNUM, dev->filename, "het" );
+    }
     return 0;
 
 } /* end function open_het */
@@ -134,27 +132,21 @@ DLL_EXPORT int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void close_het( DEVBLK* dev )
 {
-    obtain_lock( &dev->lock );
+    if (dev->fd >= 0)
     {
-        if (dev->fd >= 0)
-        {
-            if (!dev->batch || !dev->quiet)
-                // "%1d:%04X Tape file %s, type %s: tape closed"
-                WRMSG( HHC00201, "I", LCSS_DEVNUM, dev->filename, "het" );
-        }
-
-        het_close( &dev->hetb );
-        STRLCPY( dev->filename, TAPE_UNLOADED );
-
-        dev->fh      = NULL;
-        dev->fd      = -1;
-        dev->blockid =  0;
-        dev->fenced  =  0;
+        if (!dev->batch || !dev->quiet)
+            // "%1d:%04X Tape file %s, type %s: tape closed"
+            WRMSG( HHC00201, "I", LCSS_DEVNUM, dev->filename, "het" );
     }
-    release_lock( &dev->lock );
-    return;
 
-} /* end function close_het */
+    het_close( &dev->hetb );
+    STRLCPY( dev->filename, TAPE_UNLOADED );
+
+    dev->fh      = NULL;
+    dev->fd      = -1;
+    dev->blockid =  0;
+    dev->fenced  =  0;
+}
 
 /*-------------------------------------------------------------------*/
 /* Rewind HET format file                                            */

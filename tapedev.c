@@ -642,6 +642,7 @@ static int tape_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
+/* NOTE: always called with dev->lock held                           */
 /*-------------------------------------------------------------------*/
 static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
@@ -672,7 +673,7 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
                 ASSERT( dev->tmh && dev->tmh->tapeloaded );
                 if (dev->tmh->tapeloaded( dev, NULL, 0 ))
                 {
-                    release_lock( &dev->lock );
+                    // "%1d:%04X reinit rejected; drive not empty"
                     WRMSG( HHC02243, "E", LCSS_DEVNUM );
                     return -1;
                 }
@@ -1325,7 +1326,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     char        msg[80];
     int         i;                      /* Loop control              */
     int         rc, optrc;              /* various rtns return codes */
-    bool        lock_obtained = false;
+    bool        lock_obtained = false;  /* true if WE obtained lock  */
 
     union {                                 /* Parser results        */
         U32  num;                           /* Parser results        */
@@ -1724,7 +1725,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
     if (0 != rc)
     {
-        if (lock_obtained)
+        if (lock_obtained) // (release lock only if WE obtained it)
             release_lock( &dev->lock );
         return -1;
     }
@@ -1759,7 +1760,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         }
     }
 
-    if (lock_obtained)
+    if (lock_obtained) // (release lock only if WE obtained it)
         release_lock( &dev->lock );
 
     UpdateDisplay(dev);
@@ -2832,6 +2833,10 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
     // NOTE: 'blockid' passed in host (little-endian) format...
 
     int rc;
+
+    // NOTE: need dev->lock to prevent "dev->hetb" from
+    //       going NULL while we're processing (looping).
+    //       See GitHub Issue #515.
 
     obtain_lock( &dev->lock );
     {
