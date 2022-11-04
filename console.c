@@ -3470,15 +3470,15 @@ int prev_rlen3270;
         {
             /* Initialize the pselect parameters */
             FD_ZERO( &readset );
-            FD_SET( lsock, &readset ); // (normal local 3270 devices)
 
-            /* Only one SYSG device allowed */
-            if (sysblk.sysgdev && sysblk.sysgdev->connected)
-                maxfd = lsock;
-            else if (lsock2)
+            FD_SET( lsock, &readset );  // (normal local 3270 devices)
+            maxfd = lsock;              // (normal local 3270 devices)
+
+            /* If SYSGPORT defined and SYSG not connected yet... */
+            if (lsock2 && sysblk.sysgdev && !sysblk.sysgdev->connected)
             {
-                FD_SET( lsock2, &readset );
-                maxfd = MAX( lsock, lsock2 );
+                FD_SET( lsock2, &readset );     // (add SYSG port too)
+                maxfd = MAX( lsock, lsock2 );   // (then adjust maxfd)
             }
 
             SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, &readset );
