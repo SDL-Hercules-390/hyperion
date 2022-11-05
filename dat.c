@@ -845,7 +845,7 @@ U16     eax;                            /* Authorization index       */
 /*              complete description of this parameter)              */
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
-/*              LRA, IVSK, TPROT, STACK, PTE, LPTEA                  */
+/*              LRA, IVSK, TPROT, STACK, PTE, LPTEA or ACCTYPE_HW.   */
 /*                                                                   */
 /* Output:                                                           */
 /*                                                                   */
@@ -927,7 +927,8 @@ U16     eax;                            /* Authorization index       */
 /*                                                                   */
 /*      A program check may be generated for addressing and          */
 /*      translation specification exceptions, in which case the      */
-/*      function does not return.                                    */
+/*      function does not return. Otherwise the return is one of     */
+/*      the return values mentioned above.                           */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP( translate_addr )( VADR vaddr, int arn, REGS* regs, int acctype )
@@ -2315,7 +2316,7 @@ static inline bool ARCH_DEP( check_sa_per2 )( int arn, int acctype, REGS* regs )
 /*      arn     Access register number (or USE_REAL_ADDR,            */
 /*                      USE_PRIMARY_SPACE, USE_SECONDARY_SPACE)      */
 /*      regs    CPU register context                                 */
-/*      acctype Type of access requested: READ, WRITE, or instfetch  */
+/*      acctype Type of access requested: READ, WRITE, CHECK or HW.  */
 /*      akey    Bits 0-3=access key, 4-7=zeroes                      */
 /*      len     Length of data access for PER SA purpose             */
 /*                                                                   */
@@ -2328,11 +2329,16 @@ static inline bool ARCH_DEP( check_sa_per2 )( int arn, int acctype, REGS* regs )
 /*      then the addr parameter is treated as a real address.        */
 /*      Otherwise addr is a virtual address, so dynamic address      */
 /*      translation is called to convert it to a real address.       */
+/*                                                                   */
 /*      Prefixing is then applied to convert the real address to     */
-/*      an absolute address, and then low-address protection,        */
-/*      access-list controlled protection, page protection, and      */
-/*      key controlled protection checks are applied to the address. */
-/*      If successful, the reference and change bits of the storage  */
+/*      an absolute address, and then, if this is not a hardware     */
+/*      access, low-address protection, access-list controlled       */
+/*      protection, page protection, and key controlled protection   */
+/*      checks are applied to the address. When storage is being     */
+/*      accessed by the hardware (acctype = ACCTYPE_HW = 0) then     */
+/*      none of the previously mentioned checks are performed and    */
+/*      the absolute address is immediately returned. Otherwise,     */
+/*      if successful, the reference and change bits of the storage  */
 /*      key are updated, and the absolute address is returned.       */
 /*                                                                   */
 /*      If the logical address causes an addressing, protection,     */
@@ -2454,8 +2460,15 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         return regs->mainstor + aaddr;
 #endif
 
+    /* Skip further processing if hardware access */
+    if (unlikely( acctype == ACCTYPE_HW ))
+    {
+        /* Return mainstor address */
+        return regs->mainstor + aaddr;
+    }
+
     /* Check protection and set reference and change bits */
-    if (likely(acctype & ACC_READ))
+    if (likely( acctype & ACC_READ ))
     {
         /* Program check if fetch protected location */
         if (unlikely(ARCH_DEP(is_fetch_protected) (addr, *regs->dat.storkey, akey, regs)))
@@ -2474,7 +2487,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, apfra);
 
     }
-    else /* if(acctype & (ACC_WRITE|ACC_CHECK|ACCTYPE_HW)) */
+    else /* (acctype & (ACC_WRITE | ACC_CHECK)) */
     {
         /* Program check if store protected location */
         if (unlikely(ARCH_DEP(is_store_protected) (addr, *regs->dat.storkey, akey, regs)))
@@ -2516,7 +2529,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
                 ON_IC_PER_SA( regs );
         }
 #endif /* defined( FEATURE_PER ) */
-    } /* acctype & ACC_WRITE|CHECK */
+    } /* (acctype & (ACC_WRITE | ACC_CHECK)) */
 
     /* Return mainstor address */
     return regs->mainstor + aaddr;
