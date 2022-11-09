@@ -2025,10 +2025,10 @@
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\CUSE-01-basic.tst">
-      <Filter>Other Files\tests\core</Filter>
+      <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\CUSE-02-performance.tst">
-      <Filter>Other Files\tests\core</Filter>
+      <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\dfp-080-from-packed.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
@@ -2277,10 +2277,10 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\CUSE-01-basic.asm">
-      <Filter>Other Files\tests\core</Filter>
+      <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\CUSE-02-performance.asm">
-      <Filter>Other Files\tests\core</Filter>
+      <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\dfp-080-from-packed.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
