@@ -1333,7 +1333,18 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         BYTE str[ MAX_PARSER_STRLEN + 1 ];  /* Parser results        */
     } res;                                  /* Parser results        */
 
-    lock_obtained = (try_obtain_lock( &dev->lock ) == 0);
+    /* Acquire the device lock before proceeding */
+    if (!(lock_obtained = ((rc = try_obtain_lock( &dev->lock )) == 0)))
+    {
+        /* If some other thread (not us) owns it, then wait for it */
+        if (rc != EBUSY)
+        {
+            obtain_lock( &dev->lock );
+            lock_obtained = true; /* (so we know to release it) */
+        }
+        else
+            ; /* (presume we already owned it) */
+    }
 
     /* Release the previous OMA descriptor array if allocated */
     if (dev->omadesc != NULL)
@@ -2833,32 +2844,77 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
     // NOTE: 'blockid' passed in host (little-endian) format...
 
     int rc;
+    bool is_het = (dev->tmh == &tmh_het);
 
-    // NOTE: need dev->lock to prevent "dev->hetb" from
-    //       going NULL while we're processing (looping).
-    //       See GitHub Issue #515.
-
-    obtain_lock( &dev->lock );
+    /* Do it the hard way: rewind to load-point and then
+       keep doing fsb, fsb, fsb... until we find our block
+    */
+    if ((rc = dev->tmh->rewind( dev, unitstat, code)) >= 0)
     {
-        /* Do it the hard way: rewind to load-point and then
-           keep doing fsb, fsb, fsb... until we find our block
-        */
-        if ((rc = dev->tmh->rewind( dev, unitstat, code)) >= 0)
+        /* Reset position counters to start of file */
+        dev->curfilen   =  1;
+        dev->nxtblkpos  =  0;
+        dev->prvblkpos  = -1;
+        dev->blockid    =  0;
+
+        /* Keep doing fsb until we find our block... */
+        if (!is_het)
         {
-            /* Reset position counters to start of file */
-
-            dev->curfilen   =  1;
-            dev->nxtblkpos  =  0;
-            dev->prvblkpos  = -1;
-            dev->blockid    =  0;
-
-            /* Do it the hard way */
-
-            while ( dev->blockid < blockid && ( rc >= 0 ) )
+            while (dev->blockid < blockid && (rc >= 0))
                 rc = dev->tmh->fsb( dev, unitstat, code );
         }
-    }
-    release_lock( &dev->lock );
+        else // (special handling for .HET files...)
+        {
+            while (1)
+            {
+                // PROGRAMMING NOTE: We need dev->lock to prevent
+                // "dev->hetb" from going NULL while we're looping
+                // (see GitHub Issue #515 for details), BUT... we
+                // also need to also provide a brief window of
+                // opportunity for I/O instructions to acquire
+                // dev->lock themselves too if they need to, by
+                // periodically releasing dev->lock while we loop.
+                // Inefficient, yes, but it's the only sure way
+                // to prevent GitHub Issue #518 from occurring.
+
+                obtain_lock( &dev->lock );
+                {
+                    /* Check for exit condition */
+                    if (0
+                        || (rc < 0)                 // (error)
+                        || !dev->hetb               // (ERROR!!)
+                        || dev->blockid >= blockid  // (block located)
+                    )
+                    {
+                        // 'hetb' SHOULDN'T suddenly disappear but
+                        // apparently sometimes occassionally does!
+                        // See GitHub Issue #515!
+
+                        if (dev->blockid < blockid && !dev->hetb)
+                            rc = -1; // (hetb disappeared!)
+
+                        release_lock( &dev->lock );
+                        break; // (block located or error occurred)
+                    }
+                }
+                release_lock( &dev->lock );
+
+                // Between the above release and the below obtain is
+                // the window of opportunity for I/O instructions to
+                // acquire dev->lock for themselves if they need to.
+
+                obtain_lock( &dev->lock );
+                {
+                    if (!dev->hetb)
+                        rc = -1;
+                    else
+                        rc = dev->tmh->fsb( dev, unitstat, code );
+                }
+                release_lock( &dev->lock );
+
+            } // end while
+        } // end if special .HET file handling
+    } // end if rewind success
 
     return rc;
 }
