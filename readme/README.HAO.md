@@ -52,12 +52,12 @@ The following special variables are recognized:
 
 Note that substitution of a $n variable does not occur if there are fewer than n capturing groups in the regular expression.
 
-As an example, the rule below issues the Hercules command `i 001F` in response to the Hercules message "`HHC01090I 0:001F COMM: client 127.0.0.1 devtype 3270: connection reset`":
+As an example, the rule below issues the Hercules command `i 001F` in response to the Hercules message "**`HHC01090I 0:001F COMM: client 127.0.0.1 devtype 3270: connection reset`**":
 
     hao tgt HHC01090I .:([0-9A-F]{4}) COMM: .* connection reset
     hao cmd i $1
 
-Another example, shown below, illustrates how the dot matrix display of a 3590(?) tape unit might be used to implement an automatic tape library in response to the Hercules message "`HHC00224I 0:0581 Tape file *, type HET: display "K2DSBK2 " / "M2DSBK3S" (alternating)`":
+Another example, shown below, illustrates how the dot matrix display of a 3590(?) tape unit might be used to implement an automatic tape library in response to the Hercules message "**`HHC00224I 0:0581 Tape file *, type HET: display "K2DSBK2 " / "M2DSBK3S" (alternating)`**":
 
     hao tgt HHC00224I .:([0-9A-F]{4}) Tape file .*: display (?:".{8}" \/ )?"M([A-Z0-9]{1,6})\s*S"
     hao cmd devinit $1 /u/tapes/$2.aws
