@@ -1079,11 +1079,23 @@ intended to be a replacement for the <code>cckdcomp</code> utility; rather,
 the intent is to provide sufficient free space to prevent excessive file growth.
 
 <p>
-<strike>
 Another function performed by space recovery is to relocate <em>L2</em> (secondary
 lookup) tables towards the beginning of the file.  This simplifies <i>chkdsk</i>
 recovery and enables the chkdsk function to complete more quickly during initialization.
-</strike>
+
+<p>
+Interestingly however, this is actually <i><u>not recommended</u></i>,
+as it tends to make accessing track data <i>slower</i>, not faster.
+Instead, L2 tables should be kept as close as possible to the actual track
+data they point to. Enabling automatic garbage collection is therefore
+<i><u>not recommended</u></i> and is thus the reason it is disabled by
+default starting with Hercules 4.5.
+
+<p>
+Starting with Hercules 4.5, CCKD will (if <b><a href=#gcmsgs>gsmsgs</a></b>=1)
+report the current garbage state (fragmentation state) of each dasd image
+at startup so you can know which images you should perform manual
+defragmentation for.
 
 <a name=cckdcommand></a>
 <hr noshade>
@@ -1113,9 +1125,9 @@ the <b>cckd</b> command explained below.
 <tr><td>&nbsp;</td><td><b>debug=</b>n</td>     <td> &nbsp; Turn CCW tracing debug messages on or off</td>
 <tr><td>&nbsp;</td><td><b>freepend=</b>n</td>  <td> &nbsp; Set the free pending value</td>
 <tr><td>&nbsp;</td><td><b>fsync=</b>n</td>     <td> &nbsp; Turn fsync on or off</td>
-<tr><td>&nbsp;</td><td><b>gcint=</b>n</td>     <td> &nbsp; Garbage collection interval</td>
-<tr><td>&nbsp;</td><td><b>gcmsgs=</b>n</td>    <td> &nbsp; Garbage collection messages</td>
-<tr><td>&nbsp;</td><td><b>gcparm=</b>n</td>    <td> &nbsp; Garbage collection parameter</td>
+<tr><td>&nbsp;</td><td><b>gcint=</b>n</td>     <td> &nbsp; Garbage collector interval</td>
+<tr><td>&nbsp;</td><td><b>gcmsgs=</b>n</td>    <td> &nbsp; Garbage collector messages</td>
+<tr><td>&nbsp;</td><td><b>gcparm=</b>n</td>    <td> &nbsp; Garbage collector parameter</td>
 <tr><td>&nbsp;</td><td><b>gcstart=</b>n</td>   <td> &nbsp; Start garbage collector</td>
 <tr><td>&nbsp;</td><td><b>linuxnull=</b>n</td> <td> &nbsp; Check for null linux tracks</td>
 <tr><td>&nbsp;</td><td><b>nosfd=</b>n</td>     <td> &nbsp; Turn off stats report at close</td>
@@ -1207,7 +1219,8 @@ the <b>cckd</b> command explained below.
         (However, the file will not be <em>fsync</em>ed unless at least 5
         seconds have elapsed since the last <em>fsync</em>).
         <p>
-        The default is <b>10</b> seconds.
+        The default <i>(as of Hercules version 4.5)</i> is <b>0</b>,
+        meaning automatic garbage collection is disabled.
         <p>
         You can specify a number between <b>0</b> and <b>60</b>. A value of 0
         disables the default automatic behavior of the garbage collector,
@@ -1219,12 +1232,24 @@ the <b>cckd</b> command explained below.
         automatically and remain idle (but still running) between each garbage
         collection cycle, automatically starting the next cycle every 'gcint'
         seconds.
+        <p>
+        It is recommended that this parameter remain set to its default value
+        of 0 in order to prevent the garbage collector from running automatically.
+        Rather, it is highly recommended that you manually defragment your
+        dasd images yourself before starting Hercules, via either <code>cckdcomp</code>
+        or <code>cckdcomp64</code> (<i>not recommended</i>) or
+<b><a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.CCKD64.md">convto64</a></b>
+        instead (<i><u>recommended</u></i>).
         <br /><br />
     </td>
 
 <tr><td valign="top"><b>gcmsgs=</b>n</td><td> &nbsp; </td>
-    <td>Set to 1 to display garbage collector progress messages.
-        Set to <b>0</b> (the default) to suppress garbage collector progress messages.
+    <td>Set to 1 to display garbage collector messages.
+<a name="gcmsgs">
+        Set to <b>0</b> (the default) to suppress garbage collector messages.
+        Garbage collector messages are issued (if enabled) during each garbage
+        collection cycle as well as during startup to report the current garbage
+        state of each image.
         <br /><br />
     </td>
 
@@ -1547,9 +1572,6 @@ the <b>cckd</b> command explained below.
         <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
     </tr>
     <tr>
-        <td>&nbsp;</td>
-    </tr>
-    <tr>
         <td valign="top"> &nbsp; </td>
         <td valign="top">Remove all free space from a compressed file or files.</td>
     </tr>
@@ -1573,6 +1595,24 @@ the <b>cckd</b> command explained below.
                 <td valign="top">A number 0 .. 4 indicating the cckdcdsk level.</td>
             </tr>
         </table>
+        </td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">
+            <i>
+            <b>NOTE:</b> Use of the cckdcomp64 utility is discouraged. It is recommended
+            that you use the
+            <b><a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.CCKD64.md">convto64</a></b>
+            utility instead, as it is both faster and
+            much safer than cckdcomp64. If you are still using 32-bit CCKD, it is hightly
+            recommended that you convert all of your Hercules dasds to the new
+            <b><a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.CCKD64.md">CCKD64</a></b>
+            format instead.
+            </i>
         </td>
     </tr>
 </table>
@@ -1622,13 +1662,11 @@ the <b>cckd</b> command explained below.
 <hr noshade>
 
 <p>
-
-Greg Smith
-<a href="mailto:gsmith@nc.rr.com"><em>gsmith</em>&#064;<em>nc.rr.com</em></a>
-<p><center><hr width=15% noshade>
-<a href="index.html"><img src="images/back.gif" border=0 alt="back"></a>
+<center>
+<a href="##" onclick="history.go(-1)"><img src="images/back.gif" border=0 alt="back"></a>
 <p class="lastupd"><script language="Javascript">
 document.write( "Last updated " + document.lastModified + "" );
 </script></p>
+</center>
 </BODY>
 </HTML>

@@ -29,6 +29,7 @@
 #if defined( OPTION_W32_CTCI )      // (need tt32_get_default_iface)
 #include "w32ctca.h"
 #endif
+#include "cckddasd.h"               // (need cckd_gc_rpt_states)
 
 static char shortopts[] =
 
@@ -1469,6 +1470,9 @@ int     rc;
 
     sysblk.config_processed = true;
     sysblk.cfg_timerint = sysblk.timerint;
+
+    /* Report CCKD dasd image garbage states at startup */
+    cckd_gc_rpt_states();
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 

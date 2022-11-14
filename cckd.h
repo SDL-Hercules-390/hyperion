@@ -244,7 +244,7 @@ typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 #define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
 
 #define CCKD_MIN_GCINT         0        /* Min collection interval   */
-#define CCKD_DEF_GCINT         10       /* Def collection interval   */
+#define CCKD_DEF_GCINT         0        /* Def collection interval   */
 #define CCKD_MAX_GCINT         60       /* Max collection interval   */
 
 #define CCKD_MIN_GCPARM       -8        /* Min gcol adjustment parm  */

@@ -4176,20 +4176,93 @@ void cckd64_gcstart()
 }
 
 /*-------------------------------------------------------------------*/
+/* Report Garbage Collection state for a given CCKD device           */
+/*-------------------------------------------------------------------*/
+void cckd64_gc_rpt_state( DEVBLK* dev )
+{
+    CCKD64_EXT*  cckd;
+    int          gc;
+
+    if (!dev->cckd64)
+    {
+        cckd_gc_rpt_state( dev );
+        return;
+    }
+
+    cckd = dev->cckd_ext;
+    gc = cckd_gc_state( dev );
+
+    switch (gc)
+    {
+        case 0:     // critical!
+        case 1:     // severe
+
+            // "%1d:%04X CCKD%s image %s is SEVERELY fragmented!"
+            WRMSG( HHC00387, "W", LCSS_DEVNUM, "64",
+                TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
+            break;
+
+        case 2:     // moderate
+
+            // "%1d:%04X CCKD%s image %s is moderately fragmented"
+            WRMSG( HHC00388, "W", LCSS_DEVNUM, "64",
+                TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
+            break;
+
+        case 3:     // light
+
+            // "%1d:%04X CCKD%s image %s is lightly fragmented"
+            WRMSG( HHC00389, "I", LCSS_DEVNUM, "64",
+                TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
+            break;
+
+        default:    // less than light
+
+            break;  // (don't bother reporting it)
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* Return Garbage Collection State for a given CCKD device           */
+/*-------------------------------------------------------------------*/
+int cckd64_gc_state( DEVBLK* dev )
+{
+    CCKD64_EXT*  cckd;                  /* -> cckd extension         */
+    S64          size, fsiz;            /* File size, free size      */
+    int          gc;                    /* Garbage collection state  */
+
+    if (!dev->cckd64)
+        return cckd_gc_state( dev );
+
+    cckd = dev->cckd_ext;
+
+    /* Determine garbage state */
+    size = (S64) cckd->cdevhdr[ cckd->sfn ].cdh_size;
+    fsiz = (S64) cckd->cdevhdr[ cckd->sfn ].free_total;
+
+    if      (fsiz >= (size = size/2)) gc = 0; // critical   50% - 100%
+    else if (fsiz >= (size = size/2)) gc = 1; // severe     25% - 50%
+    else if (fsiz >= (size = size/2)) gc = 2; // moderate 12.5% - 25%
+    else if (fsiz >= (size = size/2)) gc = 3; // light     6.3% - 12.5%
+    else                              gc = 4; // none        0% - 6.3%
+
+    /* Adjust the state based on the number of free spaces */
+    if (cckd->cdevhdr[ cckd->sfn ].free_num >  800 && gc > 0) gc--;
+    if (cckd->cdevhdr[ cckd->sfn ].free_num > 1800 && gc > 0) gc--;
+    if (cckd->cdevhdr[ cckd->sfn ].free_num > 3000)           gc = 0;
+
+    return gc;
+}
+
+/*-------------------------------------------------------------------*/
 /* Perform garbage collection for a given CCKD64 device              */
 /*-------------------------------------------------------------------*/
 void cckd64_gcol_dev( DEVBLK* dev, struct timeval* tv_now )
 {
 int             rc;                     /* Return code               */
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
-U64             size, fsiz;             /* File size, free size      */
+U64             size;                   /* Percolate size            */
 int             gc;                     /* Garbage collection state  */
-int             gctab[5]= {             /* default gcol parameters   */
-                           4096,        /* critical  50%   - 100%    */
-                           2048,        /* severe    25%   -  50%    */
-                           1024,        /* moderate  12.5% -  25%    */
-                            512,        /* light      6.3% -  12.5%  */
-                            256};       /* none       0%   -   6.3%  */
 
     if (!dev->cckd64)
     {
@@ -4230,19 +4303,7 @@ int             gctab[5]= {             /* default gcol parameters   */
         }
 
         /* Determine garbage state */
-        size = cckd->cdevhdr[cckd->sfn].cdh_size;
-        fsiz = cckd->cdevhdr[cckd->sfn].free_total;
-
-        if      (fsiz >= (size = size/2)) gc = 0;
-        else if (fsiz >= (size = size/2)) gc = 1;
-        else if (fsiz >= (size = size/2)) gc = 2;
-        else if (fsiz >= (size = size/2)) gc = 3;
-        else                              gc = 4;
-
-        /* Adjust the state based on the number of free spaces */
-        if (cckd->cdevhdr[cckd->sfn].free_num >  800 && gc > 0) gc--;
-        if (cckd->cdevhdr[cckd->sfn].free_num > 1800 && gc > 0) gc--;
-        if (cckd->cdevhdr[cckd->sfn].free_num > 3000)           gc = 0;
+        gc = cckd64_gc_state( dev );
 
         /* Set the size */
         if (cckdblk.gcparm > 0) size = gctab[gc] << cckdblk.gcparm;
@@ -4257,7 +4318,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     release_lock (&cckd->cckdiolock);
 
     /* Call the garbage collector */
-    cckd64_gc_percolate (dev, (unsigned int)size);
+    cckd64_gc_percolate( dev, size );
 
     /* Schedule any updated tracks to be written */
     obtain_lock (&cckd->cckdiolock);
@@ -4327,7 +4388,7 @@ static int cckd64_gc_perc_space_error( DEVBLK* dev, CCKD64_EXT* cckd, U64 upos, 
 /*-------------------------------------------------------------------*/
 /* Garbage Collection -- Percolate algorithm                         */
 /*-------------------------------------------------------------------*/
-int cckd64_gc_percolate( DEVBLK* dev, unsigned int size )
+int cckd64_gc_percolate( DEVBLK* dev, U64 size )
 {
 CCKD64_EXT*     cckd;                   /* -> cckd extension         */
 bool            didmsg = false;         /* HHC00384 issued           */

@@ -473,7 +473,15 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00384 "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
 #define HHC00385 "Skipping garbage collection for CCKD%s file[%d] %1d:%04X %s due to space errors"
 #define HHC00386 "Collected %u bytes of garbage for CCKD%s file[%d] %1d:%04X %s..."
-//efine HHC00387 - HHC00395 (available)
+#define HHC00387 "%1d:%04X CCKD%s image %s is SEVERELY fragmented!"
+#define HHC00388 "%1d:%04X CCKD%s image %s is moderately fragmented"
+#define HHC00389 "%1d:%04X CCKD%s image %s is lightly fragmented"
+//efine HHC00390 (available)
+//efine HHC00391 (available)
+//efine HHC00392 (available)
+//efine HHC00393 (available)
+//efine HHC00394 (available)
+//efine HHC00395 (available)
 #define HHC00396 "%1d:%04X %s" // (cckd_trace)
 //efine HHC00397 (available)
 #define HHC00398 "%s" // (trace table)
