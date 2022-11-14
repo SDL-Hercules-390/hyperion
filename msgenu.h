@@ -475,7 +475,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00386 "Collected %u bytes of garbage for CCKD%s file[%d] %1d:%04X %s..."
 #define HHC00387 "%1d:%04X CCKD%s image %s is SEVERELY fragmented!"
 #define HHC00388 "%1d:%04X CCKD%s image %s is moderately fragmented"
-#define HHC00389 "%1d:%04X CCKD%s image %s is lightly fragmented"
+#define HHC00389 "%1d:%04X CCKD%s image %s is slightly fragmented"
 //efine HHC00390 (available)
 //efine HHC00391 (available)
 //efine HHC00392 (available)
@@ -2240,9 +2240,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC02976 - HHC02999 (available)
 
 // cckdmap
-#define HHC03000 "Usage: %s [ -t | -v ] infile"                             "\n" \
+#define HHC03000 "Usage: %s [ -i | -t | -v ] infile"                        "\n" \
        "HHC03000I   infile   Input file"                                    "\n" \
        "HHC03000I options:"                                                 "\n" \
+       "HHC03000I   -i       report summary information only"               "\n" \
        "HHC03000I   -t       report consolidated track data"                "\n" \
        "HHC03000I   -v       verbose (report detailed track data)"
 #define HHC03001 "Unrecognized option: %s"
@@ -2313,7 +2314,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC03048I   dh_highcyl:    %u"                                      "\n" \
        "HHC03048I   dh_serial:     %s"
 #define HHC03049 "Total unknown space    = %s bytes"
-//efine HHC03050 - HHC03099 (available)
+#define HHC03050 "Image is %s fragmented%s"
+//efine HHC03051 - HHC03099 (available)
 
 // dasdser
 #define HHC03100 "Usage: %s  image  [serial]"                               "\n" \

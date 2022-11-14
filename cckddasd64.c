@@ -4190,6 +4190,16 @@ void cckd64_gc_rpt_state( DEVBLK* dev )
     }
 
     cckd = dev->cckd_ext;
+
+    /* Retrieve and report garbage collector state, but ONLY if
+       the image is over 100MB in size. This prevents "scaring"
+       the user about SEVERELY fragmented files when the file
+       is too small to be much of a concern, as is usually the
+       case with e.g. shadow files.
+    */
+    if (cckd->cdevhdr->cdh_size < (100 * _1M))
+        return;
+
     gc = cckd_gc_state( dev );
 
     switch (gc)
@@ -4211,7 +4221,7 @@ void cckd64_gc_rpt_state( DEVBLK* dev )
 
         case 3:     // light
 
-            // "%1d:%04X CCKD%s image %s is lightly fragmented"
+            // "%1d:%04X CCKD%s image %s is slightly fragmented"
             WRMSG( HHC00389, "I", LCSS_DEVNUM, "64",
                 TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
             break;

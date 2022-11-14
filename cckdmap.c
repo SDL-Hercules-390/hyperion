@@ -24,7 +24,7 @@
 /*   collector's cckd_gc_l2 (Reposition level 2 tables) function     */
 /*   will likely be invoked or not (which is known to be buggy).     */
 /*                                                                   */
-/*       Usage:    cckdmap.exe  [ -t | -v ]   infile                 */
+/*       Usage:    cckdmap.exe  [ -i | -t | -v ]   infile            */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
@@ -58,6 +58,7 @@ bool        data             = false;   /* Consolidated tracks report*/
 bool        verbose          = false;   /* Report detailed track info*/
 bool        overlap          = false;   /* Space overlaps next space */
 bool        new_format       = false;   /* "NEW" free chain format   */
+bool        info_only        = false;   /* Summary Information Only  */
 
 CCKD_FREEBLK    freeblk32    = {0};     /* Free block (file)         */
 CCKD64_FREEBLK  freeblk      = {0};     /* Free block (file)         */
@@ -75,7 +76,7 @@ CCKD64_L2ENT    L2tab[256]   = {0};     /* CCKD64 Level 2 table      */
 /*-------------------------------------------------------------------*/
 static int syntax()
 {
-    // Usage: %s [ -t | -v ] infile
+    // Usage: %s [ -i | -t | -v ] infile
     //   infile   Input file
     // options:
     //   -t       report consolidated track data
@@ -235,6 +236,31 @@ static int sort_spacetab_by_file_offset( const void* a, const void* b )
 }
 
 /*-------------------------------------------------------------------*/
+/* Return calculated Garbage Collector State value (0-4)             */
+/*-------------------------------------------------------------------*/
+static int dev_gc_state()
+{
+    U64  size, fsiz;
+    int  gc;
+
+    size = cdevhdr.cdh_size;
+    fsiz = cdevhdr.free_total;
+
+    if      (fsiz >= (size = size/2)) gc = 0; // critical   50% - 100%
+    else if (fsiz >= (size = size/2)) gc = 1; // severe     25% - 50%
+    else if (fsiz >= (size = size/2)) gc = 2; // moderate 12.5% - 25%
+    else if (fsiz >= (size = size/2)) gc = 3; // light     6.3% - 12.5%
+    else                              gc = 4; // none        0% - 6.3%
+
+    // Adjust the state based on the number of free spaces
+    if (cdevhdr.free_num >  800 && gc > 0) gc--;
+    if (cdevhdr.free_num > 1800 && gc > 0) gc--;
+    if (cdevhdr.free_num > 3000)           gc = 0;
+
+    return gc;
+}
+
+/*-------------------------------------------------------------------*/
 /*                          MAIN                                     */
 /*-------------------------------------------------------------------*/
 int main( int argc, char* argv[] )
@@ -286,20 +312,31 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             break;
 
         if (0
+            || strcasecmp( argv[0], "-i"     ) == 0
+            || strcasecmp( argv[0], "--info" ) == 0
+        )
+        {
+            info_only = true;   /* Report only summary information */
+            data      = false;
+            verbose   = false;
+        }
+        else if (0
             || strcasecmp( argv[0], "-t"       ) == 0
             || strcasecmp( argv[0], "--tracks" ) == 0
         )
         {
-            data    = true;     /* Consolidated tracks report */
-            verbose = false;
+            info_only = false;
+            data      = true;   /* Consolidated tracks report */
+            verbose   = false;
         }
         else if (0
             || strcasecmp( argv[0], "-v"        ) == 0
             || strcasecmp( argv[0], "--verbose" ) == 0
         )
         {
-            verbose = true;     /* Report detailed track info */
-            data    = false;
+            info_only = false;
+            data      = false;
+            verbose   = true;   /* Report detailed track info */
         }
         else
         {
@@ -803,6 +840,27 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         );
     }
 
+    /* Retrieve and report garbage collector state, but ONLY if
+       the image is over 100MB in size. This prevents "scaring"
+       the user about SEVERELY fragmented files when the file
+       is too small to be much of a concern, as is usually the
+       case with e.g. shadow files.
+    */
+    if (cdevhdr.cdh_size > (100 * _1M))
+    {
+        int gc = dev_gc_state();
+        const char *gc_str, *sev;
+
+             if (gc <= 1) gc_str = "SEVERELY",   sev = "W";
+        else if (gc <= 2) gc_str = "moderately", sev = "W";
+        else if (gc <= 3) gc_str = "slightly",   sev = "I";
+        else              gc_str = "not",        sev = "I";
+
+        // "Image is %s fragmented%s"
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03050, sev, gc_str, gc <= 1 ? "!" : "." );
+    }
+
     /* cdevhdr inconsistencies check */
     hdrerr  = 0;
     hdrerr |= cdevhdr.cdh_size != filesize && cdevhdr.cdh_size != cdevhdr.free_off ? 0x0001 : 0;
@@ -1004,7 +1062,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     ADD_SPACE( spc );
 
     /* Consolidate track data unless detailed track report wanted */
-    if (!verbose)
+    if (!verbose && !info_only)
     {
         /* Sort table by file offset */
         qsort( spacetab, numspace, sizeof( SPCTAB64 ), sort_spacetab_by_file_offset );
@@ -1087,12 +1145,13 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         // ""
         // "Total unknown space    = %s bytes"
         fmt_S64( str_total, (S64) total_unknown );
+        WRMSG( HHC03020, "I" );
         WRMSG( HHC03049, "I", str_total );
     }
 
     /* Calculate average distance from each L2 table to its tracks/blkgrps */
 
-    if (verbose)  /* (inaccurate statistics otherwise!) */
+    if (verbose || info_only)  /* (inaccurate statistics otherwise!) */
     {
         seek_total    = 0;
         active_tracks = 0;
@@ -1151,79 +1210,84 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
 
     /* Finally, print the actual map (i.e. where everything is) ... */
 
-    if (fba)
+    if (!info_only)
     {
-        // ""
-        // "         File offset    Size (hex)         Size  group(s)"
-        // ""
-        WRMSG( HHC03020, "I" );
-        WRMSG( HHC03047, "I" );
-        WRMSG( HHC03020, "I" );
-    }
-    else
-    {
-        // ""
-        // "         File offset    Size (hex)         Size  track(s)"
-        // ""
-        WRMSG( HHC03020, "I" );
-        WRMSG( HHC03040, "I" );
-        WRMSG( HHC03020, "I" );
-    }
-
-    for (i=0; i < numspace; ++i)
-    {
-        if (spacetab[i].spc_typ == SPCTAB_NONE)
-            continue;
-
-        /* Print dashed line to mark L2 area lower/upper bounds */
-        if (0
-            || spacetab[i].spc_typ == SPCTAB_L2LOWER
-            || spacetab[i].spc_typ == SPCTAB_L2UPPER
-        )
-            // "***********************************************************"
-            WRMSG( HHC03041, "I" );
-
-        /* Format track/blkgrp number or track/blkgrp range, if appropriate */
-        track_range[0] = 0;
-        if (0
-            || spacetab[i].spc_typ == SPCTAB_L2
-            || spacetab[i].spc_typ == SPCTAB_TRK
-            || spacetab[i].spc_typ == SPCTAB_BLKGRP
-        )
+        if (fba)
         {
-            // Do we have a range or not? (is val2 different from val?)
-            if (spacetab[i].spc_val != spacetab[i].spc_val2)
-                MSGBUF( track_range, "  %"PRId32" - %"PRId32, spacetab[i].spc_val, spacetab[i].spc_val2 );
-            else if (spacetab[i].spc_val >= 0)
-                MSGBUF( track_range, "  %"PRId32,             spacetab[i].spc_val );
+            // ""
+            // "         File offset    Size (hex)         Size  group(s)"
+            // ""
+            WRMSG( HHC03020, "I" );
+            WRMSG( HHC03047, "I" );
+            WRMSG( HHC03020, "I" );
+        }
+        else
+        {
+            // ""
+            // "         File offset    Size (hex)         Size  track(s)"
+            // ""
+            WRMSG( HHC03020, "I" );
+            WRMSG( HHC03040, "I" );
+            WRMSG( HHC03020, "I" );
         }
 
-        /* There should NEVER be any overlaps! */
-        overlap =
-        (1
-            /* If there's another space after this one ... */
-            && (i+1) < numspace
+        for (i=0; i < numspace; ++i)
+        {
+            if (spacetab[i].spc_typ == SPCTAB_NONE)
+                continue;
 
-            /* ... and neither is a lower/upper bound space ... */
-            &&  spacetab[i+0].spc_typ != SPCTAB_L2LOWER
-            &&  spacetab[i+0].spc_typ != SPCTAB_L2UPPER
-            &&  spacetab[i+1].spc_typ != SPCTAB_L2LOWER
-            &&  spacetab[i+1].spc_typ != SPCTAB_L2UPPER
+            /* Print dashed line to mark L2 area lower/upper bounds */
+            if (0
+                || spacetab[i].spc_typ == SPCTAB_L2LOWER
+                || spacetab[i].spc_typ == SPCTAB_L2UPPER
+            )
+                // "***********************************************************"
+                WRMSG( HHC03041, "I" );
 
-            /* ... then check if this space overlaps the next */
-            && (spacetab[i+0].spc_off
-              + spacetab[i+0].spc_siz)
-              > spacetab[i+1].spc_off
-        )
-        ? true : false;
+            /* Format track/blkgrp number or track/blkgrp range, if appropriate */
+            track_range[0] = 0;
+            if (0
+                || spacetab[i].spc_typ == SPCTAB_L2
+                || spacetab[i].spc_typ == SPCTAB_TRK
+                || spacetab[i].spc_typ == SPCTAB_BLKGRP
+            )
+            {
+                // Do we have a range or not? (is val2 different from val?)
+                if (spacetab[i].spc_val != spacetab[i].spc_val2)
+                    MSGBUF( track_range, "  %"PRId32" - %"PRId32, spacetab[i].spc_val, spacetab[i].spc_val2 );
+                else if (spacetab[i].spc_val >= 0)
+                    MSGBUF( track_range, "  %"PRId32,             spacetab[i].spc_val );
+            }
 
-        MSGBUF( space_type, "%s%s",
-            spc_typ_to_str( spacetab[i].spc_typ ), overlap ? "!" : "" );
+            /* There should NEVER be any overlaps! */
+            overlap =
+            (1
+                /* If there's another space after this one ... */
+                && (i+1) < numspace
 
-        // "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
-        WRMSG( HHC03042, "I", space_type, spacetab[i].spc_off,
-            spacetab[i].spc_siz, spacetab[i].spc_siz, RTRIM( track_range ));
+                /* ... and neither is a lower/upper bound space ... */
+                &&  spacetab[i+0].spc_typ != SPCTAB_L2LOWER
+                &&  spacetab[i+0].spc_typ != SPCTAB_L2UPPER
+                &&  spacetab[i+1].spc_typ != SPCTAB_L2LOWER
+                &&  spacetab[i+1].spc_typ != SPCTAB_L2UPPER
+
+                /* ... then check if this space overlaps the next */
+                && (spacetab[i+0].spc_off
+                  + spacetab[i+0].spc_siz)
+                  > spacetab[i+1].spc_off
+            )
+            ? true : false;
+
+            MSGBUF( space_type, "%s%s",
+                spc_typ_to_str( spacetab[i].spc_typ ), overlap ? "!" : "" );
+
+            // "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
+            WRMSG( HHC03042, "I", space_type, spacetab[i].spc_off,
+                spacetab[i].spc_siz, spacetab[i].spc_siz, RTRIM( track_range ));
+        }
     }
+
+    WRMSG( HHC03020, "I" );
 
     /* DONE! */
     return 0;
