@@ -1467,7 +1467,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02332 "Script %d: test: timeout"
 #define HHC02333 "Script %d: test: running..."
 #define HHC02334 "Script %d: test: test ended"
-#define HHC02335 "Script %d: test: invalid timeout; set to def: %s"
+#define HHC02335 "Script %d: test: invalid timeout %s; set to %d instead"
 #define HHC02336 "Script %d: test: test starting"
 #define HHC02337 "runtest is only valid as a scripting command"
 #define HHC02338 "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"

@@ -251,8 +251,9 @@ of time (specified in a whole or fractional number of seconds) that the
 test is allowed to run.  This is a safety feature to prevent runaway
 tests from running forever due to a bug in the test or within Hercules
 itself.  Under normal circumstances all tests should end automatically
-the very moment they are done.  If no timeout is specified, the default
-is 30 seconds.
+the very moment they are done. The minimum timeout is 0.001 seconds.
+The maximum is 300 seconds (5 minutes). If no timeout is specified,
+a default timeout of 30 seconds is used.
 
 Please also note that timeout values are multiplied by the test
 timeout factor value which is specified by the `-t` switch on the

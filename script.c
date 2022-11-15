@@ -1085,15 +1085,47 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
 
         if ( args[0] ) /* [timeout]? */
         {
+            char without_comment[64];
+            char* pszComment;
+            BYTE c;
+
+            STRLCPY( without_comment, args );
+
+            pszComment = strchr( without_comment, '#' );
+
+            if (pszComment)
+               *pszComment = 0;
+
+            RTRIM( without_comment );
+
             if (0
-                || sscanf( args, "%lf", &secs ) < 1
+                || (rc = sscanf( without_comment, "%lf", &secs, &c )) != 1
                 || secs < MIN_RUNTEST_DUR
                 || secs > MAX_RUNTEST_DUR
             )
             {
-                // "Script %d: test: invalid timeout; set to def: %s"
-                WRMSG( HHC02335, "W", pCtl->scr_id, args );
-                secs = DEF_RUNTEST_DUR;
+                int new_secs;
+                char badval[16];
+
+                MSGBUF( badval, "%s", without_comment );
+
+                if (rc != 1)
+                    secs = DEF_RUNTEST_DUR;
+                else
+                if (secs < MIN_RUNTEST_DUR)
+                    secs = MIN_RUNTEST_DUR;
+                else
+                if (secs > MAX_RUNTEST_DUR)
+                    secs = MAX_RUNTEST_DUR;
+                else 
+                    secs = DEF_RUNTEST_DUR;
+
+                // NOTE: fails if secs < 0.5 (new_secs = 0)
+                // but we don't care.
+                new_secs = (int) secs;
+
+                // "Script %d: test: invalid timeout %s; set to %d instead"
+                WRMSG( HHC02335, "W", pCtl->scr_id, badval, new_secs );
             }
         }
 
