@@ -3898,22 +3898,380 @@ BYTE    termchar;                       /* Terminating character     */
 
 
 #if defined( FEATURE_STRING_INSTRUCTION )
+
+#undef  CUSE_DEBUG
+#define CUSE_DEBUG ( 0 )
+
+#undef  MEM_CMP_NPOS
+#define MEM_CMP_NPOS ( -1 )
+
+#undef  PAGEBYTES
+#define PAGEBYTES( _ea )  (PAGEFRAME_PAGESIZE - ((_ea) & PAGEFRAME_BYTEMASK))
+
+#undef  MAINSTOR_PAGEBASE
+#define MAINSTOR_PAGEBASE( _ma )  ((BYTE*) ((uintptr_t) ( _ma ) & PAGEFRAME_PAGEMASK))
+
+/*-------------------------------------------------------------------*/
+/*    mem_cmp_first_equ  --  compare memory for first equal byte     */
+/*-------------------------------------------------------------------*/
+/* Input:                                                            */
+/*      regs    CPU register context                                 */
+/*      ea1     Logical address of leftmost byte of operand-1        */
+/*      b1      Operand-1 base register                              */
+/*      ea2     Logical address of leftmost byte of operand-2        */
+/*      b2      Operand-2 base register                              */
+/*      len     Compare length                                       */
+/* Output:                                                           */
+/*      rc      MEM_CMP_NPOS : no equ byte                           */
+/*              0 to (len-1) : index of equ byte                     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( mem_cmp_first_equ )
+(
+    REGS*  regs,                // register context
+    VADR   ea1, int b1,         // op-1 (dst)
+    VADR   ea2, int b2,         // op-2 (src)
+    U32    len                  // compare length
+)
+{
+    BYTE   *m1,   *m2;          // operand mainstor addresses
+    BYTE   *m1pg, *m2pg;        // operand page
+    U32    i;                   // loop index
+
+    /* fast exit */
+    if (len == 0) return MEM_CMP_NPOS;
+
+    // Translate left most byte of each operand
+    m1 = MADDRL(ea1 & ADDRESS_MAXWRAP( regs ), PAGEBYTES( ea1 ), b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = MADDRL(ea2 & ADDRESS_MAXWRAP( regs ), PAGEBYTES( ea2 ), b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
+    m2pg = MAINSTOR_PAGEBASE ( m2 );
+
+    for (i = 0; i < len ; i++)
+    {
+        /* compare bytes */
+        if (*m1 == *m2)
+            return i;
+
+        /* update mainstore addresses */
+        m1++;
+        m2++;
+
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + (i+1)) & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGESIZE, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+        if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+        {
+            m2 = MADDRL((ea2 + (i+1)) & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGESIZE, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            m2pg = MAINSTOR_PAGEBASE ( m2 );
+        }
+    }
+
+    /* no equ byte in memory */
+    return MEM_CMP_NPOS;
+
+} /* end ARCH_DEP( mem_cmp_first_equ ) */
+
+/*-------------------------------------------------------------------*/
+/* mem_cmp_first_substr - compare memory for first possible substring*/
+/*                                                                   */
+/* Possile substrings are searched right to left to find the         */
+/* rightmost non-equal byte. The next byte establishes the next      */
+/* possible substring starting position for comparison.              */
+/*-------------------------------------------------------------------*/
+/* Input:                                                            */
+/*      regs    CPU register context                                 */
+/*      ea1     Logical address of leftmost byte of operand-1        */
+/*      b1      Operand-1 base register                              */
+/*      ea2     Logical address of leftmost byte of operand-2        */
+/*      b2      Operand-2 base register                              */
+/*      len     Compare length                                       */
+/*      sublen  Substring length                                     */
+/*     *equlen  possile substring length (if requested)              */
+/* Output:                                                           */
+/*      rc      MEM_CMP_NPOS : no equ byte                           */
+/*              0 to (len-1) : index of first possible substring     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( mem_cmp_first_substr )
+(
+    REGS*  regs,                // register context
+    VADR   ea1, int b1,         // op-1 (dst)
+    VADR   ea2, int b2,         // op-2 (src)
+    int    len,                 // compare length
+    int    sublen,              // substring length
+    int*   equlen               // # of equal bytes
+)
+{
+    BYTE   *m1,   *m2;          // operand mainstor addresses
+    BYTE   *m1pg, *m2pg;        // operand page
+
+    int    ss_index=0;          // possible substring index
+    int    ss_scan_index=0;     // substring scan index
+    int    ss_scan_work;        // substring scan length
+    int    ss_equ_len;          // substring equal length
+
+    /* Is caller interested in equality length? */
+    if (equlen)
+        *equlen = 0;
+
+    /* fast exits */
+    if (len <= 0) return MEM_CMP_NPOS;
+    if (sublen <= 0) return MEM_CMP_NPOS;
+
+    /* operand mainstore addresses */
+    m1 = MADDRL(ea1, PAGEBYTES( ea1 ), b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = MADDRL(ea2, PAGEBYTES( ea2 ), b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
+    m2pg = MAINSTOR_PAGEBASE ( m2 );
+
+    for (ss_index = 0; ss_index < len; ss_index = ( ss_scan_index +1 ) )
+    {
+        /* reset candidate substring length */
+        ss_equ_len = 0;
+
+        /* righttmost byte of candidate substring */
+        ss_scan_index = min( ss_index + (sublen-1), (len-1));
+        ss_scan_work = ss_scan_index - ss_index;
+
+#if CUSE_DEBUG
+        logmsg("CUSE: MEM_CMP_FIRST_SUBSTR outer: len=%d, sublen=%d, scan_ss_index=%d, ss_index=%d, ss_equ_len=%d, ea1+idx=%X , m1=%p, ea2+idx=%X, m2=%p \n",
+            len, sublen, ss_scan_index, ss_index, ss_equ_len, ea1+ss_scan_index, m1, ea2+ss_scan_index, m2);
+#endif
+        /* operand candidate substring rightmost mainstore address */
+        m1 += ss_scan_work;
+        m2 += ss_scan_work;
+
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + ss_scan_index) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+        if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+        {
+            m2 = MADDRL((ea2 + ss_scan_index) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            m2pg = MAINSTOR_PAGEBASE ( m2 );
+        }
+
+        /* check candidate substring - right to left */
+        for ( ; ss_scan_index >= ss_index ; ss_scan_index-- )
+        {
+#if CUSE_DEBUG
+        logmsg("CUSE: MEM_CMP_FIRST_SUBSTR inner: len=%d, sublen=%d, scan_ss_index=%d, ss_index=%d, ss_equ_len=%d, m1=%p, m2=%p \n",
+            len, sublen, ss_scan_index, ss_index, ss_equ_len, m1, m2);
+#endif
+            /* compare bytes */
+            if (*m1 != *m2)
+                break;
+
+            /* update partial substring length */
+            ss_equ_len++;
+
+            /* update mainstore addresses */
+            m1--;
+            m2--;
+
+            /* check for page cross */
+            if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+            {
+                m1 = MADDRL((ea1 + (ss_scan_index-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                m1pg = MAINSTOR_PAGEBASE ( m1 );
+            }
+            if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+            {
+                m2 = MADDRL((ea2 + (ss_scan_index-1)) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                m2pg = MAINSTOR_PAGEBASE ( m2 );
+            }
+        } /* end check candidate substring - right to left */
+
+        /* Is caller interested in equality length? */
+        if (equlen)
+            *equlen = ss_equ_len;
+
+        /* substring found? */
+        if ( ss_scan_index < ss_index ) return ss_index;
+
+        /* last possible substring extends beyond length? */
+        if ( ss_equ_len > 0 && ss_index + sublen >= len) return ss_scan_index +1;
+
+        /* update mainstore addresses to next byte */
+        m1++;
+        m2++;
+
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + (ss_scan_index +1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+        if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+        {
+            m2 = MADDRL((ea2 + (ss_scan_index +1)) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            m2pg = MAINSTOR_PAGEBASE ( m2 );
+        }
+    } /* end check for substring */
+
+    /* no substring; no equal bytes found       */
+    /* Is caller interested in equality length? */
+    if (equlen)
+        *equlen = 0;
+
+    return MEM_CMP_NPOS;
+
+} /* end ARCH_DEP( mem_cmp_first_substr ) */
+
+/*-------------------------------------------------------------------*/
+/*        mem_cmp_last_neq  --  compare memory for last neq byte     */
+/*-------------------------------------------------------------------*/
+/* Input:                                                            */
+/*      regs    CPU register context                                 */
+/*      ea1     Logical address of leftmost byte of operand-1        */
+/*      b1      Operand-1 base register                              */
+/*      ea2     Logical address of leftmost byte of operand-2        */
+/*      b2      Operand-2 base register                              */
+/*      len     Compare length                                       */
+/* Output:                                                           */
+/*      rc      MEM_CMP_NPOS : no neq byte (memory is equal)         */
+/*              0 to (len-1) : index of neq byte                     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( mem_cmp_last_neq )
+(
+    REGS*  regs,                // register context
+    VADR   ea1, int b1,         // op-1 (dst)
+    VADR   ea2, int b2,         // op-2 (src)
+    int    len                  // compare length
+)
+{
+    BYTE   *m1,   *m2;          // operand mainstor addresses
+    BYTE   *m1pg, *m2pg;        // operand page
+    int    i;                   // loop index
+
+    /* fast exit */
+    if (len <= 0) return MEM_CMP_NPOS;
+
+    // Translate righttmost byte of each operand
+    m1 = MADDRL((ea1 + (len-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = MADDRL((ea2 + (len-1)) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
+    m2pg = MAINSTOR_PAGEBASE ( m2 );
+
+    for (i = (len-1); i >= 0 ; i--)
+    {
+        /* compare bytes */
+        if (*m1 != *m2)
+            return i;
+
+        /* update mainstore addresses */
+        m1--;
+        m2--;
+
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + (i-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+        if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+        {
+            m2 = MADDRL((ea2 + (i-1)) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            m2pg = MAINSTOR_PAGEBASE ( m2 );
+        }
+    }
+
+    /* no neq bytes; memory is equal */
+    return MEM_CMP_NPOS;
+
+} /* end ARCH_DEP( mem_cmp_last_neq ) */
+
+/*-------------------------------------------------------------------*/
+/* mem_pad_cmp_last_neq -- compare memory to pad for last neq byte   */
+/*-------------------------------------------------------------------*/
+/* Input:                                                            */
+/*      regs    CPU register context                                 */
+/*      ea1     Logical address of leftmost byte of operand-1        */
+/*      b1      Operand-1 base register                              */
+/*      pad     Padding byte                                         */
+/*      len     Compare length                                       */
+/* Output:                                                           */
+/*      rc      MEM_CMP_NPOS : no neq byte (memory is equal to pad)  */
+/*              0 to (len-1) : index of neq byte                     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( mem_pad_cmp_last_neq )
+(
+    REGS*  regs,                // register context
+    VADR   ea1, int b1,         // op-1 (dst)
+    const BYTE pad,             // pad byte
+    int    len                  // compare length
+)
+{
+    BYTE   *m1;                 // operand mainstor addresses
+    BYTE   *m1pg;               // operand page
+    int    i;                   // loop index
+
+    if (len <= 0) return MEM_CMP_NPOS;
+
+    // Translate righttmost byte of operand
+    m1 = MADDRL((ea1 + (len-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
+
+    for (i = (len-1); i >= 0 ; i--)
+    {
+        /* compare byte to pad */
+        if (*m1 != pad)
+            return i;
+
+        /* update mainstore address */
+        m1--;
+
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + (i-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+    }
+
+    /* no neq bytes; memory is equal to pad */
+    return MEM_CMP_NPOS;
+
+} /* end ARCH_DEP( mem_pad_cmp_last_neq ) */
+
 /*-------------------------------------------------------------------*/
 /* B257 CUSE  - Compare Until Substring Equal                  [RRE] */
 /*-------------------------------------------------------------------*/
+#undef  CUSE_MAX
+#define CUSE_MAX    _4K
+
 DEF_INST( compare_until_substring_equal )
 {
-int     r1, r2;                         /* Values of R fields        */
-int     i;                              /* Loop counter              */
-int     cc = 0;                         /* Condition code            */
-VADR    addr1, addr2;                   /* Operand addresses         */
-VADR    eqaddr1, eqaddr2;               /* Address of equal substring*/
-S64     len1, len2;                     /* Operand lengths           */
-S64     remlen1, remlen2;               /* Lengths remaining         */
-BYTE    byte1, byte2;                   /* Operand bytes             */
-BYTE    pad;                            /* Padding byte              */
-BYTE    sublen;                         /* Substring length          */
-BYTE    equlen = 0;                     /* Equal byte counter        */
+    int     r1, r2;                 // Values of R fields
+    int     i;                      // Loop counter
+    int     cc = 0;                 // Condition code
+    VADR    addr1, addr2;           // Operand addresses
+    VADR    eqaddr1, eqaddr2;       // Address of equal substring
+    S64     len1, len2;             // Operand lengths
+    S64     remlen1, remlen2;       // Lengths remaining
+    BYTE    byte1, byte2;           // Operand bytes
+    BYTE    pad;                    // Padding byte
+    BYTE    sublen;                 // Substring length
+    BYTE    equlen = 0;             // Equal byte counter
+
+    int     peeklen;                // Operand look ahead length
+    int     scanlen;                // scan length
+    int     padlen;                 // Operand pad length
+    int     lastneq;                // mem_cmp_last_neq return
+    int     firstequ;               // mem_cmp_first_equ return
+    int     rc;                     // work - return code
+    U32     idx =0;                 // mem_cmp() - index
 
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
@@ -3969,17 +4327,359 @@ BYTE    equlen = 0;                     /* Equal byte counter        */
     /* Process operands from left to right */
     for (i=0; len1 > 0 || len2 > 0 ; i++)
     {
-#undef  CUSE_MAX
-#define CUSE_MAX    _4K
-
-        /* If 4096 bytes have been compared, and the last bytes
-           compared were unequal, exit with condition code 3 */
-        if (equlen == 0 && i >= CUSE_MAX)
+#if CUSE_DEBUG
+         logmsg("CUSE: addr1=%X, len1=%ld, addr2=%X, len2=%ld, equlen=%ld, eqaddr1=%X, remlen1=%ld, eqaddr2=%X, remlen2=%ld, i=%d \n",
+                        addr1, len1, addr2, len2, equlen, eqaddr1, remlen1, eqaddr2, remlen2, i);
+#endif
+        /* If equal byte count has reached substring length
+           exit with condition code zero */
+        if (equlen == sublen)
         {
-            cc = 3;
+            cc = 0;
             break;
         }
 
+        /* interrupt and cc=3 checks: last comparision was unequal */
+        if ( equlen == 0 )
+        {
+            /* If 4096 bytes have been compared, and the last bytes
+            compared were unequal, exit with condition code 3 */
+            if (i >= CUSE_MAX)
+            {
+                cc = 3;
+                break;
+            }
+        }
+
+        /* ---------------------------- */
+        /* Special Cases Optimizations  */
+        /* ---------------------------- */
+
+        /* ---------------------------------- */
+        /* Special case: substring length = 1 */
+        /* ---------------------------------- */
+        if (sublen == 1 )
+        {
+            scanlen = min ( len1, len2 );
+            firstequ = ARCH_DEP( mem_cmp_first_equ )( regs, addr1, r1, addr2, r2, scanlen);
+
+#if CUSE_DEBUG
+            logmsg("CUSE: mem_cmp_first_equ: addr1=%X, addr2=%X, scanlen=%d, firstequ=%d \n",
+                addr1, addr2, scanlen, firstequ);
+#endif
+            if (firstequ == MEM_CMP_NPOS)
+            {
+                /* no matching byte */
+                addr1 += scanlen;
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= scanlen;
+
+                addr2 += scanlen;
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= scanlen;
+
+                /* update bytes compared for cc=3 check */
+                i += scanlen;
+
+                equlen = 0;
+                cc = 2;
+                continue;
+            }
+            else
+            {
+                /* found a matching byte */
+                addr1 += firstequ;
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= firstequ;
+
+                addr2 += firstequ;
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= firstequ;
+
+                /* Update equal string addresses and lengths */
+                eqaddr1 = addr1;
+                eqaddr2 = addr2;
+                remlen1 = len1;
+                remlen2 = len2;
+
+                equlen = 1;
+                cc = 0;
+                continue;
+            }
+        }  /* end Special case: substring length = 1 */
+
+        /* --------------------------------------------------- */
+        /* Special case: partial substring found               */
+        /*               - continue compare                    */
+        /* --------------------------------------------------- */
+        if (equlen > 0 && len1 > 0 && len2 > 0)
+        {
+            scanlen = min (sublen - equlen, min( len1, len2) );
+            rc = ARCH_DEP( mem_cmp ) (regs, addr1, r1, addr2, r2, scanlen, &idx);
+
+#if CUSE_DEBUG
+            logmsg("CUSE: mem_cmp: addr1=%X, addr2=%X, scanlen=%d, sublen=%d, rc=%d, idx=%u \n",
+                addr1, addr2, scanlen, sublen, rc, idx);
+#endif
+            if (rc == 0)
+            {
+                /* larger partial substring found - may need pad to complete */
+                addr1 += scanlen;
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= scanlen;
+
+                addr2 += scanlen;
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= scanlen;
+
+                equlen += scanlen;
+
+                /* update bytes compared for cc=3 check */
+                i += scanlen;
+
+                cc = ( sublen == equlen ) ? 0 : 1;
+                continue;
+            }
+            else
+            {
+                /* substring not found */
+                /* update to nonequal byte */
+                addr1 += (idx +1);
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= (idx +1);
+
+                addr2 += (idx +1);
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= (idx +1);
+
+                equlen = 0;
+
+                /* update bytes compared for cc=3 check */
+                i += (idx +1);
+
+                cc = 2;
+                continue;
+            }
+        }   /* end Special case: partial substring found */
+
+        /* ----------------------------------------------------------------------- */
+        /* Special case: no partial substring - scan for first possible substring  */
+        /* ----------------------------------------------------------------------- */
+        scanlen = min( len1, len2 );
+        if (equlen == 0 && scanlen > sublen)
+        {
+            int ss_len = 0;
+            firstequ = ARCH_DEP( mem_cmp_first_substr )( regs, addr1, r1, addr2, r2, scanlen, sublen, &ss_len);
+
+#if CUSE_DEBUG
+            logmsg("CUSE: mem_cmp_first_substr: addr1=%X, addr2=%X, scanlen=%d, sublen=%d, firstequ=%d, ss_len=%d \n",
+                addr1, addr2, scanlen, sublen, firstequ, ss_len);
+#endif
+            if (firstequ == MEM_CMP_NPOS)
+            {
+                /* no possible substring found - update to next end of scanned memory */
+                addr1 += scanlen ;
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= scanlen;
+
+                addr2 += scanlen;
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= scanlen;
+
+                /* update bytes compared for cc=3 check */
+                i += scanlen;
+
+                /* save the start of possible substring addresses and remaining lengths */
+                eqaddr1 = addr1;
+                eqaddr2 = addr2;
+                remlen1 = len1;
+                remlen2 = len2;
+                equlen = 0;
+
+                cc = 2;
+            }
+            else
+            {
+                /* found a start of possible substring byte */
+
+                /* save the start of possible substring addresses and remaining lengths */
+                eqaddr1 = addr1 + firstequ;
+                eqaddr2 = addr2 + firstequ;
+                remlen1 = len1 - firstequ;
+                remlen2 = len2 - firstequ;
+                equlen = ss_len;
+
+                /* update address and length to next byte */
+                addr1 += (firstequ + ss_len);
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= (firstequ + ss_len);
+
+                addr2 += (firstequ + ss_len);
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= (firstequ + ss_len);
+
+                /* update bytes compared for cc=3 check */
+                i += (firstequ + ss_len);
+
+                cc = ( sublen == equlen ) ? 0 : 1;
+            }
+            continue;
+
+        }   /*end Special case: no partial substring - scan for first possible substring  */
+
+        /* ------------------------------------------------------------------- */
+        /* Special case: scan substring right to left                          */
+        /* ------------------------------------------------------------------- */
+        /* Peek look ahead at last non-pad byte of candidate substring */
+        peeklen = min( sublen - equlen, min ( len1, len2 ) );
+        if (peeklen > 1)
+        {
+            lastneq = ARCH_DEP( mem_cmp_last_neq )( regs, addr1, r1, addr2, r2, peeklen);
+
+#if CUSE_DEBUG
+            logmsg("CUSE: mem_cmp_last_neq: addr1=%X, addr2=%X, peaklen=%d, lastneq=%d \n",
+                addr1, addr2, peeklen, lastneq);
+#endif
+            if (lastneq == MEM_CMP_NPOS)
+            {
+                if (sublen == peeklen + equlen)
+                {
+                    /* complete substring found */
+                    cc = 0;
+                    break;
+                }
+                else
+                {
+                    /* partial substring found - possibly need padding */
+                    addr1 += peeklen;
+                    addr1 &= ADDRESS_MAXWRAP( regs );
+                    len1  -= peeklen;
+
+                    addr2 += peeklen;
+                    addr2 &= ADDRESS_MAXWRAP( regs );
+                    len2  -= peeklen;
+
+                    /* update bytes compared for cc=3 check */
+                    i += peeklen;
+
+                    equlen += peeklen;
+                    cc = 1;
+                    continue;
+                }
+            }
+            else
+            {
+                /* found a mismatch - update to nonequal byte */
+                addr1 += (lastneq +1);
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= (lastneq +1);
+
+                addr2 += (lastneq +1);
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= (lastneq +1);
+
+                /* update bytes compared for cc=3 check */
+                i += (lastneq +1);
+
+                equlen = 0;
+                cc = 2;
+                continue;
+            }
+        }   /* end Special case: scan substring right to left */
+
+        /* -------------------------------------------------------------- */
+        /* Special case: only have operand-1. only padding check required */
+        /* -------------------------------------------------------------- */
+        if ( len1 > 0 && len2 == 0)
+        {
+            padlen = min( len1, (sublen - equlen));
+            lastneq = ARCH_DEP( mem_pad_cmp_last_neq )( regs, addr1, r1, pad, padlen );
+
+#if CUSE_DEBUG
+            logmsg("CUSE: op-1 pad check: addr1=%X, len1=%ld, padlen=%d, eqaddr1=%X, equlen=%d, remlen1=%d, lastneq=%d \n",
+                addr1, len1, padlen, eqaddr1, equlen, remlen1, lastneq );
+#endif
+            if (lastneq == MEM_CMP_NPOS)
+            {
+                addr1 += padlen;
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= padlen;
+
+                equlen += padlen;
+
+                cc = (sublen == equlen ) ? 0 : 1;
+                break;
+            }
+            else
+            {
+                 /* found a mismatch - update to nonequal byte */
+                addr1 += (lastneq +1);
+                addr1 &= ADDRESS_MAXWRAP( regs );
+                len1  -= (lastneq +1);
+
+                /* update bytes compared for cc=3 check */
+                i += (lastneq +1);
+
+                eqaddr1 = addr1;
+                remlen1 = len1;
+
+                equlen = 0;
+                cc = 2;
+                continue;
+            }
+        }   /* end Special case: only have operand-1. only padding check required */
+
+        /* -------------------------------------------------------------- */
+        /* Special case: only have operand-2. only padding check required */
+        /* -------------------------------------------------------------- */
+        if ( len1 == 0 && len2 > 0)
+        {
+            padlen = min( len2, (sublen - equlen));
+            lastneq = ARCH_DEP( mem_pad_cmp_last_neq )( regs, addr2, r2, pad, padlen );
+
+#if CUSE_DEBUG
+            logmsg("CUSE: op-2 pad check: addr2=%X, len2=%ld, padlen=%d, eqaddr2=%X, equlen=%d, remlen2=%d, lastneq=%d \n",
+                addr2, len2, padlen, eqaddr2, equlen, remlen2, lastneq );
+#endif
+            if (lastneq == MEM_CMP_NPOS)
+            {
+                addr2 += padlen;
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= padlen;
+
+                equlen += padlen;
+
+                cc = (sublen == equlen ) ? 0 : 1;
+                break;
+            }
+            else
+            {
+                /* found a mismatch - update to nonequal byte */
+                addr2 += (lastneq +1);
+                addr2 &= ADDRESS_MAXWRAP( regs );
+                len2  -= (lastneq +1);
+
+                /* update bytes compared for cc=3 check */
+                i += (lastneq +1);
+
+                eqaddr2 = addr2;
+                remlen2 = len2;
+
+                equlen = 0;
+                cc = 2;
+                continue;
+            }
+        }   /* Special case: only have operand-2. only padding check required */
+
+        /* ------------------------------------------------------- */
+        /* General case:                                           */
+        /*      Scan left to right byte by byte                    */
+        /* ------------------------------------------------------- */
+
+#if CUSE_DEBUG
+        logmsg("CUSE: general: addr1=%X, len1=%ld, addr2=%X, len2=%ld, equlen=%d \n",
+            addr1, len1, addr2, len2, equlen);
+#endif
         /* Fetch byte from first operand, or use padding byte */
         if (len1 > 0)
             byte1 = ARCH_DEP( vfetchb )( addr1, r1, regs );
@@ -4034,30 +4734,15 @@ BYTE    equlen = 0;                     /* Equal byte counter        */
             len2--;
         }
 
-        /* update GPRs if we just crossed half page - could get rupt */
-        if ((addr1 & 0x7FF) == 0 || (addr2 & 0x7FF) == 0)
-        {
-            /* Update R1 and R2 to point to next bytes to compare */
-            SET_GR_A( r1, regs, addr1 );
-            SET_GR_A( r2, regs, addr2 );
-
-            /* Set R1+1 and R2+1 to remaining operand lengths */
-            SET_GR_A( r1+1, regs, len1 );
-            SET_GR_A( r2+1, regs, len2 );
-        }
-
-        /* If equal byte count has reached substring length
-           exit with condition code zero */
-        if (equlen == sublen)
-        {
-            cc = 0;
-            break;
-        }
-
     } /* end for(i) */
 
+#if CUSE_DEBUG
+         logmsg("CUSE: scan complete: addr1=%X, len1=%ld, addr2=%X, len2=%ld, equlen=%ld, eqaddr1=%X, remlen1=%ld, eqaddr2=%X, remlen2=%ld, i=%d, cc=%d \n",
+                        addr1, len1, addr2, len2, equlen, eqaddr1, remlen1, eqaddr2, remlen2, i, cc);
+#endif
+
     /* Update the registers */
-    if (cc < 2)
+    if (cc < 2 && equlen > 0)
     {
         /* Update R1 and R2 to point to the equal substring */
         SET_GR_A( r1, regs, eqaddr1 );
@@ -4083,6 +4768,7 @@ BYTE    equlen = 0;                     /* Equal byte counter        */
     regs->psw.cc =  cc;
 
 } /* end DEF_INST( compare_until_substring_equal ) */
+
 #endif /* defined( FEATURE_STRING_INSTRUCTION ) */
 
 

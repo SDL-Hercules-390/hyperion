@@ -3443,6 +3443,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\CUSE-01-basic.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\CUSE-02-performance.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\dfp-080-from-packed.core"
 						>
 					</File>
@@ -4482,6 +4490,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CUSE-01-basic.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\CUSE-02-performance.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\digest.tst"
 							>
 						</File>
@@ -4902,6 +4918,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CUSE-01-basic.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\CUSE-02-performance.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\dc-float.asm"
 							>
 						</File>
@@ -5290,6 +5314,22 @@
 							</File>
 							<File
 								RelativePath=".\tests\CMPSC.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CUSE-01-basic.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CUSE-01-basic.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CUSE-02-performance.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CUSE-02-performance.pdf"
 								>
 							</File>
 							<File

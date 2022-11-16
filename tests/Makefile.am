@@ -214,6 +214,16 @@ EXTRA_DIST =                    \
      csxtr.assemble             \
      csxtr.listing              \
      csxtr.tst                  \
+     CUSE-01-basic.asm          \
+     CUSE-01-basic.core         \
+     CUSE-01-basic.list         \
+     CUSE-01-basic.pdf          \
+     CUSE-01-basic.tst          \
+     CUSE-02-performance.asm    \
+     CUSE-02-performance.core   \
+     CUSE-02-performance.list   \
+     CUSE-02-performance.pdf    \
+     CUSE-02-performance.tst    \
      cxgbr.txt                  \
      cxgtr.txt                  \
      dc-float.asm               \
