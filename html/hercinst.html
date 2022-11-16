@@ -113,11 +113,11 @@ at <a href="http://brew.sh/">http://brew.sh/</a>
 <br />
 <br />
 
-<li>Proceed with <i>Building from source - Linux and MacOS</i> below.<br /><br />
+<li>Proceed with <i>Building from source - Linux and macOS</i> below.<br /><br />
 </ol>
 
 <a name="instnixmac"></a>
-<h3>Building from source - Linux and MacOS (High Sierra and newer)</h3>
+<h3>Building from source - Linux and macOS (High Sierra and newer)</h3>
 
 <p>
 <em><b>Important: Please read everything before doing anything.  Don't be bashful about asking for help. </b></em>
@@ -190,11 +190,16 @@ with every new release, which contains important late-breaking information about
         sudo dnf -y install bzip2-devel zlib-devel
     </code>
 
-    <li>AlmaLinux / CentOS 8
+    <li>CentOS / AlmaLinux / Rocky Linux 8+
     <p><code>
-        sudo yum -y install git wget<br>
+        sudo yum -y install git wget time<br>
         sudo yum -y install gcc make cmake flex gawk m4 autoconf automake libtool-ltdl-devel<br>
         sudo yum -y install bzip2-devel zlib-devel
+    </code>
+    <p>
+    <p><i>Note: On CentOS 9, the following command is required <b>before</b> installing the packages:</i>
+    <p><code>
+        sudo yum config-manager --set-enabled crb
     </code>
 
     <li>CentOS 7
@@ -204,7 +209,7 @@ with every new release, which contains important late-breaking information about
         sudo yum -y install bzip2-devel zlib-devel
     </code>
 
-    <p><i>Note: On CentOS 7, there is no package for CMAKE 3.x, must be built from source.</i>
+    <p><i>Note: On CentOS 7, there is no package for CMAKE 3.x, it must be built from source.</i>
 
     <li>openSUSE (15.1)
     <p><code>
@@ -214,7 +219,7 @@ with every new release, which contains important late-breaking information about
     sudo zypper install -y libcap-progs
     </code>
 
-    <li>Apple Darwin (MacOS High Sierra, Mojave, Catalina, Big Sur) with Homebrew
+    <li>Apple Darwin (macOS High Sierra, Mojave, Catalina, Big Sur) with Homebrew
     <p><code>
         xcode-select --install<br>
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"<br>
@@ -224,7 +229,7 @@ with every new release, which contains important late-breaking information about
         <!-- ( flex gawk m4 bzip2 zlib ) -->
     </code>
 
-    <li>Apple Darwin (MacOS Big Sur) with MacPorts
+    <li>Apple Darwin (macOS Big Sur) with MacPorts
         <p>Information on installing MacPorts may be found
         <a href="https://guide.macports.org/chunked/installing.macports.html">here</a>.
     <p><code>
@@ -320,7 +325,7 @@ document.
     <code><nobr>--enable-optimization=FLAGS</nobr></code>. For additional configuration
     options, run: <code>./configure <nobr>--help=short</nobr></code>.
 
-    <p>For Apple MacOS, these additional configure switches are recommended:
+    <p>For Apple macOS, these additional configure switches are recommended:
     <p><code>
         --disable-getoptwrapper<br>
         --without-included-ltdl
