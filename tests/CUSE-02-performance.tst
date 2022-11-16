@@ -40,7 +40,7 @@ loadcore    "$(testpath)/CUSE-02-performance.core" 0x0
 
 diag8cmd    enable    # (needed for messages to Hercules console)
 #r           408=ff    # (enable timing tests)
-runtest     500       # (test duration, depends on host)
+runtest     300       # (test duration, depends on host)
 diag8cmd    disable   # (reset back to default)
 
 *Done
