@@ -3905,6 +3905,12 @@ BYTE    termchar;                       /* Terminating character     */
 #undef  MEM_CMP_NPOS
 #define MEM_CMP_NPOS ( -1 )
 
+#undef  PAGEBYTES
+#define PAGEBYTES( _ea )  (PAGEFRAME_PAGESIZE - ((_ea) & PAGEFRAME_BYTEMASK))
+
+#undef  MAINSTOR_PAGEBASE
+#define MAINSTOR_PAGEBASE( _ma )  ((BYTE*) ((uintptr_t) ( _ma ) & PAGEFRAME_PAGEMASK))
+
 /*-------------------------------------------------------------------*/
 /*    mem_cmp_first_equ  --  compare memory for first equal byte     */
 /*-------------------------------------------------------------------*/
@@ -3929,14 +3935,18 @@ int ARCH_DEP( mem_cmp_first_equ )
 )
 {
     BYTE   *m1,   *m2;          // operand mainstor addresses
+    BYTE   *m1pg, *m2pg;        // operand page
     U32    i;                   // loop index
 
     /* fast exit */
     if (len == 0) return MEM_CMP_NPOS;
 
     // Translate left most byte of each operand
-    m1 = MADDRL(ea1 & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGESIZE - (ea1 & PAGEFRAME_PAGEMASK), b1, regs, ACCTYPE_READ, regs->psw.pkey );
-    m2 = MADDRL(ea2 & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_PAGEMASK), b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    m1 = MADDRL(ea1 & ADDRESS_MAXWRAP( regs ), PAGEBYTES( ea1 ), b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = MADDRL(ea2 & ADDRESS_MAXWRAP( regs ), PAGEBYTES( ea2 ), b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
+    m2pg = MAINSTOR_PAGEBASE ( m2 );
 
     for (i = 0; i < len ; i++)
     {
@@ -3944,16 +3954,21 @@ int ARCH_DEP( mem_cmp_first_equ )
         if (*m1 == *m2)
             return i;
 
-        /* update mainstore addresses; check for page boundary */
-        if ( ( (uintptr_t) m1 & PAGEFRAME_PAGEMASK ) != PAGEFRAME_PAGEMASK )
-            m1++;
-        else
-            m1 = MADDRL((ea1 + (i+1)) & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGEMASK, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+        /* update mainstore addresses */
+        m1++;
+        m2++;
 
-        if ( ( (uintptr_t) m2 & PAGEFRAME_PAGEMASK) != PAGEFRAME_PAGEMASK  )
-            m2++;
-        else
-            m2 = MADDRL((ea2 + (i+1)) & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGEMASK, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + (i+1)) & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGESIZE, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+        if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+        {
+            m2 = MADDRL((ea2 + (i+1)) & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGESIZE, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            m2pg = MAINSTOR_PAGEBASE ( m2 );
+        }
     }
 
     /* no equ byte in memory */
@@ -3993,7 +4008,8 @@ int ARCH_DEP( mem_cmp_first_substr )
 )
 {
     BYTE   *m1,   *m2;          // operand mainstor addresses
-    BYTE   *m1prior, *m2prior;  // operand mainstor addresses (work)
+    BYTE   *m1pg, *m2pg;        // operand page
+
     int    ss_index=0;          // possible substring index
     int    ss_scan_index=0;     // substring scan index
     int    ss_scan_work;        // substring scan length
@@ -4008,8 +4024,11 @@ int ARCH_DEP( mem_cmp_first_substr )
     if (sublen <= 0) return MEM_CMP_NPOS;
 
     /* operand mainstore addresses */
-    m1 = MADDRL(ea1, PAGEFRAME_PAGESIZE - (ea1 & PAGEFRAME_PAGEMASK), b1, regs, ACCTYPE_READ, regs->psw.pkey );
-    m2 = MADDRL(ea2, PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_PAGEMASK), b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    m1 = MADDRL(ea1, PAGEBYTES( ea1 ), b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = MADDRL(ea2, PAGEBYTES( ea2 ), b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
+    m2pg = MAINSTOR_PAGEBASE ( m2 );
 
     for (ss_index = 0; ss_index < len; ss_index = ( ss_scan_index +1 ) )
     {
@@ -4024,29 +4043,29 @@ int ARCH_DEP( mem_cmp_first_substr )
         logmsg("CUSE: MEM_CMP_FIRST_SUBSTR outer: len=%d, sublen=%d, scan_ss_index=%d, ss_index=%d, ss_equ_len=%d, ea1+idx=%X , m1=%p, ea2+idx=%X, m2=%p \n",
             len, sublen, ss_scan_index, ss_index, ss_equ_len, ea1+ss_scan_index, m1, ea2+ss_scan_index, m2);
 #endif
-        /* operand-1 candidate substring rightmost mainstore address and check for page cross */
-        m1prior = m1;
+        /* operand candidate substring rightmost mainstore address */
         m1 += ss_scan_work;
-
-        if ( ( (uintptr_t) m1 & PAGEFRAME_PAGEMASK ) <   ( (uintptr_t) m1prior & PAGEFRAME_PAGEMASK ))
-            m1 = MADDRL((ea1 + ss_scan_index) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
-
-        /* operand-2 candidate substring rightmost mainstore address and check for page cross */
-        m2prior = m2;
         m2 += ss_scan_work;
 
-        if ( ( (uintptr_t) m2 & PAGEFRAME_PAGEMASK ) <   ( (uintptr_t) m2prior & PAGEFRAME_PAGEMASK ))
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + ss_scan_index) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+        if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+        {
             m2 = MADDRL((ea2 + ss_scan_index) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            m2pg = MAINSTOR_PAGEBASE ( m2 );
+        }
 
         /* check candidate substring - right to left */
         for ( ; ss_scan_index >= ss_index ; ss_scan_index-- )
         {
-
 #if CUSE_DEBUG
         logmsg("CUSE: MEM_CMP_FIRST_SUBSTR inner: len=%d, sublen=%d, scan_ss_index=%d, ss_index=%d, ss_equ_len=%d, m1=%p, m2=%p \n",
             len, sublen, ss_scan_index, ss_index, ss_equ_len, m1, m2);
 #endif
-
             /* compare bytes */
             if (*m1 != *m2)
                 break;
@@ -4054,17 +4073,21 @@ int ARCH_DEP( mem_cmp_first_substr )
             /* update partial substring length */
             ss_equ_len++;
 
-            /* update mainstore addresses; check for page boundary */
-            if ( (uintptr_t) m1 & PAGEFRAME_PAGEMASK )
-                m1--;
-            else
+            /* update mainstore addresses */
+            m1--;
+            m2--;
+
+            /* check for page cross */
+            if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+            {
                 m1 = MADDRL((ea1 + (ss_scan_index-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
-
-            if ( (uintptr_t) m2 & PAGEFRAME_PAGEMASK )
-                m2--;
-            else
+                m1pg = MAINSTOR_PAGEBASE ( m1 );
+            }
+            if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+            {
                 m2 = MADDRL((ea2 + (ss_scan_index-1)) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
-
+                m2pg = MAINSTOR_PAGEBASE ( m2 );
+            }
         } /* end check candidate substring - right to left */
 
         /* Is caller interested in equality length? */
@@ -4077,17 +4100,21 @@ int ARCH_DEP( mem_cmp_first_substr )
         /* last possible substring extends beyond length? */
         if ( ss_equ_len > 0 && ss_index + sublen >= len) return ss_scan_index +1;
 
-        /* update mainstore addresses to next byte; check for page boundary */
-        if ( ( (uintptr_t) m1 & PAGEFRAME_PAGEMASK )  != PAGEFRAME_PAGEMASK)
-            m1++;
-        else
-            m1 = MADDRL((ea1 + (ss_scan_index +1)) & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGESIZE, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+        /* update mainstore addresses to next byte */
+        m1++;
+        m2++;
 
-        if ( ( (uintptr_t) m2 & PAGEFRAME_PAGEMASK ) != PAGEFRAME_PAGEMASK)
-            m2++;
-        else
-            m2 = MADDRL((ea2 + (ss_scan_index +1)) & ADDRESS_MAXWRAP( regs ), PAGEFRAME_PAGESIZE, b2, regs, ACCTYPE_READ, regs->psw.pkey );
-
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + (ss_scan_index +1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+        if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+        {
+            m2 = MADDRL((ea2 + (ss_scan_index +1)) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            m2pg = MAINSTOR_PAGEBASE ( m2 );
+        }
     } /* end check for substring */
 
     /* no substring; no equal bytes found       */
@@ -4123,6 +4150,7 @@ int ARCH_DEP( mem_cmp_last_neq )
 )
 {
     BYTE   *m1,   *m2;          // operand mainstor addresses
+    BYTE   *m1pg, *m2pg;        // operand page
     int    i;                   // loop index
 
     /* fast exit */
@@ -4132,22 +4160,30 @@ int ARCH_DEP( mem_cmp_last_neq )
     m1 = MADDRL((ea1 + (len-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
     m2 = MADDRL((ea2 + (len-1)) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
+    m2pg = MAINSTOR_PAGEBASE ( m2 );
+
     for (i = (len-1); i >= 0 ; i--)
     {
         /* compare bytes */
         if (*m1 != *m2)
             return i;
 
-        /* update mainstore addresses; check for page boundary */
-        if ( (uintptr_t) m1 & PAGEFRAME_PAGEMASK )
-            m1--;
-        else
-            m1 = MADDRL((ea1 + (i-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+        /* update mainstore addresses */
+        m1--;
+        m2--;
 
-        if ( (uintptr_t) m2 & PAGEFRAME_PAGEMASK)
-            m2--;
-        else
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + (i-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+        if (MAINSTOR_PAGEBASE ( m2 ) != m2pg)
+        {
             m2 = MADDRL((ea2 + (i-1)) & ADDRESS_MAXWRAP( regs ), 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            m2pg = MAINSTOR_PAGEBASE ( m2 );
+        }
     }
 
     /* no neq bytes; memory is equal */
@@ -4178,12 +4214,14 @@ int ARCH_DEP( mem_pad_cmp_last_neq )
 )
 {
     BYTE   *m1;                 // operand mainstor addresses
+    BYTE   *m1pg;               // operand page
     int    i;                   // loop index
 
     if (len <= 0) return MEM_CMP_NPOS;
 
     // Translate righttmost byte of operand
     m1 = MADDRL((ea1 + (len-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
 
     for (i = (len-1); i >= 0 ; i--)
     {
@@ -4191,12 +4229,15 @@ int ARCH_DEP( mem_pad_cmp_last_neq )
         if (*m1 != pad)
             return i;
 
-        /* update mainstore addresses; check for page boundary */
-        if ( (uintptr_t) m1 & PAGEFRAME_PAGEMASK )
-            m1--;
-        else
-            m1 = MADDRL((ea1 + (i-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+        /* update mainstore address */
+        m1--;
 
+        /* check for page cross */
+        if (MAINSTOR_PAGEBASE ( m1 ) != m1pg)
+        {
+            m1 = MADDRL((ea1 + (i-1)) & ADDRESS_MAXWRAP( regs ), 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
     }
 
     /* no neq bytes; memory is equal to pad */
@@ -4209,8 +4250,6 @@ int ARCH_DEP( mem_pad_cmp_last_neq )
 /*-------------------------------------------------------------------*/
 #undef  CUSE_MAX
 #define CUSE_MAX    _4K
-#undef  CUSE_INTERRUPT_POINT
-#define CUSE_INTERRUPT_POINT     _1K
 
 DEF_INST( compare_until_substring_equal )
 {
@@ -4229,7 +4268,6 @@ DEF_INST( compare_until_substring_equal )
     int     peeklen;                // Operand look ahead length
     int     scanlen;                // scan length
     int     padlen;                 // Operand pad length
-    int     ruptcnt = CUSE_INTERRUPT_POINT; // when to save GPRs
     int     lastneq;                // mem_cmp_last_neq return
     int     firstequ;               // mem_cmp_first_equ return
     int     rc;                     // work - return code
@@ -4289,12 +4327,10 @@ DEF_INST( compare_until_substring_equal )
     /* Process operands from left to right */
     for (i=0; len1 > 0 || len2 > 0 ; i++)
     {
-
 #if CUSE_DEBUG
          logmsg("CUSE: addr1=%X, len1=%ld, addr2=%X, len2=%ld, equlen=%ld, eqaddr1=%X, remlen1=%ld, eqaddr2=%X, remlen2=%ld, i=%d \n",
                         addr1, len1, addr2, len2, equlen, eqaddr1, remlen1, eqaddr2, remlen2, i);
 #endif
-
         /* If equal byte count has reached substring length
            exit with condition code zero */
         if (equlen == sublen)
@@ -4313,20 +4349,6 @@ DEF_INST( compare_until_substring_equal )
                 cc = 3;
                 break;
             }
-
-            /* update GPRs if scanned 1024 bytes - could get interrupt */
-            if (i >= ruptcnt)
-            {
-                ruptcnt += CUSE_INTERRUPT_POINT;
-
-                /* Update R1 and R2 to point to next bytes to compare */
-                SET_GR_A( r1, regs, addr1 );
-                SET_GR_A( r2, regs, addr2 );
-
-                /* Set R1+1 and R2+1 to remaining operand lengths */
-                SET_GR_A( r1+1, regs, len1 );
-                SET_GR_A( r2+1, regs, len2 );
-            }
         }
 
         /* ---------------------------- */
@@ -4338,14 +4360,13 @@ DEF_INST( compare_until_substring_equal )
         /* ---------------------------------- */
         if (sublen == 1 )
         {
-            scanlen = min ( min ( len1, len2 ), CUSE_INTERRUPT_POINT);
+            scanlen = min ( len1, len2 );
             firstequ = ARCH_DEP( mem_cmp_first_equ )( regs, addr1, r1, addr2, r2, scanlen);
 
 #if CUSE_DEBUG
             logmsg("CUSE: mem_cmp_first_equ: addr1=%X, addr2=%X, scanlen=%d, firstequ=%d \n",
                 addr1, addr2, scanlen, firstequ);
 #endif
-
             if (firstequ == MEM_CMP_NPOS)
             {
                 /* no matching byte */
@@ -4400,7 +4421,6 @@ DEF_INST( compare_until_substring_equal )
             logmsg("CUSE: mem_cmp: addr1=%X, addr2=%X, scanlen=%d, sublen=%d, rc=%d, idx=%u \n",
                 addr1, addr2, scanlen, sublen, rc, idx);
 #endif
-
             if (rc == 0)
             {
                 /* larger partial substring found - may need pad to complete */
@@ -4420,7 +4440,6 @@ DEF_INST( compare_until_substring_equal )
                 cc = ( sublen == equlen ) ? 0 : 1;
                 continue;
             }
-
             else
             {
                 /* substring not found */
@@ -4456,7 +4475,6 @@ DEF_INST( compare_until_substring_equal )
             logmsg("CUSE: mem_cmp_first_substr: addr1=%X, addr2=%X, scanlen=%d, sublen=%d, firstequ=%d, ss_len=%d \n",
                 addr1, addr2, scanlen, sublen, firstequ, ss_len);
 #endif
-
             if (firstequ == MEM_CMP_NPOS)
             {
                 /* no possible substring found - update to next end of scanned memory */
@@ -4480,7 +4498,6 @@ DEF_INST( compare_until_substring_equal )
 
                 cc = 2;
             }
-
             else
             {
                 /* found a start of possible substring byte */
@@ -4523,7 +4540,6 @@ DEF_INST( compare_until_substring_equal )
             logmsg("CUSE: mem_cmp_last_neq: addr1=%X, addr2=%X, peaklen=%d, lastneq=%d \n",
                 addr1, addr2, peeklen, lastneq);
 #endif
-
             if (lastneq == MEM_CMP_NPOS)
             {
                 if (sublen == peeklen + equlen)
@@ -4551,7 +4567,6 @@ DEF_INST( compare_until_substring_equal )
                     continue;
                 }
             }
-
             else
             {
                 /* found a mismatch - update to nonequal byte */
@@ -4584,7 +4599,6 @@ DEF_INST( compare_until_substring_equal )
             logmsg("CUSE: op-1 pad check: addr1=%X, len1=%ld, padlen=%d, eqaddr1=%X, equlen=%d, remlen1=%d, lastneq=%d \n",
                 addr1, len1, padlen, eqaddr1, equlen, remlen1, lastneq );
 #endif
-
             if (lastneq == MEM_CMP_NPOS)
             {
                 addr1 += padlen;
@@ -4596,7 +4610,6 @@ DEF_INST( compare_until_substring_equal )
                 cc = (sublen == equlen ) ? 0 : 1;
                 break;
             }
-
             else
             {
                  /* found a mismatch - update to nonequal byte */
@@ -4628,7 +4641,6 @@ DEF_INST( compare_until_substring_equal )
             logmsg("CUSE: op-2 pad check: addr2=%X, len2=%ld, padlen=%d, eqaddr2=%X, equlen=%d, remlen2=%d, lastneq=%d \n",
                 addr2, len2, padlen, eqaddr2, equlen, remlen2, lastneq );
 #endif
-
             if (lastneq == MEM_CMP_NPOS)
             {
                 addr2 += padlen;
@@ -4668,7 +4680,6 @@ DEF_INST( compare_until_substring_equal )
         logmsg("CUSE: general: addr1=%X, len1=%ld, addr2=%X, len2=%ld, equlen=%d \n",
             addr1, len1, addr2, len2, equlen);
 #endif
-
         /* Fetch byte from first operand, or use padding byte */
         if (len1 > 0)
             byte1 = ARCH_DEP( vfetchb )( addr1, r1, regs );
