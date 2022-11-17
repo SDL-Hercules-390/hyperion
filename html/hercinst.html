@@ -190,7 +190,7 @@ with every new release, which contains important late-breaking information about
         sudo dnf -y install bzip2-devel zlib-devel
     </code>
 
-    <li>CentOS / AlmaLinux / Rocky Linux 8+
+    <li>CentOS / AlmaLinux / Rocky Linux 8+ / Red Hat RHEL 9
     <p><code>
         sudo yum -y install git wget time<br>
         sudo yum -y install gcc make cmake flex gawk m4 autoconf automake libtool-ltdl-devel<br>
@@ -200,6 +200,12 @@ with every new release, which contains important late-breaking information about
     <p><i>Note: On CentOS 9, the following command is required <b>before</b> installing the packages:</i>
     <p><code>
         sudo yum config-manager --set-enabled crb
+    </code>
+    <p>
+    <p><i>Note: On Red Hat RHEL 9, the following command is required <b>before</b> installing the packages:</i>
+    <br>(refer <a href="https://www.redhat.com/sysadmin/install-epel-linux">here</a> for more information)
+    <p><code>
+        sudo subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
     </code>
 
     <li>CentOS 7
