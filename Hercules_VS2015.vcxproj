@@ -1118,6 +1118,16 @@
     <None Include="tests\TRTE-02-performance.list" />
     <None Include="tests\TRTE-02-performance.pdf" />
     <None Include="tests\TRTE-02-performance.tst" />
+    <None Include="tests\TRTR-01-basic.asm" />
+    <None Include="tests\TRTR-01-basic.core" />
+    <None Include="tests\TRTR-01-basic.list" />
+    <None Include="tests\TRTR-01-basic.pdf" />
+    <None Include="tests\TRTR-01-basic.tst" />
+    <None Include="tests\TRTR-02-performance.asm" />
+    <None Include="tests\TRTR-02-performance.core" />
+    <None Include="tests\TRTR-02-performance.list" />
+    <None Include="tests\TRTR-02-performance.pdf" />
+    <None Include="tests\TRTR-02-performance.tst" />
     <None Include="tests\TRTRE-01-basic.asm" />
     <None Include="tests\TRTRE-01-basic.core" />
     <None Include="tests\TRTRE-01-basic.list" />

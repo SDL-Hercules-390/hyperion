@@ -519,6 +519,16 @@ EXTRA_DIST =                    \
      TRTE-02-performance.list   \
      TRTE-02-performance.pdf    \
      TRTE-02-performance.tst    \
+     TRTR-01-basic.asm          \
+     TRTR-01-basic.core         \
+     TRTR-01-basic.list         \
+     TRTR-01-basic.pdf          \
+     TRTR-01-basic.tst          \
+     TRTR-02-performance.asm    \
+     TRTR-02-performance.core   \
+     TRTR-02-performance.list   \
+     TRTR-02-performance.pdf    \
+     TRTR-02-performance.tst    \
      TRTRE-01-basic.asm         \
      TRTRE-01-basic.core        \
      TRTRE-01-basic.list        \

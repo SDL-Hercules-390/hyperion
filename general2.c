@@ -3001,33 +3001,58 @@ DEF_INST( search_string_unicode )
     regs->psw.cc = 3;
 }
 
+
+#undef  MAINSTOR_PAGEBASE
+#define MAINSTOR_PAGEBASE( _ma )  ((BYTE*) ((uintptr_t) ( _ma ) & PAGEFRAME_PAGEMASK))
+
 /*-------------------------------------------------------------------*/
 /* D0   TRTR  - Translate and Test Reverse                    [SS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test_reverse)
 {
-    int b1, b2;                         /* Values of base field      */
-    int cc = 0;                         /* Condition code            */
-    BYTE dbyte;                         /* Byte work areas           */
+    int b1, b2;                        // Values of base field
+    int cc = 0;                        // Condition code
     VADR effective_addr1;
-    VADR effective_addr2;               /* Effective addresses       */
-    int i;                              /* Integer work areas        */
-    int len;                            /* Length byte               */
-    BYTE sbyte;                         /* Byte work areas           */
+    VADR effective_addr2;              // Effective addresses
+    int i;                             // Integer work areas
+    int len;                           // Length byte
+    BYTE sbyte;                        // Byte work areas
+
+    CACHE_ALIGN BYTE  trtab[256];      // Translate table - copy
+    BYTE*   p_fct;                     // ptr to FC Table
+    BYTE*   m1;                        // operand mainstor addresses
+    BYTE   *m1pg;                      // operand page
 
     SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     TXFC_INSTR_CHECK( regs );
 
+    /* Get pointer to Function Code table or copy */
+    if (CROSSPAGE( effective_addr2, 256-1))
+    {
+        ARCH_DEP( vfetchc )( trtab, 256-1, effective_addr2, b2, regs );
+        p_fct = (BYTE *) &trtab;
+    }
+    else
+    {
+        p_fct = MADDRL( effective_addr2, 256, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    }
+
+    /* Get mainstor address to test byte */
+    m1 = MADDRL( effective_addr1, 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m1pg = MAINSTOR_PAGEBASE ( m1 );
+
     /* Process first operand from right to left*/
     for(i = 0; i <= len; i++)
     {
         /* Fetch argument byte from first operand */
-        dbyte = ARCH_DEP(vfetchb)(effective_addr1, b1, regs);
+        // dbyte = ARCH_DEP(vfetchb)(effective_addr1, b1, regs);
 
         /* Fetch function byte from second operand */
-        sbyte = ARCH_DEP(vfetchb)((effective_addr2 + dbyte) & ADDRESS_MAXWRAP(regs), b2, regs);
+        // sbyte = ARCH_DEP(vfetchb)((effective_addr2 + dbyte) & ADDRESS_MAXWRAP(regs), b2, regs);
+
+        sbyte = p_fct[ *m1 ];
 
         /* Test for non-zero function byte */
         if(sbyte != 0)
@@ -3064,11 +3089,22 @@ DEF_INST(translate_and_test_reverse)
         effective_addr1--; /* Another difference with TRT */
         effective_addr1 &= ADDRESS_MAXWRAP(regs);
 
+        /* update mainstor address */
+        m1--;
+
+        /* check for page cross */
+        if ( MAINSTOR_PAGEBASE ( m1 ) != m1pg ) 
+        {
+            m1 = MADDRL(effective_addr1, 1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1pg = MAINSTOR_PAGEBASE ( m1 );
+        }
+
     } /* end for(i) */
 
     /* Update the condition code */
     regs->psw.cc = cc;
 }
+
 #endif /* defined( FEATURE_022_EXT_TRANSL_FACILITY_3 ) */
 
 
