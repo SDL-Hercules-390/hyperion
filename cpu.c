@@ -270,8 +270,9 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     )
     {
         char buf[40];
+        STR_PSW( regs, buf );
         // "Processor %s%02X: loaded wait state PSW %s"
-        WRMSG( HHC00800, "I", PTYPSTR( regs->cpuad ), regs->cpuad, STR_PSW( regs, buf ));
+        WRMSG( HHC00800, "I", PTYPSTR( regs->cpuad ), regs->cpuad, buf );
     }
 
     TEST_SET_AEA_MODE(regs);
@@ -544,7 +545,7 @@ DLL_EXPORT void ARCH_DEP( trace_program_interrupt )( REGS* regs, int pcode, int 
     if (code == PGM_DATA_EXCEPTION)
        MSGBUF( dxcstr, " DXC=%2.2X", regs->dxc );
 
-    // HHC00801 "Processor %s%02X: %s%s %s code %4.4X ilc %d%s%s"
+    // "Processor %s%02X: %s%s %s interruption code %4.4X ilc %d%s%s"
     WRMSG( HHC00801, "I",
         PTYPSTR( regs->cpuad ), regs->cpuad,
         sie_mode_str, sie_debug_arch,
@@ -1083,10 +1084,17 @@ bool    intercept;                      /* False for virtual pgmint  */
     {
         if (CPU_STEPPING_OR_TRACING( realregs, ilc ))
         {
-            // "Processor %s%02X: PER event: code %4.4X perc %2.2X addr "F_VADR
-            WRMSG( HHC00802, "I", PTYPSTR( regs->cpuad ), regs->cpuad,
-                pcode, IS_IC_PER( realregs ) >> 16,
-                (realregs->psw.IA - ilc) & ADDRESS_MAXWRAP( realregs ));
+            BYTE perc = IS_IC_PER( realregs ) >> 16;
+
+            {
+                char percname[32];
+                perc2name( perc, percname, sizeof( percname ));
+
+                // "Processor %s%02X: PER event: code %4.4X perc %2.2X=%s addr "F_VADR
+                WRMSG( HHC00802, "I", PTYPSTR( regs->cpuad ), regs->cpuad,
+                    pcode, perc, percname,
+                    (realregs->psw.IA - ilc) & ADDRESS_MAXWRAP( realregs ));
+            }
         }
 
         realregs->perc |= OPEN_IC_PER( realregs ) >> ((32 - IC_CR9_SHIFT) - 16);
@@ -1336,9 +1344,10 @@ bool    intercept;                      /* False for virtual pgmint  */
         if (pgmintloop)
         {
             char buf[64];
+            STR_PSW( realregs, buf );
             // "Processor %s%02X: program interrupt loop PSW %s"
-            WRMSG( HHC00803, "I", PTYPSTR( realregs->cpuad ), realregs->cpuad,
-                     STR_PSW( realregs, buf ));
+            WRMSG( HHC00803, "I", PTYPSTR( realregs->cpuad ),
+                realregs->cpuad, buf );
 
             OBTAIN_INTLOCK( realregs );
             {
@@ -1492,10 +1501,10 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
         BYTE*   csw = psa->csw;
 
         // "Processor %s%02X: I/O interrupt code %1.1X:%4.4X CSW %2.2X...
-        WRMSG (HHC00804, "I", PTYPSTR(regs->cpuad), regs->cpuad,
-                SSID_TO_LCSS(ioid >> 16) & 0x07, ioid,
+        WRMSG( HHC00804, "I", PTYPSTR( regs->cpuad ), regs->cpuad,
+                SSID_TO_LCSS( ioid >> 16 ) & 0x07, ioid,
                 csw[0], csw[1], csw[2], csw[3],
-                csw[4], csw[5], csw[6], csw[7]);
+                csw[4], csw[5], csw[6], csw[7] );
     }
 #endif /*FEATURE_S370_CHANNEL*/
 
@@ -1592,7 +1601,10 @@ RADR    fsta;                           /* Failing storage address   */
 
     /* Trace the machine check interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
+    {
+        // "Processor %s%02X: machine check code %16.16"PRIu64
         WRMSG (HHC00807, "I", PTYPSTR(regs->cpuad), regs->cpuad, mcic);
+    }
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
@@ -1738,7 +1750,10 @@ cpustate_stopping:
         {
             OFF_IC_STORSTAT(regs);
             ARCH_DEP(store_status) (regs, 0);
-            WRMSG (HHC00808, "I", PTYPSTR(regs->cpuad), regs->cpuad);
+
+            // "Processor %s%02X: store status completed"
+            WRMSG( HHC00808, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
+
             /* ISW 20071102 : Do not return via longjmp here. */
             /*    process_interrupt needs to finish putting the */
             /*    CPU in its manual state                     */
@@ -1803,9 +1818,10 @@ cpustate_stopping:
             )
             {
                 char buf[40];
+                STR_PSW( regs, buf );
                 // "Processor %s%02X: disabled wait state %s"
                 WRMSG( HHC00809, "I", PTYPSTR( regs->cpuad ),
-                    regs->cpuad, STR_PSW( regs, buf ));
+                    regs->cpuad, buf );
             }
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK( regs );
@@ -1873,22 +1889,23 @@ int     aswitch;
             sysblk.regs[cpu] = regs;
             release_lock(&sysblk.cpulock[cpu]);
             // "Processor %s%02X: architecture mode %s"
-            WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_name(regs));
+            WRMSG( HHC00811, "I", PTYPSTR( cpu ), cpu, get_arch_name( regs ));
         }
     }
     else
     {
         memset(regs, 0, sizeof(REGS));
 
-        if (cpu_init (cpu, regs, NULL))
+        if (cpu_init( cpu, regs, NULL ))
             return NULL;
 
         // "Processor %s%02X: architecture mode %s"
-        WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_name(regs));
+        WRMSG( HHC00811, "I", PTYPSTR( cpu ), cpu, get_arch_name( regs ));
 
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY )
         if (regs->vf->online)
-            WRMSG (HHC00812, "I", PTYPSTR(cpu), cpu);
+            // "Processor %s%02X: vector facility online"
+            WRMSG( HHC00812, "I", PTYPSTR( cpu ), cpu );
 #endif
     }
 
@@ -2277,6 +2294,7 @@ int   rc;
              timer_thread, NULL, TIMER_THREAD_NAME );
         if (rc)
         {
+            // "Error in function create_thread(): %s"
             WRMSG( HHC00102, "E", strerror( rc ));
             RELEASE_INTLOCK( NULL );
             return NULL;
@@ -2724,182 +2742,7 @@ void do_automatic_tracing()
 /*-------------------------------------------------------------------*/
 U64 make_psw64( REGS* regs, int arch /*370/390/900*/, bool bc )
 {
-    /* Return first/only 64-bit DWORD of the PSW -- IN HOST FORMAT!
-
-       Caller is responsible for doing the STORE_DW on the returned
-       value, which does a CSWAP to place it into guest storage in
-       proper big endian format. The 900 mode caller (i.e. z/Arch)
-       is also responsible for doing the store of the second DWORD
-       of the 16-byte z/Arch PSW = the 64-bit instruction address.
-    */
-
-    BYTE  b0, b1, b2, b3, b4;
-    U16   b23;
-    U32   b567, b4567;
-    U64   psw64 = 0;
-
-    switch (arch)
-    {
-        case 370:
-
-        if (bc) {
-            //                      370 BC-mode
-            //
-            //     +---------------+---+-----+------+---------------+----
-            //     | channel masks | E | key | 0MWP | interupt code | ..
-            //     +---------------+---+-----+------+---------------+----
-            //     0               7   8     12     16             31
-
-            //  ---+-----+----+------+------------------------------+
-            //   ..| ilc | cc | mask |     instruction address      |
-            //  ---+-----+----+------+------------------------------+
-            //     32    34   36     40                            63
-
-            b0 = regs->psw.sysmask;
-
-            b1 = 0
-                 | regs->psw.pkey
-                 | regs->psw.states
-                 ;
-
-            b23 = regs->psw.intcode;
-
-            b4 = 0
-                 | (REAL_ILC( regs ) << 6)
-                 | (regs->psw.cc     << 4)
-                 |  regs->psw.progmask
-                 ;
-
-            b567 = regs->psw.IA_L;
-
-            if (!regs->psw.zeroilc)
-                b567 &= AMASK24;
-
-            psw64 = 0
-                    | ( (U64) b0   << (64-(1*8)) )
-                    | ( (U64) b1   << (64-(2*8)) )
-                    | ( (U64) b23  << (64-(4*8)) )
-                    | ( (U64) b4   << (64-(5*8)) )
-                    | ( (U64) b567 << (64-(8*8)) )
-                    ;
-            break;
-        }
-
-        /* Not 370 BC-mode = 370 EC-mode. Fall through to the 390 case,
-           which handles both ESA/390 mode and S/370 EC-mode PSWs too.
-
-           The below special "FALLTHRU" comment lets GCC know that we are
-           purposely falling through to the next switch case and is needed
-           in order to suppress the warning that GCC would otherwise issue.
-        */
-        /* FALLTHRU */
-
-        case 390:
-            //                      370 EC-mode
-            //
-            //     +------+------+-----+------+----+----+------+----------+---
-            //     | 0R00 | 0TIE | key | 1MWP | S0 | cc | mask | 00000000 | ..
-            //     +------+------+-----+------+----+----+------+----------+---
-            //     0      4      8     12     16   18   20     24
-
-            //  ---+----------+-------------------------------------------+
-            //   ..| 00000000 |       instruction address                 |  (370)
-            //  ---+----------+-------------------------------------------+
-            //     32         40                                         63
-            //
-            //                        ESA/390
-            //
-            //     +------+------+-----+------+----+----+------+----------+---
-            //     | 0R00 | 0TIE | key | 1MWP | AS | cc | mask | 00000000 | ..
-            //     +------+------+-----+------+----+----+------+----------+---
-            //     0      4      8     12     16   18   20     24
-            //
-            //  ---+---+--------------------------------------------------+
-            //   ..| A |              instruction address                 |  (390)
-            //  ---+---+--------------------------------------------------+
-            //     32  33                                                63
-
-            b0 = regs->psw.sysmask;
-
-            b1 = 0
-                 | regs->psw.pkey
-                 | regs->psw.states
-                 ;
-
-            b2 = 0
-                 |  regs->psw.asc           // (S0 or AS)
-                 | (regs->psw.cc << 4)
-                 |  regs->psw.progmask
-                 ;
-
-            b3 = regs->psw.zerobyte;
-
-            b4567 = regs->psw.IA_L;
-
-            if (!regs->psw.zeroilc)
-                b4567 &= regs->psw.amode ? AMASK31 : AMASK24;
-
-            if (regs->psw.amode)
-                b4567 |= 0x80000000;
-
-            psw64 = 0
-                    | ( (U64) b0    << (64-(1*8)) )
-                    | ( (U64) b1    << (64-(2*8)) )
-                    | ( (U64) b2    << (64-(3*8)) )
-                    | ( (U64) b3    << (64-(4*8)) )
-                    | ( (U64) b4567 << (64-(8*8)) )
-                    ;
-            break;
-
-        case 900:
-            //                      z/Architecture
-            //
-            //     +------+------+-----+------+----+----+------+-----------+---
-            //     | 0R00 | 0TIE | key | 0MWP | AS | cc | mask | 0000 000E | ..
-            //     +------+------+-----+------+----+----+------+-----------+---
-            //     0      4      8     12     16   18   20     24         31
-            //
-            //  ---+---+---------------------------------------------------+
-            //   ..| B | 0000000000000000000000000000000000000000000000000 |
-            //  ---+---+---------------------------------------------------+
-            //     32  33                                                 63
-
-            b0 = regs->psw.sysmask;
-
-            b1 = 0
-                 | regs->psw.pkey
-                 | regs->psw.states
-                 ;
-
-            b2 = 0
-                 |  regs->psw.asc
-                 | (regs->psw.cc << 4)
-                 |  regs->psw.progmask
-                 ;
-
-            b3 = regs->psw.zerobyte;
-
-            if (regs->psw.amode64)
-                b3 |= 0x01;
-
-            b4567 = regs->psw.zeroword;
-
-            if (regs->psw.amode)
-                b4567 |= 0x80000000;
-
-            psw64 = 0
-                    | ( (U64) b0    << (64-(1*8)) )
-                    | ( (U64) b1    << (64-(2*8)) )
-                    | ( (U64) b2    << (64-(3*8)) )
-                    | ( (U64) b3    << (64-(4*8)) )
-                    | ( (U64) b4567 << (64-(8*8)) )
-                    ;
-            break;
-
-        default:        // LOGIC ERROR!
-            CRASH();    // LOGIC ERROR!
-    }
-    return psw64;
+    return do_make_psw64( &regs->psw, REAL_ILC( regs ), arch, bc );
 }
 
 #endif /*!defined(_GEN_ARCH)*/

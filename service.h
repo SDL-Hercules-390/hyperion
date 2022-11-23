@@ -278,6 +278,12 @@ SCCB_CPU_INFO;
 /*-------------------------------------------------------------------*/
 /*                Processor type macro                               */
 /*-------------------------------------------------------------------*/
+
+/* WARNING! Uses 'ptyp' array defined in 'sysblk'! This macro
+   will thus *NOT* work correctly for utilities, whose sysblk
+   is NEVER fully initialized! Call the 'ptyp2short' function
+   directly yourself instead!
+*/
 #define PTYPSTR(cpu_num)        ptyp2short( sysblk.ptyp[(cpu_num)] )
 
 /* Macro converts event type to event mask */

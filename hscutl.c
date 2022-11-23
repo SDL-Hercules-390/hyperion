@@ -1380,10 +1380,14 @@ int initialize_utility( int argc, char* argv[],
     hthreads_internal_init();                   // (must be second)
     SET_THREAD_NAME( exename );                 // (then other stuff)
     sysblk.msglvl = DEFAULT_MLVL;
+    sysblk.sysgroup = DEFAULT_SYSGROUP;
 
     initialize_detach_attr( DETACHED );
     initialize_join_attr( JOINABLE );
     initialize_lock( &sysblk.dasdcache_lock );
+    initialize_lock( &sysblk.scrlock );
+    initialize_condition( &sysblk.scrcond );
+
     set_codepage( NULL );
     init_hostinfo( &hostinfo );
 
@@ -1757,20 +1761,35 @@ DLL_EXPORT void init_random()
 }
 
 /*-------------------------------------------------------------------*/
-/* Check if string is numeric                                        */
+/* Check if string is numeric or hexadecimal                         */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT bool is_numeric( const char* str )
 {
     return is_numeric_l( str, strlen( str ));
 }
-
-DLL_EXPORT bool is_numeric_l( const char* str, int len )
+DLL_EXPORT bool is_numeric_l( const char* str, size_t len )
 {
-    int  i;
+    size_t i;
     for (i=0; i < len; i++)
-        if (str[i] < '0' || str[i] > '9')
+        if (!(str[i] >= '0' && str[i] <= '9'))
             return false;
-    return true;
+    return len ? true : false; // (empty string is not numeric)
+}
+DLL_EXPORT bool is_hex( const char* str )
+{
+    return is_hex_l( str, strlen( str ));
+}
+DLL_EXPORT bool is_hex_l( const char* str, size_t len )
+{
+    size_t i;
+    for (i=0; i < len; i++)
+        if (!(0
+            || (str[i] >= '0' && str[i] <= '9')
+            || (str[i] >= 'a' && str[i] <= 'f')
+            || (str[i] >= 'A' && str[i] <= 'F')
+        ))
+            return false;
+    return len ? true : false; // (empty string is not hex)
 }
 
 /*-------------------------------------------------------------------*/
@@ -1913,3 +1932,502 @@ int __cmpxchg16_e2k(volatile char *lockflag, U64 *old1, U64 *old2, U64 new1,
 }
 #endif /* e2k && LCC */
 
+/*-------------------------------------------------------------------*/
+/*     Processor types table and associated query functions          */
+/*-------------------------------------------------------------------*/
+struct PTYPTAB
+{
+    const BYTE  ptyp;           // 1-byte processor type (service.h)
+    const char* shortname;      // 2-character short name (Hercules)
+    const char* longname;       // 16-character long name (diag 224)
+};
+typedef struct PTYPTAB PTYPTAB;
+
+static PTYPTAB ptypes[] =
+{
+    { SCCB_PTYP_CP,      "CP", "CP              " },  // 0
+    { SCCB_PTYP_UNKNOWN, "??", "                " },  // 1 (unknown == blanks)
+    { SCCB_PTYP_ZAAP,    "AP", "ZAAP            " },  // 2
+    { SCCB_PTYP_IFL,     "IL", "IFL             " },  // 3
+    { SCCB_PTYP_ICF,     "CF", "ICF             " },  // 4
+    { SCCB_PTYP_ZIIP,    "IP", "ZIIP            " },  // 5
+};
+
+DLL_EXPORT const char* ptyp2long( BYTE ptyp )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (ptypes[i].ptyp == ptyp)
+            return ptypes[i].longname;
+    return "                ";              // 16 blanks
+}
+
+DLL_EXPORT const char* ptyp2short( BYTE ptyp )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (ptypes[i].ptyp == ptyp)
+            return ptypes[i].shortname;
+    return "??";
+}
+
+DLL_EXPORT BYTE short2ptyp( const char* shortname )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (strcasecmp( ptypes[i].shortname, shortname ) == 0)
+            return ptypes[i].ptyp;
+    return SCCB_PTYP_UNKNOWN;
+}
+
+DLL_EXPORT U64 do_make_psw64( PSW* psw, BYTE real_ilc, int arch /*370/390/900*/, bool bc )
+{
+    /* Return first/only 64-bit DWORD of the PSW -- IN HOST FORMAT!
+
+       Caller is responsible for doing the STORE_DW on the returned
+       value, which does a CSWAP to place it into guest storage in
+       proper big endian format. The 900 mode caller (i.e. z/Arch)
+       is also responsible for doing the store of the second DWORD
+       of the 16-byte z/Arch PSW = the 64-bit instruction address.
+    */
+
+    BYTE  b0, b1, b2, b3, b4;
+    U16   b23;
+    U32   b567, b4567;
+    U64   psw64 = 0;
+
+    switch (arch)
+    {
+        case 370:
+
+        if (bc) {
+            //                      370 BC-mode
+            //
+            //     +---------------+---+-----+------+---------------+----
+            //     | channel masks | E | key | 0MWP | interupt code | ..
+            //     +---------------+---+-----+------+---------------+----
+            //     0               7   8     12     16             31
+
+            //  ---+-----+----+------+------------------------------+
+            //   ..| ilc | cc | mask |     instruction address      |
+            //  ---+-----+----+------+------------------------------+
+            //     32    34   36     40                            63
+
+            b0 = psw->sysmask;
+
+            b1 = 0
+                 | psw->pkey
+                 | psw->states
+                 ;
+
+            b23 = psw->intcode;
+
+            b4 = 0
+                 | (real_ilc     << 6)
+                 | (psw->cc << 4)
+                 |  psw->progmask
+                 ;
+
+            b567 = psw->IA_L;
+
+            if (!psw->zeroilc)
+                b567 &= AMASK24;
+
+            psw64 = 0
+                    | ( (U64) b0   << (64-(1*8)) )
+                    | ( (U64) b1   << (64-(2*8)) )
+                    | ( (U64) b23  << (64-(4*8)) )
+                    | ( (U64) b4   << (64-(5*8)) )
+                    | ( (U64) b567 << (64-(8*8)) )
+                    ;
+            break;
+        }
+
+        /* Not 370 BC-mode = 370 EC-mode. Fall through to the 390 case,
+           which handles both ESA/390 mode and S/370 EC-mode PSWs too.
+
+           The below special "FALLTHRU" comment lets GCC know that we are
+           purposely falling through to the next switch case and is needed
+           in order to suppress the warning that GCC would otherwise issue.
+        */
+        /* FALLTHRU */
+
+        case 390:
+            //                      370 EC-mode
+            //
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     | 0R00 | 0TIE | key | 1MWP | S0 | cc | mask | 00000000 | ..
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     0      4      8     12     16   18   20     24
+
+            //  ---+----------+-------------------------------------------+
+            //   ..| 00000000 |       instruction address                 |  (370)
+            //  ---+----------+-------------------------------------------+
+            //     32         40                                         63
+            //
+            //                        ESA/390
+            //
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     | 0R00 | 0TIE | key | 1MWP | AS | cc | mask | 00000000 | ..
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     0      4      8     12     16   18   20     24
+            //
+            //  ---+---+--------------------------------------------------+
+            //   ..| A |              instruction address                 |  (390)
+            //  ---+---+--------------------------------------------------+
+            //     32  33                                                63
+
+            b0 = psw->sysmask;
+
+            b1 = 0
+                 | psw->pkey
+                 | psw->states
+                 ;
+
+            b2 = 0
+                 |  psw->asc           // (S0 or AS)
+                 | (psw->cc << 4)
+                 |  psw->progmask
+                 ;
+
+            b3 = psw->zerobyte;
+
+            b4567 = psw->IA_L;
+
+            if (!psw->zeroilc)
+                b4567 &= psw->amode ? AMASK31 : AMASK24;
+
+            if (psw->amode)
+                b4567 |= 0x80000000;
+
+            psw64 = 0
+                    | ( (U64) b0    << (64-(1*8)) )
+                    | ( (U64) b1    << (64-(2*8)) )
+                    | ( (U64) b2    << (64-(3*8)) )
+                    | ( (U64) b3    << (64-(4*8)) )
+                    | ( (U64) b4567 << (64-(8*8)) )
+                    ;
+            break;
+
+        case 900:
+            //                      z/Architecture
+            //
+            //     +------+------+-----+------+----+----+------+-----------+---
+            //     | 0R00 | 0TIE | key | 0MWP | AS | cc | mask | 0000 000E | ..
+            //     +------+------+-----+------+----+----+------+-----------+---
+            //     0      4      8     12     16   18   20     24         31
+            //
+            //  ---+---+---------------------------------------------------+
+            //   ..| B | 0000000000000000000000000000000000000000000000000 |
+            //  ---+---+---------------------------------------------------+
+            //     32  33                                                 63
+
+            b0 = psw->sysmask;
+
+            b1 = 0
+                 | psw->pkey
+                 | psw->states
+                 ;
+
+            b2 = 0
+                 |  psw->asc
+                 | (psw->cc << 4)
+                 |  psw->progmask
+                 ;
+
+            b3 = psw->zerobyte;
+
+            if (psw->amode64)
+                b3 |= 0x01;
+
+            b4567 = psw->zeroword;
+
+            if (psw->amode)
+                b4567 |= 0x80000000;
+
+            psw64 = 0
+                    | ( (U64) b0    << (64-(1*8)) )
+                    | ( (U64) b1    << (64-(2*8)) )
+                    | ( (U64) b2    << (64-(3*8)) )
+                    | ( (U64) b3    << (64-(4*8)) )
+                    | ( (U64) b4567 << (64-(8*8)) )
+                    ;
+            break;
+
+        default:        // LOGIC ERROR!
+            CRASH();    // LOGIC ERROR!
+    }
+    return psw64;
+}
+
+/*-------------------------------------------------------------------*/
+/*              Return Program Interrupt Name                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* PIC2Name( int pcode )
+{
+    static const char* pgmintname[] =
+    {
+        /* 01 */    "Operation exception",
+        /* 02 */    "Privileged-operation exception",
+        /* 03 */    "Execute exception",
+        /* 04 */    "Protection exception",
+        /* 05 */    "Addressing exception",
+        /* 06 */    "Specification exception",
+        /* 07 */    "Data exception",
+        /* 08 */    "Fixed-point-overflow exception",
+        /* 09 */    "Fixed-point-divide exception",
+        /* 0A */    "Decimal-overflow exception",
+        /* 0B */    "Decimal-divide exception",
+        /* 0C */    "HFP-exponent-overflow exception",
+        /* 0D */    "HFP-exponent-underflow exception",
+        /* 0E */    "HFP-significance exception",
+        /* 0F */    "HFP-floating-point-divide exception",
+        /* 10 */    "Segment-translation exception",
+        /* 11 */    "Page-translation exception",
+        /* 12 */    "Translation-specification exception",
+        /* 13 */    "Special-operation exception",
+        /* 14 */    "Pseudo-page-fault exception",
+        /* 15 */    "Operand exception",
+        /* 16 */    "Trace-table exception",
+        /* 17 */    "ASN-translation exception",
+        /* 18 */    "Transaction constraint exception",
+        /* 19 */    "Vector/Crypto operation exception",
+        /* 1A */    "Page state exception",
+        /* 1B */    "Vector processing exception",
+        /* 1C */    "Space-switch event",
+        /* 1D */    "Square-root exception",
+        /* 1E */    "Unnormalized-operand exception",
+        /* 1F */    "PC-translation specification exception",
+        /* 20 */    "AFX-translation exception",
+        /* 21 */    "ASX-translation exception",
+        /* 22 */    "LX-translation exception",
+        /* 23 */    "EX-translation exception",
+        /* 24 */    "Primary-authority exception",
+        /* 25 */    "Secondary-authority exception",
+        /* 26 */ /* "Page-fault-assist exception",          */
+        /* 26 */    "LFX-translation exception",
+        /* 27 */ /* "Control-switch exception",             */
+        /* 27 */    "LSX-translation exception",
+        /* 28 */    "ALET-specification exception",
+        /* 29 */    "ALEN-translation exception",
+        /* 2A */    "ALE-sequence exception",
+        /* 2B */    "ASTE-validity exception",
+        /* 2C */    "ASTE-sequence exception",
+        /* 2D */    "Extended-authority exception",
+        /* 2E */    "LSTE-sequence exception",
+        /* 2F */    "ASTE-instance exception",
+        /* 30 */    "Stack-full exception",
+        /* 31 */    "Stack-empty exception",
+        /* 32 */    "Stack-specification exception",
+        /* 33 */    "Stack-type exception",
+        /* 34 */    "Stack-operation exception",
+        /* 35 */    "Unassigned exception",
+        /* 36 */    "Unassigned exception",
+        /* 37 */    "Unassigned exception",
+        /* 38 */    "ASCE-type exception",
+        /* 39 */    "Region-first-translation exception",
+        /* 3A */    "Region-second-translation exception",
+        /* 3B */    "Region-third-translation exception",
+        /* 3C */    "Unassigned exception",
+        /* 3D */    "Unassigned exception",
+        /* 3E */    "Unassigned exception",
+        /* 3F */    "Unassigned exception",
+        /* 40 */    "Monitor event"
+    };
+
+    int ndx, code = (pcode & 0xFF);
+
+    if (code == 0x80)
+        return "PER event";
+
+    if (code < 1 || code > (int) _countof( pgmintname ))
+        return "Unassigned exception";
+
+    ndx = ((code - 1) & 0x3F);
+
+    return (ndx >= 0 && ndx < (int) _countof( pgmintname )) ?
+        pgmintname[ ndx ] : "Unassigned exception";
+}
+
+/*-------------------------------------------------------------------*/
+/*                 Return SIGP Order Name                            */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* order2name( BYTE order )
+{
+static const char *ordername[] =
+{
+/* 0x00                          */  "Unassigned",
+/* 0x01 SIGP_SENSE               */  "Sense",
+/* 0x02 SIGP_EXTCALL             */  "External call",
+/* 0x03 SIGP_EMERGENCY           */  "Emergency signal",
+/* 0x04 SIGP_START               */  "Start",
+/* 0x05 SIGP_STOP                */  "Stop",
+/* 0x06 SIGP_RESTART             */  "Restart",
+/* 0x07 SIGP_IPR                 */  "Initial program reset",
+/* 0x08 SIGP_PR                  */  "Program reset",
+/* 0x09 SIGP_STOPSTORE           */  "Stop and store status",
+/* 0x0A SIGP_IMPL                */  "Initial microprogram load",
+/* 0x0B SIGP_INITRESET           */  "Initial CPU reset",
+/* 0x0C SIGP_RESET               */  "CPU reset",
+/* 0x0D SIGP_SETPREFIX           */  "Set prefix",
+/* 0x0E SIGP_STORE               */  "Store status",
+/* 0x0F                          */  "Unassigned",
+/* 0x10                          */  "Unassigned",
+/* 0x11 SIGP_STOREX              */  "Store extended status at address",
+/* 0x12 SIGP_SETARCH             */  "Set architecture mode",
+/* 0x13 SIGP_COND_EMERGENCY      */  "Conditional emergency",
+/* 0x14                          */  "Unassigned",
+/* 0x15 SIGP_SENSE_RUNNING_STATE */  "Sense running state"
+};
+    return (order >= _countof( ordername )) ?
+        "Unassigned" : ordername[ order ];
+}
+
+/*-------------------------------------------------------------------*/
+/*                 Return PER Event name(s)                          */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* perc2name( BYTE perc, char* buf, size_t bufsiz )
+{   /*
+           Hex    Bit   PER Event
+            80     0    Successful-branching 
+            40     1    Instruction-fetching
+            20     2    Storage-alteration
+            10     3    Storage-key-alteration
+            08     4    Store-using-real-address 
+            04     5    Zero-address-detection 
+            02     6    Transaction-end
+            01     7    Instruction-fetching nullification (PER-3) */
+
+    const char* name;
+
+    switch (perc)
+    {
+        /*-----------------------------------------------------------*/
+        /*               Basic single-bit events...                  */
+        /*-----------------------------------------------------------*/
+
+        case 0x80:
+        {
+            name = "BRANCH";
+            break;
+        }
+
+        case 0x40:
+        {
+            name = "IFETCH";
+            break;
+        }
+
+        case 0x20:
+        {
+            name = "STOR";
+            break;
+        }
+
+        case 0x10:
+        {
+            /* NOTE: docs say: "A zero is stored in bit position 3 of
+               locations 150-151", so this SHOULDN'T(?) occur, but if
+               for some reason it does, let's return an indication.
+            */
+            name = "SKEY";
+            break;
+        }
+
+#if 0 // (probably illegal? i.e. should never occur? See 0x28 below!)
+
+        case 0x08:
+        {
+            name = "STURA";
+            break;
+        }
+#endif
+        case 0x04:
+        {
+            name = "ZAD";
+            break;
+        }
+
+        case 0x02:
+        {
+            name = "TEND";
+            break;
+        }
+
+        case 0x01:
+        {
+            name = "IFNULL";
+            break;
+        }
+
+        /*-----------------------------------------------------------*/
+        /*    Exceptions to the rule requiring special handling      */
+        /*-----------------------------------------------------------*/
+
+        case 0x24:
+        {
+            /* "... when ... a storage-alteration ... event is re-
+               cognized concurrently with a zero-address-detection
+               event, only the storage alteration ... event is in-
+               dicated." (Not sure whether that means ONLY the 0x20
+               storage alteration bit is set, or whether the "event"
+               should simply be TREATED AS a storage event, so to
+               be safe, we'll code for it.)
+            */
+            name = "STOR";
+            break;
+        }
+
+        case 0x28:
+        {
+            /* "... while ones in bit positions 2 and 4 indicate a
+               store-using-real-address event."
+            */
+            name = "STURA";
+            break;
+        }
+
+#if 0 // (probbaly illegal? i.e. should never occur?)
+
+        case 0x2C:
+        {
+            /* "... when ... store-using-real-address event is re-
+               cognized concurrently with a zero-address-detection
+               event, only the ... store-using-real-address event
+               is indicated."
+            */
+            name = "STURA";
+            break;
+        }
+#endif
+        case 0x41:
+        {
+            /* "When a program interruption occurs for a PER instruc-
+               tion fetching nullification event, bits 1 and 7 are set
+               to one in the PER code. No other PER events are concur-
+               rently indicated.
+            */
+            name = "IFETCH+IFNULL";
+            break;
+        }
+
+        case 0x42:
+        {
+            /* "If an instruction-fetching basic event coincides with
+               the transaction-end event, bit 1 is also set to one
+               in the PER code."
+            */
+            name = "IFETCH+TEND";
+            break;
+        }
+
+        default:
+        {
+            name = "UNKNOWN!";
+            break;
+        }
+    }
+
+    strlcpy( buf, name, bufsiz );
+    return buf;
+}

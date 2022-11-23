@@ -2353,7 +2353,7 @@ CPU_DLL_IMPORT int  ARCH_DEP( fix_program_interrupt_PSW )( REGS* regs );
 CPU_DLL_IMPORT void ARCH_DEP( trace_program_interrupt   )( REGS* regs, int pcode, int ilc );
 
 void *cpu_thread (void *cpu);
-DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
+CPU_DLL_IMPORT void copy_psw (REGS *regs, BYTE *addr);
 int   display_psw(                 REGS* regs, char* buf, int buflen );
 char* str_psw(                     REGS* regs, char* buf, int buflen );
 char* str_arch_psw( int arch_mode, REGS* regs, char* buf, int buflen );

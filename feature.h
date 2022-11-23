@@ -126,6 +126,18 @@
     #define _STORKEY_ARRAY_SHIFTAMT     STORKEY_KEY_4K_SHIFTAMT
   #endif
 
+  /* Macro used by "display_inst_adj" function to determine whether
+     to call "display_virt" (which calls "virt_to_real") using the
+     "USE_REAL_ADDR" translation option or not
+  */
+  #define IS_REAL_ADDR_OP( _opcode1, _opcode2 )             \
+  (0                                                        \
+   || (_opcode1 == 0xB2 && _opcode2 == 0x4B)  /*LURA*/      \
+   || (_opcode1 == 0xB2 && _opcode2 == 0x46)  /*STURA*/     \
+   || (_opcode1 == 0xB9 && _opcode2 == 0x05)  /*LURAG*/     \
+   || (_opcode1 == 0xB9 && _opcode2 == 0x25)  /*STURG*/     \
+  )
+
 #endif /* !defined( DID_FEATCHK_PASS_1 ) */
 
 /*-------------------------------------------------------------------*/

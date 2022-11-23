@@ -268,6 +268,9 @@ HUT_DLL_IMPORT char*   trim ( char* str, const char* dlm ); // (trim both)
 #define RTRIM( str )  rtrim ( (str), WHITESPACE )
 #define  TRIM( str )   trim ( (str), WHITESPACE )
 
+#define LTRIMS( str, s )  ltrim ( (str), (s) )
+#define RTRIMS( str, s )  rtrim ( (str), (s) )
+
 #if defined( HAVE_PTHREAD_SETNAME_NP ) // !defined( _MSVC_ ) implied
 /*-------------------------------------------------------------------*/
 /* Set thead name           (nonstandard GNU extension)              */
@@ -287,10 +290,12 @@ HUT_DLL_IMPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc );
 HUT_DLL_IMPORT void init_random();
 
 /*-------------------------------------------------------------------*/
-/* Check if string is numeric                                        */
+/* Check if string is numeric or hexadecimal                         */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT bool is_numeric( const char* str );
-HUT_DLL_IMPORT bool is_numeric_l( const char* str, int len );
+HUT_DLL_IMPORT bool is_numeric_l( const char* str, size_t len );
+HUT_DLL_IMPORT bool is_hex( const char* str );
+HUT_DLL_IMPORT bool is_hex_l( const char* str, size_t len );
 
 /*-------------------------------------------------------------------*/
 /* Subroutines to convert strings to upper or lower case             */
@@ -358,5 +363,32 @@ HUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen)
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT int  idx_snprintf( int idx, char* buffer, size_t bufsiz, const char* fmt, ... ) ATTR_PRINTF(4,5);
+
+/*-------------------------------------------------------------------*/
+/*                Processor types functions                          */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT const char* ptyp2long ( BYTE ptyp );
+HUT_DLL_IMPORT const char* ptyp2short( BYTE ptyp );
+HUT_DLL_IMPORT BYTE short2ptyp( const char* shortname );
+
+/*-------------------------------------------------------------------*/
+/*                Store PSW helper function                          */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT U64 do_make_psw64( PSW* psw, BYTE real_ilc, int arch /*370/390/900*/, bool bc );
+
+/*-------------------------------------------------------------------*/
+/*              Return Program Interrupt Name                        */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT const char* PIC2Name( int code );
+
+/*-------------------------------------------------------------------*/
+/*                 Return SIGP Order Name                            */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT const char* order2name( BYTE order );
+
+/*-------------------------------------------------------------------*/
+/*                 Return PER Event name(s)                          */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT const char* perc2name( BYTE perc, char* buf, size_t bufsiz );
 
 #endif /* __HSCUTL_H__ */

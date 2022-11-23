@@ -675,8 +675,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 
 // reserve 008xx for processor related messages
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
-#define HHC00801 "Processor %s%02X: %s%s%s code %4.4X ilc %d%s%s"
-#define HHC00802 "Processor %s%02X: PER event: code %4.4X perc %2.2X addr "F_VADR
+#define HHC00801 "Processor %s%02X: %s%s%s interruption code %4.4X ilc %d%s%s"
+#define HHC00802 "Processor %s%02X: PER event: code %4.4X perc %2.2X=%s addr "F_VADR
 #define HHC00803 "Processor %s%02X: program interrupt loop PSW %s"
 #define HHC00804 "Processor %s%02X: I/O interrupt code %1.1X:%4.4X CSW %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
 #define HHC00805 "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X"
@@ -1488,7 +1488,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02371 "Automatic tracing stopped at instrcount %"PRIu64" (AMT+%"PRIu64")"
 #define HHC02372 "Automatic tracing not enabled"
 #define HHC02373 "Automatic tracing disabled"
-#define HHC02374 "Automatic tracing enabled: BEG=%"PRIu64", AMT=%"PRIu64
+#define HHC02374 "Automatic tracing enabled: BEG=%"PRIu64" AMT=%"PRIu64
 #define HHC02375 "Automatic tracing is active"
 #define HHC02376 "Automatic tracing value(s) must be greater than zero"
 //efine HHC02377 (available)

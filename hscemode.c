@@ -1586,7 +1586,7 @@ int auto_trace_cmd( int argc, char* argv[], char* cmdline )
     }
     else // (auto_trace_beg && auto_trace_amt)
     {
-        // "Automatic tracing enabled: BEG=%"PRIu64", AMT=%"PRIu64
+        // "Automatic tracing enabled: BEG=%"PRIu64" AMT=%"PRIu64
         WRMSG( HHC02374, "I", auto_trace_beg, auto_trace_amt );
     }
 

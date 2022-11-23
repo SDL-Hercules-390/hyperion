@@ -176,7 +176,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     if ( OPEN_IC_INTKEY(regs) && !SIE_MODE(regs) )
     {
         // "Processor %s%02X: External interrupt: interrupt key"
-        WRMSG (HHC00840, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
+        WRMSG( HHC00840, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
 
         /* Reset interrupt key pending */
         OFF_IC_INTKEY;
@@ -223,7 +223,6 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
         /* Generate emergency signal interrupt */
         ARCH_DEP(external_interrupt) (EXT_MALFUNCTION_ALERT_INTERRUPT, regs);
     }
-
 
     /* External interrupt if emergency signal is pending */
     if (OPEN_IC_EMERSIG(regs))

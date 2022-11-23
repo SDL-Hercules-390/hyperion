@@ -2230,7 +2230,7 @@ const char* tac2short( U64 tac ) { return tac2name( tac, false ); }
 /*-------------------------------------------------------------------*/
 /*            DEBUG:  Constraint Violation Names                     */
 /*-------------------------------------------------------------------*/
-const char* txf_why_str( char* buffer, int buffsize, int why )
+DLL_EXPORT const char* txf_why_str( char* buffer, int buffsize, int why )
 {
     #define TXF_WHY_FORMAT( _why ) ((why & _why) ? " " #_why : "")
 

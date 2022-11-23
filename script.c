@@ -1099,7 +1099,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
             RTRIM( without_comment );
 
             if (0
-                || (rc = sscanf( without_comment, "%lf", &secs, &c )) != 1
+                || (rc = sscanf( without_comment, "%lf%c", &secs, &c )) != 1
                 || secs < MIN_RUNTEST_DUR
                 || secs > MAX_RUNTEST_DUR
             )

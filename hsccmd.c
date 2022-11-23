@@ -3138,54 +3138,6 @@ int sclproot_cmd( int argc, char* argv[], char* cmdline )
 }
 
 /*-------------------------------------------------------------------*/
-/* Processor types table and associated query functions              */
-/*-------------------------------------------------------------------*/
-struct PTYPTAB
-{
-    const BYTE  ptyp;           // 1-byte processor type (service.h)
-    const char* shortname;      // 2-character short name (Hercules)
-    const char* longname;       // 16-character long name (diag 224)
-};
-typedef struct PTYPTAB PTYPTAB;
-
-static PTYPTAB ptypes[] =
-{
-    { SCCB_PTYP_CP,      "CP", "CP              " },  // 0
-    { SCCB_PTYP_UNKNOWN, "??", "                " },  // 1 (unknown == blanks)
-    { SCCB_PTYP_ZAAP,    "AP", "ZAAP            " },  // 2
-    { SCCB_PTYP_IFL,     "IL", "IFL             " },  // 3
-    { SCCB_PTYP_ICF,     "CF", "ICF             " },  // 4
-    { SCCB_PTYP_ZIIP,    "IP", "ZIIP            " },  // 5
-};
-
-DLL_EXPORT const char* ptyp2long( BYTE ptyp )
-{
-    unsigned int i;
-    for (i=0; i < _countof( ptypes ); i++)
-        if (ptypes[i].ptyp == ptyp)
-            return ptypes[i].longname;
-    return "                ";              // 16 blanks
-}
-
-DLL_EXPORT const char* ptyp2short( BYTE ptyp )
-{
-    unsigned int i;
-    for (i=0; i < _countof( ptypes ); i++)
-        if (ptypes[i].ptyp == ptyp)
-            return ptypes[i].shortname;
-    return "??";
-}
-
-DLL_EXPORT BYTE short2ptyp( const char* shortname )
-{
-    unsigned int i;
-    for (i=0; i < _countof( ptypes ); i++)
-        if (strcasecmp( ptypes[i].shortname, shortname ) == 0)
-            return ptypes[i].ptyp;
-    return SCCB_PTYP_UNKNOWN;
-}
-
-/*-------------------------------------------------------------------*/
 /* engines command                                                   */
 /*-------------------------------------------------------------------*/
 int engines_cmd(int argc, char *argv[], char *cmdline)

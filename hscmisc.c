@@ -99,6 +99,8 @@ int ARCH_DEP( virt_to_real )( U64* raptr, int* siptr, U64 vaddr,
         if (SIE_MODE( regs ))
             memcpy( HOSTREGS->progjmp, regs->progjmp, sizeof( jmp_buf ));
 
+        // akey (access key) = 0, len (length of data access) = 1
+        // since we're a "utility" and only interested in the address.
         ARCH_DEP( logical_to_main_l )( (VADR)vaddr, temp_arn, regs, acctype, 0, 1 );
     }
 
@@ -182,7 +184,7 @@ BYTE    c;                              /* Character work area       */
         if ((aaddr & PAGEFRAME_BYTEMASK) == 0x000) break;
     } /* end for(i) */
 
-    n += idx_snprintf( n, buf, bufl, "%36.36s %16.16s", hbuf, cbuf);
+    n += idx_snprintf( n, buf, bufl, "%-36.36s %-16.16s", hbuf, cbuf);
     return n;
 
 } /* end function display_real */
@@ -814,7 +816,6 @@ size_t  totamt;                         /* Total amount to be dumped */
 
 } /* end function alter_display_virt */
 
-
 /*-------------------------------------------------------------------*/
 /*                    display_inst_adj                               */
 /*-------------------------------------------------------------------*/
@@ -1015,7 +1016,7 @@ char    regs_msg_buf[4*512] = {0};
             (0
              || (inst[1] == 0x05)   // LURAG
              || (inst[1] == 0x25)   // STURG
-             || (inst[1] >= 0x31)   // FIXME: Needs more specifics!
+             || (inst[1] >= 0x31)   // CLGFR
             )
            )
     )
@@ -1102,10 +1103,7 @@ char    regs_msg_buf[4*512] = {0};
                            PTYPSTR( regs->cpuad ), regs->cpuad );
         if (0
             || REAL_MODE( &regs->psw )
-            || (opcode == 0xB2 && inst[1] == 0x4B)  /*LURA*/
-            || (opcode == 0xB2 && inst[1] == 0x46)  /*STURA*/
-            || (opcode == 0xB9 && inst[1] == 0x05)  /*LURAG*/
-            || (opcode == 0xB9 && inst[1] == 0x25)  /*STURG*/
+            || IS_REAL_ADDR_OP( opcode, inst[1] )
         )
             ar = USE_REAL_ADDR;
 
@@ -1484,7 +1482,7 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
     {
         rpl=2;
     }
-    else
+    else // (numcpus <= 1 || sysblk.insttrace || sysblk.instbreak)
     {
         rpl=4;
     }
@@ -1513,7 +1511,6 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
 }
 
 #endif // _900
-
 
 /*-------------------------------------------------------------------*/
 /*        Display registers for the instruction display              */
@@ -2918,89 +2915,6 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
     }
 
     return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/*              Format Program Interrupt Name                        */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT const char* PIC2Name( int pcode )
-{
-    static const char* pgmintname[] =
-    {
-        /* 01 */    "Operation exception",
-        /* 02 */    "Privileged-operation exception",
-        /* 03 */    "Execute exception",
-        /* 04 */    "Protection exception",
-        /* 05 */    "Addressing exception",
-        /* 06 */    "Specification exception",
-        /* 07 */    "Data exception",
-        /* 08 */    "Fixed-point-overflow exception",
-        /* 09 */    "Fixed-point-divide exception",
-        /* 0A */    "Decimal-overflow exception",
-        /* 0B */    "Decimal-divide exception",
-        /* 0C */    "HFP-exponent-overflow exception",
-        /* 0D */    "HFP-exponent-underflow exception",
-        /* 0E */    "HFP-significance exception",
-        /* 0F */    "HFP-floating-point-divide exception",
-        /* 10 */    "Segment-translation exception",
-        /* 11 */    "Page-translation exception",
-        /* 12 */    "Translation-specification exception",
-        /* 13 */    "Special-operation exception",
-        /* 14 */    "Pseudo-page-fault exception",
-        /* 15 */    "Operand exception",
-        /* 16 */    "Trace-table exception",
-        /* 17 */    "ASN-translation exception",
-        /* 18 */    "Transaction constraint exception",
-        /* 19 */    "Vector/Crypto operation exception",
-        /* 1A */    "Page state exception",
-        /* 1B */    "Vector processing exception",
-        /* 1C */    "Space-switch event",
-        /* 1D */    "Square-root exception",
-        /* 1E */    "Unnormalized-operand exception",
-        /* 1F */    "PC-translation specification exception",
-        /* 20 */    "AFX-translation exception",
-        /* 21 */    "ASX-translation exception",
-        /* 22 */    "LX-translation exception",
-        /* 23 */    "EX-translation exception",
-        /* 24 */    "Primary-authority exception",
-        /* 25 */    "Secondary-authority exception",
-        /* 26 */ /* "Page-fault-assist exception",          */
-        /* 26 */    "LFX-translation exception",
-        /* 27 */ /* "Control-switch exception",             */
-        /* 27 */    "LSX-translation exception",
-        /* 28 */    "ALET-specification exception",
-        /* 29 */    "ALEN-translation exception",
-        /* 2A */    "ALE-sequence exception",
-        /* 2B */    "ASTE-validity exception",
-        /* 2C */    "ASTE-sequence exception",
-        /* 2D */    "Extended-authority exception",
-        /* 2E */    "LSTE-sequence exception",
-        /* 2F */    "ASTE-instance exception",
-        /* 30 */    "Stack-full exception",
-        /* 31 */    "Stack-empty exception",
-        /* 32 */    "Stack-specification exception",
-        /* 33 */    "Stack-type exception",
-        /* 34 */    "Stack-operation exception",
-        /* 35 */    "Unassigned exception",
-        /* 36 */    "Unassigned exception",
-        /* 37 */    "Unassigned exception",
-        /* 38 */    "ASCE-type exception",
-        /* 39 */    "Region-first-translation exception",
-        /* 3A */    "Region-second-translation exception",
-        /* 3B */    "Region-third-translation exception",
-        /* 3C */    "Unassigned exception",
-        /* 3D */    "Unassigned exception",
-        /* 3E */    "Unassigned exception",
-        /* 3F */    "Unassigned exception",
-        /* 40 */    "Monitor event"
-    };
-    int ndx, code = (pcode & 0xFF);
-    if (code < 1 || code > (int) _countof( pgmintname ))
-        return "Unassigned exception";
-    ndx = ((code - 1) & 0x3F);
-    return (ndx >= 0 && ndx < (int) _countof( pgmintname )) ?
-        pgmintname[ ndx ] : "Unassigned exception";
 }
 
 

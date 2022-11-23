@@ -299,7 +299,7 @@ void dump_cache( REGS* regs, const char* pfxfmt, int linenum , const BYTE* line)
 void dump_tdb( REGS* regs, TDB* tdb );
 
 // Return reason why transaction was aborted
-const char* txf_why_str( char* buffer, int buffsize, int why );
+TRANS_DLL_IMPORT const char* txf_why_str( char* buffer, int buffsize, int why );
 
 /* Helper macros for issuing TXF debugging messages */
 #define TXF_CPUAD( _regs )    PTYPSTR( (_regs)->cpuad ), (_regs)->cpuad

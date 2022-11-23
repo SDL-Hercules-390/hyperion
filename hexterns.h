@@ -114,9 +114,6 @@ HAO_DLL_IMPORT void hao_command(char *command); /* process hao command */
 #endif /* defined(OPTION_HAO) */
 
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
-HCMD_DLL_IMPORT const char* ptyp2long ( BYTE ptyp );       // diag224_call()
-HCMD_DLL_IMPORT const char* ptyp2short( BYTE ptyp );       // PTYPSTR()
-HCMD_DLL_IMPORT BYTE short2ptyp( const char* shortname );  // engines_cmd()
 HCMD_DLL_IMPORT int devinit_cmd( int argc, char* argv[], char* cmdline ); // used by CTCE_Recovery()
 extern int qproc_cmd( int argc, char* argv[], char* cmdline );
 
@@ -378,7 +375,7 @@ HMISC_DLL_IMPORT REGS* copy_regs( REGS* regs );
 HMISC_DLL_IMPORT const char* FormatSID( BYTE* iobuf, int num, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatRCD( BYTE* iobuf, int num, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatRNI( BYTE* iobuf, int num, char* buf, size_t bufsz );
-HMISC_DLL_IMPORT const char* PIC2Name( int code );
+
 HMISC_DLL_IMPORT int s370_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );
 HMISC_DLL_IMPORT int s390_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );
 HMISC_DLL_IMPORT int z900_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );

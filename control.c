@@ -5899,30 +5899,6 @@ int     set_arch = 0;                   /* Need to switch mode       */
 #endif /*defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 size_t  log_sigp = 0;                   /* Log SIGP instruction flag */
 char    log_buf[128];                   /* Log buffer                */
-static char *ordername[] = {
-    /* 0x00                          */  "Unassigned",
-    /* 0x01 SIGP_SENSE               */  "Sense",
-    /* 0x02 SIGP_EXTCALL             */  "External call",
-    /* 0x03 SIGP_EMERGENCY           */  "Emergency signal",
-    /* 0x04 SIGP_START               */  "Start",
-    /* 0x05 SIGP_STOP                */  "Stop",
-    /* 0x06 SIGP_RESTART             */  "Restart",
-    /* 0x07 SIGP_IPR                 */  "Initial program reset",
-    /* 0x08 SIGP_PR                  */  "Program reset",
-    /* 0x09 SIGP_STOPSTORE           */  "Stop and store status",
-    /* 0x0A SIGP_IMPL                */  "Initial microprogram load",
-    /* 0x0B SIGP_INITRESET           */  "Initial CPU reset",
-    /* 0x0C SIGP_RESET               */  "CPU reset",
-    /* 0x0D SIGP_SETPREFIX           */  "Set prefix",
-    /* 0x0E SIGP_STORE               */  "Store status",
-    /* 0x0F                          */  "Unassigned",
-    /* 0x10                          */  "Unassigned",
-    /* 0x11 SIGP_STOREX              */  "Store extended status at address",
-    /* 0x12 SIGP_SETARCH             */  "Set architecture mode",
-    /* 0x13 SIGP_COND_EMERGENCY      */  "Conditional emergency",
-    /* 0x14                          */  "Unassigned",
-    /* 0x15 SIGP_SENSE_RUNNING_STATE */  "Sense running state"
-};
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
 
@@ -5965,17 +5941,14 @@ static char *ordername[] = {
     }
 
     /* Trace SIGP unless Sense, External Call, Emergency Signal,
-       Sense Running State,
-       or the target CPU is configured offline */
+       Sense Running State, or the target CPU is configured offline */
     if ((order > LOG_SIGPORDER && order != SIGP_SENSE_RUNNING_STATE)
         || !IS_CPU_ONLINE( cpad ))
     {
         log_sigp = MSGBUF( log_buf,
                 "%s%02X: SIGP %-32s (%2.2X) %s%02X, PARM "F_GREG,
                 PTYPSTR( regs->cpuad ), regs->cpuad,
-                order >= sizeof(ordername) / sizeof(ordername[0]) ?
-                        "Unassigned" : ordername[order],
-                order,
+                order2name( order ), order,
                 PTYPSTR( cpad ), cpad,
                 parm);
     }
