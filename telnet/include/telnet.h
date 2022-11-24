@@ -598,11 +598,11 @@ extern void telnet_send
 /*-------------------------------------------------------------------*/
 /* Buffer non-command data, append IAC+EOR and send in one shot      */
 /*-------------------------------------------------------------------*/
-extern void telnet_send_one_shot
+void telnet_send_one_shot
 (
-    telnet_t*     telnet,       // Telnet state tracker object.
-    const BYTE*   buffer,       // Buffer of bytes to send.
-    unsigned int  size,         // Number of bytes to send.
+    telnet_t*     telnet,
+    const BYTE*   buffer,
+    unsigned int  size,
     char*         sendbuf
 );
 

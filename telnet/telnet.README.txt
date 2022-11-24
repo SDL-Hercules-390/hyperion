@@ -161,6 +161,15 @@ IIc. Sending Data
    Sends a single "simple" TELNET command, such as the GO-AHEAD
    commands (255 249).
 
+void telnet_3270_cmd(telnet_t *telnet, unsigned char cmd);
+   Sends a single byte (typically a 3270 READ or READ MODIFIED
+   command), immediately followed by IAC+EOR. This is a shortcut
+   for calling telnet_send(*telnet, cmd, 1) followd by
+   telnet_iac(*telnet, EOR). Depending on network properties
+   (latency, use of Nagle's algorithm, et al) some tn3270 clients
+   (namely IBM's PCOMM) recognize a chaining error when cmd-IAC-EOR
+   don't arrive in the same transmission.
+
  void telnet_negotiate(telnet_t *telnet, unsigned char cmd,
      unsigned char opt);
    Sends a TELNET negotiation command.  The cmd parameter must be one
@@ -178,6 +187,19 @@ IIc. Sending Data
 
    For sending regular text is may be more convenient to use
    telnet_printf().
+
+ void telnet_send_one_shot(telnet_t *telnet, const char *buffer,
+     size_t size, char *sendbuf);
+   This is the same as telnet_send with IAC+EOR immediately
+   appended to the data being sent. The caller must provide a
+   sufficiently large buffer (char *sendbuf) to accomodate the
+   data to be sent plus IAC escapes plus the final IAC+EOR
+   sequence. This is a shortcut for calling telnet_send(*telnet,
+   buffer, size) followd by telnet_iac(*telnet, EOR). Depending on
+   network properties (latency, use of Nagle's algorithm, et al)
+   some tn3270 clients (namely IBM's PCOMM) recognize various
+   datastream errors when data-IAC-EOR don't arrive in the same
+   transmission.
 
  void telnet_begin_sb(telnet_t *telnet, unsigned char telopt);
    Sends the header for a TELNET sub-negotiation command for the
