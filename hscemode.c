@@ -2384,7 +2384,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
 
         ICOUNT_COLLECT_CASE( 0x01, imap01, 256 )
         ICOUNT_COLLECT_CASE( 0xA4, imapa4, 256 )
-        ICOUNT_COLLECT_CASE( 0xA5, imapa5, 256 )
+        ICOUNT_COLLECT_CASE( 0xA5, imapa5,  16 )
         ICOUNT_COLLECT_CASE( 0xA6, imapa6, 256 )
         ICOUNT_COLLECT_CASE( 0xA7, imapa7,  16 )
         ICOUNT_COLLECT_CASE( 0xB2, imapb2, 256 )
