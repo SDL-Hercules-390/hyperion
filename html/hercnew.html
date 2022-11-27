@@ -13,6 +13,62 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
+<h2>What's new in Version 4.5
+</h2>
+
+<p>Release date: 27 November 2022
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.5">Release_4.5</a>
+
+<ul>
+
+<li><i><b>Significant</b></i> performance improvements to CLCLE, CUSE, TRE, TRTE, TRTR and TRTRE instructions
+(<a href="https://github.com/SDL-Hercules-390/hyperion/issues/498">#498</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/500">#500</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/510">#510</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/513">#513</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/519">#519</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/520">#520</a>)
+<i>(Thank you James Wekel!)</i>
+<p>
+<li>Fix minor bug in STSTU (Search String Unicode) instruction
+<li>Fix minor bug in CMPSC (Compression Call) instruction
+<li>Fix minor bug in PFPO (Perform Floating-Point Operation) instruction (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/407">#407</a>)
+<li>PER 1 GRA (General Register Alteration) support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/87">#87</a>)
+<li>z/VM TXF PER support (i.e. TXSUSPEND = Event Suppression)
+<li>PER SKEY support
+<li>PER Zero-Address Detection support
+<li>BEAR-Enhancement Facility support
+<li>Decimal Floating-Point Packed Conversion Facility support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/496">#496</a>)
+<p>
+<li>Report and ignore oversized LCS outbound SNA messages
+<li>Ensure same serial number on all multi-file images (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/276">#276</a>)
+<li>Fix minor dasdinit negative size parameter bug (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/472">#472</a>)
+<li>Fix minor dasd CCW data-chaining bug
+<li>Improve CCKD handling of unusual/unexpected errors
+<li>Minor corrections to CTCE documentation
+<li>dasdls: sort display by by dataset name
+<li>Various minor cckdmap enhancements
+<li>Fix rare bug in .HET locate block logic (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/518">#518</a>)
+<li>Disable CCKD automatic garbage collection (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/504">#504</a>)
+<p>
+<li>Fix hang at exit when MLVL DEBUG is active
+<li>Fix bug causing DASD corruption with s+ tracing
+<li>Fix 'numcpu' handling bug causing crash (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/481">#481</a>)
+<li>Ensure error message when no config file provided (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/483">#483</a>)
+<li>Fix another possible Windows suspend/resume crash (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/489">#489</a>)
+<li>Customized Offerings Driver (COD) support
+<li>New <a href="https://sdl-hercules-390.github.io/html/hercconf.html#SYSGPORT">SYSGPORT</a> config file statement (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/505">#505</a>)
+<li>Various improvements to Linux build scripts (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/454">#454</a>, <a href="https://github.com/SDL-Hercules-390/hyperion/issues/461">#461</a>)
+<li>Many other various minor miscellaneous fixes and improvements to both documentation and code
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
 <h2>What's new in Version 4.4.1
 </h2>
 
