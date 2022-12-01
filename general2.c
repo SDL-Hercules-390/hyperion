@@ -3255,12 +3255,16 @@ DEF_INST( translate_and_test_xxx_extended )
                 /* Yes! Piece together the argument */
                 temp_h  =  *buf_main_addr;
                 temp_l  =  *MADDRL( buf_addr+1, 1 , r1, regs, ACCTYPE_READ, regs->psw.pkey );
-                arg_ch  =  (temp_h << 8) | temp_l;
             }
             else
             {
-                arg_ch = CSWAP16( *(U16*) buf_main_addr );
+                // the following fails on sparc 64 : alignment
+                // arg_ch = CSWAP16( *(U16*) buf_main_addr );
+                // so
+                temp_h  =  *(buf_main_addr +0);
+                temp_l  =  *(buf_main_addr +1);
             }
+            arg_ch  =   (temp_h << 8) | temp_l;
         }
         else
         {
@@ -3287,10 +3291,14 @@ DEF_INST( translate_and_test_xxx_extended )
                     /* Yes! Piece together the FC */
                     temp_h  =  *(fct_main_page_addr[ fc_page_no - fct_page_no + 0 ] + PAGEFRAME_BYTEMASK ); // (last byte of page)
                     temp_l  =  *(fct_main_page_addr[ fc_page_no - fct_page_no + 1 ] );                      // (first byte of next page)
-                    fc      =  (temp_h << 8) | temp_l;
                 }
                 else
-                    fc =  CSWAP16( *(U16*) (fct_main_page_addr[ fc_page_no - fct_page_no ] + (fc_addr & PAGEFRAME_BYTEMASK)));
+                {
+                    // fc =  CSWAP16( *(U16*) (fct_main_page_addr[ fc_page_no - fct_page_no ] + (fc_addr & PAGEFRAME_BYTEMASK)));
+                    temp_h  =  *( fct_main_page_addr[ fc_page_no - fct_page_no ] + (fc_addr & PAGEFRAME_BYTEMASK) +0 );
+                    temp_l  =  *( fct_main_page_addr[ fc_page_no - fct_page_no ] + (fc_addr & PAGEFRAME_BYTEMASK) +1 );
+                }
+                fc  =   (temp_h << 8) | temp_l;
             }
             else
             {
