@@ -474,7 +474,7 @@ FT( Z900, Z900, NONE, 073_TRANSACT_EXEC )
 #endif
 
 #if defined(  FEATURE_074_STORE_HYPER_INFO_FACILITY )
-FT( Z900, Z900, NONE, 074_STORE_HYPER_INFO )
+FT( Z900, NONE, NONE, 074_STORE_HYPER_INFO ) // (defaults to OFF/disabled)
 #endif
 
 #if defined(  FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
@@ -820,7 +820,8 @@ FT( MALL, NONE, NONE, HERC_TCPIP_PROB_STATE )
 #endif
 
 #if defined( FEATURE_ZVM_ESSA )
-FT( Z900, Z900, NONE, HERC_ZVM_ESSA ) // z/VM STHYI Store Hypervisor Information
+FT( Z900, NONE, NONE, HERC_ZVM_ESSA ) // z/VM ESSA Extract and Set Storage Attributes
+                                      // (defaults to OFF/disabled)
 #endif
 };
 
