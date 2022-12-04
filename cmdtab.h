@@ -1600,8 +1600,12 @@
   "Performs the System Reset Clear manual control function. Same as\n"          \
   "the \"sysreset clear\" command. Clears main storage to 0, and all\n"         \
   "registers, control registers, etc.. are reset to their initial value.\n"     \
-  "At this point, the system is essentially in the same state as it was\n"      \
-  "when it was first started.\n"
+  "At this point, for architecture modes OTHER than z/Arch, the system is\n"    \
+  "essentially in the same state as it was when it was first powered on.\n"     \
+  "\n"                                                                          \
+  "For z/Arch architecture mode, essentially the same thing happens except\n"   \
+  "that your architecture mode is reset to ESA/390 mode in preparation for\n"   \
+  "the system being IPLed."
 
 #define sysepoch_cmd_desc       "Set sysepoch parameter"
 #define sysreset_cmd_desc       "System Reset manual operation"
