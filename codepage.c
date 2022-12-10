@@ -1076,7 +1076,10 @@ DLL_EXPORT bool valid_codepage_name( const char* name )
     return false;
 }
 
-DLL_EXPORT void set_codepage( const char* name )
+#define SETCODEPAGE_SILENT   1
+#define SETCODEPAGE_VERBOSE  2
+
+static void set_codepage_internal( const char* name, int msgflag )
 {
     int dflt = FALSE;
 
@@ -1089,7 +1092,7 @@ DLL_EXPORT void set_codepage( const char* name )
 
     if( strcasecmp(name,"user") == 0 && user_in_use == FALSE )
     {
-        WRMSG( HHC01477, "W" );
+        if( msgflag == SETCODEPAGE_VERBOSE) WRMSG( HHC01477, "W" );
         name = "default";
     }
 
@@ -1100,16 +1103,29 @@ DLL_EXPORT void set_codepage( const char* name )
     if( codepage_conv->name && strcasecmp(codepage_conv->name,"user") == 0 && user_in_use == FALSE )
         codepage_conv++;
 
-    if(codepage_conv->name)
+    if( msgflag == SETCODEPAGE_VERBOSE )
     {
-        if (!dflt)
-            WRMSG(HHC01474, "I", "internal", name);
+        if(codepage_conv->name)
+        {
+            if (!dflt)
+                WRMSG(HHC01474, "I", "internal", name);
+        }
+        else
+        {
+            if (!dflt)
+                WRMSG (HHC01475, "E", name);
+        }
     }
-    else
-    {
-        if (!dflt)
-            WRMSG (HHC01475, "E", name);
-    }
+}
+
+DLL_EXPORT void set_codepage( const char* name )
+{
+    set_codepage_internal( name, SETCODEPAGE_VERBOSE );
+}
+
+DLL_EXPORT void set_codepage_no_msgs( const char* name )
+{
+    set_codepage_internal( name, SETCODEPAGE_SILENT );
 }
 
 DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )

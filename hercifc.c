@@ -62,7 +62,7 @@ int main( int argc, char **argv )
         sysblk.msglvl = atoi( argv[1] );
 
         if (argv[2])
-            set_codepage( argv[2] );
+            set_codepage_no_msgs( argv[2] );
     }
 
     // Must not be run from the commandline

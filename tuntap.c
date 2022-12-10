@@ -222,7 +222,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 // Output:
 //      pfd            Pointer to receive the file descriptor of the
 //                       TUN/TAP interface.
-//      pszNetDevName  Pointer to receive the name if the interface.
+//      pszNetDevName  Pointer to receive the name of the interface.
 
 int             TUNTAP_CreateInterface( char* pszTUNDevice,
                                         int   iFlags,
