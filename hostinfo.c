@@ -17,9 +17,11 @@
 
 #include "hercules.h"
 
-#if defined(HAVE_SYS_SYSCTL_H)
-#include <sys/sysctl.h>
-#endif
+#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
+#  if defined(HAVE_SYS_SYSCTL_H)
+#    include <sys/sysctl.h>
+#  endif
+#endif /* #if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD ) */
 
 DLL_EXPORT HOST_INFO  hostinfo;     /* Host system information       */
 
@@ -207,7 +209,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         }
 #endif
     }
-#endif
+#endif /* #if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD ) */
 
     pHostInfo->hostpagesz = (U64) HPAGESIZE();
 
