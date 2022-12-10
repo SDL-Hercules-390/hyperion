@@ -1342,8 +1342,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             obtain_lock( &dev->lock );
             lock_obtained = true; /* (so we know to release it) */
         }
-        else
-            ; /* (presume we already owned it) */
+        /* (else: presume we already owned it) */
     }
 
     /* Release the previous OMA descriptor array if allocated */
