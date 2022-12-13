@@ -1078,7 +1078,8 @@ char    regs_msg_buf[4*512] = {0};
             ARCH_DEP( display_virt )( regs, addr1, buf2+n, sizeof( buf2 )-n-1,
                                       b1, (opcode == 0x44                 // EX?
 #if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
-                                 || (opcode == 0xc6 && !(inst[1] & 0x0f)) // EXRL?
+                                 || (opcode == 0xc6 && !(inst[1] & 0x0f) &&
+                                     FACILITY_ENABLED( 035_EXECUTE_EXTN, regs )) // EXRL?
 #endif
                                                 ? ACCTYPE_HW :     // EX/EXRL
                                  opcode == 0xB1 ? ACCTYPE_HW :

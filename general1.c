@@ -829,29 +829,32 @@ DEF_INST( branch_on_condition_register )
         /* Bump ip to next sequential instruction */
         regs->ip += 2;
 
-        /* Perform serialization and checkpoint synchronization if
-           the mask is all ones and R2 is register 0 */
+        /* Perform serialization AND checkpoint synchronization
+           if the mask is all ones and the r2 register is 0 */
         if (inst[1] == 0xF0)
         {
 #if defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
             HARDWARE_SYNC();
-#else
+#else // OPTION_HARDWARE_SYNC_ALL
             PERFORM_SERIALIZATION( regs );
             PERFORM_CHKPT_SYNC( regs );
 #endif
         }
 #if defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY )
-        /* Perform serialization without checkpoint synchronization
-           the mask is B'1110' and R2 is register 0 */
-        else if (inst[1] == 0xE0)
+        if (FACILITY_ENABLED( 045_FAST_BCR_SERIAL, regs ))
         {
+            /* Perform serialization WITHOUT checkpoint synchronization
+               if the mask is B'1110' and the r2 register is 0 */
+            if (inst[1] == 0xE0)
+            {
 #if defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
-            HARDWARE_SYNC();
-#else
-            PERFORM_SERIALIZATION( regs );
+                HARDWARE_SYNC();
+#else // OPTION_HARDWARE_SYNC_ALL
+                PERFORM_SERIALIZATION( regs );
 #endif
+            }
         }
-#endif /* defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY ) */
+#endif
     }
 
 } /* end DEF_INST( branch_on_condition_register ) */
@@ -4801,7 +4804,7 @@ bool    wfc;                            /* Well-Formedness-Checking  */
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
     /* Set WellFormednessChecking */
-    if (m3 & 0x01)
+    if ((m3 & 0x01) && FACILITY_ENABLED( 030_ETF3_ENHANCEMENT, regs ))
       wfc = true;
     else
       wfc = false;
@@ -4873,9 +4876,9 @@ bool    wfc;                            /* Well-Formedness-Checking  */
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
-            if(wfc)
+            if (wfc)
             {
-              if(unicode2 < 0xdc00 || unicode2 > 0xdf00)
+              if (unicode2 < 0xdc00 || unicode2 > 0xdf00)
               {
                 regs->psw.cc = 2;
                 return;
@@ -4954,7 +4957,7 @@ bool    wfc;                            /* WellFormednessChecking    */
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
     /* Set WellFormednessChecking */
-    if (m3 & 0x01)
+    if ((m3 & 0x01) && FACILITY_ENABLED( 030_ETF3_ENHANCEMENT, regs ))
       wfc = true;
     else
       wfc = false;
@@ -4996,9 +4999,9 @@ bool    wfc;                            /* WellFormednessChecking    */
         {
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
-            if(wfc)
+            if (wfc)
             {
-              if(utf[0] <= 0xc1)
+              if (utf[0] <= 0xc1)
               {
                 regs->psw.cc = 2;
                 return;
@@ -5014,9 +5017,9 @@ bool    wfc;                            /* WellFormednessChecking    */
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormednessChecking */
-            if(wfc)
+            if (wfc)
             {
-              if(utf[1] < 0x80 || utf[1] > 0xbf)
+              if (utf[1] < 0x80 || utf[1] > 0xbf)
               {
                 regs->psw.cc = 2;
                 return;
@@ -5039,27 +5042,42 @@ bool    wfc;                            /* WellFormednessChecking    */
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
-            if(wfc)
+            if (wfc)
             {
-              if(utf[0] == 0xe0)
+              if (utf[0] == 0xe0)
               {
-                if(utf[1] < 0xa0 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf)
+                if (utf[1] < 0xa0 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf)
                 {
                   regs->psw.cc = 2;
                   return;
                 }
               }
-              if((utf[0] >= 0xe1 && utf[0] <= 0xec) || (utf[0] >= 0xee && utf[0] < 0xef))
+              if (0
+                  || (utf[0] >= 0xe1 && utf[0] <= 0xec)
+                  || (utf[0] >= 0xee && utf[0] <  0xef)
+              )
               {
-                if(utf[1] < 0x80 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf)
+                if (0
+                    || utf[1] < 0x80
+                    || utf[1] > 0xbf
+
+                    || utf[2] < 0x80
+                    || utf[2] > 0xbf
+                )
                 {
                   regs->psw.cc = 2;
                   return;
                 }
               }
-              if(utf[0] == 0xed)
+              if (utf[0] == 0xed)
               {
-                if(utf[1] < 0x80 || utf[1] > 0x9f || utf[2] < 0x80 || utf[2] > 0xbf)
+                if (0
+                    || utf[1] < 0x80
+                    || utf[1] > 0x9f
+
+                    || utf[2] < 0x80
+                    || utf[2] > 0xbf
+                )
                 {
                   regs->psw.cc = 2;
                   return;
@@ -5085,27 +5103,27 @@ bool    wfc;                            /* WellFormednessChecking    */
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
-            if(wfc)
+            if (wfc)
             {
-              if(utf[0] == 0xf0)
+              if (utf[0] == 0xf0)
               {
-                if(utf[1] < 0x90 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
+                if (utf[1] < 0x90 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
                 {
                   regs->psw.cc = 2;
                   return;
                 }
               }
-              if(utf[0] >= 0xf1 && utf[0] <= 0xf3)
+              if (utf[0] >= 0xf1 && utf[0] <= 0xf3)
               {
-                if(utf[1] < 0x80 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
+                if (utf[1] < 0x80 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
                 {
                   regs->psw.cc = 2;
                   return;
                 }
               }
-              if(utf[0] == 0xf4)
+              if (utf[0] == 0xf4)
               {
-                if(utf[1] < 0x80 || utf[1] > 0x8f || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
+                if (utf[1] < 0x80 || utf[1] > 0x8f || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
                 {
                   regs->psw.cc = 2;
                   return;
@@ -5626,12 +5644,17 @@ BYTE   *ip;                             /* -> executed instruction   */
         memcpy (regs->exinst, ip, 8);
 
     /* Program check if recursive execute */
-    if ( regs->exinst[0] == 0x44
+    if (0
+        || regs->exinst[0] == 0x44
 #if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
-         || (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f))
+        || (1
+            && FACILITY_ENABLED( 035_EXECUTE_EXTN, regs )
+            &&  (regs->exinst[0] == 0xc6)
+            && !(regs->exinst[1] &  0x0f)
+           )
 #endif
-                                                                   )
-        regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
+    )
+        regs->program_interrupt( regs, PGM_EXECUTE_EXCEPTION );
 
     /* Or 2nd byte of instruction with low-order byte of R1 */
     regs->exinst[1] |= r1 ? regs->GR_LHLCL(r1) : 0;

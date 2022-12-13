@@ -1387,6 +1387,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     bool txf_contran = false;
     BYTE txf_tnd = 0;
 #endif
+    bool is_exrl = false;
 
     //-----------------------------------------------------------
     //              IMPORTANT SIE PROGRAMMING NOTE!
@@ -1424,20 +1425,19 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
 
         if (!GUESTREGS->instinvalid)
         {
-            if (0
-
-                /* EX = Execute instruction? */
-                || GUESTREGS->ip[0] == 0x44
-
 #if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
-
+            if (FACILITY_ENABLED( 035_EXECUTE_EXTN, GUESTREGS ))
+            {
                 /* EXRL = Execute Relative Long instruction? */
-                || (1
-                    &&  (GUESTREGS->ip[0] == 0xc6)
+                is_exrl =
+                (1
+                    &&   GUESTREGS->ip[0] == 0xc6
                     && !(GUESTREGS->ip[1] &  0x0f)
-                   )
+                );
+            }
 #endif
-            )
+            /* EX or EXRL instruction? */
+            if (GUESTREGS->ip[0] == 0x44 || is_exrl)
             {
                 ip  =  GUESTREGS->exinst;
                 nt2 = (GUESTREGS->ip[0] == 0x44) ? 0x44
@@ -1721,27 +1721,26 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
         if (GUESTREGS->ip < GUESTREGS->aip)
             GUESTREGS->ip = GUESTREGS->inst;
 
-        /* Update interception parameters in the state descriptor */
-        if (0
-
-            /* EX = Execute instruction? */
-            || GUESTREGS->ip[0] == 0x44
-
 #if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
-
+        if (FACILITY_ENABLED( 035_EXECUTE_EXTN, GUESTREGS ))
+        {
             /* EXRL = Execute Relative Long instruction? */
-            || (1
+            is_exrl =
+            (1
                 &&   GUESTREGS->ip[0] == 0xc6
                 && !(GUESTREGS->ip[1] &  0x0f)
-               )
+            );
+        }
 #endif
-        )
+        /* Update interception parameters in the state descriptor */
+        if (GUESTREGS->ip[0] == 0x44 || is_exrl)
         {
             int ilc;
             STATEBK->f |= SIE_F_EX;
             ilc = ILC( GUESTREGS->exinst[0] );
 #if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
-            STATEBK->f |= (ilc << 4) & SIE_F_EXL;
+            if (is_exrl)
+                STATEBK->f |= (ilc << 4) & SIE_F_EXL;
 #endif
             memcpy( STATEBK->ipa, GUESTREGS->exinst, ilc );
         }

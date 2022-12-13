@@ -1077,11 +1077,12 @@ ETOD ETOD;
         tte = (void*)(regs->mainstor + raddr);
 
         /* Determine if fast clock format */
-        #if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
+#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
+        if (FACILITY_ENABLED( 025_STORE_CLOCK_FAST, regs ))
             fast = (regs->CR(0) & CR0_TRACE_TOD) >> 31;
-        #else
+        else
+#endif
             fast = 0;
-        #endif
 
         /* Calculate the number of registers to be traced, minus 1 */
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
@@ -1100,7 +1101,9 @@ ETOD ETOD;
         STORE_DW(tte, dreg);
 
         /* Store trace operand */
-        #if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
+#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
+        if (FACILITY_ENABLED( 025_STORE_CLOCK_FAST, regs ))
+        {
             if (fast)
             {
                 op &= 0xFF00FFFF;
@@ -1108,7 +1111,8 @@ ETOD ETOD;
                 op |= model_code << 16;
                  */
             }
-        #endif
+        }
+#endif
         STORE_FW(tte->operand, op);
 
         for(i = r1, j = 0; ; )
@@ -1180,7 +1184,9 @@ U64  dreg;
         STORE_FW(tte->clk48, ETOD.low >> 32);
 
         /* Store trace operand */
-        #if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
+#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
+        if (FACILITY_ENABLED( 025_STORE_CLOCK_FAST, regs ))
+        {
             if ((regs->CR(0) & CR0_TRACE_TOD))
             {
                 op &= 0xFF00FFFF;
@@ -1188,7 +1194,8 @@ U64  dreg;
                 op |= model_code << 16;
                  */
             }
-        #endif
+        }
+#endif
         STORE_FW(tte->operand, op);
 
         for (i = r1, j = 0; ; )

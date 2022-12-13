@@ -782,6 +782,28 @@ inline void ARCH_DEP( per3_zero_xcheck2 )( REGS* regs, int x2, int b2 )
 }
 
 /*-------------------------------------------------------------------*/
+/* Program check if fpc is not valid contents for FPC register       */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( FPC_check )( REGS* regs, U32 fpc )
+{
+    if (FACILITY_ENABLED( 037_FP_EXTENSION, regs ))
+    {
+        if (0
+            || (fpc & FPC_RESV_FPX)
+            || (fpc & FPC_BRM_3BIT) == BRM_RESV4
+            || (fpc & FPC_BRM_3BIT) == BRM_RESV5
+            || (fpc & FPC_BRM_3BIT) == BRM_RESV6
+        )
+            regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+    }
+    else
+    {
+        if (fpc & FPC_RESERVED)
+            regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /* Fetch a doubleword from absolute storage.                         */
 /* The caller is assumed to have already checked that the absolute   */
 /* address is within the limit of main storage.                      */

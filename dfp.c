@@ -233,13 +233,13 @@ VADR            effective_addr2;        /* Effective address         */
 static BYTE
 fpc_signal_check(U32 cur_fpc, U32 src_fpc)
 {
-U32             ff, sm, enabled_flags;  /* Mask and flag work areas  */
-BYTE            dxc;                    /* Data exception code or 0  */
+U32     ff, sm, enabled_flags;      /* Mask and flag work areas  */
+BYTE    dxc;                        /* Data exception code or 0      */
 
     /* AND the current FPC flags with the source FPC mask */
     ff = (cur_fpc & FPC_FLAGS) >> FPC_FLAG_SHIFT;
     sm = (src_fpc & FPC_MASKS) >> FPC_MASK_SHIFT;
-    enabled_flags = (ff & sm) << FPC_FLAG_SHIFT;
+    enabled_flags = (ff & sm)  << FPC_FLAG_SHIFT;
 
     /* A simulated-IEEE-exception event is recognized
        if any current flag corresponds to the source mask */
@@ -282,27 +282,32 @@ BYTE            dxc;                    /* Data exception code or 0  */
 /*-------------------------------------------------------------------*/
 /* B2BD LFAS  - Load FPC and Signal                              [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_fpc_and_signal)
+DEF_INST( load_fpc_and_signal )
 {
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     TXFC_INSTR_CHECK( regs );
-    DFPINST_CHECK(regs);
+    DFPINST_CHECK( regs );
 
     /* Load new FPC register contents from operand location */
-    src_fpc = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+    src_fpc = ARCH_DEP( vfetch4 )( effective_addr2, b2, regs );
 
     /* Program check if reserved bits are non-zero */
-    FPC_CHECK(src_fpc, regs);
+    FPC_CHECK( src_fpc, regs );
 
     /* OR the flags from the current FPC register */
-    new_fpc = src_fpc | (regs->fpc & FPC_FLAGS);
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
+    if (FACILITY_ENABLED( 037_FP_EXTENSION, regs ))
+        new_fpc = src_fpc | (regs->fpc & FPC_FPX_FLAGS);
+    else
+#endif
+        new_fpc = src_fpc | (regs->fpc & FPC_FLAGS);
 
     /* Determine whether an event is to be signaled */
     dxc = fpc_signal_check(regs->fpc, src_fpc);
@@ -314,7 +319,7 @@ BYTE            dxc;                    /* Data exception code       */
     if (dxc != 0)
     {
         regs->dxc = dxc;
-        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+        ARCH_DEP( program_interrupt )( regs, PGM_DATA_EXCEPTION );
     }
 
 } /* end DEF_INST(load_fpc_and_signal) */
@@ -323,25 +328,30 @@ BYTE            dxc;                    /* Data exception code       */
 /*-------------------------------------------------------------------*/
 /* B385 SFASR - Set FPC and Signal                             [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(set_fpc_and_signal)
+DEF_INST( set_fpc_and_signal )
 {
 int             r1, r2;                 /* Values of R fields        */
 U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
     TXFC_INSTR_CHECK( regs );
-    DFPINST_CHECK(regs);
+    DFPINST_CHECK( regs );
 
     /* Load new FPC register contents from R1 register bits 32-63 */
     src_fpc = regs->GR_L(r1);
 
     /* Program check if reserved bits are non-zero */
-    FPC_CHECK(src_fpc, regs);
+    FPC_CHECK( src_fpc, regs );
 
     /* OR the flags from the current FPC register */
-    new_fpc = src_fpc | (regs->fpc & FPC_FLAGS);
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
+    if (FACILITY_ENABLED( 037_FP_EXTENSION, regs ))
+        new_fpc = src_fpc | (regs->fpc & FPC_FPX_FLAGS);
+    else
+#endif
+        new_fpc = src_fpc | (regs->fpc & FPC_FLAGS);
 
     /* Determine whether an event is to be signaled */
     dxc = fpc_signal_check(regs->fpc, src_fpc);
@@ -353,7 +363,7 @@ BYTE            dxc;                    /* Data exception code       */
     if (dxc != 0)
     {
         regs->dxc = dxc;
-        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+        ARCH_DEP( program_interrupt )( regs, PGM_DATA_EXCEPTION );
     }
 
 } /* end DEF_INST(set_fpc_and_signal) */

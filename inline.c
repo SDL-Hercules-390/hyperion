@@ -76,6 +76,8 @@ extern inline void ARCH_DEP( per3_zero_l24check2 )( REGS* regs, int r1, int l1, 
 extern inline void ARCH_DEP( per3_zero_xcheck )( REGS* regs, int b1 );
 extern inline void ARCH_DEP( per3_zero_xcheck2 )( REGS* regs, int x2, int b2 );
 
+extern inline void ARCH_DEP( FPC_check )( REGS* regs, U32 fpc );
+
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/

@@ -137,12 +137,21 @@ int ARCH_DEP( foobar_func )( REGS* regs, xxx... )
 
 #if !defined( _GEN_ARCH )
 
-  #if defined(              _ARCH_NUM_1 )
+  // All of the architecture dependent (i.e. "ARCH_DEP") functions
+  // for the default "_ARCH_NUM_0" build architecture have now just
+  // been built (usually 370).
+
+  // Now we need to build the same architecture dependent "ARCH_DEP"
+  // functions for all of the OTHER build architectures that remain
+  // (usually S/390 and z/Arch), so we #include ourselves again but
+  // with the next build archiecture #defined instead...
+
+  #if defined(              _ARCH_NUM_1 )     // (usually 390)
     #define   _GEN_ARCH     _ARCH_NUM_1
     #include "ourselves.c"
   #endif
 
-  #if defined(              _ARCH_NUM_2 )
+  #if defined(              _ARCH_NUM_2 )     // (usually 900)
     #undef    _GEN_ARCH
     #define   _GEN_ARCH     _ARCH_NUM_2
     #include "ourselves.c"

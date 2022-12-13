@@ -1394,34 +1394,8 @@ do {                                                                  \
 /*-------------------------------------------------------------------*/
 
 /* Program check if fpc is not valid contents for FPC register */
-
-#undef FPC_BRM
-#undef FPC_CHECK
-
-#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
-
-  #define FPC_BRM     FPC_BRM_3BIT
-
-  #define FPC_CHECK( _fpc, _regs )                                    \
-                                                                      \
-    if (0                                                             \
-        || ((_fpc) & FPC_RESV_FPX)                                    \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4                       \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5                       \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6                       \
-    )                                                                 \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
-
-#else /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
-
-  #define FPC_BRM     FPC_BRM_2BIT
-
-  #define FPC_CHECK( _fpc, _regs )                                    \
-                                                                      \
-    if ((_fpc) & FPC_RESERVED)                                        \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
-
-#endif /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
+#undef  FPC_CHECK
+#define FPC_CHECK( _fpc, _regs )    ARCH_DEP( FPC_check )( (_regs), (_fpc) )
 
 /*-------------------------------------------------------------------*/
 /*        PER 1 GRA (General Register Alteration) support            */

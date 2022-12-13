@@ -951,6 +951,8 @@ BYTE  ARCH_DEP( scpinfo_ifm )[8] =
 
 BYTE  ARCH_DEP( scpinfo_cfg )[6] =
 {
+// ----------------BYTE 0 -------------------------------------------
+
                         0
 #if defined( FEATURE_HYPERVISOR )
 //                      | SCCB_CFG0_LOGICALLY_PARTITIONED
@@ -972,9 +974,17 @@ BYTE  ARCH_DEP( scpinfo_cfg )[6] =
                         | SCCB_CFG0_FAST_SYNCHRONOUS_DATA_MOVER
 #endif
                         ,
+
+
+// ----------------BYTE 1 -------------------------------------------
+
                         0
 //                      | SCCB_CFG1_CSLO
                         ,
+
+
+// ----------------BYTE 2 -------------------------------------------
+
                         0
 //                      | SCCB_CFG2_DEVICE_ACTIVE_ONLY_MEASUREMENT
 #if defined( FEATURE_CALLED_SPACE_IDENTIFICATION )
@@ -984,6 +994,10 @@ BYTE  ARCH_DEP( scpinfo_cfg )[6] =
                         | SCCB_CFG2_CHECKSUM_INSTRUCTION
 #endif
                         ,
+
+
+// ----------------BYTE 3 -------------------------------------------
+
                         0
 #if defined( FEATURE_RESUME_PROGRAM )
                         | SCCB_CFG3_RESUME_PROGRAM
@@ -1005,6 +1019,10 @@ BYTE  ARCH_DEP( scpinfo_cfg )[6] =
 #endif
 /*ZZ*/                  | SCCB_CFG3_EXTENDED_LOGICAL_COMPUTATION_FACILITY
                         ,
+
+
+// ----------------BYTE 4 -------------------------------------------
+
                         0
 #if defined( FEATURE_EXTENDED_TOD_CLOCK )
                         | SCCB_CFG4_EXTENDED_TOD_CLOCK
@@ -1024,6 +1042,10 @@ BYTE  ARCH_DEP( scpinfo_cfg )[6] =
 //                      | SCCB_CFG4_LPAR_CLUSTERING
                         | SCCB_CFG4_IFA_FACILITY
                         ,
+
+
+// ----------------BYTE 5 -------------------------------------------
+
                         0
 #if defined( FEATURE_009_SENSE_RUN_STATUS_FACILITY )
                         | SCCB_CFG5_SENSE_RUNNING_STATUS
@@ -1443,6 +1465,14 @@ BYTE*           xstmap;                 /* Xstore bitmap, zero means
         memcpy( sccbscp->cfg, ARCH_DEP( scpinfo_cfg ), sizeof( sccbscp->cfg ));
         /* sccbscp->cfg11 = ARCH_DEP( scpinfo_cfg11 ); */
 
+        /* Turn off bits for facilities that aren't enabled */
+        if (!FACILITY_ENABLED( 016_EXT_TRANSL_2, regs ))
+            sccbscp->cfg[4] &= ~SCCB_CFG4_EXTENDED_TRANSLATION_FACILITY2;
+
+        if (!FACILITY_ENABLED( 009_SENSE_RUN_STATUS, regs ))
+            sccbscp->cfg[5] &= ~SCCB_CFG5_SENSE_RUNNING_STATUS;
+
+        /* Turn on additioal bits for facilities that ARE enabled */
         if (0
 #if defined( _FEATURE_HYPERVISOR )
             || FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs )

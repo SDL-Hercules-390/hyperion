@@ -152,7 +152,8 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
     /* Zeroize FPC bit 29 if FP Extension Facility is installed */
-    regs->fpc &= ~(FPC_BIT29);
+    if (FACILITY_ENABLED( 037_FP_EXTENSION, regs ))
+        regs->fpc &= ~(FPC_BIT29);
 #endif
 
 } /* end DEF_INST(set_bfp_rounding_mode_2bit) */
@@ -5566,10 +5567,14 @@ DEF_INST( perform_timing_facility_function )
 
 #if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
         case PTFF_GPR0_FC_QSIE:
+            if (!FACILITY_ENABLED( 139_MULTIPLE_EPOCH, regs ))
+                break;
             ARCH_DEP( query_steering_information_extended )( regs );
             regs->psw.cc = 0;
             return;
         case PTFF_GPR0_FC_QTOUE:
+            if (!FACILITY_ENABLED( 139_MULTIPLE_EPOCH, regs ))
+                break;
             ARCH_DEP( query_tod_offset_user_extended )( regs );
             regs->psw.cc = 0;
             return;
@@ -5605,11 +5610,15 @@ DEF_INST( perform_timing_facility_function )
 
 #if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
         case PTFF_GPR0_FC_STOE:
+            if (!FACILITY_ENABLED( 139_MULTIPLE_EPOCH, regs ))
+                break;
             PRIV_CHECK( regs );
             ARCH_DEP( set_tod_offset_extended )( regs );
             regs->psw.cc = 0;
             return;
         case PTFF_GPR0_FC_STOUE:
+            if (!FACILITY_ENABLED( 139_MULTIPLE_EPOCH, regs ))
+                break;
             PRIV_CHECK( regs );
             ARCH_DEP( set_tod_offset_user_extended )( regs );
             regs->psw.cc = 0;

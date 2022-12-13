@@ -2358,7 +2358,7 @@ DEF_INST(convert_utf8_to_utf32)
     srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
     srcelen = GR_A(r2 + 1, regs);
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
-    if (m3 & 0x01)
+    if ((m3 & 0x01) && FACILITY_ENABLED( 030_ETF3_ENHANCEMENT, regs ))
         wfc = true;
     else
         wfc = false;
@@ -2398,9 +2398,9 @@ DEF_INST(convert_utf8_to_utf32)
         {
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormednessChecking */
-            if(wfc)
+            if (wfc)
             {
-                if(utf8[0] <= 0xc1)
+                if (utf8[0] <= 0xc1)
                 {
                     regs->psw.cc = 2;
                     return;
@@ -2420,9 +2420,9 @@ DEF_INST(convert_utf8_to_utf32)
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormednessChecking */
-            if(wfc)
+            if (wfc)
             {
-                if(utf8[1] < 0x80 || utf8[1] > 0xbf)
+                if (utf8[1] < 0x80 || utf8[1] > 0xbf)
                 {
                     regs->psw.cc = 2;
                     return;
@@ -2451,27 +2451,27 @@ DEF_INST(convert_utf8_to_utf32)
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellformednessChecking */
-            if(wfc)
+            if (wfc)
             {
-                if(utf8[0] == 0xe0)
+                if (utf8[0] == 0xe0)
                 {
-                    if(utf8[1] < 0xa0 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
+                    if (utf8[1] < 0xa0 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
                     {
                         regs->psw.cc = 2;
                         return;
                     }
                 }
-                if((utf8[0] >= 0xe1 && utf8[0] <= 0xec) || (utf8[0] >= 0xee && utf8[0] <= 0xef))
+                if ((utf8[0] >= 0xe1 && utf8[0] <= 0xec) || (utf8[0] >= 0xee && utf8[0] <= 0xef))
                 {
-                    if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
+                    if (utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
                     {
                         regs->psw.cc = 2;
                         return;
                     }
                 }
-                if(utf8[0] == 0xed)
+                if (utf8[0] == 0xed)
                 {
-                    if(utf8[1] < 0x80 || utf8[1] > 0x9f || utf8[2] < 0x80 || utf8[2] > 0xbf)
+                    if (utf8[1] < 0x80 || utf8[1] > 0x9f || utf8[2] < 0x80 || utf8[2] > 0xbf)
                     {
                         regs->psw.cc = 2;
                         return;
@@ -2491,9 +2491,9 @@ DEF_INST(convert_utf8_to_utf32)
         {
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormednessChecking */
-            if(wfc)
+            if (wfc)
             {
-                if(utf8[0] > 0xf4)
+                if (utf8[0] > 0xf4)
                 {
                     regs->psw.cc = 2;
                     return;
@@ -2513,27 +2513,54 @@ DEF_INST(convert_utf8_to_utf32)
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
-            if(wfc)
+            if (wfc)
             {
-                if(utf8[0] == 0xf0)
+                if (utf8[0] == 0xf0)
                 {
-                    if(utf8[1] < 0x90 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
+                    if (0
+                        || utf8[1] < 0x90
+                        || utf8[1] > 0xbf
+
+                        || utf8[2] < 0x80
+                        || utf8[2] > 0xbf
+
+                        || utf8[3] < 0x80
+                        || utf8[3] > 0xbf
+                    )
                     {
                         regs->psw.cc = 2;
                         return;
                     }
                 }
-                if(utf8[0] >= 0xf1 && utf8[0] <= 0xf3)
+                if (utf8[0] >= 0xf1 && utf8[0] <= 0xf3)
                 {
-                    if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
+                    if (0
+                        || utf8[1] < 0x80
+                        || utf8[1] > 0xbf
+
+                        || utf8[2] < 0x80
+                        || utf8[2] > 0xbf
+
+                        || utf8[3] < 0x80
+                        || utf8[3] > 0xbf
+                    )
                     {
                         regs->psw.cc = 2;
                         return;
                     }
                 }
-                if(utf8[0] == 0xf4)
+                if (utf8[0] == 0xf4)
                 {
-                    if(utf8[1] < 0x80 || utf8[1] > 0x8f || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
+                    if (0
+                        || utf8[1] < 0x80
+                        || utf8[1] > 0x8f
+
+                        || utf8[2] < 0x80
+                        || utf8[2] > 0xbf
+
+                        || utf8[3] < 0x80
+                        || utf8[3] > 0xbf
+                    )
                     {
                         regs->psw.cc = 2;
                         return;
@@ -2600,7 +2627,7 @@ DEF_INST(convert_utf16_to_utf32)
     srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
     srcelen = GR_A(r2 + 1, regs);
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
-    if(m3 & 0x01)
+    if ((m3 & 0x01) && FACILITY_ENABLED( 030_ETF3_ENHANCEMENT, regs ))
         wfc = true;
     else
         wfc = false;
@@ -2650,9 +2677,9 @@ DEF_INST(convert_utf16_to_utf32)
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormednessChecking */
-            if(wfc)
+            if (wfc)
             {
-                if(utf16[2] < 0xdc || utf16[2] > 0xdf)
+                if (utf16[2] < 0xdc || utf16[2] > 0xdf)
                 {
                     regs->psw.cc = 2;
                     return;

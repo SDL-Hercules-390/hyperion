@@ -1667,14 +1667,17 @@ spec_oper_excp:
 
 tran_prog_check:
 #if defined( FEATURE_036_ENH_MONITOR_FACILITY )
-    /* No program interrupt for enhanced MC */
-    if(acctype & ACC_ENH_MC)
+    if (FACILITY_ENABLED( 036_ENH_MONITOR, regs ))
     {
-        cc = 5;
-        return cc;
+        /* No program interrupt for enhanced MC */
+        if (acctype & ACC_ENH_MC)
+        {
+            cc = 5;
+            return cc;
+        }
     }
 #endif
-    regs->program_interrupt (regs, regs->dat.xcode);
+    regs->program_interrupt( regs, regs->dat.xcode );
 
 /* Conditions which the caller may or may not program check */
 seg_tran_invalid:
@@ -1825,11 +1828,17 @@ tran_excp_addr:
 #endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 #if defined( FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
-    /* Set the fetch/store indication bits 52-53 in the TEA */
-    if (acctype & ACC_READ) {
-        regs->TEA |= TEA_FETCH;
-    } else if (acctype & (ACC_WRITE|ACC_CHECK)) {
-        regs->TEA |= TEA_STORE;
+    if (FACILITY_ENABLED( 075_ACC_EX_FS_INDIC, regs ))
+    {
+        /* Set the fetch/store indication bits 52-53 in the TEA */
+        if (acctype & ACC_READ)
+        {
+            regs->TEA |= TEA_FETCH;
+        }
+        else if (acctype & (ACC_WRITE | ACC_CHECK))
+        {
+            regs->TEA |= TEA_STORE;
+        }
     }
 #endif
     /* Set the exception access identification */
