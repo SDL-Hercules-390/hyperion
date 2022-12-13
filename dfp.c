@@ -237,8 +237,8 @@ U32             ff, sm, enabled_flags;  /* Mask and flag work areas  */
 BYTE            dxc;                    /* Data exception code or 0  */
 
     /* AND the current FPC flags with the source FPC mask */
-    ff = (cur_fpc & FPC_FLAG) >> FPC_FLAG_SHIFT;
-    sm = (src_fpc & FPC_MASK) >> FPC_MASK_SHIFT;
+    ff = (cur_fpc & FPC_FLAGS) >> FPC_FLAG_SHIFT;
+    sm = (src_fpc & FPC_MASKS) >> FPC_MASK_SHIFT;
     enabled_flags = (ff & sm) << FPC_FLAG_SHIFT;
 
     /* A simulated-IEEE-exception event is recognized
@@ -302,7 +302,7 @@ BYTE            dxc;                    /* Data exception code       */
     FPC_CHECK(src_fpc, regs);
 
     /* OR the flags from the current FPC register */
-    new_fpc = src_fpc | (regs->fpc & FPC_FLAG);
+    new_fpc = src_fpc | (regs->fpc & FPC_FLAGS);
 
     /* Determine whether an event is to be signaled */
     dxc = fpc_signal_check(regs->fpc, src_fpc);
@@ -341,7 +341,7 @@ BYTE            dxc;                    /* Data exception code       */
     FPC_CHECK(src_fpc, regs);
 
     /* OR the flags from the current FPC register */
-    new_fpc = src_fpc | (regs->fpc & FPC_FLAG);
+    new_fpc = src_fpc | (regs->fpc & FPC_FLAGS);
 
     /* Determine whether an event is to be signaled */
     dxc = fpc_signal_check(regs->fpc, src_fpc);
