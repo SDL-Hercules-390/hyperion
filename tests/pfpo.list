@@ -1,4 +1,4 @@
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     1
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -30,7 +30,7 @@ ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)      
                                                     23 ***********************************************************************
 
 
-                              00000000  0000073F    25 PFPO     START 0
+                              00000000  0000075F    25 PFPO     START 0
 00000000                      00000000              26          USING PFPO,0                 Use absolute addressing
 
 
@@ -47,7 +47,7 @@ ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)      
 000001D4  80000000                                  36          DC    XL4'80000000'          z/Arch Program new PSW
 000001D8  00000000                                  37          DC    XL4'00000000'          z/Arch Program new PSW
 000001DC  0000DEAD                                  38          DC    XL4'0000DEAD'          z/Arch Program new PSW
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     2
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -58,14 +58,11 @@ ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)      
 000001E0                      000001E0  00000200    44          ORG   PFPO+X'200'            Test code entry point
 00000200                                            45 BEGIN    DS    0H
 
-
-00000200  EB00 0250 002F                00000250    47          LCTLG CR0,CR0,CTL0   Enable AFP-register-control bit
+00000200  EB00 0290 002F                00000290    47          LCTLG CR0,CR0,CTL0   Enable AFP-register-control bit
 00000206  B38C 0000                                 48          EFPC  R0             R0 <== FPC
-0000020A  5000 0260                     00000260    49          ST    R0,SAVEDFPC    Save FPC
+0000020A  5000 02A0                     000002A0    49          ST    R0,SAVEDFPC    Save FPC
 
-
-
-                                                    51 * Load the test values.............
+                                                    51 *   Load the test values.............
 
 0000020E  E340 0600 0004                00000600    53          LG    R4,DFPIN_F4    R4 = first 64-bits
 00000214  E360 0608 0004                00000608    54          LG    R6,DFPIN_F6    R6 = second 64-bits
@@ -73,218 +70,257 @@ ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)      
 0000021A  B3C1 0044                                 56          LDGR  FR4,R4         Move to floating point register
 0000021E  B3C1 0066                                 57          LDGR  FR6,R6         Move to floating point register
 
+                                                    59 *   Do the test............ (i.e. perform the conversion)
 
-                                                    59 * Do the test............ (i.e. perform the conversion)
+00000222  E300 0298 0004                00000298    61          LG    R0,PFPO_R0     Extended DFP ==> Long HFP
+00000228  C019 ABCD ABCD                            62          IILF  R1,X'ABCDABCD' Unlikely Return Code Register value
 
-00000222  E300 0258 0004                00000258    61          LG    R0,PFPO_R0     Extended DFP ==> Long HFP
-00000228  010A                                      62          PFPO  ,              Do it!
+0000022E  41F0 0003                     00000003    64          LA    R15,3          (set CC3...)
+00000232  89F0 001C                     0000001C    65          SLL   R15,32-4       (shift into proper position)
+00000236  04F0                                      66          SPM   R15            (set Condition Code 3 in PSW)
 
+00000238  010A                                      68          PFPO  ,              Do it!
+0000023A  A714 0025                     00000284    69          JC    B'0001',BADCC  CC=3?!  Impossible!!  FAIL!!
 
-                                                    64 * Save the results..........
+0000023E  1211                                      71          LTR   R1,R1          Check Return Code Register value
+00000240  4770 0288                     00000288    72          BNZ   BADGR1         Not zero? FAIL!
 
-0000022A  B3CD 0000                                 66          LGDR  R0,FR0         Save actual results (R0 <== FR0)
-0000022E  E300 0710 0024                00000710    67          STG   R0,HFPOUT      Save actual results (R0 --> save)
+                                                    74 *   Save the results..........
 
+00000244  B3CD 0000                                 76          LGDR  R0,FR0         Save actual results (R0 <== FR0)
+00000248  E300 0710 0024                00000710    77          STG   R0,HFPOUT      Save actual results (R0 --> save)
 
-                                                    69 * Check the results..........
+                                                    79 *   Check the results..........
 
-00000234  E310 0700 0004                00000700    71          LG    R1,HFPOUTOK    R1 <== Expected
-0000023A  B920 0001                                 72          CGR   R0,R1          Actual = Expected?
-0000023E  4770 0246                     00000246    73          BNE   FAIL           No, fail
-
-
-
-
-
-00000242  B2B2 0720                     00000720    75          LPSWE GOODPSW        Load success PSW
-00000246  B2B2 0730                     00000730    76 FAIL     LPSWE FAILPSW        Load failure PSW
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     3
-
-  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
-
-                                                    78 *********************************************************************
-                                                    79 *                      Working storage
-                                                    80 *********************************************************************
-
-0000024A  07000700 0700                             82          CNOP  0,16   (alignment solely for storage readability)
-
-
-00000250  00000000 00040000                         84 CTL0     DC    0D'0',XL8'0000000000040000' CR0 AFP-register-control bit
-00000258  00000000 01010A00                         85 PFPO_R0  DC    XL4'00000000',XL4'01010A00'
-00000260  00000000 00000000                         86 SAVEDFPC DC    F'0',F'0',D'0'
-
-
-00000270                      00000270  00000600    88          ORG   PFPO+X'600'      INPUT @ X'600'
-
-00000600  39FFD2B3 2D873E6E                         90 DFPIN_F4 DC    0D'0',XL8'39FFD2B32D873E6E'    (original input)
-00000608  A9DAAD5A BE6B6404                         91 DFPIN_F6 DC    0D'0',XL8'A9DAAD5ABE6B6404'    (original input)
-
-
-00000610                      00000610  00000700    93          ORG   PFPO+X'700'      EXPECTED OUTPUT @ X'700'
-
-00000700  416487ED 5110B461                         95 HFPOUTOK DC    0D'0',XL8'416487ED5110B461'  (expected output)
-00000708  00000000 00000000                         96          DC    D'0'
-
-
-00000710                      00000710  00000710    98          ORG   PFPO+X'710'      ACTUAL OUTPUT @ X'710'
-
-00000710  00000000 00000000                        100 HFPOUT   DC    0D'0',XL8'00'    (actual output)
-00000718  00000000 00000000                        101          DC    D'0'
-
-
-
-
-00000720                                           103 GOODPSW  DC    0D'0'          Failure PSW
-00000720  00020001                                 104          DC    XL4'00020001'  Failure PSW
-00000724  80000000                                 105          DC    XL4'80000000'  Failure PSW
-00000728  00000000                                 106          DC    XL4'00000000'  Failure PSW
-0000072C  00000000                                 107          DC    XL4'00000000'  Failure PSW
-
-00000730                                           109 FAILPSW  DC    0D'0'          Failure PSW
-00000730  00020001                                 110          DC    XL4'00020001'  Failure PSW
-00000734  80000000                                 111          DC    XL4'80000000'  Failure PSW
-00000738  00000000                                 112          DC    XL4'00000000'  Failure PSW
-0000073C  EEEEEEEE                                 113          DC    XL4'EEEEEEEE'  Failure PSW
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     4
+0000024E  E310 0700 0004                00000700    81          LG    R1,HFPOUTOK    R1 <== Expected
+00000254  B920 0001                                 82          CGR   R0,R1          Actual = Expected?
+00000258  4770 0280                     00000280    83          BNE   FAIL           No?! FAIL!
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                              00000000  00000001   115 R0       EQU   0        General Purpose Registers...
-                              00000001  00000001   116 R1       EQU   1
-                              00000002  00000001   117 R2       EQU   2
-                              00000003  00000001   118 R3       EQU   3
-                              00000004  00000001   119 R4       EQU   4
-                              00000005  00000001   120 R5       EQU   5
-                              00000006  00000001   121 R6       EQU   6
-                              00000007  00000001   122 R7       EQU   7
-                              00000008  00000001   123 R8       EQU   8
-                              00000009  00000001   124 R9       EQU   9
-                              0000000A  00000001   125 R10      EQU   10
-                              0000000B  00000001   126 R11      EQU   11
-                              0000000C  00000001   127 R12      EQU   12
-                              0000000D  00000001   128 R13      EQU   13
-                              0000000E  00000001   129 R14      EQU   14
-                              0000000F  00000001   130 R15      EQU   15
-                                                   131
-                              00000000  00000001   132 FR0      EQU   0        Floating-Point Registers...
-                              00000001  00000001   133 FR1      EQU   1
-                              00000002  00000001   134 FR2      EQU   2
-                              00000003  00000001   135 FR3      EQU   3
-                              00000004  00000001   136 FR4      EQU   4
-                              00000005  00000001   137 FR5      EQU   5
-                              00000006  00000001   138 FR6      EQU   6
-                              00000007  00000001   139 FR7      EQU   7
-                              00000008  00000001   140 FR8      EQU   8
-                              00000009  00000001   141 FR9      EQU   9
-                              0000000A  00000001   142 FR10     EQU   10
-                              0000000B  00000001   143 FR11     EQU   11
-                              0000000C  00000001   144 FR12     EQU   12
-                              0000000D  00000001   145 FR13     EQU   13
-                              0000000E  00000001   146 FR14     EQU   14
-                              0000000F  00000001   147 FR15     EQU   15
-                                                   148
-                              00000000  00000001   149 CR0      EQU   0        Control Registers...
-                              00000001  00000001   150 CR1      EQU   1
-                              00000002  00000001   151 CR2      EQU   2
-                              00000003  00000001   152 CR3      EQU   3
-                              00000004  00000001   153 CR4      EQU   4
-                              00000005  00000001   154 CR5      EQU   5
-                              00000006  00000001   155 CR6      EQU   6
-                              00000007  00000001   156 CR7      EQU   7
-                              00000008  00000001   157 CR8      EQU   8
-                              00000009  00000001   158 CR9      EQU   9
-                              0000000A  00000001   159 CR10     EQU   10
-                              0000000B  00000001   160 CR11     EQU   11
-                              0000000C  00000001   161 CR12     EQU   12
-                              0000000D  00000001   162 CR13     EQU   13
-                              0000000E  00000001   163 CR14     EQU   14
-                              0000000F  00000001   164 CR15     EQU   15
+                                                    85 ***********************************************************************
+                                                    86 *      Try invalid conversion with Test bit set  (should get cc=3)
+                                                    87 ***********************************************************************
 
-                                                   166          END
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     5
+0000025C  C009 8109 0900                            89          IILF  R0,X'81090900' Test: Long DFP ==> Long DFP (invalid!)
+00000262  C019 ABCD ABCD                            90          IILF  R1,X'ABCDABCD' Unlikely Return Code Register value
+
+00000268  1FFF                                      92          SLR   R15,R15        (set CC0...)
+0000026A  89F0 001C                     0000001C    93          SLL   R15,32-4       (shift into proper position)
+0000026E  04F0                                      94          SPM   R15            (set Condition Code 0 in PSW)
+
+00000270  010A                                      96          PFPO  ,              Do it!
+00000272  A7E4 0009                     00000284    97          JC    B'1110',BADCC  Not CC=3? FAIL!
+
+00000276  1211                                      99          LTR   R1,R1          Check Return Code Register value
+00000278  4770 0288                     00000288   100          BNZ   BADGR1         Not zero? FAIL!
+
+0000027C  B2B2 0720                     00000720   102          LPSWE GOODPSW        Load success PSW
+00000280  B2B2 0730                     00000730   103 FAIL     LPSWE FAILPSW        Load failure PSW
+00000284  B2B2 0750                     00000750   104 BADCC    LPSWE BADCCPSW       Load failure PSW
+00000288  B2B2 0740                     00000740   105 BADGR1   LPSWE BADRCPSW       Load failure PSW
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   107 *********************************************************************
+                                                   108 *                      Working storage
+                                                   109 *********************************************************************
+
+0000028C  07000700                                 111          CNOP  0,16   (alignment solely for storage readability)
+
+
+00000290  00000000 00040000                        113 CTL0     DC    0D'0',XL8'0000000000040000' CR0 AFP-register-control bit
+00000298  00000000 01010A00                        114 PFPO_R0  DC    XL4'00000000',XL4'01010A00'
+000002A0  00000000 00000000                        115 SAVEDFPC DC    F'0',F'0',D'0'
+
+
+000002B0                      000002B0  00000600   117          ORG   PFPO+X'600'      INPUT @ X'600'
+
+00000600  39FFD2B3 2D873E6E                        119 DFPIN_F4 DC    0D'0',XL8'39FFD2B32D873E6E'    (original input)
+00000608  A9DAAD5A BE6B6404                        120 DFPIN_F6 DC    0D'0',XL8'A9DAAD5ABE6B6404'    (original input)
+
+
+00000610                      00000610  00000700   122          ORG   PFPO+X'700'      EXPECTED OUTPUT @ X'700'
+
+00000700  416487ED 5110B461                        124 HFPOUTOK DC    0D'0',XL8'416487ED5110B461'  (expected output)
+00000708  00000000 00000000                        125          DC    D'0'
+
+
+00000710                      00000710  00000710   127          ORG   PFPO+X'710'      ACTUAL OUTPUT @ X'710'
+
+00000710  00000000 00000000                        129 HFPOUT   DC    0D'0',XL8'00'    (actual output)
+00000718  00000000 00000000                        130          DC    D'0'
+
+
+00000720                                           132 GOODPSW  DC    0D'0'          Failure PSW
+00000720  00020001                                 133          DC    XL4'00020001'  Failure PSW
+00000724  80000000                                 134          DC    XL4'80000000'  Failure PSW
+00000728  00000000                                 135          DC    XL4'00000000'  Failure PSW
+0000072C  00000000                                 136          DC    XL4'00000000'  Failure PSW
+
+00000730                                           138 FAILPSW  DC    0D'0'          Failure PSW
+00000730  00020001                                 139          DC    XL4'00020001'  Failure PSW
+00000734  80000000                                 140          DC    XL4'80000000'  Failure PSW
+00000738  00000000                                 141          DC    XL4'00000000'  Failure PSW
+0000073C  00000BAD                                 142          DC    XL4'00000BAD'  Failure PSW  (general test failure)
+
+00000740                                           144 BADRCPSW DC    0D'0'          Failure PSW
+00000740  00020001                                 145          DC    XL4'00020001'  Failure PSW
+00000744  80000000                                 146          DC    XL4'80000000'  Failure PSW
+00000748  00000000                                 147          DC    XL4'00000000'  Failure PSW
+0000074C  0000BAD1                                 148          DC    XL4'0000BAD1'  Failure PSW  (bad GR1 Return Code value)
+
+00000750                                           150 BADCCPSW DC    0D'0'          Failure PSW
+00000750  00020001                                 151          DC    XL4'00020001'  Failure PSW
+00000754  80000000                                 152          DC    XL4'80000000'  Failure PSW
+00000758  00000000                                 153          DC    XL4'00000000'  Failure PSW
+0000075C  000BADCC                                 154          DC    XL4'000BADCC'  Failure PSW  (bad Condition Code)
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000000  00000001   156 R0       EQU   0        General Purpose Registers...
+                              00000001  00000001   157 R1       EQU   1
+                              00000002  00000001   158 R2       EQU   2
+                              00000003  00000001   159 R3       EQU   3
+                              00000004  00000001   160 R4       EQU   4
+                              00000005  00000001   161 R5       EQU   5
+                              00000006  00000001   162 R6       EQU   6
+                              00000007  00000001   163 R7       EQU   7
+                              00000008  00000001   164 R8       EQU   8
+                              00000009  00000001   165 R9       EQU   9
+                              0000000A  00000001   166 R10      EQU   10
+                              0000000B  00000001   167 R11      EQU   11
+                              0000000C  00000001   168 R12      EQU   12
+                              0000000D  00000001   169 R13      EQU   13
+                              0000000E  00000001   170 R14      EQU   14
+                              0000000F  00000001   171 R15      EQU   15
+                                                   172
+                              00000000  00000001   173 FR0      EQU   0        Floating-Point Registers...
+                              00000001  00000001   174 FR1      EQU   1
+                              00000002  00000001   175 FR2      EQU   2
+                              00000003  00000001   176 FR3      EQU   3
+                              00000004  00000001   177 FR4      EQU   4
+                              00000005  00000001   178 FR5      EQU   5
+                              00000006  00000001   179 FR6      EQU   6
+                              00000007  00000001   180 FR7      EQU   7
+                              00000008  00000001   181 FR8      EQU   8
+                              00000009  00000001   182 FR9      EQU   9
+                              0000000A  00000001   183 FR10     EQU   10
+                              0000000B  00000001   184 FR11     EQU   11
+                              0000000C  00000001   185 FR12     EQU   12
+                              0000000D  00000001   186 FR13     EQU   13
+                              0000000E  00000001   187 FR14     EQU   14
+                              0000000F  00000001   188 FR15     EQU   15
+                                                   189
+                              00000000  00000001   190 CR0      EQU   0        Control Registers...
+                              00000001  00000001   191 CR1      EQU   1
+                              00000002  00000001   192 CR2      EQU   2
+                              00000003  00000001   193 CR3      EQU   3
+                              00000004  00000001   194 CR4      EQU   4
+                              00000005  00000001   195 CR5      EQU   5
+                              00000006  00000001   196 CR6      EQU   6
+                              00000007  00000001   197 CR7      EQU   7
+                              00000008  00000001   198 CR8      EQU   8
+                              00000009  00000001   199 CR9      EQU   9
+                              0000000A  00000001   200 CR10     EQU   10
+                              0000000B  00000001   201 CR11     EQU   11
+                              0000000C  00000001   202 CR12     EQU   12
+                              0000000D  00000001   203 CR13     EQU   13
+                              0000000E  00000001   204 CR14     EQU   14
+                              0000000F  00000001   205 CR15     EQU   15
+
+                                                   207          END
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     6
 
      SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
 
+BADCC               I    000284       4   104   69   97
+BADCCPSW            D    000750       8   150  104
+BADGR1              I    000288       4   105   72  100
+BADRCPSW            D    000740       8   144  105
 BEGIN               H    000200       2    45   32
-CR0                 U    000000       1   149   47
-CR1                 U    000001       1   150
-CR10                U    00000A       1   159
-CR11                U    00000B       1   160
-CR12                U    00000C       1   161
-CR13                U    00000D       1   162
-CR14                U    00000E       1   163
-CR15                U    00000F       1   164
-CR2                 U    000002       1   151
-CR3                 U    000003       1   152
-CR4                 U    000004       1   153
-CR5                 U    000005       1   154
-CR6                 U    000006       1   155
-CR7                 U    000007       1   156
-CR8                 U    000008       1   157
-CR9                 U    000009       1   158
-CTL0                D    000250       8    84   47
-DFPIN_F4            D    000600       8    90   53
-DFPIN_F6            D    000608       8    91   54
-FAIL                I    000246       4    76   73
-FAILPSW             D    000730       8   109   76
-FR0                 U    000000       1   132   66
-FR1                 U    000001       1   133
-FR10                U    00000A       1   142
-FR11                U    00000B       1   143
-FR12                U    00000C       1   144
-FR13                U    00000D       1   145
-FR14                U    00000E       1   146
-FR15                U    00000F       1   147
-FR2                 U    000002       1   134
-FR3                 U    000003       1   135
-FR4                 U    000004       1   136   56
-FR5                 U    000005       1   137
-FR6                 U    000006       1   138   57
-FR7                 U    000007       1   139
-FR8                 U    000008       1   140
-FR9                 U    000009       1   141
-GOODPSW             D    000720       8   103   75
-HFPOUT              D    000710       8   100   67
-HFPOUTOK            D    000700       8    95   71
-IMAGE               1    000000    1856     0
-PFPO                J    000000    1856    25   28   34   44   88   93   98   26
-PFPO_R0             X    000258       4    85   61
-R0                  U    000000       1   115   48   49   61   66   67   72
-R1                  U    000001       1   116   71   72
-R10                 U    00000A       1   125
-R11                 U    00000B       1   126
-R12                 U    00000C       1   127
-R13                 U    00000D       1   128
-R14                 U    00000E       1   129
-R15                 U    00000F       1   130
-R2                  U    000002       1   117
-R3                  U    000003       1   118
-R4                  U    000004       1   119   53   56
-R5                  U    000005       1   120
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     6
+CR0                 U    000000       1   190   47
+CR1                 U    000001       1   191
+CR10                U    00000A       1   200
+CR11                U    00000B       1   201
+CR12                U    00000C       1   202
+CR13                U    00000D       1   203
+CR14                U    00000E       1   204
+CR15                U    00000F       1   205
+CR2                 U    000002       1   192
+CR3                 U    000003       1   193
+CR4                 U    000004       1   194
+CR5                 U    000005       1   195
+CR6                 U    000006       1   196
+CR7                 U    000007       1   197
+CR8                 U    000008       1   198
+CR9                 U    000009       1   199
+CTL0                D    000290       8   113   47
+DFPIN_F4            D    000600       8   119   53
+DFPIN_F6            D    000608       8   120   54
+FAIL                I    000280       4   103   83
+FAILPSW             D    000730       8   138  103
+FR0                 U    000000       1   173   76
+FR1                 U    000001       1   174
+FR10                U    00000A       1   183
+FR11                U    00000B       1   184
+FR12                U    00000C       1   185
+FR13                U    00000D       1   186
+FR14                U    00000E       1   187
+FR15                U    00000F       1   188
+FR2                 U    000002       1   175
+FR3                 U    000003       1   176
+FR4                 U    000004       1   177   56
+FR5                 U    000005       1   178
+FR6                 U    000006       1   179   57
+FR7                 U    000007       1   180
+FR8                 U    000008       1   181
+FR9                 U    000009       1   182
+GOODPSW             D    000720       8   132  102
+HFPOUT              D    000710       8   129   77
+HFPOUTOK            D    000700       8   124   81
+IMAGE               1    000000    1888     0
+PFPO                J    000000    1888    25   28   34   44  117  122  127   26
+PFPO_R0             X    000298       4   114   61
+R0                  U    000000       1   156   48   49   61   76   77   82   89
+R1                  U    000001       1   157   62   71   81   82   90   99
+R10                 U    00000A       1   166
+R11                 U    00000B       1   167
+R12                 U    00000C       1   168
+R13                 U    00000D       1   169
+R14                 U    00000E       1   170
+R15                 U    00000F       1   171   64   65   66   92   93   94
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     7
 
      SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
 
-R6                  U    000006       1   121   54   57
-R7                  U    000007       1   122
-R8                  U    000008       1   123
-R9                  U    000009       1   124
-SAVEDFPC            F    000260       4    86   49
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     7
+R2                  U    000002       1   158
+R3                  U    000003       1   159
+R4                  U    000004       1   160   53   56
+R5                  U    000005       1   161
+R6                  U    000006       1   162   54   57
+R7                  U    000007       1   163
+R8                  U    000008       1   164
+R9                  U    000009       1   165
+SAVEDFPC            F    0002A0       4   115   49
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     8
 
-MACRO   DEFN  REFERENCES
+MACRO  DEFN  REFERENCES
 
 No defined macros
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     8
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     9
 
    DESC    SYMBOL  SIZE    POS      ADDR
 
 Entry: 0
 
-Image      IMAGE   1856  000-73F  000-73F
-  Region           1856  000-73F  000-73F
-    CSECT  PFPO    1856  000-73F  000-73F
-ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          25 May 2022 19:46:49  Page     9
+Image      IMAGE   1888  000-75F  000-75F
+  Region           1888  000-75F  000-75F
+    CSECT  PFPO    1888  000-75F  000-75F
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page    10
 
    STMT                                       FILE NAME
 

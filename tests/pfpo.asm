@@ -43,37 +43,66 @@ PFPO     START 0
                                                                 SPACE
          ORG   PFPO+X'200'            Test code entry point
 BEGIN    DS    0H
-                                                                SPACE 2
+                                                                SPACE
          LCTLG CR0,CR0,CTL0   Enable AFP-register-control bit
          EFPC  R0             R0 <== FPC
          ST    R0,SAVEDFPC    Save FPC
-                                                                SPACE 3
-* Load the test values.............
+                                                                SPACE
+*   Load the test values.............
                                                                 SPACE
          LG    R4,DFPIN_F4    R4 = first 64-bits
          LG    R6,DFPIN_F6    R6 = second 64-bits
                                                                 SPACE
          LDGR  FR4,R4         Move to floating point register
          LDGR  FR6,R6         Move to floating point register
-                                                                SPACE 2
-* Do the test............ (i.e. perform the conversion)
+                                                                SPACE
+*   Do the test............ (i.e. perform the conversion)
                                                                 SPACE
          LG    R0,PFPO_R0     Extended DFP ==> Long HFP
+         IILF  R1,X'ABCDABCD' Unlikely Return Code Register value
+                                                                SPACE
+         LA    R15,3          (set CC3...)
+         SLL   R15,32-4       (shift into proper position)
+         SPM   R15            (set Condition Code 3 in PSW)
+                                                                SPACE
          PFPO  ,              Do it!
-                                                                SPACE 2
-* Save the results..........
+         JC    B'0001',BADCC  CC=3?!  Impossible!!  FAIL!!
+                                                                SPACE
+         LTR   R1,R1          Check Return Code Register value
+         BNZ   BADGR1         Not zero? FAIL!
+                                                                SPACE
+*   Save the results..........
                                                                 SPACE
          LGDR  R0,FR0         Save actual results (R0 <== FR0)
          STG   R0,HFPOUT      Save actual results (R0 --> save)
-                                                                SPACE 2
-* Check the results..........
+                                                                SPACE
+*   Check the results..........
                                                                 SPACE
          LG    R1,HFPOUTOK    R1 <== Expected
          CGR   R0,R1          Actual = Expected?
-         BNE   FAIL           No, fail
-                                                                SPACE 5
+         BNE   FAIL           No?! FAIL!
+                                                                EJECT
+***********************************************************************
+*      Try invalid conversion with Test bit set  (should get cc=3)
+***********************************************************************
+                                                                SPACE
+         IILF  R0,X'81090900' Test: Long DFP ==> Long DFP (invalid!)
+         IILF  R1,X'ABCDABCD' Unlikely Return Code Register value
+                                                                SPACE
+         SLR   R15,R15        (set CC0...)
+         SLL   R15,32-4       (shift into proper position)
+         SPM   R15            (set Condition Code 0 in PSW)
+                                                                SPACE
+         PFPO  ,              Do it!
+         JC    B'1110',BADCC  Not CC=3? FAIL!
+                                                                SPACE
+         LTR   R1,R1          Check Return Code Register value
+         BNZ   BADGR1         Not zero? FAIL!
+                                                                SPACE
          LPSWE GOODPSW        Load success PSW
 FAIL     LPSWE FAILPSW        Load failure PSW
+BADCC    LPSWE BADCCPSW       Load failure PSW
+BADGR1   LPSWE BADRCPSW       Load failure PSW
                                                                 EJECT
 *********************************************************************
 *                      Working storage
@@ -99,7 +128,7 @@ HFPOUTOK DC    0D'0',XL8'416487ED5110B461'  (expected output)
                                                                 SPACE
 HFPOUT   DC    0D'0',XL8'00'    (actual output)
          DC    D'0'
-                                                                SPACE 4
+                                                                SPACE 2
 GOODPSW  DC    0D'0'          Failure PSW
          DC    XL4'00020001'  Failure PSW
          DC    XL4'80000000'  Failure PSW
@@ -110,7 +139,19 @@ FAILPSW  DC    0D'0'          Failure PSW
          DC    XL4'00020001'  Failure PSW
          DC    XL4'80000000'  Failure PSW
          DC    XL4'00000000'  Failure PSW
-         DC    XL4'EEEEEEEE'  Failure PSW
+         DC    XL4'00000BAD'  Failure PSW  (general test failure)
+                                                                SPACE
+BADRCPSW DC    0D'0'          Failure PSW
+         DC    XL4'00020001'  Failure PSW
+         DC    XL4'80000000'  Failure PSW
+         DC    XL4'00000000'  Failure PSW
+         DC    XL4'0000BAD1'  Failure PSW  (bad GR1 Return Code value)
+                                                                SPACE
+BADCCPSW DC    0D'0'          Failure PSW
+         DC    XL4'00020001'  Failure PSW
+         DC    XL4'80000000'  Failure PSW
+         DC    XL4'00000000'  Failure PSW
+         DC    XL4'000BADCC'  Failure PSW  (bad Condition Code)
                                                                 EJECT
 R0       EQU   0        General Purpose Registers...
 R1       EQU   1

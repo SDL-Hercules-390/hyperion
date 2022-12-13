@@ -30,11 +30,14 @@
 
 #if defined( FEATURE_044_PFPO_FACILITY )
 
-#define IS_GR0_INEX_SUPP_BIT_ON( _optbits )  ((_optbits) & 0x80)
-#define IS_GR0_ALT_EXCPT_BIT_ON( _optbits )  ((_optbits) & 0x40)
-#define IS_GR0_BIT58_ON( _optbits )          ((_optbits) & 0x20)
-#define IS_GR0_BIT59_ON( _optbits )          ((_optbits) & 0x10)
-#define GR0_RM_BITS( _optbits )              ((_optbits) & 0x0F)
+#define GR0_IS(           _optbits )    ((_optbits) & 0x80)
+#define GR0_AE(           _optbits )    ((_optbits) & 0x40)
+#define GR0_TR_HFP_OVER(  _optbits )    ((_optbits) & 0x20)
+#define GR0_TR_HFP_UNDER( _optbits )    ((_optbits) & 0x10)
+#define GR0_TR_BFP_RSRVD( _optbits )    ((_optbits) & 0x30)
+#define GR0_TR_DQPC(      _optbits )    ((_optbits) & 0x20)
+#define GR0_TR_DPQC(      _optbits )    ((_optbits) & 0x10)
+#define GR0_RM(           _optbits )    ((_optbits) & 0x0F)
 
 const uint16_t DPD2BIN[1024]={    0,    1,    2,    3,    4,    5,    6,    7,
     8,    9,   80,   81,  800,  801,  880,  881,   10,   11,   12,   13,   14,
@@ -555,14 +558,14 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, BYTE optbits, int *
   unsigned int remtab[4];
   if (hexp > 127)
   {
-    if (IS_GR0_BIT58_ON( optbits ))
+    if (GR0_TR_HFP_OVER( optbits ))
     {
       if (*fpc & FPC_MASK_IMO)
       {
         *fpc &= ~(FPC_FLAG_SFX | FPC_DXC);
         *fpc |= DXC_IEEE_OF_INEX_TRUNC << FPC_DXC_SHIFT;
         hfltab[0] |= 0x41000000;
-        if (IS_GR0_ALT_EXCPT_BIT_ON( optbits ))
+        if (GR0_AE( optbits ))
           cc = 2;
         else
           cc = -7;
@@ -582,7 +585,7 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, BYTE optbits, int *
       {
         *fpc &= ~(FPC_FLAG_SFX | FPC_DXC);;
         *fpc |= FPC_DXC_I;
-        if (IS_GR0_ALT_EXCPT_BIT_ON( optbits ))
+        if (GR0_AE( optbits ))
           cc = 2;
         else
           cc = -7;
@@ -653,9 +656,9 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, BYTE optbits, int *
         *hexpptr = 0;
         return 0;
       }
-      if (IS_GR0_BIT59_ON( optbits ))
+      if (GR0_TR_HFP_UNDER( optbits ))
       {
-        if ((*fpc & FPC_MASK_IMU) && !IS_GR0_ALT_EXCPT_BIT_ON( optbits ))
+        if ((*fpc & FPC_MASK_IMU) && !GR0_AE( optbits ))
         {
           cc = -7;
           *fpc &= ~FPC_DXC;
@@ -670,7 +673,7 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, BYTE optbits, int *
       }
       else
       {
-        if ((*fpc & FPC_MASK_IMI) && !IS_GR0_ALT_EXCPT_BIT_ON( optbits ))
+        if ((*fpc & FPC_MASK_IMI) && !GR0_AE( optbits ))
         {
           cc = -7;
           *fpc &= ~FPC_DXC;
@@ -717,7 +720,7 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, BYTE optbits, int *fpc,
         bfltab[0] |= 0x3fff8000;
         break;
       }
-      if (IS_GR0_ALT_EXCPT_BIT_ON( optbits ))
+      if (GR0_AE( optbits ))
         cc = 2;
       else
         cc = -7;
@@ -792,7 +795,7 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, BYTE optbits, int *fpc,
       }
       if (*fpc & FPC_MASK_IMU)
       {
-        if (IS_GR0_ALT_EXCPT_BIT_ON( optbits ))
+        if (GR0_AE( optbits ))
         {
           cc = 2;
           *fpc &= ~FPC_DXC;
@@ -886,7 +889,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int mid;
   int tradix;
   memset(binzero, 0x00, sizeof(binzero));
-  temp1 = (int) GR0_RM_BITS( optbits );
+  temp1 = (int) GR0_RM( optbits );
   if (temp1 == 0)
     roundrule = (*fpc & FPC_DRM) >> 4;
   else
@@ -1431,7 +1434,7 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
   unsigned int temp1;
   unsigned int temp2;
   memset(binzero, 0x00, sizeof(binzero));
-  temp1 = (unsigned int) GR0_RM_BITS( optbits );
+  temp1 = (unsigned int) GR0_RM( optbits );
   if (hfltab[0] & 0x80000000)
   {
     neg = 1;
@@ -1841,7 +1844,7 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, B
   int rem;
   unsigned int temp1;
   unsigned int temp2;
-  temp1 = (unsigned int) GR0_RM_BITS( optbits );
+  temp1 = (unsigned int) GR0_RM( optbits );
   if (temp1 == 0)
     roundrule = (*fpc & FPC_DRM) >> 4;
   else
@@ -2042,7 +2045,7 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
   BYTE binzero[32];
   maxword = max(nwordin, nwordout) + 1;
   memset(binzero, 0x00, sizeof(binzero));
-  temp1 = (unsigned int) GR0_RM_BITS( optbits );
+  temp1 = (unsigned int) GR0_RM( optbits );
   if (temp1 == 0)
     roundrule = (*fpc & FPC_DRM) >> 4;
   else
@@ -2224,13 +2227,13 @@ DEF_INST( perform_floating_point_operation )
     int dxc;            // Decimal Exception Code value
     int i0, i2, i4, i6; // Floating-Point register array indexes
 
-    /* Extract conversion options from General Register 0 */
-    bool test_mode = regs->GR_L(0) & 0x80000000 ? true : false;
-    BYTE otc       = regs->GR_LHHCH(0) & 0x7F;
-    BYTE ofc1      = regs->GR_LHH(0)   & 0xFF;
-    BYTE ofc2      = regs->GR_LHLCH(0);
+    /* Extract fields from General Register 0 */
+    bool test_mode = GR0_T( regs );
+    BYTE otc       = GR0_OTC( regs );
+    BYTE ofc1      = GR0_OFC1( regs );
+    BYTE ofc2      = GR0_OFC2( regs );
     BYTE optbits   = regs->GR_LHLCL(0);
-    BYTE rm        = GR0_RM_BITS( optbits );
+    BYTE rm        = GR0_RM( optbits );
 
     E( inst, regs );
     TXFC_INSTR_CHECK( regs );
@@ -2260,6 +2263,13 @@ DEF_INST( perform_floating_point_operation )
     if (rm >= 2 && rm <= 7)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
+    /* DFP DQPC only valid if FP Extension Facility installed */
+    if (1
+        && GR0_TR_DQPC( optbits )
+        && !FACILITY_ENABLED( 037_FP_EXTENSION, regs )
+    )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     /* Check for Reserved/Invalid Operand-Format Code */
     switch (ofc1)
     {
@@ -2277,12 +2287,23 @@ DEF_INST( perform_floating_point_operation )
 
     default:   opcode = -1; break;  // Reserved/Invalid target
     }
-    if (opcode == -1)
+    if (0
+        || opcode == -1
+        || (1
+            && (0
+                || opcode == 4
+                || opcode == 5
+                || opcode == 6
+               )
+            && GR0_TR_BFP_RSRVD( optbits )
+           )
+    )
     {
         if (!test_mode)
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
         regs->psw.cc = 3;
+        regs->GR_L( 1 ) = 0;  //  *** See PROGRAMMING NOTE further below! ***
         return;
     }
     switch (ofc2)
@@ -2307,17 +2328,47 @@ DEF_INST( perform_floating_point_operation )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
         regs->psw.cc = 3;
+        regs->GR_L( 1 ) = 0;  //  *** See PROGRAMMING NOTE further below! ***
         return;
     }
 
-    /* If test mode, then we're done */
+    /* If test mode, validate the request itself */
     if (test_mode)
     {
-        regs->psw.cc = 0;
+        switch (opcode)
+        {
+        case 71: case 72: case 73:  // DFP Short     ==>  HFP Short/Long/Extended
+        case 81: case 82: case 83:  // DFP Long      ==>  HFP Short/Long/Extended
+        case 91: case 92: case 93:  // DFP Extended  ==>  HFP Short/Long/Extended
+
+        case 17: case 18: case 19:  // HFP Short     ==>  DFP Short/Long/Extended
+        case 27: case 28: case 29:  // HFP Long      ==>  DFP Short/Long/Extended
+        case 37: case 38: case 39:  // HFP Extended  ==>  DFP Short/Long/Extended
+
+        case 41: case 42: case 43:  // BFP Short     ==>  HFP Short/Long/Extended
+        case 51: case 52: case 53:  // BFP Long      ==>  HFP Short/Long/Extended
+        case 61: case 62: case 63:  // BFP Extended  ==>  HFP Short/Long/Extended
+
+        case 14: case 15: case 16:  // HFP Short     ==>  BFP Short/Long/Extended
+        case 24: case 25: case 26:  // HFP Long      ==>  BFP Short/Long/Extended
+        case 34: case 35: case 36:  // HFP Extended  ==>  BFP Short/Long/Extended
+
+        case 74: case 75: case 76:  // DFP Short     ==>  BFP Short/Long/Extended
+        case 84: case 85: case 86:  // DFP Long      ==>  BFP Short/Long/Extended
+        case 94: case 95: case 96:  // DFP Extended  ==>  BFP Short/Long/Extended
+
+        case 47: case 48: case 49:  // BFP Short     ==>  DFP Short/Long/Extended
+        case 57: case 58: case 59:  // BFP Long      ==>  DFP Short/Long/Extended
+        case 67: case 68: case 69:  // BFP Extended  ==>  DFP Short/Long/Extended
+            regs->psw.cc = 0; break;
+        default:
+            regs->psw.cc = 3; break;
+        }
+        regs->GR_L( 1 ) = 0;  //  *** See PROGRAMMING NOTE further below! ***
         return;
     }
 
-    /* Process their request... */
+    /* NOT test mode: Process their request... */
     switch (opcode)
     {
         // DFP Short     ==>  HFP Short/Long/Extended
@@ -2426,22 +2477,26 @@ DEF_INST( perform_floating_point_operation )
     }
 
 
+    /*****************************************************************/
+    /*                    PROGRAMMING NOTE!                          */
+    /*****************************************************************/
+    /*                                                               */
+    /*  Set Return Code value in GR1 to zero. FIXME: we know this    */
+    /*  isn't right, but it's the best we can do for now. We will    */
+    /*  fix it later. Besides, it's very likely zero IS correct!     */
+    /*                                                               */
+    /*****************************************************************/
+    regs->GR_L( 1 ) = 0;
 
 
     /* Specification Exception if Invalid Operation Code */
     if (numout < 0)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-
-
-
     /* Retrieve/Set DXC/FPC results */
     dxc = (fpc & FPC_DXC) >> FPC_DXC_SHIFT;
     regs->dxc = dxc;
     regs->fpc = fpc;
-
-
-
 
     /* If not Invalid Operation, update registers with the results */
     if (!(fpc & FPC_DXC_I))
@@ -2462,16 +2517,20 @@ DEF_INST( perform_floating_point_operation )
         }
     }
 
-
-
-
     if (cc >= 0)
     {
-        // if reg0 says suppress inexact errors, turn off the bit
+        // FIXME: currently, CC1 is never returned because cc=1 is
+        // never returned by any of the above conversion functions,
+        // but it's the best we can do for now. We'll fix it later.
+        regs->psw.cc = cc;
+
+        /* If GR0 says suppress inexact errors, then turn off the FPC bit */
         if (fpc & FPC_FLAG_SFX) // inexact
         {
-            // generate program interuption if the mask is in place and error not suppressed
-            if ((fpc & FPC_MASK_IMX) && !IS_GR0_INEX_SUPP_BIT_ON( optbits ))
+            /* Generate a Program Interuption if the mask is in place
+               and the error is not being purposely suppressed.
+            */
+            if ((fpc & FPC_MASK_IMX) && !GR0_IS( optbits ))
             {
                 fpc &= ~FPC_DXC;
                 fpc |= DXC_IEEE_INEXACT_INCR << FPC_DXC_SHIFT;
@@ -2482,8 +2541,10 @@ DEF_INST( perform_floating_point_operation )
                 ARCH_DEP( program_interrupt )( regs, PGM_DATA_EXCEPTION );
             }
 
-            // if inexact suppression requested, turn off the bit in the fpc
-            if (IS_GR0_INEX_SUPP_BIT_ON( optbits ))
+            /* Otherwise if inexact suppression was requested, turn off
+               that bit in the FPC.
+            */
+            if (GR0_IS( optbits ))
                 regs->fpc &= ~FPC_FLAG_SFX;
         }
     }
@@ -2492,10 +2553,6 @@ DEF_INST( perform_floating_point_operation )
         regs->fpc = fpc;
         ARCH_DEP( program_interrupt )( regs, PGM_DATA_EXCEPTION );
     }
-
-
-
-
 
 } /* end DEF_INST( perform_floating_point_operation ) */
 
