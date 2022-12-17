@@ -967,9 +967,9 @@ het_read( HETB *hetb, void *sbuf )
 
                 rc = BZ2_bzBuffToBuffDecompress( sbuf,
                                                  (void *) &slen,
-                            tbuf,
+                                                 tbuf,
                                                  tlen,
-                            0,
+                                                 0,
                                                  0 );
                 if (rc != BZ_OK)
                 {
