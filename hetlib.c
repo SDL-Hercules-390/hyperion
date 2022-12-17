@@ -767,9 +767,14 @@ het_read( HETB *hetb, void *sbuf )
 {
     char *tptr;
     int rc;
-    unsigned int slen;
+
+    unsigned long slen;
+    unsigned long tlen;
+
+    unsigned int bz_slen;
+    unsigned int bz_tlen;
+
     int flags1, flags2;
-    unsigned int tlen;
     char *tbuf;
 
     /*
@@ -963,14 +968,21 @@ het_read( HETB *hetb, void *sbuf )
 
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:
+
                 slen = HETMAX_BLOCKSIZE;
 
+                bz_slen = (unsigned int) slen;
+                bz_tlen = (unsigned int) tlen;
+
                 rc = BZ2_bzBuffToBuffDecompress( sbuf,
-                                                 (void *) &slen,
+                                                 (void *) &bz_slen,
                                                  tbuf,
-                                                 tlen,
+                                                 bz_tlen,
                                                  0,
                                                  0 );
+                slen = (unsigned long) bz_slen;
+                tlen = (unsigned long) bz_tlen;
+
                 if (rc != BZ_OK)
                 {
                     rc = errno;
@@ -1254,7 +1266,11 @@ het_write( HETB *hetb, const void *sbuf, int slen )
 {
     int rc;
     int flags;
-    unsigned int tlen;
+
+    unsigned long tlen;
+
+    unsigned int bz_tlen;
+
     char *tbuf = NULL;
 #if defined( HAVE_ZLIB ) || defined( HET_BZIP2 )
     size_t tsiz = ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12);
@@ -1317,13 +1333,17 @@ het_write( HETB *hetb, const void *sbuf, int slen )
             case HETHDR_FLAGS1_BZLIB:
                 tlen = tsiz;
 
+                bz_tlen = (unsigned int) tlen;
+
                 rc = BZ2_bzBuffToBuffCompress( tbuf,
-                                               (void *) &tlen,
+                                               (void *) &bz_tlen,
                                                (void *)sbuf,
                                                slen,
                                                hetb->level,
                                                0,
                                                0 );
+                tlen = (unsigned long) bz_tlen;
+
                 if( rc != BZ_OK )
                 {
                     rc = errno;
