@@ -767,9 +767,9 @@ het_read( HETB *hetb, void *sbuf )
 {
     char *tptr;
     int rc;
-    unsigned long slen;
+    unsigned int slen;
     int flags1, flags2;
-    unsigned long tlen;
+    unsigned int tlen;
     char *tbuf;
 
     /*
@@ -967,9 +967,9 @@ het_read( HETB *hetb, void *sbuf )
 
                 rc = BZ2_bzBuffToBuffDecompress( sbuf,
                                                  (void *) &slen,
-                                                 tbuf,
+                            tbuf,
                                                  tlen,
-                                                 0,
+                            0,
                                                  0 );
                 if (rc != BZ_OK)
                 {
@@ -1254,7 +1254,7 @@ het_write( HETB *hetb, const void *sbuf, int slen )
 {
     int rc;
     int flags;
-    unsigned long tlen;
+    unsigned int tlen;
     char *tbuf = NULL;
 #if defined( HAVE_ZLIB ) || defined( HET_BZIP2 )
     size_t tsiz = ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12);
