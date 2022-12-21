@@ -746,7 +746,13 @@ static void* quit_thread( void* arg )
     // command has time to be echoed to the screen.
 
     usleep( quitdelay_usecs );
-    do_shutdown();
+
+    // Now proceed with a normal shutdown, which waits for
+    // the guest to quiesce itself beforehand (if appropriate)
+    // or else simply proceeds with a normal Hercules shutdown
+    // via our "do_shutdown_now" helper function.
+
+    do_shutdown();  // ALWAYS go through this function!
     return NULL;
 }
 
@@ -772,7 +778,7 @@ int quit_cmd( int argc, char* argv[], char* cmdline )
     }
 
     if (argc > 1)
-        sysblk.shutimmed = TRUE;
+        sysblk.shutimmed = TRUE;  // ('FORCE' option was given)
 
     // Launch the shutdown from a separate thread only
     // so the "exit" command can be echoed to the panel.
@@ -780,6 +786,52 @@ int quit_cmd( int argc, char* argv[], char* cmdline )
     VERIFY( create_thread( &tid, DETACHED,
         quit_thread, 0, "quit_thread" ) == 0);
 
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* quitmout - define maximum wait-for-guest-to-quiesce timeout value */
+/*-------------------------------------------------------------------*/
+int quitmout_cmd( int argc, char* argv[], char* cmdline )
+{
+    long quitmout = 0;
+    char* endptr  = NULL;
+    char buf[16]  = {0};
+
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0( argv );
+
+    if (argc < 2)
+    {
+        MSGBUF( buf, "%d", sysblk.quitmout );
+
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], buf );
+        return 0;
+    }
+
+    if (0
+        || argc > 2
+        || (quitmout = strtol( argv[1], &endptr, 10 )) < 0
+        || (1
+            && (0 == quitmout || LONG_MAX == quitmout)
+            && (ERANGE == errno || EINVAL == errno)
+           )
+        || (1
+            && *endptr != ' '
+            && *endptr != 0
+           )
+    )
+    {
+        // "Invalid argument(s). Type 'help %s' for assistance."
+        WRMSG( HHC02211, "E", argv[0] );
+        return -1;
+    }
+
+    MSGBUF( buf, "%d", sysblk.quitmout = (int) quitmout );
+
+    // "%-14s set to %s"
+    WRMSG( HHC02204, "I", argv[0], buf );
     return 0;
 }
 

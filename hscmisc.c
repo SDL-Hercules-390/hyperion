@@ -1213,43 +1213,64 @@ void ARCH_DEP( display_guest_inst )( REGS* regs, BYTE* inst )
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-static int wait_sigq_pending = 0;
+static bool guest_is_quiesced = true;  // (Yes! This is the default!)
 
-static int is_wait_sigq_pending()
+static bool wait_for_quiesce_cancelled = false;
+
+static int is_guest_quiesced()
 {
-int pending;
+    bool quiesced;
 
-    OBTAIN_INTLOCK(NULL);
-    pending = wait_sigq_pending;
-    RELEASE_INTLOCK(NULL);
-
-    return pending;
-}
-
-static void wait_sigq_resp()
-{
-int pending;
-    /* Wait for all CPU's to stop */
-    do
+    OBTAIN_INTLOCK( NULL );
     {
-        OBTAIN_INTLOCK(NULL);
-        wait_sigq_pending = 0;
-        if (!are_all_cpus_stopped_intlock_held())
-            wait_sigq_pending = 1;
-        pending = wait_sigq_pending;
-        RELEASE_INTLOCK(NULL);
-
-        if(pending)
-            SLEEP(1);
+        quiesced = guest_is_quiesced;
     }
-    while(is_wait_sigq_pending());
+    RELEASE_INTLOCK( NULL );
+
+    return quiesced;
 }
 
-static void cancel_wait_sigq()
+static void wait_for_guest_to_quiesce()
 {
-    OBTAIN_INTLOCK(NULL);
-    wait_sigq_pending = 0;
-    RELEASE_INTLOCK(NULL);
+    int  i;
+    bool keep_waiting = true;
+
+    guest_is_quiesced = false;
+
+    /* Wait for all CPU's to stop or time has expired */
+    for (i=0; keep_waiting && (!sysblk.quitmout || i < sysblk.quitmout); ++i)
+    {
+        /* If not the first time, wait a bit before checking again */
+        if (i != 0 && !is_guest_quiesced())
+            SLEEP( 1 );
+
+        /* Check if guest has finally quiesced itself */
+        OBTAIN_INTLOCK( NULL );
+        {
+            if (!guest_is_quiesced)
+                 guest_is_quiesced = are_all_cpus_stopped_intlock_held();
+
+            keep_waiting = !guest_is_quiesced;
+        }
+        RELEASE_INTLOCK( NULL );
+    }
+
+    /* Guest has finished quiescing itself or else we lost patience */
+}
+
+static void cancel_wait_for_guest_quiesce()
+{
+    OBTAIN_INTLOCK( NULL );
+    {
+        /* Purposely LIE by setting the flag indicating the guest has
+           finished quiescing (regardless of whether it actually has
+           or not!) so as to cause the above "wait_for_guest_to_quiesce"
+           function to break out of its wait loop and return.
+        */
+        wait_for_quiesce_cancelled = true;  // (if anyone's interested)
+        guest_is_quiesced = true;           // PURPOSELY LIE! (maybe)
+    }
+    RELEASE_INTLOCK( NULL );
 }
 
 
@@ -1394,8 +1415,9 @@ static void do_shutdown_now()
 static void* do_shutdown_wait(void* arg)
 {
     UNREFERENCED( arg );
-    WRMSG(HHC01426, "I");
-    wait_sigq_resp();
+    // "Shutdown initiated"
+    WRMSG( HHC01426, "I" );
+    wait_for_guest_to_quiesce();
     do_shutdown_now();
     return NULL;
 }
@@ -1412,19 +1434,53 @@ static void* do_shutdown_wait(void* arg)
 /*-------------------------------------------------------------------*/
 void do_shutdown()
 {
-TID tid;
-    if ( sysblk.shutimmed )
+    /* If an immediate shutdown has been triggered, then do so now! */
+    if (sysblk.shutimmed)
+    {
         do_shutdown_now();
+    }
     else
     {
-        if(is_wait_sigq_pending())
-            cancel_wait_sigq();
+        /* If this was the second time we've been called, give up
+           waiting for the guest to quiesce. This should cause the
+           "wait_for_guest_to_quiesce" function the "do_shutdown_wait"
+           thread called to immediately give up and return, thereby
+           causing it to proceed on to performing a normal shutdown.
+
+           Otherwise, if this is our first time here, signal the guest
+           to quiesce itself and then create a worker thread to WAIT
+           for it to finish quiescing itself before then continuing on
+           with our own normal Hercules shutdown.
+        */
+
+        if (!is_guest_quiesced())             // (second request?)
+        {
+            cancel_wait_for_guest_quiesce();  // (then stop waiting!)
+        }
         else
-            if(can_signal_quiesce() && !signal_quiesce(0,0))
-                create_thread(&tid, DETACHED, do_shutdown_wait,
-                              NULL, "do_shutdown_wait");
+        {
+            TID tid;  // (work for create_thread)
+
+            /* This is our first time here. If the guest supports
+               the quiesce signal (SigQuiesce), then send the signal
+               and then create a thread that waits for the guest to
+               finish quiescing itself before then continuing with
+               our own shutdown.
+            */
+            if (can_signal_quiesce() && signal_quiesce( 0,0 ) == 0)
+            {
+                create_thread( &tid,
+                               DETACHED, do_shutdown_wait,
+                               NULL,    "do_shutdown_wait" );
+            }
             else
+            {
+                /* Otherwise the guest does not support the quiesce
+                   signal, so just do a normal Hercules shutdown.
+                */
                 do_shutdown_now();
+            }
+        }
     }
 }
 

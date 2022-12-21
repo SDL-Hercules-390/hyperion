@@ -1210,6 +1210,30 @@
   "              force     This option will terminate the emulator\n"           \
   "                        immediately.\n"
 
+#define quitmout_cmd_desc      "Define maximum guest quiesce time"
+#define quitmout_cmd_help       \
+                                \
+  "Format: \"quitmout [nnn]\" Defines the maximum amount of time in seconds\n"  \
+  "you wish to wait for your guest to complete its quiesce function before\n"   \
+  "proceeding with Hercules shutdown processing. If the guest completes its\n"  \
+  "quiesce before this time period has expired Hercules proceeds immediately\n" \
+  "with its normal shutdown processing. It does not wait for the time period\n" \
+  "to expire.\n"                                                                \
+  "\n"                                                                          \
+  "If the guest fails to complete its quiesce functionality within the given\n" \
+  "time period then Hercules does not wait any long and proceeds immediately\n" \
+  "to performing a normal shutdown of the emulator.\n"                          \
+  "\n"                                                                          \
+  "Specify '0' to indicate you wish to always wait for the guest to complete\n" \
+  "its quiesce functionality before shutting down the emulator no matter how\n" \
+  "long it may take (i.e. wait forever for the guest to quiesce).\n"            \
+  "\n"                                                                          \
+  "Enter the command with no operand to display the current value.\n"           \
+  "\n"                                                                          \
+  "NOTE: setting a quit timeout value only makes sense if you are running a\n"  \
+  "guest that supports the Signal Shutdown hypervisor signal. Not all guests\n" \
+  "support such signals. zLinux and z/VM do, but z/OS for example does not.\n"
+
 #define hwldr_cmd_desc          "Specify boot loader filename"
 #define hwldr_cmd_help          \
                                 \
@@ -2110,6 +2134,7 @@ COMMAND( "shrdport",                shrdport_cmd,           SYSCFGNDIAG8,       
 COMMAND( "shrd",                    EXTCMD(shrd_cmd),       SYSCMDNOPER,        shrd_cmd_desc,          shrd_cmd_help       )
 #endif
 COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_cmd_desc,          quit_cmd_help       )
+COMMAND( "quitmout",                quitmout_cmd,           SYSALLNDIAG8,       quitmout_cmd_desc,      quitmout_cmd_help   )
 #if defined( OPTION_W32_CTCI )
 COMMAND( "tt32",                    tt32_cmd,               SYSCMDNOPER,        tt32_cmd_desc,          tt32_cmd_help       )
 #endif

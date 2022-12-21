@@ -114,6 +114,8 @@ HAO_DLL_IMPORT void hao_command(char *command); /* process hao command */
 #endif /* defined(OPTION_HAO) */
 
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
+extern int quit_cmd(     int argc, char* argv[], char* cmdline );
+extern int quitmout_cmd( int argc, char* argv[], char* cmdline );
 HCMD_DLL_IMPORT int devinit_cmd( int argc, char* argv[], char* cmdline ); // used by CTCE_Recovery()
 extern int qproc_cmd( int argc, char* argv[], char* cmdline );
 
@@ -242,7 +244,6 @@ void get_mpfactors(BYTE *dest);
 
 /* Functions in module impl.c */
 IMPL_DLL_IMPORT int impl(int,char **);
-int quit_cmd(int argc, char *argv[],char *cmdline);
 typedef void (*LOGCALLBACK)( const char*, size_t );
 typedef void *(*COMMANDHANDLER)(char *);
 IMPL_DLL_IMPORT void registerLogCallback(LOGCALLBACK);
