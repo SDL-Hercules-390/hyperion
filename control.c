@@ -1786,8 +1786,10 @@ VADR    vaddr;                          /* Virtual Address of first or
 int     pageidx;                        /* Starting page index       */
 int     pages = 1;                      /* Total Pages to invalidate */
 int     i;                              /* work (for loop iterator)  */
-bool    do_range = false;               /* helper flag               */
 bool    local = false;                  /* true == m4 bit 3 is on    */
+#if defined( FEATURE_013_IPTE_RANGE_FACILITY )
+bool    do_range = false;               /* helper flag               */
+#endif
 
 #if defined( FEATURE_013_IPTE_RANGE_FACILITY ) || \
     defined( FEATURE_051_LOCAL_TLB_CLEARING_FACILITY )
