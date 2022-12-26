@@ -325,10 +325,11 @@ document.
     <p>
     By default, the configure script will attempt to guess appropriate
     compiler optimization flags for your system.  If its guesses
-    turn out to be wrong, you can disable all optimization by
-    passing the <code><nobr>--disable-optimization</nobr></code> option to
-    configure, or specify your own optimization flags with
-    <code><nobr>--enable-optimization=FLAGS</nobr></code>. For additional configuration
+    turn out to be wrong, you can either specify your own optimization
+    flags with <code><nobr>--enable-optimization=FLAGS</nobr></code>
+    (<i>preferred</i>) or else as a last resort disable all optimization
+    by passing the <code><nobr>--disable-optimization</nobr></code> option
+    instead (<i><b>not</b> recommended</i>). For additional configuration
     options, run: <code>./configure <nobr>--help=short</nobr></code>.
 
     <p>For Apple macOS, these additional configure switches are recommended:
