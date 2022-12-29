@@ -192,7 +192,7 @@ static void do_data_dump( bool ascii, void* addr, unsigned int len, unsigned int
         hex_chars[xi] = '\0';
     }
 
-    if (firstsame || len <= DD_BPL)
+    if (firstsame || len <= MAX_DD)
         same_as_above( &firstsame, &lastsame, lineoff, hex_chars, print_chars );
 
     if (len > MAX_DD)
