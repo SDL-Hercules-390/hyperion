@@ -2240,6 +2240,60 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             invalid = TRUE;
         }
     }
+    else // (argc < 3)
+    {
+        // "ctc debug" by itself lists the CTC debugging state for all CTC devices
+
+        static const char* yes_startup  = "STARTUP";
+        static const char* yes_on       = "ON";
+        static const char* no_off       = "OFF";
+        const char* on_or_off;
+
+        for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
+        {
+            if (0
+                || !dev->allocated
+                || 0x3088 != dev->devtype
+                || (1
+                    && CTC_CTCI != dev->ctctype
+                    && CTC_LCS  != dev->ctctype
+                    && CTC_PTP  != dev->ctctype
+                    && CTC_CTCE != dev->ctctype
+                   )
+            )
+                continue;
+
+            if (CTC_CTCI == dev->ctctype)
+            {
+                pCTCBLK = dev->dev_data;
+                on_or_off = (pCTCBLK->fDebug) ? yes_on : no_off;
+            }
+            else if (CTC_LCS == dev->ctctype)
+            {
+                pLCSDEV = dev->dev_data;
+                pLCSBLK = pLCSDEV->pLCSBLK;
+                on_or_off = (pLCSBLK->fDebug) ? yes_on : no_off;
+            }
+            else if (CTC_CTCE == dev->ctctype)  /* CTCE is not grouped. */
+            {
+                if (dev->ctce_trace_cntr >= 0)
+                    on_or_off = yes_startup;
+                else
+                    on_or_off = (CTCE_TRACE_ON == dev->ctce_trace_cntr) ? yes_on : no_off;
+            }
+            else // (CTC_PTP == dev->ctctype)
+            {
+                pPTPATH = dev->dev_data;
+                pPTPBLK = pPTPATH->pPTPBLK;
+                on_or_off = (pPTPBLK->uDebugMask) ? yes_on : no_off;
+            }
+
+            // "%1d:%04X: CTC DEBUG is %s"
+            WRMSG( HHC00903, "I", LCSS_DEVNUM, on_or_off );
+        }
+
+        return 0;
+    }
 
     /* Check whether there is a fourth token. If there isn't, assume the fourth token is all.  */
     if (argc < 4)
@@ -2334,7 +2388,12 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             if (0
                 || !dev->allocated
                 || 0x3088 != dev->devtype
-                || (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype && CTC_PTP != dev->ctctype && CTC_CTCE != dev->ctctype)
+                || (1
+                    && CTC_CTCI != dev->ctctype
+                    && CTC_LCS  != dev->ctctype
+                    && CTC_PTP  != dev->ctctype
+                    && CTC_CTCE != dev->ctctype
+                   )
             )
                 continue;
 
@@ -2350,6 +2409,21 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                 pLCSBLK->fDebug = onoff;
                 pLCSBLK->iTraceLen = iTraceLen;
                 pLCSBLK->iDiscTrace = iDiscTrace;
+            }
+            else if (CTC_CTCE == dev->ctctype)  /* CTCE is not grouped. */
+            {
+                if (onoff)
+                {
+                    dev->ctce_trace_cntr = CTCE_TRACE_ON;
+                }
+                else if (startup)
+                {
+                    dev->ctce_trace_cntr = CTCE_TRACE_STARTUP;
+                }
+                else
+                {
+                    dev->ctce_trace_cntr = CTCE_TRACE_OFF;
+                }
             }
             else // (CTC_PTP == dev->ctctype)
             {

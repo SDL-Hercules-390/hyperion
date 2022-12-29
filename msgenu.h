@@ -777,7 +777,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00900 "%1d:%04X %s: Error in function %s: %s"
 #define HHC00901 "%1d:%04X %s: Interface %s, type %s opened"
 #define HHC00902 "%1d:%04X %s: ioctl %s failed for device %s: %s"
-//efine HHC00903 (available)
+#define HHC00903 "%1d:%04X: CTC DEBUG is %s"
 #define HHC00904 "%1d:%04X %s: Halt or clear recognized"
 //efine HHC00905 (available)
 #define HHC00906 "%1d:%04X CTC: write CCW count %u is invalid"
