@@ -1496,7 +1496,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC02379 (available)
 //efine HHC02380 (available)
 //efine HHC02381 (available)
-//efine HHC02382 (available)
+#define HHC02382 "%stracing active for %1d:%04X" // CCW/ORB/both
 //efine HHC02383 (available)
 //efine HHC02384 (available)
 #define HHC02385 "CPUMODEL %04X does not technically support TXF"

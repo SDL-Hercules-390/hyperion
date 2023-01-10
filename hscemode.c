@@ -1165,6 +1165,27 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         panel_command( "-txf" );
 #endif
 
+    /* Also show CCW/ORB tracing if enabled */
+    if (query)
+    {
+        DEVBLK* dev;
+        char type[16] = {0};
+
+        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        {
+            type[0] = 0;
+
+            if (dev->orbtrace   ) STRLCAT( type, "ORB " );
+            if (dev->ccwtrace   ) STRLCAT( type, "CCW " );
+            if (dev->ckdkeytrace) STRLCAT( type, "CKD " );
+
+            if (type[0])
+                // "%stracing active for %1d:%04X"
+                WRMSG( HHC02382, "I", type,
+                    SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        }
+    }
+
     return 0;
 }
 
