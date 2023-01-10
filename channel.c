@@ -810,13 +810,12 @@ static void _display_ccw ( const DEVBLK* dev, const BYTE ccw[], const U32 addr,
 {
     BYTE area[64];
 
-    UNREFERENCED( flags );
-
+    /* No data to be formatted if CCW is a NOP or TIC
+       or the CCW "Skip data transfer" flag is on. */
     if (0
-        || IS_CCW_READ      (      ccw[0] )
-        || IS_CCW_IMMEDIATE ( dev, ccw[0] )
-        || IS_CCW_TIC       (      ccw[0] )
-        || IS_CCW_SENSE     (      ccw[0] )
+        || flags & CCW_FLAGS_SKIP
+        || IS_CCW_NOP( ccw[0] )
+        || IS_CCW_TIC( ccw[0] )
     )
         area[0] = 0;
     else
@@ -4600,8 +4599,21 @@ execute_halt:
             if (chanstat != 0)
                 goto breakchain;
 
-            /* Display the CCW */
-            if (dev->ccwtrace)
+            /* Trace the CCW -- UNLESS ... it's a read type! For read
+               type CCWs, we defer the tracing until AFTER the CCW has
+               been executed and the data copied to storage (i.e. we
+               don't trace the CCW until after BOTH the driver's CCW
+               handler (dev->hnd->exec) and ARCH_DEP(copy_iobuf) have
+               been called; see much further below).
+            */
+            if (1
+                && dev->ccwtrace
+                && !(0
+                     || IS_CCW_READ  ( ccw[0] )
+                     || IS_CCW_RDBACK( ccw[0] )
+                     || IS_CCW_SENSE ( ccw[0] )
+                    )
+            )
                 DISPLAY_CCW (dev, ccw, addr, count, flags);
         }
 
@@ -5525,25 +5537,14 @@ breakchain:
                 area[0] = 0x00;
             }
 
-            /* Format data for READ or SENSE commands only */
-            else if (!dev->is_immed              &&
-                !(flags & CCW_FLAGS_SKIP)        &&
-                count                            &&
-                (IS_CCW_READ(dev->code)     ||
-                 IS_CCW_SENSE(dev->code)    ||
-                 IS_CCW_RDBACK(dev->code)))
-            {
-                memcpy(area, "=>", 2);
-                format_data(area + 2, sizeof(area)-2, iobuf->data, MIN(count, 16));
-            }
-            else
-                area[0] = '\0';
+            /* Trace the read type CCW */
+            DISPLAY_CCW( dev, ccw, addr, count, flags );
 
             /* Display status and residual byte count */
 
-            // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X%s"
+            // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X"
             WRMSG( HHC01312, "I", LCSS_DEVNUM,
-                unitstat, chanstat, residual, area );
+                    unitstat, chanstat, residual );
 
             /* Display sense bytes if unit check is indicated */
             if (unitstat & CSW_UC)
