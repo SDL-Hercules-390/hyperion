@@ -1357,8 +1357,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02222 "Unsupported function"
 #define HHC02223 "%s of %s-labeled volume %s pending for drive %u:%4.4X %s"
 #define HHC02224 "Store status rejected: CPU not stopped"
-//efine HHC02225 (available)
-//efine HHC02226 (available)
+#define HHC02225 "%1d:%04X is not a dasd device"
+#define HHC02226 "No dasd devices found"
 #define HHC02227 "Shell/Exec commands are disabled"
 #define HHC02228 "%s key pressed"
 #define HHC02229 "Instruction %s %s%s%s"

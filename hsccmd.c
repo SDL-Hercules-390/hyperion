@@ -8034,7 +8034,7 @@ static int fonoff_cmd( REGS* regs, char* cmdline )
 /*-------------------------------------------------------------------*/
 int OnOffCommand( int argc, char* argv[], char* cmdline )
 {
-    char*   cmd = cmdline;              /* Copy of panel command     */
+    char*   cmd = cmdline;              /* (just a shorter name)     */
     bool    plus_enable_on;             /* true == x+, false == x-   */
     char*   onoroff;                    /* x+ == "on", x- == "off"   */
     DEVBLK* dev;
@@ -8057,82 +8057,160 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
     }
 
     OBTAIN_INTLOCK( NULL );
-
-    if (!IS_CPU_ONLINE( sysblk.pcpu ))
     {
-        RELEASE_INTLOCK( NULL );
-        // "Processor %s%02X: processor is not %s"
-        WRMSG( HHC00816, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online" );
-        return 0;
-    }
+        if (!IS_CPU_ONLINE( sysblk.pcpu ))
+        {
+            RELEASE_INTLOCK( NULL );
+            // "Processor %s%02X: processor is not %s"
+            WRMSG( HHC00816, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online" );
+            return 0;
+        }
 
-    regs = sysblk.regs[ sysblk.pcpu ];
+        regs = sysblk.regs[ sysblk.pcpu ];
 
-    // f- and f+ commands - mark 4K page frame as -unusable or +usable
+        // f- and f+ commands - mark 4K page frame as -unusable or +usable
 
-    if (cmd[0] == 'f')
-    {
-        int rc = fonoff_cmd( regs, cmdline );
-        RELEASE_INTLOCK( NULL );
-        return rc;
-    }
+        if (cmd[0] == 'f')
+        {
+            int rc = fonoff_cmd( regs, cmdline );
+            RELEASE_INTLOCK( NULL );
+            return rc;
+        }
 
 #if defined( OPTION_CKD_KEY_TRACING )
 
-    // t+ckd and t-ckd commands - turn CKD_KEY tracing on/off
+        // t+ckd [devnum] and t-ckd [devnum] commands - turn CKD Search Key tracing on/off
 
-    if ((cmd[0] == 't') && (strcasecmp(cmd+2, "ckd") == 0))
-    {
-        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        if (1
+            && (cmd[0] == 't')
+            && (cmd[2] == 'c' || cmd[2] == 'C')
+            && (cmd[3] == 'k' || cmd[3] == 'K')
+            && (cmd[4] == 'd' || cmd[4] == 'D')
+            && (cmd[5] ==  0  || cmd[5] == ' ')
+        )
         {
-            if (dev->devchar[10] == 0x20)
+            char buf[64];   // (results message buffer)
+
+            if (cmd[5] ==  0) // (just "t+ckd" without any device number)
+            {
+                // Enable CKD Search Key tracing for all CKD devices...
+
+                bool bFound = false;
+
+                for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+                {
+                    if (dev->devchar[10] == DEVCLASS_DASD)
+                    {
+                        bFound = true;
+                        dev->ckdkeytrace = plus_enable_on;
+                    }
+                }
+
+                if (!bFound)
+                {
+                    RELEASE_INTLOCK( NULL );
+                    // "No dasd devices found"
+                    WRMSG( HHC02226, "E" );
+                    return -1;
+                }
+
+                // Build results message
+                MSGBUF( buf, "%s for all dasd devices", onoroff );
+            }
+            else if (cmd[5] != ' ')
+            {
+                RELEASE_INTLOCK( NULL );
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", cmd, "" );
+                return -1;
+            }
+            else // (optional device number presumably specified)
+            {
+                const char* p;
+                U16 lcss, devnum;
+
+                // Position to start of devnum operand
+                for (p = &cmd[6]; *p && *p == ' '; ++p);
+
+                // Parse the device number
+                if (parse_single_devnum( p, &lcss, &devnum ) < 0)
+                {
+                    RELEASE_INTLOCK( NULL );
+                    return -1;  // (error message already displayed)
+                }
+
+                // Validate device number
+                if (!(dev = find_device_by_devnum( lcss, devnum )))
+                {
+                    RELEASE_INTLOCK( NULL );
+                    // HHC02200 "%1d:%04X device not found"
+                    devnotfound_msg( lcss, devnum );
+                    return -1;
+                }
+
+                if (dev->devchar[10] != DEVCLASS_DASD)
+                {
+                    RELEASE_INTLOCK( NULL );
+                    // "%1d:%04X is not a dasd device"
+                    WRMSG( HHC02225, "E", lcss, devnum );
+                    return -1;
+                }
+
+                // Enable CKD Search Key tracing for this device
                 dev->ckdkeytrace = plus_enable_on;
+
+                // Build results message
+                MSGBUF( buf, "%s for device %1d:%04X", onoroff, lcss, devnum );
+            }
+
+            RELEASE_INTLOCK( NULL );
+
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", "CKD key trace", buf );
+            return 0;
         }
-        RELEASE_INTLOCK( NULL );
-        WRMSG( HHC02204, "I", "CKD key trace", onoroff );
-        return 0;
-    }
 
 #endif
 
-    // o+devn and o-devn commands - turn ORB tracing on/off
-    // t+devn and t-devn commands - turn CCW tracing on/off
+        // o+devn and o-devn commands - turn ORB tracing on/off
+        // t+devn and t-devn commands - turn CCW tracing on/off
 
-    if (1
-        && (cmd[0] == 'o' || cmd[0] == 't')
-        && parse_single_devnum_silent( &cmd[2], &lcss, &devnum ) == 0
-    )
-    {
-        char* typ;
-        char buf[40];
-
-        if (!(dev = find_device_by_devnum( lcss, devnum )))
+        if (1
+            && (cmd[0] == 'o' || cmd[0] == 't')
+            && parse_single_devnum_silent( &cmd[2], &lcss, &devnum ) == 0
+        )
         {
-            // HHC02200 "%1d:%04X device not found"
-            devnotfound_msg( lcss, devnum );
+            char* typ;
+            char buf[40];
+
+            if (!(dev = find_device_by_devnum( lcss, devnum )))
+            {
+                // HHC02200 "%1d:%04X device not found"
+                devnotfound_msg( lcss, devnum );
+                RELEASE_INTLOCK( NULL );
+                return -1;
+            }
+
+            if (cmd[0] == 'o')
+            {
+                typ = "ORB trace";
+                dev->orbtrace = plus_enable_on;
+            }
+            else // (cmd[0] == 't')
+            {
+                typ = "CCW trace";
+                dev->orbtrace = plus_enable_on;
+                dev->ccwtrace = plus_enable_on;
+            }
+            MSGBUF( buf, "%s for %1d:%04X", typ, lcss, devnum );
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", buf, onoroff );
             RELEASE_INTLOCK( NULL );
-            return -1;
+            return 0;
         }
-
-        if (cmd[0] == 'o')
-        {
-            typ = "ORB trace";
-            dev->orbtrace = plus_enable_on;
-        }
-        else // (cmd[0] == 't')
-        {
-            typ = "CCW trace";
-            dev->orbtrace = plus_enable_on;
-            dev->ccwtrace = plus_enable_on;
-        }
-        MSGBUF( buf, "%s for %1d:%04X", typ, lcss, devnum );
-        // "%-14s set to %s"
-        WRMSG( HHC02204, "I", buf, onoroff );
-        RELEASE_INTLOCK( NULL );
-        return 0;
     }
-
     RELEASE_INTLOCK( NULL );
+
     // "Invalid argument %s%s"
     WRMSG( HHC02205, "E", cmd, "" );
     return -1;

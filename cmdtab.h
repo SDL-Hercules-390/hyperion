@@ -1673,7 +1673,7 @@
   "Format: \"t?\" displays whether instruction tracing is on or off\n"          \
   "and the address range if any.\n"
 
-#define tckd_cmd_desc           "Turn CKD_KEY tracing on/off"
+#define tckd_cmd_desc           "Turn CKD Search Key tracing on/off"
 #define odev_cmd_desc           "Turn ORB tracing on/off"
 #define tdev_cmd_desc           "Turn CCW tracing on/off"
 #define tplus_cmd_desc          "Turn on instruction tracing"
@@ -2082,7 +2082,7 @@ COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        
 COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )
 #if defined( OPTION_CKD_KEY_TRACING )
-COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL                )
+COMMAND( "t{+/-}CKD [devnum]",      NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL                )
 #endif
         // PROGRAMMING NOTE: the following CCKD 'sf' shadow file commands
         // are directly routed by the 'CallHercCmd' function in "cmdtab.c".

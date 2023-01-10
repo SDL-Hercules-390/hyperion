@@ -41,7 +41,8 @@ typedef struct _CKDDEV {                /* CKD Device table entry    */
   const char   *name;                   /* Device name               */
         U16     devt;                   /* Device type               */
         BYTE    model;                  /* Device model              */
-        BYTE    devclass;               /* Device class              */
+        BYTE    devclass;               /* Device class: X'20'=DASD  */
+#define DEVCLASS_DASD       0x20
         BYTE    code;                   /* Device code               */
         U16     cyls;                   /* Number primary cylinders  */
         U16     altcyls;                /* Number alternate cylinders*/
