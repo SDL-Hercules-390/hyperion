@@ -215,11 +215,11 @@
 /*  Instruction tracing helper function to print the instruction     */
 /*-------------------------------------------------------------------*/
 
-#define PRINT_INST( _regs, _inst, _prtbuf )     \
-                                                \
-           iprint_router_func( (_regs), (_inst), 0, (_prtbuf) )
+#define PRINT_INST( _arch_mode, _inst, _prtbuf )     \
+                                                     \
+           iprint_router_func( (_arch_mode), (_inst), 0, (_prtbuf) )
 
-extern int iprint_router_func( REGS* regs, BYTE inst[], char mnemonic[], char* prtbuf );
+OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemonic[], char* prtbuf );
 
 /*-------------------------------------------------------------------*/
 /*               Individual instruction counting                     */

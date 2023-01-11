@@ -5749,7 +5749,7 @@ DEF_INST(execute_relative_long)
         if (ilc < 6) STRLCAT( buf, "    " );
         if (ilc < 4) STRLCAT( buf, "    " );
 
-        PRINT_INST( regs, ip, buf2 );
+        PRINT_INST( regs->arch_mode, ip, buf2 );
 
         LOGMSG( "%s%s\n", buf, buf2 );
     }

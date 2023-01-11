@@ -2444,7 +2444,7 @@ void dump_tdb( REGS* regs, TDB* tdb )
                                      n += idx_snprintf( n, buf, sizeof( buf ), " %s", (ilc < 4) ? "        "
                                                                                     : (ilc < 6) ? "    "
                                                                                     :             "" );
-                        n += PRINT_INST( regs, inst, buf + n );
+                        n += PRINT_INST( regs->arch_mode, inst, buf + n );
 
                         // "AAAAAAAAAAAAAAAA INST=112233445566 XXXXX op1,op2                name"
                         WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
