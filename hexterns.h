@@ -367,7 +367,6 @@ int display_cregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_aregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr);
 const char* FormatCRW( U32  crw, char* buf, size_t bufsz );
-const char* FormatORB( ORB* orb, char* buf, size_t bufsz );
 const char* FormatSCL( ESW* esw, char* buf, size_t bufsz );
 const char* FormatERW( ESW* esw, char* buf, size_t bufsz );
 const char* FormatESW( ESW* esw, char* buf, size_t bufsz );
@@ -438,6 +437,7 @@ GOP_DLL_IMPORT int   getopt_long ( int nargc, char * const *nargv, const char *o
                 void shared_iowait (DEVBLK *dev);
 CHAN_DLL_IMPORT int  device_attention (DEVBLK *dev, BYTE unitstat);
 CHAN_DLL_IMPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
+CHAN_DLL_IMPORT void default_sns( char* buf, size_t buflen, BYTE b0, BYTE b1 );
 
 CHAN_DLL_IMPORT void Queue_IO_Interrupt           (IOINT* io, U8 clrbsy, const char* location);
 CHAN_DLL_IMPORT void Queue_IO_Interrupt_QLocked   (IOINT* io, U8 clrbsy, const char* location);

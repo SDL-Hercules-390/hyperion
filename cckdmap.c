@@ -156,21 +156,6 @@ static void L2tab_to_64()
 }
 
 /*-------------------------------------------------------------------*/
-/* Determine if running on a big endian system or not                */
-/*-------------------------------------------------------------------*/
-static bool are_big_endian()
-{
-    static union
-    {
-        uint32_t  ui32;
-        char      b[4];
-    }
-    test = {0x01020304};
-
-    return (0x01 == test.b[0]);
-}
-
-/*-------------------------------------------------------------------*/
 /* Determine if endian swaps are going to be needed or not           */
 /*-------------------------------------------------------------------*/
 static bool are_swaps_needed( const CCKD64_DEVHDR* cdevhdr64 )

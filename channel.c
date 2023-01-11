@@ -317,15 +317,6 @@ iobuf_reallocate (IOBUF *iobuf, const u_int size)
 /* Define 256 entries in the prefetch table */
 #define PF_SIZE 256
 
-/* IDAW Types */
-enum PF_IDATYPE
-{
-   PF_NO_IDAW = 0,
-   PF_IDAW1   = 1,
-   PF_IDAW2   = 2,
-   PF_MIDAW   = 3
-};
-
 struct PREFETCH                         /* Prefetch data structure   */
 {
     u_int   seq;                        /* Counter                   */
@@ -836,6 +827,34 @@ static void _display_ccw ( const DEVBLK* dev, const BYTE ccw[], const U32 addr,
 
 
 /*-------------------------------------------------------------------*/
+/* Format default interpretation of first two sense bytes            */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void default_sns( char* buf, size_t buflen, BYTE b0, BYTE b1 )
+{
+    snprintf( buf, buflen, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
+
+            , (b0 & SENSE_CR  ) ? "CMDREJ " : ""
+            , (b0 & SENSE_IR  ) ? "INTREQ " : ""
+            , (b0 & SENSE_BOC ) ? "BUSCK "  : ""
+            , (b0 & SENSE_EC  ) ? "EQPCK "  : ""
+            , (b0 & SENSE_DC  ) ? "DATCK "  : ""
+            , (b0 & SENSE_OR  ) ? "OVRUN "  : ""
+            , (b0 & SENSE_CC  ) ? "CTLCK "  : ""
+            , (b0 & SENSE_OC  ) ? "OPRCK "  : ""
+
+            , (b1 & SENSE1_PER) ? "PERM "   : ""
+            , (b1 & SENSE1_ITF) ? "ITF "    : ""
+            , (b1 & SENSE1_EOC) ? "EOC "    : ""
+            , (b1 & SENSE1_MTO) ? "MSG "    : ""
+            , (b1 & SENSE1_NRF) ? "NRF "    : ""
+            , (b1 & SENSE1_FP ) ? "FP "     : ""
+            , (b1 & SENSE1_WRI) ? "WRI "    : ""
+            , (b1 & SENSE1_IE ) ? "IE "     : ""
+    );
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Display interpretation of first two sense bytes                   */
 /*-------------------------------------------------------------------*/
 
@@ -852,26 +871,7 @@ static void _display_sense( const DEVBLK* dev,
         dev->sns( dev, snsbuf, sizeof( snsbuf ));
     else
         /* Otherwise we use our default interpretation */
-        MSGBUF( snsbuf, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
-
-            , (dev->sense[0] & SENSE_CR  ) ? "CMDREJ " : ""
-            , (dev->sense[0] & SENSE_IR  ) ? "INTREQ " : ""
-            , (dev->sense[0] & SENSE_BOC ) ? "BUSCK "  : ""
-            , (dev->sense[0] & SENSE_EC  ) ? "EQPCK "  : ""
-            , (dev->sense[0] & SENSE_DC  ) ? "DATCK "  : ""
-            , (dev->sense[0] & SENSE_OR  ) ? "OVRUN "  : ""
-            , (dev->sense[0] & SENSE_CC  ) ? "CTLCK "  : ""
-            , (dev->sense[0] & SENSE_OC  ) ? "OPRCK "  : ""
-
-            , (dev->sense[1] & SENSE1_PER) ? "PERM "   : ""
-            , (dev->sense[1] & SENSE1_ITF) ? "ITF "    : ""
-            , (dev->sense[1] & SENSE1_EOC) ? "EOC "    : ""
-            , (dev->sense[1] & SENSE1_MTO) ? "MSG "    : ""
-            , (dev->sense[1] & SENSE1_NRF) ? "NRF "    : ""
-            , (dev->sense[1] & SENSE1_FP ) ? "FP "     : ""
-            , (dev->sense[1] & SENSE1_WRI) ? "WRI "    : ""
-            , (dev->sense[1] & SENSE1_IE ) ? "IE "     : ""
-        );
+        default_sns( snsbuf, sizeof( snsbuf ), dev->sense[0], dev->sense[1] );
 
     // "%1d:%04X CHAN: sense %s"
     fwritemsg
@@ -3047,7 +3047,7 @@ BYTE    storkey;                        /* Storage key               */
 
     /* Channel program check if IDAW is not on correct
        boundary or is outside limit of main storage */
-    if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))
+    if ((idawaddr & ((idawfmt == PF_IDAW2) ? 0x07 : 0x03))
         || CHADDRCHK(idawaddr, dev)
         /* Program check if Format-0 CCW and IDAW address > 16M      */
         /* SA22-7201-05:                                             */
@@ -3071,7 +3071,7 @@ BYTE    storkey;                        /* Storage key               */
     ARCH_DEP( or_dev_storage_key )( dev, idawaddr, STORKEY_REF );
 
     /* Fetch IDAW from main storage */
-    if (idawfmt == 2)
+    if (idawfmt == PF_IDAW2)
     {
         /* Fetch format-2 IDAW */
         FETCH_DW(idaw2, dev->mainstor + idawaddr);
@@ -3560,7 +3560,7 @@ do {                                                                   \
 
         idawaddr = addr;
         idacount = count;
-        idasize = (idawfmt == 1) ? 4 : 8;
+        idasize = (idawfmt == PF_IDAW1) ? 4 : 8;
 
         for (idaseq = 0;
              idacount > 0 &&
@@ -3999,7 +3999,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 
             if (dev->ccwtrace)
                 // "%1d:%04X CHAN: attention signaled"
-                WRMSG( HHC01304, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum);
+                WRMSG( HHC01304, "I", LCSS_DEVNUM );
             rc = 0;
         }
         else
@@ -4179,7 +4179,7 @@ int     rc;                             /* Return code               */
     {
         char msgbuf[128] = {0};
         FormatORB( orb, msgbuf, sizeof( msgbuf ));
-        // HHC01334 "%1d:%04X CHAN: ORB: %s"
+        // "%1d:%04X CHAN: ORB: %s"
         WRMSG( HHC01334, "I", LCSS_DEVNUM, msgbuf );
     }
 
@@ -4414,17 +4414,17 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
     dev->ccwaddr = ccwaddr;
     dev->ccwfmt = ccwfmt = (dev->orb.flag5 & ORB5_F) ? 1 : 0;
     dev->ccwkey = ccwkey = dev->orb.flag4 & ORB4_KEY;
-    dev->idawfmt = idawfmt = (dev->orb.flag5 & ORB5_H) ? 2 : 1;
+    dev->idawfmt = idawfmt = (dev->orb.flag5 & ORB5_H) ? PF_IDAW2 : PF_IDAW1;
 
     /* Determine IDA page size */
-    if (idawfmt == 2)
+    if (idawfmt == PF_IDAW2)
     {
         /* Page size is 2K or 4K depending on flag bit */
-        idapmask =
-            (dev->orb.flag5 & ORB5_T) ? 0x7FF : 0xFFF;
+        idapmask = (dev->orb.flag5 & ORB5_T) ? STORAGE_KEY_2K_BYTEMASK
+                                             : STORAGE_KEY_4K_BYTEMASK;
     } else {
         /* Page size is always 2K for format-1 IDAW */
-        idapmask = 0x7FF;
+        idapmask = STORAGE_KEY_2K_BYTEMASK;
     }
 
 

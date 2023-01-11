@@ -1014,8 +1014,16 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01316 "%1d:%04X CHAN: csw %2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X"
 #define HHC01317 "%1d:%04X CHAN: scsw %2.2X%2.2X%2.2X%2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X%2.2X"
 #define HHC01318 "%1d:%04X CHAN: test I/O: cc=%d"
+//efine HHC01319 (available)
 #define HHC01320 "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation started"
 #define HHC01321 "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation successful"
+//efine HHC01322 (available)
+//efine HHC01323 (available)
+//efine HHC01324 (available)
+//efine HHC01325 (available)
+//efine HHC01326 (available)
+//efine HHC01327 (available)
+//efine HHC01328 (available)
 #define HHC01329 "%1d:%04X CHAN: halt I/O"
 #define HHC01330 "%1d:%04X CHAN: HIO modification executed: cc=1"
 #define HHC01331 "%1d:%04X CHAN: clear subchannel"
@@ -1024,12 +1032,30 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01334 "%1d:%04X CHAN: ORB: %s"
 //efine HHC01335 (available)
 #define HHC01336 "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
-//efine HHC01337 - HHC01349 (available)
-#define HHC01350 "%1d:%04X CHAN: missing generic channel method"
-#define HHC01351 "%1d:%04X CHAN: incorrect generic channel method %s"
-#define HHC01352 "%1d:%04X CHAN: generic channel initialisation failed"
-#define HHC01353 "%1d:%04X CHAN: generic channel is currently in development"
-//efine HHC01354 - HHC01389 (available)
+//efine HHC01337 (available)
+//efine HHC01338 (available)
+//efine HHC01339 (available)
+//efine HHC01340 (available)
+//efine HHC01341 (available)
+//efine HHC01342 (available)
+//efine HHC01343 (available)
+//efine HHC01344 (available)
+//efine HHC01345 (available)
+//efine HHC01346 (available)
+//efine HHC01347 (available)
+//efine HHC01348 (available)
+//efine HHC01349 (available)
+#define HHC01350 "%1d:%04X CHAN: missing generic channel method"                // (hchan.c)
+#define HHC01351 "%1d:%04X CHAN: incorrect generic channel method %s"           // (hchan.c)
+#define HHC01352 "%1d:%04X CHAN: generic channel initialisation failed"         // (hchan.c)
+#define HHC01353 "%1d:%04X CHAN: generic channel is currently in development"   // (hchan.c)
+//efine HHC01354 (available)
+//efine HHC01355 (available)
+//efine HHC01356 (available)
+//efine HHC01357 (available)
+//efine HHC01358 (available)
+//efine HHC01359 (available)
+//efine HHC01360 - HHC01389 (available)
 #define HHC01390 "%s" // DUMP (debugging)
 #define HHC01391 "%s" // DUMP_STORAGE (debugging)
 #define HHC01392 "%s" // DISPLAY_PREFETCH (debugging)

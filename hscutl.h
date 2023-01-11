@@ -391,4 +391,14 @@ HUT_DLL_IMPORT const char* order2name( BYTE order );
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT const char* perc2name( BYTE perc, char* buf, size_t bufsiz );
 
+/*-------------------------------------------------------------------*/
+/*      Format Operation-Request Block (ORB) for display             */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT const char* FormatORB( ORB* orb, char* buf, size_t bufsz );
+
+/*-------------------------------------------------------------------*/
+/*      Determine if running on a big endian system or not           */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT bool are_big_endian();
+
 #endif /* __HSCUTL_H__ */

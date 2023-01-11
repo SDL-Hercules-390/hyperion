@@ -316,8 +316,8 @@ cswp_error:
 /*                                                                   */
 /* The idea here is, the default format for our CCKD dasd images     */
 /* should match the endianness of the system we're running on (i.e.  */
-/* that we were built for), so that we don't need to swap of any     */
-/* of the fields in any of our dasd control blocks (e.g. compressed  */
+/* that we were built for), so that we don't need to swap any of     */
+/* the fields in any of our dasd control blocks (e.g. compressed     */
 /* CCKD device header, L1/L2 tables, etc).  Instead, we can simply   */
 /* use them directly, which is simpler and more efficient.           */
 /*                                                                   */

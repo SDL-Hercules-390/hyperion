@@ -2274,62 +2274,6 @@ const char* FormatCRW( U32 crw, char* buf, size_t bufsz )
 
 
 /*-------------------------------------------------------------------*/
-/*      Format Operation-Request Block (ORB) for display             */
-/*-------------------------------------------------------------------*/
-const char* FormatORB( ORB* orb, char* buf, size_t bufsz )
-{
-    if (!buf)
-        return NULL;
-
-    if (bufsz)
-        *buf = 0;
-
-    if (bufsz <= 1 || !orb)
-        return buf;
-
-    snprintf( buf, bufsz,
-
-        "IntP:%2.2X%2.2X%2.2X%2.2X Key:%d LPM:%2.2X "
-        "Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c%c%c%c%c %c%c.....%c "
-        "%cCW:%2.2X%2.2X%2.2X%2.2X"
-
-        , orb->intparm[0], orb->intparm[1], orb->intparm[2], orb->intparm[3]
-        , (orb->flag4 & ORB4_KEY) >> 4
-        , orb->lpm
-
-        , (orb->flag4 & ~ORB4_KEY)
-        , orb->flag5
-        , orb->flag7
-
-        , ( orb->flag4 & ORB4_S ) ? 'S' : '.'
-        , ( orb->flag4 & ORB4_C ) ? 'C' : '.'
-        , ( orb->flag4 & ORB4_M ) ? 'M' : '.'
-        , ( orb->flag4 & ORB4_Y ) ? 'Y' : '.'
-
-        , ( orb->flag5 & ORB5_F ) ? 'F' : '.'
-        , ( orb->flag5 & ORB5_P ) ? 'P' : '.'
-        , ( orb->flag5 & ORB5_I ) ? 'I' : '.'
-        , ( orb->flag5 & ORB5_A ) ? 'A' : '.'
-
-        , ( orb->flag5 & ORB5_U ) ? 'U' : '.'
-        , ( orb->flag5 & ORB5_B ) ? 'B' : '.'
-        , ( orb->flag5 & ORB5_H ) ? 'H' : '.'
-        , ( orb->flag5 & ORB5_T ) ? 'T' : '.'
-
-        , ( orb->flag7 & ORB7_L ) ? 'L' : '.'
-        , ( orb->flag7 & ORB7_D ) ? 'D' : '.'
-        , ( orb->flag7 & ORB7_X ) ? 'X' : '.'
-
-        , ( orb->flag5 & ORB5_B ) ? 'T' : 'C'  // (TCW or CCW)
-
-        , orb->ccwaddr[0], orb->ccwaddr[1], orb->ccwaddr[2], orb->ccwaddr[3]
-    );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
 /*     Format ESW's Subchannel Logout information for display        */
 /*-------------------------------------------------------------------*/
 const char* FormatSCL( ESW* esw, char* buf, size_t bufsz )

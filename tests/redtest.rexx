@@ -280,7 +280,7 @@ Select
    When msg = 'HHC02277I' Then
       Parse Var rest  . prefix .
 
-   /*          HHC00801I Processor %s%02X: %s%s%s code %4.4X  ilc %d%s */
+   /*          HHC00801I Processor %s%02X: %s%s%s interruption code %4.4X  ilc %d%s */
    When msg = 'HHC00801I' Then
       Parse Var rest  ' code ' pgmchk . ' ilc'
 
