@@ -979,6 +979,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 #endif
                 sigintreq:1,            /* 1 = SIGINT request pending*/
                 insttrace:1,            /* 1 = Inst trace enabled    */
+                tfnostop:1,             /* 1 = tf continue tracing   */
                 instbreak:1,            /* 1 = Inst break enabled    */
                 shutdown:1,             /* 1 = shutdown requested    */
                 shutfini:1,             /* 1 = shutdown complete     */
@@ -1125,6 +1126,30 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         char    **herclogo;             /* Constructed logo screen   */
         char    *logofile;              /* File name of logo file    */
         size_t  logolines;              /* Logo file number of lines */
+
+        /*-----------------------------------------------------------*/
+        /*      Trace File support                                   */
+        /*-----------------------------------------------------------*/
+
+        LOCK        tracefileLock;      /* LOCK for below fields     */
+#define OBTAIN_TRACEFILE_LOCK()     obtain_lock(  &sysblk.tracefileLock )
+#define RELEASE_TRACEFILE_LOCK()    release_lock( &sysblk.tracefileLock )
+        const char* tracefilename;      /* File name of trace file   */
+        FILE*       traceFILE;          /* Ptr to trace file FILE    */
+        U64         curtracesize;       /* Current trace file size   */
+        U64         maxtracesize;       /* Maximum trace file size   */
+        void*       tracefilebuff;      /* Ptr to trace file buffer  */
+
+        TFGSK*      s370_gsk;           /* s370_get_storage_key      */
+        TFGSK*      s390_gsk;           /* s390_get_storage_key      */
+        TFGSK*      z900_gsk;           /* z900_get_storage_key      */
+
+        TFVTR*      s370_vtr;           /* virt_to_real              */
+        TFVTR*      s390_vtr;           /* virt_to_real              */
+        TFVTR*      z900_vtr;           /* virt_to_real              */
+
+        TFSIT*      s370_sit;           /* store_int_timer           */
+        TFGCT*      gct;                /* get_cpu_timer             */
 
         /* Merged Counters for all CPUs                              */
         U64     instcount;              /* Instruction counter       */

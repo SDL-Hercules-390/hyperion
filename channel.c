@@ -799,30 +799,38 @@ static void _display_ccw ( const DEVBLK* dev, const BYTE ccw[], const U32 addr,
                           const U32 count, const U8 flags,
                           const char* file, int line, const char* func )
 {
-    BYTE area[64];
-
-    /* No data to be formatted if CCW is a NOP or TIC
-       or the CCW "Skip data transfer" flag is on. */
-    if (0
-        || flags & CCW_FLAGS_SKIP
-        || IS_CCW_NOP( ccw[0] )
-        || IS_CCW_TIC( ccw[0] )
-    )
-        area[0] = 0;
+    if (dev->ccwtrace && sysblk.traceFILE)
+    {
+        BYTE amt = MIN( 16, CAPPED_BUFFLEN( addr, count, dev ));
+        tf_1315( dev, ccw, addr, count, dev->mainstor + addr, amt );
+    }
     else
-        format_iobuf_data( addr, area, dev, count );
+    {
+        BYTE area[64];
 
-    // "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
-    fwritemsg
-    (
-        file, line, func, WRMSG_NORMAL, stdout,
-        MSG
-        (
-            HHC01315, "I", LCSS_DEVNUM,
-            ccw[0], ccw[1], ccw[2], ccw[3],
-            ccw[4], ccw[5], ccw[6], ccw[7], area
+        /* No data to be formatted if CCW is a NOP or TIC
+           or the CCW "Skip data transfer" flag is on. */
+        if (0
+            || flags & CCW_FLAGS_SKIP
+            || IS_CCW_NOP( ccw[0] )
+            || IS_CCW_TIC( ccw[0] )
         )
-    );
+            area[0] = 0;
+        else
+            format_iobuf_data( addr, area, dev, count );
+
+        // "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
+        fwritemsg
+        (
+            file, line, func, WRMSG_NORMAL, stdout,
+            MSG
+            (
+                HHC01315, "I", LCSS_DEVNUM,
+                ccw[0], ccw[1], ccw[2], ccw[3],
+                ccw[4], ccw[5], ccw[6], ccw[7], area
+            )
+        );
+    }
 }
 
 
@@ -894,38 +902,46 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
                            const RADR addr, const U16 count,
                            const char* file, int line, const char* func )
 {
-    BYTE area[64];
-
-    format_iobuf_data( addr, area, dev, count );
-
-    switch (type)
+    if (dev->ccwtrace && sysblk.traceFILE)
     {
-        case PF_IDAW1:
-            // "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16": %s"
-            fwritemsg
-            (
-                file, line, func, WRMSG_NORMAL, stdout,
-                MSG( HHC01302, "I", LCSS_DEVNUM, (U32)addr, count, area )
-            );
-            break;
+        BYTE amt = MIN( 16, CAPPED_BUFFLEN( addr, count, dev ));
+        tf_1301( dev, addr, count, dev->mainstor + addr, amt, flag, type );
+    }
+    else
+    {
+        BYTE area[64];
 
-        case PF_IDAW2:
-            // "%1d:%04X CHAN: idaw %16.16"PRIX64", len %4.4"PRIX16": %s"
-            fwritemsg
-            (
-                file, line, func, WRMSG_NORMAL, stdout,
-                MSG( HHC01303, "I", LCSS_DEVNUM, (U64)addr, count, area )
-            );
-            break;
+        format_iobuf_data( addr, area, dev, count );
 
-        case PF_MIDAW:
-            // "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64": %s"
-            fwritemsg
-            (
-                file, line, func, WRMSG_NORMAL, stdout,
-                MSG( HHC01301, "I", LCSS_DEVNUM, flag, count, (U64)addr, area )
-            );
-            break;
+        switch (type)
+        {
+            case PF_IDAW1:
+                // "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16": %s"
+                fwritemsg
+                (
+                    file, line, func, WRMSG_NORMAL, stdout,
+                    MSG( HHC01302, "I", LCSS_DEVNUM, (U32)addr, count, area )
+                );
+                break;
+
+            case PF_IDAW2:
+                // "%1d:%04X CHAN: idaw %16.16"PRIX64", len %4.4"PRIX16": %s"
+                fwritemsg
+                (
+                    file, line, func, WRMSG_NORMAL, stdout,
+                    MSG( HHC01303, "I", LCSS_DEVNUM, (U64)addr, count, area )
+                );
+                break;
+
+            case PF_MIDAW:
+                // "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64": %s"
+                fwritemsg
+                (
+                    file, line, func, WRMSG_NORMAL, stdout,
+                    MSG( HHC01301, "I", LCSS_DEVNUM, flag, count, (U64)addr, area )
+                );
+                break;
+        }
     }
 }
 
@@ -940,18 +956,23 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
 static void _display_csw( const DEVBLK* dev, const BYTE csw[],
                           const char* file, int line, const char* func )
 {
-    // "%1d:%04X CHAN: csw %2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X"
-    fwritemsg
-    (
-        file, line, func, WRMSG_NORMAL, stdout,
-        MSG
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_1316( dev, csw );
+    else
+    {
+        // "%1d:%04X CHAN: csw %2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X"
+        fwritemsg
         (
-            HHC01316, "I", LCSS_DEVNUM,
-            csw[0],
-            csw[4], csw[5], csw[6], csw[7],
-            csw[1], csw[2], csw[3]
-        )
-    );
+            file, line, func, WRMSG_NORMAL, stdout,
+            MSG
+            (
+                HHC01316, "I", LCSS_DEVNUM,
+                csw[0],
+                csw[4], csw[5], csw[6], csw[7],
+                csw[1], csw[2], csw[3]
+            )
+        );
+    }
 }
 
 
@@ -974,20 +995,25 @@ static void _display_scsw( const DEVBLK* dev, const SCSW scsw,
         return;
     }
 
-    // "%1d:%04X CHAN: scsw %2.2X%2.2X%2.2X%2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X%2.2X"
-    fwritemsg
-    (
-        file, line, func, WRMSG_NORMAL, stdout,
-        MSG
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_1317( dev, scsw );
+    else
+    {
+        // "%1d:%04X CHAN: scsw %2.2X%2.2X%2.2X%2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X%2.2X"
+        fwritemsg
         (
-            HHC01317, "I", LCSS_DEVNUM,
-            scsw.flag0, scsw.flag1, scsw.flag2, scsw.flag3,
-            scsw.unitstat, scsw.chanstat,
-            scsw.count[0], scsw.count[1],
-            scsw.ccwaddr[0], scsw.ccwaddr[1],
-            scsw.ccwaddr[2], scsw.ccwaddr[3]
-        )
-    );
+            file, line, func, WRMSG_NORMAL, stdout,
+            MSG
+            (
+                HHC01317, "I", LCSS_DEVNUM,
+                scsw.flag0, scsw.flag1, scsw.flag2, scsw.flag3,
+                scsw.unitstat, scsw.chanstat,
+                scsw.count[0], scsw.count[1],
+                scsw.ccwaddr[0], scsw.ccwaddr[1],
+                scsw.ccwaddr[2], scsw.ccwaddr[3]
+            )
+        );
+    }
 }
 
 
@@ -1264,7 +1290,13 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
         cc = 0;         /* Available */
 
     if (dev->ccwtrace)
-        WRMSG (HHC01318, "I", LCSS_DEVNUM, cc);
+    {
+        if (sysblk.traceFILE)
+            tf_1318( dev, cc );
+        else
+            // "%1d:%04X CHAN: test I/O: cc=%d"
+            WRMSG( HHC01318, "I", LCSS_DEVNUM, cc );
+    }
 
     /* Complete unlock sequence */
     release_lock(&dev->lock);
@@ -1287,8 +1319,13 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
     UNREFERENCED( ibyte );
 
     if (dev->ccwtrace)
-        // "%1d:%04X CHAN: halt I/O"
-        WRMSG( HHC01329, "I", LCSS_DEVNUM );
+    {
+        if (sysblk.traceFILE)
+            tf_1329( dev );
+        else
+            // "%1d:%04X CHAN: halt I/O"
+            WRMSG( HHC01329, "I", LCSS_DEVNUM );
+    }
 
     OBTAIN_INTLOCK( regs );
     obtain_lock( &dev->lock );
@@ -1368,9 +1405,17 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
         if (dev->ccwtrace)
         {
             psa = (PSA_3XX*)(regs->mainstor + regs->PX);
-            // "%1d:%04X CHAN: HIO modification executed: cc=1"
-            WRMSG( HHC01330, "I", LCSS_DEVNUM );
-            DISPLAY_CSW( dev, psa->csw );
+            if (sysblk.traceFILE)
+            {
+                tf_1330( dev );
+                DISPLAY_CSW( dev, psa->csw );
+            }
+            else
+            {
+                // "%1d:%04X CHAN: HIO modification executed: cc=1"
+                WRMSG( HHC01330, "I", LCSS_DEVNUM );
+                DISPLAY_CSW( dev, psa->csw );
+            }
         }
     }
     else
@@ -1743,8 +1788,13 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
 
     /* Display the condition code */
     if (dev->ccwtrace)
-        // "%1d:%04X CHAN: test I/O: cc=%d"
-        WRMSG( HHC01318, "I", LCSS_DEVNUM, cc );
+    {
+        if (sysblk.traceFILE)
+            tf_1318( dev, cc );
+        else
+            // "%1d:%04X CHAN: test I/O: cc=%d"
+            WRMSG( HHC01318, "I", LCSS_DEVNUM, cc );
+    }
 
     /* Release remaining locks */
     release_lock(&dev->lock);
@@ -1817,8 +1867,13 @@ perform_clear_subchan (DEVBLK *dev)
     release_lock(&sysblk.iointqlk);
 
     if (dev->ccwtrace)
-        // "%1d:%04X CHAN: clear completed"
-        WRMSG( HHC01308, "I", LCSS_DEVNUM );
+    {
+        if (sysblk.traceFILE)
+            tf_1308( dev );
+        else
+            // "%1d:%04X CHAN: clear completed"
+            WRMSG( HHC01308, "I", LCSS_DEVNUM );
+    }
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Wake up any waiters if the device isn't reserved */
@@ -1844,8 +1899,13 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
     UNREFERENCED( regs );
 
     if (dev->ccwtrace)
-        // "%1d:%04X CHAN: clear subchannel"
-        WRMSG( HHC01331, "I", LCSS_DEVNUM );
+    {
+        if (sysblk.traceFILE)
+            tf_1331( dev );
+        else
+            // "%1d:%04X CHAN: clear subchannel"
+            WRMSG( HHC01331, "I", LCSS_DEVNUM );
+    }
 
 #if defined( _FEATURE_IO_ASSIST )
     if (1
@@ -1991,8 +2051,13 @@ perform_halt_and_release_lock (DEVBLK *dev)
 
     /* Trace HALT */
     if (dev->ccwtrace)
-        // "%1d:%04X CHAN: halt subchannel: cc=%d"
-        WRMSG( HHC01300, "I", LCSS_DEVNUM, 0 );
+    {
+        if (sysblk.traceFILE)
+            tf_1300( dev, 0 );
+        else
+            // "%1d:%04X CHAN: halt subchannel: cc=%d"
+            WRMSG( HHC01300, "I", LCSS_DEVNUM, 0 );
+    }
 
     /* Queue pending I/O interrupt and update status */
     queue_io_interrupt_and_update_status_locked(dev,TRUE);
@@ -2041,8 +2106,13 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     UNREFERENCED( regs );
 
     if (dev->ccwtrace)
-        // "%1d:%04X CHAN: halt subchannel"
-        WRMSG( HHC01332, "I", LCSS_DEVNUM );
+    {
+        if (sysblk.traceFILE)
+            tf_1332( dev );
+        else
+            // "%1d:%04X CHAN: halt subchannel"
+            WRMSG( HHC01332, "I", LCSS_DEVNUM );
+    }
 
     OBTAIN_INTLOCK( regs );
     obtain_lock( &dev->lock );
@@ -2074,8 +2144,13 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     )
     {
         if (dev->ccwtrace)
-            // "%1d:%04X CHAN: halt subchannel: cc=%d"
-            WRMSG( HHC01300, "I", LCSS_DEVNUM, 1 );
+        {
+            if (sysblk.traceFILE)
+                tf_1300( dev, 1 );
+            else
+                // "%1d:%04X CHAN: halt subchannel: cc=%d"
+                WRMSG( HHC01300, "I", LCSS_DEVNUM, 1 );
+        }
         release_lock( &dev->lock );
         RELEASE_INTLOCK( regs );
         return 1;
@@ -2087,8 +2162,13 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     if (dev->scsw.flag2 & (SCSW2_AC_HALT | SCSW2_AC_CLEAR))
     {
         if (dev->ccwtrace)
-            // "%1d:%04X CHAN: halt subchannel: cc=%d"
-            WRMSG( HHC01300, "I", LCSS_DEVNUM, 2 );
+        {
+            if (sysblk.traceFILE)
+                tf_1300( dev, 2 );
+            else
+                // "%1d:%04X CHAN: halt subchannel: cc=%d"
+                WRMSG( HHC01300, "I", LCSS_DEVNUM, 2 );
+        }
         release_lock( &dev->lock );
         RELEASE_INTLOCK( regs );
         return 2;
@@ -2864,7 +2944,13 @@ int cc;                                 /* Return code               */
 
     /* If tracing, write trace message */
     if (dev->ccwtrace)
-        WRMSG (HHC01333, "I", LCSS_DEVNUM, cc);
+    {
+        if (sysblk.traceFILE)
+            tf_1333( dev, cc );
+        else
+            // "%1d:%04X CHAN: resume subchannel: cc=%d"
+            WRMSG( HHC01333, "I", LCSS_DEVNUM, cc );
+    }
 
     release_lock (&dev->lock);
 
@@ -3998,8 +4084,13 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
             schedule_ioq( NULL, dev );
 
             if (dev->ccwtrace)
-                // "%1d:%04X CHAN: attention signaled"
-                WRMSG( HHC01304, "I", LCSS_DEVNUM );
+            {
+                if (sysblk.traceFILE)
+                    tf_1304( dev );
+                else
+                    // "%1d:%04X CHAN: attention signaled"
+                    WRMSG( HHC01304, "I", LCSS_DEVNUM );
+            }
             rc = 0;
         }
         else
@@ -4011,8 +4102,13 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
     }
 
     if (dev->ccwtrace)
-        // "%1d:%04X CHAN: attention"
-        WRMSG( HHC01305, "I", LCSS_DEVNUM );
+    {
+        if (sysblk.traceFILE)
+            tf_1305( dev );
+        else
+            // "%1d:%04X CHAN: attention"
+            WRMSG( HHC01305, "I", LCSS_DEVNUM );
+    }
 
     /* We already have INTLOCK and dev->lock held, so now
        we only need to acquire the interrupt queue lock. */
@@ -4120,9 +4216,12 @@ int     rc;                             /* Return code               */
         /*************************************************************/
         if (dev->ccwtrace)
         {
-            // "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
-            WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),
-            dev->devnum, dev->busy, dev->startpending );
+            if (sysblk.traceFILE)
+                tf_1336( dev );
+            else
+                // "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
+                WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),
+                       dev->devnum, dev->busy, dev->startpending );
         }
 
         return 2;
@@ -4177,10 +4276,15 @@ int     rc;                             /* Return code               */
 
     if (dev->orbtrace)
     {
-        char msgbuf[128] = {0};
-        FormatORB( orb, msgbuf, sizeof( msgbuf ));
-        // "%1d:%04X CHAN: ORB: %s"
-        WRMSG( HHC01334, "I", LCSS_DEVNUM, msgbuf );
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_1334( dev, orb );
+        else
+        {
+            char msgbuf[128] = {0};
+            FormatORB( orb, msgbuf, sizeof( msgbuf ));
+            // "%1d:%04X CHAN: ORB: %s"
+            WRMSG( HHC01334, "I", LCSS_DEVNUM, msgbuf );
+        }
     }
 
     /* Set I/O priority */
@@ -4358,17 +4462,23 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
         {
             if (dev->s370start)
             {
-                /* State successful conversion from synchronous
-                 * to asynchronous for 370 mode.
-                 */
-                // "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation successful"
-                WRMSG( HHC01321, "I", LCSS_DEVNUM );
+                if (sysblk.traceFILE)
+                    tf_1321( dev );
+                else
+                    /* State successful conversion from synchronous
+                     * to asynchronous for 370 mode.
+                     */
+                    // "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation successful"
+                    WRMSG( HHC01321, "I", LCSS_DEVNUM );
             }
             else
             {
-                /* Trace I/O resumption */
-                // "%1d:%04X CHAN: resumed"
-                WRMSG (HHC01311, "I", LCSS_DEVNUM );
+                if (sysblk.traceFILE)
+                    tf_1311( dev );
+                else
+                    /* Trace I/O resumption */
+                    // "%1d:%04X CHAN: resumed"
+                    WRMSG (HHC01311, "I", LCSS_DEVNUM );
             }
         }
 
@@ -4519,8 +4629,13 @@ execute_halt:
             perform_halt(dev);
 
             if (tracethis)
-                // "%1d:%04X CHAN: halt completed"
-                WRMSG( HHC01309, "I", LCSS_DEVNUM );
+            {
+                if (dev->ccwtrace && sysblk.traceFILE)
+                    tf_1309( dev );
+                else
+                    // "%1d:%04X CHAN: halt completed"
+                    WRMSG( HHC01309, "I", LCSS_DEVNUM );
+            }
 
             return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
 
@@ -4538,8 +4653,13 @@ execute_halt:
             queue_io_interrupt_and_update_status(dev,TRUE);
 
             if (CCW_TRACING_ACTIVE( dev, tracethis ))
-                // "%1d:%04X CHAN: attention completed"
-                WRMSG( HHC01307, "I", LCSS_DEVNUM );
+            {
+                if (dev->ccwtrace && sysblk.traceFILE)
+                    tf_1307( dev );
+                else
+                    // "%1d:%04X CHAN: attention completed"
+                    WRMSG( HHC01307, "I", LCSS_DEVNUM );
+            }
 
             return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
 
@@ -4614,7 +4734,7 @@ execute_halt:
                      || IS_CCW_SENSE ( ccw[0] )
                     )
             )
-                DISPLAY_CCW (dev, ccw, addr, count, flags);
+                DISPLAY_CCW( dev, ccw, addr, count, flags );
         }
 
         /* Channel program check if invalid Format-1 CCW             */
@@ -4908,8 +5028,13 @@ execute_halt:
 
                 /* Trace suspension point */
                 if (unlikely( CCW_TRACING_ACTIVE( dev, tracethis )))
-                    // "%1d:%04X CHAN: suspended"
-                    WRMSG( HHC01310, "I", LCSS_DEVNUM );
+                {
+                    if (dev->ccwtrace && sysblk.traceFILE)
+                        tf_1310( dev );
+                    else
+                        // "%1d:%04X CHAN: suspended"
+                        WRMSG( HHC01310, "I", LCSS_DEVNUM );
+                }
 
                 /* Present the interrupt and return */
                 if (dev->scsw.flag3 & SCSW3_SC_PEND)
@@ -5015,8 +5140,13 @@ execute_halt:
 
             /* State converting from SIO synchronous to asynchronous */
             if (CCW_TRACING_ACTIVE( dev, tracethis ))
-                // "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation started"
-                WRMSG( HHC01320, "I", LCSS_DEVNUM );
+            {
+                if (dev->ccwtrace && sysblk.traceFILE)
+                    tf_1320( dev );
+                else
+                    // "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation started"
+                    WRMSG( HHC01320, "I", LCSS_DEVNUM );
+            }
 
             /* Update local copy of ORB */
             STORE_FW(dev->orb.ccwaddr, (ccwaddr-8));
@@ -5076,11 +5206,15 @@ execute_halt:
                 queue_io_interrupt_and_update_status(dev,FALSE);
 
                 if (CCW_TRACING_ACTIVE( dev, tracethis ))
-                    // "%1d:%04X CHAN: initial status interrupt"
-                    WRMSG( HHC01306, "I", LCSS_DEVNUM );
+                {
+                    if (dev->ccwtrace && sysblk.traceFILE)
+                        tf_1306( dev );
+                    else
+                        // "%1d:%04X CHAN: initial status interrupt"
+                        WRMSG( HHC01306, "I", LCSS_DEVNUM );
+                }
             }
         }
-
 
         /* For WRITE and non-immediate CONTROL operations,
            copy data from main storage into channel buffer */
@@ -5106,9 +5240,7 @@ execute_halt:
                 prefetch.chanstat[ps] = chanstat;
                 chanstat = 0;
             }
-
 prefetch:
-
             /* Finish prefetch table entry initialization */
             if (opcode == 0x08 ||
                 (ccwfmt == 0 && ((opcode & 0x0f) == 0x08)))
@@ -5334,7 +5466,7 @@ prefetch:
 
             /* For READ, SENSE, and READ BACKWARD operations, copy data
                from channel buffer to main storage, unless SKIP is set
-               */
+            */
             else if (1
                 && !dev->is_immed
                 && !skip_ccws
@@ -5542,28 +5674,36 @@ breakchain:
 
             /* Display status and residual byte count */
 
-            // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X"
-            WRMSG( HHC01312, "I", LCSS_DEVNUM,
+            if (sysblk.traceFILE)
+                tf_1312( dev, unitstat, chanstat, (BYTE) MIN( count, 16 ), residual, iobuf->data );
+            else
+                // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X"
+                WRMSG( HHC01312, "I", LCSS_DEVNUM,
                     unitstat, chanstat, residual );
 
             /* Display sense bytes if unit check is indicated */
             if (unitstat & CSW_UC)
             {
-                register BYTE* sense = dev->sense;
+                if (dev->ccwtrace && sysblk.traceFILE)
+                    tf_1313( dev );
+                else
+                {
+                    register BYTE* sense = dev->sense;
 
-                // "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X ...
-                WRMSG( HHC01313, "I", LCSS_DEVNUM,
-                        sense[ 0], sense[ 1], sense[ 2], sense[ 3],
-                        sense[ 4], sense[ 5], sense[ 6], sense[ 7],
-                        sense[ 8], sense[ 9], sense[10], sense[11],
-                        sense[12], sense[13], sense[14], sense[15],
-                        sense[16], sense[17], sense[18], sense[19],
-                        sense[20], sense[21], sense[22], sense[23],
-                        sense[24], sense[25], sense[26], sense[27],
-                        sense[28], sense[29], sense[30], sense[31] );
+                    // "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X ...
+                    WRMSG( HHC01313, "I", LCSS_DEVNUM,
+                            sense[ 0], sense[ 1], sense[ 2], sense[ 3],
+                            sense[ 4], sense[ 5], sense[ 6], sense[ 7],
+                            sense[ 8], sense[ 9], sense[10], sense[11],
+                            sense[12], sense[13], sense[14], sense[15],
+                            sense[16], sense[17], sense[18], sense[19],
+                            sense[20], sense[21], sense[22], sense[23],
+                            sense[24], sense[25], sense[26], sense[27],
+                            sense[28], sense[29], sense[30], sense[31] );
 
-                if (sense[0] != 0 || sense[1] != 0)
-                    DISPLAY_SENSE( dev );
+                    if (sense[0] != 0 || sense[1] != 0)
+                        DISPLAY_SENSE( dev );
+                }
             }
         }
 

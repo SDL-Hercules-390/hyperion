@@ -1647,6 +1647,37 @@
 
 #define sysgport_cmd_desc       "Define SYSG console port"
 
+#define tf_cmd_desc             "Define trace-to-file parameters"
+#define tf_cmd_help             \
+                                \
+  "Format:\n"                                                                   \
+  "\n"                                                                          \
+  "   tf  [ OFF | ON ] [ \"FILE=filename\" ] [ MAX=nnnS ] [ STOP | NOSTOP ]\n"  \
+  "\n"                                                                          \
+  "Defines the parameters for instruction and/or ccw tracing to an output\n"    \
+  "file. Note that this command only enables/disables tracing to a file;\n"     \
+  "you will still need to enable instruction and/or ccw tracing separately\n"   \
+  "via the 't+' and/or 't+dev' command(s).\n"                                   \
+  "\n"                                                                          \
+  "ON or OFF enables or disables tracing to a file. If ON is specified\n"       \
+  "then FILE= is required if not already defined by a previous command.\n"      \
+  "Enclose the entire option name and value within double quotes if it\n"       \
+  "contains any blanks (e.g. \"FILE=my trace file\").\n"                        \
+  "\n"                                                                          \
+  "MAX= specifies the desired maximum size the trace file is allowed to\n"      \
+  "grow to. Specify the value as \"nnnM\" for megabytes or \"nnnG\" for\n"      \
+  "gigabytes, where 'nnn' is the maximum number of megabytes/gigabytes\n"       \
+  "in size the file is allowed to grow to. Once the maximum is reached,\n"      \
+  "both tracefile tracing as well as all instruction and ccw tracing are\n"     \
+  "disabled. This prevents instruction and/or ccw tracing from continuing\n"    \
+  "to be traced but to the hardware panel instead once the limit has been\n"    \
+  "reached. Use the NOSTOP option to disable this behavior and allow the\n"     \
+  "instruction and/or ccw tracing to continue, but to the hardware panel\n"     \
+  "instead once the limit has been reached. The default is STOP/NOCONT.\n"      \
+  "\n"                                                                          \
+  "OPEN/CLOSE or NOCONT/CONT may be used in lieu of ON/OFF or STOP/NOSTOP.\n"   \
+  "Specify the command without any arguments to display current values."
+
 #define tminus_cmd_desc         "Turn off instruction tracing"
 #define t_cmd_desc              "Set tracing range or Query tracing"
 #define t_cmd_help              \
@@ -1973,6 +2004,7 @@ COMMAND( "sh",                      sh_cmd,                 SYSCMDNOPER,        
 COMMAND( "suspend",                 suspend_cmd,            SYSCMDNOPER,        suspend_cmd_desc,       NULL                )
 COMMAND( "symptom",                 traceopt_cmd,           SYSCMDNOPER,        symptom_cmd_desc,       NULL                )
 
+COMMAND( "tf",                      tf_cmd,                 SYSCMDNOPER,        tf_cmd_desc,            tf_cmd_help         )
 COMMAND( "t-",                      trace_cmd,              SYSCMDNOPER,        tminus_cmd_desc,        NULL                )
 COMMAND( "t",                       trace_cmd,              SYSCMDNOPER,        t_cmd_desc,             t_cmd_help          )
 COMMAND( "t?",                      trace_cmd,              SYSCMDNOPER,        tquest_cmd_desc,        tquest_cmd_help     )

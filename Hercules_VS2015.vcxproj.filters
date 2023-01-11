@@ -771,6 +771,12 @@
     <ClCompile Include="tcpip.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tfprint.c">
+      <Filter>Source Files\Utilities\other</Filter>
+    </ClCompile>
+    <ClCompile Include="tfswap.c">
+      <Filter>Source Files\Utilities\other</Filter>
+    </ClCompile>
     <ClCompile Include="timer.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>

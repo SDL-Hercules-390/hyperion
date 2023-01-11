@@ -2500,3 +2500,2241 @@ DLL_EXPORT bool are_big_endian()
     test = {0x01020304};
     return (0x01 == test.b[0]);
 }
+
+/*********************************************************************/
+/*********************************************************************/
+/**                                                                 **/
+/**                    TraceFile support                            **/
+/**                                                                 **/
+/*********************************************************************/
+/*********************************************************************/
+
+/*-------------------------------------------------------------------*/
+/*    Determine if endian swaps are going to be needed or not        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT bool tf_are_swaps_needed( TFSYS* sys )
+{
+    return
+    (0
+        || (1
+            && are_big_endian()     // (we are big endian)
+            && sys->bigend == 0     // (but file is little endian)
+           )
+        || (1
+            && !are_big_endian()    // (we are little endian)
+            && sys->bigend == 1     // (but file is big endian)
+           )
+    );
+}
+
+//---------------------------------------------------------------------
+//       (helper function to call correct ARCH_DEP function)
+//---------------------------------------------------------------------
+static int tf_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype )
+{
+    switch (regs->arch_mode)
+    {
+#if defined(       _370 )
+        case   ARCH_370_IDX:
+            return sysblk.s370_vtr( raptr, siptr, vaddr, arn, regs, acctype );
+#endif
+#if defined(       _390 )
+        case   ARCH_390_IDX:
+            return sysblk.s390_vtr( raptr, siptr, vaddr, arn, regs, acctype );
+#endif
+#if defined(       _900 )
+        case   ARCH_900_IDX:
+            return sysblk.z900_vtr( raptr, siptr, vaddr, arn, regs, acctype );
+#endif
+        default: CRASH();
+            UNREACHABLE_CODE( return 0 );
+    }
+}
+
+//---------------------------------------------------------------------
+//       (helper function to call correct ARCH_DEP function)
+//---------------------------------------------------------------------
+static BYTE tf_get_storage_key( REGS* regs, U64 abs )
+{
+    switch (regs->arch_mode)
+    {
+#if defined(       _370 )
+        case   ARCH_370_IDX:
+            return sysblk.s370_gsk( abs );
+#endif
+#if defined(       _390 )
+        case   ARCH_390_IDX:
+            return sysblk.s390_gsk( abs );
+#endif
+#if defined(       _900 )
+        case   ARCH_900_IDX:
+            return sysblk.z900_gsk( abs );
+#endif
+        default: CRASH();
+            UNREACHABLE_CODE( return 0 );
+    }
+}
+
+//---------------------------------------------------------------------
+//       (helper function to call correct ARCH_DEP function)
+//---------------------------------------------------------------------
+static void tf_store_int_timer( REGS* regs, U64 raddr )
+{
+    switch (regs->arch_mode)
+    {
+#if defined(     _370 )
+        case ARCH_370_IDX:
+            if (ITIMER_ACCESS( raddr, 16 ))
+                 sysblk.s370_sit( regs );
+            return;
+#endif
+#if defined(     _390 )
+        case ARCH_390_IDX:
+            //    390 doesn't have interval timers
+            return;
+#endif
+#if defined(     _900 )
+        case ARCH_900_IDX:
+            //    900 doesn't have interval timers
+            return;
+#endif
+        default: CRASH();
+            UNREACHABLE_CODE( return );
+    }
+}
+
+//---------------------------------------------------------------------
+//       (helper function to call correct ARCH_DEP function)
+//---------------------------------------------------------------------
+static U64 tf_apply_prefixing( U64 radr, REGS* regs )
+{
+    switch (regs->arch_mode)
+    {
+#if defined(            _370 )
+        case        ARCH_370_IDX:
+            return APPLY_370_PREFIXING( radr, regs->PX_370 );
+#endif
+#if defined(            _390 )
+        case        ARCH_390_IDX:
+            return APPLY_390_PREFIXING( radr, regs->PX_390 );
+#endif
+#if defined(            _900 )
+        case        ARCH_900_IDX:
+            return APPLY_900_PREFIXING( radr, regs->PX_900 );
+#endif
+        default: CRASH();
+            UNREACHABLE_CODE( return 0 );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                       TFSYS record                                */
+/*-------------------------------------------------------------------*/
+static const size_t tfsys_size = sizeof( TFSYS );
+static TFSYS tfsys = {0};
+
+/*-------------------------------------------------------------------*/
+/*                Write starting TFSYS record                        */
+/*-------------------------------------------------------------------*/
+static bool tf_write_initial_TFSYS_locked( TIMEVAL* tod )
+{
+    size_t  written;
+    bool    ret = true;
+
+    /* Initialize TFSYS record */
+
+    tfsys.ffmt[0] = '%';
+    tfsys.ffmt[1] = 'T';
+    tfsys.ffmt[2] = 'F';
+    tfsys.ffmt[3] = TF_FMT;
+
+    tfsys.bigend   = are_big_endian() ? 1 : 0;
+    tfsys.engs     = MAX_CPU_ENGS;
+    tfsys.archnum0 = _ARCH_NUM_0;
+    tfsys.archnum1 = _ARCH_NUM_1;
+    tfsys.archnum2 = _ARCH_NUM_2;
+
+    memcpy( &tfsys.beg_tod, tod, sizeof( tfsys.beg_tod ));
+    memset( &tfsys.end_tod,  0,  sizeof( tfsys.end_tod ));
+
+    STRLCPY( tfsys.version, *sysblk.vers_info );
+    memcpy( &tfsys.ptyp[0], &sysblk.ptyp[0], MAX_CPU_ENGS );
+
+    if ((written = fwrite( &tfsys, 1, tfsys_size,
+                sysblk.traceFILE )) < tfsys_size)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", "fwrite()", strerror( errno ));
+        ret = false;
+    }
+
+    sysblk.curtracesize += written;
+    return ret;
+}
+
+/*-------------------------------------------------------------------*/
+/*                     Close TraceFile                               */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void tf_close_locked()
+{
+    /* Quick exit if already closed */
+    if (!sysblk.traceFILE)
+        return;
+
+    if (fseek( sysblk.traceFILE, 0, SEEK_SET ) != 0)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", "fseek()", strerror( errno ));
+    }
+    else if (fwrite( &tfsys, 1, tfsys_size, sysblk.traceFILE ) < tfsys_size)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", "fwrite()", strerror( errno ));
+    }
+
+    /* Now close the file */
+    VERIFY( 0 == fclose( sysblk.traceFILE ));
+    sysblk.traceFILE = NULL;
+    sysblk.curtracesize = 0;
+}
+
+DLL_EXPORT void tf_close( void* notused )
+{
+    UNREFERENCED( notused );
+
+    OBTAIN_TRACEFILE_LOCK();
+    {
+        tf_close_locked();
+    }
+    RELEASE_TRACEFILE_LOCK();
+}
+
+/*-------------------------------------------------------------------*/
+/*                 Write TraceFile record                            */
+/*-------------------------------------------------------------------*/
+static bool tf_write( REGS* regs, void* rec, U16 curr, U16 msgnum )
+{
+    static size_t  bufsize  = 0;
+    static U16     prev     = 0;
+
+    TFHDR*   hdr;
+    size_t   written;
+    TIMEVAL  tod;
+    bool     nostop;
+    bool     auto_closed = false; // (true when MAX= reached)
+    bool     ret = true;
+
+    OBTAIN_TRACEFILE_LOCK();
+    {
+        /* Quick exit if tracefile tracing isn't active */
+        if (!sysblk.traceFILE)
+        {
+            RELEASE_TRACEFILE_LOCK();
+            return true;
+        }
+
+        gettimeofday( (TIMEVAL*) &tod, NULL );
+
+        /* Write TFSYS record if first time */
+        if (!sysblk.curtracesize)
+        {
+            if (!tf_write_initial_TFSYS_locked( &tod ))
+            {
+                // (error message already issued)
+                RELEASE_TRACEFILE_LOCK();
+                return false;
+            }
+
+            bufsize = tf_MAX_RECSIZE();
+            prev = 0;
+
+            /* Register shutdown function so close updates TFSYS */
+            hdl_addshut( "tf_close", tf_close, NULL );
+        }
+
+        /* Copy caller's entire record into our buffer */
+        if ((size_t)curr > bufsize) CRASH();
+        hdr = (TFHDR*) sysblk.tracefilebuff;
+        memcpy( hdr, rec, curr );
+
+        /* Finish building their header */
+        hdr->prev      = prev;
+        hdr->curr      = curr;
+        hdr->cpuad     = regs ? regs->cpuad : 0xFFFF;
+        hdr->msgnum    = msgnum;
+        hdr->arch_mode = regs ? regs->arch_mode : 0xFF;
+        hdr->tod       = tod;
+
+        /* Update the TFSYS record's end time too */
+        memcpy( &tfsys.end_tod, &tod, sizeof( tfsys.end_tod ));
+
+        /* Write caller's entire record to the trace file */
+        if ((written = fwrite( hdr, 1, curr,
+                sysblk.traceFILE )) <  curr)
+        {
+            // "Error in function %s: %s"
+            WRMSG( HHC00075, "E", "fwrite()", strerror( errno ));
+            ret = false;
+        }
+
+        /* Update variables for next time */
+        sysblk.curtracesize += written;
+        prev = curr;
+
+        /* Count total trace records */
+        if (hdr->cpuad == 0xFFFF)
+            tfsys.tot_dev++;
+        else
+        {
+            if (hdr->msgnum == 2324)
+                tfsys.tot_ins++;
+        }
+
+        /* Stop tracing when MAX size exceeded */
+        if (sysblk.curtracesize > sysblk.maxtracesize)
+        {
+            tf_close_locked();
+            auto_closed = true; // (handled further below)
+            nostop = sysblk.tfnostop ? true : false;
+        }
+    }
+    RELEASE_TRACEFILE_LOCK();
+
+    /* If file automatically closed due to MAX= being reached... */
+    if (auto_closed)
+    {
+        /* Stop all instruction tracing too unless asked not to */
+        if (nostop)
+        {
+            // "Trace file MAX= reached; file closed, tracing %s"
+            WRMSG( HHC02379, "I", "continues" );
+        }
+        else
+        {
+            tf_autostop();
+
+            // "Trace file MAX= reached; file closed, tracing %s"
+            WRMSG( HHC02379, "I", "auto-stopped" );
+        }
+    }
+
+    return ret;
+}
+
+//---------------------------------------------------------------------
+//               Automatically stop all tracing
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_autostop()
+{
+    bool bStopped = false;
+
+    DEVBLK* dev;
+
+    /* Stop all tracing */
+    OBTAIN_INTLOCK( NULL );
+    {
+        bStopped = sysblk.insttrace ? true : false;
+        sysblk.insttrace = false;
+
+        /* Stop CCW tracing */
+        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        {
+            bStopped = bStopped || dev->ccwtrace || dev->orbtrace || dev->ckdkeytrace;
+            dev->ccwtrace    = 0;
+            dev->orbtrace    = 0;
+            dev->ckdkeytrace = 0;
+        }
+    }
+    RELEASE_INTLOCK( NULL );
+
+    return bStopped;
+}
+
+//---------------------------------------------------------------------
+//                      Search key
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0423( DEVBLK* dev, size_t kl, BYTE* key )
+{
+    TF00423 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.kl = (BYTE) kl;
+    memcpy( rec.key, key, kl );
+    return tf_write( NULL, &rec, sizeof( TF00423 ), 423 );
+}
+
+//---------------------------------------------------------------------
+//                      Cur trk
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0424( DEVBLK* dev, S32 trk )
+{
+    TF00424 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk    = trk;
+    rec.bufcur = dev->bufcur;
+    return tf_write( NULL, &rec, sizeof( TF00424 ), 424 );
+}
+
+//---------------------------------------------------------------------
+//                      Updating track
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0425( DEVBLK* dev )
+{
+    TF00425 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.bufcur = dev->bufcur;
+    return tf_write( NULL, &rec, sizeof( TF00425 ), 425 );
+}
+
+//---------------------------------------------------------------------
+//                      Cache hit
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0426( DEVBLK* dev, S32 trk, S32 i )
+{
+    TF00426 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk = trk;
+    rec.idx = i;
+    return tf_write( NULL, &rec, sizeof( TF00426 ), 426 );
+}
+
+//---------------------------------------------------------------------
+//                   Unavailable cache
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0427( DEVBLK* dev, S32 trk )
+{
+    TF00427 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk = trk;
+    return tf_write( NULL, &rec, sizeof( TF00427 ), 427 );
+}
+
+//---------------------------------------------------------------------
+//                      Cache miss
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0428( DEVBLK* dev, S32 trk, S32 o )
+{
+    TF00428 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk = trk;
+    rec.idx = o;
+    return tf_write( NULL, &rec, sizeof( TF00428 ), 428 );
+}
+
+//---------------------------------------------------------------------
+//                      Offset
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0429( DEVBLK* dev, S32 trk, S32 fnum )
+{
+    TF00429 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk    = trk;
+    rec.offset = dev->ckdtrkoff;
+    rec.len    = dev->ckdtrksz;
+    rec.fnum   = fnum;
+    return tf_write( NULL, &rec, sizeof( TF00429 ), 429 );
+}
+
+//---------------------------------------------------------------------
+//                      Trkhdr
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0430( DEVBLK* dev, S32 trk )
+{
+    TF00430 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk = trk;
+    memcpy( rec.buf, dev->buf, sizeof( rec.buf ));
+    return tf_write( NULL, &rec, sizeof( TF00430 ), 430 );
+}
+
+//---------------------------------------------------------------------
+//                      Seeking
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0431( DEVBLK* dev, int cyl, int head )
+{
+    TF00431 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.cyl  = cyl;
+    rec.head = head;
+    return tf_write( NULL, &rec, sizeof( TF00431 ), 431 );
+}
+
+//---------------------------------------------------------------------
+//                      MT advance error
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0432( DEVBLK* dev )
+{
+    TF00432 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.count = dev->ckdlcount;
+    rec.mask  = dev->ckdfmask;
+    return tf_write( NULL, &rec, sizeof( TF00432 ), 432 );
+}
+
+//---------------------------------------------------------------------
+//                      MT advance
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0433( DEVBLK* dev, int cyl, int head )
+{
+    TF00433 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.cyl  = cyl;
+    rec.head = head;
+    return tf_write( NULL, &rec, sizeof( TF00433 ), 433 );
+}
+
+//---------------------------------------------------------------------
+//                   Read count orientation
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0434( DEVBLK* dev )
+{
+    TF00434 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.orient = (BYTE) dev->ckdorient;
+    return tf_write( NULL, &rec, sizeof( TF00434 ), 434 );
+}
+
+//---------------------------------------------------------------------
+//                      Cyl head record kl dl
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0435( DEVBLK* dev )
+{
+    TF00435 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.dl     = dev->ckdcurdl;
+    rec.cyl    = dev->ckdcurcyl;
+    rec.head   = dev->ckdcurhead;
+    rec.record = dev->ckdcurrec;
+    rec.kl     = dev->ckdcurkl;
+    rec.offset = dev->ckdtrkof;
+    return tf_write( NULL, &rec, sizeof( TF00435 ), 435 );
+}
+
+//---------------------------------------------------------------------
+//                      Read key
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0436( DEVBLK* dev )
+{
+    TF00436 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.kl = dev->ckdcurkl;
+    return tf_write( NULL, &rec, sizeof( TF00436 ), 436 );
+}
+
+//---------------------------------------------------------------------
+//                      Read data
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0437( DEVBLK* dev )
+{
+    TF00437 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.dl = dev->ckdcurdl;
+    return tf_write( NULL, &rec, sizeof( TF00437 ), 437 );
+}
+
+//---------------------------------------------------------------------
+//                 Write cyl head record kl dl
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0438( DEVBLK* dev, BYTE recnum, BYTE keylen, U16 datalen )
+{
+    TF00438 rec;
+    rec.rhdr.devnum  = dev->devnum;
+    rec.rhdr.lcss    = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.datalen = datalen;
+    rec.recnum  = recnum;
+    rec.keylen  = keylen;
+    rec.cyl     = dev->ckdcurcyl;
+    rec.head    = dev->ckdcurhead;
+    return tf_write( NULL, &rec, sizeof( TF00438 ), 438 );
+}
+
+//---------------------------------------------------------------------
+//                   Set track overflow flag
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0439( DEVBLK* dev, BYTE recnum )
+{
+    TF00439 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.recnum = recnum;
+    rec.cyl    = dev->ckdcurcyl;
+    rec.head   = dev->ckdcurhead;
+    return tf_write( NULL, &rec, sizeof( TF00439 ), 439 );
+}
+
+//---------------------------------------------------------------------
+//                 Update cyl head record kl dl
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0440( DEVBLK* dev )
+{
+    TF00440 rec;
+    rec.rhdr.devnum  = dev->devnum;
+    rec.rhdr.lcss    = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.cyl     = dev->ckdcurcyl;
+    rec.head    = dev->ckdcurhead;
+    rec.recnum  = dev->ckdcurrec;
+    rec.keylen  = dev->ckdcurkl;
+    rec.datalen = dev->ckdcurdl;
+
+    return tf_write( NULL, &rec, sizeof( TF00440 ), 440 );
+}
+
+//---------------------------------------------------------------------
+//                   Update cyl head record dl
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0441( DEVBLK* dev )
+{
+    TF00441 rec;
+    rec.rhdr.devnum  = dev->devnum;
+    rec.rhdr.lcss    = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.cyl     = dev->ckdcurcyl;
+    rec.head    = dev->ckdcurhead;
+    rec.recnum  = dev->ckdcurrec;
+    rec.datalen = dev->ckdcurdl;
+    return tf_write( NULL, &rec, sizeof( TF00441 ), 441 );
+}
+
+//---------------------------------------------------------------------
+//                      Set file mask
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0442( DEVBLK* dev )
+{
+    TF00442 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.mask = dev->ckdfmask;
+    return tf_write( NULL, &rec, sizeof( TF00442 ), 442 );
+}
+
+//---------------------------------------------------------------------
+//                      Cache hit
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0516( DEVBLK* dev, S32 blkgrp, S32 i )
+{
+    TF00516 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.blkgrp = blkgrp;
+    rec.idx    = i;
+    return tf_write( NULL, &rec, sizeof( TF00516 ), 516 );
+}
+
+//---------------------------------------------------------------------
+//                    Unavailable cache
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0517( DEVBLK* dev, S32 blkgrp )
+{
+    TF00517 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.blkgrp = blkgrp;
+    return tf_write( NULL, &rec, sizeof( TF00517 ), 517 );
+}
+
+//---------------------------------------------------------------------
+//                    Cache miss
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0518( DEVBLK* dev, S32 blkgrp, S32 o )
+{
+    TF00518 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.blkgrp = blkgrp;
+    rec.idx    = o;
+    return tf_write( NULL, &rec, sizeof( TF00518 ), 518 );
+}
+
+//---------------------------------------------------------------------
+//                    Offset len
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0519( DEVBLK* dev, S32 blkgrp, U64 offset, S32 len )
+{
+    TF00519 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.blkgrp = blkgrp;
+    rec.offset = offset;
+    rec.len    = len;
+    return tf_write( NULL, &rec, sizeof( TF00519 ), 519 );
+}
+
+//---------------------------------------------------------------------
+//                    Positioning
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0520( DEVBLK* dev )
+{
+    TF00520 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.rba    = dev->fbarba;
+    return tf_write( NULL, &rec, sizeof( TF00520 ), 520 );
+}
+
+//---------------------------------------------------------------------
+//                    Wait State PSW
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0800( REGS* regs )
+{
+    TF00800 rec;
+    if (!sysblk.insttrace) return true;
+    memcpy( &rec.psw, &regs->psw, sizeof( rec.psw ));
+    rec.psw.ilc = REAL_ILC( regs );
+    rec.amode64 = rec.psw.amode64;
+    rec.amode   = rec.psw.amode;
+    rec.zeroilc = rec.psw.zeroilc;
+    return tf_write( regs, &rec, sizeof( TF00800 ), 800 );
+}
+
+//---------------------------------------------------------------------
+//                  Program Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0801( REGS* regs, U16 pcode, BYTE ilc )
+{
+    TF00801 rec;
+    if (!sysblk.insttrace) return true;
+    rec.sie =
+#if defined( _FEATURE_SIE )
+        SIE_MODE( regs );
+#else
+        false;
+#endif
+    rec.ilc = ilc;
+    rec.pcode = pcode;
+    rec.why = (pcode & PGM_TXF_EVENT) ? regs->txf_why : 0;
+    rec.dxc = ((pcode & 0xFF) == PGM_DATA_EXCEPTION) ? regs->dxc : 0;
+    return tf_write( regs, &rec, sizeof( TF00801 ), 801 );
+}
+
+//---------------------------------------------------------------------
+//                       PER event
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0802( REGS* regs, U64 ia, U32 pcode, U16 perc )
+{
+    TF00802 rec;
+    if (!sysblk.insttrace) return true;
+    rec.ia    = ia;
+    rec.pcode = pcode;
+    rec.perc  = perc;
+    return tf_write( regs, &rec, sizeof( TF00802 ), 802 );
+}
+
+//---------------------------------------------------------------------
+//                  Program interrupt loop
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0803( REGS* regs, const char* str )
+{
+    TF00803 rec;
+    if (!sysblk.insttrace) return true;
+    STRLCPY( rec.str, str );
+    return tf_write( regs, &rec, sizeof( TF00803 ), 803 );
+}
+
+//---------------------------------------------------------------------
+//                  I/O interrupt (S/370)
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0804( REGS* regs, BYTE* csw, U16 ioid, BYTE lcss )
+{
+    TF00804 rec;
+    if (!sysblk.insttrace) return true;
+    rec.ioid = ioid;
+    rec.rhdr.lcss = lcss;
+    memcpy( rec.csw, csw, sizeof( rec.csw ));
+    return tf_write( regs, &rec, sizeof( TF00804 ), 804 );
+}
+
+//---------------------------------------------------------------------
+//                    I/O Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0806( REGS* regs, U32 ioid, U32 ioparm, U32 iointid )
+{
+    TF00806 rec;
+    if (!sysblk.insttrace) return true;
+    rec.ioid    = ioid;
+    rec.ioparm  = ioparm;
+    rec.iointid = iointid;
+    return tf_write( regs, &rec, sizeof( TF00806 ), 806 );
+}
+
+//---------------------------------------------------------------------
+//                 Machine Check Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0807( REGS* regs, U64 mcic, U64 fsta, U32 xdmg )
+{
+    TF00807 rec;
+    if (!sysblk.insttrace) return true;
+    rec.mcic = mcic;
+    rec.xdmg = xdmg;
+    rec.fsta = fsta;
+    return tf_write( regs, &rec, sizeof( TF00807 ), 807 );
+}
+
+//---------------------------------------------------------------------
+//                       Store Status
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0808( REGS* regs )
+{
+    TF00808 rec;
+    if (!sysblk.insttrace) return true;
+    return tf_write( regs, &rec, sizeof( TF00808 ), 808 );
+}
+
+//---------------------------------------------------------------------
+//                    Disabled Wait State
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0809( REGS* regs, const char* str)
+{
+    TF00809 rec;
+    if (!sysblk.insttrace) return true;
+    STRLCPY( rec.str, str );
+    return tf_write( regs, &rec, sizeof( TF00809 ), 809 );
+}
+
+//---------------------------------------------------------------------
+//                      Architecture mode
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0811( REGS* regs, const char* archname )
+{
+    TF00811 rec;
+    if (!sysblk.insttrace) return true;
+    STRLCPY( rec.archname, archname );
+    return tf_write( regs, &rec, sizeof( TF00811 ), 811 );
+}
+
+//---------------------------------------------------------------------
+//               Vector facility online (370/390)
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0812( REGS* regs )
+{
+    TF00812 rec;
+    if (!sysblk.insttrace) return true;
+    return tf_write( regs, &rec, sizeof( TF00812 ), 812 );
+}
+
+//---------------------------------------------------------------------
+//                    Signal Processor
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0814( REGS* regs, BYTE order, BYTE cc, U16 cpad, U32 status, U64 parm, BYTE got_status )
+{
+    TF00814 rec;
+    if (!sysblk.insttrace) return true;
+    rec.order      = order;
+    rec.cc         = cc;
+    rec.cpad       = cpad;
+    rec.status     = status;
+    rec.parm       = parm;
+    rec.got_status = got_status;
+    return tf_write( regs, &rec, sizeof( TF00814 ), 814 );
+}
+
+//---------------------------------------------------------------------
+//                  External Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0840( REGS* regs, U16 icode )
+{
+    TF00840 rec;
+    if (!sysblk.insttrace) return true;
+    rec.icode = icode;
+    rec.cpu_timer = (EXT_CPU_TIMER_INTERRUPT == rec.icode)
+                  ? sysblk.gct( regs ) : 0;
+    return tf_write( regs, &rec, sizeof( TF00840 ), 840 );
+}
+
+//---------------------------------------------------------------------
+//                  Block I/O Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0844( REGS* regs )
+{
+    TF00844 rec;
+    if (!sysblk.insttrace) return true;
+    rec.rhdr.devnum   = sysblk.biodev->devnum;
+    rec.rhdr.lcss     = SSID_TO_LCSS( sysblk.biodev->ssid );
+    rec.servcode = sysblk.servcode;
+    rec.bioparm  = sysblk.bioparm;
+    rec.biostat  = sysblk.biostat;
+    rec.biosubcd = sysblk.biosubcd;
+    return tf_write( regs, &rec, sizeof( TF00844 ), 844 );
+}
+
+//---------------------------------------------------------------------
+//               Block I/O External interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0845( REGS* regs )
+{
+    TF00845 rec;
+    if (!sysblk.insttrace) return true;
+    rec.bioparm  = sysblk.bioparm;
+    rec.biosubcd = sysblk.biosubcd;
+    return tf_write( regs, &rec, sizeof( TF00845 ), 845 );
+}
+
+//---------------------------------------------------------------------
+//               Service Signal External Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0846( REGS* regs )
+{
+    TF00846 rec;
+    if (!sysblk.insttrace) return true;
+    rec.servparm = sysblk.servparm;
+    return tf_write( regs, &rec, sizeof( TF00846 ), 846 );
+}
+
+//---------------------------------------------------------------------
+//                      Halt subchannel
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1300( DEVBLK* dev, BYTE cc )
+{
+    TF01300 rec;
+    rec.cc     = cc;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01300 ), 1300 );
+}
+
+//---------------------------------------------------------------------
+//                      IDAW/MIDAW
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1301( const DEVBLK* dev, const U64 addr, const U16 count,
+              BYTE* data, BYTE amt, const BYTE flag, const BYTE type )
+{
+    TF01301 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    rec.amt   = amt;
+    rec.addr  = addr;
+    rec.count = count;
+    rec.type  = type;
+    rec.mflag = flag;
+    memcpy( rec.data, data, amt );
+    return tf_write( NULL, &rec, sizeof( TF01301 ), 1301 );
+}
+
+//---------------------------------------------------------------------
+//                  Attention signaled
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1304( DEVBLK* dev )
+{
+    TF01304 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01304 ), 1304 );
+}
+
+//---------------------------------------------------------------------
+//                      Attention
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1305( DEVBLK* dev )
+{
+    TF01305 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01305 ), 1305 );
+}
+
+//---------------------------------------------------------------------
+//                  Initial status interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1306( DEVBLK* dev )
+{
+    TF01306 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01306 ), 1306 );
+}
+
+//---------------------------------------------------------------------
+//                  Attention completed
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1307( DEVBLK* dev )
+{
+    TF01307 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01307 ), 1307 );
+}
+
+//---------------------------------------------------------------------
+//                  Clear completed
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1308( DEVBLK* dev )
+{
+    TF01308 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01308 ), 1308 );
+}
+
+//---------------------------------------------------------------------
+//                      Halt completed
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1309( DEVBLK* dev )
+{
+    TF01309 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01309 ), 1309 );
+}
+
+//---------------------------------------------------------------------
+//                      Suspended
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1310( DEVBLK* dev )
+{
+    TF01310 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01310 ), 1310 );
+}
+
+//---------------------------------------------------------------------
+//                        Resumed
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1311( DEVBLK* dev )
+{
+    TF01311 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01311 ), 1311 );
+}
+
+//---------------------------------------------------------------------
+//                       I/O stat
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1312( DEVBLK* dev, BYTE us, BYTE cs, BYTE amt, U32 resid, BYTE* data )
+{
+    TF01312 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    rec.unitstat = us;
+    rec.chanstat = cs;
+    rec.amt      = amt;
+    rec.residual = resid;
+    memcpy( rec.data, data, amt );
+    return tf_write( NULL, &rec, sizeof( TF01312 ), 1312 );
+}
+
+//---------------------------------------------------------------------
+//                          Sense
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1313( DEVBLK* dev )
+{
+    TF01313 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    memcpy( rec.sense, dev->sense, sizeof( rec.sense ));
+    if (dev->sns)
+        dev->sns( dev, rec.sns, sizeof( rec.sns ));
+    else
+        rec.sns[0] = 0;
+    return tf_write( NULL, &rec, sizeof( TF01313 ), 1313 );
+}
+
+//---------------------------------------------------------------------
+//                          CCW
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1315( const DEVBLK* dev, const BYTE* ccw,
+              const U32 addr, const U16 count, BYTE* data, BYTE amt )
+{
+    TF01315 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    rec.amt   = amt;
+    rec.addr  = addr;
+    rec.count = count;
+    memcpy( rec.ccw,  ccw,  sizeof( rec.ccw ));
+    memcpy( rec.data, data, amt );
+    return tf_write( NULL, &rec, sizeof( TF01315 ), 1315 );
+}
+
+//---------------------------------------------------------------------
+//                      CSW (370)
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1316( const DEVBLK* dev, const BYTE csw[] )
+{
+    TF01316 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    memcpy( rec.csw, csw, sizeof( rec.csw ));
+    return tf_write( NULL, &rec, sizeof( TF01316 ), 1316 );
+}
+
+//---------------------------------------------------------------------
+//                         SCSW
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1317( const DEVBLK* dev, const SCSW scsw )
+{
+    TF01317 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    memcpy( &rec.scsw, &scsw, sizeof( rec.scsw ));
+    return tf_write( NULL, &rec, sizeof( TF01317 ), 1317 );
+}
+
+//---------------------------------------------------------------------
+//                        TEST I/O
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1318( DEVBLK* dev, BYTE cc )
+{
+    TF01318 rec;
+    rec.cc     = cc;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01318 ), 1318 );
+}
+
+//---------------------------------------------------------------------
+//               S/370 start I/O conversion started
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1320( DEVBLK* dev )
+{
+    TF01320 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01320 ), 1320 );
+}
+
+//---------------------------------------------------------------------
+//               S/370 start I/O conversion success
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1321( DEVBLK* dev )
+{
+    TF01321 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01321 ), 1321 );
+}
+
+//---------------------------------------------------------------------
+//                      Halt I/O
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1329( DEVBLK* dev )
+{
+    TF01329 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01329 ), 1329 );
+}
+
+//---------------------------------------------------------------------
+//                      HIO modification
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1330( DEVBLK* dev )
+{
+    TF01330 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01330 ), 1330 );
+}
+
+//---------------------------------------------------------------------
+//                      Clear subchannel
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1331( DEVBLK* dev )
+{
+    TF01331 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01331 ), 1331 );
+}
+
+//---------------------------------------------------------------------
+//                      Halt subchannel
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1332( DEVBLK* dev )
+{
+    TF01332 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01332 ), 1332 );
+}
+
+//---------------------------------------------------------------------
+//                    Resume subchannel
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1333( DEVBLK* dev, BYTE cc )
+{
+    TF01333 rec;
+    rec.cc     = cc;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01333 ), 1333 );
+}
+
+//---------------------------------------------------------------------
+//                          ORB
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1334( DEVBLK* dev, ORB* orb )
+{
+    TF01334 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    memcpy( &rec.orb, orb, sizeof( rec.orb ));
+    return tf_write( NULL, &rec, sizeof( TF01334 ), 1334 );
+}
+
+//---------------------------------------------------------------------
+//                      Startio cc=2
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1336( DEVBLK* dev )
+{
+    TF01336 rec;
+    rec.rhdr.devnum  = dev->devnum;
+    rec.rhdr.lcss    = SSID_TO_LCSS( dev->ssid );
+    rec.busy         = dev->busy;
+    rec.startpending = dev->startpending;
+    return tf_write( NULL, &rec, sizeof( TF01336 ), 1336 );
+}
+
+//---------------------------------------------------------------------
+//                  General Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2269( REGS* regs, BYTE* inst )
+{
+    TF02269 rec;
+    if (!sysblk.insttrace) return true;
+    memcpy( rec.gr, regs->gr, sizeof( rec.gr ));
+    rec.ifetch_error = inst ? false : true;
+    rec.sie =
+#if defined( _FEATURE_SIE )
+        SIE_MODE( regs );
+#else
+        false;
+#endif
+    return tf_write( regs, &rec, sizeof( TF02269 ), 2269 );
+}
+
+//---------------------------------------------------------------------
+//               Floating Point Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2270( REGS* regs )
+{
+    TF02270 rec;
+    if (!sysblk.insttrace) return true;
+    memcpy( rec.fpr, regs->fpr, sizeof( rec.fpr ));
+    rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
+    return tf_write( regs, &rec, sizeof( TF02270 ), 2270 );
+}
+
+//---------------------------------------------------------------------
+//                  Control Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2271( REGS* regs )
+{
+    TF02271 rec;
+    if (!sysblk.insttrace) return true;
+    memcpy( rec.cr, &regs->cr_struct[1], sizeof( rec.cr ));
+    return tf_write( regs, &rec, sizeof( TF02271 ), 2271 );
+}
+
+//---------------------------------------------------------------------
+//                  Access Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2272( REGS* regs )
+{
+    TF02272 rec;
+    if (!sysblk.insttrace) return true;
+    memcpy( rec.ar, regs->ar, sizeof( rec.ar ));
+    return tf_write( regs, &rec, sizeof( TF02272 ), 2272 );
+}
+
+//---------------------------------------------------------------------
+//           Floating Point Control Register
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2276( REGS* regs )
+{
+    TF02276 rec;
+    if (!sysblk.insttrace) return true;
+    rec.fpc = regs->fpc;
+    rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
+    return tf_write( regs, &rec, sizeof( TF02276 ), 2276 );
+}
+
+//---------------------------------------------------------------------
+//              Primary Instruction Trace
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2324( REGS* regs, BYTE* inst )
+{
+    TF02324 rec;
+    if (!sysblk.insttrace) return true;
+    rec.sie =
+#if defined( _FEATURE_SIE )
+        SIE_MODE( regs );
+#else
+        false;
+#endif
+    rec.ilc = ILC( inst[0] ); // (value in regs not always right)
+    memcpy( &rec.psw,  &regs->psw, sizeof( rec.psw ));
+    memcpy( rec.inst, inst, rec.ilc );
+    rec.amode64 = rec.psw.amode64;
+    rec.amode   = rec.psw.amode;
+    rec.zeroilc = rec.psw.zeroilc;
+    return tf_write( regs, &rec, sizeof( TF02324 ), 2324 );
+}
+
+//---------------------------------------------------------------------
+//           Instruction Storage Operand helper
+//---------------------------------------------------------------------
+
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Waddress-of-packed-member" )
+
+static void tf_2326_op( REGS* regs, TFOP* op, BYTE opcode1, BYTE opcode2, int b, bool isop2 )
+{
+    if (b >= 0)
+    {
+        int ar, stid;
+
+        /* Determine if operand should be treated as a real address */
+        if (0
+            || REAL_MODE( &regs->psw )
+            || (isop2 && IS_REAL_ADDR_OP( opcode1, opcode2 ))
+        )
+            ar = USE_REAL_ADDR;
+        else
+            ar = b;
+
+        /* Get the real address for this virtual address */
+        if ((op->xcode = tf_virt_to_real( &op->raddr, &stid,
+             op->vaddr, ar, regs, ACCTYPE_HW )) == 0)
+        {
+            U64 pagesize, bytemask, abs;
+            size_t amt = sizeof( op->stor );
+
+            /* Convert real address to absolute address */
+            abs = tf_apply_prefixing( op->raddr, regs );
+
+            /* Determine page size and byte mask */
+            if (regs->arch_mode == ARCH_370_IDX)
+            {
+                pagesize = STORAGE_KEY_2K_PAGESIZE;
+                bytemask = STORAGE_KEY_2K_BYTEMASK;
+            }
+            else
+            {
+                pagesize = STORAGE_KEY_4K_PAGESIZE;
+                bytemask = STORAGE_KEY_4K_BYTEMASK;
+            }
+
+            /* If virtual storage, only save the data that's
+               on this one page (i.e. to the end of the page) */
+            if (ar != USE_REAL_ADDR)
+            {
+                amt = pagesize - (abs & bytemask);
+
+                if (amt > sizeof( op->stor ))
+                    amt = sizeof( op->stor );
+            }
+
+            /* Update Interval Timer beforehand, if needed */
+#if defined( _FEATURE_INTERVAL_TIMER )
+            tf_store_int_timer( regs, op->raddr );
+#endif
+            /* Save as much operand data as possible */
+            memcpy( op->stor, regs->mainstor + abs, amt );
+
+            /* Save the amount we saved and its storage key */
+            op->amt = (BYTE) amt; // (how much we saved)
+            op->skey = tf_get_storage_key( regs, abs );
+        }
+    }
+}
+
+POP_GCC_WARNINGS()
+
+//---------------------------------------------------------------------
+//                 Instruction Storage
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2326( REGS* regs, TF02326* tf2326, BYTE opcode1, BYTE opcode2,
+                                           int    b1,    int    b2 )
+{
+    if (!sysblk.insttrace) return true;
+    if (tf2326->valid)
+    {
+        tf2326->real_mode = REAL_MODE( &regs->psw );
+        tf2326->b1 = b1;
+        tf2326->b2 = b2;
+        tf_2326_op( regs, &tf2326->op1, opcode1, opcode2, b1, false );
+        tf_2326_op( regs, &tf2326->op2, opcode1, opcode2, b2, true  );
+    }
+    return tf_write( regs, tf2326, sizeof( TF02326 ), 2326 );
+}
+
+/*-------------------------------------------------------------------*/
+/*            Return maximum TraceFile record size                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT size_t  tf_MAX_RECSIZE()
+{
+    size_t
+        max_recsize = sizeof( TFSYS );
+
+    // Device tracing
+
+    if (max_recsize < sizeof( TF00423 ))
+        max_recsize = sizeof( TF00423 );
+
+    if (max_recsize < sizeof( TF00424 ))
+        max_recsize = sizeof( TF00424 );
+
+    if (max_recsize < sizeof( TF00425 ))
+        max_recsize = sizeof( TF00425 );
+
+    if (max_recsize < sizeof( TF00426 ))
+        max_recsize = sizeof( TF00426 );
+
+    if (max_recsize < sizeof( TF00427 ))
+        max_recsize = sizeof( TF00427 );
+
+    if (max_recsize < sizeof( TF00428 ))
+        max_recsize = sizeof( TF00428 );
+
+    if (max_recsize < sizeof( TF00429 ))
+        max_recsize = sizeof( TF00429 );
+
+    if (max_recsize < sizeof( TF00430 ))
+        max_recsize = sizeof( TF00430 );
+
+    if (max_recsize < sizeof( TF00431 ))
+        max_recsize = sizeof( TF00431 );
+
+    if (max_recsize < sizeof( TF00432 ))
+        max_recsize = sizeof( TF00432 );
+
+    if (max_recsize < sizeof( TF00433 ))
+        max_recsize = sizeof( TF00433 );
+
+    if (max_recsize < sizeof( TF00434 ))
+        max_recsize = sizeof( TF00434 );
+
+    if (max_recsize < sizeof( TF00435 ))
+        max_recsize = sizeof( TF00435 );
+
+    if (max_recsize < sizeof( TF00436 ))
+        max_recsize = sizeof( TF00436 );
+
+    if (max_recsize < sizeof( TF00437 ))
+        max_recsize = sizeof( TF00437 );
+
+    if (max_recsize < sizeof( TF00438 ))
+        max_recsize = sizeof( TF00438 );
+
+    if (max_recsize < sizeof( TF00439 ))
+        max_recsize = sizeof( TF00439 );
+
+    if (max_recsize < sizeof( TF00440 ))
+        max_recsize = sizeof( TF00440 );
+
+    if (max_recsize < sizeof( TF00441 ))
+        max_recsize = sizeof( TF00441 );
+
+    if (max_recsize < sizeof( TF00442 ))
+        max_recsize = sizeof( TF00442 );
+
+    if (max_recsize < sizeof( TF00516 ))
+        max_recsize = sizeof( TF00516 );
+
+    if (max_recsize < sizeof( TF00517 ))
+        max_recsize = sizeof( TF00517 );
+
+    if (max_recsize < sizeof( TF00518 ))
+        max_recsize = sizeof( TF00518 );
+
+    if (max_recsize < sizeof( TF00519 ))
+        max_recsize = sizeof( TF00519 );
+
+    if (max_recsize < sizeof( TF00520 ))
+        max_recsize = sizeof( TF00520 );
+
+    // Instruction tracing
+
+    if (max_recsize < sizeof( TF00800 ))
+        max_recsize = sizeof( TF00800 );
+
+    if (max_recsize < sizeof( TF00801 ))
+        max_recsize = sizeof( TF00801 );
+
+    if (max_recsize < sizeof( TF00802 ))
+        max_recsize = sizeof( TF00802 );
+
+    if (max_recsize < sizeof( TF00803 ))
+        max_recsize = sizeof( TF00803 );
+
+    if (max_recsize < sizeof( TF00804 ))
+        max_recsize = sizeof( TF00804 );
+
+    if (max_recsize < sizeof( TF00806 ))
+        max_recsize = sizeof( TF00806 );
+
+    if (max_recsize < sizeof( TF00807 ))
+        max_recsize = sizeof( TF00807 );
+
+    if (max_recsize < sizeof( TF00808 ))
+        max_recsize = sizeof( TF00808 );
+
+    if (max_recsize < sizeof( TF00809 ))
+        max_recsize = sizeof( TF00809 );
+
+    if (max_recsize < sizeof( TF00811 ))
+        max_recsize = sizeof( TF00811 );
+
+    if (max_recsize < sizeof( TF00812 ))
+        max_recsize = sizeof( TF00812 );
+
+    if (max_recsize < sizeof( TF00814 ))
+        max_recsize = sizeof( TF00814 );
+
+    if (max_recsize < sizeof( TF00840 ))
+        max_recsize = sizeof( TF00840 );
+
+    if (max_recsize < sizeof( TF00844 ))
+        max_recsize = sizeof( TF00844 );
+
+    if (max_recsize < sizeof( TF00845 ))
+        max_recsize = sizeof( TF00845 );
+
+    if (max_recsize < sizeof( TF00846 ))
+        max_recsize = sizeof( TF00846 );
+
+    // Device tracing
+
+    if (max_recsize < sizeof( TF01300 ))
+        max_recsize = sizeof( TF01300 );
+
+    if (max_recsize < sizeof( TF01301 ))
+        max_recsize = sizeof( TF01301 );
+
+    if (max_recsize < sizeof( TF01304 ))
+        max_recsize = sizeof( TF01304 );
+
+    if (max_recsize < sizeof( TF01305 ))
+        max_recsize = sizeof( TF01305 );
+
+    if (max_recsize < sizeof( TF01306 ))
+        max_recsize = sizeof( TF01306 );
+
+    if (max_recsize < sizeof( TF01307 ))
+        max_recsize = sizeof( TF01307 );
+
+    if (max_recsize < sizeof( TF01308 ))
+        max_recsize = sizeof( TF01308 );
+
+    if (max_recsize < sizeof( TF01309 ))
+        max_recsize = sizeof( TF01309 );
+
+    if (max_recsize < sizeof( TF01310 ))
+        max_recsize = sizeof( TF01310 );
+
+    if (max_recsize < sizeof( TF01311 ))
+        max_recsize = sizeof( TF01311 );
+
+    if (max_recsize < sizeof( TF01312 ))
+        max_recsize = sizeof( TF01312 );
+
+    if (max_recsize < sizeof( TF01313 ))
+        max_recsize = sizeof( TF01313 );
+
+    if (max_recsize < sizeof( TF01315 ))
+        max_recsize = sizeof( TF01315 );
+
+    if (max_recsize < sizeof( TF01316 ))
+        max_recsize = sizeof( TF01316 );
+
+    if (max_recsize < sizeof( TF01317 ))
+        max_recsize = sizeof( TF01317 );
+
+    if (max_recsize < sizeof( TF01318 ))
+        max_recsize = sizeof( TF01318 );
+
+    if (max_recsize < sizeof( TF01320 ))
+        max_recsize = sizeof( TF01320 );
+
+    if (max_recsize < sizeof( TF01321 ))
+        max_recsize = sizeof( TF01321 );
+    
+    if (max_recsize < sizeof( TF01329 ))
+        max_recsize = sizeof( TF01329 );
+
+    if (max_recsize < sizeof( TF01330 ))
+        max_recsize = sizeof( TF01330 );
+
+    if (max_recsize < sizeof( TF01331 ))
+        max_recsize = sizeof( TF01331 );
+
+    if (max_recsize < sizeof( TF01332 ))
+        max_recsize = sizeof( TF01332 );
+
+    if (max_recsize < sizeof( TF01333 ))
+        max_recsize = sizeof( TF01333 );
+
+    if (max_recsize < sizeof( TF01334 ))
+        max_recsize = sizeof( TF01334 );
+
+    if (max_recsize < sizeof( TF01336 ))
+        max_recsize = sizeof( TF01336 );
+
+    // Instruction tracing
+
+    if (max_recsize < sizeof( TF02269 ))
+        max_recsize = sizeof( TF02269 );
+
+    if (max_recsize < sizeof( TF02270 ))
+        max_recsize = sizeof( TF02270 );
+
+    if (max_recsize < sizeof( TF02271 ))
+        max_recsize = sizeof( TF02271 );
+
+    if (max_recsize < sizeof( TF02272 ))
+        max_recsize = sizeof( TF02272 );
+
+    if (max_recsize < sizeof( TF02276 ))
+        max_recsize = sizeof( TF02276 );
+
+    if (max_recsize < sizeof( TF02324))
+        max_recsize = sizeof( TF02324 );
+
+    if (max_recsize < sizeof( TF02326))
+        max_recsize = sizeof( TF02326 );
+
+    return
+        max_recsize;
+}
+
+/*-------------------------------------------------------------------*/
+/*          Do unconditional Endian swap of TFSYS record             */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void tf_swap_sys( TFSYS* sys )
+{
+    sys->bigend          = !sys->bigend;
+    sys->beg_tod.tv_sec  = SWAP32( sys->beg_tod.tv_sec  );
+    sys->beg_tod.tv_usec = SWAP32( sys->beg_tod.tv_usec );
+    sys->end_tod.tv_sec  = SWAP32( sys->end_tod.tv_sec  );
+    sys->end_tod.tv_usec = SWAP32( sys->end_tod.tv_usec );
+    sys->tot_ins         = SWAP64( sys->tot_ins         );
+    sys->tot_dev         = SWAP64( sys->tot_dev         );
+}
+
+/*-------------------------------------------------------------------*/
+/*        Do unconditional Endian swap of TFHDR record header        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void tf_swap_hdr( TFHDR* hdr )
+{
+    hdr->prev        = SWAP16( hdr->prev        );
+    hdr->curr        = SWAP16( hdr->curr        );
+    hdr->cpuad       = SWAP16( hdr->cpuad       );
+    hdr->msgnum      = SWAP16( hdr->msgnum      );
+    hdr->devnum      = SWAP16( hdr->devnum      );
+    hdr->tod.tv_sec  = SWAP32( hdr->tod.tv_sec  );
+    hdr->tod.tv_usec = SWAP32( hdr->tod.tv_usec );
+}
+
+/*-------------------------------------------------------------------*/
+/*     Do unconditional Endian swap of Trace File record fields      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void tf_swap_rec( TFHDR* hdr, U16 msgnum )
+{
+    switch (msgnum)
+    {
+        case  423:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  424:
+        {
+            TF00424* rec = (TF00424*) hdr;
+            rec->trk     = SWAP32( rec->trk    );
+            rec->bufcur  = SWAP32( rec->bufcur );
+        }
+        break;
+
+        case  425:
+        {
+            TF00425* rec = (TF00425*) hdr;
+            rec->bufcur  = SWAP32( rec->bufcur );
+        }
+        break;
+
+        case  426:
+        {
+            TF00426* rec = (TF00426*) hdr;
+            rec->trk     = SWAP32( rec->trk );
+            rec->idx     = SWAP32( rec->idx );
+        }
+        break;
+
+        case  427:
+        {
+            TF00427* rec = (TF00427*) hdr;
+            rec->trk     = SWAP32( rec->trk );
+        }
+        break;
+
+        case  428:
+        {
+            TF00428* rec = (TF00428*) hdr;
+            rec->trk     = SWAP32( rec->trk );
+            rec->idx     = SWAP32( rec->idx );
+        }
+        break;
+
+        case  429:
+        {
+            TF00429* rec = (TF00429*) hdr;
+            rec->trk     = SWAP32( rec->trk    );
+            rec->fnum    = SWAP32( rec->fnum   );
+            rec->len     = SWAP32( rec->len    );
+            rec->offset  = SWAP64( rec->offset );
+        }
+        break;
+
+        case  430:
+        {
+            TF00430* rec = (TF00430*) hdr;
+            rec->trk     = SWAP32( rec->trk );
+        }
+        break;
+
+        case  431:
+        {
+            TF00431* rec = (TF00431*) hdr;
+            rec->cyl     = SWAP32( rec->cyl  );
+            rec->head    = SWAP32( rec->head );
+        }
+        break;
+
+        case  432:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  433:
+        {
+            TF00433* rec = (TF00433*) hdr;
+            rec->cyl     = SWAP32( rec->cyl  );
+            rec->head    = SWAP32( rec->head );
+        }
+        break;
+
+        case  434:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  435:
+        {
+            TF00435* rec = (TF00435*) hdr;
+            rec->dl      = SWAP16( rec->dl     );
+            rec->cyl     = SWAP32( rec->cyl    );
+            rec->head    = SWAP32( rec->head   );
+            rec->record  = SWAP32( rec->record );
+            rec->kl      = SWAP32( rec->kl     );
+            rec->offset  = SWAP32( rec->offset );
+        }
+        break;
+
+        case  436:
+        {
+            TF00436* rec = (TF00436*) hdr;
+            rec->kl      = SWAP32( rec->kl );
+        }
+        break;
+
+        case  437:
+        {
+            TF00437* rec = (TF00437*) hdr;
+            rec->dl      = SWAP16( rec->dl );
+        }
+        break;
+
+        case  438:
+        {
+            TF00438* rec = (TF00438*) hdr;
+            rec->datalen = SWAP16( rec->datalen );
+            rec->cyl     = SWAP32( rec->cyl     );
+            rec->head    = SWAP32( rec->head    );
+        }
+        break;
+
+        case  439:
+        {
+            TF00439* rec = (TF00439*) hdr;
+            rec->cyl     = SWAP32( rec->cyl  );
+            rec->head    = SWAP32( rec->head );
+        }
+        break;
+
+        case  440:
+        {
+            TF00440* rec = (TF00440*) hdr;
+            rec->datalen = SWAP16( rec->datalen );
+            rec->cyl     = SWAP32( rec->cyl     );
+            rec->head    = SWAP32( rec->head    );
+            rec->recnum  = SWAP32( rec->recnum  );
+            rec->keylen  = SWAP32( rec->keylen  );
+        }
+        break;
+
+        case  441:
+        {
+            TF00441* rec = (TF00441*) hdr;
+            rec->datalen = SWAP16( rec->datalen );
+            rec->cyl     = SWAP32( rec->cyl     );
+            rec->head    = SWAP32( rec->head    );
+            rec->recnum  = SWAP32( rec->recnum  );
+        }
+        break;
+
+        case  442:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  516:
+        {
+            TF00516* rec = (TF00516*) hdr;
+            rec->blkgrp  = SWAP32( rec->blkgrp );
+            rec->idx     = SWAP32( rec->idx    );
+        }
+        break;
+
+        case  517:
+        {
+            TF00517* rec = (TF00517*) hdr;
+            rec->blkgrp  = SWAP32( rec->blkgrp );
+        }
+        break;
+
+        case  518:
+        {
+            TF00518* rec = (TF00518*) hdr;
+            rec->blkgrp  = SWAP32( rec->blkgrp );
+            rec->idx     = SWAP32( rec->idx    );
+        }
+        break;
+
+        case  519:
+        {
+            TF00519* rec = (TF00519*) hdr;
+            rec->blkgrp  = SWAP32( rec->blkgrp );
+            rec->len     = SWAP32( rec->len    );
+            rec->offset  = SWAP64( rec->offset );
+        }
+        break;
+
+        case  520:
+        {
+            TF00520* rec = (TF00520*) hdr;
+            rec->rba     = SWAP64( rec->rba );
+        }
+        break;
+
+        case  800:
+        {
+            TF00800* rec = (TF00800*) hdr;
+
+            rec->psw.intcode  = SWAP16( rec->psw.intcode  );
+            rec->psw.zeroword = SWAP32( rec->psw.zeroword );
+            rec->psw.ia.D     = SWAP64( rec->psw.ia.D     );
+            rec->psw.amask.D  = SWAP64( rec->psw.amask.D  );
+
+            rec->psw.amode64  = rec->amode64 ? 1 : 0;
+            rec->psw.amode    = rec->amode   ? 1 : 0;
+            rec->psw.zeroilc  = rec->zeroilc ? 1 : 0;
+        }
+        break;
+
+        case  801:
+        {
+            TF00801* rec = (TF00801*) hdr;
+            rec->pcode  = SWAP16( rec->pcode );
+            rec->dxc    = SWAP32( rec->dxc   );
+            rec->why    = SWAP32( rec->why   );
+        }
+        break;
+
+        case  802:
+        {
+            TF00802* rec = (TF00802*) hdr;
+            rec->perc   = SWAP16( rec->perc  );
+            rec->pcode  = SWAP32( rec->pcode );
+            rec->ia     = SWAP64( rec->ia    );
+        }
+        break;
+
+        case  803:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  804:
+        {
+            TF00804* rec = (TF00804*) hdr;
+            rec->ioid    = SWAP16( rec->ioid );
+        }
+        break;
+
+        case  806:
+        {
+            TF00806* rec = (TF00806*) hdr;
+            rec->ioid    = SWAP32( rec->ioid    );
+            rec->ioparm  = SWAP32( rec->ioparm  );
+            rec->iointid = SWAP32( rec->iointid );
+        }
+        break;
+
+        case  807:
+        {
+            TF00807* rec = (TF00807*) hdr;
+            rec->xdmg    = SWAP32( rec->xdmg );
+            rec->mcic    = SWAP64( rec->mcic );
+            rec->fsta    = SWAP64( rec->fsta );
+        }
+        break;
+
+        case  808:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  809:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  811:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  812:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  814:
+        {
+            TF00814* rec = (TF00814*) hdr;
+            rec->cpad    = SWAP16( rec->cpad   );
+            rec->status  = SWAP32( rec->status );
+            rec->parm    = SWAP64( rec->parm   );
+        }
+        break;
+
+        case  840:
+        {
+            TF00840* rec   = (TF00840*) hdr;
+            rec->icode     = SWAP16( rec->icode     );
+            rec->cpu_timer = SWAP64( rec->cpu_timer );
+        }
+        break;
+
+        case  844:
+        {
+            TF00844* rec  = (TF00844*) hdr;
+            rec->servcode = SWAP16( rec->servcode );
+            rec->bioparm  = SWAP64( rec->bioparm  );
+        }
+        break;
+
+        case  845:
+        {
+            TF00845* rec = (TF00845*) hdr;
+            rec->bioparm = SWAP64( rec->bioparm );
+        }
+        break;
+
+        case  846:
+        {
+            TF00846* rec  = (TF00846*) hdr;
+            rec->servparm = SWAP32( rec->servparm );
+        }
+        break;
+
+        case 1300:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1301:
+        {
+            TF01301* rec = (TF01301*) hdr;
+            rec->count   = SWAP16( rec->count );
+            rec->addr    = SWAP64( rec->addr  );
+        }
+        break;
+
+        case 1304:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1305:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1306:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1307:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1308:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1309:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1310:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1311:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1312:
+        {
+            TF01312* rec  = (TF01312*) hdr;
+            rec->residual = SWAP32( rec->residual );
+        }
+        break;
+
+        case 1313:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1315:
+        {
+            TF01315* rec = (TF01315*) hdr;
+            rec->count   = SWAP16( rec->count );
+            rec->addr    = SWAP32( rec->addr  );
+        }
+        break;
+
+        case 1316:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1317:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1318:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1320:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1321:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1329:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1330:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1331:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1332:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1333:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1334:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1336:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 2269:
+        {
+            TF02269* rec = (TF02269*) hdr;
+            int  i;
+            for (i=0; i < 16; ++i)
+                rec->gr[i].D   = SWAP64( rec->gr[i].D );
+        }
+        break;
+
+        case 2270:
+        {
+            TF02270* rec = (TF02270*) hdr;
+            int  i;
+            for (i=0; i < 32; ++i)
+                rec->fpr[i]   = SWAP32( rec->fpr[i] );
+        }
+        break;
+
+        case 2271:
+        {
+            TF02271* rec = (TF02271*) hdr;
+            int  i;
+            for (i=0; i < 16; ++i)
+                rec->cr[i].D   = SWAP64( rec->cr[i].D );
+        }
+        break;
+
+        case 2272:
+        {
+            TF02272* rec = (TF02272*) hdr;
+            int  i;
+            for (i=0; i < 16; ++i)
+                rec->ar[i]   = SWAP32( rec->ar[i] );
+        }
+        break;
+
+        case 2276:
+        {
+            TF02276* rec = (TF02276*) hdr;
+            rec->fpc     = SWAP32( rec->fpc );
+        }
+        break;
+
+        case 2324:
+        {
+            TF02324* rec = (TF02324*) hdr;
+
+            rec->psw.intcode  = SWAP16( rec->psw.intcode  );
+            rec->psw.zeroword = SWAP32( rec->psw.zeroword );
+            rec->psw.ia.D     = SWAP64( rec->psw.ia.D     );
+            rec->psw.amask.D  = SWAP64( rec->psw.amask.D  );
+
+            rec->psw.amode64  = rec->amode64 ? 1 : 0;
+            rec->psw.amode    = rec->amode   ? 1 : 0;
+            rec->psw.zeroilc  = rec->zeroilc ? 1 : 0;
+        }
+        break;
+
+        case 2326:
+        {
+            TF02326* rec = (TF02326*) hdr;
+            TFOP* op;
+
+            rec->b1   = SWAP16( rec->b1 );
+            rec->b2   = SWAP16( rec->b2 );
+
+            op = &rec->op1;
+
+            op->xcode = SWAP16( op->xcode );
+            op->vaddr = SWAP64( op->vaddr );
+            op->raddr = SWAP64( op->raddr );
+
+            op = &rec->op2;
+
+            op->xcode = SWAP16( op->xcode );
+            op->vaddr = SWAP64( op->vaddr );
+            op->raddr = SWAP64( op->raddr );
+        }
+        break;
+
+        default: CRASH(); UNREACHABLE_CODE( return );
+    }
+}
+
+/*********************************************************************/
+/*                   END OF TraceFile support                        */
+/*********************************************************************/

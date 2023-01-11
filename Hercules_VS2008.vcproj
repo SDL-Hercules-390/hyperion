@@ -396,6 +396,14 @@
 						RelativePath=".\herclin.c"
 						>
 					</File>
+					<File
+						RelativePath=".\tfprint.c"
+						>
+					</File>
+					<File
+						RelativePath=".\tfswap.c"
+						>
+					</File>
 				</Filter>
 			</Filter>
 			<Filter

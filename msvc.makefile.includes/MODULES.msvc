@@ -73,4 +73,6 @@ EXECUTABLES = \
     $(X)tapecopy.exe    \
     $(X)tapemap.exe     \
     $(X)tapesplt.exe    \
+    $(X)tfprint.exe     \
+    $(X)tfswap.exe      \
     $(X)vmfplc2.exe

@@ -284,5 +284,15 @@ typedef int                 HRANDHAND;  /* secure random api handle  */
 #endif
 
 /*-------------------------------------------------------------------*/
+/*            Trace File helper function typedefs                    */
+/*-------------------------------------------------------------------*/
+
+typedef BYTE TFGSK( U64 );                  // get_storage_key
+typedef S64  TFGCT( REGS* );                // get_cpu_timer
+typedef void TFSIT( REGS* );                // store_int_timer
+typedef int  TFVTR( U64*, int*, U64, int,   // virt_to_real
+                    REGS*, int );
+
+/*-------------------------------------------------------------------*/
 
 #endif // _HTYPES_H_

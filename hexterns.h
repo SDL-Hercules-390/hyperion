@@ -366,6 +366,8 @@ int display_fregs (REGS *regs, char *buf, int buflen,char *hdr);
 int display_cregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_aregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr);
+int display_inst_regs( bool trace2file, REGS* regs, BYTE* inst, BYTE opcode, char* buf, int buflen );
+
 const char* FormatCRW( U32  crw, char* buf, size_t bufsz );
 const char* FormatSCL( ESW* esw, char* buf, size_t bufsz );
 const char* FormatERW( ESW* esw, char* buf, size_t bufsz );

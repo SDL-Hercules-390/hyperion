@@ -247,6 +247,8 @@ bin_PROGRAMS = \
   tapecopy     \
   tapemap      \
   tapesplt     \
+  tfprint      \
+  tfswap       \
   vmfplc2      \
   $(HERCIFC)   \
   $(HERCLIN)
@@ -724,6 +726,14 @@ dmap2hrc_LDFLAGS   = $(tools_LD_FLAGS)
 vmfplc2_SOURCES    = vmfplc2.c
 vmfplc2_LDADD      = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
+
+tfprint_SOURCES    = tfprint.c
+tfprint_LDADD      = $(tools_ADDLIBS)
+tfprint_LDFLAGS    = $(tools_LD_FLAGS)
+
+tfswap_SOURCES     = tfswap.c
+tfswap_LDADD       = $(tools_ADDLIBS)
+tfswap_LDFLAGS     = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se

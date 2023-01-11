@@ -791,6 +791,12 @@ static void arghelp()
     usleep( 100000 );
 }
 
+/* Functions in module skey.h/.c, needed by impl.c */
+
+extern inline BYTE s370_get_storage_key( U64 abs );
+extern inline BYTE s390_get_storage_key( U64 abs );
+extern inline BYTE z900_get_storage_key( U64 abs );
+
 /*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
@@ -981,7 +987,20 @@ int     rc;
     sysblk.zpbits  = DEF_CMPSC_ZP_BITS;
 #endif
 
+    /* Initialize Trace File helper function pointers */ 
+    sysblk.s370_gsk = &s370_get_storage_key;
+    sysblk.s390_gsk = &s390_get_storage_key;
+    sysblk.z900_gsk = &z900_get_storage_key;
+
+    sysblk.s370_vtr = &s370_virt_to_real;
+    sysblk.s390_vtr = &s390_virt_to_real;
+    sysblk.z900_vtr = &z900_virt_to_real;
+
+    sysblk.s370_sit = &s370_store_int_timer;
+    sysblk.gct      = &get_cpu_timer;
+
     /* Initialize locks, conditions, and attributes */
+    initialize_lock( &sysblk.tracefileLock );
     initialize_lock( &sysblk.bindlock );
     initialize_lock( &sysblk.config   );
     initialize_lock( &sysblk.todlock  );

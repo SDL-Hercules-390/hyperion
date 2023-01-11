@@ -800,7 +800,10 @@ int             i,o,f;                  /* Indexes                   */
 CKD_TRKHDR     *trkhdr;                 /* -> New track header       */
 
     // "%1d:%04X CKD file %s: read trk %d cur trk %d"
-    LOGDEVTR( HHC00424, "I", dev->filename, trk, dev->bufcur );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0424( dev, trk );
+    else
+        LOGDEVTR( HHC00424, "I", dev->filename, trk, dev->bufcur );
 
     /* Calculate cylinder and head */
     if (dev->ckdheads) /* (might be 0 if init failed!) */
@@ -821,7 +824,10 @@ CKD_TRKHDR     *trkhdr;                 /* -> New track header       */
     if (dev->bufupd)
     {
         // "%1d:%04X CKD file %s: read track updating track %d"
-        LOGDEVTR( HHC00425, "I", dev->filename, dev->bufcur );
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0425( dev );
+        else
+            LOGDEVTR( HHC00425, "I", dev->filename, dev->bufcur );
 
         dev->bufupd = 0;
 
@@ -895,7 +901,10 @@ ckd_read_track_retry:
         cache_unlock(CACHE_DEVBUF);
 
         // "%1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
-        LOGDEVTR( HHC00426, "I", dev->filename, trk, i );
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0426( dev, trk, i );
+        else
+            LOGDEVTR( HHC00426, "I", dev->filename, trk, i );
 
         dev->cachehits++;
         dev->cache = i;
@@ -922,7 +931,10 @@ ckd_read_track_retry:
     if (o < 0)
     {
         // "%1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
-        LOGDEVTR( HHC00427, "I", dev->filename, trk );
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0427( dev, trk );
+        else
+            LOGDEVTR( HHC00427, "I", dev->filename, trk );
 
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
@@ -932,7 +944,10 @@ ckd_read_track_retry:
     /* Cache miss */
 
     // "%1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
-    LOGDEVTR( HHC00428, "I", dev->filename, trk, o );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0428( dev, trk, o );
+    else
+        LOGDEVTR( HHC00428, "I", dev->filename, trk, o );
 
     dev->cachemisses++;
 
@@ -953,7 +968,10 @@ ckd_read_track_retry:
          ((U64)(trk - (f ? dev->ckdhitrk[f-1] : 0))) * dev->ckdtrksz);
 
     // "%1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
-    LOGDEVTR( HHC00429, "I", dev->filename, trk, f+1, dev->ckdtrkoff, dev->ckdtrksz );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0429( dev, trk, f+1 );
+    else
+        LOGDEVTR( HHC00429, "I", dev->filename, trk, f+1, dev->ckdtrkoff, dev->ckdtrksz );
 
     /* Seek to the track image offset */
     offset = dev->ckdtrkoff;
@@ -1004,8 +1022,11 @@ ckd_read_track_retry:
     /* Validate the track header */
 
     // "%1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
-    LOGDEVTR( HHC00430, "I", dev->filename, trk,
-        dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4] );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0430( dev, trk );
+    else
+        LOGDEVTR( HHC00430, "I", dev->filename, trk,
+            dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4] );
 
     trkhdr = (CKD_TRKHDR*)dev->buf;
     if (0
@@ -1537,7 +1558,10 @@ static int ckd_seek ( DEVBLK *dev, int cyl, int head,
 int             rc;                     /* Return code               */
 
     // "%1d:%04X CKD file %s: seeking to cyl %d head %d"
-    LOGDEVTR( HHC00431, "I", dev->filename, cyl, head );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0431( dev, cyl, head );
+    else
+        LOGDEVTR( HHC00431, "I", dev->filename, cyl, head );
 
     /* Read the track image */
     rc = ckd_read_cchh (dev, cyl, head, unitstat);
@@ -1577,7 +1601,10 @@ int             head;                   /* Next head for multitrack  */
         (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
     {
         // "%1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
-        LOGDEVTR( HHC00432, "E", dev->filename, dev->ckdlcount, dev->ckdfmask );
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0432( dev );
+        else
+            LOGDEVTR( HHC00432, "E", dev->filename, dev->ckdlcount, dev->ckdfmask );
 
         if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_FP | SENSE1_IE, 0, 0, 0);
@@ -1610,7 +1637,10 @@ int             head;                   /* Next head for multitrack  */
     }
 
     // "%1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
-    LOGDEVTR( HHC00433, "I", dev->filename, cyl, head );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0433( dev, cyl, head );
+    else
+        LOGDEVTR( HHC00433, "I", dev->filename, cyl, head );
 
     /* File protect error if next track is outside the
        limits of the device or outside the defined extent */
@@ -1659,7 +1689,10 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         skipr0 = 1;
 
     // "%1d:%04X CKD file %s: read count orientation %s"
-    LOGDEVTR( HHC00434, "I", dev->filename, orient[dev->ckdorient] );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0434( dev );
+    else
+        LOGDEVTR( HHC00434, "I", dev->filename, orient[dev->ckdorient] );
 
     /* If orientation is at End-Of_Track then a multi-track advance
        failed previously during synchronous I/O */
@@ -1709,9 +1742,12 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
             dev->ckdtrkof = 0;
 
         // "%1d:%04X CKD file %s: cyl %d head %d record %d kl %d dl %d of %d"
-        LOGDEVTR( HHC00435, "I",  dev->filename,
-                  dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
-                  dev->ckdcurkl,  dev->ckdcurdl,   dev->ckdtrkof );
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0435( dev );
+        else
+            LOGDEVTR( HHC00435, "I",  dev->filename,
+                      dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+                      dev->ckdcurkl,  dev->ckdcurdl,   dev->ckdtrkof );
 
         /* Skip record zero if user data record required */
         if (skipr0 && rechdr->rec == 0)
@@ -1814,7 +1850,10 @@ CKD_RECHDR      rechdr;                 /* CKD record header         */
     }
 
     // "%1d:%04X CKD file %s: read key %d bytes"
-    LOGDEVTR( HHC00436, "I", dev->filename, dev->ckdcurkl );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0436( dev );
+    else
+        LOGDEVTR( HHC00436, "I", dev->filename, dev->ckdcurkl );
 
     /* Read key field */
     if (dev->ckdcurkl > 0)
@@ -1867,7 +1906,10 @@ CKD_RECHDR      rechdr;                 /* Record header             */
         dev->bufoff += dev->ckdcurkl;
 
     // "%1d:%04X CKD file %s: read data %d bytes"
-    LOGDEVTR( HHC00437, "I", dev->filename, dev->ckdcurdl );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0437( dev );
+    else
+        LOGDEVTR( HHC00437, "I", dev->filename, dev->ckdcurdl );
 
     /* Read data field */
     if (dev->ckdcurdl > 0)
@@ -1996,15 +2038,21 @@ U32             ckdlen;                 /* Count+key+data length     */
     while (len < (int)ckdlen) buf[len++] = '\0';
 
     // "%1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
-    LOGDEVTR( HHC00438, "I",  dev->filename,
-              dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0438( dev, recnum, keylen, datalen );
+    else
+        LOGDEVTR( HHC00438, "I",  dev->filename,
+                  dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen );
 
     /* Set track overflow flag if called for */
     if (trk_ovfl)
     {
         // "%1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
-        LOGDEVTR( HHC00439, "I",  dev->filename,
-                  dev->ckdcurcyl, dev->ckdcurhead, recnum );
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0439( dev, recnum );
+        else
+            LOGDEVTR( HHC00439, "I",  dev->filename,
+                      dev->ckdcurcyl, dev->ckdcurhead, recnum );
         buf[0] |= 0x80;
     }
 
@@ -2062,9 +2110,12 @@ int             kdlen;                  /* Key+data length           */
     while (len < kdlen) buf[len++] = '\0';
 
     // "%1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
-    LOGDEVTR( HHC00440, "I",  dev->filename,
-              dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
-              dev->ckdcurkl,  dev->ckdcurdl );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0440( dev );
+    else
+        LOGDEVTR( HHC00440, "I",  dev->filename,
+                  dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+                  dev->ckdcurkl,  dev->ckdcurdl );
 
     /* Write key and data */
     rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, buf, kdlen, unitstat);
@@ -2107,8 +2158,11 @@ int             rc;                     /* Return code               */
     while (len < dev->ckdcurdl) buf[len++] = '\0';
 
     // "%1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
-    LOGDEVTR( HHC00441, "I",  dev->filename,
-              dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec, dev->ckdcurdl );
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0441( dev );
+    else
+        LOGDEVTR( HHC00441, "I",  dev->filename,
+                  dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec, dev->ckdcurdl );
 
     /* Write data */
     rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, buf, dev->ckdcurdl, unitstat);
@@ -3619,7 +3673,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdfmask = iobuf[0];
 
         // "%1d:%04X CKD file %s: set file mask %02X"
-        LOGDEVTR( HHC00442, "I", dev->filename, dev->ckdfmask );
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0442( dev );
+        else
+            LOGDEVTR( HHC00442, "I", dev->filename, dev->ckdfmask );
 
         /* Command reject if file mask is invalid */
         if ((dev->ckdfmask & CKDMASK_RESV) != 0)
@@ -3786,9 +3843,15 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
             BYTE module[45];
             size_t kl = MIN( (size_t)num, sizeof( module ) - 1 );
-            str_guest_to_host( iobuf, module, (u_int)kl );
-            // "%1d:%04X CKD file %s: search key %s"
-            WRMSG( HHC00423, "I", LCSS_DEVNUM, dev->filename, RTRIM( module ));
+
+            if (sysblk.traceFILE)
+                tf_0423( dev, kl, iobuf );
+            else
+            {
+                str_guest_to_host( iobuf, module, (u_int)kl );
+                // "%1d:%04X CKD file %s: search key %s"
+                WRMSG( HHC00423, "I", LCSS_DEVNUM, dev->filename, RTRIM( module ));
+            }
         }
 #endif /* defined( OPTION_CKD_KEY_TRACING ) */
 

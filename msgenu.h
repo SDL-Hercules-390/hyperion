@@ -1056,10 +1056,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC01358 (available)
 //efine HHC01359 (available)
 //efine HHC01360 - HHC01389 (available)
-#define HHC01390 "%s" // DUMP (debugging)
-#define HHC01391 "%s" // DUMP_STORAGE (debugging)
-#define HHC01392 "%s" // DISPLAY_PREFETCH (debugging)
-#define HHC01393 "%s" // DEBUG_SCSW (debugging)
+#define HHC01390 "%s" // DUMP               (debugging)
+#define HHC01391 "%s" // DUMP_STORAGE       (debugging)
+#define HHC01392 "%s" // DISPLAY_PREFETCH   (debugging)
+#define HHC01393 "%s" // DEBUG_SCSW         (debugging)
 //efine HHC01394 - HHC01399 (available)
 
 // reserve 014xx for initialization and shutdown
@@ -1517,11 +1517,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02374 "Automatic tracing enabled: BEG=%"PRIu64" AMT=%"PRIu64
 #define HHC02375 "Automatic tracing is active"
 #define HHC02376 "Automatic tracing value(s) must be greater than zero"
-//efine HHC02377 (available)
-//efine HHC02378 (available)
-//efine HHC02379 (available)
-//efine HHC02380 (available)
-//efine HHC02381 (available)
+#define HHC02377 "Trace file open error %s: \"%s\""
+#define HHC02378 "Invalid MAX= value: %s"
+#define HHC02379 "Trace file MAX= reached; file closed, tracing %s"
+#define HHC02380 "Invalid %s= value: %s"
+#define HHC02381 "File closed, tracing %s"
 #define HHC02382 "%stracing active for %1d:%04X" // CCW/ORB/both
 //efine HHC02383 (available)
 //efine HHC02384 (available)
@@ -2353,7 +2353,70 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03103 "Unsupported dasd image file format"
 //efine HHC03104 - HHC03199 (available)
 
-// range 03200 - 03299 available
+// tfprint
+#define HHC03200 "Usage:  %s  [options...] tracefile\n"                          \
+       "HHC03200I\n"                                                             \
+       "HHC03200I        [-i|--info]\n"                                          \
+       "HHC03200I        [-c|--cpu hh[[-hh][,hh]]\n"                             \
+       "HHC03200I        [-r|--traceopt TRADITIONAL|REGSFIRST|NOREGS]\n"         \
+       "HHC03200I        [-n|--count nnnnnn[[-nnnnnn]|[.nnn]]\n"                 \
+       "HHC03200I        [-e|--msg nnnnn[,nnnnn]\n"                              \
+       "HHC03200I        [-s|--storage V|R:hhhhhh[[-hhhhhh]|[.hhh]]\n"           \
+       "HHC03200I        [-d|--date YYYY/MM/DD-YYYY/MM/DD\n"                     \
+       "HHC03200I        [-t|--time HH:MM:SS.nnnnnn-HH:MM:SS.nnnnnn\n"           \
+       "HHC03200I        [-o|--opcode hhhhhhhh[,hhxxhhxxhhhh]\n"                 \
+       "HHC03200I        [-m|--msglvl xxxxx\n"                                   \
+       "HHC03200I        [-u|--unit uuuu[[-uuuu]|[.nnn]]\n"                      \
+       "HHC03200I        [-p|--codepage zzzzzzzz\n"                              \
+       "HHC03200I\n"                                                             \
+       "HHC03200I   -i   Print only TFSYS header information then exit\n"        \
+       "HHC03200I   -c   Print only specified CPU(s)\n"                          \
+       "HHC03200I   -r   Print registers trace option\n"                         \
+       "HHC03200I   -n   Print only records nnnnnn to nnnnnn (by count)\n"       \
+       "HHC03200I   -e   Print only messages with specified message number\n"    \
+       "HHC03200I   -s   Print only instructions that reference or modify\n"     \
+       "HHC03200I        the specified 'V'irtual or 'R'eal storage range\n"      \
+       "HHC03200I   -d   Print only records within specified date range\n"       \
+       "HHC03200I   -t   Print only records within specified time range\n"       \
+       "HHC03200I   -o   Print only specified instruction(s) (by opcode)\n"      \
+       "HHC03200I        Only as many bytes are checked as are specified\n"      \
+       "HHC03200I        Use 'x' as wildcard for nibbles not to be checked\n"    \
+       "HHC03200I   -m   Modify Hercules 'msglvl' setting\n"                     \
+       "HHC03200I   -u   Print only trace records for specified I/O unit(s)\n"   \
+       "HHC03200I   -p   Use EBCDIC/ASCII codepage conversion table zzzzzzzz"
+
+#define HHC03201 "Missing input-file specification"
+#define HHC03202 "Error opening \"%s\": %s"
+#define HHC03203 "Option %s has not been implemented yet!"
+#define HHC03204 "Missing argument for option %s"
+#define HHC03205 "Option \"%s\" value \"%s\" is invalid"
+#define HHC03206 "Error reading trace file: %s"
+#define HHC03207 "Truncated %s record; aborting"
+#define HHC03208 "Format-%c trace file created by: %s"
+#define HHC03209 "Trace %s: %s"
+#define HHC03210 "Incompatible MAX_CPU_ENGS"
+#define HHC03211 "Trace count: ins=%s records, dev=%s records"
+#define HHC03212 "File does not start with TFSYS record; aborting"
+#define HHC03213 "Unsupported Trace File format: %%TF%c"
+#define HHC03214 "Unsupported Trace File record: msgnum %"PRIu16
+#define HHC03215 "%s %s printed"
+#define HHC03216 "Incompatible Hercules build architectures"
+#define HHC03217 "Args: %s"
+#define HHC03218 "Unsupported external interrupt: processor %s, code %4.4"PRIX16
+#define HHC03219 "Invalid/unsupported option: %s"
+#define HHC03220 "--date range is required when --time range specified"
+#define HHC03221 "Endianness of %s = %s"
+#define HHC03222 "WARNING: possible performance impact due to endianness!"
+//efine HHC03223 - HHC03249 (available)
+
+// tfswap
+#define HHC03250 "Usage:  tfswap  infile  outfile\n"
+#define HHC03251 "Error opening \"%s\": %s"
+#define HHC03252 "Error reading trace file: %s"
+#define HHC03253 "Truncated %s record; aborting"
+#define HHC03254 "File successfully swapped from %s endian to %s endian"
+//efine HHC03255 - HHC03299 (available)
+
 // range 03300 - 03399 available
 // range 03400 - 03499 available
 // range 03500 - 03599 available

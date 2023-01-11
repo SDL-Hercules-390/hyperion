@@ -5961,7 +5961,12 @@ char    log_buf[128];                   /* Log buffer                */
     {
         regs->psw.cc = 2;
         if (log_sigp)
-            WRMSG( HHC00814, "I", log_buf, 2, "" );
+        {
+            if (sysblk.traceFILE)
+                tf_0814( regs, order, 2, cpad, status, parm, 0 );
+            else
+                WRMSG( HHC00814, "I", log_buf, 2, "" );
+        }
         return;
     }
 
@@ -5982,7 +5987,12 @@ char    log_buf[128];                   /* Log buffer                */
         release_lock( &sysblk.sigplock );
         regs->psw.cc = 3;
         if (log_sigp)
-            WRMSG(HHC00814, "I", log_buf, 3, "");
+        {
+            if (sysblk.traceFILE)
+                tf_0814( regs, order, 3, cpad, status, parm, 0 );
+            else
+                WRMSG(HHC00814, "I", log_buf, 3, "");
+        }
         return;
     }
 
@@ -6005,7 +6015,12 @@ char    log_buf[128];                   /* Log buffer                */
         release_lock( &sysblk.sigplock );
         regs->psw.cc = 2;
         if (log_sigp)
-            WRMSG( HHC00814, "I", log_buf, 2, "" );
+        {
+            if (sysblk.traceFILE)
+                tf_0814( regs, order, 2, cpad, status, parm, 0 );
+            else
+                WRMSG( HHC00814, "I", log_buf, 2, "" );
+        }
         sched_yield();
         return;
     }
@@ -6574,12 +6589,22 @@ char    log_buf[128];                   /* Log buffer                */
     if (log_sigp)
     {
         if (regs->psw.cc == 0)
-            WRMSG( HHC00814, "I", log_buf, 0, "" );
+        {
+            if (sysblk.traceFILE)
+                tf_0814( regs, order, 0, cpad, status, parm, 0 );
+            else
+                WRMSG( HHC00814, "I", log_buf, 0, "" );
+        }
         else
         {
-            char buf[40];
-            MSGBUF( buf, " status %8.8X", (U32) status );
-            WRMSG( HHC00814, "I", log_buf, 1, buf );
+            if (sysblk.traceFILE)
+                tf_0814( regs, order, regs->psw.cc, cpad, status, parm, 1 );
+            else
+            {
+                char buf[40];
+                MSGBUF( buf, " status %8.8X", (U32) status );
+                WRMSG( HHC00814, "I", log_buf, 1, buf );
+            }
         }
     }
 

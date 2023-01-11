@@ -450,6 +450,8 @@
     <ClCompile Include="tapesplt.c" />
     <ClCompile Include="tcpip.c" />
     <ClCompile Include="tcpnje.c" />
+    <ClCompile Include="tfprint.c" />
+    <ClCompile Include="tfswap.c" />
     <ClCompile Include="timer.c" />
     <ClCompile Include="trace.c" />
     <ClCompile Include="transact.c" />
