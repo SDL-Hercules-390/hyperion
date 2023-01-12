@@ -3354,6 +3354,7 @@ U16     maxlen;                         /* Maximum allowable length  */
 /*-------------------------------------------------------------------*/
 static void
 ARCH_DEP(copy_iobuf) (DEVBLK *dev,      /* -> Device block           */
+                      BYTE ccw[],       /* CCW                       */
                       BYTE code,        /* CCW operation code        */
                       BYTE flags,       /* CCW flags                 */
                       U32 addr,         /* Data address              */
@@ -3605,7 +3606,17 @@ do {                                                                   \
 
                 /* Display the MIDAW if CCW tracing is on */
                 if (!prefetch->seq && dev->ccwtrace)
+                {
+                    /* Trace the CCW first, then the MIDAW, but only
+                       if this is a read type CCW as determined by
+                       the direction of the copying. (For write type
+                       CCws, channel code properly traces CCWs before
+                       we're even called.)
+                    */
+                    if (to_memory)
+                        DISPLAY_CCW( dev, ccw, addr, count, flags );
                     DISPLAY_IDAW( dev, PF_MIDAW, midawflg, midawdat, midawlen );
+                }
 #if DEBUG_DUMP
                 if (dev->ccwtrace)
                 {
@@ -3805,8 +3816,19 @@ do {                                                                   \
             }
 
             /* If not prefetch, display the IDAW if CCW tracing */
-            else if (dev->ccwtrace)
+            if (!prefetch->seq && dev->ccwtrace)
+            {
+                /* Trace the CCW first, then the IDAW, but only
+                   if this is a read type CCW as determined by
+                   the direction of the copying. (For write type
+                   CCws, channel code properly traces CCWs before
+                   we're even called.)
+                */
+                if (to_memory)
+                    DISPLAY_CCW( dev, ccw, addr, count, flags );
                 DISPLAY_IDAW( dev, idawfmt, 0, idadata, idalen );
+            }
+
 #if DEBUG_DUMP
             if (dev->ccwtrace)
             {
@@ -5295,7 +5317,7 @@ prefetch:
                 /* If no errors, prefetch data to I/O buffer */
                 if (!prefetch.chanstat[ps])
                 {
-                    ARCH_DEP(copy_iobuf) (dev, dev->code, flags, addr,
+                    ARCH_DEP(copy_iobuf) (dev, ccw, dev->code, flags, addr,
                                           count, ccwkey,
                                           idawfmt, idapmask,
                                           iobuf->data + bufpos,
@@ -5479,7 +5501,7 @@ prefetch:
             )
             {
                 /* Copy data from I/O buffer to main storage */
-                ARCH_DEP(copy_iobuf) (dev, dev->code, flags, addr,
+                ARCH_DEP(copy_iobuf) (dev, ccw, dev->code, flags, addr,
                                       count - residual, ccwkey,
                                       idawfmt, idapmask,
                                       iobuf->data,
@@ -5616,19 +5638,19 @@ breakchain:
         if (unlikely( CCW_TRACING_ACTIVE( dev, tracethis )))
         {
 #if DEBUG_PREFETCH
-                if (!prefetch.seq)
-                {
-                    char msgbuf[133];
-                    MSGBUF( msgbuf, "flags=%2.2X count=%d (%4.4X) "
-                                    "residual=%d (%4.4X) "
-                                    "more=%d "
-                                    "bufpos=%d",
-                                    flags,
-                                    count, count,
-                                    residual, residual,
-                                    more, bufpos );
-                    WRMSG( HHC01392, "D", msgbuf );
-                }
+            if (!prefetch.seq)
+            {
+                char msgbuf[133];
+                MSGBUF( msgbuf, "flags=%2.2X count=%d (%4.4X) "
+                                "residual=%d (%4.4X) "
+                                "more=%d "
+                                "bufpos=%d",
+                                flags,
+                                count, count,
+                                residual, residual,
+                                more, bufpos );
+                WRMSG( HHC01392, "D", msgbuf );
+            }
 #endif
 
             /* Display prefetch data */
@@ -5669,8 +5691,16 @@ breakchain:
                 area[0] = 0x00;
             }
 
-            /* Trace the read type CCW */
-            DISPLAY_CCW( dev, ccw, addr, count, flags );
+            /* Trace the read type CCW, UNLESS... the IDA/MIDA flag
+               is on. When the IDA/MIDA flag is on for read type CCWs,
+               the copy_iobuf function traces the CCW before it traces
+               the IDA/MIDA.
+            */
+            if (1
+                && !(flags & CCW_FLAGS_IDA)
+                && !(flags & CCW_FLAGS_MIDAW)
+            )
+                DISPLAY_CCW( dev, ccw, addr, count, flags );
 
             /* Display status and residual byte count */
 
