@@ -8077,8 +8077,6 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
             return rc;
         }
 
-#if defined( OPTION_CKD_KEY_TRACING )
-
         // t+ckd [devnum] and t-ckd [devnum] commands - turn CKD Search Key tracing on/off
 
         if (1
@@ -8169,8 +8167,6 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
             WRMSG( HHC02204, "I", "CKD key trace", buf );
             return 0;
         }
-
-#endif
 
         // o+devn and o-devn commands - turn ORB tracing on/off
         // t+devn and t-devn commands - turn CCW tracing on/off

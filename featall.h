@@ -76,7 +76,6 @@
 //efine OPTION_LONG_HOSTINFO            /* Detailed host & logo info */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
-#define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
 #undef  MODEL_DEPENDENT_STCM            /* STCM, STCMH always store  */
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 

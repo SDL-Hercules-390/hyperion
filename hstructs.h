@@ -1441,9 +1441,7 @@ struct DEVBLK {                         /* Device configuration block*/
         unsigned int                    /* Flags                     */
                 append:1,               /* 1=append new data to end  */
                 s370start:1,            /* 1=S/370 non-BMX behavior  */
-#ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
-#endif /*OPTION_CKD_KEY_TRACING*/
 #if defined( OPTION_SHARED_DEVICES )
                 shareable:1,            /* 1=Device is shareable     */
 #endif // defined( OPTION_SHARED_DEVICES )

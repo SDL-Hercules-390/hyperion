@@ -3834,7 +3834,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         else
             *unitstat = CSW_CE | CSW_DE;
 
-#if defined( OPTION_CKD_KEY_TRACING )
         /* If the search was successful, trace the first 8 bytes of
            the key, which will usually be a dataset name or member
            name and can provide useful debugging information */
@@ -3853,7 +3852,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 WRMSG( HHC00423, "I", LCSS_DEVNUM, dev->filename, RTRIM( module ));
             }
         }
-#endif /* defined( OPTION_CKD_KEY_TRACING ) */
 
         /* Set flag if entire key was equal for SEARCH KEY EQUAL */
         if (rc == 0 && num == (U32)dev->ckdcurkl && (code & 0x7F) == 0x29)

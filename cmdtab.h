@@ -2113,11 +2113,11 @@ COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             
 COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             f_cmd_help          )
 COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )
-#if defined( OPTION_CKD_KEY_TRACING )
 COMMAND( "t{+/-}CKD [devnum]",      NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL                )
-#endif
+
         // PROGRAMMING NOTE: the following CCKD 'sf' shadow file commands
-        // are directly routed by the 'CallHercCmd' function in "cmdtab.c".
+        // are directly routed by cmdtab.c's "CallHercCmd" function
+        // directly to the "sf_cmd" command function in hsccmd.c.
 
         // PLEASE ALSO NOTE that, unlike most other Hercules commands, the
         // below CCKD 'sf' shadow file commands are called ASYNCHRONOUSLY
