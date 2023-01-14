@@ -1412,7 +1412,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02251 "Address exceeds main storage size"
 #define HHC02252 "Too many instructions! (Sorry!)"
 #define HHC02253 "All CPU's must be stopped %s"
-//efine HHC02254 (available)
+#define HHC02254 "CPU %02X is not online"
 //efine HHC02255 (available)
 #define HHC02256 "Command '%s' is deprecated%s"
 #define HHC02257 "%s%7d"
@@ -1522,7 +1522,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02379 "Trace file MAX= reached; file closed, tracing %s"
 #define HHC02380 "Invalid %s= value: %s"
 #define HHC02381 "File closed, tracing %s"
-#define HHC02382 "%stracing active for %1d:%04X" // CCW/ORB/both
+#define HHC02382 "%stracing active for %s"
 //efine HHC02383 (available)
 //efine HHC02384 (available)
 #define HHC02385 "CPUMODEL %04X does not technically support TXF"

@@ -458,7 +458,11 @@ do { \
   (sysblk.instbreak  && _CPU_STEP_OR_TRACE(breakaddr,(_regs),(_ilc)))
 
 #define CPU_TRACING(_regs, _ilc)                                      \
-  (sysblk.insttrace && _CPU_STEP_OR_TRACE(traceaddr,(_regs),(_ilc)))
+  (1                                                                  \
+   && sysblk.insttrace                                                \
+   && (_regs)->trace_this_cpu                                         \
+   && _CPU_STEP_OR_TRACE( traceaddr, (_regs), (_ilc) )                \
+  )
 
 #define CPU_STEPPING_OR_TRACING(_regs, _ilc) \
   ( unlikely((_regs)->breakortrace) && \

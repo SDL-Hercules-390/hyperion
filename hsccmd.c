@@ -8091,7 +8091,7 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
 
             if (cmd[5] ==  0) // (just "t+ckd" without any device number)
             {
-                // Enable CKD Search Key tracing for all CKD devices...
+                // Enable/disable CKD Search Key tracing for all CKD devices...
 
                 bool bFound = false;
 
@@ -8154,7 +8154,7 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
                     return -1;
                 }
 
-                // Enable CKD Search Key tracing for this device
+                // Enable/disable CKD Search Key tracing for this device
                 dev->ckdkeytrace = plus_enable_on;
 
                 // Build results message
@@ -8165,6 +8165,110 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
 
             // "%-14s set to %s"
             WRMSG( HHC02204, "I", "CKD key trace", buf );
+            return 0;
+        }
+
+        // "t+cpu [cpunum]" command - turn instruction tracing on/off for CPU(s)...
+
+        if (1
+            && (cmd[0] == 't')
+            && (cmd[2] == 'c' || cmd[2] == 'C')
+            && (cmd[3] == 'p' || cmd[3] == 'P')
+            && (cmd[4] == 'u' || cmd[4] == 'U')
+            && (cmd[5] ==  0  || cmd[5] == ' ')
+        )
+        {
+            int cpu;
+            char buf[64];   // (results message buffer)
+
+            if (cmd[5] ==  0) // (just "t+cpu" without any CPU number)
+            {
+                // Enable/disable instruction tracing for all CPUs...
+
+                sysblk.insttrace = plus_enable_on;
+
+                for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+                {
+                    if (IS_CPU_ONLINE( cpu ))
+                        sysblk.regs[ cpu ]->trace_this_cpu = plus_enable_on;
+                }
+
+                // Build results message
+                MSGBUF( buf, "%s for all CPUs", onoroff );
+            }
+            else if (cmd[5] != ' ')
+            {
+                RELEASE_INTLOCK( NULL );
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", cmd, "" );
+                return -1;
+            }
+            else // (optional CPU number presumably specified)
+            {
+                const char* p;
+                U16 cpu16;
+                BYTE c;
+                bool trace_cpu = false;
+
+                // Position to start of cpunum operand
+                for (p = &cmd[6]; *p && *p == ' '; ++p);
+
+                // Parse the CPU number
+                if (sscanf( p, "%hu%c", &cpu16, &c ) != 1)
+                {
+                    RELEASE_INTLOCK( NULL );
+                    // "Invalid argument %s%s"
+                    WRMSG( HHC02205, "E", cmd, "" );
+                    return -1;
+                }
+
+                // Validate CPU number
+                if (0
+                    || cpu16 >= MAX_CPU_ENGS
+                    || cpu16 >= sysblk.maxcpu
+                    || !IS_CPU_ONLINE( cpu16 )
+                )
+                {
+                    RELEASE_INTLOCK( NULL );
+                    // "CPU %02X is not online"
+                    WRMSG( HHC02254, "E", cpu16 );
+                    return -1;
+                }
+
+                // Enable/disable instruction tracing for this CPU
+                sysblk.regs[ cpu16 ]->trace_this_cpu = plus_enable_on;
+
+                // Disable/enable overall instruction tracing depending
+                // on whether it's now enabled/disabled for all CPUs or
+                // not. (i.e. if it's enabled for some CPUs but not for
+                // others or vice-versa, then overall tracing should be
+                // enabled. Otherwise if it's not enabled for any CPU,
+                // then it should be disabled.)
+
+                for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+                {
+                    if (IS_CPU_ONLINE( cpu ))
+                    {
+                        if (sysblk.regs[ cpu ]->trace_this_cpu)
+                        {
+                            trace_cpu = true;
+                            sysblk.insttrace = 1;
+                            break;
+                        }
+                    }
+                }
+
+                if (!trace_cpu)
+                    sysblk.insttrace = 0;
+
+                // Build results message
+                MSGBUF( buf, "%s for %s%02X", onoroff, ptyp2short( sysblk.ptyp[ cpu16 ] ), cpu16 );
+            }
+
+            RELEASE_INTLOCK( NULL );
+
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", "CPU tracing", buf );
             return 0;
         }
 

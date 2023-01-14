@@ -1373,6 +1373,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         /* Update and/or enable/disable tracing/stepping */
         if (on || off || update)
         {
+            int cpu;
             bool auto_disabled = false;
 
             /* Explicit tracing overrides automatic tracing */
@@ -1393,7 +1394,15 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                 }
 
                 if (on || off)
+                {
                     sysblk.insttrace = on;
+
+                    for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+                    {
+                        if (IS_CPU_ONLINE( cpu ))
+                            sysblk.regs[ cpu ]->trace_this_cpu = on;
+                    }
+                }
             }
             else // (step || breakp)
             {
@@ -1471,25 +1480,74 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         panel_command( "-txf" );
 #endif
 
-    /* Also show CCW/ORB tracing if enabled */
     if (query)
     {
-        DEVBLK* dev;
-        char type[16] = {0};
-
-        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        unlock = (TRY_OBTAIN_INTLOCK( NULL ) == 0);
         {
-            type[0] = 0;
+            DEVBLK* dev;
+            char typ[16] = {0};
+            char who[16] = {0};
+            int cpu, on = 0, off = 0;
 
-            if (dev->orbtrace   ) STRLCAT( type, "ORB " );
-            if (dev->ccwtrace   ) STRLCAT( type, "CCW " );
-            if (dev->ckdkeytrace) STRLCAT( type, "CKD " );
+            /* Also show instruction tracing for each individual CPU,
+               but only if not all CPUs are being traced or not (i.e.
+               only if some are being traced but not others, or vice-
+               versa).
+            */
+            for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+            {
+                if (IS_CPU_ONLINE( cpu ))
+                {
+                    if (sysblk.regs[ cpu ]->trace_this_cpu)
+                        ++on;
+                    else
+                        ++off;
+                }
+            }
 
-            if (type[0])
-                // "%stracing active for %1d:%04X"
-                WRMSG( HHC02382, "I", type,
-                    SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            /* If only some (but not all) have instruction tracing enabled
+               (or vice versa), then show them which ones have it enabled.
+            */
+            if (on && off)  // Some on, some off? (i.e. neither is zero?)
+            {
+                ASSERT( sysblk.insttrace ); // sanity check
+
+                for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+                {
+                    if (IS_CPU_ONLINE( cpu ))
+                    {
+                        if (sysblk.regs[ cpu ]->trace_this_cpu)
+                        {
+                            MSGBUF( who, "CPU %s%02X",
+                                ptyp2short( sysblk.ptyp[ cpu ] ), cpu );
+
+                            // "%stracing active for %s"
+                            WRMSG( HHC02382, "I", "instruction ", who );
+                        }
+                    }
+                }
+            }
+
+            /* Also show CCW/ORB tracing if enabled */
+            for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+            {
+                typ[0] = 0;
+
+                if (dev->orbtrace   ) STRLCAT( typ, "ORB " );
+                if (dev->ccwtrace   ) STRLCAT( typ, "CCW " );
+                if (dev->ckdkeytrace) STRLCAT( typ, "CKD " );
+
+                if (typ[0])
+                {
+                    MSGBUF( who, "device %1d:%04X",
+                        SSID_TO_LCSS( dev->ssid ), dev->devnum );
+
+                    // "%stracing active for %s"
+                    WRMSG( HHC02382, "I", typ, who );
+                }
+            }
         }
+        if (unlock) RELEASE_INTLOCK( NULL );
     }
 
     return 0;
@@ -1847,7 +1905,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
 
 
 /*-------------------------------------------------------------------*/
-/* automatic tracing command:   "t+-  [ON=nnnn  [OFF=nnnn]]"         */
+/* automatic tracing command:  "t+- [ BEG=<instrcount>  AMT=num ]"   */
 /*-------------------------------------------------------------------*/
 int auto_trace_cmd( int argc, char* argv[], char* cmdline )
 {

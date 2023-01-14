@@ -1687,7 +1687,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(regs);
     OFF_IC_INTERRUPT(regs);
-    regs->breakortrace = (sysblk.instbreak || sysblk.insttrace);
+    regs->breakortrace = (sysblk.instbreak || (sysblk.insttrace && regs->trace_this_cpu));
 
     /* Ensure psw.IA is set and invalidate the aia */
     INVALIDATE_AIA(regs);
@@ -1969,7 +1969,7 @@ int     aswitch;
 
     regs->program_interrupt = &ARCH_DEP(program_interrupt);
 
-    regs->breakortrace = (sysblk.instbreak || sysblk.insttrace);
+    regs->breakortrace = (sysblk.instbreak || (sysblk.insttrace && regs->trace_this_cpu));
     regs->ints_state |= sysblk.ints_state;
 
     /* Establish longjmp destination for cpu thread exit */
@@ -2728,6 +2728,7 @@ void do_automatic_tracing()
     static U64  too_much;           // (num extra instructions traced)
 
     bool started = false, stopped = false;
+    int cpu;
 
     /* Return immediately if automatic tracing not enabled or active */
     if (!sysblk.auto_trace_amt)
@@ -2779,6 +2780,13 @@ void do_automatic_tracing()
             sysblk.insttrace = false;           // (deactivate tracing)
             sysblk.auto_trace_amt = 0;          // (prevent re-trigger)
             SET_IC_TRACE;                       // (force interrupt)
+        }
+
+        /* Enable/disable CPU tracing based on overall trace status */
+        for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+        {
+            if (IS_CPU_ONLINE( cpu ))
+                sysblk.regs[ cpu ]->trace_this_cpu = sysblk.insttrace;
         }
     }
     RELEASE_INTLOCK( NULL );

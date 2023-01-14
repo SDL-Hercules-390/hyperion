@@ -1678,7 +1678,7 @@
   "OPEN/CLOSE or NOCONT/CONT may be used in lieu of ON/OFF or STOP/NOSTOP.\n"   \
   "Specify the command without any arguments to display current values."
 
-#define tminus_cmd_desc         "Turn off instruction tracing"
+#define tminus_cmd_desc         "Turn instruction tracing OFF for all CPUs"
 #define t_cmd_desc              "Set tracing range or Query tracing"
 #define t_cmd_help              \
                                 \
@@ -1698,23 +1698,26 @@
   "Use the 't+' command to activate instruction tracing.  Use 't 0'\n"          \
   "to remove the address range causing all addresses to be traced.\n"
 
-#define tquest_cmd_desc         "Query instruction tracing values"
+#define tquest_cmd_desc         "Query instruction tracing"
 #define tquest_cmd_help         \
                                 \
-  "Format: \"t?\" displays whether instruction tracing is on or off\n"          \
+  "Format: \"t?\" displays whether instruction tracing is ON or OFF\n"          \
   "and the address range if any.\n"
 
-#define tckd_cmd_desc           "Turn CKD Search Key tracing on/off"
-#define odev_cmd_desc           "Turn ORB tracing on/off"
-#define tdev_cmd_desc           "Turn CCW tracing on/off"
-#define tplus_cmd_desc          "Turn on instruction tracing"
+#define tckd_cmd_desc           "Turn Search Key tracing ON/OFF for device"
+#define tcpu_cmd_desc           "Turn instruction tracing ON/OFF for CPU(s)"
+#define odev_cmd_desc           "Turn ORB tracing ON/OFF for device"
+#define tdev_cmd_desc           "Turn ORB and CCW tracing ON/OFF for device"
+#define tplus_cmd_desc          "Turn instruction tracing ON for all CPUs"
 #define tplus_cmd_help          \
                                 \
   "Format:   \"t+ [addr-addr]\".    Activates instruction tracing.\n"           \
   "\n"                                                                          \
   "An address range can be specified as for the \"t\" command, else the\n"      \
   "existing address range is used. If there is no address range (or was\n"      \
-  "specified as 0) then all instructions will be traced.\n"
+  "specified as 0) then all instructions will be traced. Please note that\n"    \
+  "the \"t+\" command affects ALL cpus.\n"
+
 
 #define auto_trace_desc         "Automatic instruction tracing"
 #define auto_trace_help         \
@@ -2114,6 +2117,7 @@ COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        
 COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}CKD [devnum]",      NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL                )
+COMMAND( "t{+/-}CPU [cpunum]",      NULL,                   SYSCMDNOPER,        tcpu_cmd_desc,          NULL                )
 
         // PROGRAMMING NOTE: the following CCKD 'sf' shadow file commands
         // are directly routed by cmdtab.c's "CallHercCmd" function

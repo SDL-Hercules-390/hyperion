@@ -2826,28 +2826,40 @@ static bool tf_write( REGS* regs, void* rec, U16 curr, U16 msgnum )
 //---------------------------------------------------------------------
 DLL_EXPORT bool tf_autostop()
 {
-    bool bStopped = false;
-
-    DEVBLK* dev;
+    bool bWasActive;
 
     /* Stop all tracing */
     OBTAIN_INTLOCK( NULL );
     {
-        bStopped = sysblk.insttrace ? true : false;
+        DEVBLK* dev;
+        int cpu;
+
+        /* Stop overall instruction tracing */
+        bWasActive = sysblk.insttrace ? true : false;
         sysblk.insttrace = false;
 
-        /* Stop CCW tracing */
+        /* Stop instruction tracing for all CPUs */
+        for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+        {
+            if (IS_CPU_ONLINE( cpu ))
+            {
+                bWasActive = bWasActive || sysblk.regs[ cpu ]->trace_this_cpu;
+                sysblk.regs[ cpu ]->trace_this_cpu = false;
+            }
+        }
+
+        /* Stop ORB/CCW/KEY tracing for all devices */
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
-            bStopped = bStopped || dev->ccwtrace || dev->orbtrace || dev->ckdkeytrace;
-            dev->ccwtrace    = 0;
-            dev->orbtrace    = 0;
-            dev->ckdkeytrace = 0;
+            bWasActive = bWasActive || dev->ccwtrace || dev->orbtrace || dev->ckdkeytrace;
+            dev->ccwtrace    = false;
+            dev->orbtrace    = false;
+            dev->ckdkeytrace = false;
         }
     }
     RELEASE_INTLOCK( NULL );
 
-    return bStopped;
+    return bWasActive;
 }
 
 //---------------------------------------------------------------------
@@ -3215,7 +3227,6 @@ DLL_EXPORT bool tf_0520( DEVBLK* dev )
 DLL_EXPORT bool tf_0800( REGS* regs )
 {
     TF00800 rec;
-    if (!sysblk.insttrace) return true;
     memcpy( &rec.psw, &regs->psw, sizeof( rec.psw ));
     rec.psw.ilc = REAL_ILC( regs );
     rec.amode64 = rec.psw.amode64;
@@ -3230,7 +3241,6 @@ DLL_EXPORT bool tf_0800( REGS* regs )
 DLL_EXPORT bool tf_0801( REGS* regs, U16 pcode, BYTE ilc )
 {
     TF00801 rec;
-    if (!sysblk.insttrace) return true;
     rec.sie =
 #if defined( _FEATURE_SIE )
         SIE_MODE( regs );
@@ -3250,7 +3260,6 @@ DLL_EXPORT bool tf_0801( REGS* regs, U16 pcode, BYTE ilc )
 DLL_EXPORT bool tf_0802( REGS* regs, U64 ia, U32 pcode, U16 perc )
 {
     TF00802 rec;
-    if (!sysblk.insttrace) return true;
     rec.ia    = ia;
     rec.pcode = pcode;
     rec.perc  = perc;
@@ -3263,7 +3272,6 @@ DLL_EXPORT bool tf_0802( REGS* regs, U64 ia, U32 pcode, U16 perc )
 DLL_EXPORT bool tf_0803( REGS* regs, const char* str )
 {
     TF00803 rec;
-    if (!sysblk.insttrace) return true;
     STRLCPY( rec.str, str );
     return tf_write( regs, &rec, sizeof( TF00803 ), 803 );
 }
@@ -3274,7 +3282,6 @@ DLL_EXPORT bool tf_0803( REGS* regs, const char* str )
 DLL_EXPORT bool tf_0804( REGS* regs, BYTE* csw, U16 ioid, BYTE lcss )
 {
     TF00804 rec;
-    if (!sysblk.insttrace) return true;
     rec.ioid = ioid;
     rec.rhdr.lcss = lcss;
     memcpy( rec.csw, csw, sizeof( rec.csw ));
@@ -3287,7 +3294,6 @@ DLL_EXPORT bool tf_0804( REGS* regs, BYTE* csw, U16 ioid, BYTE lcss )
 DLL_EXPORT bool tf_0806( REGS* regs, U32 ioid, U32 ioparm, U32 iointid )
 {
     TF00806 rec;
-    if (!sysblk.insttrace) return true;
     rec.ioid    = ioid;
     rec.ioparm  = ioparm;
     rec.iointid = iointid;
@@ -3300,7 +3306,6 @@ DLL_EXPORT bool tf_0806( REGS* regs, U32 ioid, U32 ioparm, U32 iointid )
 DLL_EXPORT bool tf_0807( REGS* regs, U64 mcic, U64 fsta, U32 xdmg )
 {
     TF00807 rec;
-    if (!sysblk.insttrace) return true;
     rec.mcic = mcic;
     rec.xdmg = xdmg;
     rec.fsta = fsta;
@@ -3313,7 +3318,6 @@ DLL_EXPORT bool tf_0807( REGS* regs, U64 mcic, U64 fsta, U32 xdmg )
 DLL_EXPORT bool tf_0808( REGS* regs )
 {
     TF00808 rec;
-    if (!sysblk.insttrace) return true;
     return tf_write( regs, &rec, sizeof( TF00808 ), 808 );
 }
 
@@ -3323,7 +3327,6 @@ DLL_EXPORT bool tf_0808( REGS* regs )
 DLL_EXPORT bool tf_0809( REGS* regs, const char* str)
 {
     TF00809 rec;
-    if (!sysblk.insttrace) return true;
     STRLCPY( rec.str, str );
     return tf_write( regs, &rec, sizeof( TF00809 ), 809 );
 }
@@ -3334,7 +3337,6 @@ DLL_EXPORT bool tf_0809( REGS* regs, const char* str)
 DLL_EXPORT bool tf_0811( REGS* regs, const char* archname )
 {
     TF00811 rec;
-    if (!sysblk.insttrace) return true;
     STRLCPY( rec.archname, archname );
     return tf_write( regs, &rec, sizeof( TF00811 ), 811 );
 }
@@ -3345,7 +3347,6 @@ DLL_EXPORT bool tf_0811( REGS* regs, const char* archname )
 DLL_EXPORT bool tf_0812( REGS* regs )
 {
     TF00812 rec;
-    if (!sysblk.insttrace) return true;
     return tf_write( regs, &rec, sizeof( TF00812 ), 812 );
 }
 
@@ -3355,7 +3356,6 @@ DLL_EXPORT bool tf_0812( REGS* regs )
 DLL_EXPORT bool tf_0814( REGS* regs, BYTE order, BYTE cc, U16 cpad, U32 status, U64 parm, BYTE got_status )
 {
     TF00814 rec;
-    if (!sysblk.insttrace) return true;
     rec.order      = order;
     rec.cc         = cc;
     rec.cpad       = cpad;
@@ -3371,7 +3371,6 @@ DLL_EXPORT bool tf_0814( REGS* regs, BYTE order, BYTE cc, U16 cpad, U32 status, 
 DLL_EXPORT bool tf_0840( REGS* regs, U16 icode )
 {
     TF00840 rec;
-    if (!sysblk.insttrace) return true;
     rec.icode = icode;
     rec.cpu_timer = (EXT_CPU_TIMER_INTERRUPT == rec.icode)
                   ? sysblk.gct( regs ) : 0;
@@ -3384,7 +3383,6 @@ DLL_EXPORT bool tf_0840( REGS* regs, U16 icode )
 DLL_EXPORT bool tf_0844( REGS* regs )
 {
     TF00844 rec;
-    if (!sysblk.insttrace) return true;
     rec.rhdr.devnum   = sysblk.biodev->devnum;
     rec.rhdr.lcss     = SSID_TO_LCSS( sysblk.biodev->ssid );
     rec.servcode = sysblk.servcode;
@@ -3400,7 +3398,6 @@ DLL_EXPORT bool tf_0844( REGS* regs )
 DLL_EXPORT bool tf_0845( REGS* regs )
 {
     TF00845 rec;
-    if (!sysblk.insttrace) return true;
     rec.bioparm  = sysblk.bioparm;
     rec.biosubcd = sysblk.biosubcd;
     return tf_write( regs, &rec, sizeof( TF00845 ), 845 );
@@ -3412,7 +3409,6 @@ DLL_EXPORT bool tf_0845( REGS* regs )
 DLL_EXPORT bool tf_0846( REGS* regs )
 {
     TF00846 rec;
-    if (!sysblk.insttrace) return true;
     rec.servparm = sysblk.servparm;
     return tf_write( regs, &rec, sizeof( TF00846 ), 846 );
 }
@@ -3729,7 +3725,6 @@ DLL_EXPORT bool tf_1336( DEVBLK* dev )
 DLL_EXPORT bool tf_2269( REGS* regs, BYTE* inst )
 {
     TF02269 rec;
-    if (!sysblk.insttrace) return true;
     memcpy( rec.gr, regs->gr, sizeof( rec.gr ));
     rec.ifetch_error = inst ? false : true;
     rec.sie =
@@ -3747,7 +3742,6 @@ DLL_EXPORT bool tf_2269( REGS* regs, BYTE* inst )
 DLL_EXPORT bool tf_2270( REGS* regs )
 {
     TF02270 rec;
-    if (!sysblk.insttrace) return true;
     memcpy( rec.fpr, regs->fpr, sizeof( rec.fpr ));
     rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
     return tf_write( regs, &rec, sizeof( TF02270 ), 2270 );
@@ -3759,7 +3753,6 @@ DLL_EXPORT bool tf_2270( REGS* regs )
 DLL_EXPORT bool tf_2271( REGS* regs )
 {
     TF02271 rec;
-    if (!sysblk.insttrace) return true;
     memcpy( rec.cr, &regs->cr_struct[1], sizeof( rec.cr ));
     return tf_write( regs, &rec, sizeof( TF02271 ), 2271 );
 }
@@ -3770,7 +3763,6 @@ DLL_EXPORT bool tf_2271( REGS* regs )
 DLL_EXPORT bool tf_2272( REGS* regs )
 {
     TF02272 rec;
-    if (!sysblk.insttrace) return true;
     memcpy( rec.ar, regs->ar, sizeof( rec.ar ));
     return tf_write( regs, &rec, sizeof( TF02272 ), 2272 );
 }
@@ -3781,7 +3773,6 @@ DLL_EXPORT bool tf_2272( REGS* regs )
 DLL_EXPORT bool tf_2276( REGS* regs )
 {
     TF02276 rec;
-    if (!sysblk.insttrace) return true;
     rec.fpc = regs->fpc;
     rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
     return tf_write( regs, &rec, sizeof( TF02276 ), 2276 );
@@ -3793,7 +3784,6 @@ DLL_EXPORT bool tf_2276( REGS* regs )
 DLL_EXPORT bool tf_2324( REGS* regs, BYTE* inst )
 {
     TF02324 rec;
-    if (!sysblk.insttrace) return true;
     rec.sie =
 #if defined( _FEATURE_SIE )
         SIE_MODE( regs );
@@ -3885,7 +3875,6 @@ POP_GCC_WARNINGS()
 DLL_EXPORT bool tf_2326( REGS* regs, TF02326* tf2326, BYTE opcode1, BYTE opcode2,
                                            int    b1,    int    b2 )
 {
-    if (!sysblk.insttrace) return true;
     if (tf2326->valid)
     {
         tf2326->real_mode = REAL_MODE( &regs->psw );
