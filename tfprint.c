@@ -86,11 +86,10 @@ static bool  out_istty = false;         /* stdout is a TTY device    */
 static bool  err_istty = false;         /* stderr is a TTY device    */
 static double filesize = 0;             /* File size as double       */
 static CPU_BITMAP cpu_map = 0;          /* --cpu option              */
-static U64   ins_num   = 0;             /* Current ins rec number    */
-static U64   dev_num   = 0;             /* Current dev rec number    */
-static U64   fromins   = 0;             /* --count option            */
-static U64   toins     = -1;            /* --count option            */
-static U64   selins    = 0;             /* Total ins recs selected   */
+static U64   recnum    = 0;             /* Current record number     */
+static U64   fromrec   = 0;             /* --count option            */
+static U64   torec     = ~0;            /* --count option            */
+static U64   totins    = 0;             /* Total instruct printed    */
 static U64   totios    = 0;             /* Total dev I/Os printed    */
 static MOPT* pMsgMOPT  = NULL;          /* --msg option              */
 static int   nMsgMOPT  = 0;             /* --msg option              */
@@ -139,9 +138,9 @@ static void show_file_progress()
     percent *= 100.0;
 
     if (extgui)
-        fprintf( stderr, "PCT=%.1f\n", percent );
+        fprintf( stderr, "PCT=%.0f\n", percent );
     else if (err_istty)
-        fprintf( stderr, "%.1f%% of file processed...\r", percent );
+        fprintf( stderr, "%.0f%% of file processed...\r", percent );
 }
 
 /******************************************************************************/
@@ -669,6 +668,81 @@ static void tf_store_psw( PSW* psw, QWORD* qw, BYTE arch_mode )
 /******************************************************************************/
 
 /*-------------------------------------------------------------------*/
+/*                  Filter by record count                           */
+/*-------------------------------------------------------------------*/
+static bool is_recnum_wanted()
+{
+    return (recnum >= fromrec && recnum <= torec);
+}
+
+/*-------------------------------------------------------------------*/
+/*                  Filter by message number                         */
+/*-------------------------------------------------------------------*/
+static bool is_msgnum_wanted( int msgnum )
+{
+    int i;
+
+    if (!nMsgMOPT)          // If not filtering by message number
+        return true;        // Then all messages are wanted
+
+    for (i=0; i < nMsgMOPT; ++i)
+        if (msgnum == (int)pMsgMOPT[i].opt1)
+            return true;
+
+    return false;           // It's not one they're interested in
+}
+
+/*-------------------------------------------------------------------*/
+/*                        Filter by CPU                              */
+/*-------------------------------------------------------------------*/
+static bool is_cpu_wanted( BYTE cpu )
+{
+    return (0
+        || cpu_map == 0                 // (all CPUs)
+        || cpu_map & CPU_BIT( cpu )     // (this CPU)
+    );
+}
+
+/*-------------------------------------------------------------------*/
+/*                  Filter by date/time                              */
+/*-------------------------------------------------------------------*/
+static bool is_time_wanted( TIMEVAL* pTV )
+{
+    if (0
+        || beg_tim.tv_sec       // if a
+        || beg_tim.tv_usec      // ... time
+        || end_tim.tv_sec       // ...... range
+        || end_tim.tv_usec      // .........was specified
+    )
+    {
+        /* Then we need to check further */
+
+        U64 max_past = 0;    // (usecs)
+        U64 past_beg;        // (usecs; work)
+        TIMEVAL dif_tim;     // (work)
+
+        if (!max_past)              // (first time here?)
+        {
+            /* Calculate requested time range in usecs */
+            timeval_subtract( &beg_tim, &end_tim, &dif_tim );
+            max_past = ((U64)dif_tim.tv_sec * 1000000) + dif_tim.tv_usec;
+        }
+
+        /* Calculate how far past begin time this record's time is */
+        if (timeval_subtract( &beg_tim, pTV, &dif_tim ) < 0)
+            return false; // (we haven't reached begin time yet)
+
+        past_beg = ((U64)dif_tim.tv_sec * 1000000) + dif_tim.tv_usec;
+
+        /* Not interested if outside of specified range */
+        if (past_beg > max_past)
+            return false;
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
 /*              Perform storage address filtering                    */
 /*-------------------------------------------------------------------*/
 static bool is_wanted_storage( U64 want_addr, U64 want_amt,
@@ -759,77 +833,13 @@ static bool is_wanted_opcode( BYTE* p )
 }
 
 /*-------------------------------------------------------------------*/
-/*                        Filter by CPU                              */
-/*-------------------------------------------------------------------*/
-static bool is_cpu_wanted( BYTE cpu )
-{
-    return (0
-        || cpu_map == 0                 // (all CPUs)
-        || cpu_map & CPU_BIT( cpu )     // (this CPU)
-    );
-}
-
-/*-------------------------------------------------------------------*/
-/*                  Filter by message number                         */
-/*-------------------------------------------------------------------*/
-static bool is_msgnum_wanted( int msgnum )
-{
-    int i;
-
-    if (!nMsgMOPT)          // If not filtering by message number
-        return true;        // Then all messages are wanted
-
-    for (i=0; i < nMsgMOPT; ++i)
-        if (msgnum == (int)pMsgMOPT[i].opt1)
-            return true;
-
-    return false;           // It's not one they're interested in
-}
-
-/*-------------------------------------------------------------------*/
-/*                  Filter by date/time                              */
-/*-------------------------------------------------------------------*/
-static bool is_time_wanted( TIMEVAL* pTV )
-{
-    if (0
-        || beg_tim.tv_sec       // if a
-        || beg_tim.tv_usec      // ... time
-        || end_tim.tv_sec       // ...... range
-        || end_tim.tv_usec      // .........was specified
-    )
-    {
-        /* Then we need to check further */
-
-        U64 max_past = 0;    // (usecs)
-        U64 past_beg;        // (usecs; work)
-        TIMEVAL dif_tim;     // (work)
-
-        if (!max_past)              // (first time here?)
-        {
-            /* Calculate requested time range in usecs */
-            timeval_subtract( &beg_tim, &end_tim, &dif_tim );
-            max_past = ((U64)dif_tim.tv_sec * 1000000) + dif_tim.tv_usec;
-        }
-
-        /* Calculate how far past begin time this record's time is */
-        if (timeval_subtract( &beg_tim, pTV, &dif_tim ) < 0)
-            return false; // (we haven't reached begin time yet)
-
-        past_beg = ((U64)dif_tim.tv_sec * 1000000) + dif_tim.tv_usec;
-
-        /* Not interested if outside of specified range */
-        if (past_beg > max_past)
-            return false;
-    }
-
-    return true;
-}
-
-/*-------------------------------------------------------------------*/
 /*                     Record filtering                              */
 /*-------------------------------------------------------------------*/
 static bool is_wanted( TFHDR* hdr )
 {
+    if (!is_recnum_wanted())
+        return false;
+
     if (!is_msgnum_wanted( hdr->msgnum ))
         return false;
 
@@ -2444,18 +2454,6 @@ static void process_TF02324( TF02324* rec )
     char tim [ 64 ] = {0};  // "YYYY-MM-DD HH:MM:SS.uuuuuu"
     BYTE cpuad;
 
-    /* Count instruction records read and show progress */
-    if (!(++ins_num % 1000))
-        show_file_progress();
-
-    /* Have we reached their desired records yet? */
-    if (ins_num < fromins || ins_num > toins)
-    {
-        /* No, not yet. Reset *all* GOT flags and return */
-        all_recs[ rec->rhdr.cpuad ].gotmask = 0;
-        return;
-    }
-
     /* (just a more covenient shorter variable name) */
     cpuad = (BYTE) rec->rhdr.cpuad;
 
@@ -2484,8 +2482,8 @@ static void process_TF02324( TF02324* rec )
         }
     }
 
-    /* Count instruction records selected */
-    ++selins;
+    /* Count instruction records printed */
+    ++totins;
 
     FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
 
@@ -2548,10 +2546,6 @@ static void process_TF02326( TF02326* rec )
                                                                     \
     static void process_TF0 ## _nnnn( TF0 ## _nnnn* rec )           \
     {                                                               \
-        /* Count device records read and show progress */           \
-        if (!(++dev_num % 1000))                                    \
-            show_file_progress();                                   \
-                                                                    \
         /* Print the record immediately if wanted */                \
         if (is_devnum_wanted( rec->rhdr.devnum ))                   \
             print_TF0 ## _nnnn( rec );                              \
@@ -2772,7 +2766,7 @@ int main( int argc, char* argv[] )
 
     /* Now read and process trace file records until EOF is reached */
     hdr = (TFHDR*) iobuff;
-    while (ins_num < toins)
+    while (recnum < torec)
     {
         /* Read just TFHDR for now, so we can identify record */
         if ((bytes_read = fread( hdr, 1, sizeof( TFHDR ), inf )) != sizeof( TFHDR ))
@@ -2785,6 +2779,10 @@ int main( int argc, char* argv[] )
             FWRMSG( stderr, HHC03206, "E", strerror( errno ));
             exit( -1 );
         }
+
+        /* Count records read and show progress */
+        if (!(++recnum % 4000))
+            show_file_progress();
 
         /* Make sure we have a complete header to work with */
         if (bytes_read < sizeof( TFHDR ))
@@ -2919,7 +2917,7 @@ int main( int argc, char* argv[] )
         char inscnt[ 32] = {0};
         char tiocnt[ 32] = {0};
 
-        fmt_S64( inscnt, (S64) selins );
+        fmt_S64( inscnt, (S64) totins );
         fmt_S64( tiocnt, (S64) totios );
 
         /* Device trace messages don't print blank lines after each
@@ -2940,7 +2938,7 @@ done:
 
     /* Close file and exit */
     fclose( inf );
-    return info_only ? 0 : ((selins > 0 || totios > 0) ? 0 : 1);
+    return info_only ? 0 : ((totins > 0 || totios > 0) ? 0 : 1);
 
 } /* end function main */
 
@@ -3529,16 +3527,16 @@ static void parse_option_count( const char* optname )
 
     if (pMOPT->isrange)
     {
-        fromins = pMOPT->opt1;
-        toins   = pMOPT->opt2;
+        fromrec = pMOPT->opt1;
+        torec   = pMOPT->opt2;
     }
     else
     {
         if (!pMOPT->opt1)
             goto opt_error;
 
-        fromins = 0;
-        toins   = pMOPT->opt1;
+        fromrec = 0;
+        torec   = pMOPT->opt1;
     }
 
     goto opt_return;
