@@ -105,6 +105,7 @@ static time_t  beg_dat = {0};           /* --date option             */
 static time_t  end_dat = {0};           /* --date option             */
 static U16   prvcpuad  = 0;             /* cpuad  of prv printed rec */
 static U16   prvdevnum = 0;             /* devnum of prv printed rec */
+static bool  previnst  = true;          /* prv was instruction print */
 static char  pathname[ MAX_PATH ] = {0};/* Trace file name           */
 static BYTE  iobuff[ _64_KILOBYTE ];    /* Trace file I/O buffer     */
 
@@ -140,7 +141,24 @@ static void show_file_progress()
     if (extgui)
         fprintf( stderr, "PCT=%.0f\n", percent );
     else if (err_istty)
-        fprintf( stderr, "%.0f%% of file processed...\r", percent );
+    {
+        char scale[50+1];
+        int i;
+
+        /* Draw a nice scale too */
+        memset( scale, '.', 50 );
+        for (i=1; i <= 50; ++i)         // (50 = 2 percent per position)
+        {
+            if (percent >= (i << 1))    // (percent greater than here?)
+                scale[i-1] = '*';
+            else
+                break;
+        }
+        scale[50] = 0;
+
+        fprintf( stderr, "%.0f%% of file processed...   [%s]\r",
+            percent, scale );
+    }
 }
 
 /******************************************************************************/
@@ -888,14 +906,21 @@ static bool is_devnum_wanted( U16 devnum )
 /*                      (helper functions)                           */
 /*-------------------------------------------------------------------*/
 
-/* For instruction trace printing... */
+/* For instruction (non-device) trace printing... */
 static void tf_do_blank_sep( TFHDR* hdr )
 {
-    if (hdr->cpuad != prvcpuad)
-        printf("\n");
+    if (0
+        || prvcpuad >= MAX_CPU_ENGS     // (prev was device record?)
+        || hdr->cpuad != prvcpuad       // (or not same CPU?)
+        || previnst                     // (or was "instruction"?)
+    )
+        printf("\n");                   // (separate from previous)
+
+    // (else prv NOT dev, *AND* same cpu, *AND* not "instruction")
 
     prvcpuad  = hdr->cpuad;
     prvdevnum = hdr->devnum;
+    previnst  = false;
 }
 
 //---------------------------------------------------------------------
@@ -903,14 +928,16 @@ static void tf_do_blank_sep( TFHDR* hdr )
 /* For device trace printing... */
 static void tf_dev_do_blank_sep( TFHDR* hdr )
 {
-    if (1
-        && prvcpuad >= MAX_CPU_ENGS
-        && hdr->msgnum == 1334
+    if (0
+        || prvcpuad < MAX_CPU_ENGS      // (prev not device record?)
+        || prvdevnum != hdr->devnum     // (or not for same device?)
+        || hdr->msgnum == 1334          // (or ORB = start new I/O?)
     )
-        printf("\n");
+        printf("\n");                   // (separate from previous)
 
     prvcpuad  = hdr->cpuad;
     prvdevnum = hdr->devnum;
+    previnst  = false;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1051,7 +1078,7 @@ static inline void print_gr_regs( TF02269* rec )
     gr = rec->gr;               // (so GR_G/GR_L macros work right)
 
     if (regsfirst && !noregs)
-        tf_do_blank_sep( &rec->rhdr );
+        printf("\n");           // (blank line before inst)
 
     FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
     MSGBUF( pfx, "%s HHC02269I %s:", &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ));
@@ -1371,10 +1398,6 @@ static inline void print_800_wait_state_psw( TF00800* rec )
         ptyp_str( rec->rhdr.cpuad ),
         fmt_psw_str( &rec->psw, rec->rhdr.arch_mode )
     );
-
-    /* Separating each wait state PSW line with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1409,10 +1432,6 @@ static inline void print_801_program_interrupt( TF00801* rec )
         dxcstr,
         whystr
     );
-
-    /* Separating each Program Interrupt line with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1445,10 +1464,6 @@ static inline void print_802_per_event( TF00802* rec )
             &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ),
             rec->pcode, rec->perc, percname, (U32) rec->ia );
     }
-
-    /* Separating each machine check interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1465,10 +1480,6 @@ static inline void print_803_pgm_int_loop( TF00803* rec )
     FLOGMSG( stdout,
         "%s HHC00803I Processor %s: program interrupt loop PSW %s\n",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ), rec->str );
-
-    /* Separating each machine check interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1488,10 +1499,6 @@ static inline void print_804_io_rupt_370( TF00804* rec )
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ),
         rec->rhdr.lcss, rec->ioid, rec->csw[0], rec->csw[1], rec->csw[2], rec->csw[3],
                               rec->csw[4], rec->csw[5], rec->csw[6], rec->csw[7] );
-
-    /* Separating each machine check interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1508,10 +1515,6 @@ static inline void print_807_machine_check_interrupt( TF00807* rec )
     FLOGMSG( stdout,
         "%s HHC00807I Processor %s: machine check code %16.16"PRIu64"\n",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ), rec->mcic );
-
-    /* Separating each machine check interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1528,10 +1531,6 @@ static inline void print_808_store_status( TF00808* rec )
     FLOGMSG( stdout,
         "%s HHC00808I Processor %s: store status completed\n",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ) );
-
-    /* Separating each machine check interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1548,10 +1547,6 @@ static inline void print_809_disabled_wait( TF00809* rec )
     FLOGMSG( stdout,
         "%s HHC00809I Processor %s: disabled wait state %s\n",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ), rec->str );
-
-    /* Separating each machine check interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1568,10 +1563,6 @@ static inline void print_811_arch_mode( TF00811* rec )
     FLOGMSG( stdout,
         "%s HHC00811I Processor %s: architecture mode %s\n",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ), rec->archname );
-
-    /* Separating each machine check interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1588,10 +1579,6 @@ static inline void print_812_vect_online_370( TF00812* rec )
     FLOGMSG( stdout,
         "%s HHC00812I Processor %s: vector facility online\n",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ) );
-
-    /* Separating each machine check interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1645,10 +1632,6 @@ static inline void print_840_ext_rupt( TF00840* rec )
             FWRMSG( stderr, HHC03218, "W", ptyp_str( rec->rhdr.cpuad ), rec->icode );
             break;
     }
-
-    /* Separating each external interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1666,10 +1649,6 @@ static inline void print_844_blkio_rupt( TF00844* rec )
         "%s HHC00844I Processor %s: %1d:%04X: processing block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X\n",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ), rec->rhdr.lcss, rec->rhdr.devnum,
         rec->servcode, rec->bioparm, rec->biostat, rec->biosubcd );
-
-    /* Separating each block i/o interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1693,10 +1672,6 @@ static inline void print_845_blkio_ext_rupt( TF00845* rec )
         FLOGMSG( stdout,
             "%s HHC00845I Processor %s: External interrupt: block I/O %8.8"PRIX32"\n",
             &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ), (U32)rec->bioparm );
-
-    /* Separating each block i/o external interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1713,10 +1688,6 @@ static inline void print_846_srvsig_ext_rupt( TF00846* rec )
     FLOGMSG( stdout,
         "%s HHC00846I Processor %s: External interrupt: service signal %8.8X\n",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ), rec->servparm );
-
-    /* Separating each service signal external interrupt with a blank
-       line makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1748,11 +1719,18 @@ static inline void print_op_stor( const char* pfx, BYTE arch_mode, BYTE real_mod
             MSGBUF( vadr, "V:%8.8"PRIX32":", (U32)op->vaddr );
     }
 
-    /* Then print the real address and storage part... */
+    /* Next, print the real address and storage part... */
     if (op->xcode)
     {
-        FLOGMSG( stdout, "%s %s Translation exception %04.4"PRIX16" (%s)\n",
-            pfx, vadr, op->xcode, PIC2Name( op->xcode ));
+        char pfx_and_vadr[128];
+
+        MSGBUF(  pfx_and_vadr, "%s %s ", pfx, vadr );
+
+        RTRIM(   pfx_and_vadr );        // (vadr likely empty)
+        STRLCAT( pfx_and_vadr, " " );   // (blank is expected)
+
+        FLOGMSG( stdout, "%sTranslation exception %04.4"PRIX16" (%s)\n",
+            pfx_and_vadr, op->xcode, PIC2Name( op->xcode ));
     }
     else
     {
@@ -1801,12 +1779,12 @@ static inline void print_op_stor( const char* pfx, BYTE arch_mode, BYTE real_mod
         /* And finally print all pieces together as one line */
         if (ARCH_900_IDX == arch_mode)
         {
-            FLOGMSG( stdout, "%s %sR:%16.16"PRIX64":K:%02.2X=%s\n",
+            FLOGMSG( stdout, "%s%sR:%16.16"PRIX64":K:%02.2X=%s\n",
                 pfx, vadr, op->raddr, op->skey, stor );
         }
         else
         {
-            FLOGMSG( stdout, "%s %sR:%8.8"PRIX32":K:%02.2X=%s\n",
+            FLOGMSG( stdout, "%s%sR:%8.8"PRIX32":K:%02.2X=%s\n",
                 pfx, vadr, (U32)op->raddr, op->skey, stor );
         }
     }
@@ -1828,7 +1806,7 @@ static inline void print_storage_lines( BYTE cpuad )
         return;
 
     FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
-    MSGBUF( pfx, "%s HHC02326I %s%s:", &tim[ 11 ],
+    MSGBUF( pfx, "%s HHC02326I %s%s: ", &tim[ 11 ],
         rec->sie ? "SIE: " : "", ptyp_str( cpuad ));
 
     if (rec->b1 >= 0)
@@ -1856,6 +1834,8 @@ static inline void print_806_io_rupt( TF00806* rec )
     // HHC00805 "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X"
     // HHC00806 "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X id %8.8X"
 
+    tf_do_blank_sep( &rec->rhdr );
+
     MSGBUF( pfx, "%s %s Processor %s: I/O interrupt code %8.8X parm %8.8X",
         &tim[ 11 ], msgid, ptyp_str( rec->rhdr.cpuad ), rec->ioid, rec->ioparm );
 
@@ -1865,10 +1845,6 @@ static inline void print_806_io_rupt( TF00806* rec )
     else
         // "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X id %8.8X"
         FLOGMSG( stdout, "%s id %8.8X\n", pfx, rec->iointid );
-
-    /* Separating each I/O interrupt with a blank line
-       makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 
@@ -1894,14 +1870,12 @@ static inline void print_814_sigp( TF00814* rec )
         order2name( rec->order ), rec->order,
         ptyp_str( rec->cpad ), prm, rec->cc );
 
+    tf_do_blank_sep( &rec->rhdr );
+
     if (rec->got_status)
         FLOGMSG( stdout, "%s\n", pfx );
     else
         FLOGMSG( stdout, "%s status %8.8X\n", pfx, rec->status );
-
-    /* Separating each I/O interrupt with a blank line
-       makes the report MUCH easier to read/consume! */
-    printf( "\n" );
 }
 
 /******************************************************************************/
@@ -2048,21 +2022,21 @@ static inline void print_TF01301( TF01301* rec )
     switch (rec->type)
     {
     case PF_IDAW1:
-        // "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16": %s"
+        // "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16"%s"
         TF_DEV_FLOGMSG( 1302 ),
             rec->rhdr.lcss, rec->rhdr.devnum, (U32)rec->addr, rec->count, fmtdata( rec->data, rec->amt ));
         break;
 
     case PF_IDAW2:
 
-        // "%1d:%04X CHAN: idaw %16.16"PRIX64", len %4.4"PRIX16": %s"
+        // "%1d:%04X CHAN: idaw %16.16"PRIX64", len %4.4"PRIX16"%s"
         TF_DEV_FLOGMSG( 1303 ),
             rec->rhdr.lcss, rec->rhdr.devnum, (U64)rec->addr, rec->count, fmtdata( rec->data, rec->amt ));
         break;
 
     case PF_MIDAW:
 
-        // "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64": %s"
+        // "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64"%s"
         TF_DEV_FLOGMSG( 1301 ),
             rec->rhdr.lcss, rec->rhdr.devnum, rec->mflag, rec->count, (U64)rec->addr, fmtdata( rec->data, rec->amt ));
         break;
@@ -2438,6 +2412,7 @@ static void process_TF02269( TF02269* rec )
         // Display "Instruction Fetch Error" message
         FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
         MSGBUF( buf, "%s HHC02269E %s", &tim[ 11 ], rec->sie ? "SIE: " : "" );
+        tf_do_blank_sep( &rec->rhdr );
         FLOGMSG( stderr, "%s%s\n", buf, "Instruction fetch error" );
 
         /* Reset ONLY *our* GOT flag and return */
@@ -2485,15 +2460,31 @@ static void process_TF02324( TF02324* rec )
     /* Count instruction records printed */
     ++totins;
 
-    FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
+    /* Update previous values */
+    prvcpuad  = rec->rhdr.cpuad;
+    prvdevnum = rec->rhdr.devnum;
 
+    /* Print a blank line before printing each instruction so that
+       there is a blank line between each printed instruction.
+
+       PLEASE NOTE that we wish to treat each instruction that is
+       printed as if it were a single line (even though multiple
+       lines are always ptinted for each).
+       
+       Thus the "print_all_available_regs" function prints the blank
+       line for us before it prints the registers, but only does so
+       if the REGSFIRST option was specified. Otherwise it doesn't,
+       so we need to do it ourselves here before printing the actual
+       instruction line.
+    */
     /* Print the registers line(s) if appropriate... */
-    if (!noregs && regsfirst)
-        print_all_available_regs( cpuad );
+    if (regsfirst && !noregs)              // (REGSFIRST?)
+        print_all_available_regs( cpuad ); // (also prints blank line)
     else
-        tf_do_blank_sep( &rec->rhdr );
+        printf("\n");                      // (blank line before inst)
 
     /* Print the HHC02324 PSW and INST line... */
+    FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
     FLOGMSG( stdout, "%s HHC02324I %s: %s %s\n",
         &tim[ 11 ],
         ptyp_str( cpuad ),
@@ -2506,12 +2497,11 @@ static void process_TF02324( TF02324* rec )
         print_storage_lines( cpuad );
 
     /* Print the registers line(s) if appropriate... */
-    if (!noregs && !regsfirst)
+    if (!regsfirst && !noregs)
         print_all_available_regs( cpuad );
 
-    /* Separating each instruction with a blank line
-       makes the report MUCH easier to read/consume! */
-    printf( "\n" );
+    /* Remember we printed an instruction */
+    previnst = true;
 
     /* Reset *all* GOT flags and return */
     all_recs[ cpuad ].gotmask = 0;
@@ -2527,6 +2517,7 @@ static void process_TF02326( TF02326* rec )
         char tim [ 64 ] = {0};  // "YYYY-MM-DD HH:MM:SS.uuuuuu"
 
         FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
+        tf_do_blank_sep( &rec->rhdr );
         FLOGMSG( stdout, "%s HHC02267I Real address is not valid\n", &tim[ 11 ] );
 
         /* Reset ONLY *our* GOT flag and return */
@@ -2781,7 +2772,7 @@ int main( int argc, char* argv[] )
         }
 
         /* Count records read and show progress */
-        if (!(++recnum % 4000))
+        if (!(++recnum % 3000))
             show_file_progress();
 
         /* Make sure we have a complete header to work with */
@@ -2913,6 +2904,10 @@ int main( int argc, char* argv[] )
         } /* end switch */
     } /* end while */
 
+    /* Show 100% of file processed */
+    show_file_progress();
+
+    /* Print totals */
     {
         char inscnt[ 32] = {0};
         char tiocnt[ 32] = {0};
@@ -2920,14 +2915,7 @@ int main( int argc, char* argv[] )
         fmt_S64( inscnt, (S64) totins );
         fmt_S64( tiocnt, (S64) totios );
 
-        /* Device trace messages don't print blank lines after each
-           trace message like instruction trace messages always do,
-           so if the report ends with a device trace message, then
-           we need to print a blank line to separate the last mesage
-           from the below totals lines.
-        */
-        if (prvcpuad >= MAX_CPU_ENGS)
-            printf( "\n" );
+        printf( "\n" );
 
         // "%s %s printed"
         FWRMSG( stdout, HHC03215, "I", inscnt, "instructions" );
