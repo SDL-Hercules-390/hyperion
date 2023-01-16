@@ -1,5 +1,7 @@
 #------------------------------------------------------------------------------
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
+# (C) Copyright Roger Bowler, 1999-2012
+# (C) and others 2013-2023
 # Process this file with 'automake' to produce Makefile.in
 #------------------------------------------------------------------------------
 

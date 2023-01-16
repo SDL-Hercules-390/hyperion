@@ -1,5 +1,5 @@
 /* OPCODE.H     (C) Copyright Jan Jaeger, 2000-2012                  */
-/*              (C) and others 2013-2022                             */
+/*              (C) and others 2013-2023                             */
 /*              Instruction decoding macros and prototypes           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

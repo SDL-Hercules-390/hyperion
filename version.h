@@ -1,5 +1,6 @@
 /*  VERSION.H   (C) Copyright Roger Bowler, 1999-2012                */
-/*      HERCULES Emulator Version definition                         */
+/*              (C) and others 2013-2023                             */
+/*              Hercules Emulator Version definition                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */

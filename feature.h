@@ -1,4 +1,5 @@
 /* FEATURE.H    (C) Copyright Jan Jaeger, 2000-2012                  */
+/*              (C) and others 2013-2023                             */
 /*              Architecture-dependent macro definitions             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

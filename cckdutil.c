@@ -1,5 +1,5 @@
 /* CCKDUTIL.C   (C) Copyright Roger Bowler, 1999-2012                */
-/*              (C) and others 2013-2022                             */
+/*              (C) and others 2013-2023                             */
 /*              CCKD (Compressed CKD) Common routines                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

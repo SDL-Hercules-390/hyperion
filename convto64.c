@@ -1,5 +1,6 @@
-/* CONVTO64.c (C) Copyright "Fish" (David B. Trout), 2018-2019       */
-/*                Convert compressed ckd to cckd64 format            */
+/* CONVTO64.c   (C) Copyright "Fish" (David B. Trout), 2018-2019     */
+/*              (C) and others 2020-2023                             */
+/*              Convert compressed ckd to cckd64 format              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */

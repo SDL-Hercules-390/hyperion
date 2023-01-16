@@ -1,5 +1,6 @@
-/* cckdmap.c   (C) Copyright "Fish" (David B. Trout), 2019-2022      */
-/*                 Compressed dasd file map                          */
+/* cckdmap.c    (C) Copyright "Fish" (David B. Trout), 2019-2022     */
+/*              (C) and others 2022-2023                             */
+/*               Compressed dasd file map                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */

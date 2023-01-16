@@ -1,6 +1,7 @@
 /* MSGENU.H     (C) Copyright Roger Bowler and others, 1999-2022     */
 /*              (C) Copyright Bernard van der Helm, 2010-2012        */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2011-2023                             */
 /*              Header file for Hercules messages (US English)       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
