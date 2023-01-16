@@ -4402,6 +4402,7 @@ U32     residual = 0;                   /* Residual byte count       */
 BYTE    more;                           /* 1=Count exhausted         */
 BYTE    chain = 1;                      /* 1=Chain to next CCW       */
 BYTE    tracethis = 0;                  /* 1=Trace this CCW chain    */
+BYTE    ioerror = 0;                    /* 1=CCW I/O error           */
 BYTE    firstccw = 1;                   /* 1=First CCW               */
 BYTE    area[64];                       /* Message area              */
 u_int   bufpos = 0;                     /* Position in I/O buffer    */
@@ -5616,6 +5617,7 @@ breakchain:
                 && !skip_ch9uc
             )
             {
+                ioerror = 1;
                 DISPLAY_CCW (dev, ccw, addr, count, flags);
             }
 
@@ -5633,6 +5635,8 @@ breakchain:
                 tracethis = 1;
             }
         }
+        else
+            ioerror = 0;
 
         /* Trace the results of CCW execution */
         if (unlikely( CCW_TRACING_ACTIVE( dev, tracethis )))
@@ -5700,11 +5704,20 @@ breakchain:
                 && !(flags & CCW_FLAGS_IDA)
                 && !(flags & CCW_FLAGS_MIDAW)
             )
-                DISPLAY_CCW( dev, ccw, addr, count, flags );
+            {
+                /* If we're tracing due to an I/O error, then the CCW
+                   has already been traced further above, so we DON'T
+                   want to do it here again!
+                */
+                if (!ioerror)
+                    DISPLAY_CCW( dev, ccw, addr, count, flags );
+            }
+
+            ioerror = 0; // (reset flag)
 
             /* Display status and residual byte count */
 
-            if (sysblk.traceFILE)
+            if (dev->ccwtrace && sysblk.traceFILE)
                 tf_1312( dev, unitstat, chanstat, (BYTE) MIN( count, 16 ), residual, iobuf->data );
             else
                 // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X"
