@@ -3123,4 +3123,33 @@ int pid, status;
 #endif
 } /* end function herc_system */
 
+/*-------------------------------------------------------------------*/
+/*     Test whether instruction tracing is active SYSTEM-WIDE        */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*   Returns true ONLY if *BOTH* sysblk.insttrace is on,             */
+/*   *AND* regs->insttrace is ALSO on for *ALL* online cpus.         */
+/*                                                                   */
+/*   Otherwise returns false if either sysblk.insttrace is NOT on,   */
+/*   or regs->insttrace is NOT on for *any* online cpu.              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+bool insttrace_all()
+{
+    if (sysblk.insttrace)
+    {
+        int  cpu;
+        for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+        {
+            if (IS_CPU_ONLINE( cpu ))
+            {
+                if (!sysblk.regs[ cpu ]->insttrace)
+                    return false;
+            }
+        }
+        return true;  /* insttrace is active on all CPUs */
+    }
+    return false;     /* insttrace NOT active for at least one CPU */
+}
+
 #endif // !defined(_GEN_ARCH)

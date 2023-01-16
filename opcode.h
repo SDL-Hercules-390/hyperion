@@ -418,13 +418,16 @@ do { \
 #define TXF_INSTR_TRACING()                                           \
   (sysblk.txf_tracing & TXF_TR_INSTR)
 
+
 #define TXF_CONSTRAINED_TRANS_INSTR( _regs )                          \
   ((sysblk.txf_tracing & TXF_TR_C)                                    \
     && (_regs)->txf_tnd && (_regs)->txf_contran)
 
+
 #define TXF_UNCONSTRAINED_TRANS_INSTR( _regs )                        \
   ((sysblk.txf_tracing & TXF_TR_U)                                    \
     && (_regs)->txf_tnd && !(_regs)->txf_contran)
+
 
 #define TXF_TRACE_THIS_INSTR( _regs )                                 \
   (1                                                                  \
@@ -436,26 +439,40 @@ do { \
       )                                                               \
   )
 
-#define _CPU_STEP_OR_TRACE(_steptrace, _regs, _ilc)                   \
+
+#define _CPU_STEP_OR_TRACE(_breakaddr_or_traceaddr, _regs, _ilc)      \
    (0                                                                 \
        || !TXF_INSTR_TRACING()                                        \
        ||  TXF_TRACE_THIS_INSTR( _regs )                              \
    )                                                                  \
    &&                                                                 \
    (                                                                  \
-        (sysblk._steptrace[0] == 0 && sysblk._steptrace[1] == 0)      \
-     || (sysblk._steptrace[0] <= sysblk._steptrace[1]                 \
-         && PSW_IA_FROM_IP((_regs), -(_ilc)) >= sysblk._steptrace[0]  \
-         && PSW_IA_FROM_IP((_regs), -(_ilc)) <= sysblk._steptrace[1]  \
+        (sysblk._breakaddr_or_traceaddr[0] == 0 &&                    \
+         sysblk._breakaddr_or_traceaddr[1] == 0)                      \
+                                                                      \
+     || (sysblk._breakaddr_or_traceaddr[0] <=                         \
+         sysblk._breakaddr_or_traceaddr[1]                            \
+                                                                      \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) >=                       \
+            sysblk._breakaddr_or_traceaddr[0]                         \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) <=                       \
+            sysblk._breakaddr_or_traceaddr[1]                         \
         )                                                             \
-     || (sysblk._steptrace[0] > sysblk._steptrace[1]                  \
-         && PSW_IA_FROM_IP((_regs), -(_ilc)) >= sysblk._steptrace[1]  \
-         && PSW_IA_FROM_IP((_regs), -(_ilc)) <= sysblk._steptrace[0]  \
+                                                                      \
+     || (sysblk._breakaddr_or_traceaddr[0] >                          \
+         sysblk._breakaddr_or_traceaddr[1]                            \
+                                                                      \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) >=                       \
+            sysblk._breakaddr_or_traceaddr[1]                         \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) <=                       \
+            sysblk._breakaddr_or_traceaddr[0]                         \
         )                                                             \
    )                                                                  \
 
+
 #define CPU_STEPPING(_regs, _ilc)                                     \
   (sysblk.instbreak  && _CPU_STEP_OR_TRACE(breakaddr,(_regs),(_ilc)))
+
 
 #define CPU_TRACING(_regs, _ilc)                                      \
   (1                                                                  \
@@ -464,17 +481,27 @@ do { \
    && _CPU_STEP_OR_TRACE( traceaddr, (_regs), (_ilc) )                \
   )
 
-#define CPU_STEPPING_OR_TRACING(_regs, _ilc) \
-  ( unlikely((_regs)->breakortrace) && \
+
+#define CPU_STEPPING_OR_TRACING(_regs, _ilc)                          \
+  ( unlikely((_regs)->breakortrace) &&                                \
     (CPU_STEPPING((_regs), (_ilc)) || CPU_TRACING((_regs), (_ilc)))   \
   )
 
-#define _CPU_TRACESTEP_ALL(_steptrace,_addr)                          \
-  (sysblk._steptrace && sysblk._addr[0] == 0 && sysblk._addr[1] == 0)
 
-#define CPU_TRACING_ALL                 _CPU_TRACESTEP_ALL( insttrace, traceaddr )
-#define CPU_STEPPING_ALL                _CPU_TRACESTEP_ALL( instbreak, breakaddr )
-#define CPU_STEPPING_OR_TRACING_ALL     (CPU_TRACING_ALL || CPU_STEPPING_ALL)
+#define _CPU_TRACE_ALL                                                \
+   (sysblk.traceaddr[0] == 0 &&                                       \
+    sysblk.traceaddr[1] == 0 &&                                       \
+  /*sysblk.insttrace*/ insttrace_all())
+
+
+#define _CPU_STEP_ALL                                                 \
+  (sysblk.breakaddr[0] == 0 &&                                        \
+   sysblk.breakaddr[1] == 0 &&                                        \
+   sysblk.instbreak)
+
+
+#define CPU_STEPPING_OR_TRACING_ALL  (_CPU_STEP_ALL || _CPU_TRACE_ALL)
+
 
 #define PROCESS_TRACE( _regs, _ip, _goto )                            \
   do                                                                  \
