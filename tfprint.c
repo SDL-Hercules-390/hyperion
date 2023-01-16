@@ -735,9 +735,9 @@ static bool is_time_wanted( TIMEVAL* pTV )
     {
         /* Then we need to check further */
 
-        U64 max_past = 0;    // (usecs)
-        U64 past_beg;        // (usecs; work)
-        TIMEVAL dif_tim;     // (work)
+        static U64 max_past = 0;    // (usecs)
+               U64 past_beg;        // (usecs; work)
+               TIMEVAL dif_tim;     // (work)
 
         if (!max_past)              // (first time here?)
         {
