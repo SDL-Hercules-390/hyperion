@@ -1576,7 +1576,7 @@ static INSTR_FUNC ARCH_DEP( gen_opcode_b2xx )[256][NUM_INSTR_TAB_PTRS] =
  /*B23F*/ AD_GENx___x390x900 ( "TPZI"      , S    , ASMFMT_S       , test_pending_zone_interrupt             ),
  /*B240*/ AD_GENx___x390x900 ( "BAKR"      , RRE  , ASMFMT_RRE     , branch_and_stack                        ),
  /*B241*/ AD_GENx37Xx390x900 ( "CKSM"      , RRE  , ASMFMT_RRE     , checksum                                ),
- /*B242*/ AD_GENx___x___x___ , /**Add FRR */
+ /*B242*/ AD_GENx370x___x___ ( "Assist"    , SSE  , ASMFMT_RRE     , add_frr                                             ),
  /*B243*/ AD_GENx___x___x___ , /*#MA      */
  /*B244*/ AD_GENx37Xx390x900 ( "SQDR"      , RRE  , ASMFMT_RRE     , squareroot_float_long_reg               ),
  /*B245*/ AD_GENx37Xx390x900 ( "SQER"      , RRE  , ASMFMT_RRE     , squareroot_float_short_reg              ),

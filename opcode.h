@@ -3853,6 +3853,7 @@ DEF_INST( execute_ed________xx );
 
 DEF_INST( add );
 DEF_INST( add_decimal );
+DEF_INST( add_frr );
 DEF_INST( add_halfword );
 DEF_INST( add_logical );
 DEF_INST( add_logical_register );
