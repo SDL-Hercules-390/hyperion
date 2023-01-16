@@ -1400,7 +1400,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
                     {
                         if (IS_CPU_ONLINE( cpu ))
-                            sysblk.regs[ cpu ]->trace_this_cpu = on;
+                            sysblk.regs[ cpu ]->insttrace = on;
                     }
                 }
             }
@@ -1498,7 +1498,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
             {
                 if (IS_CPU_ONLINE( cpu ))
                 {
-                    if (sysblk.regs[ cpu ]->trace_this_cpu)
+                    if (sysblk.regs[ cpu ]->insttrace)
                         ++on;
                     else
                         ++off;
@@ -1516,7 +1516,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                 {
                     if (IS_CPU_ONLINE( cpu ))
                     {
-                        if (sysblk.regs[ cpu ]->trace_this_cpu)
+                        if (sysblk.regs[ cpu ]->insttrace)
                         {
                             MSGBUF( who, "CPU %s%02X",
                                 ptyp2short( sysblk.ptyp[ cpu ] ), cpu );

@@ -460,7 +460,7 @@ do { \
 #define CPU_TRACING(_regs, _ilc)                                      \
   (1                                                                  \
    && sysblk.insttrace                                                \
-   && (_regs)->trace_this_cpu                                         \
+   && (_regs)->insttrace                                              \
    && _CPU_STEP_OR_TRACE( traceaddr, (_regs), (_ilc) )                \
   )
 

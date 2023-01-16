@@ -251,7 +251,7 @@ struct REGS {                           /* Processor registers       */
                 loadstate:1,            /* 1=CPU is in load state    */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
-                trace_this_cpu:1,       /* 1=Inst trace enabled      */
+                insttrace:1,            /* 1=Inst trace enabled      */
                 breakortrace:1,         /* 1=Inst break/trace active */
                 stepping:1,             /* 1=Inst stepping is active */
                 stepwait:1,             /* 1=Wait in inst stepping   */

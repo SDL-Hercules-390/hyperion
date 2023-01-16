@@ -2843,8 +2843,8 @@ DLL_EXPORT bool tf_autostop()
         {
             if (IS_CPU_ONLINE( cpu ))
             {
-                bWasActive = bWasActive || sysblk.regs[ cpu ]->trace_this_cpu;
-                sysblk.regs[ cpu ]->trace_this_cpu = false;
+                bWasActive = bWasActive || sysblk.regs[ cpu ]->insttrace;
+                sysblk.regs[ cpu ]->insttrace = false;
             }
         }
 

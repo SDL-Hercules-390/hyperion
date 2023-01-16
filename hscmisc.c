@@ -829,7 +829,7 @@ char    op1_stor_msg[128]   = {0};
 char    op2_stor_msg[128]   = {0};
 char    regs_msg_buf[4*512] = {0};
 
-    if (!iregs->trace_this_cpu)
+    if (!iregs->insttrace)
         return;
 
     PTT_PGM( "dinst", inst, 0, pgmint );

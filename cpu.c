@@ -1687,7 +1687,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(regs);
     OFF_IC_INTERRUPT(regs);
-    regs->breakortrace = (sysblk.instbreak || (sysblk.insttrace && regs->trace_this_cpu));
+    regs->breakortrace = (sysblk.instbreak || (sysblk.insttrace && regs->insttrace));
 
     /* Ensure psw.IA is set and invalidate the aia */
     INVALIDATE_AIA(regs);
@@ -1969,7 +1969,7 @@ int     aswitch;
 
     regs->program_interrupt = &ARCH_DEP(program_interrupt);
 
-    regs->breakortrace = (sysblk.instbreak || (sysblk.insttrace && regs->trace_this_cpu));
+    regs->breakortrace = (sysblk.instbreak || (sysblk.insttrace && regs->insttrace));
     regs->ints_state |= sysblk.ints_state;
 
     /* Establish longjmp destination for cpu thread exit */
@@ -2786,7 +2786,7 @@ void do_automatic_tracing()
         for (cpu=0; cpu < sysblk.maxcpu; cpu++)
         {
             if (IS_CPU_ONLINE( cpu ))
-                sysblk.regs[ cpu ]->trace_this_cpu = sysblk.insttrace;
+                sysblk.regs[ cpu ]->insttrace = sysblk.insttrace;
         }
     }
     RELEASE_INTLOCK( NULL );

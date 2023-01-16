@@ -8190,7 +8190,7 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
                 for (cpu=0; cpu < sysblk.maxcpu; cpu++)
                 {
                     if (IS_CPU_ONLINE( cpu ))
-                        sysblk.regs[ cpu ]->trace_this_cpu = plus_enable_on;
+                        sysblk.regs[ cpu ]->insttrace = plus_enable_on;
                 }
 
                 // Build results message
@@ -8236,7 +8236,7 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
                 }
 
                 // Enable/disable instruction tracing for this CPU
-                sysblk.regs[ cpu16 ]->trace_this_cpu = plus_enable_on;
+                sysblk.regs[ cpu16 ]->insttrace = plus_enable_on;
 
                 // Disable/enable overall instruction tracing depending
                 // on whether it's now enabled/disabled for all CPUs or
@@ -8249,7 +8249,7 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
                 {
                     if (IS_CPU_ONLINE( cpu ))
                     {
-                        if (sysblk.regs[ cpu ]->trace_this_cpu)
+                        if (sysblk.regs[ cpu ]->insttrace)
                         {
                             trace_cpu = true;
                             sysblk.insttrace = 1;
