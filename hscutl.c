@@ -2669,6 +2669,10 @@ static bool tf_write_initial_TFSYS_locked( TIMEVAL* tod )
     }
 
     sysblk.curtracesize += written;
+
+    // "Trace file tracing begun..."
+    WRMSG( HHC02383, "I" );
+
     return ret;
 }
 

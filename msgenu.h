@@ -996,9 +996,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 
 // reserve 013xx for channel related messages
 #define HHC01300 "%1d:%04X CHAN: halt subchannel: cc=%d"
-#define HHC01301 "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64": %s"
-#define HHC01302 "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16": %s"
-#define HHC01303 "%1d:%04X CHAN: idaw %16.16"PRIX64", len %4.4"PRIX16": %s"
+#define HHC01301 "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64"%s"
+#define HHC01302 "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16"%s"
+#define HHC01303 "%1d:%04X CHAN: idaw %16.16"PRIX64", len %4.4"PRIX16"%s"
 #define HHC01304 "%1d:%04X CHAN: attention signaled"
 #define HHC01305 "%1d:%04X CHAN: attention"
 #define HHC01306 "%1d:%04X CHAN: initial status interrupt"
@@ -1523,7 +1523,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02380 "Invalid %s= value: %s"
 #define HHC02381 "File closed, tracing %s"
 #define HHC02382 "%stracing active for %s"
-//efine HHC02383 (available)
+#define HHC02383 "Trace file tracing begun..."
 //efine HHC02384 (available)
 #define HHC02385 "CPUMODEL %04X does not technically support TXF"
 #define HHC02386 "Configure CPU error %d"

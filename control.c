@@ -5962,7 +5962,7 @@ char    log_buf[128];                   /* Log buffer                */
         regs->psw.cc = 2;
         if (log_sigp)
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, 2, cpad, status, parm, 0 );
             else
                 WRMSG( HHC00814, "I", log_buf, 2, "" );
@@ -5988,7 +5988,7 @@ char    log_buf[128];                   /* Log buffer                */
         regs->psw.cc = 3;
         if (log_sigp)
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, 3, cpad, status, parm, 0 );
             else
                 WRMSG(HHC00814, "I", log_buf, 3, "");
@@ -6016,7 +6016,7 @@ char    log_buf[128];                   /* Log buffer                */
         regs->psw.cc = 2;
         if (log_sigp)
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, 2, cpad, status, parm, 0 );
             else
                 WRMSG( HHC00814, "I", log_buf, 2, "" );
@@ -6590,14 +6590,14 @@ char    log_buf[128];                   /* Log buffer                */
     {
         if (regs->psw.cc == 0)
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, 0, cpad, status, parm, 0 );
             else
                 WRMSG( HHC00814, "I", log_buf, 0, "" );
         }
         else
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, regs->psw.cc, cpad, status, parm, 1 );
             else
             {

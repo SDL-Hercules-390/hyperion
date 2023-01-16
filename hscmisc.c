@@ -829,14 +829,11 @@ char    op1_stor_msg[128]   = {0};
 char    op2_stor_msg[128]   = {0};
 char    regs_msg_buf[4*512] = {0};
 
-    if (!iregs->insttrace)
-        return;
-
     PTT_PGM( "dinst", inst, 0, pgmint );
 
     OBTAIN_TRACEFILE_LOCK();
     {
-        trace2file = sysblk.traceFILE ? true : false;
+        trace2file = (iregs->insttrace && sysblk.traceFILE) ? true : false;
     }
     RELEASE_TRACEFILE_LOCK();
 

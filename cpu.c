@@ -269,7 +269,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         && !TXF_INSTR_TRACING()
     )
     {
-        if (sysblk.traceFILE)
+        if (regs->insttrace && sysblk.traceFILE)
             tf_0800( regs );
         else
         {
@@ -550,17 +550,15 @@ DLL_EXPORT void ARCH_DEP( trace_program_interrupt )( REGS* regs, int pcode, int 
     if (code == PGM_DATA_EXCEPTION)
        MSGBUF( dxcstr, " DXC=%2.2X", regs->dxc );
 
-    if (sysblk.traceFILE)
+    if (regs->insttrace && sysblk.traceFILE)
         tf_0801( regs, pcode, ilc );
-    else
-    {
-        // "Processor %s%02X: %s%s %s interruption code %4.4X ilc %d%s%s"
-        WRMSG( HHC00801, "I",
-            PTYPSTR( regs->cpuad ), regs->cpuad,
-            sie_mode_str, sie_debug_arch,
-            PIC2Name( code ), pcode,
-            ilc, dxcstr, txf_why );
-    }
+
+    // "Processor %s%02X: %s%s %s interruption code %4.4X ilc %d%s%s"
+    WRMSG( HHC00801, "I",
+        PTYPSTR( regs->cpuad ), regs->cpuad,
+        sie_mode_str, sie_debug_arch,
+        PIC2Name( code ), pcode,
+        ilc, dxcstr, txf_why );
 
     // HHC02324 "PSW=... INST=...  OPCODE  operands   name"
     ARCH_DEP( display_pgmint_inst )( regs, ip );
@@ -1096,7 +1094,7 @@ bool    intercept;                      /* False for virtual pgmint  */
         {
             BYTE perc = IS_IC_PER( realregs ) >> 16;
 
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0802( regs,
                         (realregs->psw.IA - ilc) & ADDRESS_MAXWRAP( realregs ),
                          pcode, perc );
@@ -1361,7 +1359,7 @@ bool    intercept;                      /* False for virtual pgmint  */
             char buf[64];
             STR_PSW( realregs, buf );
 
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0803( realregs, buf );
 
             // "Processor %s%02X: program interrupt loop PSW %s"
@@ -1519,7 +1517,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
     {
         BYTE* csw = psa->csw;
 
-        if (sysblk.traceFILE)
+        if (regs->insttrace && sysblk.traceFILE)
             tf_0804( regs, csw, ioid, SSID_TO_LCSS(ioid >> 16) & 0x07 );
         else
         {
@@ -1547,7 +1545,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
     /* Trace the I/O interrupt */
     if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace)
     {
-        if (sysblk.traceFILE)
+        if (regs->insttrace && sysblk.traceFILE)
             tf_0806( regs, ioid, ioparm, iointid );
         else
         {
@@ -1633,7 +1631,7 @@ RADR    fsta;                           /* Failing storage address   */
     /* Trace the machine check interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
     {
-        if (sysblk.traceFILE)
+        if (regs->insttrace && sysblk.traceFILE)
             tf_0807( regs, mcic, fsta, xdmg );
         else
             // "Processor %s%02X: machine check code %16.16"PRIu64
@@ -1785,21 +1783,19 @@ cpustate_stopping:
             OFF_IC_STORSTAT(regs);
             ARCH_DEP(store_status) (regs, 0);
 
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0808( regs );
-            else
-            {
-                // "Processor %s%02X: store status completed"
-                WRMSG( HHC00808, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
 
-                /* ISW 20071102 : Do not return via longjmp here. */
-                /*    process_interrupt needs to finish putting the */
-                /*    CPU in its manual state                     */
-                /*
-                RELEASE_INTLOCK(regs);
-                longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-                */
-            }
+            // "Processor %s%02X: store status completed"
+            WRMSG( HHC00808, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
+
+            /* ISW 20071102 : Do not return via longjmp here. */
+            /*    process_interrupt needs to finish putting the */
+            /*    CPU in its manual state                     */
+            /*
+            RELEASE_INTLOCK(regs);
+            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+            */
         }
     } /*CPUSTATE_STOPPING*/
 
@@ -1859,7 +1855,7 @@ cpustate_stopping:
                 char buf[40];
                 STR_PSW( regs, buf );
 
-                if (sysblk.traceFILE)
+                if (regs->insttrace && sysblk.traceFILE)
                     tf_0809( regs, buf );
 
                 // "Processor %s%02X: disabled wait state %s"
@@ -1931,13 +1927,10 @@ int     aswitch;
                 HOST(GUESTREGS) = regs;
             sysblk.regs[cpu] = regs;
             release_lock(&sysblk.cpulock[cpu]);
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0811( regs, get_arch_name( regs ));
-            else
-            {
-                // "Processor %s%02X: architecture mode %s"
-                WRMSG( HHC00811, "I", PTYPSTR( cpu ), cpu, get_arch_name( regs ));
-            }
+            // "Processor %s%02X: architecture mode %s"
+            WRMSG( HHC00811, "I", PTYPSTR( cpu ), cpu, get_arch_name( regs ));
         }
     }
     else
@@ -1947,18 +1940,16 @@ int     aswitch;
         if (cpu_init( cpu, regs, NULL ))
             return NULL;
 
-        if (sysblk.traceFILE)
+        if (regs->insttrace && sysblk.traceFILE)
             tf_0811( regs, get_arch_name( regs ));
-        else
-        {
-            // "Processor %s%02X: architecture mode %s"
-            WRMSG( HHC00811, "I", PTYPSTR( cpu ), cpu, get_arch_name( regs ));
-        }
+
+        // "Processor %s%02X: architecture mode %s"
+        WRMSG( HHC00811, "I", PTYPSTR( cpu ), cpu, get_arch_name( regs ));
 
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY )
         if (regs->vf->online)
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0812( regs, get_arch_name( regs ));
 
             // "Processor %s%02X: vector facility online"

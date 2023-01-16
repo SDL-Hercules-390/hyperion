@@ -175,11 +175,11 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     /* External interrupt if console interrupt key was depressed */
     if ( OPEN_IC_INTKEY(regs) && !SIE_MODE(regs) )
     {
-        if (sysblk.traceFILE)
+        if (regs->insttrace && sysblk.traceFILE)
             tf_0840( regs, EXT_INTERRUPT_KEY_INTERRUPT );
-        else
-            // "Processor %s%02X: External interrupt: interrupt key"
-            WRMSG( HHC00840, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
+
+        // "Processor %s%02X: External interrupt: interrupt key"
+        WRMSG( HHC00840, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
 
         /* Reset interrupt key pending */
         OFF_IC_INTKEY;
@@ -294,7 +294,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             && !TXF_INSTR_TRACING()
         )
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0840( regs, EXT_CLOCK_COMPARATOR_INTERRUPT );
             else
                 // "Processor %s%02X: External interrupt: clock comparator"
@@ -314,7 +314,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             && !TXF_INSTR_TRACING()
         )
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0840( regs, EXT_CPU_TIMER_INTERRUPT );
             else
                 // "Processor %s%02X: External interrupt: CPU timer=%16.16"PRIX64
@@ -336,7 +336,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             && !TXF_INSTR_TRACING()
         )
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0840( regs, EXT_INTERVAL_TIMER_INTERRUPT );
             else
                 // "Processor %s%02X: External interrupt: interval timer"
@@ -369,7 +369,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
             if (sysblk.biodev->ccwtrace)
             {
-                if (sysblk.traceFILE)
+                if (regs->insttrace && sysblk.traceFILE)
                     tf_0844( regs );
                 else
                     // "Processor %s%02X: %1d:%04X: processing block I/O interrupt:
@@ -397,7 +397,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                     && !TXF_INSTR_TRACING()
                 )
                 {
-                    if (sysblk.traceFILE)
+                    if (regs->insttrace && sysblk.traceFILE)
                         tf_0845( regs );
                     else
                     {
@@ -439,7 +439,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                     && !TXF_INSTR_TRACING()
                 )
                 {
-                    if (sysblk.traceFILE)
+                    if (regs->insttrace && sysblk.traceFILE)
                         tf_0845( regs );
                     else
                     {
@@ -479,7 +479,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                 && !TXF_INSTR_TRACING()
             )
             {
-                if (sysblk.traceFILE)
+                if (regs->insttrace && sysblk.traceFILE)
                     tf_0846( regs );
                 else
                     // "Processor %s%02X: External interrupt: service signal %8.8X"
@@ -514,7 +514,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             && !TXF_INSTR_TRACING()
         )
         {
-            if (sysblk.traceFILE)
+            if (regs->insttrace && sysblk.traceFILE)
                 tf_0846( regs );
             else
                 // "Processor %s%02X: External interrupt: service signal %8.8X"
