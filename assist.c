@@ -676,30 +676,88 @@ VADR    effective_addr1,
 /*-------------------------------------------------------------------*/
 /* B242       - Add FRR                                        [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_frr)
+DEF_INST( add_frr )
 {
+/*                          ADDFRR
+
+        Add new Functional-Recovery-Routine Stack entry
+
+   What little documentation that exists for this feature can be found
+   on page 9 of IBM System/370 Assists for MVS, GA22-7079-1 (the text
+   of which is copied verbatim further below), which can be found on
+   Bitsavers at:
+
+      * https://bitsavers.org/pdf/ibm/370/MVS/GA22-7079-1_IBM_System_370_Assists_for_MVS_2nd_ed_198110.pdf
+
+   The rest of the documentation regarding how it works is found in the
+   way MVS itself manages the FRR stack. The assist feature is part of
+   the 3033 Extensions.
+
+   r1 contains an entry value designating the type of FRR and action to
+   take by this assist. r2 contains the address of the FRR to be added.
+*/
+/*                          ADDFRR
+
+    "A new entry is added to the top of the current functional-
+     recovery-routine (FRR) stack. The entry is initialized with
+     values provided in general registers and with the PSW S bit
+     (bit 16)."
+
+    "Optionally, the contents of control registers 3 and 4 are
+     saved in an entry in a separate table."
+
+    "The general register designated by the r2 field provides the
+     logical address of the FRR entry point."
+
+    "Before instruction execution, the general register designated
+     by the r1 field provides three bytes that are stored in the
+     FRR entry and whose value determines if control registers 3
+     and 4 are to be stored as well. When instruction execution is
+     completed, the register designated by r1 contains the logical
+     address of the six-word work area within the new, current
+     FRR-stack entry."
+
+    "Logical location 380 hex contains the logical address of the
+     stack-table header. The stack-table header contains (1) a logical
+     address which is 32 less than the address of the first dynamic
+     entry in the stack table, (2) the logical address of the last
+     entry in the stack table, and (3) the logical address of the
+     current stack-table entry."
+
+    "At an offset from the beginning of the stack-table header is
+     found a table of stack-entry-extension entries. Optionally,
+     the contents of control registers 3 and 4 are saved in an
+     extension entry. One extension entry corresponds to each entry
+     in the stack table. The offset to the table of extension entries,
+     and the encoded length of an extension entry, are found in the
+     word at logical location BA8 hex."
+
+    Condition Code: The code remains unchanged.
+
+    Program Exceptions:
+    Access (storage operands)
+    Operation (when the instruction is not installed)
+    Privileged operation
+    Specification
+*/
+
 int     r1, r2;
 VADR    frrstak;
-VADR    frrnext;
+VADR    frrparm;
 VADR    frrlast;
-int     frrsize;
+U32     frrsize;
 VADR    frrcurr;
+VADR    frrnext;
 VADR    newia;
 VADR    cr_ptr;
-BYTE    *main;
 BYTE    entrycode;
+U32     size, len;
+VADR    clear_vaddr;
+static const BYTE zeros[256] = {0};
 
 #define FRRSPARM    0x08
 
-/* What little documentation that exists for this feature can be found on page 9 of  */
-/* IBM System/370 Assists for MVS, GA22-7079-1, available on Bitsavers. The rest of  */
-/* this is found in the way MVS itself manages the FRR stack. The feature is part of */
-/* the 3033 Extensions. */
-
-/* r1 contains an entry value designating the type of FRR and action to take by this assist */
-/* r2 contains the address of the FRR to be added                                           */
-
-/* entry code bits in r1 */
+/* Entry code bits in r1 */
 #define EUT         0x80
 #define FULLXM      0x08
 #define PRIMARY     0x04
@@ -709,83 +767,92 @@ BYTE    entrycode;
 
     RRE( inst, regs, r1, r2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
     /* Obtain needed values from the FRR stack pointers */
-    frrstak = ARCH_DEP(vfetch4) ( PSACSTK, USE_PRIMARY_SPACE, regs );
-    frrlast = ARCH_DEP(vfetch4) ( frrstak + 4, USE_PRIMARY_SPACE, regs );
-    frrsize = ARCH_DEP(vfetch4) ( frrstak + 8, USE_PRIMARY_SPACE, regs );
-    frrcurr = ARCH_DEP(vfetch4) ( frrstak + 12, USE_PRIMARY_SPACE, regs );
-    frrnext = frrcurr + frrsize;
+    frrstak = ARCH_DEP( vfetch4 )( PSACSTK,                                  USE_PRIMARY_SPACE, regs ) & ADDRESS_MAXWRAP( regs );
+    frrparm = ARCH_DEP( vfetch4 )( (frrstak +  0),                           USE_PRIMARY_SPACE, regs ) & ADDRESS_MAXWRAP( regs );
+    frrlast = ARCH_DEP( vfetch4 )( (frrstak +  4) & ADDRESS_MAXWRAP( regs ), USE_PRIMARY_SPACE, regs ) & ADDRESS_MAXWRAP( regs );
+    frrsize = ARCH_DEP( vfetch4 )( (frrstak +  8) & ADDRESS_MAXWRAP( regs ), USE_PRIMARY_SPACE, regs );
+    frrcurr = ARCH_DEP( vfetch4 )( (frrstak + 12) & ADDRESS_MAXWRAP( regs ), USE_PRIMARY_SPACE, regs ) & ADDRESS_MAXWRAP( regs );
+    frrnext = (frrcurr + frrsize) & ADDRESS_MAXWRAP( regs );
 
-    /* Determine if FRR stack is full.  If yes, then         */
-    /* branch to the system supplied code at PSALFSCC        */
-    if (frrnext > frrlast) 
+    /* Determine if FRR stack is full. If yes, then
+       branch to the system supplied code at PSALFSCC
+    */
+    if (frrnext > frrlast)
     {
-        newia = ARCH_DEP(vfetch4) ( PSALSFCC, USE_PRIMARY_SPACE, regs );
-        SET_PSW_IA_AND_MAYBE_IP(regs, newia);
-    }
- 
-    entrycode = regs->GR_LHLCL(r1);
-
-    /* Perform one of the following three functions based on the entry code from r1 */
-
-    /*  1.  SETFRR  A,MODE=HOME    (no LOCAL/GLOBAL or EUT specification) */
-
-    if (entrycode == HOME)                        
-    {
-        /* Set the FRR entry point from r2 in the stack and init the rest of the FRR stack */
-        ARCH_DEP(vstore4) ( regs->GR_L(r2), frrnext, USE_PRIMARY_SPACE, regs );
-        main = MADDRL (frrnext + 8, 4, 0, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        memset((char*)main, 0x00, frrsize);
+        newia = ARCH_DEP( vfetch4 )( PSALSFCC, USE_PRIMARY_SPACE, regs ) & ADDRESS_MAXWRAP( regs );
+        SET_PSW_IA_AND_MAYBE_IP( regs, newia );
+        return;
     }
 
-    /*  2.  SETFRR A,MODE=(HOME, with any combination of LOCAL or GLOBAL or EUT=YES.  */
+    /* Perform exactly one of the following three functions based on the entry code from r1 */
+    entrycode = regs->GR_LHLCL( r1 );
 
-    if ((!(entrycode & FULLXM+PRIMARY)) & (entrycode & EUT+GLOBAL+LOCAL))
+    /*  1. SETFRR  A,MODE=HOME (no LOCAL/GLOBAL or EUT specification) */
+
+    if (entrycode == HOME)
     {
-        /* Set the FRR entry point from r2 in the stack and init the rest of the FRR stack */
-        ARCH_DEP(vstore4) ( regs->GR_L(r2) | 0x00000001, frrnext, USE_PRIMARY_SPACE, regs );
-        /* the entry code is stored in the FRR stack */
-        ARCH_DEP( vstoreb )( entrycode, ((frrnext + 7) & ADDRESS_MAXWRAP( regs )), USE_PRIMARY_SPACE, regs );
-        main = MADDRL (frrnext + 8, 4, 0, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        memset((char*)main, 0x00, frrsize);
+        /* Set the FRR entry point from r2 in the stack */
+        ARCH_DEP( vstore4 )( regs->GR_L(r2), frrnext, USE_PRIMARY_SPACE, regs );
     }
 
-    /*  3.  SETFRR A,MODE=(FULLXM | PRIMARY,  with any or no combination of LOCAL or GLOBAL or EUT=YES.  */
+    /*  2. SETFRR A,MODE=(HOME, with any combination of LOCAL or GLOBAL or EUT=YES.  */
 
-    if ((entrycode & FULLXM+PRIMARY))           
-    {  
-        /* Set the FRR entry point from r2 in the stack and init the rest of the FRR stack */
-        (vstore4) ( regs->GR_L(r2) | 0x00000001, frrnext, USE_PRIMARY_SPACE, regs );
-        main = MADDRL (frrnext + 8, 4, 0, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        memset((char*)main, 0x00, frrsize);
-  
-        /* check if in secondary access mode; if yes turn on secondary bit in the entry code */
+    else if ((!(entrycode & (FULLXM + PRIMARY))) && (entrycode & (EUT + GLOBAL + LOCAL)))
+    {
+        /* Set the FRR entry point from r2 in the stack */
+        ARCH_DEP( vstore4 )( regs->GR_L(r2) | 0x00000001, frrnext, USE_PRIMARY_SPACE, regs );
+
+        /* The entry code is stored in the FRR stack */
+        ARCH_DEP( vstoreb )( entrycode, (frrnext + 7) & ADDRESS_MAXWRAP( regs ), USE_PRIMARY_SPACE, regs );
+    }
+
+    /*  3. SETFRR A,MODE=(FULLXM | PRIMARY, with any or no combination of LOCAL or GLOBAL or EUT=YES.  */
+
+    else
+    {
+        BYTE cr34[8];  // CR3 and CR4
+
+        /* Set the FRR entry point from r2 in the stack */
+        ARCH_DEP( vstore4 )( regs->GR_L(r2) | 0x00000001, frrnext, USE_PRIMARY_SPACE, regs );
+
+        /* Check if in secondary access mode; if yes turn on secondary bit in the entry code */
         if (ARCH_DEP( vfetchb )( (PSAXMFLG & ADDRESS_MAXWRAP( regs )), USE_PRIMARY_SPACE, regs ) & PSAXMODE)
-        {
-            entrycode |= PSAXMODE;                  // indicate to FRR in secondary mode
-        }
-        /* the entry code is stored in the FRR stack */
+            entrycode |= PSAXMODE;  // indicate to FRR in secondary mode
+
+        /* The entry code is stored in the FRR stack */
         ARCH_DEP( vstoreb )( entrycode, ((frrnext + 7) & ADDRESS_MAXWRAP( regs )), USE_PRIMARY_SPACE, regs );
 
         /* Compute the address of the FRR area where CR3 and CR4 are copied from the PSA */
-        cr_ptr = frrnext - ARCH_DEP(vfetch4) ( frrstak, USE_PRIMARY_SPACE, regs );  
+        cr_ptr = frrnext - frrparm;
         cr_ptr = cr_ptr >> 2;
-        cr_ptr = frrstak + cr_ptr + 120;
+        cr_ptr = (frrstak + cr_ptr + 120) & ADDRESS_MAXWRAP( regs );
 
-        /* Get mainstor address of cr_ptr word */
-        main = MADDRL (cr_ptr, 4, 0, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-        /* Copy CR3 and CR4 values from PSA to FRR area */
-        ARCH_DEP( vfetchc )( main, 8, PSAXMCR3, USE_PRIMARY_SPACE, regs );
+        /* Copy CR3 and CR4 values from PSA to computed FRR area */
+        ARCH_DEP( vfetchc )( cr34, 8-1, PSAXMCR3, USE_PRIMARY_SPACE, regs );
+        ARCH_DEP( vstorec )( cr34, 8-1, cr_ptr, 0, regs );
     }
 
     /* Update the FRR stack pointers to point to the newly added FRR */
-    ARCH_DEP( vstore4 )( frrnext, frrstak + 12, USE_PRIMARY_SPACE, regs );
+    ARCH_DEP( vstore4 )( frrnext, (frrstak + 12) & ADDRESS_MAXWRAP( regs ), USE_PRIMARY_SPACE, regs );
 
     /* Return with the FRRSPARM area address in r1 per the assist documentation  */
-    regs->GR_L(r1) = frrnext + FRRSPARM;
+    regs->GR_L(r1) = (frrnext + FRRSPARM) & ADDRESS_MAXWRAP( regs );
+
+    /* Initialize (clear) the rest of the FRR stack */
+    clear_vaddr = (frrnext + 8) & ADDRESS_MAXWRAP( regs );
+    len = 256;
+    size = frrsize;
+    while (size)
+    {
+        if (len > size) len = size;
+        ARCH_DEP( vstorec )( zeros, len-1, clear_vaddr, 0, regs );
+        size        -= len;
+        clear_vaddr += len;
+        clear_vaddr &= ADDRESS_MAXWRAP( regs );
+    }
 }
 
 
