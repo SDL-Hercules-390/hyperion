@@ -2069,8 +2069,8 @@ PRINT_DEV_FUNC( 1310 )); }
 // "%1d:%04X CHAN: resumed"
 PRINT_DEV_FUNC( 1311 )); }
 
-// "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X%s"
-PRINT_DEV_FUNC( 1312 ), rec->unitstat, rec->chanstat, rec->residual, "" ); }
+// "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X"
+PRINT_DEV_FUNC( 1312 ), rec->unitstat, rec->chanstat, rec->residual ); }
 
 /*-------------------------------------------------------------------*/
 /*                   Print Sense Record                              */
@@ -2109,7 +2109,6 @@ static inline void print_TF01313( TF01313* rec )
 static inline void print_TF01315( TF01315* rec )
 {
     char timstr [ 64 ] = {0};      // "YYYY-MM-DD HH:MM:SS.uuuuuu"
-    char area   [ 64 ] = {0};      // " => ................"
 
     FormatTIMEVAL( &rec->rhdr.tod, timstr, sizeof( timstr ));
 
