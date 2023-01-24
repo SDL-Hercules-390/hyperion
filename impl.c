@@ -835,6 +835,14 @@ int     rc;
     init_progname( argc, argv );
     init_sysblk_version_str_arrays( NULL );
 
+    if (argc < 2)
+    {
+        display_version( stdout, 0, NULL );
+        arghelp();
+        WRMSG( HHC02343, "S", 1 );
+        return 1;
+    }
+
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
 
