@@ -440,7 +440,7 @@ struct TFSYS
     U64     tot_ins;        // Total instructions traced
     U64     tot_dev;        // Total device trace records
     char    version[ 128 ]; // Hercules version string (ASCII)
-    BYTE    ptyp[ MAX_CPU_ENGS ]; // Processor type for each CPU
+    BYTE    ptyp[ ROUND_UP( MAX_CPU_ENGS, 8 ) ]; // Processor type for each CPU
 }
 ATTRIBUTE_PACKED; typedef struct TFSYS TFSYS;
 CASSERT( sizeof( TFSYS ) % 8 == 0, hscutl_h );
