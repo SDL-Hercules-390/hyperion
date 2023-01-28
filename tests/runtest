@@ -94,8 +94,7 @@
 # 5+    Passed to redtest.rexx.  "quiet" or <var>=<value>.
 
 # To run a specific test case:
-#       ../hyperion/tests/runtest - <fname>
-# Again, be sure to omit the extension.
+#       ../hyperion/tests/runtest -f <fname>
 
 # Tests  are  normally  done alphabetically.  You can use the scripting
 # facilities  to  include specific test case files in any order, but do
@@ -147,9 +146,18 @@ scanflags()
                                 files="$files $testdir/$fname"
                                 shift ;;
                         (-h) setvar hercexec $1 $2 ; shift ;;
-                        (-l|-t)
+                        (-l)
                                 setvar dummy    $1 $2
                                 hercargs="$hercargs $1 $2"
+                                shift ;;
+                        (-t)
+                                setvar dummy    $1 $2
+
+                                # NOTE: must use "$1$2" (without any spaces between
+                                # the two) due to Hercules '-t' command-line argument
+                                # parsing requirement
+
+                                hercargs="$hercargs $1$2"
                                 shift ;;
                         (-p) setvar modpath $1 $2 ; shift ;;
                         (-r) setvar repeat  $1 $2 ; shift ;;
@@ -319,7 +327,7 @@ fi
 # panel commands.
 
 # set -x
-cmd="$hdir/hercules -p $modpath $hercargs -f $dir/tests.conf -r $wfn.testin -t2.0"
+cmd="$hdir/hercules -p $modpath -t2.0 $hercargs -f $dir/tests.conf -r $wfn.testin"
 if [ "$exit" = "noexit" ] ; then
         $cmd >$wfn.out
         rv=$?
