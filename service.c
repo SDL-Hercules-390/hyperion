@@ -74,9 +74,16 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
     // (message translated from guest to host)
     BYTE /*ASCII*/ a_msg[ MAX_EVENT_MSG_LEN ];
 
-    /* Ignore zero length messages or messages that are "too long" */
-    if (!msglen || msglen >= (int) sizeof( a_msg ))
+    /* Ignore messages that are "too long" */
+    if (msglen >= (int) sizeof( a_msg ))
         return;
+
+    /* For empty messages, just echo a blank line */
+    if (!msglen)
+    {
+        LOGMSG( "\n" );
+        return;
+    }
 
     /* Note that IBM zLinux seems to use EBCDIC X'4A' for their
        ESCape character, so whatever that translates to is the
@@ -1925,8 +1932,10 @@ docheckstop:
                         /* Make sure we don't overflow our buffer! */
                         if (event_msglen >= (int) sizeof( message ) - 1)
                         {
-                            ASSERT( FALSE );
-                            event_msglen = (int) sizeof( message ) - 1;
+                            int trunc_len = (int) sizeof( message ) - 1;
+                            // "Overly long %d byte SCP message truncated to %d bytes"
+                            WRMSG( HHC00159, "W", event_msglen, trunc_len );
+                            event_msglen = trunc_len;
                         }
 
                         /* Print line unless it is a response prompt */

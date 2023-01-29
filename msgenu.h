@@ -326,7 +326,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00156 "IFF_TUN requested but not a tun device: %s"
 #define HHC00157 "IFF_TAP requested but not a tap device: %s"
 //efine HHC00158 (available)
-//efine HHC00159 (available)
+#define HHC00159 "Overly long %d byte SCP message truncated to %d bytes"
 #define HHC00160 "SCP %scommand: %s"
 #define HHC00161 "Function %s failed: [%02d] %s"
 // hercifc.c: 162-169
