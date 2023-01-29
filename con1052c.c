@@ -79,7 +79,6 @@ static BYTE  con1052_immed [256] =
 static const char default_pfxs[] =
 {
     0x2F,       //      /       slash
-    0x5C,       //      \       backslash
     0x60,       //      `       backtick
     0x3D,       //      =       equals
     0x7E,       //      ~       tilde

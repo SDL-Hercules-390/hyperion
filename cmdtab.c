@@ -432,7 +432,9 @@ static int DoCallHercCmdLine (char* pszCmdLine, BYTE internal)
 #if defined( _FEATURE_SYSTEM_CONSOLE )
     /* See if maybe it's a command that the guest understands. */
     if ( !internal && sysblk.scpimply && can_send_command() )
-        rc = scp_command( cmdline, FALSE, sysblk.scpecho ? TRUE : FALSE );
+        rc = scp_command( cmdline, false,
+                          sysblk.scpecho ? true : false,
+                          cmdline[0] == '\\' ? true : false );
     else
 #else
         UNREFERENCED( internal );
@@ -795,17 +797,22 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
 #if defined( _FEATURE_SYSTEM_CONSOLE )
 
     /* Check if SCP command */
-    if(cmd[0] == '.' || cmd[0] == '!')
+    if (0
+        || cmd[0] == '.'
+        || cmd[0] == '!'
+        || cmd[0] == '\\'
+    )
     {
-        int  priomsg  = cmd[0] == '!'  ? TRUE : FALSE;
-        int  scpecho  = sysblk.scpecho ? TRUE : FALSE;
+        bool  priomsg  = cmd[0] == '!'  ? true : false;
+        bool  scpecho  = sysblk.scpecho ? true : false;
+        bool  mask     = cmd[0] == '\\' ? true : false;
 
         if (!cmd[1]) {      /* (empty command given?) */
             cmd[1] = ' ';   /* (must send something!) */
             cmd[2] = 0;
         }
 
-        rc = scp_command( cmd+1, priomsg, scpecho );
+        rc = scp_command( cmd+1, priomsg, scpecho, mask );
     }
     else
 

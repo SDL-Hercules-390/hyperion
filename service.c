@@ -395,7 +395,7 @@ U32 pending;
 /*      priomsg 0=SCP command, 1=SCP priority message                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-int scp_command( char* command, int priomsg, int echo )
+int scp_command( const char* command, bool priomsg, bool echo, bool mask )
 {
     /* Error if disabled for priority messages */
     if (priomsg && !SCLP_RECV_ENABLED( PRIOR ))
@@ -424,8 +424,10 @@ int scp_command( char* command, int priomsg, int echo )
     /* Echo command to HMC console iuf requested */
     if (echo)
     {
+        const char* cmd = mask ? "(suppressed)" : command;
+
         // "SCP %scommand: %s"
-        WRMSG( HHC00160, "I", priomsg ? "priority " : "", command );
+        WRMSG( HHC00160, "I", priomsg ? "priority " : "", cmd );
     }
 
     /* Obtain the interrupt lock */

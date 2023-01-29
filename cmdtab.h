@@ -72,21 +72,30 @@
     "is the default for Debug builds but not normal production builds).\n"      \
     "Note: it is possible to disable the $zapcmd itself so BE CAREFUL!\n"
 
-#define bangmsg_cmd_desc        "SCP priority message"
+#define bangmsg_cmd_desc        "SCP priority command"
 #define bangmsg_cmd_help        \
                                 \
   "To enter a system control program (i.e. guest operating system)\n"           \
-  "priority command on the hercules console, simply prefix the command\n"       \
+  "priority command on the Hercules console, simply prefix the command\n"       \
   "with an exclamation point '!'.\n"
 
-#define hash_cmd_desc           "Silent comment"
-#define star_cmd_desc           "Loud comment"
-#define reply_cmd_desc          "SCP command"
+#define reply_cmd_desc          "SCP reply"
 #define reply_cmd_help          \
                                 \
   "To reply to a system control program (i.e. guest operating system)\n"        \
-  "message that gets issued to the hercules console, prefix the reply\n"        \
+  "prompt that gets issued to the Hercules console, prefix the reply\n"         \
   "with a period.\n"
+
+#define supp_reply_cmd_desc     "SCP suppressed reply"
+#define supp_reply_cmd_help     \
+                                \
+  "To reply to a system control program (i.e. guest operating system)\n"        \
+  "prompt that gets issued to the Hercules console without echoing it\n"        \
+  "the console (such as when entering a password), prefix the reply\n"          \
+  "with a '\\' backslash.\n"
+
+#define hash_cmd_desc           "Silent comment"
+#define star_cmd_desc           "Loud comment"
 
 #define quest_cmd_desc          "alias for help"
 #define abs_cmd_desc            "Display or alter absolute storage"
@@ -2098,6 +2107,7 @@ COMMAND( "evm",                     ecpsvm_cmd,             SYSCMDNOPER,        
 #if defined( _FEATURE_SYSTEM_CONSOLE )
 COMMAND( "!message",                g_cmd,                  SYSCMD,             bangmsg_cmd_desc,       bangmsg_cmd_help    )
 COMMAND( ".reply",                  g_cmd,                  SYSCMD,             reply_cmd_desc,         reply_cmd_help      )
+COMMAND( "\\reply",                 g_cmd,                  SYSCMD,             supp_reply_cmd_desc,    supp_reply_cmd_help )
 COMMAND( "scpecho",                 scpecho_cmd,            SYSCMD,             scpecho_cmd_desc,       scpecho_cmd_help    )
 COMMAND( "scpimply",                scpimply_cmd,           SYSCMD,             scpimply_cmd_desc,      scpimply_cmd_help   )
 COMMAND( "ssd",                     ssd_cmd,                SYSCMD,             ssd_cmd_desc,           ssd_cmd_help        )
