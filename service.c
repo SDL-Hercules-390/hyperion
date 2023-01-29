@@ -39,10 +39,218 @@
 #ifndef _SERVICE_C
 #define _SERVICE_C
 
+/* Maximum event data buffer length plus one for \0 */
+#define MAX_EVENT_MSG_LEN   ((_4K - 8) + 1)
+
 /*-------------------------------------------------------------------*/
 /*                non-ARCH_DEP helper functions                      */
 /*              compiled only once, the first time                   */
 /*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* ATTEMPT to "fix" the message as best we can so it displays better */
+/*-------------------------------------------------------------------*/
+/* IBM s390x Linux seems to be using EBCDIC code page 500, not 37,   */
+/* so if you use some other non-500 codepage setting in Hercules,    */
+/* your messages will very likely NOT display correctly. Right now,  */
+/* I'm using 819/500, which seems to work quite well, but 437/500    */
+/* seems to work equally well, but unfortunately is not transparent. */
+/*-------------------------------------------------------------------*/
+static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
+{
+    static bool once   = false;
+    static bool ignore = false;
+    static BYTE ESC    = 0;
+
+    static const char* parms  = "0123456789:;<=>?";
+//  static const char* inter  = " !\"#$%&'()*+,-./"; // (not used)
+    static const char* final  = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+    static       int   prmlen; // (length of above "parms" string)
+    static       BYTE  subsub[3] = {0};
+
+    BYTE  *p, *p2;   // (work)
+    int i, seqlen;   // (work)
+
+    // (message translated from guest to host)
+    BYTE /*ASCII*/ a_msg[ MAX_EVENT_MSG_LEN ];
+
+    /* Ignore zero length messages or messages that are "too long" */
+    if (!msglen || msglen >= (int) sizeof( a_msg ))
+        return;
+
+    /* Note that IBM zLinux seems to use EBCDIC X'4A' for their
+       ESCape character, so whatever that translates to is the
+       host ASCII character that we need to treat as the "ESC"
+       character that indicates the start of a Control Sequence.
+       Same thing with the "SUB" character which they also use.
+    */
+    if (!once)
+    {
+        once = true;
+        prmlen    = (int) strlen( parms );
+        ESC       = guest_to_host( 0x4A /* CODEPAGE 500  '['  */ );
+        subsub[0] = guest_to_host( 0x3F /* CODEPAGE 500 "SUB" */ );
+        subsub[1] = subsub[0];
+    }
+
+    /* Convert from guest to host */
+    for (i=0; i < msglen; i++)
+        a_msg[i] = guest_to_host( e_msg[i] );
+    a_msg[ msglen ] = 0;
+
+    /*****************************************************************/
+    /*                       REFERENCE                               */
+    /*                                                               */
+    /*    https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Con    */
+    /*            trol_Sequence_Introducer)_sequences                */
+    /*                                                               */
+    /*    For Control Sequence Introducer, or CSI, commands,         */
+    /*    the "ESC [" (written as "\e[" or "\033[" in several        */
+    /*    programming and scripting languages) is followed by        */
+    /*    any number (including none!) of "parameter bytes"          */
+    /*    in the range 0x30-0x3F (ASCII 0-9:;<=>?), then by          */
+    /*    any number of "intermediate bytes" in the range            */
+    /*    0x20-0x2F (ASCII space and !"#$%&'()*+,-./), then          */
+    /*    finally by a single "final byte" in the range 0x40-0x7E    */
+    /*    (ASCII @A-Z[\]^_`a-z{|}~).                                 */
+    /*                                                               */
+    /*****************************************************************/
+
+    for (p = a_msg; msglen;)
+    {
+        /* Find the start of the next control sequence */
+        if (!(p = memchr( p, ESC, msglen )))
+            break; // (No control sequences remain! We're done!)
+
+        /* If the next character is NOT a "parameter byte", then it's
+           obviously not a CSI. It might be some other Linux escape
+           sequence though, so we need to check further.
+        */
+        if (!memchr( parms, *(p+1), prmlen ))
+        {
+            /*********************************************************/
+            /*                     REFERENCE                         */
+            /*                                                       */
+            /*   console_codes(4) - Linux manual page                */
+            /*   https://man7.org/linux/man-pages/man4/console_codes.4.html  */
+            /*                                                       */
+            /*   ECMA-48 CSI sequences:                              */
+            /*                                                       */
+            /*   The action of a CSI sequence is determined by its   */
+            /*   final character:                                    */
+            /*                                                       */
+            /*     K  EL        Erase line (default: from cursor     */
+            /*                  to end of line).                     */
+            /*                                                       */
+            /*        ESC [ 1 K: erase from start of line to cursor. */
+            /*        ESC [ 2 K: erase whole line.                   */
+            /*                                                       */
+            /*********************************************************/
+
+            /* If the next byte is a 'K', then, while this is not a
+               CSI (Control Sequence Introducer), it appears to be
+               an escape code that means "Erase line" (from the cursor
+               to the end of line) which I'm interpreting as meaning:
+
+               "Ignore everything that preceded this escape code
+                and consider what follows this escape code as text
+                that should be displayed starting from the beginning
+                of the current line."
+            */
+            if (*(p+1) == 'K')
+            {
+                msglen -= (p + 2) - a_msg;
+                memmove( a_msg, p + 2, msglen + 1 );
+                p = a_msg;
+                continue;
+            }
+
+            /* Otherwise it's not an escape sequence; skip over this
+              non-ESC byte and continue looking for the next ESCape
+              sequence.
+            */
+            ++p; --msglen;  // (skip past this non-ESC)
+            continue;       // (look for the next ESC)
+        }
+
+        /* Remove the ESCape right away */
+        memmove( p, p + 1, msglen + 1 );   // (+1 to include NULL)
+        --msglen;
+
+        /* Find the end of the control sequence */
+        if (!(p2 = strpbrk( p, final )))
+            break; // (Not found?! I guess we're done then!)
+
+        /* Remove the entire control sequence */
+        seqlen = (p2 - p) + 1;
+        memmove( p, p2 + 1, (msglen - seqlen) + 1 );
+        msglen -= seqlen;
+    }
+
+    /*****************************************************************/
+    /*                    SPECIAL HANDLING                           */
+    /*                                                               */
+    /*   If the message starts with a "in progress" indicator,       */
+    /*   i.e. "[   ***]" or any variation thereof, i.e. a '['        */
+    /*   and one or more asterisks before the end ']', then we       */
+    /*   will simply ignore that entire message and the next         */
+    /*   message too.                                                */
+    /*                                                               */
+    /*****************************************************************/
+    if (a_msg[0] == '[')
+    {
+        int scanlen = (int) strlen( a_msg );
+
+        if ((p = memchr( a_msg, ']', scanlen )))
+        {
+            if ((scanlen = (p - a_msg)) > 0)
+            {
+                if (memchr( a_msg, '*', scanlen ))
+                {
+                    ignore = true;  // (ignore the NEXT message)
+                    return;         // (and THIS message too)
+                }
+            }
+        }
+    }
+
+    /* Ignore this message if our ignore flag is set, but ONLY if the
+       current message appears to be a continuation (i.e. line wrap)
+       of the previous message. Otherwise, if it appears to be a new
+       message (i.e. starts with "[  OK  ]" or "        " = 8 blanks),
+       then we obviously should NOT ignore it.
+    */
+    if (ignore)
+    {
+        ignore = false; // (reset flag)
+
+        /* if NOT a new message, then ignore it as requested */
+        if (1
+            && a_msg[0] != '['
+            && str_ne_n( a_msg, "        ", 8 )
+        )
+        {
+            return;
+        }
+
+        /* Otherwise it's a new message. Display it. */
+    }
+
+    /* Lastly, convert any unprintable chars to spaces or underscores */
+    for (i=0; a_msg[i]; i++)
+    {
+        if (!isprint( a_msg[i] ))
+        {
+            if (a_msg[i] == subsub[0])  // "SUB" character?
+                a_msg[i] = '_';         // Replace with underscore
+            else
+                a_msg[i] = ' ';         // Otherwise with space
+        }
+    }
+
+    /* And finally, show the fixed results! */
+    LOGMSG( "%s\n", RTRIM( a_msg ));
+}
 
 /*-------------------------------------------------------------------*/
 /*              Service processor state data                         */
@@ -1232,7 +1440,7 @@ U16             obj_type;               /* Object type               */
 SCCB_MTO_BK*    mto_bk;                 /* Message Text Object       */
 BYTE*           evd_msg;                /* Message Text pointer      */
 int             event_msglen;           /* Message Text length       */
-BYTE            message[4089];          /* Maximum event data buffer
+BYTE            message[MAX_EVENT_MSG_LEN];/* Maximum event data buffer
                                            length plus one for \0    */
 U32             masklen;                /* Length of event mask      */
 U32             old_cp_recv_mask;       /* Masks before write event  */
@@ -1714,16 +1922,62 @@ docheckstop:
                             break;
                         }
 
+                        /* Make sure we don't overflow our buffer! */
+                        if (event_msglen >= (int) sizeof( message ) - 1)
+                        {
+                            ASSERT( FALSE );
+                            event_msglen = (int) sizeof( message ) - 1;
+                        }
+
                         /* Print line unless it is a response prompt */
                         if (!(mto_bk->ltflag[0] & SCCB_MTO_LTFLG0_PROMPT))
                         {
-                            for (i=0; i < event_msglen; i++)
+                            static bool s390x_linux_detected = false;
+                            static bool is_s390x_linux = false;
+
+#if 0 // debug: save raw EBCDIC message for test program
+static bool once = false;
+static FILE* efile;
+U16 u16_len = (U16) event_msglen;
+U16 big_endian_u16_len = CSWAP16( u16_len );
+if (!once)
+{
+    once = true;
+    efile = fopen( "e_msgs.dat", "wb" );
+}
+fwrite( &big_endian_u16_len, 1, 2, efile );
+fwrite( evd_msg, 1, u16_len, efile );
+fflush( efile );
+#endif // debug: save raw EBCDIC message for test program
+
+                            /* Try to auto-detect if this is s390x Linux */
+                            if (!s390x_linux_detected)
                             {
-                                message[i] = isprint( guest_to_host( evd_msg[i] )) ?
-                                    guest_to_host( evd_msg[i] ) : 0x20;
+                                /* Look for EBCDIC 'ESC' character */
+                                if (event_msglen && memchr( evd_msg, 0x4A, event_msglen ))
+                                {
+                                    s390x_linux_detected = true;
+                                    is_s390x_linux = true;
+                                }
                             }
-                            message[i] = '\0';
-                            LOGMSG("%s\n",message);
+
+                            /* If this is s390x Linux... */
+                            if (is_s390x_linux)
+                            {
+                                /* Try to remove terminal escape sequences.
+                                   Note: also does LOGMSG as appropriate. */
+                                gh534_fix( event_msglen, evd_msg );
+                            }
+                            else /* Normal processing: show message as-is */
+                            {
+                                for (i=0; i < event_msglen; i++)
+                                {
+                                    message[i] = isprint( guest_to_host( evd_msg[i] )) ?
+                                        guest_to_host( evd_msg[i] ) : ' ';
+                                }
+                                message[i] = '\0';
+                                LOGMSG("%s\n",message);
+                            }
                         }
                     }
 

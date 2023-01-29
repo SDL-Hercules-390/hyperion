@@ -480,10 +480,10 @@ a real System/390.  The configuration file is an ASCII text file.
             <td><center>YES</center></td>
         </tr>
 
-        <tr><td align="center"><code>819/500</code></td>
-            <td>819 ISO-8859-1</td>
-            <td>500 International</td>
-            <td><center>YES</center></td>
+        <tr><td align="center"><b><code>819/500</code></b></td>
+            <td><b>819 ISO-8859-1</b></td>
+            <td><b>500 International</b></td>
+            <td><b><center>YES</center></b></td>
         </tr>
 
         <tr><td align="center"><b><code>819/1047</code></b></td>
@@ -558,40 +558,56 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <p>
 
-    The recommended code page is "<b>819/1047</b>", as it is both transparent
-    and properly translates <i><u>all</u></i> ASCII characters to their EBCDIC
-    equivalents, including all extended ASCII characters such as
-
-    '[' (left square bracket),
-    '\' (backslash),
-    ']' (right square bracket),
-    '^' (caret / circumflex),
-    '_' (underscore),
-    '`' (grave / accent),
-    '{' (left curly bracket),
-    '|' (vertical bar),
-    '}' (right curly bracket),
-    '~' (tilde),
-    '&cent;' (cent),
-    '&pound;' (pound),
-    '&curren;' (Currency sign),
-    '&yen;' (yen, yuan),
-    '&brvbar;' (broken bar),
-    '&sect;' (section sign),
-    '&copy;' (copyright),
-    '&ordf;' (feminine ordinal indicator),
-    '&reg;' (registered trademark),
-    '&deg;' (degree),
-    '&plusmn;' (plus-minus),
-    '&micro;' (mu/micro),
-    '&para;' (pilcrow/paragraph),
-    '&ordm;' (masculine ordinal indicator),
-    '&iquest;' (inverted question mark),
-    '&times;' (multiplication sign),
-    '&divide;' (obelus/divide sign).
+    The recommended code page for Linux guests is
+    "<b>819/500</b>",
+    as it is both transparent and appears to be the code
+    page that s390x Linux actually uses, thus allowing
+    boot/startup messages to be parsed and displayed properly.
 
     <p>
 
+    The recommended code page for non-Linux guests (e.g. z/OS, etc) is
+    "<b>819/1047</b>", as it is both transparent and properly translates
+    all ASCII characters to their EBCDIC equivalents,
+    including all extended ASCII characters too, such as:
+
+    <p>
+
+<blockquote>
+<table style="width:25%">
+
+<tr><td style="text-align:center">[</td><td style="text-align:left"> &nbsp; &nbsp; left square bracket</td></tr>
+<tr><td style="text-align:center">\</td><td style="text-align:left"> &nbsp; &nbsp; backslash</td></tr>
+<tr><td style="text-align:center">]</td><td style="text-align:left"> &nbsp; &nbsp; right square bracket</td></tr>
+<tr><td style="text-align:center">^</td><td style="text-align:left"> &nbsp; &nbsp; caret / circumflex</td></tr>
+<tr><td style="text-align:center">_</td><td style="text-align:left"> &nbsp; &nbsp; underscore</td></tr>
+<tr><td style="text-align:center">`</td><td style="text-align:left"> &nbsp; &nbsp; grave accent</td></tr>
+<tr><td style="text-align:center">{</td><td style="text-align:left"> &nbsp; &nbsp; left curly bracket</td></tr>
+<tr><td style="text-align:center">|</td><td style="text-align:left"> &nbsp; &nbsp; solid vertical bar</td></tr>
+<tr><td style="text-align:center">}</td><td style="text-align:left"> &nbsp; &nbsp; right curly bracket</td></tr>
+<tr><td style="text-align:center">~</td><td style="text-align:left"> &nbsp; &nbsp; tilde</td></tr>
+<tr><td style="text-align:center">&cent;</td><td style="text-align:left"> &nbsp; &nbsp; cent</td></tr>
+<tr><td style="text-align:center">&pound;</td><td style="text-align:left"> &nbsp; &nbsp; pound</td></tr>
+<tr><td style="text-align:center">&curren;</td><td style="text-align:left"> &nbsp; &nbsp; currency sign</td></tr>
+<tr><td style="text-align:center">&yen;</td><td style="text-align:left"> &nbsp; &nbsp; yen</td></tr>
+<tr><td style="text-align:center">&brvbar;</td><td style="text-align:left"> &nbsp; &nbsp; broken vertical bar</td></tr>
+<tr><td style="text-align:center">&sect;</td><td style="text-align:left"> &nbsp; &nbsp; section sign</td></tr>
+<tr><td style="text-align:center">&copy;</td><td style="text-align:left"> &nbsp; &nbsp; copyright symbol</td></tr>
+<tr><td style="text-align:center">&ordf;</td><td style="text-align:left"> &nbsp; &nbsp; feminine ordinal indicator</td></tr>
+<tr><td style="text-align:center">&reg;</td><td style="text-align:left"> &nbsp; &nbsp; registered trademark</td></tr>
+<tr><td style="text-align:center">&deg;</td><td style="text-align:left"> &nbsp; &nbsp; degree</td></tr>
+<tr><td style="text-align:center">&plusmn;</td><td style="text-align:left"> &nbsp; &nbsp; plus-minus</td></tr>
+<tr><td style="text-align:center">&micro;</td><td style="text-align:left"> &nbsp; &nbsp; mu/micro</td></tr>
+<tr><td style="text-align:center">&para;</td><td style="text-align:left"> &nbsp; &nbsp; pilcrow/paragraph</td></tr>
+<tr><td style="text-align:center">&ordm;</td><td style="text-align:left"> &nbsp; &nbsp; masculine ordinal indicator</td></tr>
+<tr><td style="text-align:center">&iquest;</td><td style="text-align:left"> &nbsp; &nbsp; inverted question mark</td></tr>
+<tr><td style="text-align:center">&times;</td><td style="text-align:left"> &nbsp; &nbsp; multiplication sign</td></tr>
+<tr><td style="text-align:center">&divide;</td><td style="text-align:left"> &nbsp; &nbsp; obelus/divide sign</td></tr>
+
+</table>
+</blockquote>
+
+    <p>
 
 <a name="CONKPALV"></a>
 <dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>
@@ -1015,7 +1031,7 @@ a real System/390.  The configuration file is an ASCII text file.
     on a real machine because we may present an I/O interrupt sooner than a
     real machine.
     <p>
-    NOTE : <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
+    NOTE: <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
     IODELAY to 800 since the problem described above is no longer present in
     recent versions of the Linux kernel.
     <p>
@@ -1340,12 +1356,13 @@ a real System/390.  The configuration file is an ASCII text file.
     <code>NULL</code> <i>displays</i> all exception messages.
     <p>
     <i>
-    QUIET should normally <i><u>never</u></i> be used in normal circumstances
-    as it hides what otherwise might be important messages needed to diagnose
-    incorrect Hercules functionality. Only use <code>QUIET</code> under the
-    guidance of Hercules product support personnel. Instead, please specify an
-    OSTAILOR value that is appropriate for the guest operating system you intend
-    to run under Hercules or else let it default by not specifying it at all.
+    <b>Note!</b> Neither QUIET nor NULL should <u>ever</u> be used
+    in normal circumstances! QUIET hides what otherwise might be important
+    messages needed to diagnose incorrect Hercules and/or guest functionality.
+    Only use QUIET under the guidance of Hercules product support personnel.
+    Instead, please specify an OSTAILOR value that is appropriate for the guest
+    operating system you intend to run under Hercules, or else let it default
+    by not specifying it at all.
     </i>
     <p>
     If no <code>OSTAILOR</code> statement is specified at all, then <code><u>DEFAULT</u></code>
@@ -1369,8 +1386,7 @@ a real System/390.  The configuration file is an ASCII text file.
         OSTAILOR &nbsp;+Z/OS
     </code> </blockquote>
     <p>
-    Use the <code>ostailor</code> or <code>pgmtrace</code> panel
-    commands to display or fine tune the current settings.
+    Use the "<code>pgmtrace</code>" panel command to fine tune the current settings.
     <p>
 
 <a name="PANOPT"></a>
