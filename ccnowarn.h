@@ -114,7 +114,7 @@
   DISABLE_GCC_WARNING( "-Wunused-local-typedefs" )
   #endif
 
-  #if defined( __clang__ ) && __clang_major__ >= 5 /* clang >= 5.0.0 */
+  #if defined( CLANG_VERSION ) && CLANG_VERSION >= 50000 /* clang >= 5.0.0 */
   DISABLE_GCC_WARNING( "-Wunused-local-typedef" )
   #endif
 
@@ -133,6 +133,11 @@
   #if defined( GCC_VERSION ) && GCC_VERSION >= 80000 /* gcc >= 8.0.0 */
   /* Too many false positives on this one */
   DISABLE_GCC_WARNING( "-Wstringop-truncation" )
+  #endif
+
+  #if defined( CLANG_VERSION ) && CLANG_VERSION >= 120000 /* clang >= 12.0.0 */
+  /* Annoying and NOT a problem */
+  DISABLE_GCC_WARNING( "-Wundefined-inline" )
   #endif
 
   /*-----------------------------------------------------------------*/
