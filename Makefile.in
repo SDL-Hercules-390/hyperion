@@ -16,6 +16,8 @@
 
 #------------------------------------------------------------------------------
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
+# (C) Copyright Roger Bowler, 1999-2012
+# (C) and others 2013-2023
 # Process this file with 'automake' to produce Makefile.in
 #------------------------------------------------------------------------------
 
@@ -107,8 +109,8 @@ bin_PROGRAMS = cckdcdsk$(EXEEXT) cckdcomp$(EXEEXT) cckddiag$(EXEEXT) \
 	dmap2hrc$(EXEEXT) hercules$(EXEEXT) hetget$(EXEEXT) \
 	hetinit$(EXEEXT) hetmap$(EXEEXT) hetupd$(EXEEXT) \
 	maketape$(EXEEXT) tapecopy$(EXEEXT) tapemap$(EXEEXT) \
-	tapesplt$(EXEEXT) vmfplc2$(EXEEXT) $(am__EXEEXT_1) \
-	$(am__EXEEXT_2)
+	tapesplt$(EXEEXT) tfprint$(EXEEXT) tfswap$(EXEEXT) \
+	vmfplc2$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2)
 EXTRA_PROGRAMS = hercifc$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -567,6 +569,18 @@ tapesplt_DEPENDENCIES = $(am__DEPENDENCIES_3)
 tapesplt_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(tapesplt_LDFLAGS) $(LDFLAGS) -o $@
+am_tfprint_OBJECTS = tfprint.$(OBJEXT)
+tfprint_OBJECTS = $(am_tfprint_OBJECTS)
+tfprint_DEPENDENCIES = $(am__DEPENDENCIES_3)
+tfprint_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(tfprint_LDFLAGS) $(LDFLAGS) -o $@
+am_tfswap_OBJECTS = tfswap.$(OBJEXT)
+tfswap_OBJECTS = $(am_tfswap_OBJECTS)
+tfswap_DEPENDENCIES = $(am__DEPENDENCIES_3)
+tfswap_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(tfswap_LDFLAGS) $(LDFLAGS) -o $@
 am_vmfplc2_OBJECTS = vmfplc2.$(OBJEXT)
 vmfplc2_OBJECTS = $(am_vmfplc2_OBJECTS)
 vmfplc2_DEPENDENCIES = $(am__DEPENDENCIES_3) libhdt3420_not_mod.la
@@ -673,6 +687,7 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/tapecopy-tapecopy.Po ./$(DEPDIR)/tapedev.Plo \
 	./$(DEPDIR)/tapemap.Po ./$(DEPDIR)/tapesplt.Po \
 	./$(DEPDIR)/tcpip.Plo ./$(DEPDIR)/tcpnje.Plo \
+	./$(DEPDIR)/tfprint.Po ./$(DEPDIR)/tfswap.Po \
 	./$(DEPDIR)/timer.Plo ./$(DEPDIR)/trace.Plo \
 	./$(DEPDIR)/transact.Plo ./$(DEPDIR)/tuntap.Plo \
 	./$(DEPDIR)/vector.Plo ./$(DEPDIR)/version.Plo \
@@ -724,7 +739,8 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hercifc_SOURCES) $(herclin_SOURCES) $(hercules_SOURCES) \
 	$(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) \
 	$(hetupd_SOURCES) $(maketape_SOURCES) $(tapecopy_SOURCES) \
-	$(tapemap_SOURCES) $(tapesplt_SOURCES) $(vmfplc2_SOURCES)
+	$(tapemap_SOURCES) $(tapesplt_SOURCES) $(tfprint_SOURCES) \
+	$(tfswap_SOURCES) $(vmfplc2_SOURCES)
 DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt1052c_la_SOURCES) $(hdt1403_la_SOURCES) \
 	$(hdt2703_la_SOURCES) $(hdt2880_la_SOURCES) \
@@ -751,7 +767,7 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) \
 	$(hetmap_SOURCES) $(hetupd_SOURCES) $(maketape_SOURCES) \
 	$(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES) \
-	$(vmfplc2_SOURCES)
+	$(tfprint_SOURCES) $(tfswap_SOURCES) $(vmfplc2_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -1584,6 +1600,12 @@ dmap2hrc_LDFLAGS = $(tools_LD_FLAGS)
 vmfplc2_SOURCES = vmfplc2.c
 vmfplc2_LDADD = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS = $(tools_LD_FLAGS)
+tfprint_SOURCES = tfprint.c
+tfprint_LDADD = $(tools_ADDLIBS)
+tfprint_LDFLAGS = $(tools_LD_FLAGS)
+tfswap_SOURCES = tfswap.c
+tfswap_LDADD = $(tools_ADDLIBS)
+tfswap_LDFLAGS = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se
@@ -2361,6 +2383,14 @@ tapesplt$(EXEEXT): $(tapesplt_OBJECTS) $(tapesplt_DEPENDENCIES) $(EXTRA_tapesplt
 	@rm -f tapesplt$(EXEEXT)
 	$(AM_V_CCLD)$(tapesplt_LINK) $(tapesplt_OBJECTS) $(tapesplt_LDADD) $(LIBS)
 
+tfprint$(EXEEXT): $(tfprint_OBJECTS) $(tfprint_DEPENDENCIES) $(EXTRA_tfprint_DEPENDENCIES) 
+	@rm -f tfprint$(EXEEXT)
+	$(AM_V_CCLD)$(tfprint_LINK) $(tfprint_OBJECTS) $(tfprint_LDADD) $(LIBS)
+
+tfswap$(EXEEXT): $(tfswap_OBJECTS) $(tfswap_DEPENDENCIES) $(EXTRA_tfswap_DEPENDENCIES) 
+	@rm -f tfswap$(EXEEXT)
+	$(AM_V_CCLD)$(tfswap_LINK) $(tfswap_OBJECTS) $(tfswap_LDADD) $(LIBS)
+
 vmfplc2$(EXEEXT): $(vmfplc2_OBJECTS) $(vmfplc2_DEPENDENCIES) $(EXTRA_vmfplc2_DEPENDENCIES) 
 	@rm -f vmfplc2$(EXEEXT)
 	$(AM_V_CCLD)$(vmfplc2_LINK) $(vmfplc2_OBJECTS) $(vmfplc2_LDADD) $(LIBS)
@@ -2541,6 +2571,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tapesplt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpip.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpnje.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tfprint.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tfswap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timer.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trace.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/transact.Plo@am__quote@ # am--include-marker
@@ -3139,6 +3171,8 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/tapesplt.Po
 	-rm -f ./$(DEPDIR)/tcpip.Plo
 	-rm -f ./$(DEPDIR)/tcpnje.Plo
+	-rm -f ./$(DEPDIR)/tfprint.Po
+	-rm -f ./$(DEPDIR)/tfswap.Po
 	-rm -f ./$(DEPDIR)/timer.Plo
 	-rm -f ./$(DEPDIR)/trace.Plo
 	-rm -f ./$(DEPDIR)/transact.Plo
@@ -3371,6 +3405,8 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/tapesplt.Po
 	-rm -f ./$(DEPDIR)/tcpip.Plo
 	-rm -f ./$(DEPDIR)/tcpnje.Plo
+	-rm -f ./$(DEPDIR)/tfprint.Po
+	-rm -f ./$(DEPDIR)/tfswap.Po
 	-rm -f ./$(DEPDIR)/timer.Plo
 	-rm -f ./$(DEPDIR)/trace.Plo
 	-rm -f ./$(DEPDIR)/transact.Plo
