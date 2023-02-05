@@ -1096,6 +1096,10 @@ int configure_cpu( int target_cpu )
         while (!IS_CPU_ONLINE( target_cpu ))
             wait_condition( &sysblk.cpucond, &sysblk.intlock );
 
+        /* Now wait for it to reach its STOPPED state */
+        while (sysblk.regs[ target_cpu ]->cpustate != CPUSTATE_STOPPED)
+            wait_condition( &sysblk.cpucond, &sysblk.intlock );
+
         if (arecpu)
             sysblk.regs[ ourcpu ]->intwait = false;
 

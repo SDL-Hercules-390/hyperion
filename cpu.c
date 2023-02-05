@@ -1753,6 +1753,9 @@ cpustate_stopping:
         regs->opinterv = 0;
         regs->cpustate = CPUSTATE_STOPPED;
 
+        /* Signal that the cpu is now stopped */
+        signal_condition( &sysblk.cpucond );
+
         /* Thread exit (note - intlock still held) */
         if (!regs->configured)
             longjmp(regs->exitjmp, SIE_NO_INTERCEPT);
