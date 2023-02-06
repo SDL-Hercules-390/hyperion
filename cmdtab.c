@@ -2,6 +2,7 @@
 /*              (C) Copyright "Fish" (David B. Trout), 2002-2012     */
 /*              (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2013-2023                             */
 /*              Route all Hercules configuration statements          */
 /*              and panel commands to the appropriate functions      */
 /*                                                                   */

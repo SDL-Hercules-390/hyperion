@@ -1,5 +1,5 @@
 /* CONFIG.C     (C) Copyright Jan Jaeger, 2000-2012                  */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2023                             */
 /*              Device and Storage configuration functions           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

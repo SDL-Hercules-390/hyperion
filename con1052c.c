@@ -1,4 +1,5 @@
 /* CON1052.C    (c)Copyright Jan Jaeger, 2004-2012                   */
+/*              (C) and others 2013-2023                             */
 /*              Emulated Console Printer Keyboard on Hercules HMC    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

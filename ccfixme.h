@@ -1,4 +1,5 @@
 /* ccfixme.h (C) Copyright "Fish" (David B. Trout), 2011             */
+/*           (C) and others 2013-2023                                */
 /*                                                                   */
 /*             Released under "The Q Public License Version 1"       */
 /*             (http://www.hercules-390.org/herclic.html)            */

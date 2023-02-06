@@ -1,5 +1,6 @@
 /* ASSIST.C     (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
+/*              (C) and others 2013-2023                             */
 /*              ESA/390 MVS Assist Routines                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
