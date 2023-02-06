@@ -771,8 +771,10 @@ het_read( HETB *hetb, void *sbuf )
     unsigned long slen;
     unsigned long tlen;
 
+#if defined( HET_BZIP2 )
     unsigned int bz_slen;
     unsigned int bz_tlen;
+#endif
 
     int flags1, flags2;
     char *tbuf;
@@ -1269,7 +1271,9 @@ het_write( HETB *hetb, const void *sbuf, int slen )
 
     unsigned long tlen;
 
+#if defined( HET_BZIP2 )
     unsigned int bz_tlen;
+#endif
 
     char *tbuf = NULL;
 #if defined( HAVE_ZLIB ) || defined( HET_BZIP2 )
