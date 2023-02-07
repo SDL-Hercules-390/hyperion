@@ -77,22 +77,22 @@
                                 \
   "To enter a system control program (i.e. guest operating system)\n"           \
   "priority command on the Hercules console, simply prefix the command\n"       \
-  "with an exclamation point '!'.\n"
+  "with an '!' exclamation point.\n"
 
 #define reply_cmd_desc          "SCP reply"
 #define reply_cmd_help          \
                                 \
   "To reply to a system control program (i.e. guest operating system)\n"        \
-  "prompt that gets issued to the Hercules console, prefix the reply\n"         \
-  "with a period.\n"
+  "prompt that gets issued to the Hercules console, simply prefix the\n"        \
+  "reply with a '.' period.\n"
 
 #define supp_reply_cmd_desc     "SCP suppressed reply"
 #define supp_reply_cmd_help     \
                                 \
   "To reply to a system control program (i.e. guest operating system)\n"        \
   "prompt that gets issued to the Hercules console without echoing it\n"        \
-  "the console (such as when entering a password), prefix the reply\n"          \
-  "with a '\\' backslash.\n"
+  "to the console (such as when entering a password), simply prefix the\n"      \
+  "reply with a '\\' backslash.\n"
 
 #define hash_cmd_desc           "Silent comment"
 #define star_cmd_desc           "Loud comment"
