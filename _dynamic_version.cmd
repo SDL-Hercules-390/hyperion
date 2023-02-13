@@ -614,8 +614,7 @@
   %TRACE%.
 
   ::--------------------------------------------------------------
-  ::  Make it PAINFULLY CLEAR this is a *SOFTDEVLABS* version
-  ::  of 4.x Hyperion and not the original 4.0 Hyperion version,
+  ::  Make it clear this Hercules is NOT any of the other ones
   ::  by embedding "-SDL" into the "VERSION" string. Same idea
   ::  for "-DEV" indicating a development version.
   ::--------------------------------------------------------------

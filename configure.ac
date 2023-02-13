@@ -2507,7 +2507,7 @@ if test "$hc_cv_opt_capabilities" = "yes"; then
   fi
 fi
 
-hc_cv_opt_custom_build_str="** The SoftDevLabs version of Hercules **"
+hc_cv_opt_custom_build_str="** The SDL 4.x Hyperion version of Hercules **"
 
 AC_ARG_ENABLE( custom,
 

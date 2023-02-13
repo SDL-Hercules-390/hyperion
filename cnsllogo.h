@@ -107,7 +107,7 @@ static char *herclogo[]={
 "",
 "",
 "         The Hercules S/370, ESA/390 and z/Architecture Emulator",
-"                 Software Development Laboratories",
+"                          SDL 4.x Hyperion",
 "           _    _                            _",
 "          | |  | |                          (_)",
 "          | |__| | _   _  _ __    ___  _ __  _   ___   _ __",

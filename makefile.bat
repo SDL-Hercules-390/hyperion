@@ -2,7 +2,7 @@
 
   setlocal
 
-  set CUSTOM_BUILD_STRING="** The SoftDevLabs version of Hercules **"
+  set CUSTOM_BUILD_STRING="** The SDL 4.x Hyperion version of Hercules **"
 
   set "TRACE=if defined DEBUG echo"
   set "return=goto :EOF"
