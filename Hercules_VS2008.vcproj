@@ -3447,10 +3447,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\tests\cpu0off.core"
-						>
-					</File>
-					<File
 						RelativePath=".\tests\CUSE-01-basic.core"
 						>
 					</File>

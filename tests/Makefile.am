@@ -208,7 +208,6 @@ EXTRA_DIST =                    \
      CMPSC.tst                  \
      comments.txt               \
      cpsdr.txt                  \
-     cpu0off.core               \
      cr.tst                     \
      csst.txt                   \
      csxtr.assemble             \

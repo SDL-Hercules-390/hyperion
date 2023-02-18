@@ -1718,9 +1718,6 @@
     <None Include="tests\CLCLE-04-performance.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
-    <None Include="tests\cpu0off.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
     <None Include="tests\CUSE-01-basic.core">
       <Filter>Other Files\tests\core</Filter>
     </None>

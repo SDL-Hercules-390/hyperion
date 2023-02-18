@@ -930,8 +930,6 @@
     <None Include="tests\cmd-rv-4K-64.subxxx" />
     <None Include="tests\cmd-rv.xxx" />
     <None Include="tests\cr.tst" />
-    <None Include="tests\cpu0off.core" />
-    <None Include="tests\cpu0off.core" />
     <None Include="tests\CUSE-01-basic.asm" />
     <None Include="tests\CUSE-02-performance.asm" />
     <None Include="tests\CUSE-01-basic.core" />
