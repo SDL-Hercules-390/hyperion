@@ -1627,6 +1627,10 @@ do {                                                                  \
 
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
+
+/*-------------------------------------------------------------------*/
+/*                 Floating-point helper macros                      */
+/*-------------------------------------------------------------------*/
 #undef HFPREG_CHECK
 #undef HFPREG2_CHECK
 #undef HFPODD_CHECK
@@ -1635,164 +1639,263 @@ do {                                                                  \
 #undef FPREX
 
 #if defined( FEATURE_BASIC_FP_EXTENSIONS )
-#if defined( _FEATURE_SIE )
+
+  #if defined( _FEATURE_SIE )
 
     /* Program check if BFP instruction is executed when AFP control is zero */
-#define BFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
-            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
+    #define BFPINST_CHECK(_regs)                                                \
+                                                                                \
+        if (0                                                                   \
+            || !((_regs)->CR(0) & CR0_AFP)                                      \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+        )                                                                       \
+        {                                                                       \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION;                                 \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );          \
         }
+
 
     /* Program check if DFP instruction is executed when AFP control is zero */
-#define DFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
-            (_regs)->dxc = DXC_DFP_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
+    #define DFPINST_CHECK(_regs)                                                \
+                                                                                \
+        if (0                                                                   \
+            || !((_regs)->CR(0) & CR0_AFP)                                      \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+        )                                                                       \
+        {                                                                       \
+            (_regs)->dxc = DXC_DFP_INSTRUCTION;                                 \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );          \
         }
 
+
     /* Program check if r1 is not 0, 2, 4, or 6 */
-#define HFPREG_CHECK(_r, _regs) \
-    if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
-        if( (_r) & 9 ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+    #define HFPREG_CHECK(_r, _regs)                                             \
+                                                                                \
+        if (0                                                                   \
+            || !((_regs)->CR(0) & CR0_AFP)                                      \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+        )                                                                       \
+        {                                                                       \
+            if ((_r) & 9)                                                       \
+            {                                                                   \
+                (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+            }                                                                   \
+        }
+
 
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-#define HFPREG2_CHECK(_r1, _r2, _regs) \
-    if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
-        if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+    #define HFPREG2_CHECK(_r1, _r2, _regs)                                      \
+                                                                                \
+        if (0                                                                   \
+            || !((_regs)->CR(0) & CR0_AFP)                                      \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+        )                                                                       \
+        {                                                                       \
+            if (0                                                               \
+                || ((_r1) & 9)                                                  \
+                || ((_r2) & 9)                                                  \
+            )                                                                   \
+            {                                                                   \
+                (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+            }                                                                   \
+        }
+
 
     /* Program check if r1 is not 0 or 4 */
-#define HFPODD_CHECK(_r, _regs) \
-    if( (_r) & 2 ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
-    else if( !((_regs)->CR(0) & CR0_AFP) \
-               || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
-        if( (_r) & 9 ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+    #define HFPODD_CHECK(_r, _regs)                                             \
+                                                                                \
+        if ((_r) & 2)                                                           \
+        {                                                                       \
+            (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+        }                                                                       \
+        else if (0                                                              \
+            || !((_regs)->CR(0) & CR0_AFP)                                      \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+        )                                                                       \
+        {                                                                       \
+            if ((_r) & 9)                                                       \
+            {                                                                   \
+                (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+            }                                                                   \
+        }
+
 
     /* Program check if r1 and r2 are not 0 or 4 */
-#define HFPODD2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 2) || ((_r2) & 2) ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
-    else if( !((_regs)->CR(0) & CR0_AFP) \
-                || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
-        if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
-#else /* !defined( _FEATURE_SIE ) */
+    #define HFPODD2_CHECK(_r1, _r2, _regs)                                      \
+                                                                                \
+        if (0                                                                   \
+            || ((_r1) & 2)                                                      \
+            || ((_r2) & 2)                                                      \
+        )                                                                       \
+        {                                                                       \
+            (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+        }                                                                       \
+        else if (0                                                              \
+            || !((_regs)->CR(0) & CR0_AFP)                                      \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+        )                                                                       \
+        {                                                                       \
+            if (0                                                               \
+                || ((_r1) & 9)                                                  \
+                || ((_r2) & 9)                                                  \
+            )                                                                   \
+            {                                                                   \
+                (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+            }                                                                   \
+        }
+
+
+  #else /* !defined( _FEATURE_SIE ) */
+
 
     /* Program check if BFP instruction is executed when AFP control is zero */
-#define BFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) ) { \
-            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
+    #define BFPINST_CHECK(_regs)                                                \
+                                                                                \
+        if (!((_regs)->CR(0) & CR0_AFP))                                        \
+        {                                                                       \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION;                                 \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );          \
         }
+
 
     /* Program check if DFP instruction is executed when AFP control is zero */
-#define DFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) ) { \
-            (_regs)->dxc = DXC_DFP_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
+    #define DFPINST_CHECK(_regs)                                                \
+                                                                                \
+        if (!((_regs)->CR(0) & CR0_AFP))                                        \
+        {                                                                       \
+            (_regs)->dxc = DXC_DFP_INSTRUCTION;                                 \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );          \
         }
 
 
     /* Program check if r1 is not 0, 2, 4, or 6 */
-#define HFPREG_CHECK(_r, _regs) \
-    if( !((_regs)->CR(0) & CR0_AFP) ) { \
-        if( (_r) & 9 ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+    #define HFPREG_CHECK(_r, _regs)                                             \
+                                                                                \
+        if (!((_regs)->CR(0) & CR0_AFP))                                        \
+        {                                                                       \
+            if ((_r) & 9)                                                       \
+            {                                                                   \
+                (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+            }                                                                   \
+        }
+
 
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-#define HFPREG2_CHECK(_r1, _r2, _regs) \
-    if( !((_regs)->CR(0) & CR0_AFP) ) { \
-        if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+    #define HFPREG2_CHECK(_r1, _r2, _regs)                                      \
+                                                                                \
+        if (!((_regs)->CR(0) & CR0_AFP) )                                       \
+        {                                                                       \
+            if (0                                                               \
+                || ((_r1) & 9)                                                  \
+                || ((_r2) & 9)                                                  \
+            )                                                                   \
+            {                                                                   \
+                (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+            }                                                                   \
+        }
+
 
     /* Program check if r1 is not 0 or 4 */
-#define HFPODD_CHECK(_r, _regs) \
-    if( (_r) & 2 ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
-    else if( !((_regs)->CR(0) & CR0_AFP) ) { \
-        if( (_r) & 9 ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+    #define HFPODD_CHECK(_r, _regs)                                             \
+                                                                                \
+        if ((_r) & 2)                                                           \
+        {                                                                       \
+            (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+        }                                                                       \
+        else if (!((_regs)->CR(0) & CR0_AFP) )                                  \
+        {                                                                       \
+            if ((_r) & 9)                                                       \
+            {                                                                   \
+                (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+            }                                                                   \
+        }
+
 
     /* Program check if r1 and r2 are not 0 or 4 */
-#define HFPODD2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 2) || ((_r2) & 2) ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
-    else if( !((_regs)->CR(0) & CR0_AFP) ) { \
-        if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+    #define HFPODD2_CHECK(_r1, _r2, _regs)                                      \
+                                                                                \
+        if (0                                                                   \
+            || ((_r1) & 2)                                                      \
+            || ((_r2) & 2)                                                      \
+        )                                                                       \
+        {                                                                       \
+            (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+        }                                                                       \
+        else if (!((_regs)->CR(0) & CR0_AFP) )                                  \
+        {                                                                       \
+            if (0                                                               \
+                || ((_r1) & 9)                                                  \
+                || ((_r2) & 9)                                                  \
+            )                                                                   \
+            {                                                                   \
+                (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+            }                                                                   \
+        }
 
-#endif /* !defined( _FEATURE_SIE ) */
+
+  #endif /* !defined( _FEATURE_SIE ) */
 
 
-    /* Convert fpr to index */
-#define FPR2I(_r) \
-    ((_r) << 1)
+  #define FPR2I(_r)     ((_r) << 1)     /* Convert fpr to index */
+  #define FPREX              4          /* Offset of extended register */
 
-    /* Offset of extended register */
-#define FPREX 4
 
-#else /*!defined( FEATURE_BASIC_FP_EXTENSIONS )*/
+#else /* !defined( FEATURE_BASIC_FP_EXTENSIONS ) */
 
-    /* Program check if r1 is not 0, 2, 4, or 6 */
-#define HFPREG_CHECK(_r, _regs) \
-    if( (_r) & 9 ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
-    /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-#define HFPREG2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 9) || ((_r2) & 9) ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
+  /* Program check if r1 is not 0, 2, 4, or 6 */
+  #define HFPREG_CHECK(_r, _regs)                                               \
+                                                                                \
+    if ((_r) & 9)                                                               \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
-    /* Program check if r1 is not 0 or 4 */
-#define HFPODD_CHECK(_r, _regs) \
-    if( (_r) & 11 ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
-    /* Program check if r1 and r2 are not 0 or 4 */
-#define HFPODD2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 11) || ((_r2) & 11) ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
+  /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
+  #define HFPREG2_CHECK(_r1, _r2, _regs)                                        \
+                                                                                \
+    if (0                                                                       \
+        || ((_r1) & 9)                                                          \
+        || ((_r2) & 9)                                                          \
+    )                                                                           \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
-    /* Convert fpr to index */
-#define FPR2I(_r) \
-    (_r)
 
-    /* Offset of extended register */
-#define FPREX 2
+  /* Program check if r1 is not 0 or 4 */
+  #define HFPODD_CHECK(_r, _regs)                                               \
+                                                                                \
+    if ((_r) & 11)                                                              \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
-#endif /*!defined( FEATURE_BASIC_FP_EXTENSIONS )*/
+
+  /* Program check if r1 and r2 are not 0 or 4 */
+  #define HFPODD2_CHECK(_r1, _r2, _regs)                                        \
+                                                                                \
+    if (0                                                                       \
+        || ((_r1) & 11)                                                         \
+        || ((_r2) & 11)                                                         \
+    )                                                                           \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+  #define FPR2I(_r)         (_r)        /* Convert fpr to index */
+  #define FPREX               2         /* Offset of extended register */
+
+
+#endif /* !defined( FEATURE_BASIC_FP_EXTENSIONS ) */
+
+/*-------------------------------------------------------------------*/
+/*               (end floating-point helper macros)                  */
+/*-------------------------------------------------------------------*/
+
+
 
 #define TLBIX(_addr) (((VADR_L)(_addr) >> TLB_PAGESHIFT) & TLB_MASK)
 
@@ -1806,16 +1909,21 @@ do {                                                                  \
 
 #define MAIN_TO_ABS(_main)  ((U64)((BYTE*)(_main) - sysblk.mainstor))
 
-/* Perform invalidation after storage key update...
- *
- * If the REF or CHANGE bit is turned off for an absolute address,
- * then we need to invalidate any cached entries for that address
- * on *ALL* CPUs.
- *
- * FIXME: Synchronization, esp. for the CHANGE bit, should be
- * tighter than what is provided here.
- */
+
+/*-------------------------------------------------------------------*/
+/*        Perform invalidation after storage key update...           */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  If the REF or CHANGE bit is turned off for an absolute address,  */
+/*  then we need to invalidate any cached entries for that address   */
+/*  on *ALL* CPUs.                                                   */
+/*                                                                   */
+/*  FIXME: Synchronization, esp. for the CHANGE bit, should be       */
+/*  tighter than what is provided here.                              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
 #define STORKEY_INVALIDATE_LOCKED( _regs, _n )                          \
+                                                                        \
  do                                                                     \
  {                                                                      \
    BYTE* abs = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK);         \
