@@ -496,6 +496,10 @@
  #define    _FEATURE_BASIC_STORAGE_KEYS
 #endif
 
+#if defined( FEATURE_CMPSC )
+ #define    _FEATURE_CMPSC
+#endif
+
 #if defined( FEATURE_EXTENDED_STORAGE_KEYS )
  #define    _FEATURE_EXTENDED_STORAGE_KEYS
 #endif
