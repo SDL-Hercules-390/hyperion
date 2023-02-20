@@ -1,5 +1,5 @@
 /* FLOAT.C      (C) Copyright Peter Kuschnerus, 2000-2012            */
-/*              ESA/390 Hex Floatingpoint Instructions               */
+/*              ESA/390 Hex Floating-point Instructions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
