@@ -1790,12 +1790,12 @@ char cpustr[32] = "";
 
     if(regs->CR(0) & CR0_AFP)
         return(snprintf(buf,buflen,
-            "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
-            "%sFPR1=%8.8X%8.8X FPR3=%8.8X%8.8X\n"
-            "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
-            "%sFPR5=%8.8X%8.8X FPR7=%8.8X%8.8X\n"
-            "%sFPR8=%8.8X%8.8X FP10=%8.8X%8.8X\n"
-            "%sFPR9=%8.8X%8.8X FP11=%8.8X%8.8X\n"
+            "%sFP00=%8.8X%8.8X FP02=%8.8X%8.8X\n"
+            "%sFP01=%8.8X%8.8X FP03=%8.8X%8.8X\n"
+            "%sFP04=%8.8X%8.8X FP06=%8.8X%8.8X\n"
+            "%sFP05=%8.8X%8.8X FP07=%8.8X%8.8X\n"
+            "%sFP08=%8.8X%8.8X FP10=%8.8X%8.8X\n"
+            "%sFP09=%8.8X%8.8X FP11=%8.8X%8.8X\n"
             "%sFP12=%8.8X%8.8X FP14=%8.8X%8.8X\n"
             "%sFP13=%8.8X%8.8X FP15=%8.8X%8.8X\n"
             ,cpustr, regs->fpr[0],  regs->fpr[1],  regs->fpr[4],  regs->fpr[5]
@@ -1809,8 +1809,8 @@ char cpustr[32] = "";
         ));
     else
         return(snprintf(buf,buflen,
-            "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
-            "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
+            "%sFP00=%8.8X%8.8X FP02=%8.8X%8.8X\n"
+            "%sFP04=%8.8X%8.8X FP06=%8.8X%8.8X\n"
             ,cpustr, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
             ,cpustr, regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]
         ));
