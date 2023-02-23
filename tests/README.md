@@ -292,25 +292,26 @@ are case sensitive.  Using `*testcase` for example accomplishes nothing.
             not given then any subsequent '*Hmsg' directives will fail
             due to the stored message queue being empty.
 
-*Want       The expected r command output.  A string identifying the
+*Want       The expected 'r' command output.  A string identifying the
             comparison may be enclosed in double quotes before the
             compare data (e.g. `*Want "CRC-32" DF00E74C`)
 
-*Gpr        A previous gpr console command should have been issued to
-            display the general registers.  The specified register is
-            compared with the hexadecimal data specified after the
-            register number.  Specify a decimal register number with no
-            leading zero.  The comment "#address" may be specified to
-            notify the CMS test driver that the register contains a
-            storage address.
+*Gpr        A previous 'gpr' console command should have been issued
+            to display the general registers.  The specified register
+            is compared with the hexadecimal data specified after the
+            register number.  Specify a decimal register number with
+            no leading zero.  The comment "#address" may be specified
+            to notify the CMS test driver that the register contains
+            a storage address.
 
-*Cr         Same thing as *Gpr except for control registers.
+*Fpr        Same thing as *Gpr except for 'fpr' floating-point registers.
+*Cr         Same thing as *Gpr except for 'cr' control registers.
 
 *Key        Compare the specified key against the key displayed in the
-            previous r command.
+            previous 'r' command.
 
 *Prefix     Compare the specified value to the contents of the prefix
-            register displayed by a previous pr command.
+            register displayed by a previous 'pr' command.
 
 *Program    A program check is expected, for example to verify that a
             privileged operation causes an 0c2.  Since program checks
@@ -334,10 +335,9 @@ are case sensitive.  Using `*testcase` for example accomplishes nothing.
             The stored messages queue does not begin storing messages
             until the '*Compare' directive is first given.
 
+*Error      Synonym for *Hmsg.  Use if an error message is expected.
 *Info       Synonym for *Hmsg.  Use if an informational message is
             expected.
-
-*Error      Synonym for *Hmsg.  Use if an error message is expected.
 
 *Explain    Specify  the explanatory text to write when the next
             comparison fails.  You can specify as many *Explains as you

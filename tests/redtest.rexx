@@ -269,6 +269,7 @@ Select
    When msg = 'HHC01417I' Then Call HHC01417I   -- (startup)
    When msg = 'HHC01603I' Then Call HHC01603I   -- (command echo)
    When msg = 'HHC02269I' Then Call HHC02269I   -- (gp registers)
+   When msg = 'HHC02270I' Then Call HHC02270I   -- (fpr registers)
    When msg = 'HHC02271I' Then Call HHC02271I   -- (control regs)
    When msg = 'HHC02290I' Then Call HHC02290I   -- (real, absolute)
    When msg = 'HHC02291I' Then Call HHC02291I   -- (virtual)
@@ -550,6 +551,7 @@ Select
       When verb = '*Done'      Then call EndTest
       When verb = '*Want'      Then call DoWant
       When verb = '*Gpr'       Then call WantGPR
+      When verb = '*Fpr'       Then call WantFPR
       When verb = '*Cr'        Then call WantCR
       When verb = '*Key'       Then call WantKey
       When verb = '*Prefix'    Then call WantPrefix
@@ -731,6 +733,7 @@ pgmchk      = ''
 wantpgm     = ''
 prefix      = ''
 gpr.        = ''
+fpr.        = ''
 cr.         = ''
 xr.         = ''
 
@@ -770,6 +773,18 @@ WantGPR:
 Parse Upper Var rest r what '#' .
 Call OkayOrNot gpr.r = what, 'Gpr' r 'compare mismatch.',,
     'Want:' what, 'Got: ' gpr.r
+Return
+
+/*********************************************************************/
+/*                           WantFPR                                 */
+/*********************************************************************/
+/* Verify contents of a floating point register.                     */
+/*********************************************************************/
+
+WantFPR:
+Parse Upper Var rest r what '#' .
+Call OkayOrNot fpr.r = what, 'Fpr' r 'compare mismatch.',,
+    'Want:' what, 'Got: ' fpr.r
 Return
 
 /*********************************************************************/
@@ -859,6 +874,20 @@ End
 Return
 
 /*********************************************************************/
+/*                           HHC02270I                               */
+/*********************************************************************/
+HHC02270I:
+Call HHC022nnI 'Floating', 'FP', 'FP';
+/*
+    Copy stem variable to another stem variable the HARD way!
+    Doing a simple "foo. = bar." doesn't work with Regina!!!!
+*/
+Do i=0 to 15 by 1
+   fpr.i = xr.i
+End
+Return
+
+/*********************************************************************/
 /*                           HHC02271I                               */
 /*********************************************************************/
 HHC02271I:
@@ -902,6 +931,10 @@ Return
 /* HHC022nnI CP00: xx04=00000000 xx05=00000000 xx06=00000000 ...     */
 /* HHC022nnI CP00: xx08=00000000 xx09=00000000 xx10=00000000 ...     */
 /* HHC022nnI CP00: xx12=00000000 xx13=00000000 xx14=00000000 ...     */
+/*           --or--                                                  */
+/* HHC022nnI xxxxxxx registers                                       */
+/* HHC022nnI FP08=0000000000000000 FP10=0000000000000000             */
+/* HHC022nnI FP09=0000000000000000 FP11=0000000000000000             */
 /*********************************************************************/
 HHC022nnI:
 
