@@ -1631,268 +1631,392 @@ do {                                                                  \
 /*-------------------------------------------------------------------*/
 /*                 Floating-point helper macros                      */
 /*-------------------------------------------------------------------*/
+
+// Plain vanilla S/370 mode macros...
+
+#undef _370_HFPREG_CHECK
+#undef _370_HFPREG2_CHECK
+#undef _370_HFPODD_CHECK
+#undef _370_HFPODD2_CHECK
+
+/* Program check if r1 is not 0, 2, 4, or 6 */
+#define _370_HFPREG_CHECK(_r, _regs)                                        \
+                                                                            \
+  if ((_r) & 9)                                                             \
+      (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+/* Program check if r1 and r2 are not 0, 2, 4, or 6 */
+#define _370_HFPREG2_CHECK(_r1, _r2, _regs)                                 \
+                                                                            \
+  if (0                                                                     \
+      || ((_r1) & 9)                                                        \
+      || ((_r2) & 9)                                                        \
+  )                                                                         \
+      (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+/* Program check if r1 is not 0 or 4 */
+#define _370_HFPODD_CHECK(_r, _regs)                                        \
+                                                                            \
+  if ((_r) & 11)                                                            \
+      (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+/* Program check if r1 and r2 are not 0 or 4 */
+#define _370_HFPODD2_CHECK(_r1, _r2, _regs)                                 \
+                                                                            \
+  if (0                                                                     \
+      || ((_r1) & 11)                                                       \
+      || ((_r2) & 11)                                                       \
+  )                                                                         \
+      (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+// Macros for 390 or z/Arch mode, -OR for 370 mode
+// with HERC_370_EXTENSION *maybe* enabled or not...
+
 #undef HFPREG_CHECK
 #undef HFPREG2_CHECK
 #undef HFPODD_CHECK
 #undef HFPODD2_CHECK
-#undef FPR2I
-#undef FPREX
 
-#if defined( FEATURE_BASIC_FP_EXTENSIONS )
+#if !defined( FEATURE_BASIC_FP_EXTENSIONS )
+
+  // Plain vanilla S/370 mode macros...
+
+  #define HFPREG_CHECK(_r,_regs)        _370_HFPREG_CHECK((_r),(_regs))
+  #define HFPREG2_CHECK(_r1,_r2,_regs)  _370_HFPREG2_CHECK((_r1),(_r2),(_regs))
+  #define HFPODD_CHECK(_r,_regs)        _370_HFPODD_CHECK((_r),(_regs))
+  #define HFPODD2_CHECK(_r1,_r2,_regs)  _370_HFPODD2_CHECK((_r1),(_r2),(_regs))
+
+#else /* defined( FEATURE_BASIC_FP_EXTENSIONS ) */
 
   #if defined( _FEATURE_SIE )
 
-    /* Program check if BFP instruction is executed when AFP control is zero */
-    #define BFPINST_CHECK(_regs)                                                \
-                                                                                \
-        if (0                                                                   \
-            || !((_regs)->CR(0) & CR0_AFP)                                      \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
-        )                                                                       \
-        {                                                                       \
-            (_regs)->dxc = DXC_BFP_INSTRUCTION;                                 \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );          \
-        }
-
-
     /* Program check if DFP instruction is executed when AFP control is zero */
-    #define DFPINST_CHECK(_regs)                                                \
-                                                                                \
-        if (0                                                                   \
-            || !((_regs)->CR(0) & CR0_AFP)                                      \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
-        )                                                                       \
-        {                                                                       \
-            (_regs)->dxc = DXC_DFP_INSTRUCTION;                                 \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );          \
+    #define DFPINST_CHECK(_regs)                                                    \
+                                                                                    \
+        if (0                                                                       \
+            || !((_regs)->CR(0) & CR0_AFP)                                          \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))               \
+        )                                                                           \
+        {                                                                           \
+            (_regs)->dxc = DXC_DFP_INSTRUCTION;                                     \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );              \
         }
 
+    /* Program check if BFP instruction is executed when AFP control is zero */
+    #define BFPINST_CHECK(_regs)                                                    \
+                                                                                    \
+        if (0                                                                       \
+            || !((_regs)->CR(0) & CR0_AFP)                                          \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))               \
+        )                                                                           \
+        {                                                                           \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION;                                     \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );              \
+        }
 
     /* Program check if r1 is not 0, 2, 4, or 6 */
-    #define HFPREG_CHECK(_r, _regs)                                             \
-                                                                                \
-        if (0                                                                   \
-            || !((_regs)->CR(0) & CR0_AFP)                                      \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
-        )                                                                       \
-        {                                                                       \
-            if ((_r) & 9)                                                       \
-            {                                                                   \
-                (_regs)->dxc = DXC_AFP_REGISTER;                                \
-                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
-            }                                                                   \
+    #define HFPREG_CHECK(_r, _regs)                                                 \
+                                                                                    \
+        if (0                                                                       \
+            || !((_regs)->CR(0) & CR0_AFP)                                          \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))               \
+        )                                                                           \
+        {                                                                           \
+            if (1                                                                   \
+                && ARCH_370_IDX == sysblk.arch_mode                                 \
+                && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )       \
+            )                                                                       \
+            {                                                                       \
+                /* Normal 370 case: HERC_370_EXTENSION not enabled */               \
+                _370_HFPREG_CHECK((_r),(_regs));                                    \
+            }                                                                       \
+            else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */       \
+            {                                                                       \
+                if ((_r) & 9)                                                       \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
         }
-
 
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-    #define HFPREG2_CHECK(_r1, _r2, _regs)                                      \
-                                                                                \
-        if (0                                                                   \
-            || !((_regs)->CR(0) & CR0_AFP)                                      \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
-        )                                                                       \
-        {                                                                       \
-            if (0                                                               \
-                || ((_r1) & 9)                                                  \
-                || ((_r2) & 9)                                                  \
-            )                                                                   \
-            {                                                                   \
-                (_regs)->dxc = DXC_AFP_REGISTER;                                \
-                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
-            }                                                                   \
+    #define HFPREG2_CHECK(_r1, _r2, _regs)                                          \
+                                                                                    \
+        if (0                                                                       \
+            || !((_regs)->CR(0) & CR0_AFP)                                          \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))               \
+        )                                                                           \
+        {                                                                           \
+            if (1                                                                   \
+                && ARCH_370_IDX == sysblk.arch_mode                                 \
+                && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )       \
+            )                                                                       \
+            {                                                                       \
+                /* Normal 370 case: HERC_370_EXTENSION not enabled */               \
+                _370_HFPREG2_CHECK((_r1),(_r2),(_regs));                            \
+            }                                                                       \
+            else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */       \
+            {                                                                       \
+                if (0                                                               \
+                    || ((_r1) & 9)                                                  \
+                    || ((_r2) & 9)                                                  \
+                )                                                                   \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
         }
-
 
     /* Program check if r1 is not 0 or 4 */
-    #define HFPODD_CHECK(_r, _regs)                                             \
-                                                                                \
-        if ((_r) & 2)                                                           \
-        {                                                                       \
-            (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
-        }                                                                       \
-        else if (0                                                              \
-            || !((_regs)->CR(0) & CR0_AFP)                                      \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
-        )                                                                       \
-        {                                                                       \
-            if ((_r) & 9)                                                       \
-            {                                                                   \
-                (_regs)->dxc = DXC_AFP_REGISTER;                                \
-                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
-            }                                                                   \
+    #define HFPODD_CHECK(_r, _regs)                                                 \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPODD_CHECK((_r),(_regs));                                        \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if ((_r) & 2)                                                           \
+            {                                                                       \
+                (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+            }                                                                       \
+            else if (0                                                              \
+                || !((_regs)->CR(0) & CR0_AFP)                                      \
+                || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+            )                                                                       \
+            {                                                                       \
+                if ((_r) & 9)                                                       \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
         }
-
 
     /* Program check if r1 and r2 are not 0 or 4 */
-    #define HFPODD2_CHECK(_r1, _r2, _regs)                                      \
-                                                                                \
-        if (0                                                                   \
-            || ((_r1) & 2)                                                      \
-            || ((_r2) & 2)                                                      \
-        )                                                                       \
-        {                                                                       \
-            (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
-        }                                                                       \
-        else if (0                                                              \
-            || !((_regs)->CR(0) & CR0_AFP)                                      \
-            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
-        )                                                                       \
-        {                                                                       \
-            if (0                                                               \
-                || ((_r1) & 9)                                                  \
-                || ((_r2) & 9)                                                  \
-            )                                                                   \
-            {                                                                   \
-                (_regs)->dxc = DXC_AFP_REGISTER;                                \
-                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
-            }                                                                   \
+    #define HFPODD2_CHECK(_r1, _r2, _regs)                                          \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPODD2_CHECK((_r1),(_r2),(_regs));                                \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if (0                                                                   \
+                || ((_r1) & 2)                                                      \
+                || ((_r2) & 2)                                                      \
+            )                                                                       \
+            {                                                                       \
+                (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+            }                                                                       \
+            else if (0                                                              \
+                || !((_regs)->CR(0) & CR0_AFP)                                      \
+                || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+            )                                                                       \
+            {                                                                       \
+                if (0                                                               \
+                    || ((_r1) & 9)                                                  \
+                    || ((_r2) & 9)                                                  \
+                )                                                                   \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
         }
-
 
   #else /* !defined( _FEATURE_SIE ) */
 
+    /* Program check if DFP instruction is executed when AFP control is zero */
+    #define DFPINST_CHECK(_regs)                                                    \
+                                                                                    \
+        if (!((_regs)->CR(0) & CR0_AFP))                                            \
+        {                                                                           \
+            (_regs)->dxc = DXC_DFP_INSTRUCTION;                                     \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );              \
+        }
 
     /* Program check if BFP instruction is executed when AFP control is zero */
-    #define BFPINST_CHECK(_regs)                                                \
-                                                                                \
-        if (!((_regs)->CR(0) & CR0_AFP))                                        \
-        {                                                                       \
-            (_regs)->dxc = DXC_BFP_INSTRUCTION;                                 \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );          \
+    #define BFPINST_CHECK(_regs)                                                    \
+                                                                                    \
+        if (!((_regs)->CR(0) & CR0_AFP))                                            \
+        {                                                                           \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION;                                     \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );              \
         }
-
-
-    /* Program check if DFP instruction is executed when AFP control is zero */
-    #define DFPINST_CHECK(_regs)                                                \
-                                                                                \
-        if (!((_regs)->CR(0) & CR0_AFP))                                        \
-        {                                                                       \
-            (_regs)->dxc = DXC_DFP_INSTRUCTION;                                 \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );          \
-        }
-
 
     /* Program check if r1 is not 0, 2, 4, or 6 */
-    #define HFPREG_CHECK(_r, _regs)                                             \
-                                                                                \
-        if (!((_regs)->CR(0) & CR0_AFP))                                        \
-        {                                                                       \
-            if ((_r) & 9)                                                       \
-            {                                                                   \
-                (_regs)->dxc = DXC_AFP_REGISTER;                                \
-                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
-            }                                                                   \
+    #define HFPREG_CHECK(_r,_regs)                                                  \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPREG_CHECK((_r),(_regs));                                        \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if (!((_regs)->CR(0) & CR0_AFP))                                        \
+            {                                                                       \
+                if ((_r) & 9)                                                       \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
         }
-
 
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-    #define HFPREG2_CHECK(_r1, _r2, _regs)                                      \
-                                                                                \
-        if (!((_regs)->CR(0) & CR0_AFP) )                                       \
-        {                                                                       \
-            if (0                                                               \
-                || ((_r1) & 9)                                                  \
-                || ((_r2) & 9)                                                  \
-            )                                                                   \
-            {                                                                   \
-                (_regs)->dxc = DXC_AFP_REGISTER;                                \
-                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
-            }                                                                   \
+    #define HFPREG2_CHECK(_r1,_r2,_regs)                                            \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPREG2_CHECK((_r1),(_r2),(_regs));                                \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if (!((_regs)->CR(0) & CR0_AFP) )                                       \
+            {                                                                       \
+                if (0                                                               \
+                    || ((_r1) & 9)                                                  \
+                    || ((_r2) & 9)                                                  \
+                )                                                                   \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
         }
-
 
     /* Program check if r1 is not 0 or 4 */
-    #define HFPODD_CHECK(_r, _regs)                                             \
-                                                                                \
-        if ((_r) & 2)                                                           \
-        {                                                                       \
-            (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
-        }                                                                       \
-        else if (!((_regs)->CR(0) & CR0_AFP) )                                  \
-        {                                                                       \
-            if ((_r) & 9)                                                       \
-            {                                                                   \
-                (_regs)->dxc = DXC_AFP_REGISTER;                                \
-                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
-            }                                                                   \
+    #define HFPODD_CHECK(_r,_regs)                                                  \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPODD_CHECK((_r),(_regs));                                        \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if ((_r) & 2)                                                           \
+            {                                                                       \
+                (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+            }                                                                       \
+            else if (!((_regs)->CR(0) & CR0_AFP) )                                  \
+            {                                                                       \
+                if ((_r) & 9)                                                       \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
         }
-
 
     /* Program check if r1 and r2 are not 0 or 4 */
-    #define HFPODD2_CHECK(_r1, _r2, _regs)                                      \
-                                                                                \
-        if (0                                                                   \
-            || ((_r1) & 2)                                                      \
-            || ((_r2) & 2)                                                      \
-        )                                                                       \
-        {                                                                       \
-            (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
-        }                                                                       \
-        else if (!((_regs)->CR(0) & CR0_AFP) )                                  \
-        {                                                                       \
-            if (0                                                               \
-                || ((_r1) & 9)                                                  \
-                || ((_r2) & 9)                                                  \
-            )                                                                   \
-            {                                                                   \
-                (_regs)->dxc = DXC_AFP_REGISTER;                                \
-                (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
-            }                                                                   \
+    #define HFPODD2_CHECK(_r1,_r2,_regs)                                            \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPODD2_CHECK((_r1),(_r2),(_regs));                                \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if (0                                                                   \
+                || ((_r1) & 2)                                                      \
+                || ((_r2) & 2)                                                      \
+            )                                                                       \
+            {                                                                       \
+                (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+            }                                                                       \
+            else if (!((_regs)->CR(0) & CR0_AFP) )                                  \
+            {                                                                       \
+                if (0                                                               \
+                    || ((_r1) & 9)                                                  \
+                    || ((_r2) & 9)                                                  \
+                )                                                                   \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
         }
 
-
   #endif /* !defined( _FEATURE_SIE ) */
-
-
-  #define FPR2I(_r)     ((_r) << 1)     /* Convert fpr to index */
-  #define FPREX              4          /* Offset of extended register */
-
-
-#else /* !defined( FEATURE_BASIC_FP_EXTENSIONS ) */
-
-
-  /* Program check if r1 is not 0, 2, 4, or 6 */
-  #define HFPREG_CHECK(_r, _regs)                                               \
-                                                                                \
-    if ((_r) & 9)                                                               \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
-
-
-  /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-  #define HFPREG2_CHECK(_r1, _r2, _regs)                                        \
-                                                                                \
-    if (0                                                                       \
-        || ((_r1) & 9)                                                          \
-        || ((_r2) & 9)                                                          \
-    )                                                                           \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
-
-
-  /* Program check if r1 is not 0 or 4 */
-  #define HFPODD_CHECK(_r, _regs)                                               \
-                                                                                \
-    if ((_r) & 11)                                                              \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
-
-
-  /* Program check if r1 and r2 are not 0 or 4 */
-  #define HFPODD2_CHECK(_r1, _r2, _regs)                                        \
-                                                                                \
-    if (0                                                                       \
-        || ((_r1) & 11)                                                         \
-        || ((_r2) & 11)                                                         \
-    )                                                                           \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
-
-
-  #define FPR2I(_r)         (_r)        /* Convert fpr to index */
-  #define FPREX               2         /* Offset of extended register */
-
 
 #endif /* !defined( FEATURE_BASIC_FP_EXTENSIONS ) */
 
 /*-------------------------------------------------------------------*/
 /*               (end floating-point helper macros)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*        Special FPR2I/FPREX handling for HERC_370_EXTENSION        */
+/*-------------------------------------------------------------------*/
+#undef FPR2I
+#undef FPREX
+#if defined( FEATURE_BASIC_FP_EXTENSIONS )
+
+  // 390 or zArch -OR- 370 with the "FEATURE_370_EXTENSION" BUILD
+  // option #defined, which causes the "FEATURE_BASIC_FP_EXTENSIONS"
+  // BUILD to necessarily ALSO be #defined, forcing us to check if
+  // the "HERC_370_EXTENSION" facility is enabled or not.
+  //
+  // PLEASE NOTE that enabling the "HERC_370_EXTENSION" facility
+  // causes nonconformant/incorrect S/370 floating point behavior!
+
+  #define FPR2I(_r)     /* Convert fpr to index */                    \
+  ((0                                                                 \
+      || ARCH_370_IDX != sysblk.arch_mode                             \
+      || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
+  )                                                                   \
+  ? ((_r) << 1) : (_r))
+
+  #define FPREX         /* Offset of extended register */             \
+  ((0                                                                 \
+      || ARCH_370_IDX != sysblk.arch_mode                             \
+      || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
+  )                                                                   \
+  ? 4 : 2 )
+
+#else // !defined( FEATURE_BASIC_FP_EXTENSIONS )
+
+  // S/370 without the "FEATURE_370_EXTENSION" BUILD option defined,
+  // which causes the "FEATURE_BASIC_FP_EXTENSIONS" BUILD option to
+  // NOT be #defined, which provides normal S/370 behavior.
+    
+  #define FPR2I(_r)     (_r)        /* Convert fpr to index */
+  #define FPREX           2         /* Offset of extended register */
+
+#endif // defined( FEATURE_BASIC_FP_EXTENSIONS)
+/*-------------------------------------------------------------------*/
+/*     (end special fpr2i/fprex handling for herc_370_extension)     */
 /*-------------------------------------------------------------------*/
 
 
