@@ -964,6 +964,11 @@
     <None Include="tests\fix-page.list" />
     <None Include="tests\fix-page.tst" />
     <None Include="tests\fix-page.pdf" />
+    <None Include="tests\float.asm" />
+    <None Include="tests\float.core" />
+    <None Include="tests\float.list" />
+    <None Include="tests\float.tst" />
+    <None Include="tests\float.pdf" />
     <None Include="tests\csxtr.assemble" />
     <None Include="tests\csxtr.listing" />
     <None Include="tests\csxtr.tst" />

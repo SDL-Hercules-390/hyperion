@@ -1799,6 +1799,21 @@
     <None Include="tests\fix-page.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\float.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\float.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\float.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\float.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\float.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\PERZAD.core">
       <Filter>Other Files\tests\core</Filter>
     </None>

@@ -3475,6 +3475,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\float.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\mhi.core"
 						>
 					</File>
@@ -4526,6 +4530,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\float.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\hetbsf.tst"
 							>
 						</File>
@@ -4970,6 +4978,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\float.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\mhi.asm"
 							>
 						</File>
@@ -5390,6 +5402,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\fix-page.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\float.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\float.pdf"
 								>
 							</File>
 							<File
