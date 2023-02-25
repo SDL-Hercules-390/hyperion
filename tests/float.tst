@@ -144,6 +144,15 @@ fpr
 *Done
 *
 *
+* -----------------------------------------------------------
+* Clean up  (370 extension facility is disabled by default!)
+* -----------------------------------------------------------
+*
+sysreset
+sysclear
+FACILITY DISABLE HERC_370_EXTENSION
+*
+*
 *
 * -----------------------------------------------------------
 *Testcase HFP Floating Point (z/Arch, no AFP)
