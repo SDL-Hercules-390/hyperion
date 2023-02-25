@@ -1,6 +1,6 @@
  TITLE '                  VERY Simple Basic HFP Floating Point Tests'
 ***********************************************************************
-*                          FLOAT
+*                            FLOAT
 ***********************************************************************
 *
 *   This program performs a few EXTREMELY simple Floating Point
@@ -13,30 +13,51 @@
 *   at the time, there was some concern as to whether floating point
 *   instructions were being executed properly (GitHub Issue #546).
 *
+*   UPDATE: This test has now been updated to also support running
+*   in z/Arcitecture mode as well, since z/Arcitecture also supports
+*   HFP instructions.
+*
 ***********************************************************************
-                                                                SPACE 6
+                                                                SPACE 2
 ***********************************************************************
 *                          LOW CORE
 ***********************************************************************
-                                                                SPACE 4
+                                                                SPACE 2
 TEST     START 0
          USING TEST,0                 Use absolute addressing
-                                                                SPACE 3
+                                                                SPACE 2
+         PRINT DATA
+                                                                SPACE
          ORG   TEST+X'00'             S/370 Restart new PSW
-         DC    XL4'00000000'          S/370 Restart new PSW
-         DC    A(BEGIN)               S/370 Restart new PSW
+         DC    XL4'00000000',A(BEGIN)
                                                                 SPACE 2
          ORG   TEST+X'68'             S/370 Program new PSW
-         DC    XL4'00020000'          S/370 Program new PSW
-         DC    A(X'DEAD')             S/370 Program new PSW
+         DC    XL4'00020000',A(X'DEAD')
+                                                                SPACE 2
+         ORG   TEST+X'1A0'            z Restart New PSW
+         DC    0D'0',X'0000000180000000',AD(BEGINZ)
+                                                                SPACE 2
+         ORG   TEST+X'1D0'            z Program New PSW
+         DC    0D'0',X'0002000180000000',AD(X'DEAD')
+                                                                SPACE
+         PRINT NODATA
                                                                 EJECT
 ***********************************************************************
 *                          MAINLINE
 ***********************************************************************
                                                                 SPACE
          ORG   TEST+X'200'            Start of test program
-BEGIN    DS    0H
-                                                                SPACE 2
+                                                                SPACE 3
+BEGIN    MVI   RUNMODE,MODE370        370 mode
+         BAL   R15,DOTESTS
+         B     SUCCESS
+                                                                SPACE 3
+BEGINZ   MVI   RUNMODE,ZMODE          z/Architecture mode
+         BAL   R15,DOTESTS
+         B     SUCCESS
+                                                                SPACE 4
+DOTESTS  DS    0H                     Perform all tests...
+                                                                SPACE
          BAL   R14,TEST1
          BAL   R14,TEST2
          BAL   R14,TEST3
@@ -47,17 +68,39 @@ BEGIN    DS    0H
          MVI   TESTNUM,0              No test has failed
          MVI   SUBTEST,0              No sub-test has failed either
                                                                 SPACE
-SUCCESS  LPSW  GOODPSW                Load  SUCCESS disabled wait PSW
-GOODPSW  DC    0D'0',XL4'00020000'    S/370 SUCCESS disabled wait PSW
-         DC    A(0)                   S/370 SUCCESS disabled wait PSW
-                                                                SPACE 4
-BADCC    LPSW  BADCCPSW               Load  FAILURE disabled wait PSW
-BADCCPSW DC    0D'0',XL4'00020000'    S/370 FAILURE disabled wait PSW
-         DC    A(X'BADCC')            S/370 FAILURE disabled wait PSW
+         BR    R15                    Return to caller
+                                                                EJECT
+***********************************************************************
+*                         END OF JOB
+***********************************************************************
+                                                                SPACE 2
+SUCCESS  CLI   RUNMODE,MODE370
+         BNE   ZSUCCESS
+         LPSW  OKPSW
+                                                                SPACE 2
+BADCC    CLI   RUNMODE,MODE370
+         BNE   ZBADCC
+         LPSW  CCPSW
+                                                                SPACE 2
+BADGOT   CLI   RUNMODE,MODE370
+         BNE   ZBADGOT
+         LPSW  GOTPSW
+                                                                SPACE 3
+ZSUCCESS LPSWE ZOKPSW
+ZBADCC   LPSWE ZCCPSW
+ZBADGOT  LPSWE ZGOTPSW
+                                                                SPACE 6
+         PRINT DATA
                                                                 SPACE
-BADGOT   LPSW  FAILPSW                Load  FAILURE disabled wait PSW
-FAILPSW  DC    0D'0',XL4'00020000'    S/370 FAILURE disabled wait PSW
-         DC    A(X'BADBAD')           S/370 FAILURE disabled wait PSW
+OKPSW    DC    0D'0',XL4'00020000',A(0)
+CCPSW    DC    0D'0',XL4'00020000',A(X'BADCC')
+GOTPSW   DC    0D'0',XL4'00020000',A(X'BADBAD')
+                                                                SPACE 3
+ZOKPSW   DC    0D'0',XL8'0002000180000000',AD(0)
+ZCCPSW   DC    0D'0',XL8'0002000180000000',AD(X'BADCC')
+ZGOTPSW  DC    0D'0',XL8'0002000180000000',AD(X'BADBAD')
+                                                                SPACE
+         PRINT NODATA
                                                                 EJECT
 ***********************************************************************
 *                TEST 1:  AE/AD  (Add Normalized)
@@ -335,6 +378,10 @@ TEST6    MVI   TESTNUM,X'F6'
                                                                 SPACE
          LTORG ,                        Literals Pool
                                                                 SPACE 2
+RUNMODE  DC    C' '                     Run mode
+MODE370  EQU   C'3'                     370 run mode
+ZMODE    EQU   C'Z'                     z/Architecture run mode
+                                                                SPACE 2
          DC    0D'0'
 T1_FPR6  DC    XL8'C3 08 21 00 00 00 00 00'
 T1_STRG  DC    XL8'41 12 34 56 00 00 00 00'
@@ -369,16 +416,20 @@ T3_FPR6X DC    XL8'3F 12 34 56 78 9A BC 00'
 T3_NUMX  EQU   (*-T3_FPR6X)/8
                                                                 EJECT
          PRINT DATA
+                                                                SPACE
 T4_A     DC    XL4'C3 082100',XL4'43 001234',XL4'C2 72522F'
 T4_B     DC    XL4'42 101010',XL4'45 111111',XL4'3D F0F0F0'
 T4_C     DC    XL4'48 30000F',XL4'41 400000',XL4'47 C0003C'
 T4_D     DC    XL4'48 30000F',XL4'41 200000',XL4'48 180007'
 T4_E     DC    XL4'48 180007',XL4'41 200000',XL4'47 C00038'
+                                                                SPACE
 T4_NUMT  EQU   (*-T4_A)/(3*4)
 T4_GOT   DC    XL4'00'
+                                                                SPACE
          PRINT NODATA
-         DC    0D'0'    (alignment)
-                                                                SPACE 2
+                                                                SPACE 3
+         DC    0D'0'            (alignment)
+                                                                SPACE 4
 T5_FPR2  DC    XL8'48 30 00 00 00 00 00 0F'
 T5_GOT   DC    XL8'00'
 T5_WANT  DC    XL8'48 18 00 00 00 00 00 07'
@@ -388,6 +439,10 @@ T6_FPR2  DC    XL8'DA 200000 20000020'
 T6_GOT   DC    XL8'00'
 T6_WANT  DC    XL8'4C C0C0C1 81818241'
                                                                 SPACE 3
+***********************************************************************
+*                      Test Flags
+***********************************************************************
+                                                                SPACE
          ORG   TEST+X'600'              Test flags
                                                                 SPACE
 TESTNUM  DC    X'00'                    Test number that failed
