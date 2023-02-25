@@ -1197,6 +1197,59 @@ void ARCH_DEP( display_guest_inst )( REGS* regs, BYTE* inst )
 }
 
 /*-------------------------------------------------------------------*/
+/*               Display floating point registers                    */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( display_fregs )( REGS* regs, char* buf, int buflen, char* hdr )
+{
+char cpustr[32] = "";
+
+    if (sysblk.cpus>1)
+        MSGBUF( cpustr, "%s%s%02X: ", hdr, PTYPSTR( regs->cpuad ), regs->cpuad );
+    else
+        MSGBUF( cpustr, "%s", hdr );
+
+    if (regs->CR(0) & CR0_AFP)
+    {
+        return snprintf( buf, buflen,
+
+            "%sFP00=%8.8X%8.8X FP08=%8.8X%8.8X\n"
+            "%sFP01=%8.8X%8.8X FP09=%8.8X%8.8X\n"
+            "%sFP02=%8.8X%8.8X FP10=%8.8X%8.8X\n"
+            "%sFP03=%8.8X%8.8X FP11=%8.8X%8.8X\n"
+            "%sFP04=%8.8X%8.8X FP12=%8.8X%8.8X\n"
+            "%sFP05=%8.8X%8.8X FP13=%8.8X%8.8X\n"
+            "%sFP06=%8.8X%8.8X FP14=%8.8X%8.8X\n"
+            "%sFP07=%8.8X%8.8X FP15=%8.8X%8.8X\n"
+
+            ,cpustr, regs->fpr[FPR2I(0)], regs->fpr[FPR2I(0)+1], regs->fpr[FPR2I( 8)], regs->fpr[FPR2I( 8)+1]
+            ,cpustr, regs->fpr[FPR2I(1)], regs->fpr[FPR2I(1)+1], regs->fpr[FPR2I( 9)], regs->fpr[FPR2I( 9)+1]
+            ,cpustr, regs->fpr[FPR2I(2)], regs->fpr[FPR2I(2)+1], regs->fpr[FPR2I(10)], regs->fpr[FPR2I(10)+1]
+            ,cpustr, regs->fpr[FPR2I(3)], regs->fpr[FPR2I(3)+1], regs->fpr[FPR2I(11)], regs->fpr[FPR2I(11)+1]
+            ,cpustr, regs->fpr[FPR2I(4)], regs->fpr[FPR2I(4)+1], regs->fpr[FPR2I(12)], regs->fpr[FPR2I(12)+1]
+            ,cpustr, regs->fpr[FPR2I(5)], regs->fpr[FPR2I(5)+1], regs->fpr[FPR2I(13)], regs->fpr[FPR2I(13)+1]
+            ,cpustr, regs->fpr[FPR2I(6)], regs->fpr[FPR2I(6)+1], regs->fpr[FPR2I(14)], regs->fpr[FPR2I(14)+1]
+            ,cpustr, regs->fpr[FPR2I(7)], regs->fpr[FPR2I(7)+1], regs->fpr[FPR2I(15)], regs->fpr[FPR2I(15)+1]
+        );
+    }
+    else
+    {
+        return snprintf( buf, buflen,
+
+            "%sFP00=%8.8X%8.8X\n"
+            "%sFP02=%8.8X%8.8X\n"
+            "%sFP04=%8.8X%8.8X\n"
+            "%sFP06=%8.8X%8.8X\n"
+
+            ,cpustr, regs->fpr[FPR2I(0)], regs->fpr[FPR2I(0)+1]
+            ,cpustr, regs->fpr[FPR2I(2)], regs->fpr[FPR2I(2)+1]
+            ,cpustr, regs->fpr[FPR2I(4)], regs->fpr[FPR2I(4)+1]
+            ,cpustr, regs->fpr[FPR2I(6)], regs->fpr[FPR2I(6)+1]
+        );
+    }
+
+} /* end function display_fregs */
+
+/*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
 
@@ -1779,43 +1832,27 @@ int display_aregs (REGS *regs, char *buf, int buflen, char *hdr)
 /*-------------------------------------------------------------------*/
 /*               Display floating point registers                    */
 /*-------------------------------------------------------------------*/
-int display_fregs (REGS *regs, char *buf, int buflen, char *hdr)
+int display_fregs( REGS* regs, char* buf, int buflen, char* hdr )
 {
-char cpustr[32] = "";
-
-    if(sysblk.cpus>1)
-        MSGBUF(cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
-    else
-        MSGBUF(cpustr, "%s", hdr);
-
-    if(regs->CR(0) & CR0_AFP)
-        return(snprintf(buf,buflen,
-            "%sFP00=%8.8X%8.8X FP02=%8.8X%8.8X\n"
-            "%sFP01=%8.8X%8.8X FP03=%8.8X%8.8X\n"
-            "%sFP04=%8.8X%8.8X FP06=%8.8X%8.8X\n"
-            "%sFP05=%8.8X%8.8X FP07=%8.8X%8.8X\n"
-            "%sFP08=%8.8X%8.8X FP10=%8.8X%8.8X\n"
-            "%sFP09=%8.8X%8.8X FP11=%8.8X%8.8X\n"
-            "%sFP12=%8.8X%8.8X FP14=%8.8X%8.8X\n"
-            "%sFP13=%8.8X%8.8X FP15=%8.8X%8.8X\n"
-            ,cpustr, regs->fpr[0],  regs->fpr[1],  regs->fpr[4],  regs->fpr[5]
-            ,cpustr, regs->fpr[2],  regs->fpr[3],  regs->fpr[6],  regs->fpr[7]
-            ,cpustr, regs->fpr[8],  regs->fpr[9],  regs->fpr[12], regs->fpr[13]
-            ,cpustr, regs->fpr[10], regs->fpr[11], regs->fpr[14], regs->fpr[15]
-            ,cpustr, regs->fpr[16], regs->fpr[17], regs->fpr[20], regs->fpr[21]
-            ,cpustr, regs->fpr[18], regs->fpr[19], regs->fpr[22], regs->fpr[23]
-            ,cpustr, regs->fpr[24], regs->fpr[25], regs->fpr[28], regs->fpr[29]
-            ,cpustr, regs->fpr[26], regs->fpr[27], regs->fpr[30], regs->fpr[31]
-        ));
-    else
-        return(snprintf(buf,buflen,
-            "%sFP00=%8.8X%8.8X FP02=%8.8X%8.8X\n"
-            "%sFP04=%8.8X%8.8X FP06=%8.8X%8.8X\n"
-            ,cpustr, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
-            ,cpustr, regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]
-        ));
-
-} /* end function display_fregs */
+    int rc;
+    switch (sysblk.arch_mode)
+    {
+#if defined(_370)
+        case ARCH_370_IDX:
+            rc = s370_display_fregs( regs, buf, buflen, hdr ); break;
+#endif
+#if defined(_390)
+        case ARCH_390_IDX:
+            rc = s390_display_fregs( regs, buf, buflen, hdr ); break;
+#endif
+#if defined(_900)
+        case ARCH_900_IDX:
+            rc = z900_display_fregs( regs, buf, buflen, hdr ); break;
+#endif
+        default: CRASH();
+    }
+    return rc;
+}
 
 
 /*-------------------------------------------------------------------*/
