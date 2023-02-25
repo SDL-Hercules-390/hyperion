@@ -2024,7 +2024,10 @@ DLL_EXPORT U64 do_make_psw64( PSW* psw, BYTE real_ilc, int arch /*370/390/900*/,
             b23 = psw->intcode;
 
             b4 = 0
-                 | (real_ilc     << 6)
+                 | ((real_ilc >> 1) << 6)   // CAREFUL! Herc's ilc value
+                                            // is the ACTUAL length (2,
+                                            // 4 or 6), but the value in
+                                            // the PSW is either 1,2,3!)
                  | (psw->cc << 4)
                  |  psw->progmask
                  ;
