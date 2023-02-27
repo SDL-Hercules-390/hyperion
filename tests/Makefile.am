@@ -14,6 +14,11 @@ EXTRA_DIST =                    \
      awsbsf.tst                 \
      axtr.txt                   \
      BEAR.txt                   \
+     bc-ilc.asm                 \
+     bc-ilc.core                \
+     bc-ilc.list                \
+     bc-ilc.tst                 \
+     bc-ilc.pdf                 \
      bfp-001-divtoint.asm       \
      bfp-001-divtoint.core      \
      bfp-001-divtoint.list      \

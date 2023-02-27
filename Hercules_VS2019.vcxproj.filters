@@ -1634,6 +1634,21 @@
     <None Include="tests\3211.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\bc-ilc.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bc-ilc.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bc-ilc.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bc-ilc.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bc-ilc.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\bfp-001-divtoint.core">
       <Filter>Other Files\tests\core</Filter>
     </None>

@@ -1,0 +1,295 @@
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *                            BC ILC
+                                                     4 ***********************************************************************
+                                                     5 *
+                                                     6 *   This program verifies proper handling of the 370 BC mode PSW
+                                                     7 *   ILC field. The ILC field in a 370 BC mode PSW is in the high-
+                                                     8 *   order 2 bits of the second word of the PSW (bits 32 and 33).
+                                                     9 *   An ILC value of 00 (binary) indicates an ILC of 0 (zero). An
+                                                    10 *   ILC value of 01 indicates an ILC of 2 (two). An ILC value of
+                                                    11 *   10 indicates an ILC of 4 (four). An ILC value of 11 indicates
+                                                    12 *   an ILC of 6 (six).
+                                                    13 *
+                                                    14 *   The technique used is to force a program check interruption
+                                                    15 *   on instructions of different lengths (a 2 byte instruction,
+                                                    16 *   a 4 byte instruction and a 6 byte instruction), copying the
+                                                    17 *   high-order byte of the second word of the resulting Program
+                                                    18 *   Old PSW from the Program Check, and then comparing it with
+                                                    19 *   our expected value. For ILC 0, we use a LPSW of an invalid
+                                                    20 *   EC mode PSW, thus causing an early Specification exception.
+                                                    21 *   For ILCs 2, 4 and 6 we use a CLCL, CLI and MVC instruction
+                                                    22 *   with a base register value causing an Addressing Exception.
+                                                    23 *
+                                                    24 ***********************************************************************
+
+
+
+                                                    26 ***********************************************************************
+                                                    27 *                          LOW CORE
+                                                    28 ***********************************************************************
+
+
+                              00000000  00000303    30 TEST     START 0
+00000000                      00000000              31          USING TEST,0                 Use absolute addressing
+
+
+00000000                      00000000  00000000    33          ORG   TEST+X'00'             S/370 Restart New PSW
+00000000  00000000 00000200                         34          DC    XL4'00000000',A(BEGIN)
+
+
+00000008                      00000008  00000028    36          ORG   TEST+X'28'             S/370 Program Old PSW
+00000028  00000000 00000000                         37 PGMOLD   DC    XL4'00000000',A(0)
+
+
+00000030                      00000030  00000068    39          ORG   TEST+X'68'             S/370 Program New PSW
+00000068  00000000 00000000                         40 PGMNEW   DC    XL4'00000000',A(0)
+
+
+00000070                      00000070  00000090    42          ORG   TEST+X'90'             S/370 TEA (*not* 390/zArch DXC!)
+00000090  00000000                                  43 TEA_DXC  DC    XL4'00000000'
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    45 ***********************************************************************
+                                                    46 *                          MAINLINE
+                                                    47 ***********************************************************************
+
+00000094                      00000094  00000200    49          ORG   TEST+X'200'            Start of test program
+
+00000200  45E0 0228                     00000228    51 BEGIN    BAL   R14,ILC0TEST
+00000204  45E0 024A                     0000024A    52          BAL   R14,ILC2TEST
+00000208  45E0 0270                     00000270    53          BAL   R14,ILC4TEST
+0000020C  45E0 0296                     00000296    54          BAL   R14,ILC6TEST
+
+00000210  8200 0218                     00000218    56          LPSW  GOODPSW
+00000214  8200 0220                     00000220    57 FAIL     LPSW  FAILPSW
+
+
+00000218  00020000 00000000                         59 GOODPSW  DC    0D'0',XL4'00020000',A(0)
+00000220  00020000 00000BAD                         60 FAILPSW  DC    0D'0',XL4'00020000',A(X'BAD')
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    62 ***********************************************************************
+                                                    63 *                       ILC 0
+                                                    64 ***********************************************************************
+
+00000228  4100 0234                     00000234    66 ILC0TEST LA    R0,ILC0CONT            R0 --> continue
+0000022C  BE07 006D                     0000006D    67          STCM  R0,B'0111',PGMNEW+4+1  Program New --> continue
+
+00000230  8200 02C8                     000002C8    69          LPSW  BADECPSW               Specification Exception!
+
+00000234  D200 0300 002C      00000300  0000002C    71 ILC0CONT MVC   ILC0ACT,PGMOLD+4       Save Program Old ILC byte
+0000023A  94C0 0300                     00000300    72          NI    ILC0ACT,B'11000000'    Discard unwanted bits
+0000023E  D500 0300 02D0      00000300  000002D0    73          CLC   ILC0ACT,ILC0EXP        Actual = Expected?
+00000244  078E                                      74          BER   R14                    Yes, return
+00000246  8200 0220                     00000220    75          LPSW  FAILPSW                No?! FAIL!
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    77 ***********************************************************************
+                                                    78 *                       ILC 2
+                                                    79 ***********************************************************************
+
+0000024A  4100 025A                     0000025A    81 ILC2TEST LA    R0,ILC2CONT            R0 --> continue
+0000024E  BE07 006D                     0000006D    82          STCM  R0,B'0111',PGMNEW+4+1  Program New --> continue
+00000252  58C0 02CC                     000002CC    83          L     R12,MAXADDR            R12 <== X'00FFFFFF'
+00000256  18DC                                      84          LR    R13,R12                R13 <== X'00FFFFFF'
+
+00000258  0FCC                                      86          CLCL  R12,R12                Addressing Exception!
+
+0000025A  D200 0301 002C      00000301  0000002C    88 ILC2CONT MVC   ILC2ACT,PGMOLD+4       Save Program Old ILC byte
+00000260  94C0 0301                     00000301    89          NI    ILC2ACT,B'11000000'    Discard unwanted bits
+00000264  D500 0301 02D1      00000301  000002D1    90          CLC   ILC2ACT,ILC2EXP        Actual = Expected?
+0000026A  078E                                      91          BER   R14                    Yes, return
+0000026C  8200 0220                     00000220    92          LPSW  FAILPSW                No?! FAIL!
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    94 ***********************************************************************
+                                                    95 *                       ILC 4
+                                                    96 ***********************************************************************
+
+00000270  4100 0280                     00000280    98 ILC4TEST LA    R0,ILC4CONT            R0 --> continue
+00000274  BE07 006D                     0000006D    99          STCM  R0,B'0111',PGMNEW+4+1  Program New --> continue
+00000278  58C0 02CC                     000002CC   100          L     R12,MAXADDR            R12 <== X'00FFFFFF'
+
+0000027C  9500 C000                     00000000   102          CLI   0(R12),0               Addressing Exception!
+
+00000280  D200 0302 002C      00000302  0000002C   104 ILC4CONT MVC   ILC4ACT,PGMOLD+4       Save Program Old ILC byte
+00000286  94C0 0302                     00000302   105          NI    ILC4ACT,B'11000000'    Discard unwanted bits
+0000028A  D500 0302 02D2      00000302  000002D2   106          CLC   ILC4ACT,ILC4EXP        Actual = Expected?
+00000290  078E                                     107          BER   R14                    Yes, return
+00000292  8200 0220                     00000220   108          LPSW  FAILPSW                No?! FAIL!
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   110 ***********************************************************************
+                                                   111 *                       ILC 6
+                                                   112 ***********************************************************************
+
+00000296  4100 02A8                     000002A8   114 ILC6TEST LA    R0,ILC6CONT            R0 --> continue
+0000029A  BE07 006D                     0000006D   115          STCM  R0,B'0111',PGMNEW+4+1  Program New --> continue
+0000029E  58C0 02CC                     000002CC   116          L     R12,MAXADDR            R12 <== X'00FFFFFF'
+
+000002A2  F922 02CD 02CD      000002CD  000002CD   118          CP    BADPACK,BADPACK        Data Exception!
+
+000002A8  D200 0303 002C      00000303  0000002C   120 ILC6CONT MVC   ILC6ACT,PGMOLD+4       Save Program Old ILC byte
+000002AE  94C0 0303                     00000303   121          NI    ILC6ACT,B'11000000'    Discard unwanted bits
+000002B2  D500 0303 02D3      00000303  000002D3   122          CLC   ILC6ACT,ILC6EXP        Actual = Expected?
+000002B8  4770 0214                     00000214   123          BNE   FAIL                   No?! FAIL!
+000002BC  5570 0090                     00000090   124          CL    R7,TEA_DXC             TEA should still be zero
+000002C0  078E                                     125          BER   R14                    Yes, return
+000002C2  8200 0220                     00000220   126          LPSW  FAILPSW                No?! FAIL!
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   128 ***********************************************************************
+                                                   129 *                      Working storage
+                                                   130 ***********************************************************************
+
+
+
+                                                   132 *        Invalid EC mode PSW...  (bits 24-31 s/b zero but they're not!)
+
+000002C8  000800FF 00FFFFFF                        134 BADECPSW DC    0D'0',XL4'000800FF',XL4'00FFFFFF'
+
+
+
+                                                   136 *        Invalid storage address...
+
+                              000002CC  00000004   138 MAXADDR  EQU   BADECPSW+4,4
+
+
+
+                                                   140 *        Invalid packed data...
+
+                              000002CD  00000003   142 BADPACK  EQU   MAXADDR+1,3
+
+
+
+                                                   144 *        Expected values...
+
+000002D0  00                                       146 ILC0EXP  DC    X'00'
+000002D1  40                                       147 ILC2EXP  DC    X'40'
+000002D2  80                                       148 ILC4EXP  DC    X'80'
+000002D3  C0                                       149 ILC6EXP  DC    X'C0'
+
+
+
+                                                   151 *        Actual values...
+000002D4                      000002D4  00000300   152          ORG   TEST+X'300'
+
+00000300  FF                                       154 ILC0ACT  DC    X'FF'
+00000301  FF                                       155 ILC2ACT  DC    X'FF'
+00000302  FF                                       156 ILC4ACT  DC    X'FF'
+00000303  FF                                       157 ILC6ACT  DC    X'FF'
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   159 ***********************************************************************
+                                                   160 *                      Register equates
+                                                   161 ***********************************************************************
+
+                              00000000  00000001   163 R0       EQU   0
+                              00000001  00000001   164 R1       EQU   1
+                              00000002  00000001   165 R2       EQU   2
+                              00000003  00000001   166 R3       EQU   3
+                              00000004  00000001   167 R4       EQU   4
+                              00000005  00000001   168 R5       EQU   5
+                              00000006  00000001   169 R6       EQU   6
+                              00000007  00000001   170 R7       EQU   7
+                              00000008  00000001   171 R8       EQU   8
+                              00000009  00000001   172 R9       EQU   9
+                              0000000A  00000001   173 R10      EQU   10
+                              0000000B  00000001   174 R11      EQU   11
+                              0000000C  00000001   175 R12      EQU   12
+                              0000000D  00000001   176 R13      EQU   13
+                              0000000E  00000001   177 R14      EQU   14
+                              0000000F  00000001   178 R15      EQU   15
+
+
+                                        00000000   180          END   TEST
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page     9
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BADECPSW            D    0002C8       8   134  138   69
+BADPACK             U    0002CD       3   142  118
+BEGIN               I    000200       4    51   34
+FAIL                I    000214       4    57  123
+FAILPSW             D    000220       8    60   57   75   92  108  126
+GOODPSW             D    000218       8    59   56
+ILC0ACT             X    000300       1   154   71   72   73
+ILC0CONT            I    000234       6    71   66
+ILC0EXP             X    0002D0       1   146   73
+ILC0TEST            I    000228       4    66   51
+ILC2ACT             X    000301       1   155   88   89   90
+ILC2CONT            I    00025A       6    88   81
+ILC2EXP             X    0002D1       1   147   90
+ILC2TEST            I    00024A       4    81   52
+ILC4ACT             X    000302       1   156  104  105  106
+ILC4CONT            I    000280       6   104   98
+ILC4EXP             X    0002D2       1   148  106
+ILC4TEST            I    000270       4    98   53
+ILC6ACT             X    000303       1   157  120  121  122
+ILC6CONT            I    0002A8       6   120  114
+ILC6EXP             X    0002D3       1   149  122
+ILC6TEST            I    000296       4   114   54
+IMAGE               1    000000     772     0
+MAXADDR             U    0002CC       4   138  142   83  100  116
+PGMNEW              X    000068       4    40   67   82   99  115
+PGMOLD              X    000028       4    37   71   88  104  120
+R0                  U    000000       1   163   66   67   81   82   98   99  114  115
+R1                  U    000001       1   164
+R10                 U    00000A       1   173
+R11                 U    00000B       1   174
+R12                 U    00000C       1   175   83   84   86  100  102  116
+R13                 U    00000D       1   176   84
+R14                 U    00000E       1   177   51   52   53   54   74   91  107  125
+R15                 U    00000F       1   178
+R2                  U    000002       1   165
+R3                  U    000003       1   166
+R4                  U    000004       1   167
+R5                  U    000005       1   168
+R6                  U    000006       1   169
+R7                  U    000007       1   170  124
+R8                  U    000008       1   171
+R9                  U    000009       1   172
+TEA_DXC             X    000090       4    43  124
+TEST                J    000000     772    30   33   36   39   42   49  152   31  180
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page    10
+
+MACRO  DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page    11
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE    772  000-303  000-303
+  Region            772  000-303  000-303
+    CSECT  TEST     772  000-303  000-303
+ASMA Ver. 0.2.1                    370 BC mode PSW ILC Handling                                     26 Feb 2023 20:58:45  Page    12
+
+   STMT                                         FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\bc-ilc\bc-ilc.asm
+
+
+** NO ERRORS FOUND **
+
+
