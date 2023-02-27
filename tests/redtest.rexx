@@ -1032,7 +1032,8 @@ Return
 HHC00809I:
 waitseen = TRUE
 Parse Var rest  'wait state' psw1 psw2
-waitok = (psw2 = 0) | (RIGHT( psw2, 4 ) = 'DEAD' & pgmchk \= '' & pgmchk = wantpgm)
+/* Rightmost 6 for BC mode compatibility */
+waitok = (RIGHT( psw2, 6 ) = 0) | (RIGHT( psw2, 4 ) = 'DEAD' & pgmchk \= '' & pgmchk = wantpgm)
 Call OkayOrNot waitok, 'Received unexpected wait state: ' psw1 psw2
 Return
 
