@@ -3311,6 +3311,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\bc-ilc.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\bfp-001-divtoint.core"
 						>
 					</File>
@@ -4342,6 +4346,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\bc-ilc.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\bfp-001-divtoint.tst"
 							>
 						</File>
@@ -4810,6 +4818,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\bc-ilc.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\bfp-001-divtoint.asm"
 							>
 						</File>
@@ -5086,6 +5098,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\3211.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bc-ilc.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bc-ilc.pdf"
 								>
 							</File>
 							<File
