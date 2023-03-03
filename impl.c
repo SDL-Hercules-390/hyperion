@@ -835,14 +835,6 @@ int     rc;
     init_progname( argc, argv );
     init_sysblk_version_str_arrays( NULL );
 
-    if (argc < 2)
-    {
-        display_version( stdout, 0, NULL );
-        arghelp();
-        WRMSG( HHC02343, "S", 1 );
-        return 1;
-    }
-
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
 
@@ -1147,9 +1139,15 @@ int     rc;
     set_thread_priority_id( sysblk.loggertid, sysblk.srvprio );
     LOG_TID_BEGIN( sysblk.loggertid, LOGGER_THREAD_NAME );
 
+    /* Always show version right away */
+    display_version( stdout, 0, NULL );
+
     /* Process command-line arguments. Exit if any serious errors. */
     if ((rc = process_args( argc, argv )) != 0)
     {
+        /* Show them our command line arguments */
+        arghelp();
+
         // "Terminating due to %d argument errors"
         WRMSG( HHC02343, "S", rc );
         delayed_exit( rc );
@@ -1853,8 +1851,8 @@ error:
     /* Terminate if invalid arguments were detected */
     if (arg_error)
     {
-        /* Show them all of our command-line arguments... */
-        arghelp();
+        /* Do nothing. Caller will call "arghelp" to
+          show them our command-line arguments... */
     }
     else /* Check for config and rc file, but don't open */
     {
