@@ -1010,6 +1010,9 @@
     <None Include="readme\README.HRAF.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="readme\README.MAKETAPE.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.MINGW.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>

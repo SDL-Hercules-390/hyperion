@@ -68,6 +68,7 @@ to our **bug report tracking system** by adding/creating a new
 [Hercules REXX Support](readme/README.REXX.md)  
 [Hercules Tape Support Enhancements SPE/Fixes](readme/README.TAPE.md)  
 [Host Resource Access Facility](readme/README.HRAF.md)  
+[MAKETAPE Create .AWS Tape File from Data Utility](readme/README.MAKETAPE.md)  
 [Runtest Low-level Test Cases](tests/README.md)  
 [S/370 Backport of select ESA/390 and z/Architecture instructions](readme/README.S37X.md)  
 [TCPNJE Support](readme/README.TCPNJE.md)  

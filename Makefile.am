@@ -865,6 +865,7 @@ EXTRA_DIST =                  \
   readme/README.HQA.md            \
   readme/README.HRAF.md           \
   readme/README.ISSUES.md         \
+  readme/README.MAKETAPE.md       \
   readme/README.MINGW.md          \
   readme/README.MSVC.md           \
   readme/README.NETWORKING.md     \

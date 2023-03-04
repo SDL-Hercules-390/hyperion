@@ -2143,6 +2143,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\readme\README.MAKETAPE.md"
+						>
+					</File>
+					<File
 						RelativePath=".\readme\README.MINGW.md"
 						>
 					</File>
