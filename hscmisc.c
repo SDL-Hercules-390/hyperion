@@ -1834,7 +1834,7 @@ int display_aregs (REGS *regs, char *buf, int buflen, char *hdr)
 /*-------------------------------------------------------------------*/
 int display_fregs( REGS* regs, char* buf, int buflen, char* hdr )
 {
-    int rc;
+    int rc = 0;
     switch (sysblk.arch_mode)
     {
 #if defined(_370)
