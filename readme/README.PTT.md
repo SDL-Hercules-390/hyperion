@@ -184,7 +184,7 @@ The **fifth** is a description of the event (i.e. the `m` message argument of yo
     PTT_XXX( "foobar!", val1, val2, val3 );
 ```
 
-The **last 3 columns** are of course is the formatted display of the `d1`, `d2` and `rc` helper macro values, being whatever debug information you wish to place into your trace record.
+The **last 3 columns** are of course the formatted display of the `d1`, `d2` and `rc` helper macro values, being whatever debug information you wish to place into your trace record.
 
 
 ## Future Direction
