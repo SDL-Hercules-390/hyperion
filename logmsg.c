@@ -367,7 +367,7 @@ static void flog_write( int panel, FILE* f, const char* msg )
 /*                     writemsg functions                            */
 /*-------------------------------------------------------------------*/
 /* The writemsg function is the primary 'WRMSG' macro function that  */
-/* is responsible for formatting messages wich, once formatted, are  */
+/* is responsible for formatting messages which, once formatted, are */
 /* then handed off to the flog_write function to be eventually shown */
 /* to the user or captured or both, according to the 'panel' option. */
 /*                                                                   */
