@@ -20976,7 +20976,7 @@ fi
   fi
 fi
 
-hc_cv_opt_custom_build_str="** The SoftDevLabs version of Hercules **"
+hc_cv_opt_custom_build_str="** The SDL 4.x Hyperion version of Hercules **"
 
 # Check whether --enable-custom was given.
 if test "${enable_custom+set}" = set; then :
