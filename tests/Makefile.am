@@ -430,6 +430,7 @@ EXTRA_DIST =                    \
      pr.subtst                  \
      pr.tst                     \
      printer.txt                \
+     punch.txt                  \
      privop.asm                 \
      privop.core                \
      privop.list                \

@@ -988,7 +988,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01207 "%1d:%04X Card: file %s: card image exceeds maximum %d bytes"
 #define HHC01208 "%1d:%04X Card: filename is missing"
 #define HHC01209 "%1d:%04X Card: parameter %s in argument %d is invalid"
-//efine HHC01210 - HHC01249 (available)
+#define HHC01210 "%1d:%04X Card: option %s is incompatible"
+#define HHC01211 "%1d:%04X Card: client %s, IP %s disconnected from device %s"
+//efine HHC01212 - HHC01249 (available)
 
 // reserve 01250 - 01299 for Generic device messages
 #define HHC01250 "%1d:%04X %s: error in function %s: %s"

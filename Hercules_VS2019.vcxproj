@@ -1467,6 +1467,7 @@
     <Text Include="tests\mxtr.txt" />
     <Text Include="tests\popcnt.txt" />
     <Text Include="tests\printer.txt" />
+    <Text Include="tests\punch.txt" />
     <Text Include="tests\ptf.txt" />
     <Text Include="tests\res40002.txt" />
     <Text Include="tests\rnsbg.txt" />

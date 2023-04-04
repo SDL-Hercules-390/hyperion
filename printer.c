@@ -231,8 +231,7 @@ static BYTE write_buffer( DEVBLK* dev, const char* buf, int len, BYTE* unitstat 
 {
 int rc;
 
-    /* Write data to the printer file */
-    if (dev->bs)
+    if (dev->bs)    /* socket device? */
     {
         /* Write data to socket, check for error */
         if ((rc = write_socket( dev->fd, buf, len )) < len)
@@ -253,7 +252,7 @@ int rc;
             return *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
     }
-    else
+    else /* regular print file */
     {
         /* Write data to the printer file, check for error */
         if ((rc = write( dev->fd, buf, len )) < len)

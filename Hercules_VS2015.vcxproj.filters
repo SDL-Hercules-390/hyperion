@@ -3798,6 +3798,9 @@
     <Text Include="tests\printer.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
+    <Text Include="tests\punch.txt">
+      <Filter>Other Files\tests\scripts\txt</Filter>
+    </Text>
     <Text Include="tests\ptf.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>

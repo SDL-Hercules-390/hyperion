@@ -14,6 +14,7 @@
 #include "hercules.h"
 
 #include "devtype.h"
+#include "sockdev.h"
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -29,22 +30,156 @@ write_buffer (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
 
-    /* Write data to the output file */
-    rc = write (dev->fd, buf, len);
-
-    /* Equipment check if error writing to output file */
-    if (rc < len)
+    if (dev->bs)    /* socket device? */
     {
-        // "%1d:%04X %s: error in function %s: %s"
-        WRMSG( HHC01250, "E", LCSS_DEVNUM,
-               "Card", "write()", errno == 0 ? "incomplete"
-                                             : strerror( errno ));
-        dev->sense[0] = SENSE_EC;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        /* Write data to socket, check for error */
+        if ((rc = write_socket( dev->fd, buf, len )) < len)
+        {
+            /* Close the connection */
+            if (dev->fd != -1)
+            {
+                int fd = dev->fd;
+                dev->fd = -1;
+                close_socket( fd );
+                // "%1d:%04X Card: client %s, IP %s disconnected from device %s"
+                WRMSG( HHC01211, "I", LCSS_DEVNUM, dev->bs->clientname, dev->bs->clientip, dev->bs->spec );
+            }
+
+            /* Set unit check with intervention required */
+            dev->sense[0] = SENSE_IR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+    }
+    else
+    {
+        /* Write data to the output file */
+        rc = write (dev->fd, buf, len);
+
+        /* Equipment check if error writing to output file */
+        if (rc < len)
+        {
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", LCSS_DEVNUM,
+                   "Card", "write()", errno == 0 ? "incomplete"
+                                                 : strerror( errno ));
+            dev->sense[0] = SENSE_EC;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
     }
 
 } /* end function write_buffer */
+
+/*-------------------------------------------------------------------*/
+/* Thread to monitor the sockdev remote punch spooler connection     */
+/*-------------------------------------------------------------------*/
+static void* spthread (void* arg)
+{
+    DEVBLK* dev = (DEVBLK*) arg;
+    BYTE byte;
+    fd_set readset, errorset;
+    struct timeval tv;
+    int rc, fd = dev->fd;           // (save original fd)
+
+    /* Fix thread name */
+    {
+        char    thread_name[16];
+        MSGBUF( thread_name, "spthread %1d:%04X", LCSS_DEVNUM );
+        SET_THREAD_NAME( thread_name );
+    }
+
+    // Looooop...  until shutdown or disconnect...
+
+    // PROGRAMMING NOTE: we do our select specifying an immediate
+    // timeout to prevent our select from holding up (slowing down)
+    // the device thread (which does the actual writing of data to
+    // the client). The only purpose for our thread even existing
+    // is to detect a severed connection (i.e. to detect when the
+    // client disconnects)...
+
+    while ( !sysblk.shutdown && dev->fd == fd )
+    {
+        if (dev->busy)
+        {
+            SLEEP(3);
+            continue;
+        }
+
+        FD_ZERO( &readset );
+        FD_ZERO( &errorset );
+
+        FD_SET( fd, &readset );
+        FD_SET( fd, &errorset );
+
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+
+        rc = select( fd+1, &readset, NULL, &errorset, &tv );
+
+        if (rc < 0)
+            break;
+
+        if (rc == 0)
+        {
+            SLEEP(3);
+            continue;
+        }
+
+        if (FD_ISSET( fd, &errorset ))
+            break;
+
+        // Read and ignore any data they send us...
+        // Note: recv should complete immediately
+        // as we know data is waiting to be read.
+
+        ASSERT( FD_ISSET( fd, &readset ) );
+
+        rc = recv( fd, &byte, sizeof(byte), 0 );
+
+        if (rc <= 0)
+            break;
+    }
+
+    obtain_lock( &dev->lock );
+
+    // PROGRAMMING NOTE: the following tells us whether we detected
+    // the error or if the device thread already did. If the device
+    // thread detected it while we were sleeping (and subsequently
+    // closed the connection) then we don't need to do anything at
+    // all; just exit. If we were the ones that detected the error
+    // however, then we need to close the connection so the device
+    // thread can learn of it...
+
+    if (dev->fd == fd)
+    {
+        dev->fd = -1;
+        close_socket( fd );
+        // "%1d:%04X Card: client %s, IP %s disconnected from device %s"
+        WRMSG( HHC01211, "I", LCSS_DEVNUM, dev->bs->clientname, dev->bs->clientip, dev->bs->spec );
+    }
+
+    release_lock( &dev->lock );
+
+    return NULL;
+
+} /* end function spthread */
+
+/*-------------------------------------------------------------------*/
+/* Sockdev "OnConnection" callback function                          */
+/*-------------------------------------------------------------------*/
+static int onconnect_callback (DEVBLK* dev)
+{
+    TID tid;
+    int rc;
+
+    rc = create_thread( &tid, DETACHED, spthread, dev, "spthread" );
+    if (rc)
+    {
+        // "Error in function create_thread(): %s"
+        WRMSG( HHC00102, "E", strerror( rc ) );
+        return 0;
+    }
+    return 1;
+}
 
 // (forward reference)
 static int open_punch( DEVBLK* dev );
@@ -55,6 +190,7 @@ static int open_punch( DEVBLK* dev );
 static int cardpch_init_handler( DEVBLK* dev, int argc, char* argv[] )
 {
 int     i;                              /* Array subscript           */
+bool    sockdev = false;
 
     /* Close the existing file, if any */
     if (dev->fd >= 0)
@@ -158,13 +294,52 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
+        /* sockdev means the device file is actually
+           a connected socket instead of a disk file.
+           The file name is the socket_spec (host:port)
+           to listen for connections on.
+        */
+        if (strcasecmp( argv[i], "sockdev" ) == 0)
+        {
+            sockdev = true;
+            continue;
+        }
+
         // "%1d:%04X Card: parameter %s in argument %d is invalid"
         WRMSG( HHC01209, "E", LCSS_DEVNUM, argv[i], i+1 );
         return -1;
+
+    } /* end for (i=1; i < argc; i++) Process the driver arguments */
+
+    /* Check for incompatible options... */
+
+    if (sockdev && dev->crlf)
+    {
+        // "%1d:%04X Card: option %s is incompatible"
+        WRMSG( HHC01210, "E", LCSS_DEVNUM,
+            "sockdev/crlf" );
+        return -1;
+    }
+
+    if (sockdev && dev->append)
+    {
+        // "%1d:%04X Card: option %s is incompatible"
+        WRMSG( HHC01210, "E", LCSS_DEVNUM,
+            "sockdev/noclear" );
+        return -1;
+    }
+
+    /* If socket device, create a listening socket
+       to accept connections on.
+    */
+    if (sockdev && !bind_device_ex( dev,
+        dev->filename, onconnect_callback, dev ))
+    {
+        return -1;  // (error msg already issued)
     }
 
     /* Open the device file right away */
-    if (open_punch( dev ) != 0)
+    if (!sockdev && open_punch( dev ) != 0)
         return -1;  // (error msg already issued)
 
     return 0;
@@ -180,9 +355,10 @@ static void cardpch_query_device (DEVBLK *dev, char **devclass,
 
     BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, devclass, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s%s%s IO[%"PRIu64"]",
+    snprintf (buffer, buflen, "%s%s%s%s%s%s IO[%"PRIu64"]",
                 filename,
                 (dev->ascii                ? " ascii"     : " ebcdic"),
+                (dev->bs                   ? " sockdev"   : ""),
                 ((dev->ascii && dev->crlf) ? " crlf"      : ""),
                 (dev->append               ? " append"    : ""),
                 (dev->stopdev              ? " (stopped)" : ""),
@@ -198,6 +374,10 @@ static int open_punch( DEVBLK* dev )
 int             rc;                     /* Return code               */
 int             open_flags;             /* File open flags           */
 off_t           filesize = 0;           /* file size for ftruncate   */
+
+    /* Socket punch? */
+    if (dev->bs)
+        return (dev->fd < 0 ? -1 : 0);
 
     open_flags = O_WRONLY | O_CREAT /* | O_SYNC */ |  O_BINARY;
 
@@ -237,7 +417,18 @@ static int cardpch_close_device( DEVBLK* dev )
 {
     /* Close the device file */
     if (dev->fd >= 0)
-        close( dev->fd );
+    {
+        /* Socket punch? */
+        if (dev->bs)
+        {
+            close_socket( dev->fd );
+            // "%1d:%04X Card: client %s, IP %s disconnected from device %s"
+            WRMSG( HHC01211, "I", LCSS_DEVNUM, dev->bs->clientname, dev->bs->clientip, dev->bs->spec );
+        }
+        else
+            close( dev->fd );
+    }
+
     dev->fd = -1;
     dev->stopdev = FALSE;
 

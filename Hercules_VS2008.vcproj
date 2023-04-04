@@ -4134,6 +4134,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\punch.txt"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\res40002.txt"
 							>
 						</File>

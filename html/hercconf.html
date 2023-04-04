@@ -2789,6 +2789,20 @@ a real System/390.  The configuration file is an ASCII text file.
         option instead.
         <p>
 
+    <dt><code>sockdev</code>
+    <dd><p>
+        Indicates the card punch is a socket device wherein the
+        filename is actually a socket specification instead of a
+        device filename.  When used, there must only be one filename
+        specified in the form: <code>port</code> or <code>host:port</code>.
+        The device then accepts
+        remote connections on the given TCP/IP port,
+        and writes data to the socket instead of to a device
+        file. This allows automatic remote spooling of card punch
+        data. The sockdev option is mutually exclusive with the
+        <code>crlf</code> and <code>append</code> options.
+        <p>
+
     </dl>
     <p>
 
