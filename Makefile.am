@@ -314,7 +314,7 @@ hdt3505_la_SOURCES  = cardrdr.c sockdev.c
 hdt3505_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3505_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-hdt3525_la_SOURCES  = cardpch.c
+hdt3525_la_SOURCES  = cardpch.c sockdev.c
 hdt3525_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3525_la_LIBADD   = $(DYNMOD_LD_ADD)
 

@@ -237,7 +237,7 @@ hdt3505_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(hdt3505_la_LDFLAGS) $(LDFLAGS) -o $@
 hdt3525_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_hdt3525_la_OBJECTS = cardpch.lo
+am_hdt3525_la_OBJECTS = cardpch.lo sockdev.lo
 hdt3525_la_OBJECTS = $(am_hdt3525_la_OBJECTS)
 hdt3525_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -1236,7 +1236,7 @@ hdt3420_la_LIBADD = $(DYNMOD_LD_ADD) libherct.la
 hdt3505_la_SOURCES = cardrdr.c sockdev.c
 hdt3505_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt3505_la_LIBADD = $(DYNMOD_LD_ADD)
-hdt3525_la_SOURCES = cardpch.c
+hdt3525_la_SOURCES = cardpch.c sockdev.c
 hdt3525_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt3525_la_LIBADD = $(DYNMOD_LD_ADD)
 hdtqeth_la_SOURCES = qeth.c mpc.c resolve.c tuntap.c
