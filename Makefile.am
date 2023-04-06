@@ -72,6 +72,12 @@ else
 HERCIFC =
 endif
 
+if BUILD_HERCUTUN
+  HERCUTUN = hercutun
+else
+  HERCUTUN=
+endif
+
 HERCLIN = herclin
 
 fthreads_SRC  = fthreads.c
@@ -133,7 +139,8 @@ dyndev_SRC =  \
   tapedev.c   \
   tuntap.c    \
   dummydev.c  \
-  zfcp.c
+  zfcp.c      \
+  utun.c
 
 #-----------------------------------------------------------------
 # -module         :  create a dlopen'able module
@@ -252,10 +259,17 @@ bin_PROGRAMS = \
   tfprint      \
   tfswap       \
   vmfplc2      \
-  $(HERCIFC)   \
   $(HERCLIN)
 
-EXTRA_PROGRAMS = hercifc
+if BUILD_HERCUTUN
+bin_PROGRAMS += hercutun
+endif
+
+if BUILD_HERCIFC
+bin_PROGRAMS += hercifc
+endif
+
+#EXTRA_PROGRAMS = hercifc
 
 #----------------------------------------------------------------------------
 # For each module:
@@ -298,7 +312,7 @@ hdt3705_la_SOURCES  = comm3705.c
 hdt3705_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3705_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c tuntap.c netsupp.c
+hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c tuntap.c netsupp.c utun.c
 hdt3088_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3088_la_LIBADD   = $(DYNMOD_LD_ADD)
 
@@ -590,6 +604,12 @@ if BUILD_HERCIFC
 hercifc_SOURCES    = hercifc.c
 hercifc_LDADD      = $(tools_ADDLIBS)
 hercifc_LDFLAGS    = $(tools_LD_FLAGS)
+endif
+
+if BUILD_HERCUTUN
+hercutun_SOURCES      = hercutun.c
+hercutun_LDADD        = $(tools_ADDLIBS)
+hercutun_LDFLAGS      = $(tools_LD_FLAGS)
 endif
 
 dasdinit_SOURCES   = dasdinit.c
@@ -1041,6 +1061,7 @@ noinst_HEADERS =          \
   hdl.h                   \
   herc_getopt.h           \
   hercifc.h               \
+  hercutun.h              \
   hercules.h              \
   hercwind.h              \
   herror.h                \
@@ -1100,6 +1121,7 @@ noinst_HEADERS =          \
   tt32api.h               \
   tt32if.h                \
   tuntap.h                \
+  utun.h                  \
   version.h               \
   vmd250.h                \
   vstore.h                \
@@ -1186,6 +1208,15 @@ endif
 	chmod 0750 $(DESTDIR)$(bindir)/hercifc
 	chmod +s   $(DESTDIR)$(bindir)/hercifc
 	rm                             hercifc
+endif
+if SETUID_HERCUTUN
+	chown root $(DESTDIR)$(bindir)/hercutun
+if HERCUTUN_GROUPSET
+	chgrp $(HERCUTUN_GROUPNAME) $(DESTDIR)$(bindir)/hercutun
+endif
+	chmod 0750 $(DESTDIR)$(bindir)/hercutun
+	chmod +s   $(DESTDIR)$(bindir)/hercutun
+	rm                             hercutun
 endif
 if OPTION_CAPABILITIES
 	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./hercules$(EXEEXT))

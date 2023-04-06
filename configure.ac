@@ -287,20 +287,33 @@ fi
 if test "$hc_cv_is_nix"        = "yes"; then
 
     hc_cv_build_hercifc=yes
+    hc_cv_use_hercifc=yes
+    hc_cv_build_hercutun=no
+    hc_cv_use_hercutun=no
+
     hc_cv_non_unique_gettimeofday=no
 
 elif test "$hc_cv_is_windows"  = "yes"; then
 
     hc_cv_build_hercifc=no
+    hc_cv_use_hercifc=no
+    hc_cv_build_hercutun=no
+    hc_cv_use_hercutun=no
     hc_cv_non_unique_gettimeofday=yes
 
 elif test "$hc_cv_is_apple"    = "yes"; then
 
     hc_cv_build_hercifc=yes
+    hc_cv_use_hercifc=yes
+    hc_cv_build_hercutun=yes
+    hc_cv_use_hercutun=yes
     hc_cv_non_unique_gettimeofday=no
 
 else
     hc_cv_build_hercifc=no
+    hc_cv_use_hercifc=no
+    hc_cv_build_hercutun=no
+    hc_cv_use_hercutun=no
     hc_cv_non_unique_gettimeofday=no
 fi
 
@@ -595,7 +608,12 @@ AH_TEMPLATE( [HAVE_U_INT],              [Define if your system uses u_int8_t, et
 AH_TEMPLATE( [OPTION_ENHANCED_CONFIG_INCLUDE], [Define to enable enhanced-mode 'include' file support in configuration file] )
 AH_TEMPLATE( [OPTION_HAO],              [Define to enable Hercules Automatic Operator feature] )
 AH_TEMPLATE( [HDL_USE_LIBTOOL],         [Define to cause dynamic loader to use libtool instead of dlopen] )
+
 AH_TEMPLATE( [BUILD_HERCIFC],           [Define if hercifc program is to be built] )
+AH_TEMPLATE( [USE_HERCIFC],             [Define if hercifc program is to be used] )
+AH_TEMPLATE( [BUILD_HERCUTUN],          [Define if hercutun program is to be built] )
+AH_TEMPLATE( [USE_HERCUTUN],            [Define if hercutun program is to be used] )
+
 AH_TEMPLATE( [WIN32],                   [Define when building under Win32 (MinGW or Cygwin)] )
 AH_TEMPLATE( [BUILD_APPLE_M1],          [Define when building for Apple Darwin M1 ARM] )
 AH_TEMPLATE( [OPTION_FTHREADS],         [Define to use included threads implementation (fthreads)] )
@@ -756,6 +774,10 @@ AC_CHECK_HEADERS( netinet/tcp.h,  [hc_cv_have_netinet_tcp_h=yes],  [hc_cv_have_n
     #ifdef HAVE_SYS_SOCKET_H
       #include <sys/socket.h>
     #endif
+] )
+AC_CHECK_HEADERS( net/if_utun.h,  [hc_cv_have_net_if_utun_h=yes],  [hc_cv_have_net_if_utun_h=no],
+[
+    #include <sys/types.h>
 ] )
 
 #------------------------------------------------------------------------------
@@ -2546,6 +2568,27 @@ else
     hc_cv_setuid_hercifc=no
 fi
 
+if test "$hc_cv_build_hercutun" = "yes"; then
+    AC_ARG_ENABLE( setuid-hercutun,
+        AC_HELP_STRING( [--enable-setuid-hercutun=yes|no|GROUPNAME],
+            [install hercutun as setuid root, and allow execution by users in group GROUPNAME]
+        ),
+        [
+            case "${enableval}" in
+            yes) hc_cv_opt_setuid_hercutun=yes                     ;;
+            no)  hc_cv_opt_setuid_hercutun=no                      ;;
+            *)   hc_cv_opt_setuid_hercutun=yes
+                 hc_cv_hercutun_groupname=${enableval}
+                 ;;
+            esac
+        ],
+        [hc_cv_opt_setuid_hercutun=no]
+    )
+    hc_cv_setuid_hercutun=$hc_cv_opt_setuid_hercutun
+else
+    hc_cv_setuid_hercutun=no
+fi
+
 #-----------------------------------------------------------------
 #  The handling of AC_ARG_ENABLE for "--enable-getoptwrapper"
 #  is defined within the 'HC_ARG_ENABLE_GETOPTWRAPPER' macro
@@ -2621,6 +2664,13 @@ if test "$hc_cv_build_hercifc" = "yes"; then
 
       AC_MSG_RESULT( [ERROR: Required header 'net/route_h' not found] )
       hc_error=yes
+   fi
+fi
+
+if test "$hc_cv_build_hercutun" = "yes"; then
+   if test "$hc_cv_have_net_if_utun_h" != "yes"; then
+       AC_MSG_RESULT( [ERROR: Required header 'net/if_utun.h' not found] )
+       hc_error=yes
    fi
 fi
 
@@ -3002,6 +3052,9 @@ test "$hc_cv_have_getsetuid"             != "yes"  &&  AC_DEFINE(NO_SETUID)
 test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
 test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
+test "$hc_cv_use_hercifc"                 = "yes"  &&  AC_DEFINE(USE_HERCIFC)
+test "$hc_cv_build_hercutun"              = "yes"  &&  AC_DEFINE(BUILD_HERCUTUN)
+test "$hc_cv_use_hercutun"                = "yes"  &&  AC_DEFINE(USE_HERCUTUN)
 test "$hc_cv_build_apple_m1"              = "yes"  &&  AC_DEFINE(BUILD_APPLE_M1)
 test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILITIES)
 test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(HAVE_OBJECT_REXX)
@@ -3127,14 +3180,22 @@ AC_CACHE_SAVE()
 # Note: Building of shared libraries is forced, and we force use of libtool too.
 
 AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] )
-AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
 AM_CONDITIONAL( OPTION_CAPABILITIES, [ test "$hc_cv_opt_capabilities" = "yes" ] )
+
+AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
 AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )
 AM_CONDITIONAL( HERCIFC_GROUPSET,    [ test "x$hc_cv_hercifc_groupname" != "x"] )
-
 if test "x$hc_cv_hercifc_groupname" != "x"; then
     HERCIFC_GROUPNAME=${hc_cv_hercifc_groupname}
     AC_SUBST(HERCIFC_GROUPNAME)
+fi
+
+AM_CONDITIONAL( BUILD_HERCUTUN,      [ test "$hc_cv_build_hercutun"   = "yes" ] )
+AM_CONDITIONAL( SETUID_HERCUTUN,     [ test "$hc_cv_setuid_hercutun"  = "yes" ] )
+AM_CONDITIONAL( HERCUTUN_GROUPSET,   [ test "x$hc_cv_hercutun_groupname" != "x"] )
+if test "x$hc_cv_hercutun_groupname" != "x"; then
+    HERCUTUN_GROUPNAME=${hc_cv_hercutun_groupname}
+    AC_SUBST(HERCUTUN_GROUPNAME)
 fi
 
 AM_CONDITIONAL( BUILD_APPLE_M1,      [ test "$hc_cv_build_apple_m1"   = "yes" ] )
