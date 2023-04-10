@@ -1483,7 +1483,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     STATEBK->f = 0;
 
     /* Set the interception code in the SIE block */
-    switch (icode < 0 ? icode : icode & 0xFF)
+    switch (icode < 0 ? icode : icode & 0x7F)
     {
        /* If host interrupt pending, then backup psw so that the SIE
           instruction gets re-executed again to re-enter SIE mode

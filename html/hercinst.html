@@ -225,7 +225,7 @@ with every new release, which contains important late-breaking information about
     sudo zypper install -y libcap-progs
     </code>
 
-    <li>Apple Darwin (macOS High Sierra, Mojave, Catalina, Big Sur) with Homebrew
+    <li>Apple Darwin (macOS High Sierra, Mojave, Catalina, Big Sur, etc.) with Homebrew
     <p><code>
         xcode-select --install<br>
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"<br>
@@ -233,6 +233,18 @@ with every new release, which contains important late-breaking information about
         brew install wget gsed<br>
         brew install cmake autoconf automake libtool<br>
         <!-- ( flex gawk m4 bzip2 zlib ) -->
+    </code>
+
+    <p><i>Note: So configure/make will find ltdl.h and libltdl:</i>
+    <p><code>
+        export CFLAGS="$CFLAGS -I$(find $(brew --cellar libtool) -type d -name "include" | sort -n | tail -n 1)"<br>
+        export LDFLAGS="$LDFLAGS -L$(find $(brew --cellar libtool) -type d -name "lib" | sort -n | tail -n 1)"
+    </code>
+
+    <p><i>And include these options to configure:</i>
+    <p><code>
+        --disable-getoptwrapper<br>
+        --without-included-ltdl
     </code>
 
     <li>Apple Darwin (macOS Big Sur) with MacPorts
