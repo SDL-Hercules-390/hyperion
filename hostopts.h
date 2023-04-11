@@ -291,7 +291,7 @@
 /*-------------------------------------------------------------------*/
 /* Hard-coded FreeBSD/NetBSD-specific features and options...        */
 /*-------------------------------------------------------------------*/
-#elif defined(__FreeBSD__) || defined( __NetBSD__ )
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 
 #define FREEBSD_OR_NETBSD
 

@@ -128,7 +128,11 @@ typedef struct hifr hifr;
 #else
   #define  hifr_flags      ifreq.ifr_ifru.ifru_flags
 #endif
+#if defined( __OpenBSD__ )
+  #define  hifr_mtu        ifreq.ifr_ifru.ifru_metric
+#else
   #define  hifr_mtu        ifreq.ifr_ifru.ifru_mtu
+#endif
 
 #if defined(ENABLE_IPV6)
   #define  hifr6_addr      in6_ifreq.ifr6_addr

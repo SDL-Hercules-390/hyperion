@@ -92,6 +92,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
             STRLCPY( pHostInfo->machine, machine );
         }
 
+#if !defined( __OpenBSD__ )
         length = sizeof(iRV);
         if ( sysctlbyname("kern.maxfilesperproc", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->maxfilesopen = iRV;
@@ -144,6 +145,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
             STRLCPY( pHostInfo->machine, mach );
             pHostInfo->cpu_aes_extns = 1;
         }
+#endif /* #if !defined( __OpenBSD__ ) */
 
 #if defined(HW_MEMSIZE)
         length = sizeof(ui64RV);
