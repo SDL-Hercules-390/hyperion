@@ -2806,6 +2806,20 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC92702 "Tape %s: %smt_gstat 0x%8.8"PRIX32" %s" // scsitape.c
 //efine HHC92703 - HHC92799 (available)
 
+#define HHCXU001E "Too many digits in utun unit number %d\n"
+#define HHCXU002E "socketpair() failed: %s\n"
+#define HHCXU901I "About to fork()/exec(): %s %s %s %s %s\n"
+#define HHCXU003E "fork() failed: %s\n"
+#define HHCXU004E "malloc() failed\n"
+#define HHCXU005E "recvmsg() failed: %s\n"
+#define HHCXU006E "Broken connection to hercutun process\n"
+#define HHCXU007E "No file descriptor from hercutun process\n"
+#define HHCXU020I "hercutun exited normally\n"
+#define HHCXU021E "hercutun argument error\n"
+#define HHCXU022E "hercutun error while opening interface\n"
+#define HHCXU023E "hercutun error while configuring addresses\n"
+#define HHCXU024E "hercutun IPC error\n"
+#define HHCCT081E "%4.4X: Invalid utun unit %s\n"
 // range 92800 - 92899 available
 // range 92900 - 92999 available
 

@@ -318,7 +318,7 @@ typedef struct _CTCISEG CTCISEG,*PCTCISEG;
 
 struct  _CTCBLK
 {
-    int         fd;                       // TUN/TAP fd
+    int         fd;                       // TUN/TAP or utun fd
     TID         tid;                      // Read Thread ID
     pid_t       pid;                      // Read Thread pid
 
@@ -343,6 +343,10 @@ struct  _CTCBLK
     u_int       fStarted:1;               // Startup Received
     u_int       fDataPending:1;           // Data is pending for read device
     u_int       fCloseInProgress:1;       // Close in progress
+
+    u_int       fUtun:1;                  // Uses utun (macOS), not tun(4)
+    int         iUtunUnit;                // utun unit number
+
     u_int       fPreconfigured:1;         // TUN device pre-configured
     u_int       fReadWaiting:1;           // CTCI_Read waiting
     u_int       fHaltOrClear:1;           // HSCH or CSCH issued

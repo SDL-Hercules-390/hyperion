@@ -1,0 +1,14 @@
+#! /bin/sh
+
+'../configure'  \
+  '--enable-optimization=-g -g3 -ggdb3 -O3 -fomit-frame-pointer -flto' \
+  '--enable-extpkgs=/Users/enrico/hercules.SDL/work/extpkgs' \
+  '--prefix=/Users/enrico/hercules.SDL/herc5x' \
+  '--enable-custom=Built using Hercules-Helper' \
+  '--enable-object-rexx' \
+  '--disable-getoptwrapper' \
+  '--without-included-ltdl' \
+  'CC= clang' \
+  'C_INCLUDE_PATH=/opt/ooRexx/include:/opt/local/include' \
+  'CPP_FLAGS= -I/opt/ooRexx/include -I/opt/local/include' \
+  'LDFLAGS= -L/opt/ooRexx/lib -L/opt/local/lib'

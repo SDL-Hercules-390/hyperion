@@ -4194,6 +4194,33 @@ ROUTE  00  172.21.3.32  255.255.255.224
                     unspecified.
                     <p>
 
+                <dt><code>-u <em>unit</em></code> &nbsp;&nbsp; or &nbsp;
+                    <code>--utun <em>unit</em></code>
+                <dd><p>
+                    specifies, on macOS hosts only, that Hercules should
+                    connect the emulated channel-to-channel adapter to a
+                    <em>utun</em> network interface on the host, rather
+                    than opening a tunnel device file.
+                    <p>
+                    <em>unit</em> is the unit number of the <em>utun</em>
+                    interface to be created, such as <code>0</code> for
+                    <em>utun0</em>. To have Hercules use the first available
+                    unit number, specify <code>auto</code> instead.
+                    <p>
+                    Unlike tun and tap devices, which are provided on macOS
+                    hosts only by third-party kernel extensions such as
+                    Mattias Nissler's
+                    <a href="http://tuntaposx.sourceforge.net/">TunTap</a>,
+                    the <em>utun</em> interface is built in to the XNU
+                    kernel (see
+                    <a href="https://github.com/apple/darwin-xnu/blob/master/bsd/net/if_utun.c">bsd/net/if_utun.c</a>).
+                    <p>
+                    If <code>-u</code> or <code>--unit</code> is specified,
+                    <code>-n</code> (<code>--dev</code>) and <code>-m</code>
+                    (<code>--mac</code>) are ignored.
+                    <p>
+
+
             </dl> <!-- end Optional for both Linux and Windows -->
 
         </dl> <!-- end CTCI parms -->
