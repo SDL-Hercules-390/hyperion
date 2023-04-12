@@ -251,6 +251,7 @@ bin_PROGRAMS = \
   tapesplt     \
   tfprint      \
   tfswap       \
+  txt2card     \
   vmfplc2      \
   $(HERCIFC)   \
   $(HERCLIN)
@@ -736,6 +737,10 @@ tfprint_LDFLAGS    = $(tools_LD_FLAGS)
 tfswap_SOURCES     = tfswap.c
 tfswap_LDADD       = $(tools_ADDLIBS)
 tfswap_LDFLAGS     = $(tools_LD_FLAGS)
+
+txt2card_SOURCES   = txt2card.c
+txt2card_LDADD     = $(tools_ADDLIBS)
+txt2card_LDFLAGS   = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se

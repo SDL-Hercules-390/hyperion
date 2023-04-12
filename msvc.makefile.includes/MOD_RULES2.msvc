@@ -167,6 +167,8 @@ $(X)tfprint.exe:  $(O)$(@B).obj $(O)hengine.lib $(O)hsys.lib $(O)hutil.lib $(O)h
 
 $(X)tfswap.exe:   $(O)$(@B).obj                 $(O)hsys.lib $(O)hutil.lib $(O)hercmisc.res
 
+$(X)txt2card.exe: $(O)$(@B).obj                 $(O)hsys.lib $(O)hutil.lib $(O)hercmisc.res
+
 $(X)conspawn.exe: $(O)$(@B).obj                                            $(O)hercmisc.res
 
 # ---------------------------------------------------------------------

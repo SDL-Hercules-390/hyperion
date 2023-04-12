@@ -404,6 +404,10 @@
 						RelativePath=".\tfswap.c"
 						>
 					</File>
+					<File
+						RelativePath=".\txt2card.c"
+						>
+					</File>
 				</Filter>
 			</Filter>
 			<Filter

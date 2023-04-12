@@ -75,4 +75,5 @@ EXECUTABLES = \
     $(X)tapesplt.exe    \
     $(X)tfprint.exe     \
     $(X)tfswap.exe      \
+    $(X)txt2card.exe    \
     $(X)vmfplc2.exe
