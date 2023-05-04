@@ -61,15 +61,15 @@ operating system crash or power failure), the compressed emulation file
 on the host's physical disk may be out of sync if the host operating
 system defers physical writes to the file system containing the emulation
 file.  However, several methods have evolved to greatly reduce the chance
-of this occurring as well as the amount of data lost that can occur after
-these kinds of events, so the chance of actual data loss is small.
+of this occurring as well as the amount of data loss that can occur after
+these kinds of events, so the chance of actual data loss is relatively small.
 <p>
 A compressed dasd image file may occupy only 20% of the disk space required
 by an uncompressed file.  In other words, you may be able to have 5 times
 more emulated volumes on your system by using compressed DASD files than by
-using uncompressed dasds.  Compressed files are more slightly more
-sensitive to failures and data corruption however, but due to its design
-and implementation the chance of this occuring is small.
+using uncompressed dasds.  Compressed files are slightly more sensitive to
+failures and data corruption however, but due to their design and careful
+implementation, the chance of this actually occuring is relatively small.
 <p>
 Compressed DASD images are created via the
 <a href="hercload.html#dasdinit">dasdinit64</a> utility.
@@ -109,8 +109,8 @@ on the device statement for the compressed DASD device.
     them via the <code>sf+xxxx</code> (or <code>sf+*</code>) command, or
     automatically <b>(<a href="#autoshadow"><code>*</code></a>)</b> by marking
     either the base dasd image file or an existing shadow file as read-only.
-    Please refer to the discussion of the <b>sf</b> command several paragraphs
-    below for more information.
+    Please refer to the discussion of the <b>sf</b> command in the next section
+    further below for more information.
 
 <p>
 
