@@ -339,6 +339,7 @@
     <ClCompile Include="dasdisup.c" />
     <ClCompile Include="dasdload.c" />
     <ClCompile Include="dasdload64.c" />
+    <ClCompile Include="dasdload2.h" />
     <ClCompile Include="dasdls.c" />
     <ClCompile Include="dasdpdsu.c" />
     <ClCompile Include="dasdseq.c" />

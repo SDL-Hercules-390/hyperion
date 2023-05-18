@@ -605,11 +605,11 @@ dasdisup_SOURCES   = dasdisup.c
 dasdisup_LDADD     = $(tools_ADDLIBS)
 dasdisup_LDFLAGS   = $(tools_LD_FLAGS)
 
-dasdload_SOURCES   = dasdload.c
+dasdload_SOURCES   = dasdload.c dasdload2.h
 dasdload_LDADD     = $(tools_ADDLIBS)
 dasdload_LDFLAGS   = $(tools_LD_FLAGS)
 
-dasdload64_SOURCES = dasdload64.c
+dasdload64_SOURCES = dasdload64.c dasdload2.h
 dasdload64_LDADD   = $(tools_ADDLIBS)
 dasdload64_LDFLAGS = $(tools_LD_FLAGS)
 

@@ -294,6 +294,9 @@
     <ClCompile Include="dasdload64.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
+    <ClInclude Include="dasdload2.h">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClInclude>
     <ClCompile Include="dasdls.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
