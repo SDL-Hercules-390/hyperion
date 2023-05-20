@@ -31,11 +31,11 @@
 /*-------------------------------------------------------------------*/
 /* Internal table sizes                                              */
 /*-------------------------------------------------------------------*/
-#define MAXDBLK 10000                   /* Maximum number of directory
+#define DEF_MAXDBLK 10000               /* Maximum number of directory
                                            blocks per dataset        */
-#define MAXTTR  50000                   /* Maximum number of TTRs
+#define DEF_MAXTTR  50000               /* Maximum number of TTRs
                                            per dataset               */
-#define MAXDSCB 1000                    /* Maximum number of DSCBs   */
+#define DEF_MAXDSCB 5000                /* Maximum number of DSCBs   */
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -109,7 +109,12 @@ BYTE cvol_low_key[] = {0, 0, 0, 0, 0, 0, 0, 1};
 
 /* Information message level: 0=None, 1=File name, 2=File information,
    3=Member information, 4=Text units, record headers, 5=Dump data */
+
 int  infolvl = 1;
+
+int  nMaxDBLK = DEF_MAXDBLK;
+int  nMaxTTR  = DEF_MAXTTR;
+int  nMaxDSCB = DEF_MAXDSCB;
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
@@ -992,10 +997,10 @@ time_t          timeval;                /* Current time value        */
     }
 
     /* Check that there is room in the DSCB pointer array */
-    if (dscbnum >= MAXDSCB)
+    if (dscbnum >= nMaxDSCB)
     {
         // "Internal error: DSCB count exceeds MAXDSCB of %d"
-        XMERRF ( MSG( HHC02518, "E", MAXDSCB ) );
+        XMERRF ( MSG( HHC02518, "E", nMaxDSCB ) );
         return -1;
     }
 
@@ -1104,10 +1109,10 @@ int             tolfact;                /* Device tolerance          */
     }
 
     /* Check that there is room in the DSCB pointer array */
-    if (dscbnum >= MAXDSCB)
+    if (dscbnum >= nMaxDSCB)
     {
         // "Internal error: DSCB count exceeds MAXDSCB of %d"
-        XMERRF ( MSG( HHC02518, "E", MAXDSCB ) );
+        XMERRF ( MSG( HHC02518, "E", nMaxDSCB ) );
         return -1;
     }
 
@@ -1178,10 +1183,10 @@ int             blklen;                 /* Size of data block        */
     }
 
     /* Check that there is room in the DSCB pointer array */
-    if (dscbnum >= MAXDSCB)
+    if (dscbnum >= nMaxDSCB)
     {
         // "Internal error: DSCB count exceeds MAXDSCB of %d"
-        XMERRF ( MSG( HHC02518, "E", MAXDSCB ) );
+        XMERRF ( MSG( HHC02518, "E", nMaxDSCB ) );
         return -1;
     }
 
@@ -2185,10 +2190,10 @@ char            hex[49];                /* Character work areas      */
     memcpy (blkp, xbuf, blklen);
 
     /* Check that there is room in the directory block pointer array */
-    if (dirblkn >= MAXDBLK)
+    if (dirblkn >= nMaxDBLK)
     {
         // "Internal error: Number of directory blocks exceeds MAXDBLK of %d"
-        XMERRF ( MSG( HHC02545, "E", MAXDBLK ) );
+        XMERRF ( MSG( HHC02545, "E", nMaxDBLK ) );
         return -1;
     }
 
@@ -2682,7 +2687,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
     }
 
     /* Obtain storage for the directory block array */
-    dirblka = (DATABLK**)malloc (sizeof(DATABLK*) * MAXDBLK);
+    dirblka = (DATABLK**)malloc (sizeof(DATABLK*) * nMaxDBLK);
     if (dirblka == NULL)
     {
         // "Storage allocation for %s using %s failed: %s"
@@ -2693,7 +2698,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
     }
 
     /* Obtain storage for the TTR conversion table */
-    ttrtab = (TTRCONV*)malloc (sizeof(TTRCONV) * MAXTTR);
+    ttrtab = (TTRCONV*)malloc (sizeof(TTRCONV) * nMaxTTR);
     if (ttrtab == NULL)
     {
         // "Storage allocation for %s using %s failed: %s"
@@ -2861,10 +2866,10 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
             else /* Not a directory block */
             {
                 /* Check that TTR conversion table is not full */
-                if (numttr >= MAXTTR)
+                if (numttr >= nMaxTTR)
                 {
                     // "Internal error: TTR count exceeds MAXTTR of %d"
-                    XMERRF ( MSG( HHC02571, "E", MAXTTR ) );
+                    XMERRF ( MSG( HHC02571, "E", nMaxTTR ) );
                     return -1;
                 }
 
@@ -4089,7 +4094,7 @@ int             offset = 0;             /* Offset into trkbuf        */
 int             fsflag = 0;             /* 1=Free space message sent */
 
     /* Obtain storage for the array of DSCB pointers */
-    dscbtab = (DATABLK**)malloc (sizeof(DATABLK*) * MAXDSCB);
+    dscbtab = (DATABLK**)malloc (sizeof(DATABLK*) * nMaxDSCB);
     if (dscbtab == NULL)
     {
         // "Storage allocation for %s using %s failed: %s"
@@ -4406,7 +4411,7 @@ char           *strtok_str = NULL;      /* last token position       */
     }
 
     /* Check the number of arguments */
-    if (argc < 3 || argc > 4)
+    if (argc < 3 || argc > 7)
         argexit(4, pgm);
 
     /* The first argument is the control file name */
@@ -4422,9 +4427,33 @@ char           *strtok_str = NULL;      /* last token position       */
     /* The optional third argument is the message level */
     if (argc > 3 && argv[3] != NULL)
     {
-        if (sscanf(argv[3], "%u%c", &infolvl, &c) != 1
-            || infolvl > 5)
+        if (sscanf(argv[3], "%u%c", &infolvl, &c) != 1 || infolvl > 5)
             argexit(3, pgm);
+
+        /* The optional forth argument is the maximum number of DBLK entries */
+        if (argc > 4 && argv[4] != NULL)
+        {
+            if (sscanf( argv[4], "%u%c", &nMaxDBLK, &c) != 1 || nMaxDBLK < 0)
+                argexit(5, pgm);
+
+            /* The optional fifth argument is the maximum number of TTR entries */
+            if (argc > 5 && argv[5] != NULL)
+            {
+                if (sscanf( argv[5], "%u%c", &nMaxTTR, &c) != 1 || nMaxTTR < 0)
+                    argexit(5, pgm);
+
+                /* The optional sixth argument is the maximum number of DSCB entries */
+                if (argc > 6 && argv[6] != NULL)
+                {
+                    if (sscanf( argv[6], "%u%c", &nMaxDSCB, &c) != 1 || nMaxDSCB < 0)
+                        argexit(5, pgm);
+                }
+            }
+        }
+
+        if (!nMaxDBLK) nMaxDBLK = DEF_MAXDBLK;
+        if (!nMaxTTR ) nMaxTTR  = DEF_MAXTTR;
+        if (!nMaxDSCB) nMaxDSCB = DEF_MAXDSCB;
     }
 
     /* Open the control file */

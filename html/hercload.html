@@ -344,8 +344,8 @@ to create a new DASD image file and load it with data from unloaded
 PDS files.
 <p>
 The format of the dasdload / dasdload64 command is:
-<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdload &nbsp;&nbsp;<i>[options]</i> <em>ctlfile outfile msglevel</em></code><br>
-    &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdload64 <i>[options]</i> <em>ctlfile outfile msglevel</em></code>
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdload &nbsp;&nbsp;<i>[options]</i> <em>ctlfile outfile <i>[msglevel [maxdblk maxttr maxdscb]]</i></em></code><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdload64 <i>[options]</i> <em>ctlfile outfile <i>[msglevel [maxdblk maxttr maxdscb]]</i></em></code>
 <p>
 where <em>[options]</em> can be:
 <blockquote>
@@ -368,14 +368,22 @@ where <em>[options]</em> can be:
     <dd>For a volume without IPL text, make the wait PSW written to the IPL1
         record enabled for machine checks.  The default is to make the wait
         PSW disabled for machine checks.</dd>
+<p>
     <dt><code><em>ctlfile</em></code>
     <dd>is the name of the control file which specifies the datasets
         that are to be loaded onto the newly-created volume
     <dt><code><em>outfile</em></code>
     <dd>is the name of the DASD image file to be created
+<p>
     <dt><code><em>msglevel</em></code>
-    <dd>is a number from 0 to 5 which controls the level of detail
+    <dd>is an optional number from 0 to 5 (default is 1) which controls the level of detail
         of the messages issued during the load.
+    <dt><code><em>maxdblk</em></code>
+    <dd>is the optional maximum number of DBLK table entries or 0 to use the default
+    <dt><code><em>maxttr</em></code>
+    <dd>is the optional maximum number of TTR table entries or 0 to use the default
+    <dt><code><em>maxdscb</em></code>
+    <dd>is the optional maximum number of DSCB table entries or 0 to use the default
 </dl>
 </blockquote>
 

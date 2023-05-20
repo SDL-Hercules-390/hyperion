@@ -1799,7 +1799,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC02495I   -1      normal  checking\n" \
        "HHC02495I   -2      intermediate checking\n" \
        "HHC02495I   -3      maximal checking"
-#define HHC02496 "Usage: %s [options] ctlfile outfile [n]\n" \
+#define HHC02496 "Usage: %s [options] ctlfile outfile [n [maxdblk maxttr maxdscb]]\n" \
        "HHC02496I options:\n" \
        "HHC02496I   -0     no compression (default)\n" \
        "HHC02496I   -a     output disk will include alternate cylinders\n" \
@@ -1811,7 +1811,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC02496I\n" \
        "HHC02496I ctlfile  name of input control file\n" \
        "HHC02496I outfile  name of DASD image file to be created\n" \
-       "HHC02496I n        msglevel 'n' is a digit 0 - 5 indicating output verbosity"
+       "HHC02496I\n" \
+       "HHC02496I n        'n' is a digit 0 - 5 (default is 1) indicating output verbosity\n" \
+       "HHC02496I max...   'maxdblk', etc, is maximum number of DBLK/TTR/DSCB entries or 0 for default"
 #define HHC02497 "Usage: %s [-f] [-level] file1 [file2 ... ]\n" \
        "HHC02497I   file    name of CCKD file\n" \
        "HHC02497I Options:\n" \
