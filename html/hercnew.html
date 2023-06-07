@@ -13,6 +13,55 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
+<h2>What's new in Version 4.6
+</h2>
+
+<p>Release date: 9 June 2023
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.6">Release_4.6</a>
+
+<ul>
+
+<li>SECURITY: New "\reply" SCP command to suppress command echoing of passwords (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/541">#541</a>)
+<p>
+<li>Fix endianness bug in PFPO instruction (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/523">#523</a>)
+<li>Fix some endianness issues in TRTE and TRTRE instructions (James Wekel) (<a href="https://github.com/SDL-Hercules-390/hyperion/pull/529">#529</a>)
+<li>Fix CODEPAGE message corruption in HERCIFC (Bill Lewis) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/525">#525</a>)
+<li>Fix some minor z/Arch Facility related bugs (Fish)
+<li>Fix BZIP2 API bug in hetlib.c (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/535">#535</a>)
+<li>Fix missing last dump line bug in dasdutil trace (Fish)
+<li>Fix crash if "ctc debug" command on unconnected CTCE device (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/536">#536</a>)
+<li>Fix segfault in 370 mode IPL (Bill Lewis) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/538">#538</a>)
+<li>Fix to show version and help if no arguments given (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/540">#540</a>, <a href="https://github.com/SDL-Hercules-390/hyperion/issues/548">#548</a>)
+<li>Fix incorrect NUMCPU/ARCHLVL/etc handling causing occasional hang (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/542">#542</a>)
+<li>Fix branding SNAFU: "SDL" does NOT mean this Hercules is a "SoftDevLabs" product! (Fish)
+<li>Fix bug causing MVT guest to fail (Fish)
+<li>Fix Program check detection if PER trace active (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/560">#560</a>)
+<p>
+<li>New: 'QUITMOUT' command/statement, per user request (Fish)
+<li>NEW: "Trace to File" support (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/33">#33</a>)
+<li>New "t+CPU [cpuad]" selective instruction tracing by CPU (Fish)
+<li>NEW: Sockdev socket punch support (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/553">#553</a>)
+<li>New 'txt2card' utility (Fish)
+<p>
+<li>Don't enable STHYI/ESSA by default (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/531">#531</a>)
+<li>Improve PFPO instruction conformance (Fish)
+<li>Add single devnum support to CKD Search Key trace command (Fish)
+<li>Enhance "t?" command to also show active device tracing (Fish)
+<li>Improve CCW tracing (Fish)
+<li>Add "ADDFRR" MVS assist (Jay Maynard) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/537">#537</a>)
+<li>Better HMC message handling for Linux guests (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/534">#534</a>)
+<li>Document MAKETAPE via README (Fish)
+<li>Add support for dasd X'F7' (DSO = Define Subsystem Operation) CCW (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/547">#547</a>)
+<li>DASDLOAD: Increase MAXDSCB and allow cmdline override (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/566">#566</a>)
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
 <h2>What's new in Version 4.5
 </h2>
 
