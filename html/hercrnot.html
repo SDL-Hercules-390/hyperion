@@ -117,6 +117,37 @@ Hercules: Release Notes
   </p>
 
 
+  <dt>NEW: "Trace to File" support
+  <dd>
+  <p>
+    Beginning with this release of SDL Hercules Hyperion, you can now have debug
+    tracing (e.g. instruction and/or CCW tracing) written to an external file
+    instead of it always being written to the HMC panel <i>(which is incredibly
+    inefficient)</i>. Tracing to an external trace file greatly decreases the
+    Hercules overhead involved with debug tracing, thus allowing your guest to run
+    <i>significantly</i> faster than otherwise when debug tracing is active.
+  </p>
+  <p>
+    Additionally, a much finer grained selection of information can be printed
+    from the resulting trace file by means of the new 'tfprint' utility. Please
+    refer to the 'tfprint' utility's help display for information regarding the
+    many options available for choosing what trace information you wish to print.
+    Enter "help tf" for more information regarding the "Trace to File" command
+    itself.
+  </p>
+
+
+  <dt>NEW: Sockdev socket punch support
+  <dd>
+  <p>
+    SDL Hercules Hyperion now supports socket punch devices in a manner identical to
+    its current support for socket printer devices, thereby allowing remote spooling
+    of card punch data. Simply specify the 'sockdev' option for your
+    <a href="hercconf.html#cardpch">Card punch</a> device in exactly the same manner
+    as you would for a socket printer device.
+  </p>
+
+
 </dl>
 
 <!-- --------------------------------------------------------------------------------- -->
