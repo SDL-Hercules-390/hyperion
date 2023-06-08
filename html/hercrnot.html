@@ -12,6 +12,115 @@ Hercules: Release Notes
 
 <h1>Hercules Release Notes and Known Issues</h1>
 
+<a name=4.6></a>
+<hr noshade>
+
+<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.6">SDL Hyperion 4.6</a>
+</h2>
+
+<p>
+<dl>
+
+
+  <dt>SECURITY: New "\" (backslash) SCP reply prefix to suppress echoing of reply text
+  <dd>
+  <p>
+    Previously, when running a guest that uses the HMC for communicating with the user,
+    the text for each reply was always logged to the HMC as-is:
+
+    <blockquote>
+<pre>
+08:35:19.528 Ubuntu 18.04.6 LTS s390x sclp_line0
+08:35:19.638 s390x login:
+08:56:15.453 HHC00160I SCP command: hercules
+08:56:15.556 hercules
+<b>08:56:15.776 Password:
+08:56:17.357 HHC00160I SCP command: <i><u>hercules</u></i></b>
+08:56:18.367 Last login: Sat Jan 28 11:31:16 EST 2023 on sclp_line0
+08:56:48.327 Welcome to Ubuntu 18.04.6 LTS (GNU/Linux 4.15.0-200-generic s390x)</pre>
+    </blockquote>
+
+    As this was deemed to be a security exposure when the reply contained sensitive
+    information such as a user's password, a new SCP command prefix was created to
+    prevent the echoing of the SCP reply. Beginning with this release of SDL Hercules
+    Hyperion, the SCP reply prefix '\' (backslash) should be used for replies that
+    you do not want to be written to the screen or logfile:
+
+    <blockquote>
+<pre>
+17:50:53.980 Ubuntu 18.04.6 LTS s390x sclp_line0
+17:50:54.089 s390x login:
+17:51:39.281 HHC00160I SCP command: hercules
+17:51:39.389 hercules
+<b>17:51:39.689 Password:
+17:51:43.265 HHC00160I SCP command: <i>(<u>suppressed</u>)</i></b>
+17:52:29.270 Welcome to Ubuntu 18.04.6 LTS (GNU/Linux 4.15.0-200-generic s390x)</pre>
+    </blockquote>
+
+    As you can see, the reply is not echoed when the '\' (backslash) SCP reply prefix
+    is used instead. Rather, the reply text is instead replaced with the message text
+    "(suppressed)". This prevents the logging of sensitive information <i>(such as
+    passwords)</i> to the screen and logfile.
+
+  </p>
+
+  <dt>Better HMC message handling for Linux guests
+  <dd>
+  <p>
+    Previously, when running a s390x Linux guest, boot progress messages would appear
+    garbled (badly formatted) when logged to the HMC:
+
+    <blockquote><pre>
+20:03:20.579 Welcome to  1mUbuntu 18.04.6 LTS 0m|
+20:03:20.580 
+20:03:20.580     77.148546! systemd 1!: Set hostname to <s390x>.
+20:03:22.494 HHC00004I Control program identification: type LINUX, name UBUNTU, sysplex 18 04 6, level 40F00
+20:03:26.059   0;32m  OK   0m! Reached target User and Group Name Lookups.
+20:03:26.059   0;32m  OK   0m! Created slice System Slice.
+20:03:26.060   0;32m  OK   0m! Listening on fsck to fsckd communication Socket.
+20:03:26.060   0;32m  OK   0m! Listening on Journal Socket.
+20:03:26.060   0;32m  OK   0m! Listening on Syslog Socket.
+20:03:26.061     82.621379! random: systemd: uninitialized urandom read (16 bytes read)
+20:03:26.061     82.621788! systemd 1!: Reached target User and Group Name Lookups.</pre>
+    </blockquote>
+
+    Beginning with this release of SDL Hercules Hyperion, efforts are made to more
+    properly parse the screen messages that Linux is issuing so that they can appear
+    on the HMC in a much more readable format:
+
+    <blockquote><pre>
+15:17:37.374 Welcome to Ubuntu 18.04 LTS!
+15:17:37.374 
+15:17:37.393 [   74.041881] systemd: Set hostname to <Ubuntu180403>.
+15:17:38.286 HHC00004I Control program identification: type LINUX, name UBUNTU, sysplex 18 04, level 40F00
+15:17:40.303 [   76.951718] random: crng init done
+15:17:42.653 [  OK  ] Started Forward Password Requests to Wall Directory Watch.
+15:17:42.653 [  OK  ] Created slice User and Session Slice.
+15:17:42.654 [  OK  ] Created slice System Slice.
+15:17:42.654 [  OK  ] Listening on fsck to fsckd communication Socket.
+15:17:42.655 [  OK  ] Listening on Journal Socket (/dev/log).
+15:17:42.655 [  OK  ] Listening on Journal Audit Socket.
+15:17:42.655 [  OK  ] Listening on LVM2 metadata daemon socket.
+15:17:42.656 [  OK  ] Created slice system-serial\x2dgetty.slice.
+15:17:42.656 [  OK  ] Listening on udev Kernel Socket.
+15:17:42.656 [  OK  ] Listening on Syslog Socket.
+15:17:42.656 [  OK  ] Reached target User and Group Name Lookups.</pre>
+    </blockquote>
+
+    <i><u>Please be aware</u></i> that in order for s390x Linux's messages to be
+    properly parsed by Hercules you should use a Hercules
+    <a href="hercconf.html#CODEPAGE"><code><b>CODEPAGE</b></code></a>
+    mapping that matches the same code page that your s390x Linux guest actually uses.
+    For <i>(most?)</i> s390x Linux guests this is usually code page "<b>819/500</b>".
+    <i>(Other code pages may also work, but probably not as well as 819/500.)</i>
+
+  </p>
+
+
+</dl>
+
+<!-- --------------------------------------------------------------------------------- -->
+
 <a name=4.4.1></a>
 <hr noshade>
 
