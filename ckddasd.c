@@ -200,7 +200,7 @@ int             trks;                   /* #of tracks in CKD file    */
 int             cyls;                   /* #of cylinders in CKD file */
 int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
-int             cckd=0;                 /* 1 if compressed CKD       */
+bool            cckd = false;           /* true if compressed CCKD   */
 char         filename[FILENAME_MAX+3];  /* work area for display     */
 BYTE            serial[12+1] = {0};     /* Dasd serial number        */
 
@@ -227,14 +227,10 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
     /* Save the file name in the device block */
     hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
-    if (strchr(dev->filename, SPACE) == NULL)
-    {
-        MSGBUF(filename, "%s", dev->filename);
-    }
+    if (!strchr( dev->filename, SPACE ))
+        MSGBUF( filename, "%s", dev->filename );
     else
-    {
-        MSGBUF(filename, "'%s'", dev->filename);
-    }
+        MSGBUF( filename, "'%s'", dev->filename );
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Device is shareable */
@@ -413,6 +409,19 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
                 dev->cckd64 = 1;
                 close( dev->fd );
                 dev->fd = -1;
+
+                if (is_dh_devid_typ( devhdr.dh_devid, CKD_P064_TYP ))
+                {
+                    cckd = false;
+
+                    if (dev->dasdsfn || dev->dasdsfx)
+                    {
+                        // "%1d:%04X %s file %s: shadow files not supported for %s dasd"
+                        WRMSG( HHC00469, "E", LCSS_DEVNUM, CKDTYP( cckd, dev->cckd64 ),
+                            filename, CKDTYP( cckd, dev->cckd64 ) );
+                        return -1;
+                    }
+                }
                 return ckd64_dasd_init_handler( dev, argc, argv );
             }
 
@@ -423,7 +432,7 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
 
         if (is_dh_devid_typ( devhdr.dh_devid, CKD_C370_TYP ))
         {
-            cckd = 1;
+            cckd = true;
 
             if (fileseq != 1)
             {
@@ -431,6 +440,14 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
                 WRMSG( HHC00407, "E", LCSS_DEVNUM, CKDTYP( cckd, 0 ), filename );
                 return -1;
             }
+        }
+
+        if (!cckd && (dev->dasdsfn || dev->dasdsfx))
+        {
+            // "%1d:%04X %s file %s: shadow files not supported for %s dasd"
+            WRMSG( HHC00469, "E", LCSS_DEVNUM, CKDTYP( cckd, dev->cckd64 ),
+                filename, CKDTYP( cckd, dev->cckd64 ) );
+            return -1;
         }
 
         if (dev->ckdrdonly)
@@ -466,7 +483,7 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         FETCH_LE_FW( trksize, devhdr.dh_trksize );
         FETCH_LE_HW( highcyl, devhdr.dh_highcyl );
 
-        if (cckd == 0)
+        if (!cckd)
         {
             if (dev->dasdcopy == 0)
             {
@@ -537,7 +554,7 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         }
 
         /* Consistency check device header */
-        if (cckd == 0 && dev->dasdcopy == 0 && (cyls * heads != trks
+        if (!cckd && dev->dasdcopy == 0 && (cyls * heads != trks
             || ((off_t)trks * trksize) + CKD_DEVHDR_SIZE
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))

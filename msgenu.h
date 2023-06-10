@@ -558,7 +558,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00466 "Maximum of %u %s in %u 2GB file(s) is supported"
 #define HHC00467 "Maximum %s supported is %u"
 #define HHC00468 "For larger capacity DASD volumes, use %s"
-//efine HHC00469 (available)
+#define HHC00469 "%1d:%04X %s file %s: shadow files not supported for %s dasd"
 #define HHC00470 "%1d:%04X %s file %s: model %s cyls %d heads %d tracks %d trklen %d"
 #define HHC00471 "%1d:%04X CKD64 file %s: %u %s successfully written"
 #define HHC00472 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"

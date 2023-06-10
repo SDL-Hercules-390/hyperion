@@ -64,16 +64,17 @@ static int fba_read (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat);
 /*-------------------------------------------------------------------*/
 int fba_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
-int     rc;                             /* Return code               */
-struct  stat statbuf;                   /* File information          */
-int     startblk;                       /* Device origin block number*/
-int     numblks;                        /* Device block count        */
-BYTE    c;                              /* Character work area       */
-char   *cu = NULL;                      /* Specified control unit    */
-int     cfba = 0;                       /* 1 = Compressed fba        */
-int     i;                              /* Loop index                */
-CKD_DEVHDR      devhdr;                 /* Device header             */
-CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
+CKD_DEVHDR   devhdr;                    /* Device header             */
+CCKD_DEVHDR  cdevhdr;                   /* Compressed device header  */
+int          rc;                        /* Return code               */
+struct stat  statbuf;                   /* File information          */
+int          startblk;                  /* Device origin block number*/
+int          numblks;                   /* Device block count        */
+BYTE         c;                         /* Character work area       */
+char        *cu = NULL;                 /* Specified control unit    */
+bool         cfba = false;              /* true = Compressed fba     */
+int          i;                         /* Loop index                */
+char         filename[FILENAME_MAX+3];  /* work area for display     */
 
     /* For re-initialisation, close the existing file, if any */
     if (dev->fd >= 0)
@@ -95,6 +96,11 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
 
     /* Save the file name in the device block */
     hostpath(dev->filename, argv[0], sizeof(dev->filename));
+
+    if (!strchr( dev->filename, SPACE ))
+        MSGBUF( filename, "%s", dev->filename );
+    else
+        MSGBUF( filename, "'%s'", dev->filename );
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Device is shareable */
@@ -152,7 +158,7 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
     {
         dev->cckd64 = 0;
 
-        cfba = 1;
+        cfba = true;
 
         /* Read the compressed device header */
         rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE);
@@ -213,6 +219,14 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
     else
     {
         dev->cckd64 = 0;
+
+        if (dev->dasdsfn || dev->dasdsfx)
+        {
+            // "%1d:%04X %s file %s: shadow files not supported for %s dasd"
+            WRMSG( HHC00469, "E", LCSS_DEVNUM, FBATYP( cfba, dev->cckd64 ),
+                filename, FBATYP( cfba, dev->cckd64 ) );
+            return -1;
+        }
 
         /* Determine the device size */
         rc = fstat (dev->fd, &statbuf);
