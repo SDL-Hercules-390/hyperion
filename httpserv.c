@@ -1067,74 +1067,102 @@ int http_startup(int isconfigcalling)
 /*-------------------------------------------------------------------*/
 /*                          http_command                             */
 /*-------------------------------------------------------------------*/
-int http_command(int argc, char *argv[])
+int http_command( int argc, char* argv[] )
 {
     int rc = 0;
 
     UPPER_ARGV_0( argv );
 
-    if ( !http_struct_init )
+    if (!http_struct_init)
     {
-        memset(&http_serv,0,sizeof(HTTP_SERV));
+        memset( &http_serv, 0 , sizeof( HTTP_SERV ));
+
         initialize_condition( &http_serv.http_wait_shutdown );
         initialize_lock( &http_serv.http_lock_shutdown );
         initialize_lock( &http_lock_root );
+
         http_struct_init = TRUE;
     }
 
     http_serv.httpstmtold = FALSE;
 
-    if ( argc == 2 && CMD(argv[0],rootx,4) &&
-         ( ( strlen(argv[0]) == 5 && argv[2] != NULL && strcmp(argv[2],"httproot") == 0 ) ||
-           ( strlen(argv[0]) == 4 ) ) )
+    if (1
+        && argc == 2
+        && CMD( argv[0], ROOTX, 4 )
+        && (0
+            || strlen( argv[0] ) == 4
+            || (1
+                && strlen( argv[0] ) == 5
+                && argv[2]
+                && strcmp( argv[2], "httproot" ) == 0
+               )
+           )
+    )
     {
-        if ( strlen(argv[0]) == 5 )
+        if (strlen( argv[0] ) == 5)
         {
             http_serv.httpstmtold = TRUE;
         }
 
         obtain_lock( &http_lock_root );
-        if (http_serv.httproot)
         {
-            free(http_serv.httproot);
-            http_serv.httproot = NULL;
-        }
+            if (http_serv.httproot)
+            {
+                free( http_serv.httproot );
+                http_serv.httproot = NULL;
+            }
 
-        if ( strlen(argv[1]) > 0 )
-        {
-            char    pathname[MAX_PATH];
+            if (strlen( argv[1] ) > 0)
+            {
+                char pathname[ MAX_PATH ];
 
-            hostpath(pathname, argv[1], sizeof(pathname));
+                hostpath( pathname, argv[1], sizeof( pathname ));
 
-            if ( pathname[strlen(pathname)-1] != PATHSEPC )
-                STRLCAT( pathname, PATHSEPS );
+                if (pathname[ strlen( pathname ) - 1 ] != PATHSEPC)
+                    STRLCAT( pathname, PATHSEPS );
 
-            http_serv.httproot = strdup(pathname);
+                http_serv.httproot = strdup( pathname );
+            }
         }
         release_lock( &http_lock_root );
 
         http_root();
 
-        if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", http_serv.httpstmtold ? "HTTPROOT": "ROOT",
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", http_serv.httpstmtold ? "HTTPROOT": "ROOT",
                         http_serv.httproot ? http_serv.httproot : "<not specified>");
 
-        if ( http_serv.httpstmtold )
-            http_startup(TRUE);
+        if (http_serv.httpstmtold)
+            http_startup( TRUE );
 
         rc = 0;
     }
-    else if ( (argc == 2 || argc == 3 || argc == 5) && CMD(argv[0],portx,4) &&
-              ( ( strlen(argv[0]) == 5 && argv[5] != NULL && strcmp(argv[5],"httpport") == 0 ) ||
-                ( strlen(argv[0]) == 4 ) ) )
+    else if (1
+             && (0
+                 || argc == 2
+                 || argc == 3
+                 || argc == 5
+                )
+             && CMD( argv[0], PORTX, 4 )
+             && (0
+                 || strlen(argv[0]) == 4
+                 || (1
+                     && strlen( argv[0] ) == 5
+                     && argv[5]
+                     && strcmp( argv[5], "httpport" ) == 0
+                    )
+                )
+    )
     {
-        if ( strlen(argv[0]) == 5 )
+        if (strlen( argv[0] ) == 5)
         {
             http_serv.httpstmtold = TRUE;
         }
 
-        if ( sysblk.httptid != 0 )
+        if (sysblk.httptid)
         {
+            // "HTTP server must be stopped for this command"
             WRMSG( HHC01812, "E" );
             rc = -1;
         }
@@ -1142,45 +1170,52 @@ int http_command(int argc, char *argv[])
         {
             char c;
 
-            if (sscanf(argv[1], "%hu%c", &http_serv.httpport, &c) != 1
-                    || http_serv.httpport == 0
-                    || (http_serv.httpport < 1024 && http_serv.httpport != 80) )
+            if (0
+                || sscanf( argv[1], "%hu%c", &http_serv.httpport, &c ) != 1
+                || !http_serv.httpport
+                || (http_serv.httpport < 1024 && http_serv.httpport != 80)
+            )
             {
                 rc = -1;
             }
-            if ( rc >= 0 && argc == 3 && CMD(argv[2],noauth,6) )
+            if (rc >= 0 && argc == 3 && CMD( argv[2], NOAUTH, 6 ))
             {
                 http_serv.httpauth = 0;
             }
-            else if ( rc >=0 && argc == 5 && CMD(argv[2],auth,4) )
+            else if (rc >=0 && argc == 5 && CMD( argv[2], AUTH, 4 ))
             {
-                if ( strlen( argv[3] ) < 1 || strlen( argv[4] ) < 1 )
+                if (strlen( argv[3] ) < 1 || strlen( argv[4] ) < 1)
                 {
+                    // "HTTP server: auth requires valid userid and password operands"
                     WRMSG( HHC01814, "E" );
                     rc = -1;
                 }
                 else
                 {
                     if (http_serv.httpuser)
-                        free(http_serv.httpuser);
-                    http_serv.httpuser = strdup(argv[3]);
+                        free( http_serv.httpuser );
+
+                    http_serv.httpuser = strdup( argv[3] );
 
                     if (http_serv.httppass)
-                        free(http_serv.httppass);
-                    http_serv.httppass = strdup(argv[4]);
+                        free( http_serv.httppass );
+
+                    http_serv.httppass = strdup( argv[4] );
 
                     http_serv.httpauth = 1;
                 }
             }
-            else if ( argc != 2 || rc < 0 )
+            else if (argc != 2 || rc < 0)
             {
+                // "Invalid command usage. Type 'help %s' for assistance."
                 WRMSG( HHC02299, "E", "http" );
                 rc = -1;
             }
 
-            if ( rc >= 0 && MLVL(VERBOSE) )
+            if (rc >= 0 && MLVL( VERBOSE ))
             {
                 char msgbuf[128];
+
                 if ( http_serv.httpauth == 1 )
                 {
                     MSGBUF( msgbuf, "port=%hu auth userid<%s> password<%s>",
@@ -1193,66 +1228,78 @@ int http_command(int argc, char *argv[])
                 else
                     MSGBUF( msgbuf, "port=%hu noauth", http_serv.httpport );
 
+                // "%-14s set to %s"
                 WRMSG( HHC02204, "I", http_serv.httpstmtold ? "HTTPPORT" : "PORT", msgbuf );
 
-                if ( http_serv.httpstmtold )
-                    http_startup(TRUE);
+                if (http_serv.httpstmtold)
+                    http_startup( TRUE );
 
             }   /* VERBOSE */
         }
     }
     else if ( argc == 1 && CMD(argv[0],start,3) )
     {
-        if ( http_serv.httpport == 0 )
+        if (!http_serv.httpport)
         {
+            // "HTTP server port is %s"
             WRMSG( HHC01815, "E", "not valid");
             rc = -1;
         }
         else
-            rc = http_startup(FALSE);
+            rc = http_startup( FALSE );
     }
     else if (argc == 1 && CMD(argv[0],stop,4))
     {
-        if ( sysblk.httptid != 0 )
+        if (sysblk.httptid)
         {
-            http_shutdown(NULL);
+            http_shutdown( NULL );
+
+            // "HTTP server signaled to stop"
             WRMSG( HHC01805, "I" );
             rc = 1;
         }
         else
         {
             http_serv.httpshutdown = TRUE;
+
+            // "HTTP server is %s"
             WRMSG( HHC01806, "W", "already stopped" );
             rc = 1;
         }
     }
-    else if ( argc == 0 )
+    else if (!argc)
     {
-        if ( sysblk.httptid != 0 )
+        if (sysblk.httptid)
         {
-            if ( http_serv.httpbinddone )
+            if (http_serv.httpbinddone)
             {
+                // "HTTP server is waiting for requests"
                 WRMSG( HHC01809, "I" );
                 rc = 0;
             }
             else
             {
+                // "HTTP server waiting for bind to complete; port in use by another server"
                 WRMSG( HHC01813, "I" );
                 rc = 1;
             }
         }
         else
         {
+            // "HTTP server is stopped"
             WRMSG( HHC01810, "I" );
             rc = 1;
         }
 
-        WRMSG(HHC01811, "I", http_get_root());
+        // "HTTP server root directory %s"
+        WRMSG( HHC01811, "I", http_get_root());
 
-        WRMSG(HHC01808, "I", http_get_port(), http_get_portauth());
+        // "HTTP server port is %s with %s"
+        WRMSG( HHC01808, "I", http_get_port(), http_get_portauth());
     }
     else
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", "http" );
         rc = -1;
     }
