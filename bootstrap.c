@@ -285,7 +285,7 @@ int main( int ac, char* av[] )
     {
         // Normal panel mode?
 
-        if (!sysblk.daemon_mode && isatty( STDERR_FILENO ))
+        if (/*!sysblk.daemon_mode &&*/ isatty( STDERR_FILENO ))
         {
             // Then disable the [x] Close button for safety
 
