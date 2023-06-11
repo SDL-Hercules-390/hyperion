@@ -1218,12 +1218,10 @@ int http_command( int argc, char* argv[] )
 
                 if ( http_serv.httpauth == 1 )
                 {
-                    MSGBUF( msgbuf, "port=%hu auth userid<%s> password<%s>",
+                    MSGBUF( msgbuf, "port=%hu auth userid=\"%s\" password=(suppressed)",
                             http_serv.httpport,
                           ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ?
-                                "" : http_serv.httpuser,
-                          ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ?
-                                "" : http_serv.httppass );
+                                "" : http_serv.httpuser );
                 }
                 else
                     MSGBUF( msgbuf, "port=%hu noauth", http_serv.httpport );
@@ -1328,11 +1326,9 @@ static char msgbuf[128];
 
     if ( http_serv.httpauth == 1)
     {
-        MSGBUF( msgbuf, "auth userid<%s> password<%s>",
+        MSGBUF( msgbuf, "auth userid=\"%s\" password=(suppressed)",
                 ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ?
-                                "" : http_serv.httpuser,
-                ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ?
-                                "" : http_serv.httppass );
+                                "" : http_serv.httpuser );
     }
     else
     {

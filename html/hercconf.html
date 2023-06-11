@@ -980,6 +980,19 @@ a real System/390.  The configuration file is an ASCII text file.
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
     <p>
+    <i><b><u>Security Alert!</u></b> &nbsp;When <tt>AUTH</tt> is specified
+    (and specifiying a password is thus required), one must exercise due diligence
+    to prevent unauthorized access to the Hercules's configuration file that
+    contains that password.
+    </i>
+    <p>
+    <i><b><u>Security Alert!</u></b> &nbsp;The HTTP Server currently utilizes the
+    insecure "http" protocol, not the more secure "https" protocol. All commands
+    and responses are transmitted over the network in the clear, allowing anyone
+    sniffing network traffic to see everything you do and possibly inject unauthorized
+    commands of their own. Exercise caution when using the HTTP Server feature.
+    </i>
+    <p>
 
 <a name="HTTPROOT"></a>
 <dt><code>HTTP &nbsp; ROOT &nbsp; <em>directory</em></code>
