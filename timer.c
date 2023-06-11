@@ -377,7 +377,7 @@ void* rubato_thread( void* argp )
 
     obtain_lock( &sysblk.rublock );
     {
-        while (!sysblk.shutfini && sysblk.rubtid)
+        while (!sysblk.shutfini && sysblk.rubtid && sysblk.todtid)
         {
             /* Detect change to starting timerint value */
             if (sysblk.timerint != starting_timerint)

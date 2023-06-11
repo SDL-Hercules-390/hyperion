@@ -113,7 +113,11 @@ int build_config( const char* hercules_cnf )
 
     /* Default main storage to 2M with one CPU */
     configure_storage( DEF_MAINSIZE_PAGES );
-    configure_numcpu( 1 );
+
+#if 1 // ZZ FIXME
+    if (!sysblk.daemon_mode)
+        configure_numcpu( 1 ); // Fish: WHY??!! I question this!!!
+#endif// ZZ FIXME
 
     if (hercules_cnf && (process_config( hercules_cnf )))
         return -1; // (error message already issued)
