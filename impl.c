@@ -1541,24 +1541,48 @@ int     rc;
         panel_display();  /* Returns only AFTER Hercules is shutdown */
     else
     {
-        /* We're in daemon mode... */
-        if (daemon_task)
-            daemon_task();/* Returns only AFTER Hercules is shutdown */
+        /*-----------------------------------------------*/
+        /*            We're in daemon mode...            */
+        /*-----------------------------------------------*/
+
+        if (daemon_task)    /* External GUI in control? */
+            daemon_task();  /* Returns only when GUI decides to */
         else
         {
-            /* daemon mode without any daemon_task */
+            /* daemon mode without any external GUI... */
+
             process_script_file( "-", true );
 
             /* We come here only if the user did ctl-d on a tty,
                or we reached EOF on stdin.  No quit command has
                been issued (yet) since that (via do_shutdown())
                would not return.  So we issue the quit here once
-               all CPUs have quiesced since without any CPUs and
-               stdin at EOF, there's nothing more for us to do!
+               all CPUs have quiesced, since with no CPUs doing
+               anything and stdin at EOF, there's no longer any
+               reason for us to stick around!
+
+               UNLESS, of course, there were never at any CPUs
+               defined/configured to begin with! (NUMCPU 0 was
+               specified). Such would be the case when Hercules
+               was running solely as a shared dasd server with
+               no guest operating IPLed for example.
+
+               In such a case we must continue running in order
+               to continue serving shared dasd I/O requests for
+               our clients, so we continue running FOREVER. We
+               NEVER exit. We can only go away (disappear) when
+               the user wants us to, by either manually killing
+               us or by issuing the 'quit' command via our HTTP
+               Server interface.
             */
-            while (sysblk.started_mask) /* All CPUs quiesced?        */
-                usleep( 10 * 1000 );    /* Wait for CPUs to stop.    */
-            quit_cmd( 0, NULL, NULL );  /* Then pull the plug.       */
+            while (0
+                || sysblk.started_mask  /* CPU(s) still running?     */
+                || !sysblk.config_mask  /* ZERO CPUs configured?     */
+            )
+                usleep( 10 * 1000 );    /* Wait on CPU(s) or forever */
+
+            if (sysblk.config_mask)     /* If NUMCPU > 0, then do    */
+                quit_cmd( 0, 0, 0);     /* normal/clean shutdown     */
         }
     }
 
