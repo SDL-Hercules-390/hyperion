@@ -856,7 +856,7 @@ int n;
 
         if(!(!ntf->name
           && !strncasecmp("type",argv[1],4)
-          && isdigit(*(argv[1]+4))
+          && isdigit((unsigned char)*(argv[1]+4))
           && sscanf(argv[1]+4, "%u%c", &file, &c) == 1
           && file < HWL_MAXFILETYPE))
         {
@@ -912,7 +912,7 @@ int lddev_cmd( int argc, char* argv[], char* cmdline )
     UNREFERENCED(cmdline);
 
     // [0] = LOAD, [1] = DUMP
-    ldind = ((islower(*argv[0]) ? toupper(*argv[0]) : *argv[0] ) == 'L')
+    ldind = ((islower((unsigned char)*argv[0]) ? toupper((unsigned char)*argv[0]) : *argv[0] ) == 'L')
           ? 0 : 1;
 
     if(argc > 1)

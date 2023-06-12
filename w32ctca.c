@@ -119,7 +119,7 @@ void __cdecl tt32_output_debug_string( const char* debug_string )
         *p2 && (nl2 = nl = strchr( p2, '\n' )); p2 = nl+1)
     {
         // Remove trailing whitespace to conform to Hercules logmsg format.
-        for (; nl2 >= p2 && isspace(*nl2); --nl2)
+        for (; nl2 >= p2 && isspace((unsigned char)*nl2); --nl2)
             *nl2 = 0;
         if (*p2)
             // "DBG: %s"

@@ -77,7 +77,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         char *p;
         for (p = rmtdev + 1; *p && *p != ':'; p++)
         {
-            if (!isdigit(*p))  /* (port numbers are always numeric) */
+            if (!isdigit((unsigned char)*p))  /* (port numbers are always numeric) */
             {
                 /* Not a port number ==> not really a remote device */
                 rmtdev = NULL;

@@ -761,7 +761,7 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
     */
     hercecho = 1;   // (default)
 
-    while (*pCmdLine && isspace( *pCmdLine ))
+    while (*pCmdLine && isspace( (unsigned char)*pCmdLine ))
         pCmdLine++;
 
     i = 0;
@@ -780,7 +780,7 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
                 pCmdLine++;         /* (skip past the '-' ... */
                                     /* ... and remove blanks) */
 
-                while (*pCmdLine && isspace( *pCmdLine ))
+                while (*pCmdLine && isspace( (unsigned char)*pCmdLine ))
                     pCmdLine++;     /* (get past blank) */
             }
         }

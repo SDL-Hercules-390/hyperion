@@ -309,9 +309,9 @@ packet_trace( BYTE* pAddr, int iLen )
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
 
-                if( isprint( e ) )
+                if( isprint( (unsigned char)e ) )
                     print_ebcdic[i] = e;
-                if( isprint( c ) )
+                if( isprint( (unsigned char)c ) )
                     print_ascii[i] = c;
             }
             else

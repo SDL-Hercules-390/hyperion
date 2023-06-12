@@ -1000,7 +1000,7 @@ BYTE       c;                           /* Character work area       */
     for (i = 0; i < 8; i++)
     {
         c = (*puser == '\0' ? SPACE : *(puser++));
-        buf[16+i] = host_to_guest(toupper(c));
+        buf[16+i] = host_to_guest(toupper((unsigned char)c));
     }
 
     /* Bytes 24-31 contain the program product bitmap */

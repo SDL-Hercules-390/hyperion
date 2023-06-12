@@ -465,7 +465,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
             if (c == '\0' ) break;
 
             /* Check if it is a white space and no other character yet */
-            if(!lstarted && isspace(c)) continue;
+            if(!lstarted && isspace((unsigned char)c)) continue;
             lstarted=1;
 
             /* Check that statement does not overflow buffer */
@@ -1703,7 +1703,7 @@ DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
 
     while (*p && *pargc < maxargc)
     {
-        while (*p && isspace(*p))
+        while (*p && isspace((unsigned char)*p))
         {
             p++;
         }
@@ -1721,7 +1721,7 @@ DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
         *pargv = p;
         ++*pargc;
 
-        while (*p && !isspace(*p) && *p != '\"' && *p != '\'')
+        while (*p && !isspace((unsigned char)*p) && *p != '\"' && *p != '\'')
         {
             p++;
         }
@@ -1800,13 +1800,13 @@ DLL_EXPORT void string_to_upper( char* source )
 {
     int  i;
     for (i=0; source[i]; i++)
-        source[i] = toupper( source[i] );
+        source[i] = toupper( (unsigned char)source[i] );
 }
 DLL_EXPORT void string_to_lower( char* source )
 {
     int  i;
     for (i=0; source[i]; i++)
-        source[i] = tolower( source[i] );
+        source[i] = tolower( (unsigned char)source[i] );
 }
 
 /*-------------------------------------------------------------------*/

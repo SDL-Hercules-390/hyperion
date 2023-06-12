@@ -177,7 +177,7 @@ static void do_data_dump( bool ascii, void* addr, unsigned int len, unsigned int
                 if (!ascii)
                     c = guest_to_host(c);
 
-                if (isprint(c))
+                if (isprint((unsigned char)c))
                     print_chars[i] = c;
             }
 
@@ -582,7 +582,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         char *p;
         for (p = rmtdev + 1; *p && *p != ':'; p++)
         {
-            if (!isdigit(*p))  /* (port numbers are always numeric) */
+            if (!isdigit((unsigned char)*p))  /* (port numbers are always numeric) */
             {
                 /* Not a port number ==> not really a remote device */
                 rmtdev = NULL;
@@ -2385,7 +2385,7 @@ DLL_EXPORT int valid_dsname( const char *pszdsname )
     for ( i = 0; i < iLen; i++ )
     {
         BYTE c = pszdsname[i];
-        if ( isalnum( c ) )
+        if ( isalnum( (unsigned char)c ) )
             continue;
         else if ( c == '$' )
             continue;

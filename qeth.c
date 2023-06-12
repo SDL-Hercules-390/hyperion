@@ -4289,7 +4289,7 @@ U32 mask4;
         {
             // Check whether a numeric prefix in the range 1 to 128 has been specified.
             work_rc = 0;
-            for (p = grp->ttpfxlen6; isdigit(*p); p++) { }
+            for (p = grp->ttpfxlen6; isdigit((unsigned char)*p); p++) { }
             if (*p != '\0' || !strlen(grp->ttpfxlen6))
                 work_rc = -1;
             pfxlen = atoi(grp->ttpfxlen6);
@@ -6535,7 +6535,7 @@ static int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
     char* p;
     int pfxlen;
     /* make sure it's a number from 0 to 32 */
-    for (p = ttpfxlen; isdigit(*p); p++) { }
+    for (p = ttpfxlen; isdigit((unsigned char)*p); p++) { }
     if (*p || !ttpfxlen[0] || (pfxlen = atoi(ttpfxlen)) > 32)
         return -1;
     addr4.s_addr = ~makepfxmask4( ttpfxlen );

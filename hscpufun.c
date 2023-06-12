@@ -464,8 +464,8 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
                     */
                     for (j=0, len = (int) strlen( argv[i] ); j < len && psi < SIZEOF_IPLPARM; j++)
                     {
-                        if (islower( argv[i][j] ))
-                            argv[i][j] = toupper( argv[i][j] );
+                        if (islower( (unsigned char)argv[i][j] ))
+                            argv[i][j] = toupper( (unsigned char)argv[i][j] );
 
                         sysblk.iplparmstring[ psi++ ] = host_to_guest( argv[i][j] );
                     }

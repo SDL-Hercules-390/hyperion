@@ -3284,7 +3284,7 @@ char *strtok_str = NULL;
         for (cpu = 0; styp != NULL; )
         {
             count = 1;
-            if (isdigit(styp[0]))
+            if (isdigit((unsigned char)styp[0]))
             {
                 if (0
                     || sscanf(styp, "%d%c", &count, &c) != 2
@@ -3578,7 +3578,7 @@ int mainsize_cmd( int argc, char* argv[], char* cmdline )
 
         if (rc == 2)
         {
-            switch (toupper( f ))
+            switch (toupper( (unsigned char)f ))
             {
             case 'B':
                 suffix_oflow_mask = 0;
@@ -3740,7 +3740,7 @@ u_int   locktype = 0;
                                                             : sizeof(U32);
         if ( rc == 2 )
         {
-            switch (toupper(f))
+            switch (toupper((unsigned char)f))
             {
             case 'B':
                 shiftsize >>= SHIFT_MEBIBYTE;
@@ -4197,7 +4197,7 @@ int cnslport_cmd( int argc, char* argv[], char* cmdline )
 
         for (i=0; i < (int) strlen( port ); i++)
         {
-            if (!isdigit( port[i] ))
+            if (!isdigit( (unsigned char)port[i] ))
             {
                 // "Invalid value %s specified for %s"
                 WRMSG( HHC01451, "E", port, argv[0] );
@@ -4340,7 +4340,7 @@ int sysgport_cmd( int argc, char* argv[], char* cmdline )
 
             for (i=0; i < (int) strlen( port ); i++)
             {
-                if (!isdigit( port[i] ))
+                if (!isdigit( (unsigned char)port[i] ))
                 {
                     // "Invalid value %s specified for %s"
                     WRMSG( HHC01451, "E", port, argv[0] );
@@ -4729,7 +4729,7 @@ int sh_cmd( int argc, char* argv[], char* cmdline )
         return -1;
     }
 
-    for (cmdline += 2; isspace( *cmdline ); ++cmdline) /* (nop) */;
+    for (cmdline += 2; isspace( (unsigned char)*cmdline ); ++cmdline) /* (nop) */;
     return (*cmdline) ? herc_system( cmdline ) : -1;
 }
 
@@ -5113,8 +5113,8 @@ int stsi_model_cmd( int argc, char* argv[], char* cmdline )
             {
                 for (i=0; i < len; i++)
                 {
-                    if (!isalnum( model[m][i] ) ||
-                       (!isupper( model[m][i] ) && !isdigit( model[m][i] )))
+                    if (!isalnum( (unsigned char)model[m][i] ) ||
+                       (!isupper( (unsigned char)model[m][i] ) && !isdigit( (unsigned char)model[m][i] )))
                     {
                         char msgbuf[64];
                         MSGBUF( msgbuf, "%s-model = <%s>", model_name[m], model[m] );
@@ -5205,8 +5205,8 @@ int stsi_plant_cmd( int argc, char* argv[], char* cmdline )
 
         for (i=0; i < strlen( argv[1] ); i++)
         {
-            if (isalnum( argv[1][i] ) &&
-               (isupper( argv[1][i] ) || isdigit( argv[1][i] )))
+            if (isalnum( (unsigned char)argv[1][i] ) &&
+               (isupper( (unsigned char)argv[1][i] ) || isdigit( (unsigned char)argv[1][i] )))
                 continue;
 
             // "Invalid argument %s%s"
@@ -5263,8 +5263,8 @@ int stsi_manufacturer_cmd( int argc, char* argv[], char* cmdline )
 
         for (i=0; i < strlen( argv[1] ); i++)
         {
-            if (isalnum( argv[1][i] ) &&
-               (isupper( argv[1][i] ) || isdigit( argv[1][i] )))
+            if (isalnum( (unsigned char)argv[1][i] ) &&
+               (isupper( (unsigned char)argv[1][i] ) || isdigit( (unsigned char)argv[1][i] )))
                 continue;
 
             // "Invalid argument %s%s"
@@ -6365,7 +6365,7 @@ int qd_cmd( int argc, char* argv[], char* cmdline )
                 if (j % 4 == 0)
                     len += sprintf( buf + len, " " );
                 len += sprintf( buf + len, "%2.2X", iobuf[j] );
-                cbuf[ j % 16 ] = isprint( guest_to_host( iobuf[j] )) ? guest_to_host( iobuf[j] ) : '.';
+                cbuf[ j % 16 ] = isprint( (unsigned char)guest_to_host( iobuf[j] )) ? guest_to_host( iobuf[j] ) : '.';
             }
             len += sprintf( buf + len, " |%s|", cbuf );
             // "%s" // qd command
@@ -7200,7 +7200,7 @@ BYTE     unitstat, code = 0;
     {
         for (rc = 0; rc < (int)strlen(argv[3]); rc++)
         {
-            if ( !isdigit(argv[3][rc]) )
+            if ( !isdigit((unsigned char)argv[3][rc]) )
             {
                 WRMSG( HHC02205, "E", argv[3], "; not in range of 1-9999");
                 return -1;

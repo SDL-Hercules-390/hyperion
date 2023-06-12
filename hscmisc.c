@@ -168,7 +168,7 @@ BYTE    c;                              /* Character work area       */
             hbuf[++j] = 0;
         }
         c = guest_to_host(c);
-        if (!isprint(c)) c = '.';
+        if (!isprint((unsigned char)c)) c = '.';
         cbuf[i] = c;
         if ((aaddr & PAGEFRAME_BYTEMASK) == 0x000) break;
     } /* end for(i) */
@@ -357,7 +357,7 @@ char    buf[512];                       /* MSGBUF work buffer        */
 
     /* Parse optional address-space prefix */
     opnd = argv[0];
-    type = toupper( *opnd );
+    type = toupper( (unsigned char)*opnd );
 
     if (0
         || type == 'R'
@@ -487,7 +487,7 @@ char    absorr[8];                      /* Uppercase command         */
 
     /* Convert command to uppercase */
     for (i = 0; argv[0][i]; i++)
-        absorr[i] = toupper(argv[0][i]);
+        absorr[i] = toupper((unsigned char)argv[0][i]);
     absorr[i] = 0;
     opnd = argv[1];
 
@@ -653,7 +653,7 @@ size_t  totamt;                         /* Total amount to be dumped */
 
     /* Parse optional address-space prefix */
     opnd = argv[0];
-    type = toupper( *opnd );
+    type = toupper( (unsigned char)*opnd );
 
     if (1
         && type != 'P'
@@ -2130,7 +2130,7 @@ BYTE    c;                              /* Character work area       */
             h1 = *(++s);
             if (h1 == '\0'  || h1 == '#' ) break;
             if (h1 == SPACE || h1 == '\t') continue;
-            h1 = toupper(h1);
+            h1 = toupper((unsigned char)h1);
             h1 = (h1 >= '0' && h1 <= '9') ? h1 - '0' :
                  (h1 >= 'A' && h1 <= 'F') ? h1 - 'A' + 10 : -1;
             if (h1 < 0)
@@ -2139,7 +2139,7 @@ BYTE    c;                              /* Character work area       */
                 return -1;
             }
             h2 = *(++s);
-            h2 = toupper(h2);
+            h2 = toupper((unsigned char)h2);
             h2 = (h2 >= '0' && h2 <= '9') ? h2 - '0' :
                  (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
             if (h2 < 0)

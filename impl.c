@@ -1759,8 +1759,8 @@ static int process_args( int argc, char* argv[] )
 
                         for (j=0; j < (int) strlen( sym ); j++)
                         {
-                            if (islower( sym[j] ))
-                                sym[j] = toupper( sym[j] );
+                            if (islower( (unsigned char)sym[j] ))
+                                sym[j] = toupper( (unsigned char)sym[j] );
                         }
 
                         set_symbol( sym, value );
@@ -1849,7 +1849,7 @@ static int process_args( int argc, char* argv[] )
             {
                 char buf[16];
 
-                if (isprint( optopt ))
+                if (isprint( (unsigned char)optopt ))
                     MSGBUF( buf, "'-%c'", optopt );
                 else
                     MSGBUF( buf, "(hex %2.2x)", optopt );

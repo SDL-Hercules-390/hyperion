@@ -810,7 +810,7 @@ int     rc;                             /* (work)                    */
 #if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 
     /* Skip past blanks to start of command */
-    for (p = stmt; isspace( *p ); p++)
+    for (p = stmt; isspace( (unsigned char)*p ); p++)
         ; /* (nop; do nothing) */
 
     /* Execute REXX script if line begins with "Slash '/' Asterisk '*'" */
@@ -832,11 +832,11 @@ int     rc;                             /* (work)                    */
         stmtnum++;
 
         /* Skip past blanks to start of statement */
-        for (p = stmt; isspace( *p ); p++)
+        for (p = stmt; isspace( (unsigned char)*p ); p++)
             ; /* (nop; do nothing) */
 
         /* Remove trailing whitespace */
-        for (stmtlen = (int)strlen(p); stmtlen && isspace(p[stmtlen-1]); stmtlen--);
+        for (stmtlen = (int)strlen(p); stmtlen && isspace((unsigned char)p[stmtlen-1]); stmtlen--);
         p[stmtlen] = 0;
 
         /* Special handling for 'pause' and other statements */
@@ -1052,7 +1052,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
         if (p2)
             args = p2;
 
-        if (isalpha( args[0] ))  /* [RESTART|START|<oldpsw>]? */
+        if (isalpha( (unsigned char)args[0] ))  /* [RESTART|START|<oldpsw>]? */
         {
 #define MAX_KW_LEN 15
             char kw[ MAX_KW_LEN + 1 ] = {0};

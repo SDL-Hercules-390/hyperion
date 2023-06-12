@@ -807,9 +807,9 @@ static void hao_message(char *buf)
                         continue;
                     }
                     /* replace $1..$99 by the corresponding capturing group */
-                    if (*p == '$' && isdigit(p[1]))
+                    if (*p == '$' && isdigit((unsigned char)p[1]))
                     {
-                        if (isdigit(p[2]))
+                        if (isdigit((unsigned char)p[2]))
                         {
                             j = (p[1]-'0') * 10 + (p[2]-'0');
                             k = 3;

@@ -539,7 +539,7 @@ BYTE buf[256];
                             dev->ckdtab->devt, dev->ckdtab->model);
         memcpy( &buf[18], dev->serial, 12 );
         for (i = 4; i < 30; i++)
-            buf[i] = host_to_guest( isalnum( buf[i] ) ? buf[i] : '0' );
+            buf[i] = host_to_guest( isalnum( (unsigned char)buf[i] ) ? buf[i] : '0' );
         store_hw(buf + 30, dev->devnum);        /* Uniquely tag within system */
 
         /* Bytes 32-63: NED 2  Node element descriptor for the string */

@@ -1100,7 +1100,7 @@ static const char* hdl_build_devmod_name( const char* typname )
     strlcat( dtname, typname, size );
 
     for (len = 0; len < strlen( dtname ); len++)
-        dtname[ len ] = tolower( dtname[ len ]);
+        dtname[ len ] = tolower( (unsigned char)dtname[ len ]);
 
     return dtname;
 }

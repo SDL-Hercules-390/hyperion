@@ -1237,7 +1237,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     bool  update  =  false;             /* Whether parms were given  */
     bool  unlock  =  false;             /* Should do RELEASE_INTLOCK */
 
-    cmdline[0] = tolower( cmdline[0] );
+    cmdline[0] = tolower( (unsigned char)cmdline[0] );
 
     trace  = (cmdline[0] == 't');       // trace command
     step   = (cmdline[0] == 's');       // stepping command

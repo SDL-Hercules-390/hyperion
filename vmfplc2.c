@@ -1560,7 +1560,7 @@ static const char* validate_cmsfile( const char* fn, const char* ft, const char*
         return msg;
     }
 
-    if (!isalpha( fm[0] ))
+    if (!isalpha( (unsigned char)fm[0] ))
         return "CMS File mode must start with a letter";
 
     if (strlen( fm ) > 1)
@@ -1838,8 +1838,8 @@ static int parse_ctlfile_stmt( OPTIONS* opts, const char* orec, int recno )
     ctl.hostfile = strdup( infile );
     ctl.mtime    = stt.st_mtime;
     ctl.reclen   = reclen;
-    ctl.recfm    = toupper( recfm  [0] );
-    ctl.filefmt  = toupper( filefmt[0] );
+    ctl.recfm    = toupper( (unsigned char)recfm  [0] );
+    ctl.filefmt  = toupper( (unsigned char)filefmt[0] );
     ctl.loaded   = false;
 
     VERIFY( add_ctltab_entry( &ctl ));
