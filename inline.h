@@ -542,7 +542,7 @@ inline BYTE* ARCH_DEP( fetch_main_absolute )( RADR addr, REGS* regs )
 /*-------------------------------------------------------------------*/
 /*  Generate a PER 1 General Register Alteration event interrupt     */
 /*-------------------------------------------------------------------*/
-inline void ARCH_DEP( per1_gra )( REGS* regs )
+static inline void ARCH_DEP( per1_gra )( REGS* regs )
 {
 #if !defined( FEATURE_PER1 )
     UNREFERENCED( regs );
