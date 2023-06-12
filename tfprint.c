@@ -1767,7 +1767,7 @@ static inline void print_op_stor( const char* pfx, BYTE arch_mode, BYTE real_mod
         for (i=0; i < op->amt; i++)
         {
             c = guest_to_host( op->stor[ i ]);
-            if (!isprint( c )) c = '.';
+            if (!isprint( (unsigned char)c )) c = '.';
             cbuf[ i ] = c;
         }
 
@@ -3564,7 +3564,7 @@ static bool convert_storage_opt_str( bool ishex, const char* str, U64* pU64, MOP
 
     if (str[1] == ':')
     {
-        char str0 = toupper( str[0] );
+        char str0 = toupper( (unsigned char)str[0] );
 
         if (1
             && str0 != 'V'      // Virtual address?
@@ -3829,7 +3829,7 @@ static bool convert_opcode_opt_str( bool ishex, const char* str, U64* pU64, MOPT
 
     for (i=0; i < n; i += 2)
     {
-        c = toupper( str[i] );      // Left nibble
+        c = toupper( (unsigned char)str[i] );      // Left nibble
 
         if (is_hex_l( &c, 1 ))
         {
@@ -3844,7 +3844,7 @@ static bool convert_opcode_opt_str( bool ishex, const char* str, U64* pU64, MOPT
             left_mask = 0;
         }
 
-        c = toupper( str[i+1] );    // Right nibble
+        c = toupper( (unsigned char)str[i+1] );    // Right nibble
 
         if (is_hex_l( &c, 1 ))
         {

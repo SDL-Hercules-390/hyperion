@@ -389,7 +389,7 @@ static BYTE WriteLine
         if (!c)
             c = SPACE;
         else if (dev->fold)
-            c = toupper(c);
+            c = toupper((unsigned char)c);
 
         /* Copy to device output buffer */
         dev->buf[ dev->bufoff ] = c;
@@ -1263,7 +1263,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                 /* ':" NOT found. old format or fcb name */
                 char c;
                 ptr = argv[ iarg ] + 4; /* get past "fcb=" */
-                if (strlen( ptr ) != 26 || !isdigit( *ptr ))
+                if (strlen( ptr ) != 26 || !isdigit( (unsigned char)*ptr ))
                 {
                     /* It doesn't appear they're defining a custom
                        fcb. See if they gave us an fcb name instead.

@@ -487,7 +487,7 @@ static off_t offtify(char *s)
     {
         s = s + 2;
 
-        for (v = 0; isxdigit(*s); ++s)
+        for (v = 0; isxdigit((unsigned char)*s); ++s)
             v = (v << 4) + xv[ strchr( xd, *s ) - xd ];
 
         if (debug)

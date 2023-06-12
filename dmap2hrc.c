@@ -176,7 +176,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             /* It's a real device. Fix the type so Hercules can use it and
                locate the output filename. */
             STRLCPY( output_type, device.type );
-            if (isprint(device.parms.disk.volser[0]))
+            if (isprint((unsigned char)device.parms.disk.volser[0]))
                 output_filename = device.parms.disk.filename;
             else output_filename = device.parms.other.filename;
 

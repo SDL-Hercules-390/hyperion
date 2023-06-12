@@ -941,10 +941,10 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                 strupper( group, argv[ac] );
 
                 for (i=1, rc=0; i < (int) strlen( group ) && rc == 0; i++)
-                    if (!isalnum( group[i] ))
+                    if (!isalnum( (unsigned char)group[i] ))
                         rc = -1;
 
-                if (rc == 0 && isalpha( group[0] ))
+                if (rc == 0 && isalpha( (unsigned char)group[0] ))
                     STRLCPY( dev->filename, group );
                 else
                 {
@@ -1202,7 +1202,7 @@ static struct sockaddr_in* parse_sockspec( const char* sockspec )
 
     // Convert port to number
 
-    if (isdigit( *port ))
+    if (isdigit( (unsigned char)*port ))
         sin->sin_port = htons( atoi( port ));
     else
     {

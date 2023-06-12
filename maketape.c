@@ -772,7 +772,7 @@ int     i, j;                      /* used to index through string vars    */
 
     /* ensure that label fields only contain upper case */
     for (i=0; i < 80; i++)
-        buf[i] = toupper( buf[i] );
+        buf[i] = toupper( (unsigned char)buf[i] );
 
     if (!nltape)
     {
@@ -857,7 +857,7 @@ int     offset;                    /* used for building blocked records    */
 
         /* ensure that label fields only contain upper case */
         for (i=0; i < 80; i++)
-            buf[i] = toupper( buf[i] );
+            buf[i] = toupper( (unsigned char)buf[i] );
 
         if (ansi)
             buf[79] = '1';

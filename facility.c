@@ -1762,7 +1762,7 @@ bool facility_query( int argc, char* argv[] )
         p += 3;
 
     if (1
-        && isdigit( *p )
+        && isdigit( (unsigned char)*p )
         && sscanf( p, "%d%c", &bitno, &c ) == 1
         && bitno >= 0
         && bitno <= (int) STFL_HERC_LAST_BIT
@@ -4516,7 +4516,7 @@ int facility_enable_disable( int argc, char* argv[] )
             p += 3;
 
         if (0
-            || !isdigit( *p )
+            || !isdigit( (unsigned char)*p )
             || sscanf( p, "%d%c", &bitno, &c ) != 1
             || bitno < 0
             || bitno > (int) STFL_HERC_LAST_BIT

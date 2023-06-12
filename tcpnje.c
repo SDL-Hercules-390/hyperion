@@ -179,7 +179,7 @@ static void logdump(char *txt, DEVBLK *dev, BYTE *bfr, size_t sz)
         for(j = 0; (j < 16) && ((i + j) < sz); j++)
         {
             character = guest_to_host(bfr[i + j]);
-            if (!isprint(character)) character = '.';
+            if (!isprint((unsigned char)character)) character = '.';
             logmsg("%c", character);
         }
         logmsg("\n");
@@ -202,7 +202,7 @@ static char *guest_to_host_string(char *string, size_t length, const BYTE *ebcdi
 
         if (string[i] == ' ')
             string[i] = '\0';
-        else if (!isprint(string[i]))
+        else if (!isprint((unsigned char)string[i]))
             string[i] = '.';
     }
 
@@ -2584,7 +2584,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                     }
                     for(j = 0; j < strlen(res.text); j++)
                     {
-                        tn->lnode[j] = host_to_guest(toupper(res.text[j]));
+                        tn->lnode[j] = host_to_guest(toupper((unsigned char)res.text[j]));
                     }
                     break;
                 case TCPNJE_KW_RNODE:
@@ -2596,7 +2596,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                     }
                     for(j = 0; j < strlen(res.text); j++)
                     {
-                        tn->rnode[j] = host_to_guest(toupper(res.text[j]));
+                        tn->rnode[j] = host_to_guest(toupper((unsigned char)res.text[j]));
                     }
                     break;
                 case TCPNJE_KW_DEBUG:

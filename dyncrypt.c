@@ -109,7 +109,7 @@ static const int kmctr_pblens[32] =
   snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " | "); \
   for(i = 0; i < (x); i++) \
   { \
-    if(isprint(guest_to_host((v)[i]))) \
+    if(isprint((unsigned char)guest_to_host((v)[i]))) \
       snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", guest_to_host((v)[i])); \
     else \
       snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "."); \
@@ -137,7 +137,7 @@ static const int kmctr_pblens[32] =
     snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " | "); \
     for(j = 0; j < (x); j++) \
     { \
-      if(isprint(guest_to_host((v)[i * (x) + j]))) \
+      if(isprint((unsigned char)guest_to_host((v)[i * (x) + j]))) \
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", guest_to_host((v)[i * (x) + j])); \
       else \
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "."); \

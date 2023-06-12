@@ -202,7 +202,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
                     strnfilenamecmp( (pszTapeDevNum=path+7)-2, "st",  2 ) == 0
                 )
             &&  strlen(pszTapeDevNum) == 1
-            &&  isdigit(*pszTapeDevNum)
+            &&  isdigit((unsigned char)*pszTapeDevNum)
         )
         {
             // Change it to a Windows device name (e.g. \\.\Tape0)

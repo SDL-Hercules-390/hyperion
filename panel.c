@@ -1424,7 +1424,7 @@ static void NP_update(REGS *regs)
                 l = (int)strlen(devnam);
                 for ( p = 0; p < l; p++ )
                 {
-                    if ( !isprint(devnam[p]) )
+                    if ( !isprint((unsigned char)devnam[p]) )
                     {
                         devnam[p] = '\0';
                         break;
@@ -2066,7 +2066,7 @@ size_t  loopcount;                      /* Number of iterations done */
                         case 1:                     /* IPL - 2nd part */
                             if (!sysblk.hicpu)
                               break;
-                            i = toupper(NPdevice) - 'A';
+                            i = toupper((unsigned char)NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
                                 memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
@@ -2087,7 +2087,7 @@ size_t  loopcount;                      /* Number of iterations done */
                         case 2:                     /* Device int: part 2 */
                             if (!sysblk.hicpu)
                               break;
-                            i = toupper(NPdevice) - 'A';
+                            i = toupper((unsigned char)NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
                                 memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
@@ -2106,7 +2106,7 @@ size_t  loopcount;                      /* Number of iterations done */
                             redraw_status = 1;
                             break;
                         case 3:                     /* Device asgn: part 2 */
-                            i = toupper(NPdevice) - 'A';
+                            i = toupper((unsigned char)NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
                                 memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
@@ -2311,7 +2311,7 @@ size_t  loopcount;                      /* Number of iterations done */
 
                             while (*p && ncmd_tok < 10 )
                             {
-                                while (*p && isspace(*p))
+                                while (*p && isspace((unsigned char)*p))
                                 {
                                     p++;
                                 }
@@ -2325,7 +2325,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                 cmd_tok[ncmd_tok] = p; ++ncmd_tok; // count new arg
 
                                 while ( *p
-                                        && !isspace(*p)
+                                        && !isspace((unsigned char)*p)
                                         && *p != '\"'
                                         && *p != '\'' )
                                 {
@@ -2410,7 +2410,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                             }
                                         }
                                     }
-                                    else if ( !isdigit( pt1[idx+1] ) && ( pt1[idx+1] != '$' ) )
+                                    else if ( !isdigit( (unsigned char)pt1[idx+1] ) && ( pt1[idx+1] != '$' ) )
                                     {
                                         psz_cmdline[odx++] = pt1[idx];
                                     }
@@ -2786,7 +2786,7 @@ size_t  loopcount;                      /* Number of iterations done */
                 } /* end if (kbbuf[i] == '\n') */
 
                 /* Ignore non-printable characters */
-                if (!isprint(kbbuf[i])) {
+                if (!isprint((unsigned char)kbbuf[i])) {
                     beep();
                     i++;
                     continue;

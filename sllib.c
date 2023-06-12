@@ -1158,13 +1158,13 @@ sl_ds1( SLLABEL *lab,
         gdg  = 0;
         gdg += (          dsn[ len - 9 ]   == '.' );
         gdg += (          dsn[ len - 8 ]   == 'G' );
-        gdg += ( isdigit( dsn[ len - 7 ] ) !=  0  );
-        gdg += ( isdigit( dsn[ len - 6 ] ) !=  0  );
-        gdg += ( isdigit( dsn[ len - 5 ] ) !=  0  );
-        gdg += ( isdigit( dsn[ len - 4 ] ) !=  0  );
+        gdg += ( isdigit( (unsigned char)dsn[ len - 7 ] ) !=  0  );
+        gdg += ( isdigit( (unsigned char)dsn[ len - 6 ] ) !=  0  );
+        gdg += ( isdigit( (unsigned char)dsn[ len - 5 ] ) !=  0  );
+        gdg += ( isdigit( (unsigned char)dsn[ len - 4 ] ) !=  0  );
         gdg += (          dsn[ len - 3 ]   == 'V' );
-        gdg += ( isdigit( dsn[ len - 2 ] ) !=  0  );
-        gdg += ( isdigit( dsn[ len - 1 ] ) !=  0  );
+        gdg += ( isdigit( (unsigned char)dsn[ len - 2 ] ) !=  0  );
+        gdg += ( isdigit( (unsigned char)dsn[ len - 1 ] ) !=  0  );
 
         if( gdg == 9 )
         {

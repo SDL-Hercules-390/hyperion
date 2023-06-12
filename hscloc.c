@@ -95,7 +95,7 @@ void fmt_line( unsigned char *tbl, char *name, int start, int length)
             if ( (i & 0xf) == 0x0 ) { hbuf[j++] = SPACE; cbuf[k++] = SPACE; }
 
             j += idx_snprintf( j, hbuf, sizeof(hbuf), "%2.2X", c );
-            cbuf[k++] = ( !isprint(c) ? '.' : c );
+            cbuf[k++] = ( !isprint((unsigned char)c) ? '.' : c );
 
         } /* end for(i) */
         MSGBUF( fmtline, "%s+0x%04x%-74.74s %-34.34s", name, o, hbuf, cbuf );

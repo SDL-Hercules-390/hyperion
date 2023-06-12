@@ -247,7 +247,7 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
     /* Lastly, convert any unprintable chars to spaces or underscores */
     for (i=0; a_msg[i]; i++)
     {
-        if (!isprint( a_msg[i] ))
+        if (!isprint( (unsigned char)a_msg[i] ))
         {
             if (a_msg[i] == subsub[0])  // "SUB" character?
                 a_msg[i] = '_';         // Replace with underscore
@@ -1984,7 +1984,7 @@ fflush( efile );
                             {
                                 for (i=0; i < event_msglen; i++)
                                 {
-                                    message[i] = isprint( guest_to_host( evd_msg[i] )) ?
+                                    message[i] = isprint( (unsigned char)guest_to_host( evd_msg[i] )) ?
                                         guest_to_host( evd_msg[i] ) : ' ';
                                 }
                                 message[i] = '\0';

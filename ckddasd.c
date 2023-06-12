@@ -3857,7 +3857,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            the key, which will usually be a dataset name or member
            name and can provide useful debugging information */
         if ((*unitstat & CSW_SM) && dev->ckdkeytrace
-            && isprint(guest_to_host(iobuf[0])))
+            && isprint((unsigned char)guest_to_host(iobuf[0])))
         {
             BYTE module[45];
             size_t kl = MIN( (size_t)num, sizeof( module ) - 1 );

@@ -46,7 +46,7 @@ void het_string_to_upper (char *source)
 int i;
 
     for (i = 0; source[i] != '\0'; i++)
-        source[i] = toupper(source[i]);
+        source[i] = toupper((unsigned char)source[i]);
 }
 
 /*

@@ -1309,8 +1309,8 @@ int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
     {
         if
         (0
-            || !isxdigit(work[(i*3)+0])
-            || !isxdigit(work[(i*3)+1])
+            || !isxdigit((unsigned char)work[(i*3)+0])
+            || !isxdigit((unsigned char)work[(i*3)+1])
             ||  sep  !=  work[(i*3)+2]
         )
         {
@@ -1422,9 +1422,9 @@ void net_data_trace( DEVBLK* pDEVBLK, BYTE* pAddr, int iLen, BYTE bDir, BYTE bSe
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
 
-                if( isprint( e ) )
+                if( isprint( (unsigned char)e ) )
                     print_ebcdic[i] = e;
-                if( isprint( c ) )
+                if( isprint( (unsigned char)c ) )
                     print_ascii[i] = c;
             }
             else

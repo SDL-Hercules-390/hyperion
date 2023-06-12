@@ -1271,7 +1271,7 @@ void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
 {
     char * response;
 
-    while (isspace(*command))
+    while (isspace((unsigned char)*command))
         command++;
 
     if (*command == 0)

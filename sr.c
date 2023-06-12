@@ -449,7 +449,7 @@ int      numconfdev=0;
             if (len >= 2)
             {
                 len -= 2;
-                while (len > 0 && isspace(buf[len]))
+                while (len > 0 && isspace((unsigned char)buf[len]))
                     --len;
                 buf[len+1]=0;
             }

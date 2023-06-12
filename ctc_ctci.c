@@ -1536,7 +1536,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
             char * s = pCTCBLK->szTUNIfName + strlen(pCTCBLK->szTUNIfName);
 
-            while(isdigit(s[- 1])) s--;
+            while(isdigit((unsigned char)s[- 1])) s--;
             STRLCAT( pCTCBLK->szTUNCharDevName, s );
         }
 #endif

@@ -7511,7 +7511,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         BYTE c, s[17]; int j;
         for (j=0; j < 16; j++) {
             c = guest_to_host( m[j] );
-            s[j] = isprint(c) ? c : '.';
+            s[j] = isprint((unsigned char)c) ? c : '.';
         }
         s[j] = '\0';
         LOGMSG( "+%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
