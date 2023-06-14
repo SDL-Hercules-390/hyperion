@@ -34,7 +34,7 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/* CKD device definitions                                            */
+/*                    CKD device definitions                         */
 /*-------------------------------------------------------------------*/
 static CKDDEV ckdtab[] = {
 /* name         type model clas code prime a hd    r0    r1 har0   len sec    rps  f f1  f2   f3   f4 f5 f6  cu */
@@ -114,12 +114,13 @@ static CKDDEV ckdtab[] = {
 #define CKDDEV_NUM (sizeof(ckdtab)/CKDDEV_SIZE)
 
 /*-------------------------------------------------------------------*/
-/* CKD control unit definitions                                      */
+/*             CKD control unit definitions                          */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*           ----------------------------------                      */
+/*           3880, 3990, 2105 and higher coding                      */
+/*           ----------------------------------                      */
 /*                                                                   */
-/* 3880, 3990, 2105 and higher coding                                */
-/* ----------------------------------                                */
 /*                                                                   */
 /* Model coding bits (RDC byte 2):                                   */
 /*                                                                   */
@@ -133,23 +134,31 @@ static CKDDEV ckdtab[] = {
 /*   .... .001 3990-6/7   Enhanced Mode                              */
 /*                                                                   */
 /*                                                                   */
-/* Features (RDC bytes 6-9):                                         */
+/* Features (RDC byte 6):                                            */
 /*                                                                   */
-/*   Byte 6:                                                         */
 /*   1... .... Multiple Burst ECC (ignored, 3380 devices)            */
 /*   .1.. .... Locate Record, Read Tracks                            */
 /*   ..1. .... Reserved                                              */
 /*   ...1 .... Locate Record, Read                                   */
+/*   .... 1... Set System Characteristics is supported  (*)          */
+/*   .... .1.. Set System Characteristics               (*)          */
+/*             has been received for this Path Group    (*)          */
+/*   .... ..1. Prefix CCW supported & enabled           (*)          */
 /*   .... ...1 Reserved for VM minidisk use                          */
 /*             (testing this bit for zero is not reliable as an      */
 /*             indicator that this is not a minidisk; can fail       */
 /*             when minidisk is a fullpack minidisk)                 */
 /*                                                                   */
-/*   Byte 7 - Levels defining byte 8 format                          */
+/*        (*)  https://www.vm.ibm.com/pubs/cp720/RDCBK.HTML          */
+/*                                                                   */
+/*                                                                   */
+/* Levels defining byte 8 format (RDC byte 7):                       */
+/*                                                                   */
 /*   0000 0000 Not supported by Hercules, must be zero               */
 /*                                                                   */
-/*   Byte 8 - Added feature support                                  */
-/*   0000 0000 Not supported by Hercules, must be zero               */
+/*                                                                   */
+/* Added feature support (RDC byte 8):                               */
+/*                                                                   */
 /*   1... .... RAMAC: During dynamic sparing operations,             */
 /*             a defective primary track will be written             */
 /*             as defective on the secondary                         */
@@ -157,7 +166,9 @@ static CKDDEV ckdtab[] = {
 /*             supported on parallel channels                        */
 /*   .00. 0000 Reserved, set to zeros                                */
 /*                                                                   */
-/*   Byte 9 - Subsystem Program Visible Facilities                   */
+/*                                                                   */
+/* Subsystem Program Visible Facilities (RDC byte 9):                */
+/*                                                                   */
 /*   1... .... Cache Fast Write supported (not supported, yet!)      */
 /*             (non-retentive data)                                  */
 /*   .1.. .... Lock Facility supported    (not supported, yet!)      */
@@ -200,7 +211,7 @@ static CKDCU ckdcutab[] = {
 #define CKDCU_NUM (sizeof(ckdcutab)/CKDCU_SIZE)
 
 /*-------------------------------------------------------------------*/
-/* FBA device definitions - courtesy of Tomas Masek                  */
+/*       FBA device definitions - courtesy of Tomas Masek            */
 /*-------------------------------------------------------------------*/
 static FBADEV fbatab[] = {
 /* name          devt class type mdl  bpg bpp size   blks   cu     */
