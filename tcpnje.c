@@ -1456,8 +1456,9 @@ static void *tcpnje_thread(void *vtn)
     init_signaled = 0;
 
     DBGMSG(1, "HHCTN002I %4.4X:TCPNJE - networking thread "TIDPAT" started for link %s - %s\n",
-            devnum, thread_id(), guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
-                                 guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
+            devnum, TID_CAST(thread_id()),
+            guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
+            guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
 
     if (!init_signaled)
     {

@@ -1284,6 +1284,7 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
     TID         tid = 0;            /* Requested thread id           */
     int         i, k, rc = 0;       /* Work vars and return code     */
     char        c;                  /* sscanf work; work flag        */
+    TID_INT     tid_int;
 
     UNREFERENCED( cmdline );
 
@@ -1292,8 +1293,10 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
          if (argc <= 1)               tid = (TID)  0;
     else if (CMD( argv[1], ALL,  3 )) tid = (TID)  0;
     else if (CMD( argv[1], HELD, 4 )) tid = (TID) -1;
-    else if (sscanf( argv[1], SCN_TIDPAT "%c", &tid, &c ) != 1)
+    else if (sscanf( argv[1], SCN_TIDPAT "%c", &tid_int, &c ) != 1) {
+        tid = (TID)tid_int;
         rc = -1;
+    }
 
     if (!rc)
     {
@@ -1550,6 +1553,7 @@ DLL_EXPORT int threads_cmd( int argc, char* argv[], char* cmdline )
     char         tod[27];           /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
     char         ht_ob_time[27];    /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
     TID          tid = 0;           /* Requested thread id           */
+    TID_INT      tid_int;
     int          i, k, rc = 0;      /* Work vars and return code     */
     char         c;                 /* sscanf work; work flag        */
 
@@ -1560,8 +1564,10 @@ DLL_EXPORT int threads_cmd( int argc, char* argv[], char* cmdline )
          if (argc <= 1)                  tid = (TID)  0;
     else if (CMD( argv[1], ALL,     3 )) tid = (TID)  0;
     else if (CMD( argv[1], WAITING, 7 )) tid = (TID) -1;
-    else if (sscanf( argv[1], SCN_TIDPAT "%c", &tid, &c ) != 1)
+    else if (sscanf( argv[1], SCN_TIDPAT "%c", &tid_int, &c ) != 1) {
+        tid = (TID)tid_int;
         rc = -1;
+    }
 
     if (!rc)
     {
