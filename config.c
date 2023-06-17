@@ -1076,7 +1076,7 @@ int configure_cpu( int target_cpu )
         /* provided the _POSIX_THREAD_CPUTIME is supported.                       */
         pthread_getcpuclockid( sysblk.cputid[ target_cpu ], &sysblk.cpuclockid[ target_cpu ]);
         if (!sysblk.hhc_111_112)
-            WRMSG( HHC00111, "I", _POSIX_THREAD_CPUTIME );
+            WRMSG( HHC00111, "I", (long int)_POSIX_THREAD_CPUTIME );
 #else
         /* When not supported, we zero the cpuclockid, which will trigger a       */
         /* different approach to obtain the thread CPU time in clock.c            */

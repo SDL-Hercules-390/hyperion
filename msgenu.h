@@ -293,7 +293,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00108 "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
 #define HHC00109 "set_thread_priority( %d ) failed: %s"
 #define HHC00110 "Defaulting all threads to priority %d"
-#define HHC00111 "Thread CPU Time IS available (_POSIX_THREAD_CPUTIME=%d)"
+#define HHC00111 "Thread CPU Time IS available (_POSIX_THREAD_CPUTIME=%ld)"
 #define HHC00112 "Thread CPU Time is NOT available."
 //efine HHC00113 - HHC00129 (available)
 
