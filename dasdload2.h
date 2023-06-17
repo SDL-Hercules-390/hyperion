@@ -2846,7 +2846,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
                 return -1;
             }
 
-            // "Input record:   CCHHR[%04X%04X%02X] (TTR[%04X%02X]) kl[%d] dl[%d]\n" \
+            // "Input record:   CCHHR[%04X%04X%02X] (TTR[%04X%02X]) kl[%d] dl[%d]\n"
             //       "HHC02564I relocated to:   CCHHR[%04X%04X%02X] (TTR[%04X%02X])"
             XMINFF (4, MSG( HHC02564, "I", blkcyl, blkhead, blkrec, blktrk, blkrec, keylen, datalen,
                                            outcyl, outhead, outrec, outtrk, outrec ) );
