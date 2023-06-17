@@ -1846,7 +1846,7 @@ static void *tcpnje_thread(void *vtn)
         if (selectcount == 0)
         {
             DBGMSG(512, "HHCTN127D %4.4X:TCPNJE - select() timeout after %ld seconds %ld microseconds\n",
-                        devnum, tvcopy.tv_sec, tvcopy.tv_usec);
+                        devnum, tvcopy.tv_sec, (long int)tvcopy.tv_usec);
 
             /* Reset Call issued flag */
             tn->callissued = 0;
