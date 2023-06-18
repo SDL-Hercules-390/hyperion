@@ -951,11 +951,11 @@ int rexx_cmd( int argc, char* argv[], char* cmdline )
                         return CancelAllRexxExecs() ? 0 : -1;
                     else
                     {
-                        TID tid;
+                        TID_INT tid_int;
                         char c;
 
-                        if (sscanf( argv[ iarg ], SCN_TIDPAT "%c", &tid, &c ) == 1)
-                            return CancelRexxExec( tid ) ? 0 : -1;
+                        if (sscanf( argv[ iarg ], SCN_TIDPAT "%c", &tid_int, &c ) == 1)
+                            return CancelRexxExec( (TID)tid_int ) ? 0 : -1;
 
                         // "REXX(%s) Option %s value '%s' is invalid"
                         WRMSG( HHC17509, "E", PackageName,
