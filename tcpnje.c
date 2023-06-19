@@ -1456,8 +1456,9 @@ static void *tcpnje_thread(void *vtn)
     init_signaled = 0;
 
     DBGMSG(1, "HHCTN002I %4.4X:TCPNJE - networking thread "TIDPAT" started for link %s - %s\n",
-            devnum, thread_id(), guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
-                                 guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
+            devnum, TID_CAST(thread_id()),
+            guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
+            guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
 
     if (!init_signaled)
     {
@@ -1845,7 +1846,7 @@ static void *tcpnje_thread(void *vtn)
         if (selectcount == 0)
         {
             DBGMSG(512, "HHCTN127D %4.4X:TCPNJE - select() timeout after %ld seconds %ld microseconds\n",
-                        devnum, tvcopy.tv_sec, tvcopy.tv_usec);
+                        devnum, tvcopy.tv_sec, (long int)tvcopy.tv_usec);
 
             /* Reset Call issued flag */
             tn->callissued = 0;

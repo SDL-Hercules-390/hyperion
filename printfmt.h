@@ -114,16 +114,17 @@
 #if defined( _MSVC_ )
   #define TIDPAT             "%8.8"PRIx32       // complete format spec
   #define SCN_TIDPAT            "%"PRIx32       // complete format spec
-  #define TID_CAST( _tid )   ((U32)(_tid))      // cast to printable
+  #define TID_INT                     U32       // integer most like a TID
 #elif defined( SIZEOF_PTHREAD_T ) && SIZEOF_PTHREAD_T >= 8
   #define TIDPAT           "%16.16"PRIx64       // complete format spec
   #define SCN_TIDPAT            "%"PRIx64       // complete format spec
-  #define TID_CAST( _tid )   ((U64)(_tid))      // cast to printable
+  #define TID_INT                     U64       // integer most like a TID
 #else
   #define TIDPAT             "%8.8"PRIx32       // complete format spec
   #define SCN_TIDPAT            "%"PRIx32       // complete format spec
-  #define TID_CAST( _tid )   ((U32)(_tid))      // cast to printable
+  #define TID_INT                     U32       // integer most like a TID
 #endif
+#define TID_CAST( _tid )   ((TID_INT)(_tid))    // cast to printable
 
 #define LOG_TID_BEGIN( _tid, _name ) \
     WRMSG( HHC00100, "I", \

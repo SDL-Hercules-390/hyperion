@@ -1729,7 +1729,7 @@ static inline void print_op_stor( const char* pfx, BYTE arch_mode, BYTE real_mod
         RTRIM(   pfx_and_vadr );        // (vadr likely empty)
         STRLCAT( pfx_and_vadr, " " );   // (blank is expected)
 
-        FLOGMSG( stdout, "%sTranslation exception %04.4"PRIX16" (%s)\n",
+        FLOGMSG( stdout, "%sTranslation exception %04"PRIX16" (%s)\n",
             pfx_and_vadr, op->xcode, PIC2Name( op->xcode ));
     }
     else
@@ -1750,10 +1750,10 @@ static inline void print_op_stor( const char* pfx, BYTE arch_mode, BYTE real_mod
         // (more efficient to print everything than to loop)
         MSGBUF( hbuf,
 
-            "%02.2X%02.2X%02.2X%02.2X "
-            "%02.2X%02.2X%02.2X%02.2X "
-            "%02.2X%02.2X%02.2X%02.2X "
-            "%02.2X%02.2X%02.2X%02.2X",
+            "%02X%02X%02X%02X "
+            "%02X%02X%02X%02X "
+            "%02X%02X%02X%02X "
+            "%02X%02X%02X%02X",
 
             op->stor[ 0], op->stor[ 1], op->stor[ 2], op->stor[ 3],
             op->stor[ 4], op->stor[ 5], op->stor[ 6], op->stor[ 7],
@@ -1779,12 +1779,12 @@ static inline void print_op_stor( const char* pfx, BYTE arch_mode, BYTE real_mod
         /* And finally print all pieces together as one line */
         if (ARCH_900_IDX == arch_mode)
         {
-            FLOGMSG( stdout, "%s%sR:%16.16"PRIX64":K:%02.2X=%s\n",
+            FLOGMSG( stdout, "%s%sR:%016"PRIX64":K:%02X=%s\n",
                 pfx, vadr, op->raddr, op->skey, stor );
         }
         else
         {
-            FLOGMSG( stdout, "%s%sR:%8.8"PRIX32":K:%02.2X=%s\n",
+            FLOGMSG( stdout, "%s%sR:%08"PRIX32":K:%02X=%s\n",
                 pfx, vadr, (U32)op->raddr, op->skey, stor );
         }
     }
@@ -1865,7 +1865,7 @@ static inline void print_814_sigp( TF00814* rec )
         MSGBUF( prm, "%8.8"PRIX32, (U32) rec->parm );
 
     // "Processor %s: CC %d%s"
-    MSGBUF( pfx, "%s HHC00814I Processor %s: SIGP %-32s (%02.2X) %s, PARM %s: CC %d",
+    MSGBUF( pfx, "%s HHC00814I Processor %s: SIGP %-32s (%02X) %s, PARM %s: CC %d",
         &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ),
         order2name( rec->order ), rec->order,
         ptyp_str( rec->cpad ), prm, rec->cc );
@@ -1875,7 +1875,7 @@ static inline void print_814_sigp( TF00814* rec )
     if (rec->got_status)
         FLOGMSG( stdout, "%s\n", pfx );
     else
-        FLOGMSG( stdout, "%s status %8.8X\n", pfx, rec->status );
+        FLOGMSG( stdout, "%s status %08X\n", pfx, rec->status );
 }
 
 /******************************************************************************/

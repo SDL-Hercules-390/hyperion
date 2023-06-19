@@ -793,9 +793,9 @@ static void arghelp()
 
 /* Functions in module skey.h/.c, needed by impl.c */
 
-extern inline BYTE s370_get_storage_key( U64 abs );
-extern inline BYTE s390_get_storage_key( U64 abs );
-extern inline BYTE z900_get_storage_key( U64 abs );
+extern BYTE s370_get_storage_key( U64 abs );
+extern BYTE s390_get_storage_key( U64 abs );
+extern BYTE z900_get_storage_key( U64 abs );
 
 /*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */

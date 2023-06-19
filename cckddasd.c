@@ -6714,7 +6714,7 @@ void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
 
             "%s.%6.6ld %1d:%04X ",          // "hh:mm:ss.uuuuuu n:CCUU "
             todwrk + 11,                    // "hh:mm:ss" (%s)
-            timeval.tv_usec,                // "uuuuuu"   (%6.6ld
+            (long int)timeval.tv_usec,      // "uuuuuu"   (%6.6ld
             LCSS_DEVNUM                     // "n:CCUU"   (%1d:%04X)
         );
 
