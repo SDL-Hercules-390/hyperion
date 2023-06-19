@@ -50,6 +50,8 @@
                                         // ALWAYS at start SIE mode
 //#define NO_OPTINST                      // Doesn't really help much?
 #define OPTION_NO_E3_OPTINST            // Problematic!
+//#define OPTION_E7_PREFIX                // Prefix E7 CCW support
+//#define OPTION_E7_TRACE_64              // E7 CCW trace 64 bytes
 
 /*-------------------------------------------------------------------*/
 /*              Normal default OPTIONs and FEATUREs                  */

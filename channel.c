@@ -655,6 +655,88 @@ int     j;
 } /* end function format_data */
 
 
+#if defined( OPTION_E7_TRACE_64 )
+/***************************************************************/
+/* SPECIAL HANDLING FOR E7 Prefix CCW TO TRACE ENTIRE 64 BYTES */
+/***************************************************************/
+#if !defined(e7_format_data)
+#   define e7_format_data(_buffer,_buflen,_data,_datalen)                 \
+          _e7_format_data((BYTE *)(_buffer),(u_int)(_buflen),             \
+                       (BYTE *)(_data),(u_int)(_datalen))
+#endif
+static INLINE void
+_e7_format_data ( BYTE *buffer,  const u_int buflen,
+               const BYTE *a, const u_int len )
+{
+u_int   i, k;                           /* Array subscripts          */
+int     j;
+
+    k = MIN(len, 64);
+
+    if (k)
+    {
+        j = snprintf((char *)buffer, buflen,
+
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
+
+                ,a[ 0], a[ 1], a[ 2], a[ 3], a[ 4], a[ 5], a[ 6], a[ 7]
+                ,a[ 8], a[ 9], a[10], a[11], a[12], a[13], a[14], a[15]
+
+                ,a[16], a[17], a[18], a[19], a[20], a[21], a[22], a[23]
+                ,a[24], a[25], a[26], a[26], a[28], a[29], a[30], a[31]
+
+                ,a[32], a[33], a[34], a[35], a[36], a[37], a[38], a[39]
+                ,a[40], a[41], a[42], a[43], a[44], a[45], a[46], a[47]
+
+                ,a[48], a[49], a[50], a[51], a[52], a[53], a[54], a[55]
+                ,a[56], a[57], a[58], a[59], a[60], a[61], a[62], a[63]
+        );
+
+        if (j < 0)
+            *buffer = 0;
+        else
+        {
+            /* Blank out unused data */
+            if (k != 64)
+            {
+                i = (k << 1) + (k >> 2);
+                memset(buffer + i, ' ', j - i);
+            }
+
+            /* If space is available, add translation */
+            if ((u_int)j < buflen)
+            {
+                /* Insert blank separator */
+                buffer[j++] = ' ';
+
+                /* If space still available, complete translation */
+                if ((u_int)j < buflen)
+                {
+                    /* Adjust data display size if necessary */
+                    if ((j + k) > buflen)
+                        k = buflen - j;
+
+                    /* Append translation */
+                    prt_guest_to_host(a, buffer + j, k);
+                }
+            }
+        }
+
+    }
+    else
+        *buffer = 0;
+
+} /* end function format_data */
+#endif // defined( OPTION_E7_TRACE_64 )
+
+
 /*-------------------------------------------------------------------*/
 /* FORMAT I/O BUFFER DATA                                            */
 /*-------------------------------------------------------------------*/
@@ -677,6 +759,31 @@ BYTE    workarea[17];                   /* Character string work     */
         *dest = 0;
 
 } /* end function format_iobuf_data */
+
+#if defined( OPTION_E7_TRACE_64 )
+/***************************************************************/
+/* SPECIAL HANDLING FOR E7 Prefix CCW TO TRACE ENTIRE 64 BYTES */
+/***************************************************************/
+static INLINE void
+e7_format_iobuf_data ( const RADR addr, BYTE *dest, const DEVBLK *dev,
+                    const u_int len )
+{
+u_int   k;                              /* Array subscripts          */
+BYTE    workarea[4*17];                 /* Character string work     */
+
+    k = MIN(sizeof(workarea)-1,CAPPED_BUFFLEN(addr,len,dev));
+
+    if (k)
+    {
+        memcpy(workarea, dev->mainstor + addr, k);
+        memcpy(dest, "=>", 2);
+        e7_format_data(dest + 2, (4*64)-2-1, workarea,  k);
+    }
+    else
+        *dest = 0;
+
+} /* end function format_iobuf_data */
+#endif // defined( OPTION_E7_TRACE_64 )
 
 
 #if !DEBUG_DUMP
@@ -792,14 +899,18 @@ char    msgbuf[133];                    /* Message buffer            */
 /* Display channel command word and data                             */
 /*-------------------------------------------------------------------*/
 
-#define DISPLAY_CCW( _dev, _ccw, _addr, _count, _flags ) \
-    _display_ccw( (_dev), (_ccw), (_addr), (_count), (_flags), \
+#define DISPLAY_CCW( _did, _dev, _ccw, _addr, _count, _flags ) \
+    _display_ccw( (_did), (_dev), (_ccw), (_addr), (_count), (_flags), \
                   __FILE__, __LINE__, __FUNCTION__ )
 
-static void _display_ccw ( const DEVBLK* dev, const BYTE ccw[], const U32 addr,
+static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
+                          const BYTE ccw[], const U32 addr,
                           const U32 count, const U8 flags,
                           const char* file, int line, const char* func )
 {
+    if (*did_ccw_trace) // (did we do this already?)
+        return;         // (then don't do it again!)
+
     if (dev->ccwtrace && sysblk.traceFILE)
     {
         BYTE amt = MIN( 16, CAPPED_BUFFLEN( addr, count, dev ));
@@ -807,7 +918,11 @@ static void _display_ccw ( const DEVBLK* dev, const BYTE ccw[], const U32 addr,
     }
     else
     {
+#if defined( OPTION_E7_TRACE_64 )
+        BYTE area[4*64];    // (4 x to trace all 64 bytes of E7 Prefix CCW)
+#else
         BYTE area[64];
+#endif
 
         /* No data to be formatted if CCW is a NOP or TIC
            or the CCW "Skip data transfer" flag is on. */
@@ -818,7 +933,14 @@ static void _display_ccw ( const DEVBLK* dev, const BYTE ccw[], const U32 addr,
         )
             area[0] = 0;
         else
-            format_iobuf_data( addr, area, dev, count );
+        {
+#if defined( OPTION_E7_TRACE_64 )
+            if (ccw[0] == 0xE7)
+                e7_format_iobuf_data( addr, area, dev, count );
+            else
+#endif
+                format_iobuf_data( addr, area, dev, count );
+        }
 
         // "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
         fwritemsg
@@ -832,6 +954,8 @@ static void _display_ccw ( const DEVBLK* dev, const BYTE ccw[], const U32 addr,
             )
         );
     }
+
+    *did_ccw_trace = true; // (remember we did this)
 }
 
 
@@ -3354,7 +3478,8 @@ U16     maxlen;                         /* Maximum allowable length  */
 /* COPY DATA BETWEEN CHANNEL I/O BUFFER AND MAIN STORAGE             */
 /*-------------------------------------------------------------------*/
 static void
-ARCH_DEP(copy_iobuf) (DEVBLK *dev,      /* -> Device block           */
+ARCH_DEP(copy_iobuf) (bool* did_ccw_trace,
+                      DEVBLK *dev,      /* -> Device block           */
                       BYTE ccw[],       /* CCW                       */
                       BYTE code,        /* CCW operation code        */
                       BYTE flags,       /* CCW flags                 */
@@ -3615,7 +3740,7 @@ do {                                                                   \
                        we're even called.)
                     */
                     if (to_memory)
-                        DISPLAY_CCW( dev, ccw, addr, count, flags );
+                        DISPLAY_CCW( did_ccw_trace, dev, ccw, addr, count, flags );
                     DISPLAY_IDAW( dev, PF_MIDAW, midawflg, midawdat, midawlen );
                 }
 #if DEBUG_DUMP
@@ -3826,7 +3951,7 @@ do {                                                                   \
                    we're even called.)
                 */
                 if (to_memory)
-                    DISPLAY_CCW( dev, ccw, addr, count, flags );
+                    DISPLAY_CCW( did_ccw_trace, dev, ccw, addr, count, flags );
                 DISPLAY_IDAW( dev, idawfmt, 0, idadata, idalen );
             }
 
@@ -4404,6 +4529,7 @@ BYTE    more;                           /* 1=Count exhausted         */
 BYTE    chain = 1;                      /* 1=Chain to next CCW       */
 BYTE    tracethis = 0;                  /* 1=Trace this CCW chain    */
 BYTE    ioerror = 0;                    /* 1=CCW I/O error           */
+bool    did_ccw_trace = false;          /* true = CCW traced         */
 BYTE    firstccw = 1;                   /* 1=First CCW               */
 BYTE    area[64];                       /* Message area              */
 u_int   bufpos = 0;                     /* Position in I/O buffer    */
@@ -4758,7 +4884,7 @@ execute_halt:
                      || IS_CCW_SENSE ( ccw[0] )
                     )
             )
-                DISPLAY_CCW( dev, ccw, addr, count, flags );
+                DISPLAY_CCW( &did_ccw_trace, dev, ccw, addr, count, flags );
         }
 
         /* Channel program check if invalid Format-1 CCW             */
@@ -5088,6 +5214,7 @@ execute_halt:
         {
             dev->prevcode = dev->code;
             dev->code = opcode;
+            did_ccw_trace = false;
 
             /* Allow the device handler to determine whether this is
                an immediate CCW (i.e. CONTROL with no data transfer) */
@@ -5319,7 +5446,7 @@ prefetch:
                 /* If no errors, prefetch data to I/O buffer */
                 if (!prefetch.chanstat[ps])
                 {
-                    ARCH_DEP(copy_iobuf) (dev, ccw, dev->code, flags, addr,
+                    ARCH_DEP(copy_iobuf) ( &did_ccw_trace, dev, ccw, dev->code, flags, addr,
                                           count, ccwkey,
                                           idawfmt, idapmask,
                                           iobuf->data + bufpos,
@@ -5503,7 +5630,7 @@ prefetch:
             )
             {
                 /* Copy data from I/O buffer to main storage */
-                ARCH_DEP(copy_iobuf) (dev, ccw, dev->code, flags, addr,
+                ARCH_DEP(copy_iobuf) ( &did_ccw_trace, dev, ccw, dev->code, flags, addr,
                                       count - residual, ccwkey,
                                       idawfmt, idapmask,
                                       iobuf->data,
@@ -5619,7 +5746,7 @@ breakchain:
             )
             {
                 ioerror = 1;
-                DISPLAY_CCW (dev, ccw, addr, count, flags);
+                DISPLAY_CCW( &did_ccw_trace, dev, ccw, addr, count, flags );
             }
 
             /* Activate tracing for this CCW chain only
@@ -5675,12 +5802,12 @@ breakchain:
                         if (ts)
                         {
                             /* Display CCW */
-                            DISPLAY_CCW (dev,
+                            DISPLAY_CCW( &did_ccw_trace, dev,
                                          dev->mainstor +
                                            (prefetch.ccwaddr[ts] - 8),
                                          prefetch.dataaddr[ts],
                                          prefetch.datalen[ts],
-                                         flags);
+                                         flags );
 
                         }
                     }
@@ -5711,7 +5838,7 @@ breakchain:
                    want to do it here again!
                 */
                 if (!ioerror)
-                    DISPLAY_CCW( dev, ccw, addr, count, flags );
+                    DISPLAY_CCW( &did_ccw_trace, dev, ccw, addr, count, flags );
             }
 
             ioerror = 0; // (reset flag)
