@@ -2228,6 +2228,51 @@ int             rc;                     /* Return code               */
     return 0;
 } /* end function ckd_write_data */
 
+/*-------------------------------------------------------------------*/
+/* Forward references to static helper functions                     */
+/*-------------------------------------------------------------------*/
+static void PerformSubsystemFunction
+(
+    DEVBLK*  dev,
+    BYTE     code,
+    BYTE     flags,
+    BYTE     chained,
+    U32      count,
+    BYTE     prevcode,
+    int      ccwseq,
+    BYTE*    iobuf,
+    BYTE*    more,
+    BYTE*    unitstat,
+    U32*     residual
+);
+static void LocateRecordExtended
+(
+    DEVBLK*  dev,
+    BYTE     code,
+    BYTE     flags,
+    BYTE     chained,
+    U32      count,
+    BYTE     prevcode,
+    int      ccwseq,
+    BYTE*    iobuf,
+    BYTE*    more,
+    BYTE*    unitstat,
+    U32*     residual
+);
+static void DefineExtent
+(
+    DEVBLK*  dev,
+    BYTE     code,
+    BYTE     flags,
+    BYTE     chained,
+    U32      count,
+    BYTE     prevcode,
+    int      ccwseq,
+    BYTE*    iobuf,
+    BYTE*    more,
+    BYTE*    unitstat,
+    U32*     residual
+);
 
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
@@ -2237,7 +2282,7 @@ void ckd_dasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
 int             rc;                     /* Return code               */
-int             i, j;                   /* Loop index                */
+int             j;                      /* Loop index                */
 CKD_TRKHDR      trkhdr;                 /* CKD track header (HA)     */
 CKD_RECHDR      rechdr;                 /* CKD record header (count) */
 U32             size;                   /* Number of bytes available */
@@ -2247,7 +2292,6 @@ BYTE            bin;                    /* Bin number                */
 U16             cyl;                    /* Cylinder number           */
 U16             head;                   /* Head number               */
 BYTE            cchhr[5];               /* Search argument           */
-BYTE            binzero[5];             /* Binary zeros              */
 BYTE            sector;                 /* Sector number             */
 BYTE            key[256];               /* Key for search operations */
 BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
@@ -3228,354 +3272,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (dev->ckd3990 == 0)
             goto seek_0x27;
 
-        /* Command reject if within the domain of a Locate Record */
-        if (dev->ckdlcount > 0)
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_2);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Use the order code to determine the required count */
-        num = (count < 2) ? 2 :
-              (iobuf[0] == 0x10) ? 14 :
-              (iobuf[0] == 0x11 || iobuf[0] == 0x18) ? 12 :
-              (iobuf[0] == 0x12) ? 5 :
-              (iobuf[0] == 0x13 || iobuf[0] == 0x14) ? 4 :
-              (iobuf[0] == 0x16) ? 4 :
-              (iobuf[0] == 0x1D) ? 66 :
-              (iobuf[0] == 0xB0) ? 4 :
-              2;
-
-        /* Command reject if count is less than required */
-        if (count < num)
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_3);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Set residual count */
-        *residual = count - num;
-
-#if 0
-        /* Command reject if SSI active */
-        if (dev->ckdssi)
-        {
-            /* Reset SSI condition */
-            dev->ckdssi = 0;
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_F);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-#endif
-
-        /* Process depending on order code in byte 0 of data */
-        switch (iobuf[0]) {
-
-        case 0x18: /* Prepare for Read Subsystem Data */
-
-            // Reject invalid parameter bytes...
-
-            if (0
-                //---------------------------------------------------
-                //  Flag byte must be zero
-                //---------------------------------------------------
-                || iobuf[1]
-
-                //---------------------------------------------------
-                //  If byte 6 == 01 then byte 7 can only be 00 or FF.
-                //  For any other byte 6 value, byte 7 must be 00.
-                //---------------------------------------------------
-
-                || (iobuf[6] == 0x01 && (iobuf[7] != 0x00 && iobuf[7] != 0xff))
-                || (iobuf[6] != 0x01 && (iobuf[7] != 0x00))
-
-                //---------------------------------------------------
-                //  If byte 6 == 00, 02, 04, or 06-FF, then
-                //  bytes 8-11 are reserved and must be zero.
-                //---------------------------------------------------
-                || ((0
-                     || iobuf[6] == 0x00
-                     || iobuf[6] == 0x02
-                     || iobuf[6] == 0x04
-                     || iobuf[6] >= 0x06    // (06 through FF)
-                    )
-                    && mem_ne( &iobuf[8], eighthex00, 4 )
-                   )
-
-                //---------------------------------------------------
-                //  If byte 6 == 01, then byte 8 must be 00 or 01
-                //  and bytes 9-11 are reserved and must be zero.
-                //---------------------------------------------------
-                || (1
-                    && iobuf[6] == 0x01
-                    && (0
-                        || (iobuf[8] != 0x00 && iobuf[8] != 0x01)
-                        || mem_ne( &iobuf[9], eighthex00, 3 )
-                       )
-                   )
-
-                //---------------------------------------------------
-                //  If byte 6 == 1C, bytes 2-3 must be zero.
-                //  Otherwise bytes 2-5 must always be zero.
-                //---------------------------------------------------
-                || (iobuf[6] == 0x1C && mem_ne( &iobuf[2], eighthex00, 2 ))
-                || (iobuf[6] != 0x1C && mem_ne( &iobuf[2], eighthex00, 4 ))
-            )
-            {
-                ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_4);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            /* Process suborder code in byte 6 of data */
-            switch (iobuf[6]) {
-
-            case 0x00: /* Storage path status */
-                /* Prepare storage path status record */
-                memset (iobuf, 0, 16);
-                iobuf[0] = 0xC0; /* Storage path valid and attached */
-                iobuf[1] = 0x80; /* Logical paths configured bitmap */
-                iobuf[2] = 0x00; /* Channels enabled bitmap */
-                iobuf[3] = 0x00; /* Channels fenced bitmap */
-                iobuf[16] = 1;   /* #logical paths thru cluster 0 */
-
-                /* Indicate the length of subsystem data prepared */
-                dev->ckdssdlen = (dev->ckdcu->code == 0x15) ? 24 : 16;
-                break;
-
-            case 0x01: /* Subsystem statistics */
-                /* Indicate the length of subsystem data prepared */
-                dev->ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
-
-                /* Prepare subsystem statistics record */
-                memset (iobuf, 0, dev->ckdssdlen);
-                iobuf[1] = dev->devnum & 0xFF;
-                store_hw( &iobuf[94], myssid );
-                break;
-
-            case 0x03:  /* Read attention message for this path-group for
-                           the addressed device Return a "No Message"
-                           message */
-                /*------------------------------------------------------*/
-                /* PROGRAMMING NOTE: 2013/01/09 Fish                    */
-                /* According to GA32-0274 IBM 3990,9390 Storage Control */
-                /* Reference the Read Attention Message response should */
-                /* be 11 bytes for a 3990-6 with Message Format byte 2  */
-                /* being 0x02 (3990-6/ESS message) with byte 9 and 10   */
-                /* containing additional response information such as a */
-                /* bit map indicating which physical subsystem SPs are  */
-                /* caching. Since Hercules doesn't support a compatible */
-                /* form of caching and an equivalent SP caching bit map */
-                /* isn't maintained we return a 9 byte response instead */
-                /* with byte 2 = 0x00 (No Message) since an 11 byte re- */
-                /* sponse with zeros in bytes 9 and 10 causes problems  */
-                /* with certain operating systems. Returning a 9-byte   */
-                /* response with byte 2 = 0x00 instead is therefore the */
-                /* safest approach to take since most operating systems */
-                /* seem to accept such a response without complaint.    */
-                /*------------------------------------------------------*/
-                iobuf[0] = 0x00;               /* Message...            */
-                iobuf[1] = 0x09;               /* ...Length             */
-                iobuf[2] = 0x00;               /* Format: "No message"  */
-                iobuf[3] = 0x00;               /* Message code: n/a     */
-                memcpy (iobuf+4, iobuf+8, 4);  /* Copy same message Id
-                                                  from bytes 8-11       */
-                iobuf[8] = 0x00;               /* Flags = 00            */
-                dev->ckdssdlen = 9;            /* Len of prepared data  */
-                break;
-
-            case 0x0E: /* Unit address configuration */
-                /* Prepare unit address configuration record */
-                memset (iobuf, 0, 512);
-                /* 256 pairs (UA type, base UA) */
-
-                /* Indicate the length of subsystem data prepared */
-                dev->ckdssdlen = 512;
-                break;
-
-            case 0x1C: /* Query Host Access */
-                /*------------------------------------------------------*/
-                /* PROGRAMMING NOTE: 2017-02-14 Ian                     */
-                /*                                                      */
-                /* IBM OA40720 PROBLEM DESCRIPTION says:-               */
-                /*                                                      */
-                /*   This provides new function support for DS8870      */
-                /*   Query Host Access function                         */
-                /*                                                      */
-                /*   The MVS System DEVSERV QDASD command was enhanced  */
-                /*   to support a new keyword 'QHA' which allows user   */
-                /*   to query host access information for a CKD volume. */
-                /*   The host access information includes a list of     */
-                /*   Path Group IDs or systems that have a device       */
-                /*   grouped (online) and/or ungrouped (offline) or     */
-                /*   Reserved. In addition, the Path Status Flags, z/OS */
-                /*   Sysplex name, and Maximum number of Cylinders per  */
-                /*   Volume supported by the host are also returned for */
-                /*   each Path Group entry.                             */
-                /*                                                      */
-                /* Linux support for QHA was added to kernel 4.6 with   */
-                /* patch 8712731 in March 2016.                         */
-                /*                                                      */
-                /* iobuf[4]-[5] contains the device being queried.      */
-                /* Other than the Linux kernel source (see structures   */
-                /* dasd_psf_query_host_access and                       */
-                /* dasd_ckd_host_information in                         */
-                /* drivers/s390/block/dasd_eckd.h) I haven't discovered */
-                /* any documentation explaining the contents of the     */
-                /* response.                                            */
-                /*------------------------------------------------------*/
-
-#define QHA_RESPONSE_SIZE  16+4+32   /* 16 = the first 16-bytes of the  */
-                                     /*      dasd_psf_query_host_access */
-                                     /*      structure.                 */
-                                     /*  4 = the first 4-bytes of the   */
-                                     /*      dasd_ckd_host_information  */
-                                     /*      structure.                 */
-                                     /* 32 = an arbitrary entry length  */
-
-                /* Indicate the length of prepared host access response */
-                dev->ckdssdlen = QHA_RESPONSE_SIZE;
-
-                /* Prepare host access response */
-                memset (iobuf, 0, QHA_RESPONSE_SIZE);
-
-                iobuf[17] = 0x20;   /* Entry size = 32 */
-                iobuf[18] = 0x00;   /* Entry...        */
-                iobuf[19] = 0x01;   /* ...count = 1    */
-
-                break;
-
-            case 0x41: /* Feature codes */
-                /* Prepare feature codes record */
-                memset (iobuf, 0, 256);
-
-                /* Indicate the length of subsystem data prepared */
-                dev->ckdssdlen = 256;
-                break;
-
-            default: /* Unknown suborder code */
-                ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_4);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-
-            } /* end switch(iobuf[6]) */
-
-            break;
-
-        case 0x1B: /* Set Special Intercept Condition */
-
-            /* Command reject if not the first command in the chain
-               or indeed if preceded by any command at all apart from
-               Suspend Multipath Reconnection */
-            if (0
-                || ccwseq > 1
-                || (1
-                    && chained
-                    && prevcode != 0x5B // SUSPEND MULTIPATH RECONNECTION
-                   )
-            )
-            {
-                ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_2);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            /* Command reject if flag byte is not zero */
-            if (iobuf[1] != 0x00)
-            {
-                ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_4);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            /* Command reject if any command is chained from this command */
-            if (flags & CCW_FLAGS_CC)
-            {
-                ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_2);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            /* Mark Set Special Intercept inactive */
-            dev->ckdssi = 1;
-
-            break;
-
-        case 0x1D: /* Set Subsystem Characteristics */
-
-            /* Command reject if flag byte is not zero */
-            if (iobuf[1] != 0x00)
-            {
-                ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_4);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            break;
-
-        case 0xB0: /* Set Interface Identifier */
-
-            /* Command reject if flag byte bits 0-5 are not zero
-               or bits 6-7 are 11 or 10 */
-            if ((iobuf[1] & 0xFE) != 0x00)
-            {
-                ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_4);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            /* Prepare subsystem data (node descriptor record) */
-            memset (iobuf, 0, 96);
-
-            /* Bytes 0-31 contain the subsystem node descriptor */
-            store_fw(&iobuf[0], 0x00000100);
-            sprintf ((char *)&iobuf[4], "00%4.4X   HRCZZ000000000001",
-                                dev->ckdcu->devt);
-            for (i = 4; i < 30; i++)
-                iobuf[i] = host_to_guest(iobuf[i]);
-
-            /* Bytes 32-63 contain node qualifier data */
-            store_fw( &iobuf[32], 0x00000000 ); // flags+zeros
-            store_fw( &iobuf[40], 0x00000000 );
-            store_fw( &iobuf[40], 0x41010000 ); // start range
-            store_fw( &iobuf[44], 0x41010001 ); // end range
-            store_fw( &iobuf[48], 0x41010010 ); // start range
-            store_fw( &iobuf[52], 0x41010011 ); // end range
-
-            /* Bytes 64-95 contain a 2nd subsystem node descriptor */
-            iobuf[64] = 0x00;
-
-            /* Indicate the length of subsystem data prepared */
-            dev->ckdssdlen = (iobuf[1] & 0x03) ? 32 : 96;
-
-            break;
-
-        default: /* Unknown order code */
-
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-
-        } /* end switch(iobuf[0]) */
-
-        /* Exit if unit check has already been set */
-        if (*unitstat & CSW_UC)
-            break;
-
-        /* Return normal status */
-        *unitstat = CSW_CE | CSW_DE;
-
+        PerformSubsystemFunction( dev, code, flags, chained, count, prevcode,
+                                  ccwseq, iobuf, more, unitstat, residual );
         break;
 
     seek_0x27: /* SEEK AND SET SECTOR (Itel 7330 controller only) */
@@ -5162,783 +4860,18 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* LOCATE RECORD EXTENDED                                        */
     /*---------------------------------------------------------------*/
 
-    /* LRE only valid for 3990-3 or 3990-6 (or greater) */
-    if (0
-        || dev->ckdcu->devt != 0x3990
-        || !(0
-             || MODEL3( dev->ckdcu )
-             || MODEL6( dev->ckdcu )
-            )
-    )
-    {
-        /* Set command reject sense byte, and unit check status */
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        LocateRecordExtended( dev, code, flags, chained, count, prevcode,
+                              ccwseq, iobuf, more, unitstat, residual );
         break;
-    }
-
-    /*
-     * The Storage Director initially requests 20 bytes of parameters
-     * from the channel; if the channel provides fewer than 20 bytes,
-     * execution is terminated with status that includes unit check
-     * (Command Reject, format X'03', CCW byte count less than required).
-     */
-    num = (count < 20) ? count : 20;
-    *residual = count - num;
-
-    if (count < 20)
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * If Locate Record Extended is received within a Locate Record
-     * domain, execution is terminated with status that includes unit
-     * check (Command Reject, format X'02', Invalid Command Sequence).
-     */
-    if (dev->ckdlcount > 0)
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * If Locate Record Extended was not preceded by a Define Extent
-     * or Read IPL command in the same channel program, execution is
-     * terminated with status that includes unit check (Command Reject,
-     * format X'02', Invalid Command Sequence). If any other operation
-     * is specified, the command is terminated with status that
-     * includes unit check (Command Reject, format X'02', Invalid
-     * Command Sequence).
-     */
-    //FIXME not sure what that last sentence means
-    if (dev->ckdxtdef == 0 && dev->ckdrdipl == 0)
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /* Byte 0 contains the locate record operation byte */
-    dev->ckdloper = iobuf[0];
-
-    /* Validate the locate record operation code (byte 0 bits 2-7) */
-    if ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_EXTOP)
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /* Validate the locate record extended operation code (byte 17) */
-    if ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_EXTOP)
-    {
-        if (1
-            && iobuf[17] != CKDOPER_WRTANY
-            && iobuf[17] != CKDOPER_RDANY
-            && iobuf[17] != CKDOPER_RDTSET
-        )
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        dev->ckdloper &= CKDOPER_ORIENTATION;
-        dev->ckdloper |= iobuf[17];
-    }
-    else if (iobuf[17] != 0)
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /* Check for write operation on a read only disk */
-    // ZZ FIXME (Not sure if this is right here)
-    if (1
-        &&  dev->ckdrdonly  // (base image is read-only)
-        && !dev->ckdfakewr  // (and fake write option not specified)
-        && !dev->dasdsfn    // (and no shadow file specified)
-        && (0
-            || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-            || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTANY
-            || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-            || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
-           )
-    )
-    {
-        ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,
-                        FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * Check for valid combination of orientation and opcode
-     *
-     * +------------------------------------------------+
-     * | Operation Code          Orientation      Byte  |
-     * |                      Cnt  HA Data Index    17  |
-     * +------------------------------------------------+
-     * | Write Data            01   x   81     x    00  |
-     * | Format Write          03  43    x    C3    00  |
-     * | Write Track           0B   x    x     x    00  |
-     * | Read Tracks           0C  4C    x     x    00  |
-     * | Read                  16  56   96    D6    00  |
-     * | Write Any             3F   x    x     x    09  |
-     * | Read Any              3F   x    x     x    0A  |
-     * | Read Trackset         3F  7F    x     x    0E  |
-     * +------------------------------------------------+
-     * | Note:  x - Combination is not valid.           |
-     * +------------------------------------------------+
-     *
-     * Table: valid orientation + operation code values
-     */
-    if (1
-        && dev->ckdloper != 0x01
-        && dev->ckdloper != 0x03
-        && dev->ckdloper != 0x0B
-        && dev->ckdloper != 0x0C
-        && dev->ckdloper != 0x16
-
-        && dev->ckdloper != 0x43
-        && dev->ckdloper != 0x4C
-        && dev->ckdloper != 0x56
-
-        && dev->ckdloper != 0x81
-        && dev->ckdloper != 0x96
-
-        && dev->ckdloper != 0xC3
-        && dev->ckdloper != 0xD6
-
-        && dev->ckdloper != 0x09
-        && dev->ckdloper != 0x0A
-        && dev->ckdloper != 0x0E
-        && dev->ckdloper != 0x4E
-    )
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * Byte 1 is the Auxiliary Byte
-     * bit 0 = 0 : Bytes 14-15 are unused
-     *         1 : Bytes 14-15 contain a TLF that overrides the
-     *             blocksize specified by the DX parameter.
-     * bits 1-6  : Must be zero
-     *             If any of these bits are '1', the LRE is terminated
-     *             with status that includes unit check (Command Reject,
-     *             format X'04', Invalid Parameter).
-     * bit 7 = 0 : No Read Count CCW is suffixed to the LR domain
-     *         1 : A Read Count CCW is suffixed to the LR domain
-     */
-    if ((iobuf[1] & CKDLAUX_RESV) != 0)
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * A Read Count command may only be suffixed to the domain of a LRE
-     * that specifies a Write Data (01), Write Any (09), Read Any (0A),
-     * or Read (16) operation code; if bit 7 = '1' when any other
-     * Operation code is specified, Locate Record Extended is terminated
-     * with status that includes unit check (Command Reject, format
-     * X'04', Invalid Parameter).
-     */
-    if (1
-        && (iobuf[1] & CKDLAUX_RDCNTSUF)
-        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
-        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDANY
-        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ
-    )
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    dev->ckdlaux = iobuf[1];
-
-    /* Byte 2 must contain zeroes */
-    if (iobuf[2] != 0)
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * Byte 3 is the Count parameter. In general, the count parameter
-     * specifies the number of records, or tracks to be operated on by
-     * data transfer commands that follow Locate Record Extended.
-     * Specific interpretation of the Count parameter depends upon the
-     * operation code in byte 0.
-     *
-     * The Count must be nonzero. If Read Count Suffixing is specified
-     * in a Locate Record, the count must be greater than 1. If the
-     * Count is invalid, Locate Record Extended is terminated with
-     * status that includes unit check (Command Reject, format X'04',
-     * Invalid Parameter).
-     */
-    if (0
-        || iobuf[3] == 0
-        || (1
-            && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
-            && iobuf[3] < 2
-           )
-    )
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    dev->ckdlcount = iobuf[3];
-
-    /*
-     * The value in bytes 4-7 must be a valid track address for the
-     * device and must be within the extent boundaries specified by the
-     * preceding Define Extent command.
-     *
-     * If the Seek Address is not valid for the device or if the Extended
-     * Operation code is Write Any or Read Any and the seek address does
-     * not specify a primary track, Locate Record Extended is terminated
-     * with status that includes unit check (Command Reject, format X'04',
-     * Invalid Parameter). If the Seek Address is not within the defined
-     * extent, Locate Record Extended is terminated with status that
-     * includes unit check (File Protected).
-     */
-    cyl  = fetch_hw( &iobuf[4] );
-    head = fetch_hw( &iobuf[6] );
-
-    if (0
-        || cyl  >= dev->ckdcyls
-        || head >= dev->ckdheads
-    )
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    if (EXTENT_CHECK( dev, cyl, head ))
-    {
-        ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * Bytes 8-12 specify a value to be used as a search argument for
-     * the Locate Record Extended search operation.
-     *
-     * When the operation specified in byte 0 does not require
-     * orientation to a specific record, no search operation is
-     * performed and bytes 8-12 are ignored. When Home Address
-     * orientation is specified, byte 12 is ignored.
-     */
-    memcpy( cchhr, &iobuf[8], 5 );
-
-    /*
-     * Byte 13 contains a sector number to which the device is to be
-     * positioned before the Storage Director establishes orientation.
-     *
-     * The sector number must be within the range of valid sector
-     * numbers for the device. If the sector number is invalid, Locate
-     * Record Extended is terminated with status that includes unit
-     * check (Command Reject, format X'04', Invalid Parameter).
-     *
-     * A value of X'FF' is valid and specifies that sector positioning
-     * is not to be performed prior to establishing orientation.
-     */
-    if (1
-        && iobuf[13] != 0xFF
-        && iobuf[13] >= dev->ckdtab->sectors
-    )
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    sector = iobuf[13];
-
-    /*
-     * When byte 1, bit 0 is '0', bytes 14-15 must contain zeros; if
-     * bytes 14-15 are not zero, Locate Record Extended is terminated
-     * with status that includes unit check (Command Reject, format
-     * X'04', Invalid Parameter).
-     *
-     * When byte 1 bit 0 is '1', bytes 14-15 contain a Transfer Length
-     * Factor (TLF). The Transfer Length Factor must be non-zero; if it
-     * is zero, Locate Record Extended is terminated with status that
-     * includes unit check (Command Reject, format X'04', Invalid
-     * Parameter).
-     *
-     * If the Transfer Length Factor value is greater than the value
-     * specified (or implied) in the Define Extent Blocksize parameter,
-     * Locate Record Extended is terminated with status that includes
-     * unit check (Command Reject, format X'04', Invalid Parameter).
-     *
-     * The Storage Director uses the TLF to determine the number of
-     * data bytes to be requested from the channel for each write
-     * command that follows a Locate Record Extended that specified the
-     * Write Data (01) Operation code. The product of the value in
-     * bytes 14-15 and the count parameter is used to determine the
-     * total number of bytes to be transferred by data transfer commands
-     * that are executed within the domain of a Locate Record Extended
-     * that specified the Format Write (03), Write Track (0B), or
-     * Read (16) Operation codes.
-     *
-     * The TLF value is not retained by the Storage Director after the
-     * expiration of the Locate Record domain.
-     *
-     * If Locate Record Extended does not specify a Transfer Length
-     * Factor, the Storage Director will use the value from the Define
-     * Extent Blocksize parameter for any required data transfer length
-     * calculation.
-     */
-    if (0
-        || (!(dev->ckdlaux & CKDLAUX_TLFVALID) &&  fetch_hw( &iobuf[14] ))
-        || ( (dev->ckdlaux & CKDLAUX_TLFVALID) && !fetch_hw( &iobuf[14] ))
-        || fetch_hw( &iobuf[14] ) > dev->ckdxblksz
-    )
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    if ((dev->ckdlaux & CKDLAUX_TLFVALID) == 0)
-        dev->ckdltranlf = dev->ckdxblksz;
-    else
-        dev->ckdltranlf = fetch_hw( &iobuf[14] );
-
-    /*
-     * Bytes 18-19 contain an unsigned 16-bit binary value that
-     * specifies the total number of extended parameter bytes. The
-     * format and content of the Extended Parameters are defined by
-     * the Extended Operation code.
-     *
-     * The length for 3990 Mod 6 or 9390 for the Extended Operation
-     * codes must be consistent with the Extended Operation code in
-     * byte 17 as follows:
-     *   09  0001
-     *   0A  0001
-     *   0E  0001 or 0002
-     *
-     * If the operation code is any code other than those defined, the
-     * extended parameter length count must be zero. If these conditions
-     * are not met the Locate Record Extended is terminated with status
-     * that includes unit check (Command Reject, format X'04', Invalid
-     * Parameter).
-     */
-    num = fetch_hw( &iobuf[18] );
-
-    if (0
-        || (1
-            && iobuf[17] != CKDOPER_WRTANY
-            && iobuf[17] != CKDOPER_RDANY
-            && iobuf[17] != CKDOPER_RDTSET
-            && num
-           )
-        || (iobuf[17] == CKDOPER_WRTANY && num != 1)
-        || (iobuf[17] == CKDOPER_RDANY  && num != 1)
-        || (iobuf[17] == CKDOPER_RDTSET && num != 1 && num != 2)
-    )
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * Request the extended parameter bytes from the channel. If the
-     * channel provides fewer bytes, execution is terminated with status
-     * that includes unit check (Command Reject, format X'03', CCW byte
-     * count less than required).
-     */
-    if (count < 20 + num)
-    {
-        *residual = 0;
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    *residual -= num;
-
-    /*
-     * For `Read Any' (0x0A) or `Write Any' (0x09) the extended
-     * length must be one and the extended parameter value (set size)
-     * must be one.  Otherwise the Locate Record Extended command is
-     * terminated with status that includes unit check (Command Reject,
-     * format X'04', Invalid Parameter).
-     */
-    if (num > 0)
-        if (iobuf[20] & 0x01)
-            dev->ckdlaux |= CKDLAUX_RDCNTSUF;
-
-    dev->ckdfcoun = 0;
-    memset( dev->ckdfcwrk, 0x00, sizeof( dev->ckdfcwrk ));
-    dev->ckdextcd = iobuf[17];
-
-    if (0
-        || (iobuf[17] == CKDOPER_WRTANY && iobuf[20] != 1)
-        || (iobuf[17] == CKDOPER_RDANY  && iobuf[20] != 1)
-    )
-    {
-        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
-    }
-
-    /*
-     * Read Trackset - X'0E': The Read Trackset Operation Code prepares
-     * the Storage Director to transfer all records from one or more
-     * tracks to the channel. The tracks to be transferred are
-     * specified by the Extended Parameter and the number of tracks to
-     * be transferred is specified by the Count Parameter (byte 3).
-     *
-     * The maximum length of the Extended Parameter is specified in byte
-     * 43 of the Device Characteristics Information.
-     *
-     * The Extended Parameter contains a bit map that represents a set
-     * of sequentially addressed tracks within the defined extent. Each
-     * bit in the parameter represent one track. A '1' bit indicates the
-     * data associated with the corresponding track is to be read. A '0'
-     * bit indicates the track is to be skipped.
-     *
-     * The first bit must be a '1' and represents the track whose
-     * address is specified in the Seek Address parameter (bytes 4-7).
-     * Subsequent bits represent consecutively addressed tracks in
-     * ascending order. If the first bit is not a '1', the Locate Record
-     * Extended command is terminated with status that includes unit
-     * check (Command Reject, format X'04', Invalid Parameter).
-     *
-     * The number of '1' bits in the bit map must be equal to the value
-     * in the count parameter (byte 3); otherwise Locate Record Extended
-     * is terminated with status that includes unit check (Command
-     * Reject, format X'04', Invalid Parameter).
-     *
-     * All tracks in the bit map represented by the '1' bits must be
-     * contained within the defined extent; otherwise the Locate Record
-     * Extended command is terminated with status that includes unit
-     * check (File Protected).
-     *
-     * Track access is initiated using the Seek Address and Sector
-     * Number parameters.
-     *
-     * When track access is completed, the search operation specified by
-     * the Search Argument and the orientation modifiers (byte 0, bits
-     * 0-1) is performed.
-     *
-     * Locate Record Extended must be followed by the number of Read
-     * Track commands specified in the count parameter (byte 3). If any
-     * other command sequence is detected within the Locate Record
-     * domain, the non-conforming command will be rejected with status
-     * that includes Unit Check (Command Reject, format X'02', Invalid
-     * Command Sequence).
-     */
-    if (iobuf[17] == CKDOPER_RDTSET)
-    {
-        U16 lastcyl, lasthead;
-        U16 mask = iobuf[20] << 8;
-
-        if (num > 1)
-            mask |= iobuf[21];
-
-        if (!(mask & 0x8000))
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        dev->ckdlmask = mask;
-
-        /*
-         * Count the one bits in mask.  There are elegant but obscure
-         * ways to do this but just keeping it simple here.  Plus we
-         * also figure out the last track we will read.
-         */
-        for (i=j=0; mask; mask <<= 1)
-        {
-            j++;
-
-            if (mask & 0x8000)
-                i++;
-        }
-
-        /* Number of one bits must match count */
-        if (i != dev->ckdlcount)
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Check extent of last track to be read */
-        lastcyl  = cyl;
-        lasthead = (U16)(head + j - 1);
-
-        while (lasthead >= dev->ckdheads)
-        {
-            lastcyl++;
-            lasthead -= (U16) dev->ckdheads;
-        }
-
-        if (EXTENT_CHECK( dev, lastcyl, lasthead ))
-        {
-            ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-    }
-
-    /* Seek to the required track */
-    rc = ckd_seek( dev, cyl, head, &trkhdr, unitstat );
-    if (rc < 0)
-        break;
-
-    /* Set normal status */
-    *unitstat = CSW_CE | CSW_DE;
-
-    /* Perform search according to specified orientation */
-    switch ((dev->ckdloper & CKDOPER_ORIENTATION)) {
-
-    case CKDOPER_ORIENT_HOME:
-
-        /* For home orientation, compare the search CCHH
-           with the CCHH in the track header */
-        if (memcmp( &(trkhdr.cyl), cchhr, 4 ) != 0)
-        {
-            ckd_build_sense (dev, 0, SENSE1_NRF, 0, 0, 0);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        }
-        break;
-
-    case CKDOPER_ORIENT_COUNT:
-    case CKDOPER_ORIENT_DATA:
-
-        /* For count or data orientation, search the track
-           for a count field matching the specified CCHHR */
-        memset( binzero, 0x00, 5 );
-
-        while (1)
-        {
-            /* Read next count field and exit at end of track
-               with sense data indicating no record found */
-            rc = ckd_read_count( dev, code, &rechdr, unitstat );
-            if (rc < 0)
-                break; // (end of track)
-
-            /* Turn off track overflow flag */
-            if (dev->ckdcyls < 32768)
-                rechdr.cyl[0] &= 0x7F;
-
-            /* For extended op code skip r0 */
-            if ((iobuf[0] & CKDOPER_CODE) == CKDOPER_EXTOP)
-            {
-                if (rechdr.rec != 0)
-                    break;
-            }
-
-            if (memcmp( cchhr, binzero, 5 ) == 0)
-                break;
-
-            /* Compare the count field with the search CCHHR */
-            else if (memcmp( &rechdr, cchhr, 5 ) == 0)
-                break; // (we found it!)
-
-        } /* end while */
-    } /* end switch(CKDOPER_ORIENTATION) */
-
-    /* Exit if search ended with error status */
-    if (*unitstat != (CSW_CE | CSW_DE))
-        break;
-
-    /* Reorient past data if data orientation is specified */
-    if ((dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_DATA)
-    {
-        /* Skip past key and data fields */
-        dev->bufoff += dev->ckdcurkl + dev->ckdcurdl;
-
-        /* Set the device orientation fields */
-        dev->ckdrem = 0;
-        dev->ckdorient = CKDORIENT_DATA;
-    }
-
-    /* Set locate record flag and return normal status */
-    dev->ckdlocat = 1;
-    break;
 
     case 0x63:
     /*---------------------------------------------------------------*/
     /* DEFINE EXTENT                                                 */
     /*---------------------------------------------------------------*/
-    {
-    U16 bcyl, bhead, ecyl, ehead, xblksz;
-    BYTE fmask, xgattr;
 
-        /* Calculate residual byte count */
-        num = (count < 16) ? count : 16;
-        *residual = count - num;
-
-        /* Control information length must be at least 16 bytes */
-        if (count < 16)
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_3);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Command reject if within the domain of a Locate Record, or
-           preceded by Define Extent, Space Count, or Set File Mask,
-           or (for 3390 only) preceded by Read IPL */
-        if (dev->ckdlcount > 0
-#if 0
-            || dev->ckdxtdef
-#endif
-            || dev->ckdsetfm
-            || dev->ckdspcnt
-            || (dev->ckdrdipl && dev->devtype == 0x3390)
-        )
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_2);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Bytes 0-1 contain the file mask and global attributes */
-        fmask = iobuf[0];
-        xgattr = iobuf[1];
-
-        if (dev->ckdxtdef &&
-           (dev->ckdfmask != fmask || dev->ckdxgattr != xgattr)
-        )
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_2);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        dev->ckdfmask = fmask;
-        dev->ckdxgattr = xgattr;
-
-        /* Validate the global attributes byte bits 0-1 */
-        if ((dev->ckdxgattr & CKDGATR_ARCH) != CKDGATR_ARCH_ECKD)
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Validate the file mask */
-        if ((dev->ckdfmask & CKDMASK_RESV) != 0)
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Bytes 2-3 contain the extent block size */
-        xblksz = (iobuf[2] << 8) | iobuf[3];
-
-        /* If extent block size is zero then use the maximum R0
-           record length (as returned in device characteristics
-           bytes 44 and 45) plus 8 */
-        if (xblksz == 0)
-            xblksz = dev->ckdtab->r0 + 8;
-
-        if (dev->ckdxtdef &&
-            dev->ckdxblksz != xblksz
-        )
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_2);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        dev->ckdxblksz = xblksz;
-
-        /* Validate the extent block */
-        if (dev->ckdxblksz > dev->ckdtab->r0 + 8)
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Bytes 4-6 must contain zeroes */
-        if (0
-            || iobuf[4] != 0
-            || iobuf[5] != 0
-            || iobuf[6] != 0
-        )
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Bytes 8-11 contain the extent begin cylinder and head */
-        bcyl  = (iobuf[8]  << 8) | iobuf[9];
-        bhead = (iobuf[10] << 8) | iobuf[11];
-
-        /* Bytes 12-15 contain the extent end cylinder and head */
-        ecyl  = (iobuf[12] << 8) | iobuf[13];
-        ehead = (iobuf[14] << 8) | iobuf[15];
-
-        /* Validate the extent description by checking that the
-           ending track is not less than the starting track and
-           that the extent does not exceed the already defined extent */
-        if (0
-            || bcyl > ecyl
-            || (bcyl == ecyl && bhead > ehead)
-            || EXTENT_CHECK( dev, bcyl, bhead )
-            || EXTENT_CHECK( dev, ecyl, ehead )
-        )
-        {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, dev->ckdxtdef ? MESSAGE_2 : MESSAGE_4);
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-
-        /* Define the new extent */
-        dev->ckdxbcyl = bcyl;
-        dev->ckdxbhead = bhead;
-        dev->ckdxecyl = ecyl;
-        dev->ckdxehead = ehead;
-
-        /* Set extent defined flag and return normal status */
-        dev->ckdxtdef = 1;
-        *unitstat = CSW_CE | CSW_DE;
+        DefineExtent( dev, code, flags, chained, count, prevcode,
+                      ccwseq, iobuf, more, unitstat, residual );
         break;
-    }
 
     case 0x64:
     /*---------------------------------------------------------------*/
@@ -6527,30 +5460,1225 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
 } /* end function ckd_dasd_execute_ccw */
 
-DLL_EXPORT DEVHND ckd_dasd_device_hndinfo = {
-        &ckd_dasd_init_handler,        /* Device Initialization      */
-        &ckd_dasd_execute_ccw,         /* Device CCW execute         */
-        &ckd_dasd_close_device,        /* Device Close               */
-        &ckd_dasd_query_device,        /* Device Query               */
-        NULL,                          /* Device Extended Query      */
-        &ckd_dasd_start,               /* Device Start channel pgm   */
-        &ckd_dasd_end,                 /* Device End channel pgm     */
-        &ckd_dasd_start,               /* Device Resume channel pgm  */
-        &ckd_dasd_end,                 /* Device Suspend channel pgm */
-        NULL,                          /* Device Halt channel pgm    */
-        &ckd_dasd_read_track,          /* Device Read                */
-        &ckd_dasd_update_track,        /* Device Write               */
-        &ckd_dasd_used,                /* Device Query used          */
-        NULL,                          /* Device Reserve             */
-        NULL,                          /* Device Release             */
-        NULL,                          /* Device Attention           */
-        NULL,                          /* Immediate CCW Codes        */
-        NULL,                          /* Signal Adapter Input       */
-        NULL,                          /* Signal Adapter Ouput       */
-        NULL,                          /* Signal Adapter Sync        */
-        NULL,                          /* Signal Adapter Output Mult */
-        NULL,                          /* QDIO subsys desc           */
-        NULL,                          /* QDIO set subchan ind       */
-        &ckd_dasd_hsuspend,            /* Hercules suspend           */
-        &ckd_dasd_hresume              /* Hercules resume            */
+/*-------------------------------------------------------------------*/
+/* PERFORM SUBSYSTEM FUNCTION    helper function                     */
+/*-------------------------------------------------------------------*/
+static void PerformSubsystemFunction
+(
+    DEVBLK*  dev,
+    BYTE     code,
+    BYTE     flags,
+    BYTE     chained,
+    U32      count,
+    BYTE     prevcode,
+    int      ccwseq,
+    BYTE*    iobuf,
+    BYTE*    more,
+    BYTE*    unitstat,
+    U32*     residual
+)
+{
+    int  i;
+    U32  num;
+
+    /* Command reject if within the domain of a Locate Record */
+    if (dev->ckdlcount > 0)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_2);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Use the order code to determine the required count */
+    num = (count < 2) ? 2 :
+          (iobuf[0] == 0x10) ? 14 :
+          (iobuf[0] == 0x11 || iobuf[0] == 0x18) ? 12 :
+          (iobuf[0] == 0x12) ? 5 :
+          (iobuf[0] == 0x13 || iobuf[0] == 0x14) ? 4 :
+          (iobuf[0] == 0x16) ? 4 :
+          (iobuf[0] == 0x1D) ? 66 :
+          (iobuf[0] == 0xB0) ? 4 :
+          2;
+
+    /* Command reject if count is less than required */
+    if (count < num)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_3);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Set residual count */
+    *residual = count - num;
+
+#if 0
+    /* Command reject if SSI active */
+    if (dev->ckdssi)
+    {
+        /* Reset SSI condition */
+        dev->ckdssi = 0;
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_F);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        break;
+    }
+#endif
+
+    /* Process depending on order code in byte 0 of data */
+    switch (iobuf[0]) {
+
+    case 0x18: /* Prepare for Read Subsystem Data */
+
+        // Reject invalid parameter bytes...
+
+        if (0
+            //---------------------------------------------------
+            //  Flag byte must be zero
+            //---------------------------------------------------
+            || iobuf[1]
+
+            //---------------------------------------------------
+            //  If byte 6 == 01 then byte 7 can only be 00 or FF.
+            //  For any other byte 6 value, byte 7 must be 00.
+            //---------------------------------------------------
+
+            || (iobuf[6] == 0x01 && (iobuf[7] != 0x00 && iobuf[7] != 0xff))
+            || (iobuf[6] != 0x01 && (iobuf[7] != 0x00))
+
+            //---------------------------------------------------
+            //  If byte 6 == 00, 02, 04, or 06-FF, then
+            //  bytes 8-11 are reserved and must be zero.
+            //---------------------------------------------------
+            || ((0
+                 || iobuf[6] == 0x00
+                 || iobuf[6] == 0x02
+                 || iobuf[6] == 0x04
+                 || iobuf[6] >= 0x06    // (06 through FF)
+                )
+                && mem_ne( &iobuf[8], eighthex00, 4 )
+               )
+
+            //---------------------------------------------------
+            //  If byte 6 == 01, then byte 8 must be 00 or 01
+            //  and bytes 9-11 are reserved and must be zero.
+            //---------------------------------------------------
+            || (1
+                && iobuf[6] == 0x01
+                && (0
+                    || (iobuf[8] != 0x00 && iobuf[8] != 0x01)
+                    || mem_ne( &iobuf[9], eighthex00, 3 )
+                   )
+               )
+
+            //---------------------------------------------------
+            //  If byte 6 == 1C, bytes 2-3 must be zero.
+            //  Otherwise bytes 2-5 must always be zero.
+            //---------------------------------------------------
+            || (iobuf[6] == 0x1C && mem_ne( &iobuf[2], eighthex00, 2 ))
+            || (iobuf[6] != 0x1C && mem_ne( &iobuf[2], eighthex00, 4 ))
+        )
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Process suborder code in byte 6 of data */
+        switch (iobuf[6]) {
+
+        case 0x00: /* Storage path status */
+            /* Prepare storage path status record */
+            memset (iobuf, 0, 16);
+            iobuf[0] = 0xC0; /* Storage path valid and attached */
+            iobuf[1] = 0x80; /* Logical paths configured bitmap */
+            iobuf[2] = 0x00; /* Channels enabled bitmap */
+            iobuf[3] = 0x00; /* Channels fenced bitmap */
+            iobuf[16] = 1;   /* #logical paths thru cluster 0 */
+
+            /* Indicate the length of subsystem data prepared */
+            dev->ckdssdlen = (dev->ckdcu->code == 0x15) ? 24 : 16;
+            break;
+
+        case 0x01: /* Subsystem statistics */
+            /* Indicate the length of subsystem data prepared */
+            dev->ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
+
+            /* Prepare subsystem statistics record */
+            memset (iobuf, 0, dev->ckdssdlen);
+            iobuf[1] = dev->devnum & 0xFF;
+            store_hw( &iobuf[94], myssid );
+            break;
+
+        case 0x03:  /* Read attention message for this path-group for
+                       the addressed device Return a "No Message"
+                       message */
+            /*------------------------------------------------------*/
+            /* PROGRAMMING NOTE: 2013/01/09 Fish                    */
+            /* According to GA32-0274 IBM 3990,9390 Storage Control */
+            /* Reference the Read Attention Message response should */
+            /* be 11 bytes for a 3990-6 with Message Format byte 2  */
+            /* being 0x02 (3990-6/ESS message) with byte 9 and 10   */
+            /* containing additional response information such as a */
+            /* bit map indicating which physical subsystem SPs are  */
+            /* caching. Since Hercules doesn't support a compatible */
+            /* form of caching and an equivalent SP caching bit map */
+            /* isn't maintained we return a 9 byte response instead */
+            /* with byte 2 = 0x00 (No Message) since an 11 byte re- */
+            /* sponse with zeros in bytes 9 and 10 causes problems  */
+            /* with certain operating systems. Returning a 9-byte   */
+            /* response with byte 2 = 0x00 instead is therefore the */
+            /* safest approach to take since most operating systems */
+            /* seem to accept such a response without complaint.    */
+            /*------------------------------------------------------*/
+            iobuf[0] = 0x00;               /* Message...            */
+            iobuf[1] = 0x09;               /* ...Length             */
+            iobuf[2] = 0x00;               /* Format: "No message"  */
+            iobuf[3] = 0x00;               /* Message code: n/a     */
+            memcpy (iobuf+4, iobuf+8, 4);  /* Copy same message Id
+                                              from bytes 8-11       */
+            iobuf[8] = 0x00;               /* Flags = 00            */
+            dev->ckdssdlen = 9;            /* Len of prepared data  */
+            break;
+
+        case 0x0E: /* Unit address configuration */
+            /* Prepare unit address configuration record */
+            memset (iobuf, 0, 512);
+            /* 256 pairs (UA type, base UA) */
+
+            /* Indicate the length of subsystem data prepared */
+            dev->ckdssdlen = 512;
+            break;
+
+        case 0x1C: /* Query Host Access */
+            /*------------------------------------------------------*/
+            /* PROGRAMMING NOTE: 2017-02-14 Ian                     */
+            /*                                                      */
+            /* IBM OA40720 PROBLEM DESCRIPTION says:-               */
+            /*                                                      */
+            /*   This provides new function support for DS8870      */
+            /*   Query Host Access function                         */
+            /*                                                      */
+            /*   The MVS System DEVSERV QDASD command was enhanced  */
+            /*   to support a new keyword 'QHA' which allows user   */
+            /*   to query host access information for a CKD volume. */
+            /*   The host access information includes a list of     */
+            /*   Path Group IDs or systems that have a device       */
+            /*   grouped (online) and/or ungrouped (offline) or     */
+            /*   Reserved. In addition, the Path Status Flags, z/OS */
+            /*   Sysplex name, and Maximum number of Cylinders per  */
+            /*   Volume supported by the host are also returned for */
+            /*   each Path Group entry.                             */
+            /*                                                      */
+            /* Linux support for QHA was added to kernel 4.6 with   */
+            /* patch 8712731 in March 2016.                         */
+            /*                                                      */
+            /* iobuf[4]-[5] contains the device being queried.      */
+            /* Other than the Linux kernel source (see structures   */
+            /* dasd_psf_query_host_access and                       */
+            /* dasd_ckd_host_information in                         */
+            /* drivers/s390/block/dasd_eckd.h) I haven't discovered */
+            /* any documentation explaining the contents of the     */
+            /* response.                                            */
+            /*------------------------------------------------------*/
+
+#define QHA_RESPONSE_SIZE  16+4+32   /* 16 = the first 16-bytes of the  */
+                                 /*      dasd_psf_query_host_access */
+                                 /*      structure.                 */
+                                 /*  4 = the first 4-bytes of the   */
+                                 /*      dasd_ckd_host_information  */
+                                 /*      structure.                 */
+                                 /* 32 = an arbitrary entry length  */
+
+            /* Indicate the length of prepared host access response */
+            dev->ckdssdlen = QHA_RESPONSE_SIZE;
+
+            /* Prepare host access response */
+            memset (iobuf, 0, QHA_RESPONSE_SIZE);
+
+            iobuf[17] = 0x20;   /* Entry size = 32 */
+            iobuf[18] = 0x00;   /* Entry...        */
+            iobuf[19] = 0x01;   /* ...count = 1    */
+
+            break;
+
+        case 0x41: /* Feature codes */
+            /* Prepare feature codes record */
+            memset (iobuf, 0, 256);
+
+            /* Indicate the length of subsystem data prepared */
+            dev->ckdssdlen = 256;
+            break;
+
+        default: /* Unknown suborder code */
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        } /* end switch(iobuf[6]) */
+
+        break;
+
+    case 0x1B: /* Set Special Intercept Condition */
+
+        /* Command reject if not the first command in the chain
+           or indeed if preceded by any command at all apart from
+           Suspend Multipath Reconnection */
+        if (0
+            || ccwseq > 1
+            || (1
+                && chained
+                && prevcode != 0x5B // SUSPEND MULTIPATH RECONNECTION
+               )
+        )
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Command reject if flag byte is not zero */
+        if (iobuf[1] != 0x00)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Command reject if any command is chained from this command */
+        if (flags & CCW_FLAGS_CC)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Mark Set Special Intercept inactive */
+        dev->ckdssi = 1;
+
+        break;
+
+    case 0x1D: /* Set Subsystem Characteristics */
+
+        /* Command reject if flag byte is not zero */
+        if (iobuf[1] != 0x00)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        break;
+
+    case 0xB0: /* Set Interface Identifier */
+
+        /* Command reject if flag byte bits 0-5 are not zero
+           or bits 6-7 are 11 or 10 */
+        if ((iobuf[1] & 0xFE) != 0x00)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Prepare subsystem data (node descriptor record) */
+        memset (iobuf, 0, 96);
+
+        /* Bytes 0-31 contain the subsystem node descriptor */
+        store_fw(&iobuf[0], 0x00000100);
+        sprintf ((char *)&iobuf[4], "00%4.4X   HRCZZ000000000001",
+                            dev->ckdcu->devt);
+        for (i = 4; i < 30; i++)
+            iobuf[i] = host_to_guest(iobuf[i]);
+
+        /* Bytes 32-63 contain node qualifier data */
+        store_fw( &iobuf[32], 0x00000000 ); // flags+zeros
+        store_fw( &iobuf[40], 0x00000000 );
+        store_fw( &iobuf[40], 0x41010000 ); // start range
+        store_fw( &iobuf[44], 0x41010001 ); // end range
+        store_fw( &iobuf[48], 0x41010010 ); // start range
+        store_fw( &iobuf[52], 0x41010011 ); // end range
+
+        /* Bytes 64-95 contain a 2nd subsystem node descriptor */
+        iobuf[64] = 0x00;
+
+        /* Indicate the length of subsystem data prepared */
+        dev->ckdssdlen = (iobuf[1] & 0x03) ? 32 : 96;
+
+        break;
+
+    default: /* Unknown order code */
+
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+    } /* end switch(iobuf[0]) */
+
+    /* Exit if unit check has already been set */
+    if (*unitstat & CSW_UC)
+        return;
+
+    /* Return normal status */
+    *unitstat = CSW_CE | CSW_DE;
+
+} /* end function PerformSubsystemFunction */
+
+/*-------------------------------------------------------------------*/
+/* LOCATE RECORD EXTENDED    helper function                         */
+/*-------------------------------------------------------------------*/
+static void LocateRecordExtended
+(
+    DEVBLK*  dev,
+    BYTE     code,
+    BYTE     flags,
+    BYTE     chained,
+    U32      count,
+    BYTE     prevcode,
+    int      ccwseq,
+    BYTE*    iobuf,
+    BYTE*    more,
+    BYTE*    unitstat,
+    U32*     residual
+)
+{
+    int         rc;                     /* Return code               */
+    int         i, j;                   /* Loop index                */
+    CKD_TRKHDR  trkhdr;                 /* CKD track header (HA)     */
+    CKD_RECHDR  rechdr;                 /* CKD record header (count) */
+    U32         num;                    /* Number of bytes to move   */
+    U16         cyl;                    /* Cylinder number           */
+    U16         head;                   /* Head number               */
+    BYTE        cchhr[5];               /* Search argument           */
+    BYTE        binzero[5];             /* Binary zeros              */
+    BYTE        sector;                 /* Sector number             */
+
+    /* LRE only valid for 3990-3 or 3990-6 (or greater) */
+    if (0
+        || dev->ckdcu->devt != 0x3990
+        || !(0
+             || MODEL3( dev->ckdcu )
+             || MODEL6( dev->ckdcu )
+            )
+    )
+    {
+        /* Set command reject sense byte, and unit check status */
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * The Storage Director initially requests 20 bytes of parameters
+     * from the channel; if the channel provides fewer than 20 bytes,
+     * execution is terminated with status that includes unit check
+     * (Command Reject, format X'03', CCW byte count less than required).
+     */
+    num = (count < 20) ? count : 20;
+    *residual = count - num;
+
+    if (count < 20)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * If Locate Record Extended is received within a Locate Record
+     * domain, execution is terminated with status that includes unit
+     * check (Command Reject, format X'02', Invalid Command Sequence).
+     */
+    if (dev->ckdlcount > 0)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * If Locate Record Extended was not preceded by a Define Extent
+     * or Read IPL command in the same channel program, execution is
+     * terminated with status that includes unit check (Command Reject,
+     * format X'02', Invalid Command Sequence). If any other operation
+     * is specified, the command is terminated with status that
+     * includes unit check (Command Reject, format X'02', Invalid
+     * Command Sequence).
+     */
+    //FIXME not sure what that last sentence means
+    if (dev->ckdxtdef == 0 && dev->ckdrdipl == 0)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Byte 0 contains the locate record operation byte */
+    dev->ckdloper = iobuf[0];
+
+    /* Validate the locate record operation code (byte 0 bits 2-7) */
+    if ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_EXTOP)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Validate the locate record extended operation code (byte 17) */
+    if ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_EXTOP)
+    {
+        if (1
+            && iobuf[17] != CKDOPER_WRTANY
+            && iobuf[17] != CKDOPER_RDANY
+            && iobuf[17] != CKDOPER_RDTSET
+        )
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return;
+        }
+
+        dev->ckdloper &= CKDOPER_ORIENTATION;
+        dev->ckdloper |= iobuf[17];
+    }
+    else if (iobuf[17] != 0)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Check for write operation on a read only disk */
+    // ZZ FIXME (Not sure if this is right here)
+    if (1
+        &&  dev->ckdrdonly  // (base image is read-only)
+        && !dev->ckdfakewr  // (and fake write option not specified)
+        && !dev->dasdsfn    // (and no shadow file specified)
+        && (0
+            || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+            || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTANY
+            || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
+            || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
+           )
+    )
+    {
+        ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,
+                        FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * Check for valid combination of orientation and opcode
+     *
+     * +------------------------------------------------+
+     * | Operation Code          Orientation      Byte  |
+     * |                      Cnt  HA Data Index    17  |
+     * +------------------------------------------------+
+     * | Write Data            01   x   81     x    00  |
+     * | Format Write          03  43    x    C3    00  |
+     * | Write Track           0B   x    x     x    00  |
+     * | Read Tracks           0C  4C    x     x    00  |
+     * | Read                  16  56   96    D6    00  |
+     * | Write Any             3F   x    x     x    09  |
+     * | Read Any              3F   x    x     x    0A  |
+     * | Read Trackset         3F  7F    x     x    0E  |
+     * +------------------------------------------------+
+     * | Note:  x - Combination is not valid.           |
+     * +------------------------------------------------+
+     *
+     * Table: valid orientation + operation code values
+     */
+    if (1
+        && dev->ckdloper != 0x01
+        && dev->ckdloper != 0x03
+        && dev->ckdloper != 0x0B
+        && dev->ckdloper != 0x0C
+        && dev->ckdloper != 0x16
+
+        && dev->ckdloper != 0x43
+        && dev->ckdloper != 0x4C
+        && dev->ckdloper != 0x56
+
+        && dev->ckdloper != 0x81
+        && dev->ckdloper != 0x96
+
+        && dev->ckdloper != 0xC3
+        && dev->ckdloper != 0xD6
+
+        && dev->ckdloper != 0x09
+        && dev->ckdloper != 0x0A
+        && dev->ckdloper != 0x0E
+        && dev->ckdloper != 0x4E
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * Byte 1 is the Auxiliary Byte
+     * bit 0 = 0 : Bytes 14-15 are unused
+     *         1 : Bytes 14-15 contain a TLF that overrides the
+     *             blocksize specified by the DX parameter.
+     * bits 1-6  : Must be zero
+     *             If any of these bits are '1', the LRE is terminated
+     *             with status that includes unit check (Command Reject,
+     *             format X'04', Invalid Parameter).
+     * bit 7 = 0 : No Read Count CCW is suffixed to the LR domain
+     *         1 : A Read Count CCW is suffixed to the LR domain
+     */
+    if ((iobuf[1] & CKDLAUX_RESV) != 0)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * A Read Count command may only be suffixed to the domain of a LRE
+     * that specifies a Write Data (01), Write Any (09), Read Any (0A),
+     * or Read (16) operation code; if bit 7 = '1' when any other
+     * Operation code is specified, Locate Record Extended is terminated
+     * with status that includes unit check (Command Reject, format
+     * X'04', Invalid Parameter).
+     */
+    if (1
+        && (iobuf[1] & CKDLAUX_RDCNTSUF)
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDANY
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    dev->ckdlaux = iobuf[1];
+
+    /* Byte 2 must contain zeroes */
+    if (iobuf[2] != 0)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * Byte 3 is the Count parameter. In general, the count parameter
+     * specifies the number of records, or tracks to be operated on by
+     * data transfer commands that follow Locate Record Extended.
+     * Specific interpretation of the Count parameter depends upon the
+     * operation code in byte 0.
+     *
+     * The Count must be nonzero. If Read Count Suffixing is specified
+     * in a Locate Record, the count must be greater than 1. If the
+     * Count is invalid, Locate Record Extended is terminated with
+     * status that includes unit check (Command Reject, format X'04',
+     * Invalid Parameter).
+     */
+    if (0
+        || iobuf[3] == 0
+        || (1
+            && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
+            && iobuf[3] < 2
+           )
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    dev->ckdlcount = iobuf[3];
+
+    /*
+     * The value in bytes 4-7 must be a valid track address for the
+     * device and must be within the extent boundaries specified by the
+     * preceding Define Extent command.
+     *
+     * If the Seek Address is not valid for the device or if the Extended
+     * Operation code is Write Any or Read Any and the seek address does
+     * not specify a primary track, Locate Record Extended is terminated
+     * with status that includes unit check (Command Reject, format X'04',
+     * Invalid Parameter). If the Seek Address is not within the defined
+     * extent, Locate Record Extended is terminated with status that
+     * includes unit check (File Protected).
+     */
+    cyl  = fetch_hw( &iobuf[4] );
+    head = fetch_hw( &iobuf[6] );
+
+    if (0
+        || cyl  >= dev->ckdcyls
+        || head >= dev->ckdheads
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    if (EXTENT_CHECK( dev, cyl, head ))
+    {
+        ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * Bytes 8-12 specify a value to be used as a search argument for
+     * the Locate Record Extended search operation.
+     *
+     * When the operation specified in byte 0 does not require
+     * orientation to a specific record, no search operation is
+     * performed and bytes 8-12 are ignored. When Home Address
+     * orientation is specified, byte 12 is ignored.
+     */
+    memcpy( cchhr, &iobuf[8], 5 );
+
+    /*
+     * Byte 13 contains a sector number to which the device is to be
+     * positioned before the Storage Director establishes orientation.
+     *
+     * The sector number must be within the range of valid sector
+     * numbers for the device. If the sector number is invalid, Locate
+     * Record Extended is terminated with status that includes unit
+     * check (Command Reject, format X'04', Invalid Parameter).
+     *
+     * A value of X'FF' is valid and specifies that sector positioning
+     * is not to be performed prior to establishing orientation.
+     */
+    if (1
+        && iobuf[13] != 0xFF
+        && iobuf[13] >= dev->ckdtab->sectors
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    sector = iobuf[13];
+
+    /*
+     * When byte 1, bit 0 is '0', bytes 14-15 must contain zeros; if
+     * bytes 14-15 are not zero, Locate Record Extended is terminated
+     * with status that includes unit check (Command Reject, format
+     * X'04', Invalid Parameter).
+     *
+     * When byte 1 bit 0 is '1', bytes 14-15 contain a Transfer Length
+     * Factor (TLF). The Transfer Length Factor must be non-zero; if it
+     * is zero, Locate Record Extended is terminated with status that
+     * includes unit check (Command Reject, format X'04', Invalid
+     * Parameter).
+     *
+     * If the Transfer Length Factor value is greater than the value
+     * specified (or implied) in the Define Extent Blocksize parameter,
+     * Locate Record Extended is terminated with status that includes
+     * unit check (Command Reject, format X'04', Invalid Parameter).
+     *
+     * The Storage Director uses the TLF to determine the number of
+     * data bytes to be requested from the channel for each write
+     * command that follows a Locate Record Extended that specified the
+     * Write Data (01) Operation code. The product of the value in
+     * bytes 14-15 and the count parameter is used to determine the
+     * total number of bytes to be transferred by data transfer commands
+     * that are executed within the domain of a Locate Record Extended
+     * that specified the Format Write (03), Write Track (0B), or
+     * Read (16) Operation codes.
+     *
+     * The TLF value is not retained by the Storage Director after the
+     * expiration of the Locate Record domain.
+     *
+     * If Locate Record Extended does not specify a Transfer Length
+     * Factor, the Storage Director will use the value from the Define
+     * Extent Blocksize parameter for any required data transfer length
+     * calculation.
+     */
+    if (0
+        || (!(dev->ckdlaux & CKDLAUX_TLFVALID) &&  fetch_hw( &iobuf[14] ))
+        || ( (dev->ckdlaux & CKDLAUX_TLFVALID) && !fetch_hw( &iobuf[14] ))
+        || fetch_hw( &iobuf[14] ) > dev->ckdxblksz
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    if ((dev->ckdlaux & CKDLAUX_TLFVALID) == 0)
+        dev->ckdltranlf = dev->ckdxblksz;
+    else
+        dev->ckdltranlf = fetch_hw( &iobuf[14] );
+
+    /*
+     * Bytes 18-19 contain an unsigned 16-bit binary value that
+     * specifies the total number of extended parameter bytes. The
+     * format and content of the Extended Parameters are defined by
+     * the Extended Operation code.
+     *
+     * The length for 3990 Mod 6 or 9390 for the Extended Operation
+     * codes must be consistent with the Extended Operation code in
+     * byte 17 as follows:
+     *   09  0001
+     *   0A  0001
+     *   0E  0001 or 0002
+     *
+     * If the operation code is any code other than those defined, the
+     * extended parameter length count must be zero. If these conditions
+     * are not met the Locate Record Extended is terminated with status
+     * that includes unit check (Command Reject, format X'04', Invalid
+     * Parameter).
+     */
+    num = fetch_hw( &iobuf[18] );
+
+    if (0
+        || (1
+            && iobuf[17] != CKDOPER_WRTANY
+            && iobuf[17] != CKDOPER_RDANY
+            && iobuf[17] != CKDOPER_RDTSET
+            && num
+           )
+        || (iobuf[17] == CKDOPER_WRTANY && num != 1)
+        || (iobuf[17] == CKDOPER_RDANY  && num != 1)
+        || (iobuf[17] == CKDOPER_RDTSET && num != 1 && num != 2)
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * Request the extended parameter bytes from the channel. If the
+     * channel provides fewer bytes, execution is terminated with status
+     * that includes unit check (Command Reject, format X'03', CCW byte
+     * count less than required).
+     */
+    if (count < 20 + num)
+    {
+        *residual = 0;
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    *residual -= num;
+
+    /*
+     * For `Read Any' (0x0A) or `Write Any' (0x09) the extended
+     * length must be one and the extended parameter value (set size)
+     * must be one.  Otherwise the Locate Record Extended command is
+     * terminated with status that includes unit check (Command Reject,
+     * format X'04', Invalid Parameter).
+     */
+    if (num > 0)
+        if (iobuf[20] & 0x01)
+            dev->ckdlaux |= CKDLAUX_RDCNTSUF;
+
+    dev->ckdfcoun = 0;
+    memset( dev->ckdfcwrk, 0x00, sizeof( dev->ckdfcwrk ));
+    dev->ckdextcd = iobuf[17];
+
+    if (0
+        || (iobuf[17] == CKDOPER_WRTANY && iobuf[20] != 1)
+        || (iobuf[17] == CKDOPER_RDANY  && iobuf[20] != 1)
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /*
+     * Read Trackset - X'0E': The Read Trackset Operation Code prepares
+     * the Storage Director to transfer all records from one or more
+     * tracks to the channel. The tracks to be transferred are
+     * specified by the Extended Parameter and the number of tracks to
+     * be transferred is specified by the Count Parameter (byte 3).
+     *
+     * The maximum length of the Extended Parameter is specified in byte
+     * 43 of the Device Characteristics Information.
+     *
+     * The Extended Parameter contains a bit map that represents a set
+     * of sequentially addressed tracks within the defined extent. Each
+     * bit in the parameter represent one track. A '1' bit indicates the
+     * data associated with the corresponding track is to be read. A '0'
+     * bit indicates the track is to be skipped.
+     *
+     * The first bit must be a '1' and represents the track whose
+     * address is specified in the Seek Address parameter (bytes 4-7).
+     * Subsequent bits represent consecutively addressed tracks in
+     * ascending order. If the first bit is not a '1', the Locate Record
+     * Extended command is terminated with status that includes unit
+     * check (Command Reject, format X'04', Invalid Parameter).
+     *
+     * The number of '1' bits in the bit map must be equal to the value
+     * in the count parameter (byte 3); otherwise Locate Record Extended
+     * is terminated with status that includes unit check (Command
+     * Reject, format X'04', Invalid Parameter).
+     *
+     * All tracks in the bit map represented by the '1' bits must be
+     * contained within the defined extent; otherwise the Locate Record
+     * Extended command is terminated with status that includes unit
+     * check (File Protected).
+     *
+     * Track access is initiated using the Seek Address and Sector
+     * Number parameters.
+     *
+     * When track access is completed, the search operation specified by
+     * the Search Argument and the orientation modifiers (byte 0, bits
+     * 0-1) is performed.
+     *
+     * Locate Record Extended must be followed by the number of Read
+     * Track commands specified in the count parameter (byte 3). If any
+     * other command sequence is detected within the Locate Record
+     * domain, the non-conforming command will be rejected with status
+     * that includes Unit Check (Command Reject, format X'02', Invalid
+     * Command Sequence).
+     */
+    if (iobuf[17] == CKDOPER_RDTSET)
+    {
+        U16 lastcyl, lasthead;
+        U16 mask = iobuf[20] << 8;
+
+        if (num > 1)
+            mask |= iobuf[21];
+
+        if (!(mask & 0x8000))
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return;
+        }
+
+        dev->ckdlmask = mask;
+
+        /*
+         * Count the one bits in mask.  There are elegant but obscure
+         * ways to do this but just keeping it simple here.  Plus we
+         * also figure out the last track we will read.
+         */
+        for (i=j=0; mask; mask <<= 1)
+        {
+            j++;
+
+            if (mask & 0x8000)
+                i++;
+        }
+
+        /* Number of one bits must match count */
+        if (i != dev->ckdlcount)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return;
+        }
+
+        /* Check extent of last track to be read */
+        lastcyl  = cyl;
+        lasthead = (U16)(head + j - 1);
+
+        while (lasthead >= dev->ckdheads)
+        {
+            lastcyl++;
+            lasthead -= (U16) dev->ckdheads;
+        }
+
+        if (EXTENT_CHECK( dev, lastcyl, lasthead ))
+        {
+            ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return;
+        }
+    }
+
+    /* Seek to the required track */
+    rc = ckd_seek( dev, cyl, head, &trkhdr, unitstat );
+    if (rc < 0)
+        return;
+
+    /* Set normal status */
+    *unitstat = CSW_CE | CSW_DE;
+
+    /* Perform search according to specified orientation */
+    switch (dev->ckdloper & CKDOPER_ORIENTATION)
+    {
+
+        case CKDOPER_ORIENT_HOME:
+
+            /* For home orientation, compare the search CCHH
+               with the CCHH in the track header */
+            if (memcmp( &(trkhdr.cyl), cchhr, 4 ) != 0)
+            {
+                ckd_build_sense (dev, 0, SENSE1_NRF, 0, 0, 0);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            }
+            break;
+
+        case CKDOPER_ORIENT_COUNT:
+        case CKDOPER_ORIENT_DATA:
+
+            /* For count or data orientation, search the track
+               for a count field matching the specified CCHHR */
+            memset( binzero, 0x00, 5 );
+
+            while (1)
+            {
+                /* Read next count field and exit at end of track
+                   with sense data indicating no record found */
+                rc = ckd_read_count( dev, code, &rechdr, unitstat );
+                if (rc < 0)
+                    break; // (end of track)
+
+                /* Turn off track overflow flag */
+                if (dev->ckdcyls < 32768)
+                    rechdr.cyl[0] &= 0x7F;
+
+                /* For extended op code skip r0 */
+                if ((iobuf[0] & CKDOPER_CODE) == CKDOPER_EXTOP)
+                {
+                    if (rechdr.rec != 0)
+                        break;
+                }
+
+                if (memcmp( cchhr, binzero, 5 ) == 0)
+                    break;
+
+                /* Compare the count field with the search CCHHR */
+                else if (memcmp( &rechdr, cchhr, 5 ) == 0)
+                    break; // (we found it!)
+
+            } /* end while */
+    } /* end switch(CKDOPER_ORIENTATION) */
+
+    /* Exit if search ended with error status */
+    if (*unitstat != (CSW_CE | CSW_DE))
+        return;
+
+    /* Reorient past data if data orientation is specified */
+    if ((dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_DATA)
+    {
+        /* Skip past key and data fields */
+        dev->bufoff += dev->ckdcurkl + dev->ckdcurdl;
+
+        /* Set the device orientation fields */
+        dev->ckdrem = 0;
+        dev->ckdorient = CKDORIENT_DATA;
+    }
+
+    /* Set locate record flag and return normal status */
+    dev->ckdlocat = 1;
+
+} /* end function LocateRecordExtended */
+
+/*-------------------------------------------------------------------*/
+/* DEFINE EXTENT    helper function                                  */
+/*-------------------------------------------------------------------*/
+static void DefineExtent
+(
+    DEVBLK*  dev,
+    BYTE     code,
+    BYTE     flags,
+    BYTE     chained,
+    U32      count,
+    BYTE     prevcode,
+    int      ccwseq,
+    BYTE*    iobuf,
+    BYTE*    more,
+    BYTE*    unitstat,
+    U32*     residual
+)
+{
+    BYTE fmask, xgattr;
+    U16 bcyl, bhead, ecyl, ehead, xblksz;
+    U32 num;
+
+    /* Calculate residual byte count */
+    num = (count < 16) ? count : 16;
+    *residual = count - num;
+
+    /* Control information length must be at least 16 bytes */
+    if (count < 16)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_3);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Command reject if within the domain of a Locate Record, or
+       preceded by Define Extent, Space Count, or Set File Mask,
+       or (for 3390 only) preceded by Read IPL */
+    if (dev->ckdlcount > 0
+#if 0
+        || dev->ckdxtdef
+#endif
+        || dev->ckdsetfm
+        || dev->ckdspcnt
+        || (dev->ckdrdipl && dev->devtype == 0x3390)
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_2);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Bytes 0-1 contain the file mask and global attributes */
+    fmask = iobuf[0];
+    xgattr = iobuf[1];
+
+    if (dev->ckdxtdef &&
+       (dev->ckdfmask != fmask || dev->ckdxgattr != xgattr)
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_2);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    dev->ckdfmask = fmask;
+    dev->ckdxgattr = xgattr;
+
+    /* Validate the global attributes byte bits 0-1 */
+    if ((dev->ckdxgattr & CKDGATR_ARCH) != CKDGATR_ARCH_ECKD)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Validate the file mask */
+    if ((dev->ckdfmask & CKDMASK_RESV) != 0)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Bytes 2-3 contain the extent block size */
+    xblksz = (iobuf[2] << 8) | iobuf[3];
+
+    /* If extent block size is zero then use the maximum R0
+       record length (as returned in device characteristics
+       bytes 44 and 45) plus 8 */
+    if (xblksz == 0)
+        xblksz = dev->ckdtab->r0 + 8;
+
+    if (dev->ckdxtdef &&
+        dev->ckdxblksz != xblksz
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_2);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    dev->ckdxblksz = xblksz;
+
+    /* Validate the extent block */
+    if (dev->ckdxblksz > dev->ckdtab->r0 + 8)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Bytes 4-6 must contain zeroes */
+    if (0
+        || iobuf[4] != 0
+        || iobuf[5] != 0
+        || iobuf[6] != 0
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Bytes 8-11 contain the extent begin cylinder and head */
+    bcyl  = (iobuf[8]  << 8) | iobuf[9];
+    bhead = (iobuf[10] << 8) | iobuf[11];
+
+    /* Bytes 12-15 contain the extent end cylinder and head */
+    ecyl  = (iobuf[12] << 8) | iobuf[13];
+    ehead = (iobuf[14] << 8) | iobuf[15];
+
+    /* Validate the extent description by checking that the
+       ending track is not less than the starting track and
+       that the extent does not exceed the already defined extent */
+    if (0
+        || bcyl > ecyl
+        || (bcyl == ecyl && bhead > ehead)
+        || EXTENT_CHECK( dev, bcyl, bhead )
+        || EXTENT_CHECK( dev, ecyl, ehead )
+    )
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, dev->ckdxtdef ? MESSAGE_2 : MESSAGE_4);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Define the new extent */
+    dev->ckdxbcyl = bcyl;
+    dev->ckdxbhead = bhead;
+    dev->ckdxecyl = ecyl;
+    dev->ckdxehead = ehead;
+
+    /* Set extent defined flag and return normal status */
+    dev->ckdxtdef = 1;
+    *unitstat = CSW_CE | CSW_DE;
+
+} /* end function DefineExtent */
+
+DLL_EXPORT  DEVHND  ckd_dasd_device_hndinfo =
+{
+    &ckd_dasd_init_handler,           /* Device Initialization      */
+    &ckd_dasd_execute_ccw,            /* Device CCW execute         */
+    &ckd_dasd_close_device,           /* Device Close               */
+    &ckd_dasd_query_device,           /* Device Query               */
+    NULL,                             /* Device Extended Query      */
+    &ckd_dasd_start,                  /* Device Start channel pgm   */
+    &ckd_dasd_end,                    /* Device End channel pgm     */
+    &ckd_dasd_start,                  /* Device Resume channel pgm  */
+    &ckd_dasd_end,                    /* Device Suspend channel pgm */
+    NULL,                             /* Device Halt channel pgm    */
+    &ckd_dasd_read_track,             /* Device Read                */
+    &ckd_dasd_update_track,           /* Device Write               */
+    &ckd_dasd_used,                   /* Device Query used          */
+    NULL,                             /* Device Reserve             */
+    NULL,                             /* Device Release             */
+    NULL,                             /* Device Attention           */
+    NULL,                             /* Immediate CCW Codes        */
+    NULL,                             /* Signal Adapter Input       */
+    NULL,                             /* Signal Adapter Ouput       */
+    NULL,                             /* Signal Adapter Sync        */
+    NULL,                             /* Signal Adapter Output Mult */
+    NULL,                             /* QDIO subsys desc           */
+    NULL,                             /* QDIO set subchan ind       */
+    &ckd_dasd_hsuspend,               /* Hercules suspend           */
+    &ckd_dasd_hresume                 /* Hercules resume            */
 };
