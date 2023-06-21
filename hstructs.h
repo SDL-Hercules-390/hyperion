@@ -1901,6 +1901,29 @@ struct DEVBLK {                         /* Device configuration block*/
 #define QTYPE_WRITE  2
 #define QTYPE_DATA   3
 
+#if defined( OPTION_E7_PREFIX )
+
+// E7 Prefix CCW support...
+
+        BYTE    ckdformat;              /* Prefix CCW Format byte    */
+        BYTE    ckdvalid;               /* Prefix CCW Validity byte  */
+        BYTE    ckdauxiliary;           /* Prefix CCW auxiliary byte */
+
+// Format byte
+#define PFX_F_DE            0x00        /* Define Extent             */
+#define PFX_F_DE_LRE        0x01        /* DE+Locate Record Extended */
+#define PFX_F_DE_PSF        0x02        /* DE+Perform Subsys. Func.  */
+
+// Validity byte
+#define PFX_V_DE_VALID      0x80        /* Define Extent bytes valid */
+#define PFX_V_TS_VALID      0x40        /* DE Time Stamp field valid */
+
+// Auxiliary byte
+#define PFX_A_SMR           0x80        /* Suspend Multipath Reconn. */
+#define PFX_A_CHKALL        0x08        /* Check all DE+LRE parms    */
+
+#endif // defined( OPTION_E7_PREFIX )
+
         BLOCK_TRAILER;                  /* eye-end                   */
 };
 // end DEVBLK

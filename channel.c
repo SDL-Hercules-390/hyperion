@@ -179,15 +179,6 @@ clear_device_busy(DEVBLK* dev)
 #ifndef IOBUF_STRUCT
 #define IOBUF_STRUCT
 
-/*  CAUTION: for performance reasons the size of the data portion
-    of IOBUF (i.e. IOBUF_MINSIZE) should never be less than 64K-1,
-    and sizes greater than 64K may cause stack overflows to occur.
-*/
-#define IOBUF_ALIGN         4096          /* Must be a power of 2    */
-#define IOBUF_HDRSIZE       IOBUF_ALIGN   /* Multiple of IOBUF_ALIGN */
-#define IOBUF_MINSIZE       65536         /* Multiple of IOBUF_ALIGN */
-#define IOBUF_INCREASE      1048576       /* Multiple of IOBUF_ALIGN */
-
 CASSERT( IOBUF_HDRSIZE  == ROUND_UP( IOBUF_HDRSIZE,  IOBUF_ALIGN ), IOBUF_HDRSIZE  );
 CASSERT( IOBUF_MINSIZE  == ROUND_UP( IOBUF_MINSIZE,  IOBUF_ALIGN ), IOBUF_MINSIZE  );
 CASSERT( IOBUF_INCREASE == ROUND_UP( IOBUF_INCREASE, IOBUF_ALIGN ), IOBUF_INCREASE );

@@ -617,4 +617,17 @@
         | PGMBIT(  PGM_REGION_THIRD_TRANSLATION_EXCEPTION    )        \
      ))
 
+/*-------------------------------------------------------------------*/
+/*         Channel constants, also needed by ckddasd code            */
+/*-------------------------------------------------------------------*/
+
+/*  CAUTION: for performance reasons the size of the data portion
+    of IOBUF (i.e. IOBUF_MINSIZE) should never be less than 64K-1,
+    and sizes greater than 64K may cause stack overflows to occur.
+*/
+#define IOBUF_ALIGN         4096          /* Must be a power of 2    */
+#define IOBUF_HDRSIZE       IOBUF_ALIGN   /* Multiple of IOBUF_ALIGN */
+#define IOBUF_MINSIZE       65536         /* Multiple of IOBUF_ALIGN */
+#define IOBUF_INCREASE      1048576       /* Multiple of IOBUF_ALIGN */
+
 #endif // _HCONSTS_H

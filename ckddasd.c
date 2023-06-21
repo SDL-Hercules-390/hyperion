@@ -97,6 +97,7 @@
 #define CKDOPER_RDTRKS          0x0C    /* ...read tracks            */
 #define CKDOPER_RDTSET          0x0E    /* ...read track set         */
 #define CKDOPER_READ            0x16    /* ...read                   */
+#define CKDOPER_PFX_READ        0x06    /* ...read (E7 Prefix only!) */
 #define CKDOPER_EXTOP           0x3F    /* ...extended operation     */
 
 /*-------------------------------------------------------------------*/
@@ -1691,14 +1692,15 @@ static int ckd_read_count ( DEVBLK *dev, BYTE code,
                             CKD_RECHDR *rechdr, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
-int             skipr0 = 0;             /* 1=Skip record zero        */
+bool            skipr0 = false;         /* true=Skip record zero     */
 int             cyl;                    /* Cylinder number for seek  */
 int             head;                   /* Head number for seek      */
 char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
 
-    /* Skip record 0 for all operations except READ TRACK, READ R0,
-       SEARCH ID EQUAL, SEARCH ID HIGH, SEARCH ID EQUAL OR HIGH,
-       LOCATE RECORD, and WRITE CKD NEXT TRACK */
+    /* Skip record 0 for all operations EXCEPT:
+       READ TRACK, READ R0, SEARCH ID EQUAL, SEARCH ID HIGH, SEARCH
+       ID EQUAL OR HIGH, LOCATE RECORD, and WRITE CKD NEXT TRACK.
+       Otherwise, if it *is* any of the above, then DON'T skip R0. */
     if (1
         &&  code         != 0xDE // READ TRACK
         && (code & 0x7F) != 0x16 // READ RECORD ZERO
@@ -1708,8 +1710,9 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         &&  code         != 0x47 // LOCATE RECORD
         &&  code         != 0x4B // LOCATE RECORD EXTENDED
         &&  code         != 0x9D // WRITE COUNT KEY AND DATA NEXT TRACK
+        &&  code         != 0xE7 // PREFIX
     )
-        skipr0 = 1;
+        skipr0 = true;
 
     // "%1d:%04X CKD file %s: read count orientation %s"
     if (dev->ccwtrace && sysblk.traceFILE)
@@ -1817,33 +1820,31 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
             continue;
         }
 
-        if (code != 0xE7) // PREFIX
-        {
-            if (0
-                || code == 0x47 // LOCATE RECORD
-                || code == 0x4B // LOCATE RECORD EXTENDED
-                || code == 0x9D // WRITE COUNT KEY AND DATA NEXT TRACK
-                || (1
-                    && dev->ckdxmark
-                    && !(1
-                         && dev->ckdlcount == 0
-                         && (0
-                             || (1
-                                 && IS_CCW_READ(code)
-                                 && (code & 0x80)
-                                )
-                             || code == 0xA9 // SEARCH KEY EQUAL
-                             || code == 0xC9 // SEARCH KEY HIGH
-                             || code == 0xE9 // SEARCH KEY EQUAL OR HIGH
+        if (0
+            || code == 0x47 // LOCATE RECORD
+            || code == 0x4B // LOCATE RECORD EXTENDED
+            || code == 0xE7 // PREFIX
+            || code == 0x9D // WRITE COUNT KEY AND DATA NEXT TRACK
+            || (1
+                && dev->ckdxmark
+                && !(1
+                     && dev->ckdlcount == 0
+                     && (0
+                         || (1
+                             && IS_CCW_READ(code)
+                             && (code & 0x80)
                             )
+                         || code == 0xA9 // SEARCH KEY EQUAL
+                         || code == 0xC9 // SEARCH KEY HIGH
+                         || code == 0xE9 // SEARCH KEY EQUAL OR HIGH
                         )
-                   )
-            )
-            {
-                ckd_build_sense(dev, 0, SENSE1_NRF, 0, 0, 0);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                return -1;
-            }
+                    )
+               )
+        )
+        {
+            ckd_build_sense(dev, 0, SENSE1_NRF, 0, 0, 0);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return -1;
         }
 
         /* Test for multitrack operation */
@@ -3262,6 +3263,80 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         break;
 
+#if defined( OPTION_E7_PREFIX )
+
+    case 0xE7: // Prefix
+    /*---------------------------------------------------------------*/
+    /* PREFIX        (SA22-1025 IBM Subsystem Reference Guide)       */
+    /*---------------------------------------------------------------*/
+
+        *residual = 0;  // ZZ FIXME (Fish: always?! I question this!)
+
+        // Command reject if count is less than minimum 
+        if (count < 64)
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_3 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        // Extract Format, Validity and Auxiliary bytes
+        dev->ckdformat    = iobuf[0];
+        dev->ckdvalid     = iobuf[1];
+        dev->ckdauxiliary = iobuf[3];
+
+        // Validate Format byte
+        if (1
+            && dev->ckdformat != PFX_F_DE
+            && dev->ckdformat != PFX_F_DE_LRE
+            && dev->ckdformat != PFX_F_DE_PSF
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_4 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        switch (dev->ckdformat)
+        {
+        case PFX_F_DE:
+
+            DefineExtent( dev, code, flags, chained, count, prevcode,
+                          ccwseq, iobuf, more, unitstat, residual );
+            break; // Done!
+
+        case PFX_F_DE_LRE:
+
+            DefineExtent( dev, code, flags, chained, count, prevcode,
+                          ccwseq, iobuf, more, unitstat, residual );
+            if (*unitstat != (CSW_CE | CSW_DE))
+                break; // (error!)
+
+            LocateRecordExtended( dev, code, flags, chained, count, prevcode,
+                                  ccwseq, iobuf, more, unitstat, residual );
+            break; // Done!
+
+        case PFX_F_DE_PSF:
+
+            DefineExtent( dev, code, flags, chained, count, prevcode,
+                          ccwseq, iobuf, more, unitstat, residual );
+            if (*unitstat != (CSW_CE | CSW_DE))
+                break; // (error!)
+
+            PerformSubsystemFunction( dev, code, flags, chained, count, prevcode,
+                                      ccwseq, iobuf, more, unitstat, residual );
+            break; // Done!
+
+        default:
+            CRASH();  // LOGIC ERROR!
+            break;
+        }
+        break;
+
+#endif // defined( OPTION_E7_PREFIX )
+
     case 0x27: // PERFORM SUBSYSTEM FUNCTION (maybe! see below!)
     case 0xF7: // DSOP: DEFINE SUBSYSTEM OPERATION (IBM RAMAC Array, GC26-7006-01)
     /*---------------------------------------------------------------*/
@@ -4466,85 +4541,37 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         break;
 
-    case 0x47: // Locate Record
-    case 0xE7: // Prefix
-    {
+    case 0x47:
         /*---------------------------------------------------------------*/
-        /* LOCATE RECORD or PREFIX                                       */
+        /* LOCATE RECORD                                                 */
         /*---------------------------------------------------------------*/
-        int bcyl, bhead, ecyl, ehead;
-        U16 xblksz;
 
-        if (code == 0x47) // LOCATE RECORD
+        /* Calculate residual byte count */
+        num = (count < 16) ? count : 16;
+        *residual = count - num;
+
+        /* Control information length must be at least 16 bytes */
+        if (count < 16)
         {
-            /* Calculate residual byte count */
-            num = (count < 16) ? count : 16;
-            *residual = count - num;
-
-            /* Control information length must be at least 16 bytes */
-            if (count < 16)
-            {
-                ckd_build_sense(dev, SENSE_CR, 0, 0,
-                    FORMAT_0, MESSAGE_3);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            /* Command reject if within the domain of a Locate Record,
-               or not preceded by a Define Extent or Read IPL command */
-            if (dev->ckdlcount > 0
-                || (dev->ckdxtdef == 0 && dev->ckdrdipl == 0))
-            {
-                ckd_build_sense(dev, SENSE_CR, 0, 0,
-                    FORMAT_0, MESSAGE_2);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            /* Byte 0 contains the locate record operation byte */
-            dev->ckdloper = iobuf[0];
+            ckd_build_sense(dev, SENSE_CR, 0, 0,
+                FORMAT_0, MESSAGE_3);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
         }
-        else // if (code == 0xE7) // PREFIX
+
+        /* Command reject if within the domain of a Locate Record,
+           or not preceded by a Define Extent or Read IPL command */
+        if (dev->ckdlcount > 0
+            || (dev->ckdxtdef == 0 && dev->ckdrdipl == 0))
         {
-            /* Calculate residual byte count */
-            *residual = 0;  // ZZ FIXME (Fish: always?! I question this!)
-
-            /* Bytes 20-23 contain the extent begin cylinder and head */
-            bcyl  = (iobuf[20] << 8) | iobuf[21];
-            bhead = (iobuf[22] << 8) | iobuf[23];
-
-            /* Bytes 24-27 contain the extent end cylinder and head */
-            ecyl  = (iobuf[24] << 8) | iobuf[25];
-            ehead = (iobuf[26] << 8) | iobuf[27];
-
-            dev->ckdxbcyl  = bcyl;
-            dev->ckdxbhead = bhead;
-            dev->ckdxecyl  = ecyl;
-            dev->ckdxehead = ehead;
-
-            /* Byte 44 contains the locate record extended operation byte */
-            dev->ckdloper = iobuf[44];
-
-            /* Bytes 14-15 contain the extent block size */
-            xblksz = (iobuf[14] << 8) | iobuf[15];
-
-            /* If extent block size is zero then use the maximum R0
-               record length (as returned in device characteristics
-               bytes 44 and 45) plus 8 */
-            if (xblksz == 0)
-                xblksz = dev->ckdtab->r0 + 8;
-
-            if (dev->ckdxtdef && dev->ckdxblksz != xblksz)
-            {
-                ckd_build_sense(dev, SENSE_CR, 0, 0,
-                    FORMAT_0, MESSAGE_2);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
-
-            dev->ckdxblksz = xblksz;
-            dev->ckdxtdef  = 1;
+            ckd_build_sense(dev, SENSE_CR, 0, 0,
+                FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
         }
+
+        /* Byte 0 contains the locate record operation byte */
+        dev->ckdloper = iobuf[0];
 
         /* Validate the locate record operation code (bits 2-7) */
         if (!(0
@@ -4619,10 +4646,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Byte 1 contains the locate record auxiliary byte */
-        if (code == 0x47) // LOCATE RECORD
-            dev->ckdlaux = iobuf[1];
-        else // (code == 0xE7) // PREFIX
-            dev->ckdlaux = iobuf[45];
+        dev->ckdlaux = iobuf[1];
 
         /* Validate the auxiliary byte */
         if (0
@@ -4643,32 +4667,16 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Byte 2 must contain zeroes */
-        if (code == 0x47) // LOCATE RECORD
+        if (iobuf[2] != 0)
         {
-            if (iobuf[2] != 0)
-            {
-                ckd_build_sense(dev, SENSE_CR, 0, 0,
-                    FORMAT_0, MESSAGE_4);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
+            ckd_build_sense(dev, SENSE_CR, 0, 0,
+                FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
 
-            /* Byte 3 contains the locate record domain count */
-            dev->ckdlcount = iobuf[3];
-        }
-        else // (code == 0xE7) // PREFIX
-        {
-            if (iobuf[46] != 0)
-            {
-                ckd_build_sense(dev, SENSE_CR, 0, 0,
-                    FORMAT_0, MESSAGE_4);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                cyl = 0; // ZZ FIXME (Fish: why?!)
-                break;
-            }
-            /* Byte 3 contains the locate record domain count */
-            dev->ckdlcount = iobuf[47];
-        }
+        /* Byte 3 contains the locate record domain count */
+        dev->ckdlcount = iobuf[3];
 
         /* Validate the locate record domain count */
         if (0
@@ -4693,21 +4701,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Bytes 4-7 contain the seek address */
-        if (code == 0x47) // LOCATE RECORD
-        {
-            cyl = (iobuf[4] << 8) | iobuf[5];
-            head = (iobuf[6] << 8) | iobuf[7];
-        }
-        else // (code == 0xE7) // PREFIX
-        {
-#if 1 // ZZ FIXME (Fish: this is wrong!)
-            cyl  = (iobuf[20] << 8) | iobuf[21];
-            head = (iobuf[22] << 8) | iobuf[23];
-#else // (This is correct!)
-            cyl  = (iobuf[48] << 8) | iobuf[49];
-            head = (iobuf[50] << 8) | iobuf[51];
-#endif // ZZ FIXME
-        }
+        cyl = (iobuf[4] << 8) | iobuf[5];
+        head = (iobuf[6] << 8) | iobuf[7];
 
         /* Command reject if seek address is not valid */
         if (cyl >= dev->ckdcyls || head >= dev->ckdheads)
@@ -4727,21 +4722,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Bytes 8-12 contain the search argument */
+        memcpy(cchhr, &iobuf[8], 5);
+
         /* Byte 13 contains the sector number */
-        if (code == 0x47) // LOCATE RECORD
-        {
-            memcpy(cchhr, &iobuf[8], 5);
-            sector = iobuf[13];
-        }
-        else // (code == 0xE7) // PREFIX
-        {
-            memcpy(cchhr, &iobuf[52], 5);
-#if 1 // ZZ FIXME (Fish: this is wrong!)
-            sector = iobuf[13];
-#else // (This is correct!)
-            sector = iobuf[57];
-#endif // ZZ FIXME
-        }
+        sector = iobuf[13];
 
         /* Command reject if sector number is not valid */
         if (sector != 0xFF && sector >= dev->ckdtab->sectors)
@@ -4753,14 +4737,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Bytes 14-15 contain the transfer length factor */
-        if (code == 0x47) // LOCATE RECORD
-            dev->ckdltranlf = (iobuf[14] << 8) | iobuf[15];
-        else // (code == 0xE7) // PREFIX
-#if 1 // ZZ FIXME (Fish: Why?! I question this!)
-            dev->ckdltranlf = 0;
-#else // (Shouldn't it be this instead?)
-            dev->ckdltranlf = (iobuf[58] << 8) | iobuf[59];
-#endif // ZZ FIXME
+        dev->ckdltranlf = (iobuf[14] << 8) | iobuf[15];
 
         /* Validate the transfer length factor */
         if (0
@@ -4853,7 +4830,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Set locate record flag and return normal status */
         dev->ckdlocat = 1;
         break;
-    }
 
     case 0x4B:
     /*---------------------------------------------------------------*/
@@ -5481,6 +5457,20 @@ static void PerformSubsystemFunction
     int  i;
     U32  num;
 
+#if defined( OPTION_E7_PREFIX )
+
+    BYTE ccwdata[ IOBUF_MINSIZE ];
+
+    /* If Prefix CCW, move iobuff data to where this function expects it */
+    if (code == 0xE7)
+    {
+        dev->ckdloper = iobuf[44];
+        memmove( ccwdata, &iobuf[62], sizeof( ccwdata ) - 62 );
+        count -= (count >= 62 ? 62 : count);
+        iobuf = &ccwdata[0];
+    }
+#endif // defined( OPTION_E7_PREFIX )
+
     /* Command reject if within the domain of a Locate Record */
     if (dev->ckdlcount > 0)
     {
@@ -5860,6 +5850,19 @@ static void LocateRecordExtended
     BYTE        binzero[5];             /* Binary zeros              */
     BYTE        sector;                 /* Sector number             */
 
+#if defined( OPTION_E7_PREFIX )
+
+    BYTE ccwdata[ IOBUF_MINSIZE ];
+
+    /* If Prefix CCW, move iobuff data to where this function expects it */
+    if (code == 0xE7)
+    {
+        memmove( ccwdata, &iobuf[44], sizeof( ccwdata ) - 44 );
+        count -= (count >= 44 ? 44 : count);
+        iobuf = &ccwdata[0];
+    }
+#endif // defined( OPTION_E7_PREFIX )
+
     /* LRE only valid for 3990-3 or 3990-6 (or greater) */
     if (0
         || dev->ckdcu->devt != 0x3990
@@ -5924,12 +5927,15 @@ static void LocateRecordExtended
     dev->ckdloper = iobuf[0];
 
     /* Validate the locate record operation code (byte 0 bits 2-7) */
-    if ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ
-     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_EXTOP)
+    if (1
+        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
+        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
+        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS
+        && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ     && code == 0x4B)
+        && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_PFX_READ && code == 0xE7) // E7 Prefix
+        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_EXTOP
+    )
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5992,6 +5998,7 @@ static void LocateRecordExtended
      * | Write Track           0B   x    x     x    00  |
      * | Read Tracks           0C  4C    x     x    00  |
      * | Read                  16  56   96    D6    00  |
+     * | Read (E7 Prefix)      06  56   96    D6    00  |
      * | Write Any             3F   x    x     x    09  |
      * | Read Any              3F   x    x     x    0A  |
      * | Read Trackset         3F  7F    x     x    0E  |
@@ -6002,26 +6009,27 @@ static void LocateRecordExtended
      * Table: valid orientation + operation code values
      */
     if (1
-        && dev->ckdloper != 0x01
-        && dev->ckdloper != 0x03
-        && dev->ckdloper != 0x0B
-        && dev->ckdloper != 0x0C
-        && dev->ckdloper != 0x16
+        &&  dev->ckdloper != 0x01
+        &&  dev->ckdloper != 0x03
+        &&  dev->ckdloper != 0x0B
+        &&  dev->ckdloper != 0x0C
+        && (dev->ckdloper != 0x16 && code == 0x4B)
+        && (dev->ckdloper != 0x06 && code == 0xE7) // E7 Prefix
 
-        && dev->ckdloper != 0x43
-        && dev->ckdloper != 0x4C
-        && dev->ckdloper != 0x56
+        &&  dev->ckdloper != 0x43
+        &&  dev->ckdloper != 0x4C
+        &&  dev->ckdloper != 0x56
 
-        && dev->ckdloper != 0x81
-        && dev->ckdloper != 0x96
+        &&  dev->ckdloper != 0x81
+        &&  dev->ckdloper != 0x96
 
-        && dev->ckdloper != 0xC3
-        && dev->ckdloper != 0xD6
+        &&  dev->ckdloper != 0xC3
+        &&  dev->ckdloper != 0xD6
 
-        && dev->ckdloper != 0x09
-        && dev->ckdloper != 0x0A
-        && dev->ckdloper != 0x0E
-        && dev->ckdloper != 0x4E
+        &&  dev->ckdloper != 0x09
+        &&  dev->ckdloper != 0x0A
+        &&  dev->ckdloper != 0x0E
+        &&  dev->ckdloper != 0x4E
     )
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
@@ -6051,17 +6059,18 @@ static void LocateRecordExtended
     /*
      * A Read Count command may only be suffixed to the domain of a LRE
      * that specifies a Write Data (01), Write Any (09), Read Any (0A),
-     * or Read (16) operation code; if bit 7 = '1' when any other
+     * or Read (16/06) operation code; if bit 7 = '1' when any other
      * Operation code is specified, Locate Record Extended is terminated
      * with status that includes unit check (Command Reject, format
      * X'04', Invalid Parameter).
      */
     if (1
-        && (iobuf[1] & CKDLAUX_RDCNTSUF)
-        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
-        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDANY
-        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ
+        &&  (iobuf[1] & CKDLAUX_RDCNTSUF)
+        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
+        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDANY
+        && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ     && code == 0x4B)
+        && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_PFX_READ && code == 0xE7) // E7 Prefix
     )
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
@@ -6200,7 +6209,7 @@ static void LocateRecordExtended
      * total number of bytes to be transferred by data transfer commands
      * that are executed within the domain of a Locate Record Extended
      * that specified the Format Write (03), Write Track (0B), or
-     * Read (16) Operation codes.
+     * Read (16/06) Operation codes.
      *
      * The TLF value is not retained by the Storage Director after the
      * expiration of the Locate Record domain.
@@ -6508,6 +6517,19 @@ static void DefineExtent
     BYTE fmask, xgattr;
     U16 bcyl, bhead, ecyl, ehead, xblksz;
     U32 num;
+
+#if defined( OPTION_E7_PREFIX )
+
+    BYTE ccwdata[ IOBUF_MINSIZE ];
+
+    /* If Prefix CCW, move iobuff data to where this function expects it */
+    if (code == 0xE7)
+    {
+        memmove( ccwdata, &iobuf[12], sizeof( ccwdata ) - 12 );
+        count -= (count >= 12 ? 12 : count);
+        iobuf = &ccwdata[0];
+    }
+#endif // defined( OPTION_E7_PREFIX )
 
     /* Calculate residual byte count */
     num = (count < 16) ? count : 16;
