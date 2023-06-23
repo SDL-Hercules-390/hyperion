@@ -899,8 +899,14 @@ static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
                           const U32 count, const U8 flags,
                           const char* file, int line, const char* func )
 {
-    if (*did_ccw_trace) // (did we do this already?)
-        return;         // (then don't do it again!)
+    if (*did_ccw_trace)         // (did we do this already?)
+        return;                 // (then don't do it again!)
+
+    if (1
+        &&  dev->ccwopstrace    // (tracing ONLY specific CCWs?)
+        && !dev->ccwops[ccw[0]] // (and NOT interested in this one?)
+    )
+        return;                 // (no, then don't trace it!)
 
     if (dev->ccwtrace && sysblk.traceFILE)
     {
@@ -1018,6 +1024,12 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
                            const RADR addr, const U16 count,
                            const char* file, int line, const char* func )
 {
+    if (1
+        &&  dev->ccwopstrace            // (tracing ONLY specific CCWs?)
+        && !dev->ccwops[ dev->code ]    // (and NOT interested in this one?)
+    )
+        return;                         // (no, then don't trace it!)
+
     if (dev->ccwtrace && sysblk.traceFILE)
     {
         BYTE amt = MIN( 16, CAPPED_BUFFLEN( addr, count, dev ));
@@ -5836,12 +5848,18 @@ breakchain:
 
             /* Display status and residual byte count */
 
-            if (dev->ccwtrace && sysblk.traceFILE)
-                tf_1312( dev, unitstat, chanstat, (BYTE) MIN( count, 16 ), residual, iobuf->data );
-            else
-                // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X"
-                WRMSG( HHC01312, "I", LCSS_DEVNUM,
-                    unitstat, chanstat, residual );
+            if (0
+                || !dev->ccwopstrace          // (NOT tracing only specific CCWs?)
+                ||  dev->ccwops[ dev->code ]  // (or IS one they're interested in?)
+            )
+            {
+                if (dev->ccwtrace && sysblk.traceFILE)
+                    tf_1312( dev, unitstat, chanstat, (BYTE) MIN( count, 16 ), residual, iobuf->data );
+                else
+                    // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X"
+                    WRMSG( HHC01312, "I", LCSS_DEVNUM,
+                        unitstat, chanstat, residual );
+            }
 
             /* Display sense bytes if unit check is indicated */
             if (unitstat & CSW_UC)

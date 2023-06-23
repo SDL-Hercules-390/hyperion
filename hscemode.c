@@ -1487,7 +1487,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         {
             DEVBLK* dev;
             char typ[16] = {0};
-            char who[16] = {0};
+            char who[1024] = {0};
             int cpu, on = 0, off = 0;
 
             /* Also show instruction tracing for each individual CPU,
@@ -1540,8 +1540,30 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
 
                 if (typ[0])
                 {
-                    MSGBUF( who, "device %1d:%04X",
-                        SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    char for_ccws[1024] = {0};
+
+                    if (dev->ccwopstrace)
+                    {
+                        int  i;
+                        char ccwop[4] = {0};
+
+                        STRLCAT( for_ccws, " for CCWs (" );
+
+                        for (i=0; i < 256; ++i)
+                        {
+                            if (dev->ccwops[i])
+                            {
+                                MSGBUF( ccwop, "%2.2x,", i );
+                                STRLCAT( for_ccws, ccwop );
+                            }
+                        }
+
+                        rtrim( for_ccws, "," );
+                        STRLCAT( for_ccws, ")" );
+                    }
+
+                    MSGBUF( who, "device %1d:%04X%s",
+                        SSID_TO_LCSS( dev->ssid ), dev->devnum, for_ccws );
 
                     // "%stracing active for %s"
                     WRMSG( HHC02382, "I", typ, who );

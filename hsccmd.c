@@ -8038,19 +8038,18 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
     bool    plus_enable_on;             /* true == x+, false == x-   */
     char*   onoroff;                    /* x+ == "on", x- == "off"   */
     DEVBLK* dev;
+    BYTE    ccwops[256];
     U16     devnum;
     U16     lcss;
     REGS*   regs;
-
-    UNREFERENCED( argc );
-    UNREFERENCED( argv );
+    size_t  cmdlen = strlen( cmdline );
 
     if (cmd[1] == '+')
     {
         plus_enable_on = true;
         onoroff = "ON";
     }
-    else
+    else // (cmd[1] == '-')
     {
         plus_enable_on = false;
         onoroff = "OFF";
@@ -8277,18 +8276,91 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
 
         if (1
             && (cmd[0] == 'o' || cmd[0] == 't')
-            && parse_single_devnum_silent( &cmd[2], &lcss, &devnum ) == 0
+            && parse_single_devnum_silent( &argv[0][2], &lcss, &devnum ) == 0
         )
         {
-            char* typ;
-            char buf[40];
+            size_t  buflen = cmdlen + 20 + 10 + 1;
+            char*   typ;
+            char*   for_ccws;
+            char*   buf = malloc( buflen );
+
+            if (!buf)
+            {
+                // "Error in function %s: %s"
+                WRMSG( HHC02219, "E", "malloc()", strerror( ENOMEM ));
+                RELEASE_INTLOCK( NULL );
+                return -1;
+            }
 
             if (!(dev = find_device_by_devnum( lcss, devnum )))
             {
                 // HHC02200 "%1d:%04X device not found"
                 devnotfound_msg( lcss, devnum );
                 RELEASE_INTLOCK( NULL );
+                free( buf );
                 return -1;
+            }
+
+            // Check for and parse optional "(aa,bb,cc,...zz)" CCWs argument
+
+            if (argc >= 2 && argv[1])
+            {
+                bool   err = false;
+                char*  copyofarg1;
+                char*  token;
+                BYTE   ccw_opcode;
+
+                if (strspn( argv[1], "(,)0123456789abcdefABCDEF" ) != strlen( argv[1] ))
+                {
+                    RELEASE_INTLOCK( NULL );
+                    // "Invalid argument %s%s"
+                    WRMSG( HHC02205, "E", argv[1], "" );
+                    return -1;
+                }
+
+                copyofarg1 = strdup( argv[1] );
+                memset( ccwops, 0, 256 );
+                token = strtok( copyofarg1, "(,)" );
+
+                while (token)
+                {
+                    // Validate token...
+                    if (0
+                        || strlen( token ) != 2
+                        || !is_hex( token )
+                    )
+                    {
+                        err = true;
+                        break;
+                    }
+
+                    // Process token
+                    ccw_opcode = (BYTE) strtol( token, NULL, 16 );
+                    ccwops[ ccw_opcode ] = 0xFF;
+
+                    // Get next token...
+                    token = strtok( NULL, "(,)" );
+                }
+
+                free( copyofarg1 );
+
+                if (err)
+                {
+                    RELEASE_INTLOCK( NULL );
+                    // "Invalid argument %s%s"
+                    WRMSG( HHC02205, "E", argv[1], "" );
+                    return -1;
+                }
+
+                dev->ccwopstrace = true;
+                memcpy( dev->ccwops, ccwops, 256 );
+                for_ccws = " for CCWs ";
+            }
+            else
+            {
+                for_ccws = "";
+                memset( dev->ccwops, 0xFF, 256 );
+                dev->ccwopstrace = false;
             }
 
             if (cmd[0] == 'o')
@@ -8302,9 +8374,15 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
                 dev->orbtrace = plus_enable_on;
                 dev->ccwtrace = plus_enable_on;
             }
-            MSGBUF( buf, "%s for %1d:%04X", typ, lcss, devnum );
+
+            snprintf( buf, buflen, "%s for %1d:%04X%s%s",
+                typ, lcss, devnum,
+                for_ccws[0] ? for_ccws : "",
+                for_ccws[0] ? argv[1]  : "" );
+
             // "%-14s set to %s"
             WRMSG( HHC02204, "I", buf, onoroff );
+            free( buf );
             RELEASE_INTLOCK( NULL );
             return 0;
         }
