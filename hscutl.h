@@ -412,7 +412,11 @@ HUT_DLL_IMPORT bool are_big_endian();
 /*********************************************************************/
 /*********************************************************************/
 
-#define TF_FMT  '0'         // TraceFile file format number (0-9)
+#if defined( OPTION_E7_TRACE_64 )
+  #define TF_FMT  '1'         // TraceFile file format number (0-9)
+#else
+  #define TF_FMT  '0'         // TraceFile file format number (0-9)
+#endif
 
 #undef ATTRIBUTE_PACKED
 #if defined(_MSVC_)
@@ -1045,8 +1049,9 @@ struct TF01301
     BYTE    amt;            // Data amount
     BYTE    type;           // IDA type (IDAW1/IDAW2/MIDAW)
     BYTE    mflag;          // MIDAW flag
-    BYTE    pad [ 3 ];      // (padding/alignment/unused)
-    BYTE    data[16];       // IDAW/MIDAW data
+    BYTE    code;           // CCW opcode
+    BYTE    pad [ 2 ];      // (padding/alignment/unused)
+    BYTE    data[64];       // CCW data
 }
 ATTRIBUTE_PACKED; typedef struct TF01301 TF01301;
 CASSERT( sizeof( TF01301 ) % 8 == 0, hscutl_h );
@@ -1170,7 +1175,7 @@ struct TF01315
     BYTE    amt;            // Data amount
     BYTE    pad [ 1 ];      // (padding/alignment/unused)
     BYTE    ccw[8];         // CCW
-    BYTE    data[16];       // CCW data
+    BYTE    data[64];       // CCW data
 }
 ATTRIBUTE_PACKED; typedef struct TF01315 TF01315;
 CASSERT( sizeof( TF01315 ) % 8 == 0, hscutl_h );

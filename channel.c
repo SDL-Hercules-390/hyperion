@@ -910,8 +910,15 @@ static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
 
     if (dev->ccwtrace && sysblk.traceFILE)
     {
-        BYTE amt = MIN( 16, CAPPED_BUFFLEN( addr, count, dev ));
-        tf_1315( dev, ccw, addr, count, dev->mainstor + addr, amt );
+        BYTE len, amt;
+
+        len = (BYTE) CAPPED_BUFFLEN( addr, count, dev );
+        amt =
+#if defined( OPTION_E7_TRACE_64 )
+        ccw[0] == 0xE7 ? 64 :
+#endif
+        16;
+        tf_1315( dev, ccw, addr, count, dev->mainstor + addr, MIN( amt, len ));
     }
     else
     {
@@ -1032,8 +1039,15 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
 
     if (dev->ccwtrace && sysblk.traceFILE)
     {
-        BYTE amt = MIN( 16, CAPPED_BUFFLEN( addr, count, dev ));
-        tf_1301( dev, addr, count, dev->mainstor + addr, amt, flag, type );
+        BYTE len, amt;
+
+        len = (BYTE) CAPPED_BUFFLEN( addr, count, dev );
+        amt =
+#if defined( OPTION_E7_TRACE_64 )
+        dev->code == 0xE7 ? 64 :
+#endif
+        16;
+        tf_1301( dev, addr, count, dev->mainstor + addr, MIN( amt, len ), flag, type );
     }
     else
     {

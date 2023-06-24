@@ -3447,6 +3447,7 @@ DLL_EXPORT bool tf_1301( const DEVBLK* dev, const U64 addr, const U16 count,
     rec.count = count;
     rec.type  = type;
     rec.mflag = flag;
+    rec.code  = dev->code;
     memcpy( rec.data, data, amt );
     return tf_write( NULL, &rec, sizeof( TF01301 ), 1301 );
 }

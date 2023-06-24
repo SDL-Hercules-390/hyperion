@@ -1885,16 +1885,19 @@ static inline void print_814_sigp( TF00814* rec )
 /*                                                                            */
 /******************************************************************************/
 
+#if defined( OPTION_E7_TRACE_64 )
 /*-------------------------------------------------------------------*/
-/*          fmtdata -- format hex and character buffer data          */
+/*  e7_fmtdata -- format 64 bytes of hex and character buffer data   */
 /*-------------------------------------------------------------------*/
-static const char* fmtdata( BYTE* data, BYTE amt )
+static const char* e7_fmtdata( BYTE code, BYTE* data, BYTE amt )
 {
-    static char both_buf[96] = {0};
-           char byte_buf[64] = {0};
-           char char_buf[32] = {0};
+    static char both_buf[(64/16)*96] = {0};
+           char byte_buf[(64/16)*64] = {0};
+           char char_buf[(64/16)*32] = {0};
 
-    if (amt > 16) CRASH();  // (sanity check)
+    UNREFERENCED( code );
+
+    if (amt > 64) CRASH();  // (sanity check)
 
     if (!amt)   // (might be e.g. TIC, which doesn't xfer any data)
     {
@@ -1902,9 +1905,24 @@ static const char* fmtdata( BYTE* data, BYTE amt )
         return both_buf;
     }
 
-    MSGBUF( byte_buf, " => %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
-        data[0], data[1], data[ 2], data[ 3], data[ 4], data[ 5], data[ 6], data[ 7],
-        data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]
+    MSGBUF( byte_buf,
+        " => "
+        "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+        "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+        "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+        "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
+
+        , data[ 0], data[ 1], data[ 2], data[ 3], data[ 4], data[ 5], data[ 6], data[ 7]
+        , data[ 8], data[ 9], data[10], data[11], data[12], data[13], data[14], data[15]
+
+        , data[16], data[17], data[18], data[19], data[20], data[21], data[22], data[23]
+        , data[24], data[25], data[26], data[27], data[28], data[29], data[30], data[31]
+
+        , data[32], data[33], data[34], data[35], data[36], data[37], data[38], data[39]
+        , data[40], data[41], data[42], data[43], data[44], data[45], data[46], data[47]
+
+        , data[48], data[49], data[50], data[51], data[52], data[53], data[54], data[55]
+        , data[56], data[57], data[58], data[59], data[60], data[61], data[62], data[63]
     );
 
     // Truncate according to passed len (the below accounts for the
@@ -1917,9 +1935,61 @@ static const char* fmtdata( BYTE* data, BYTE amt )
 
     prt_guest_to_host( data, char_buf, amt );
 
-    MSGBUF( both_buf, "%-40.40s%s", byte_buf, char_buf );
+    MSGBUF( both_buf, "%-*.*s%s", 4+((64/4)*9),
+                                  4+((64/4)*9),
+                                  byte_buf, char_buf );
 
     return both_buf;
+}
+#endif // defined( OPTION_E7_TRACE_64 )
+
+/*-------------------------------------------------------------------*/
+/*   fmtdata -- format 16 bytes of hex and character buffer data     */
+/*-------------------------------------------------------------------*/
+static const char* fmtdata( BYTE code, BYTE* data, BYTE amt )
+{
+#if defined( OPTION_E7_TRACE_64 )
+    if (code == 0xE7)
+        return e7_fmtdata( code, data, amt );
+    else
+#endif
+    {
+        static char both_buf[(16/16)*96] = {0};
+               char byte_buf[(16/16)*64] = {0};
+               char char_buf[(16/16)*32] = {0};
+
+        if (amt > 16) CRASH();  // (sanity check)
+
+        if (!amt)   // (might be e.g. TIC, which doesn't xfer any data)
+        {
+            both_buf[0] = 0;
+            return both_buf;
+        }
+
+        MSGBUF( byte_buf,
+            " => "
+            "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
+
+            , data[0], data[1], data[ 2], data[ 3], data[ 4], data[ 5], data[ 6], data[ 7]
+            , data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]
+        );
+
+        // Truncate according to passed len (the below accounts for the
+        // 4 char " => " prefix, plus the 2 printed hex characters for
+        // each byte, plus the blank/space after every 4 printed bytes.
+
+        byte_buf[ 4 + (amt << 1) + (amt >> 2) ] = 0;
+
+        // Now format the character representation of those bytes
+
+        prt_guest_to_host( data, char_buf, amt );
+
+        MSGBUF( both_buf, "%-*.*s%s", 4+((16/4)*9),
+                                      4+((16/4)*9),
+                                      byte_buf, char_buf );
+
+        return both_buf;
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -2024,21 +2094,21 @@ static inline void print_TF01301( TF01301* rec )
     case PF_IDAW1:
         // "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16"%s"
         TF_DEV_FLOGMSG( 1302 ),
-            rec->rhdr.lcss, rec->rhdr.devnum, (U32)rec->addr, rec->count, fmtdata( rec->data, rec->amt ));
+            rec->rhdr.lcss, rec->rhdr.devnum, (U32)rec->addr, rec->count, fmtdata( rec->code, rec->data, rec->amt ));
         break;
 
     case PF_IDAW2:
 
         // "%1d:%04X CHAN: idaw %16.16"PRIX64", len %4.4"PRIX16"%s"
         TF_DEV_FLOGMSG( 1303 ),
-            rec->rhdr.lcss, rec->rhdr.devnum, (U64)rec->addr, rec->count, fmtdata( rec->data, rec->amt ));
+            rec->rhdr.lcss, rec->rhdr.devnum, (U64)rec->addr, rec->count, fmtdata( rec->code, rec->data, rec->amt ));
         break;
 
     case PF_MIDAW:
 
         // "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64"%s"
         TF_DEV_FLOGMSG( 1301 ),
-            rec->rhdr.lcss, rec->rhdr.devnum, rec->mflag, rec->count, (U64)rec->addr, fmtdata( rec->data, rec->amt ));
+            rec->rhdr.lcss, rec->rhdr.devnum, rec->mflag, rec->count, (U64)rec->addr, fmtdata( rec->code, rec->data, rec->amt ));
         break;
 
     default: CRASH(); UNREACHABLE_CODE( return );
@@ -2117,7 +2187,7 @@ static inline void print_TF01315( TF01315* rec )
         rec->rhdr.lcss, rec->rhdr.devnum, 
         rec->ccw[0], rec->ccw[1], rec->ccw[2], rec->ccw[3],
         rec->ccw[4], rec->ccw[5], rec->ccw[6], rec->ccw[7],
-        fmtdata( rec->data, rec->amt ));
+        fmtdata( rec->ccw[0], rec->data, rec->amt ));
 }
 
 // "%1d:%04X CHAN: csw %2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X"
