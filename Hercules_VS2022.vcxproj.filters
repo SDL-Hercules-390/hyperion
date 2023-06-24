@@ -294,9 +294,6 @@
     <ClCompile Include="dasdload64.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
-    <ClInclude Include="dasdload2.h">
-      <Filter>Source Files\Utilities\disk</Filter>
-    </ClInclude>
     <ClCompile Include="dasdls.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
@@ -812,6 +809,9 @@
     </ClCompile>
     <ClCompile Include="xstore.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dasdload2.h">
+      <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
