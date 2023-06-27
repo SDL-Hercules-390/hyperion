@@ -3303,16 +3303,21 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
         case PFX_F_DE:
 
+            /* Basic Prefix ALWAYS includes Define Extent */
             DefineExtent( dev, code, flags, chained, count, prevcode,
                           ccwseq, iobuf, more, unitstat, residual );
             break; // Done!
 
         case PFX_F_DE_LRE:
 
-            DefineExtent( dev, code, flags, chained, count, prevcode,
-                          ccwseq, iobuf, more, unitstat, residual );
-            if (*unitstat != (CSW_CE | CSW_DE))
-                break; // (error!)
+            /* Process Define Extent field only if provided (valid) */
+            if (dev->ckdvalid & PFX_V_DE_VALID)
+            {
+                DefineExtent( dev, code, flags, chained, count, prevcode,
+                              ccwseq, iobuf, more, unitstat, residual );
+                if (*unitstat != (CSW_CE | CSW_DE))
+                    break; // (error!)
+            }
 
             LocateRecordExtended( dev, code, flags, chained, count, prevcode,
                                   ccwseq, iobuf, more, unitstat, residual );
@@ -3320,10 +3325,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         case PFX_F_DE_PSF:
 
-            DefineExtent( dev, code, flags, chained, count, prevcode,
-                          ccwseq, iobuf, more, unitstat, residual );
-            if (*unitstat != (CSW_CE | CSW_DE))
-                break; // (error!)
+            /* Process Define Extent field only if provided (valid) */
+            if (dev->ckdvalid & PFX_V_DE_VALID)
+            {
+                DefineExtent( dev, code, flags, chained, count, prevcode,
+                              ccwseq, iobuf, more, unitstat, residual );
+                if (*unitstat != (CSW_CE | CSW_DE))
+                    break; // (error!)
+            }
 
             PerformSubsystemFunction( dev, code, flags, chained, count, prevcode,
                                       ccwseq, iobuf, more, unitstat, residual );
