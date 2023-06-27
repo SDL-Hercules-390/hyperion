@@ -1203,16 +1203,16 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1                                */
 /*-------------------------------------------------------------------*/
-/* Returns a JSON file of all the available APIs: 
-
-{
-"desc": "lists and describes available APIs. The below APIs are under cgibin/api/v1/",
-"APIs": {
-    "cpus": "Returns information about the configured CPUs",
-    "psw": "Returns the PSW",
-}
-
-*/
+/* Returns a JSON file of all the available APIs:                    */
+/* Example:                                                          */
+/* {                                                                 */
+/* "desc": "lists and describes available APIs. The below APIs are   */
+/*          under cgibin/api/v1/",                                   */
+/* "APIs": {                                                         */
+/*     "cpus": "Returns information about the configured CPUs",      */
+/*     "psw": "Returns the PSW", ...                                 */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
 void cgibin_api_v1(WEBBLK *webblk)
 {
     json_header( webblk );
@@ -1225,7 +1225,7 @@ void cgibin_api_v1(WEBBLK *webblk)
     "\"syslog\":\"Returns the hercules log as an array in `syslog:`. Can take two optional parameters:\\n"
                 "- command: the command submitted will be interepreted by hercules"
                 "similar to the hercules console, the default is an empty string\\n"
-                "- msgcount: is a variable and can be changed vis get/post/cookie"
+                "- msgcount: is a variable and can be changed via get/post/cookie"
                 "and controls the number of lines returned the default is 22 lines\","
     "\"devices\":\"Returns configured device information\","
     "\"maxrates\":\"Returns maxrates\","
@@ -1235,20 +1235,23 @@ void cgibin_api_v1(WEBBLK *webblk)
                 "- fullwords: the number of fullwords to return, default 32\""
     "}}");
 }
+
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1_version                        */
 /*-------------------------------------------------------------------*/
-/* Returns a JSON file formatted with the following: 
-{
-	"hercules_version:": "4.7.0.10964-SDL-DEV-g5e214634-modified",
-	"hercules_copyright:": "(C) Copyright 1999-2023 by Roger Bowler, Jan Jaeger, and others",
-	"build_date": "Jun 25 2023",
-	"build_time": "17:21:26",
-	"modes": ["S/370", "ESA/390", "z/Arch"],
-	"max_cpu_engines": 128,
-	"build_info": "Built with: GCC 11.3.0\n ... Using ...\n With/Without ...\n"
-}
-*/
+/* Returns a JSON file formatted with the following:                 */
+/* Example:                                                          */
+/* {                                                                 */
+/*	"hercules_version:": "4.7.0.10964-SDL-DEV-g5e214634-modified",   */
+/*	"hercules_copyright:": "(C) Copyright 1999-2023 by Roger Bowler, */
+/*   Jan Jaeger, and others",                                        */
+/*	"build_date": "Jun 25 2023",                                     */
+/*	"build_time": "17:21:26",                                        */
+/*	"modes": ["S/370", "ESA/390", "z/Arch"],                         */
+/*	"max_cpu_engines": 128,                                          */
+/*	"build_info": "Built with: GCC 11.3.0\n ... Using ...\n ..."     */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
 void cgibin_api_v1_version(WEBBLK *webblk)
 {
     unsigned int num_strs;
@@ -1284,57 +1287,55 @@ void cgibin_api_v1_version(WEBBLK *webblk)
 
 }
 /*-------------------------------------------------------------------*/
-/*                           JSON API                                */
+/*                           JSON APIs                               */
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1_cpus                           */
 /*-------------------------------------------------------------------*/
-/* Format:                                                           */
-/* 
-[
-	"CPU0000": {
-		"online": true,
-		"mode": "z/Arch",
-		"percent": 0,
-		"PSW": "00000000000000000000000000000000",
-		"general_registers": {
-			"GR0": "0000000000000000",
-            ...
-			"GR15": "0000000000000000"
-		},
-		"control_registers": {
-			"CR0": "0000000000000060",
-            ...
-			"CR15": "0000000000000000"
-		},
-		"access_registers": {
-			"AR0": "00000000",
-            ...
-			"AR15": "00000000"
-		}
-	},
-	"CPU0001": {
-		"online": false,
-		"mode": "z/Arch",
-		"percent": 0,
-		"PSW": "00000000000000000000000000000000",
-		"general_registers": {
-			"GR0": "0000000000000000",
-            ...
-			"GR15": "0000000000000000"
-		},
-		"control_registers": {
-			"CR0": "0000000000000060",
-            ...
-			"CR15": "0000000000000000"
-		},
-		"access_registers": {
-			"AR0": "00000000",
-            ...
-			"AR15": "00000000"
-		}
-	}
-}
-*/
+/* Returns the cpus as an array under "cpus":                        */
+/* Example:                                                          */
+/* {                                                                 */
+/* 	"cpus":                                                          */
+/*     [                                                             */
+/*       {                                                           */
+/* 		"cpuid": "CPU0000",                                          */
+/* 		"online": true,                                              */
+/* 		"mode": "ESA/390",                                           */
+/* 		"percent": 0,                                                */
+/* 		"PSW": "030A0000800078DC",                                   */
+/* 		"general_registers": {                                       */
+/* 			"GR0": "00000000",                                       */
+/*             ...                                                   */
+/* 			"GR15": "00000000"                                       */
+/* 		},                                                           */
+/* 		"control_registers": {                                       */
+/* 			"CR0": "00000840",                                       */
+/*             ...                                                   */
+/* 			"CR15": "00000000"                                       */
+/* 		},                                                           */
+/* 		"access_registers": {                                        */
+/* 			"AR0": "00000000",                                       */
+/*             ...                                                   */
+/* 			"AR15": "00000000"                                       */
+/* 		}                                                            */
+/* 	  }, {                                                           */
+/* 		"cpuid": "CPU0001",                                          */
+/* 		"online": false,                                             */
+/* 		"mode": "z/Arch",                                            */
+/* 		"percent": 0,                                                */
+/* 		"PSW": "00000000000000000000000000000000",                   */
+/* 		"general_registers": {                                       */
+/* 			"GR0": "0000000000000000", ...                           */
+/* 		},                                                           */
+/* 		"control_registers": {                                       */
+/* 			"CR0": "0000000000000060", ...                           */
+/* 		},                                                           */
+/* 		"access_registers": {                                        */
+/* 			"AR0": "00000000", ...                                   */
+/* 		}                                                            */
+/* 	  }                                                              */
+/*     ]                                                             */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
 void cgibin_api_v1_cpus(WEBBLK *webblk)
 {
     REGS*  regs;
@@ -1431,16 +1432,16 @@ void cgibin_api_v1_cpus(WEBBLK *webblk)
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1_maxrates                       */
 /*-------------------------------------------------------------------*/
-/* Returns maxrates information similar to console: 
-{
-	"from": "Mon Jun 26 00:00:00 2023",
-	"to": "Mon Jun 26 14:31:49 2023",
-	"MIPS": 0.26,
-	"IO": 0,
-	"current_interval": 1440
-}
-*/
-
+/* Returns maxrates information similar to console command:          */
+/* Example:                                                          */
+/* {                                                                 */
+/*	"from": "Mon Jun 26 00:00:00 2023",                              */
+/*	"to": "Mon Jun 26 14:31:49 2023",                                */
+/*	"MIPS": 0.26,                                                    */
+/*	"IO": 0,                                                         */
+/*	"current_interval": 1440                                         */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
 void cgibin_api_v1_maxrates(WEBBLK *webblk)
 {
     char*   pszPrevIntervalStartDateTime = NULL;
@@ -1533,9 +1534,13 @@ void cgibin_api_v1_maxrates(WEBBLK *webblk)
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1_rates                          */
 /*-------------------------------------------------------------------*/
-/* Returns MIPS and IO rates: 
-
-*/
+/* Returns MIPS and IO rates                                         */
+/* Example:                                                          */
+/* {                                                                 */
+/*     "mipsrate":0,                                                 */
+/*     "siosrate":0                                                  */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
 void cgibin_api_v1_rates(WEBBLK *webblk)
 {
     json_header(webblk);
@@ -1546,11 +1551,12 @@ void cgibin_api_v1_rates(WEBBLK *webblk)
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1_psw                            */
 /*-------------------------------------------------------------------*/
-/* Returns the PSW: 
-{
-	"psw":"00000000 00000000 0000000000000000"
-}
-*/
+/* Returns the PSW                                                   */
+/* Example:                                                          */
+/* {                                                                 */
+/*    "psw":"030A0000 800078DC"                                      */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
 void cgibin_api_v1_psw(WEBBLK *webblk)
 {
     REGS *regs;
@@ -1586,22 +1592,21 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /*                      cgibin_api_v1_syslog                         */
 /*-------------------------------------------------------------------*/
 /* Mostly based off of cgibin_syslog                                 */
-/* Returns a JSON with the following format:
-{
-    "command": "",
-    "msgcount": 22,
-    "syslog": "[<array of lines from syslog based on msgcount>]" 
-}
-
-Notes: 
-    - command is a variable and can be changed via get/post/cookie,
-      the command submitted will be interepreted by hercules
-      similar to the hercules console, the default is an empty string
-    - msgcount is a variable and can be changed vis get/post/cookie
-      and controls the number of lines returns in "syslog",
-      the default is 22 lines
-
-*/
+/* Returns a JSON with the following format:                         */
+/* {                                                                 */
+/*     "command": "",                                                */
+/*     "msgcount": 22,                                               */
+/*     "syslog": "[<array of lines from syslog based on msgcount>]"  */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
+/* Notes:                                                            */
+/* - command is a variable and can be changed via get/post/cookie,   */
+/*   the command submitted will be interepreted by hercules          */
+/*   similar to the hercules console, the default is an empty string */
+/* - msgcount is a variable and can be changed via get/post/cookie   */
+/*   and controls the number of lines returned in "syslog",          */
+/*   the default is 22 lines                                         */
+/*-------------------------------------------------------------------*/
 void cgibin_api_v1_syslog(WEBBLK *webblk)
 {
 
@@ -1685,6 +1690,18 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
 /*                     cgibin_api_v1_storage                         */
 /*-------------------------------------------------------------------*/
 /* Copied from cgibin_debug_storage                                  */
+/* Returns the number of fullwords located at address. Can take two  */
+/* parameters: address, the starting address and fullwords, the      */
+/*             number of fullwords to return                         */
+/*                                                                   */
+/* {                                                                 */
+/*    "address":"00000000",                                          */
+/*    "fullwords":"32",                                              */
+/*    "mainsize": 67108864,                                          */
+/*    "storage":"00080000...800003D0"                                */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
+
 void cgibin_api_v1_storage(WEBBLK *webblk)
 {
 int i,size;
@@ -1729,35 +1746,35 @@ U32 addr = 0;
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1_devices                        */
 /*-------------------------------------------------------------------*/
-/* Return all the devices and information about them with the 
-   following format: 
-{
-	"devices": [
-        {
-        "devnum": "0009",
-        "subchannel": "0000",
-        "devclass": "CON",
-        "devtype": "3215",
-        "status": "open ",
-        "assignment": "*syscons cmdpref(/) noprompt IO[0]"
-        }, {
-        "devnum": "000C",
-        "subchannel": "0001",
-        "devclass": "RDR",
-        "devtype": "3505",
-        "status": "",
-        "assignment": "./util/zzsacard.bin intrq IO[0]"
-        }, {
-        "devnum": "000D",
-        "subchannel": "0002",
-        "devclass": "PCH",
-        "devtype": "3525",
-        "status": "open ",
-        "assignment": "punch00d.txt ascii IO[0]"
-        }
-    ]
-}
-*/
+/* Return an array of all the devices and information about them     */ 
+/* with the following format:                                        */
+/*{                                                                  */
+/*	"devices": [                                                     */
+/*        {                                                          */
+/*        "devnum": "0009",                                          */
+/*        "subchannel": "0000",                                      */
+/*        "devclass": "CON",                                         */
+/*        "devtype": "3215",                                         */
+/*        "status": "open ",                                         */
+/*        "assignment": "*syscons cmdpref(/) noprompt IO[0]"         */
+/*        }, {                                                       */
+/*        "devnum": "000C",                                          */
+/*        "subchannel": "0001",                                      */
+/*        "devclass": "RDR",                                         */
+/*        "devtype": "3505",                                         */
+/*        "status": "",                                              */
+/*        "assignment": "./util/zzsacard.bin intrq IO[0]"            */
+/*        }, {                                                       */
+/*        "devnum": "000D",                                          */
+/*        "subchannel": "0002",                                      */
+/*        "devclass": "PCH",                                         */
+/*        "devtype": "3525",                                         */
+/*        "status": "open ",                                         */
+/*        "assignment": "punch00d.txt ascii IO[0]"                   */
+/*        }                                                          */
+/*    ]                                                              */
+/* }                                                                 */
+/*-------------------------------------------------------------------*/
 void cgibin_api_v1_devices(WEBBLK *webblk)
 {
     DEVBLK *dev;
