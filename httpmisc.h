@@ -117,6 +117,7 @@ typedef struct CGITAB   CGITAB;
 
 HTTP_DLL_IMPORT void  html_header   ( WEBBLK* webblk );
 HTTP_DLL_IMPORT void  html_footer   ( WEBBLK* webblk );
+HTTP_DLL_IMPORT void  json_header   ( WEBBLK* webblk );
 HTTP_DLL_IMPORT int   html_include  ( WEBBLK* webblk, char* filename );
 HTTP_DLL_IMPORT char* http_variable ( WEBBLK* webblk, char* name, int type );
 
