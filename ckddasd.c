@@ -5464,7 +5464,6 @@ static void PerformSubsystemFunction
     /* If Prefix CCW, move iobuff data to where this function expects it */
     if (code == 0xE7)
     {
-        dev->ckdloper = iobuf[44];
         memmove( ccwdata, &iobuf[62], sizeof( ccwdata ) - 62 );
         count -= (count >= 62 ? 62 : count);
         iobuf = &ccwdata[0];
