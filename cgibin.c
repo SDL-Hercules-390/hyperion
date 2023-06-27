@@ -1240,16 +1240,15 @@ void cgibin_api_v1(WEBBLK *webblk)
 /*                      cgibin_api_v1_version                        */
 /*-------------------------------------------------------------------*/
 /* Returns a JSON file formatted with the following:                 */
-/* Example:                                                          */
 /* {                                                                 */
-/*	"hercules_version:": "4.7.0.10964-SDL-DEV-g5e214634-modified",   */
-/*	"hercules_copyright:": "(C) Copyright 1999-2023 by Roger Bowler, */
+/*  "hercules_version:": "4.7.0.10964-SDL-DEV-g5e214634-modified",   */
+/*  "hercules_copyright:": "(C) Copyright 1999-2023 by Roger Bowler, */
 /*   Jan Jaeger, and others",                                        */
-/*	"build_date": "Jun 25 2023",                                     */
-/*	"build_time": "17:21:26",                                        */
-/*	"modes": ["S/370", "ESA/390", "z/Arch"],                         */
-/*	"max_cpu_engines": 128,                                          */
-/*	"build_info": "Built with: GCC 11.3.0\n ... Using ...\n ..."     */
+/*  "build_date": "Jun 25 2023",                                     */
+/*  "build_time": "17:21:26",                                        */
+/*  "modes": ["S/370", "ESA/390", "z/Arch"],                         */
+/*  "max_cpu_engines": 128,                                          */
+/*  "build_info": "Built with: GCC 11.3.0\n ... Using ...\n ..."     */
 /* }                                                                 */
 /*-------------------------------------------------------------------*/
 void cgibin_api_v1_version(WEBBLK *webblk)
@@ -1294,45 +1293,45 @@ void cgibin_api_v1_version(WEBBLK *webblk)
 /* Returns the cpus as an array under "cpus":                        */
 /* Example:                                                          */
 /* {                                                                 */
-/* 	"cpus":                                                          */
+/*  "cpus":                                                          */
 /*     [                                                             */
 /*       {                                                           */
-/* 		"cpuid": "CPU0000",                                          */
-/* 		"online": true,                                              */
-/* 		"mode": "ESA/390",                                           */
-/* 		"percent": 0,                                                */
-/* 		"PSW": "030A0000800078DC",                                   */
-/* 		"general_registers": {                                       */
-/* 			"GR0": "00000000",                                       */
-/*             ...                                                   */
-/* 			"GR15": "00000000"                                       */
-/* 		},                                                           */
-/* 		"control_registers": {                                       */
-/* 			"CR0": "00000840",                                       */
-/*             ...                                                   */
-/* 			"CR15": "00000000"                                       */
-/* 		},                                                           */
-/* 		"access_registers": {                                        */
-/* 			"AR0": "00000000",                                       */
-/*             ...                                                   */
-/* 			"AR15": "00000000"                                       */
-/* 		}                                                            */
-/* 	  }, {                                                           */
-/* 		"cpuid": "CPU0001",                                          */
-/* 		"online": false,                                             */
-/* 		"mode": "z/Arch",                                            */
-/* 		"percent": 0,                                                */
-/* 		"PSW": "00000000000000000000000000000000",                   */
-/* 		"general_registers": {                                       */
-/* 			"GR0": "0000000000000000", ...                           */
-/* 		},                                                           */
-/* 		"control_registers": {                                       */
-/* 			"CR0": "0000000000000060", ...                           */
-/* 		},                                                           */
-/* 		"access_registers": {                                        */
-/* 			"AR0": "00000000", ...                                   */
-/* 		}                                                            */
-/* 	  }                                                              */
+/*      "cpuid": "CPU0000",                                          */
+/*      "online": true,                                              */
+/*      "mode": "ESA/390",                                           */
+/*      "percent": 0,                                                */
+/*      "PSW": "030A0000800078DC",                                   */
+/*      "general_registers": {                                       */
+/*          "GR0": "00000000",                                       */
+/*          ...                                                      */
+/*          "GR15": "00000000"                                       */
+/*      },                                                           */
+/*      "control_registers": {                                       */
+/*          "CR0": "00000840",                                       */
+/*          ...                                                      */
+/*          "CR15": "00000000"                                       */
+/*      },                                                           */
+/*      "access_registers": {                                        */
+/*          "AR0": "00000000",                                       */
+/*          ...                                                      */
+/*          "AR15": "00000000"                                       */
+/*      }                                                            */
+/*    }, {                                                           */
+/*      "cpuid": "CPU0001",                                          */
+/*      "online": false,                                             */
+/*      "mode": "z/Arch",                                            */
+/*      "percent": 0,                                                */
+/*      "PSW": "00000000000000000000000000000000",                   */
+/*      "general_registers": {                                       */
+/*          "GR0": "0000000000000000", ...                           */
+/*      },                                                           */
+/*      "control_registers": {                                       */
+/*          "CR0": "0000000000000060", ...                           */
+/*      },                                                           */
+/*      "access_registers": {                                        */
+/*          "AR0": "00000000", ...                                   */
+/*      }                                                            */
+/*    }                                                              */
 /*     ]                                                             */
 /* }                                                                 */
 /*-------------------------------------------------------------------*/
@@ -1435,11 +1434,11 @@ void cgibin_api_v1_cpus(WEBBLK *webblk)
 /* Returns maxrates information similar to console command:          */
 /* Example:                                                          */
 /* {                                                                 */
-/*	"from": "Mon Jun 26 00:00:00 2023",                              */
-/*	"to": "Mon Jun 26 14:31:49 2023",                                */
-/*	"MIPS": 0.26,                                                    */
-/*	"IO": 0,                                                         */
-/*	"current_interval": 1440                                         */
+/*    "from": "Mon Jun 26 00:00:00 2023",                            */
+/*    "to": "Mon Jun 26 14:31:49 2023",                              */
+/*    "MIPS": 0.26,                                                  */
+/*    "IO": 0,                                                       */
+/*    "current_interval": 1440                                       */
 /* }                                                                 */
 /*-------------------------------------------------------------------*/
 void cgibin_api_v1_maxrates(WEBBLK *webblk)
@@ -1749,7 +1748,7 @@ U32 addr = 0;
 /* Return an array of all the devices and information about them     */ 
 /* with the following format:                                        */
 /*{                                                                  */
-/*	"devices": [                                                     */
+/*    "devices": [                                                   */
 /*        {                                                          */
 /*        "devnum": "0009",                                          */
 /*        "subchannel": "0000",                                      */
