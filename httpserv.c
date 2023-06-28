@@ -62,6 +62,7 @@ static MIMETAB mime_types[] =
     { "css",   "text/css"   },
     { "html",  "text/html"  },
     { "htm",   "text/html"  },
+    { "js",    "text/javascript"  },
 
     /*----------------------------------------*/
     /*  This one SHOULD be:                   */
@@ -154,6 +155,16 @@ DLL_EXPORT void html_footer(WEBBLK *webblk)
     if (!html_include(webblk,HTML_FOOTER))
         hprintf(webblk->sock,"\n</BODY>\n</HTML>\n");
 }
+
+
+/*-------------------------------------------------------------------*/
+/*                         json_header                               */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void json_header(WEBBLK *webblk)
+{
+    hprintf(webblk->sock,"Content-type: application/json\n\n");
+}
+
 
 /*-------------------------------------------------------------------*/
 /*                          http_exit                                */
