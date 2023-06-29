@@ -96,8 +96,7 @@
 #define CKDOPER_WRTTRK          0x0B    /* ...write track            */
 #define CKDOPER_RDTRKS          0x0C    /* ...read tracks            */
 #define CKDOPER_RDTSET          0x0E    /* ...read track set         */
-#define CKDOPER_READ            0x16    /* ...read                   */
-#define CKDOPER_PFX_READ        0x06    /* ...read (E7 Prefix only!) */
+#define CKDOPER_READ16          0x16    /* ...read(16)               */
 #define CKDOPER_EXTOP           0x3F    /* ...extended operation     */
 
 /*-------------------------------------------------------------------*/
@@ -1804,7 +1803,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
            -- except when multitrack READ or SEARCH [KEY?] command
            operates outside the domain of a locate record */
         if (1
-            && (code & 0x80)
+            && IS_CCW_MTRACK( code )
             && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
             && dev->ckdlcount > 0
         )
@@ -1831,8 +1830,8 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
                      && dev->ckdlcount == 0
                      && (0
                          || (1
-                             && IS_CCW_READ(code)
-                             && (code & 0x80)
+                             && IS_CCW_READ( code )
+                             && IS_CCW_MTRACK( code )
                             )
                          || code == 0xA9 // SEARCH KEY EQUAL
                          || code == 0xC9 // SEARCH KEY HIGH
@@ -1848,7 +1847,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         }
 
         /* Test for multitrack operation */
-        if ((code & 0x80) == 0)
+        if (!IS_CCW_MTRACK( code ))
         {
             /* If non-multitrack, return to start of current track */
             cyl = dev->ckdcurcyl;
@@ -2382,8 +2381,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdxmark = 0;
 
     /* Note current operation for track overflow sense byte 3 */
-    dev->ckdcuroper = (IS_CCW_READ(code)) ? 6 :
-        ((IS_CCW_WRITE(code)) ? 5 : 0);
+    dev->ckdcuroper = (IS_CCW_READ( code )) ? 6 :
+        ((IS_CCW_WRITE( code )) ? 5 : 0);
 
     /* If subsystem data has been prepared in the channel buffer by
        a previous Perform Subsystem Function command, generate a
@@ -2521,13 +2520,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
+        if (1
+            &&  dev->ckd3990
+            && !dev->ckdseek
+            && !dev->ckdskcyl
+            && !dev->ckdlocat
+            && !dev->ckdrdipl
+            && !dev->ckdrecal
+        )
         {
-            ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_2);
+            ckd_build_sense( dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
@@ -2535,15 +2538,33 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+            if (!(0
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
                   || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
-                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
+                 )
+            )
             {
-                ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_2);
+                ckd_build_sense( dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_2 );
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 break;
             }
+
+            /* If Locate Record/Extended specified multi-track read,
+               then command reject if this isn't a multi-track read
+            */
+            if (1
+                && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
+                && !IS_CCW_MTRACK( code )
+            )
+            {
+                ckd_build_sense( dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_2 );
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+
         }
 
         /* If not oriented to count or key field, read next count */
@@ -2637,9 +2658,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
              * and Data, or Read Data commands".  That is, it doesn't
              * mention Read Key and Data.
              */
-            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+            if (!(0
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
                /* || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY */
-                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
+                 )
+            )
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -2736,12 +2760,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+            if (!(0
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
                   || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
-                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
-                  || ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
+                  || (1
+                      && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
                       && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
-                      && dev->ckdlcount == 1)))
+                      &&  dev->ckdlcount == 1
+                     )
+                 )
+            )
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -2798,13 +2827,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
-                      && ((dev->ckdloper & CKDOPER_ORIENTATION)
-                                == CKDOPER_ORIENT_HOME
-                          || (dev->ckdloper & CKDOPER_ORIENTATION)
-                                == CKDOPER_ORIENT_INDEX
-                        ))))
+            if (!(0
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || (1
+                      && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
+                      && (0
+                          || (dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_HOME
+                          || (dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_INDEX
+                         )
+                     )
+                 )
+            )
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -2815,7 +2848,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For multitrack operation outside domain of a Locate Record,
            attempt to advance to the next track before reading R0 */
-        if ((code & 0x80) && dev->ckdlcount == 0)
+        if (IS_CCW_MTRACK( code ) && dev->ckdlcount == 0)
         {
             rc = mt_advance (dev, unitstat, 1);
             if (rc < 0) break;
@@ -2886,11 +2919,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
-                      && (dev->ckdloper & CKDOPER_ORIENTATION)
-                                == CKDOPER_ORIENT_INDEX
-                    )))
+            if (!(0
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || (1
+                      && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
+                      && (dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_INDEX
+                     )
+                 )
+            )
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -2901,7 +2937,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For multitrack operation outside domain of a Locate Record,
            attempt to advance to the next track before reading HA */
-        if ((code & 0x80) && dev->ckdlcount == 0)
+        if (IS_CCW_MTRACK( code ) && dev->ckdlcount == 0)
         {
             rc = mt_advance (dev, unitstat, 1);
             if (rc < 0) break;
@@ -2949,11 +2985,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
-                      && (dev->ckdloper & CKDOPER_ORIENTATION)
-                                == CKDOPER_ORIENT_INDEX
-                    )))
+            if (!(0
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || (1
+                      && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
+                      && (dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_INDEX
+                     )
+                 )
+            )
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -3009,9 +3048,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+            if (!(0
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
                   || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
-                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
+                 )
+            )
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -3303,9 +3345,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
         case PFX_F_DE:
 
-            /* Basic Prefix ALWAYS includes Define Extent */
-            DefineExtent( dev, code, flags, chained, count, prevcode,
-                          ccwseq, iobuf, more, unitstat, residual );
+            /* Process Define Extent field only if provided (valid) */
+            if (dev->ckdvalid & PFX_V_DE_VALID)
+            {
+                DefineExtent( dev, code, flags, chained, count, prevcode,
+                              ccwseq, iobuf, more, unitstat, residual );
+            }
+            else
+            {
+                /* Return normal status */
+                *unitstat = CSW_CE | CSW_DE;
+            }
             break; // Done!
 
         case PFX_F_DE_LRE:
@@ -3833,7 +3883,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* For multitrack operation, advance to next track */
-        if (code & 0x80)
+        if (IS_CCW_MTRACK( code ))
         {
             rc = mt_advance (dev, unitstat, 1);
             if (rc < 0) break;
@@ -4590,7 +4640,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
               ||  (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
               ||  (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
               ||  (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDTRKS
-              ||  (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+              ||  (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
              )
         )
         {
@@ -4609,7 +4659,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                      || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
                      || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
                      || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDTRKS
-                     || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+                     || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
                     )
                )
             || (1
@@ -4618,14 +4668,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                      || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
                      || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
                      || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                     || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+                     || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
                     )
                )
             || (1
                 && (dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_INDEX
                 && !(0
                      || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-                     || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+                     || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
                     )
                )
         )
@@ -4664,7 +4714,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
                 && !(0
                      || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-                     || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+                     || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
                     )
                )
         )
@@ -5463,8 +5513,9 @@ static void PerformSubsystemFunction
     U32*     residual
 )
 {
-    int  i;
-    U32  num;
+    int    i;
+    U32    num;
+    BYTE*  orig_iobuf;
 
 #if defined( OPTION_E7_PREFIX )
 
@@ -5475,6 +5526,7 @@ static void PerformSubsystemFunction
     {
         memmove( ccwdata, &iobuf[62], sizeof( ccwdata ) - 62 );
         count -= (count >= 62 ? 62 : count);
+        orig_iobuf = iobuf; // (save for later!)
         iobuf = &ccwdata[0];
     }
 #endif // defined( OPTION_E7_PREFIX )
@@ -5613,7 +5665,7 @@ static void PerformSubsystemFunction
             break;
 
         case 0x03:  /* Read attention message for this path-group for
-                       the addressed device Return a "No Message"
+                       the addressed device. Returns a "No Message"
                        message */
             /*------------------------------------------------------*/
             /* PROGRAMMING NOTE: 2013/01/09 Fish                    */
@@ -5826,6 +5878,14 @@ static void PerformSubsystemFunction
     if (*unitstat & CSW_UC)
         return;
 
+#if defined( OPTION_E7_PREFIX )
+    /* If Prefix CCW, move prepared subsystem data (if any)
+       back to where the channel expects it.
+    */
+    if (code == 0xE7 && dev->ckdssdlen)
+        memmove( &orig_iobuf[0], &iobuf[0], dev->ckdssdlen );
+#endif
+
     /* Return normal status */
     *unitstat = CSW_CE | CSW_DE;
 
@@ -5943,13 +6003,13 @@ static void LocateRecordExtended
 
     /* Validate the locate record operation code (byte 0 bits 2-7) */
     if (1
-        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
-        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
-        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS
-        && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ     && code == 0x4B)
-        && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_PFX_READ && code == 0xE7) // E7 Prefix
-        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_EXTOP
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ16
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDDATA
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_EXTOP
     )
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
@@ -6080,12 +6140,12 @@ static void LocateRecordExtended
      * X'04', Invalid Parameter).
      */
     if (1
-        &&  (iobuf[1] & CKDLAUX_RDCNTSUF)
-        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
-        &&  (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDANY
-        && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ     && code == 0x4B)
-        && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_PFX_READ && code == 0xE7) // E7 Prefix
+        && (iobuf[1] & CKDLAUX_RDCNTSUF)
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDANY
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ16
+        && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDDATA
     )
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);

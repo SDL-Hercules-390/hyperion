@@ -1218,6 +1218,7 @@ typedef struct PSA_900  PSA_900;
 #define IS_CCW_SENSE(c)         (((c)&0x0F)==0x04)
 #define IS_CCW_TIC(c)           (((c)&0x0F)==0x08)
 #define IS_CCW_RDBACK(c)        (((c)&0x0F)==0x0C)
+#define IS_CCW_MTRACK(c)        (((c)&0x80))
 
 /*-------------------------------------------------------------------*/
 /*       Operation-Request Block (ORB) structure definition          */
