@@ -3260,6 +3260,10 @@
 				Name="tests"
 				>
 				<File
+					RelativePath=".\tests\3390.cckd64"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\awsbsf.aws"
 					>
 				</File>
@@ -3476,6 +3480,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\dfp-080-to-packed.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\E7Prefix.core"
 						>
 					</File>
 					<File
@@ -4542,6 +4550,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\E7Prefix.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\FAC53.tst"
 							>
 						</File>
@@ -4994,6 +5006,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\E7Prefix.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\FAC53.asm"
 							>
 						</File>
@@ -5414,6 +5430,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\dfp-080-to-packed.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\E7Prefix.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\E7Prefix.pdf"
 								>
 							</File>
 							<File

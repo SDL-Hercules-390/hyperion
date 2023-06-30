@@ -1,0 +1,1659 @@
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *                            E7Prefix
+                                                     5 *
+                                                     6 *                       GitHub Issue #572
+                                                     7 *
+                                                     8 *      "z/VM 7.2 IPL'ing as guest of itself CCW Command Rejects"
+                                                     9 *
+                                                    10 *       https://github.com/SDL-Hercules-390/hyperion/issues/572
+                                                    11 *               #issuecomment-1606223921
+                                                    12 *
+                                                    13 *   (Thank you to Aaron Finerman for devising these tests for us!)
+                                                    14 *
+                                                    15 *
+                                                    16 *                           OVERVIEW
+                                                    17 *
+                                                    18 *
+                                                    19 *   This test program simply executes a few selected E7 Prefix CCW
+                                                    20 *   channel programs to verify Hercules's E7 Prefix CCW support is
+                                                    21 *   working properly.
+                                                    22 *
+                                                    23 *
+                                                    24 *   All channel programs (except for one of them) are expected to
+                                                    25 *   complete normally without error (SCSW = CE+DE = X'0C00').
+                                                    26 *
+                                                    27 *   One them however (test #5) is purposely designed to always fail
+                                                    28 *   in order to verify Hercules properly rejects the invalid channel
+                                                    29 *   program and does not mistakenly accept and process it instead.
+                                                    30 *   Test #6 is the corrected form of this same test which should,
+                                                    31 *   just like all of the other tests, always succeed.
+                                                    32 *
+                                                    33 *
+                                                    34 *   Except for Test #1, all of the other tests (#2-#6) also specify
+                                                    35 *   IDA (Indirect Data Addressing) in some of their CCWs in order
+                                                    36 *   to verify proper Hercules handling of that too.
+                                                    37 *
+                                                    38 *
+                                                    39 *   Test #4 is especially important in that it specifies IDA in its
+                                                    40 *   E7 Prefix CCW to cause its data to be accessed in TWO chunks
+                                                    41 *   (i.e. its IDAL contains TWO entries in it), whereas all other
+                                                    42 *   IDA usage is only used in the Read 06 and Read 86 CCWs where
+                                                    43 *   the IDAL only has one entry in it so as to simply redirect the
+                                                    44 *   read to elsewhere.
+                                                    45 *
+                                                    46 *
+                                                    47 ***********************************************************************
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    49          PRINT OFF
+                                                  3430          PRINT ON
+
+                                                  3432 ***********************************************************************
+                                                  3433 *        SATK prolog stuff...
+                                                  3434 ***********************************************************************
+
+                                                  3436          ARCHLVL ZARCH=YES,ARCHIND=YES,MNOTE=NO
+                                                  3438+$AL      OPSYN AL
+                                                  3439+$ALR     OPSYN ALR
+                                                  3440+$B       OPSYN B
+                                                  3441+$BAS     OPSYN BAS
+                                                  3442+$BASR    OPSYN BASR
+                                                  3443+$BC      OPSYN BC
+                                                  3444+$BCTR    OPSYN BCTR
+                                                  3445+$BE      OPSYN BE
+                                                  3446+$BH      OPSYN BH
+                                                  3447+$BL      OPSYN BL
+                                                  3448+$BM      OPSYN BM
+                                                  3449+$BNE     OPSYN BNE
+                                                  3450+$BNH     OPSYN BNH
+                                                  3451+$BNL     OPSYN BNL
+                                                  3452+$BNM     OPSYN BNM
+                                                  3453+$BNO     OPSYN BNO
+                                                  3454+$BNP     OPSYN BNP
+                                                  3455+$BNZ     OPSYN BNZ
+                                                  3456+$BO      OPSYN BO
+                                                  3457+$BP      OPSYN BP
+                                                  3458+$BXLE    OPSYN BXLE
+                                                  3459+$BZ      OPSYN BZ
+                                                  3460+$CH      OPSYN CH
+                                                  3461+$L       OPSYN L
+                                                  3462+$LH      OPSYN LH
+                                                  3463+$LM      OPSYN LM
+                                                  3464+$LPSW    OPSYN LPSW
+                                                  3465+$LR      OPSYN LR
+                                                  3466+$LTR     OPSYN LTR
+                                                  3467+$NR      OPSYN NR
+                                                  3468+$SL      OPSYN SL
+                                                  3469+$SLR     OPSYN SLR
+                                                  3470+$SR      OPSYN SR
+                                                  3471+$ST      OPSYN ST
+                                                  3472+$STM     OPSYN STM
+                                                  3473+$X       OPSYN X
+                                                  3474+$AHI     OPSYN AHI
+                                                  3475+$B       OPSYN J
+                                                  3476+$BC      OPSYN BRC
+                                                  3477+$BE      OPSYN JE
+                                                  3478+$BH      OPSYN JH
+                                                  3479+$BL      OPSYN JL
+                                                  3480+$BM      OPSYN JM
+                                                  3481+$BNE     OPSYN JNE
+                                                  3482+$BNH     OPSYN JNH
+                                                  3483+$BNL     OPSYN JNL
+                                                  3484+$BNM     OPSYN JNM
+                                                  3485+$BNO     OPSYN JNO
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3486+$BNP     OPSYN JNP
+                                                  3487+$BNZ     OPSYN JNZ
+                                                  3488+$BO      OPSYN JO
+                                                  3489+$BP      OPSYN JP
+                                                  3490+$BXLE    OPSYN JXLE
+                                                  3491+$BZ      OPSYN JZ
+                                                  3492+$CHI     OPSYN CHI
+                                                  3493+$AHI     OPSYN AGHI
+                                                  3494+$AL      OPSYN ALG
+                                                  3495+$ALR     OPSYN ALGR
+                                                  3496+$BCTR    OPSYN BCTGR
+                                                  3497+$BXLE    OPSYN JXLEG
+                                                  3498+$CH      OPSYN CGH
+                                                  3499+$CHI     OPSYN CGHI
+                                                  3500+$L       OPSYN LG
+                                                  3501+$LH      OPSYN LGH
+                                                  3502+$LM      OPSYN LMG
+                                                  3503+$LPSW    OPSYN LPSWE
+                                                  3504+$LR      OPSYN LGR
+                                                  3505+$LTR     OPSYN LTGR
+                                                  3506+$NR      OPSYN NGR
+                                                  3507+$SL      OPSYN SLG
+                                                  3508+$SLR     OPSYN SLGR
+                                                  3509+$SR      OPSYN SGR
+                                                  3510+$ST      OPSYN STG
+                                                  3511+$STM     OPSYN STMG
+                                                  3512+$X       OPSYN XG
+
+
+
+                                                  3514 ***********************************************************************
+                                                  3515 *        Initiate the E7TEST CSECT in the CODE region
+                                                  3516 *        with the location counter at 0
+                                                  3517 ***********************************************************************
+
+                                                  3519 E7TEST   ASALOAD  REGION=CODE
+                              00000000  00002023  3520+E7TEST   START 0,CODE
+00000000  00020000 00000000                       3522+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+00000010                      00000010  00000058  3523+         ORG   E7TEST+X'058'
+00000058  00020000 00000000                       3525+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+00000068  00020000 00000000                       3526+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+00000078  00020000 00000000                       3527+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+00000088  00020000 00000000                       3528+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+00000098  00020000 00000000                       3529+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+000000A8                      000000A8  000001A0  3530+         ORG   E7TEST+X'1A0'
+000001A0  00020000 00000000                       3532+         PSWZ  0,0,2,0,X'120'     Restart ISR Trap New PSW
+000001B0  00020000 00000000                       3533+         PSWZ  0,0,2,0,X'130'     External ISR Trap New PSW
+000001C0  00020000 00000000                       3534+         PSWZ  0,0,2,0,X'140'     Supervisor Call ISR Trap New PSW
+000001D0  00020000 00000000                       3535+         PSWZ  0,0,2,0,X'150'     Program ISR Trap New PSW
+000001E0  00020000 00000000                       3536+         PSWZ  0,0,2,0,X'160'     Machine Check Trap New PSW
+000001F0  00020000 00000000                       3537+         PSWZ  0,0,2,0,X'170'     Input/Output Trap New PSW
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3539 ***********************************************************************
+                                                  3540 *                 L O W   C O R E
+                                                  3541 ***********************************************************************
+
+00000200                      00000200  000001A0  3543          ORG   E7TEST+X'1A0'                    z/Arch Restart New PSW
+000001A0  00000001 80000000                       3544          DC    0D'0',XL8'0000000180000000'
+000001A8  00000000 00000200                       3545          DC    AD(BEGIN)
+
+000001B0                      000001B0  000001D0  3547          ORG   E7TEST+X'1D0'                    z/Arch Program New PSW
+000001D0  00020001 80000000                       3548          DC    0D'0',XL8'0002000180000000'
+000001D8  00000000 0000DEAD                       3549          DC    AD(X'DEAD')
+
+
+
+
+                                                  3551 ***********************************************************************
+                                                  3552 *                    ENTRY POINT CODE
+                                                  3553 ***********************************************************************
+                                                  3554 *   R0       (work)
+                                                  3555 *   R1       (work) (also ENADEV macro's I/O device during startup)
+                                                  3556 *   R2       (work)
+                                                  3557 *   R3       IOCB pointer (set by INIT, needed by ENADEV macro)
+                                                  3558 *   R4       SCHIB pointer (tempoarily used at INIT during ENADEV)
+                                                  3559 *   R5       SCHSCSW pointer (also temporarily used for CPU register
+                                                  3560 *            when signaling architecture change during startup)
+                                                  3561 *   R6,R7    (work) (also used as signaling registers when changing
+                                                  3562 *            architecture during startup)
+                                                  3563 *   R8       ORB pointer (set by INIT, used by EXCP subroutine)
+                                                  3564 *   R9-R15   (work)
+                                                  3565 ***********************************************************************
+
+000001E0                      00000000            3567          USING E7TEST,R0          Low core addressability
+000001E0                      00000000            3568          USING ASA,R0             Low core addressability
+000001E0                      00000000            3569          USING IOCB,R3            SATK Device I/O-Control Block
+000001E0                      00000000            3570          USING SCHIB,R4           ESA/390 Subchannel Information Block
+000001E0                      00000000            3571          USING SCSW,R5            ESA/390 Subchannel Status Word
+000001E0                      00000000            3572          USING ORB,R8             ESA/390 Operation-Request Block
+
+000001E0                      000001E0  00000200  3574          ORG   E7TEST+X'200'
+                              00000200  00000001  3575 BEGIN    EQU   *
+00000200  1F00                                    3576          SLR   R0,R0              Start clean (SIGP status register)
+00000202  9200 0200                     00000200  3577          MVI   TESTNUM,0          Initialize Test number
+00000206  1F11                                    3578          SLR   R1,R1              Start clean (SIGP parm   register)
+00000208  1F22                                    3579          SLR   R2,R2              Start clean
+0000020A  1F33                                    3580          SLR   R3,R3              Start clean (SIGP target CPU)
+
+0000020C  4130 0000                     00000000  3582          LA    R3,0               Target CPU = CPU #0
+00000210  4110 0001                     00000001  3583          LA    R1,1               Parm register = z/Arch mode
+00000214  AE03 0012                     00000012  3584          SIGP  R0,R3,X'12'        Order code    = z/Arch mode
+00000218  4780 0232                     00000232  3585          BC    B'1000',ZARCHOK    CC0 = success: continue
+0000021C  4740 0228                     00000228  3586          BC    B'0100',CHKZARCH   CC1 = status stored: check further
+00000220  4720 02D0                     000002D0  3587          BC    B'0010',FAILCPU0   CC2 = busy: FAIL
+00000224  4710 02D0                     000002D0  3588          BC    B'0001',FAILCPU0   CC3 = not operational: FAIL
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3590 ***********************************************************************
+                                                  3591 *       Ensure test program executes in z/Architecture mode
+                                                  3592 ***********************************************************************
+
+00000228  4140 0100                     00000100  3594 CHKZARCH LA    R4,X'100'          Status X'100' = Same Architecture!
+0000022C  1504                                    3595          CLR   R0,R4              Are we already in z/Arch mode?
+0000022E  A774 0051                     000002D0  3596          JNE   FAILCPU0           Any other status = FAIL
+
+00000232  4140 0246                     00000246  3598 ZARCHOK  LA    R4,BEGIN0          Point to CPU #0 entry point
+00000236  4040 01AE                     000001AE  3599          STH   R4,X'1AE'          Update Restart PSW
+
+0000023A  4130 0000                     00000000  3601          LA    R3,0               Target CPU = CPU #0
+0000023E  AE03 0006                     00000006  3602          SIGP  R0,R3,X'6'         Order code = Restart
+
+
+00000242  B2B2 02D0                     000002D0  3604          LPSWE FAILCPU0           WTF?! How did we get here?!
+
+
+
+
+                                                  3606 ***********************************************************************
+                                                  3607 *    THE ACTUAL (very short and simple) E7TEST TEST PROGRAM ITSELF
+                                                  3608 ***********************************************************************
+
+00000246  45E0 0368                     00000368  3610 BEGIN0   BAL   R14,INIT           Initalize Program
+
+
+
+0000024A  98AB 0610                     00000610  3612          LM    R10,R11,ATESTTAB   R10 --> table, R11 <== #of entries
+
+0000024E  9500 0FFF                     00000FFF  3614 TESTLOOP CLI   TESTONLY,0         Do only specific test?
+00000252  4780 0260                     00000260  3615          BE    TESTTHIS           No, do all tests
+00000256  D500 0FFF A003      00000FFF  00000003  3616          CLC   TESTONLY,3(R10)    Is the test they want?
+0000025C  4770 0270                     00000270  3617          BNE   TESTNEXT           No, skip this test
+
+00000260  9801 A00C                     0000000C  3619 TESTTHIS LM    R0,R1,(TESTLEN-(2*4))(R10)  R0 <== MSG LEN, R1 --> MSG
+00000264  45E0 04A0                     000004A0  3620          BAL   R14,MSG                     Report which test this is
+
+00000268  9802 A000                     00000000  3622          LM    R0,R2,0(R10)       Load test parms from table
+0000026C  45E0 027C                     0000027C  3623          BAL   R14,DOTEST         Perform this test...
+00000270  41A0 A014                     00000014  3624 TESTNEXT LA    R10,TESTLEN(,R10)  R10 --> next test table entry
+
+00000274  46B0 024E                     0000024E  3626          BCT   R11,TESTLOOP       Loooop... until no more tests
+
+
+
+
+00000278  B2B2 0308                     00000308  3628          LPSWE GOODPSW            E7TEST SUCCESS!
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3630 ***********************************************************************
+                                                  3631 *        Generic TEST subroutine:  R0=test#, R1=chpgm, R2=flag
+                                                  3632 ***********************************************************************
+
+0000027C  50E0 02CC                     000002CC  3634 DOTEST   ST    R14,TESTR14        Save return address
+
+00000280  4200 0200                     00000200  3636          STC   R0,TESTNUM         Save this test's test number
+00000284  1801                                    3637          LR    R0,R1              R0 --> This test's Channel Program
+
+00000286  45F0 03E2                     000003E2  3639          BAL   R15,EXCP           Execute this Channel Program...
+
+0000028A  5810 3000                     00000000  3641          L     R1,IOCBDID         R1 <== Subchannel
+0000028E  5840 3028                     00000028  3642          L     R4,IOCBSIB         R4 <== SCHIB address
+
+00000292  B234 4000                     00000000  3644          STSCH 0(R4)              Store Subchannel for our device
+00000296  4770 02D8                     000002D8  3645          BC    B'0111',FAILSCH    FAIL if anything other than CC0
+
+                                                  3647 *        Verify correct/expected I/O completion...
+
+0000029A  4150 401C                     0000001C  3649          LA    R5,SCHSCSW         R5 --> SCSW
+
+0000029E  9500 5009                     00000009  3651          CLI   SCSWCS,0           Clean channel status?
+000002A2  4770 02F0                     000002F0  3652          BNE   FAILTEST           No?! ALWAYS FAIL THE TEST!
+
+000002A6  1222                                    3654          LTR   R2,R2              I/O error expected for this test?
+000002A8  4770 02B8                     000002B8  3655          BNZ   ERRTEST            Yes, then verify there was an error
+
+000002AC  950C 5008                     00000008  3657          CLI   SCSWUS,SCSWCE+SCSWDE   Check for normal successful I/O
+000002B0  4770 02F0                     000002F0  3658          BNE   FAILTEST               No?! FAIL!
+000002B4  47F0 02C4                     000002C4  3659          B     TESTOK                 Yes, then we're done; return
+
+000002B8  950C 5008                     00000008  3661 ERRTEST  CLI   SCSWUS,SCSWCE+SCSWDE   Check for normal successful I/O
+000002BC  4780 02F0                     000002F0  3662          BE    FAILTEST               Yes?! UNEXPECTED! FAIL!
+000002C0  45F0 03DE                     000003DE  3663          BAL   R15,DOSENSE            Clear the error
+
+000002C4  58E0 02CC                     000002CC  3665 TESTOK   L     R14,TESTR14        Restore R14 return address
+000002C8  07FE                                    3666          BR    R14                Return to caller
+
+
+000002CC  00000000                                3668 TESTR14  DC    A(0)     Test subroutine saved R14 return address
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3670 ***********************************************************************
+                                                  3671 *                   Disabled Wait PSWs...
+                                                  3672 ***********************************************************************
+
+
+
+                                                  3674 *    Test failure routines to load specific failure PSW...
+
+
+000002D0  4190 0328                     00000328  3676 FAILCPU0 LA    R9,BAD66PSW          SIGP failed
+000002D4  47F0 02F8                     000002F8  3677          B     FAIL
+000002D8  4190 0338                     00000338  3678 FAILSCH  LA    R9,BAD77PSW          STSCH failed
+000002DC  47F0 02F8                     000002F8  3679          B     FAIL
+000002E0  4190 0348                     00000348  3680 FAILDEV  LA    R9,BAD88PSW          ENADEV failed
+000002E4  47F0 02F8                     000002F8  3681          B     FAIL
+000002E8  4190 0358                     00000358  3682 FAILIO   LA    R9,BAD99PSW          RAWIO failed
+000002EC  47F0 02F8                     000002F8  3683          B     FAIL
+000002F0  4190 0318                     00000318  3684 FAILTEST LA    R9,FAILPSW           One of our overall tests failed
+000002F4  47F0 02F8                     000002F8  3685          B     FAIL
+
+
+
+000002F8  D200 900F 0200      0000000F  00000200  3687 FAIL     MVC   16-1(1,R9),TESTNUM   Put failing test# into PSW
+000002FE  B2B2 9000                     00000000  3688          LPSWE 0(R9)                Load failure PSW
+
+
+
+
+                                                  3690 *
+                                                  3691 **    Overall test SUCCESS / FAILURE disabled wait PSWs...
+                                                  3692 *
+
+
+00000308  00020001 80000000                       3694 GOODPSW  DC    0D'0',XL8'0002000180000000',AD(X'00000000')
+00000318  00020001 80000000                       3695 FAILPSW  DC    0D'0',XL8'0002000180000000',AD(X'0BAD0000')
+
+
+
+
+                                                  3697 *
+                                                  3698 **    Specific unexpected failure disabled wait PSWs...
+                                                  3699 *
+
+
+00000328  00020001 80000000                       3701 BAD66PSW DC    0D'0',XL8'0002000180000000',AD(X'0BAD6600')
+00000338  00020001 80000000                       3702 BAD77PSW DC    0D'0',XL8'0002000180000000',AD(X'0BAD7700')
+00000348  00020001 80000000                       3703 BAD88PSW DC    0D'0',XL8'0002000180000000',AD(X'0BAD8800')
+00000358  00020001 80000000                       3704 BAD99PSW DC    0D'0',XL8'0002000180000000',AD(X'0BAD9900')
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3706 ***********************************************************************
+                                                  3707 *        Program Initialization
+                                                  3708 ***********************************************************************
+
+00000368  4130 0574                     00000574  3710 INIT     LA    R3,IOCB_A80        R3 --> IOCB
+0000036C  E380 3018 0004                00000018  3711          LG    R8,IOCBORB         R8 --> ORB
+00000372  45F0 037C                     0000037C  3712          BAL   R15,IOINIT         Init CPU for I/O operations
+00000376  45F0 038A                     0000038A  3713          BAL   R15,ENADEV         Enable device for I/O
+0000037A  07FE                                    3714          BR    R14                Return to caller
+
+
+                                                  3716 ***********************************************************************
+                                                  3717 *        Initialize the CPU for I/O operations
+                                                  3718 ***********************************************************************
+
+                                                  3720 IOINIT   IOINIT ,
+0000037C  B766 0384                     00000384  3721+IOINIT   LCTL  6,6,IOMK0007       Enable subchannel subclasses for interruptions
+00000380  47F0 0388                     00000388  3722+         B     IOMK0007+4
+00000384                                          3723+IOMK0007 DS    0F
+00000384  FF000000                                3724+         DC    XL4'FF000000'         All subchannel subclasses enabled
+00000388  07FF                                    3725          BR    R15                Return to caller
+
+
+
+                                                  3727 ***********************************************************************
+                                                  3728 *        Enable the device, making it ready for use
+                                                  3729 ***********************************************************************
+
+                                                  3731 ENADEV   ENADEV  ENAOKAY,FAILDEV,REG=4
+0000038A  5810 03D4                     000003D4  3732+ENADEV   L     1,FIND0008
+0000038E  E340 3028 0004                00000028  3733+         $L    4,IOCBSIB          Locate where the SCHIB is to be stored
+00000394                      00000000            3734+         USING SCHIB,4
+00000394                                          3735+FINL0008 DS    0H   Retrieve Subchannel Information Block for desired device number
+00000394  B234 4000                     00000000  3736+         STSCH 0(4)               Store the SCHIB for first subchannel
+00000398  A774 FFA4                     000002E0  3737+         $BC   B'0111',FAILDEV    Subchannel does not exist and device number not found
+0000039C  9101 4005                     00000005  3738+         TM    PMCW1_8,PMCWV      Is the subchannel device number valid?
+000003A0  A784 0011                     000003C2  3739+         $BZ   FINN0008           ..No, check the next subchannel
+000003A4  D501 4006 3004      00000006  00000004  3740+         CLC   PMCWDNUM,IOCBDEV   Is this the device number being sought?
+000003AA  A774 000C                     000003C2  3741+         $BNE  FINN0008           ..No, check the next subchannel
+                                                  3742+* Subchannel found!
+000003AE  5010 3000                     00000000  3743+         ST    1,IOCBDID          Remember the subchannel so I/O can be done to it.
+000003B2  9680 4005                     00000005  3744+         OI    PMCW1_8,PMCWE      Make sure it is enabled so I/O requests accepted
+000003B6  B232 4000                     00000000  3745+         MSCH  0(4)               Enable the subchannel to the channel sub-system
+000003BA  A784 0011                     000003DC  3746+         $BC   B'1000',ENAOKAY    CC0 (SCHIB updated), device is ready.
+000003BE  A7F4 FF91                     000002E0  3747+         $B    FAILDEV            CC1,CC2,CC3 (SCHIB update failed), quit
+000003C2                                          3748+FINN0008 DS    0H  Advance to next subchannel
+000003C2  4110 1001                     00000001  3749+         LA    1,1(0,1)           Advance to next subchannel
+000003C6  5510 03D8                     000003D8  3750+         CL    1,FINM0008         Beyond maximum subchannel
+000003CA  A7D4 FFE5                     00000394  3751+         $BNH  FINL0008           ..No, examine the next subchannel
+000003CE  A724 FF89                     000002E0  3752+         $BH   FAILDEV            ..Yes, failed to enable the device
+000003D2                                          3753+         DROP  4                  Forget SCHIB addressing
+000003D4  00010000                                3754+FIND0008 DC    A(X'00010000')     First subchannel subsystem ID
+000003D8  0001FFFF                                3755+FINM0008 DC    A(X'0001FFFF')     Last subchannel subsystem ID
+
+000003DC  07FF                                    3757 ENAOKAY  BR    R15                Return to caller if device enabled OK
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3759 ***********************************************************************
+                                                  3760 *        Execute the channel program pointed to by R0
+                                                  3761 ***********************************************************************
+
+000003DE  4100 0698                     00000698  3763 DOSENSE  LA    R0,SENSEPGM          R0 -> Read SENSE Channel Program
+000003E2  5000 8008                     00000008  3764 EXCP     ST    R0,ORBCCW            Plug Channel Program into IORB
+000003E6  B904 0004                               3765          LGR   R0,R4                Save SCHIB pointer
+000003EA  9282 8005                     00000005  3766          MVI   ORB1_8,ORBF+ORBH     Format-1 CCWs, Format-2 IDAWs
+000003EE  9200 8007                     00000007  3767          MVI   ORRB1_24,0           Set all these ORB flags to zero
+
+                                                  3769          RAWIO 4,FAIL=FAILIO
+000003F2  9200 300E                     0000000E  3770+         MVI   IOCBSC,X'00'          Clear SC information
+000003F6  D201 300A 3006      0000000A  00000006  3771+         MVC   IOCBST,IOCBZERO       Clear accumulated status
+000003FC  5810 3000                     00000000  3772+         L     1,IOCBDID             Remember the device ID with which I am working
+                                                  3773+* Initiate Subchannel-based input/output operation
+00000400  E340 3018 0004                00000018  3774+         $L    4,IOCBORB             Locate the ORB for the channel subsystem
+00000406  B233 4000                     00000000  3775+         SSCH  0(4)                  Initiate the I/O operation
+0000040A  A774 FF6F                     000002E8  3776+         $BC   B'0111',FAILIO        ..Start function failed, report/handle the error
+0000040E  E340 3020 0004                00000020  3777+         $L    4,IOCBIRB             Locate the IRB storage area
+00000414                      00000000            3778+         USING IRB,4                 Make it addressable
+
+                                                  3780+* Wait for I/O operation to present status via an interruption
+00000414                                          3781+IOWT0009 DS    0H  Wait for I/O to complete
+00000414  D20F 0448 01F0      00000448  000001F0  3783+         MVC   IOS0010(16),496(0)              Save Input/Output new PSW
+0000041A  D20F 01F0 0438      000001F0  00000438  3784+         MVC   496(16,0),ION0010              Establish Input/Ouput new PSW
+00000420  B2B2 0428                     00000428  3785+         $LPSW WPSW0010                       Wait for event
+00000428  02020000 00000000                       3786+WPSW0010 PSW   2,0,2,0,0                      Wait for event
+00000438  00002000 00000000                       3787+ION0010  PSW   0,0,0,32,IRST0010,24                I/O New PSW: cc==2
+00000448  00000000 00000000                       3788+IOS0010  DC    XL16'00'
+                                                  3789+* Handle input/output interruption
+00000458                                          3790+IRST0010 DS    0H
+00000458  D20F 01F0 0448      000001F0  00000448  3791+         MVC   496(16,0),IOS0010            Restore input/output new PSW
+                                                  3792+* Process the interruption...
+                                                  3793+* Validate interruption is for the expected subchannel
+0000045E  5510 00B8                     000000B8  3794+         CL    1,IOSSID              Is this the device for which I am waiting?
+00000462  A774 FFD9                     00000414  3795+         $BNE  IOWT0009              ..No, continue waiting for it
+                                                  3796+* Accumulate interruption information from IRB
+00000466  B235 4000                     00000000  3797+         TSCH  0(4)                  Retrive interrupt information
+0000046A  A744 FFD5                     00000414  3798+         $BC   B'0100',IOWT0009      CC1 (not status pending), wait for it to arrive
+0000046E  A714 FF3D                     000002E8  3799+         $BC   B'0001',FAILIO        CC3 (not operational), an error then
+                                                  3800+*                                    CC0 (status was pending), accumulate the status
+00000472  D600 300E 4003      0000000E  00000003  3801+         OC    IOCBSC,IRBSCSW+SCSW2  Accumulate status control
+00000478  D601 300A 4008      0000000A  00000008  3802+         OC    IOCBST,IRBSCSW+SCSWUS Accumulate device and channel status
+0000047E  9104 300E                     0000000E  3803+         TM    IOCBSC,SCSWSPRI       Primary subchannel status?
+00000482  A7E4 FFC9                     00000414  3804+         $BNO  IOWT0009              ..No, wait for primary status
+00000486  D203 3010 4004      00000010  00000004  3805+         MVC   IOCBSCCW,IRBSCSW+SCSWCCW  CCW address
+0000048C  D201 3016 400A      00000016  0000000A  3806+         MVC   IOCBRCNT,IRBSCSW+SCSWCNT  Residual count
+                                                  3807+* Test for errors as specified in the IOCB
+00000492  910C 300A                     0000000A  3808+         TM    IOCBUS,CSWCE+CSWDE    Channel end and device end both accumulated?
+00000496  A7E4 FF29                     000002E8  3809+         $BNO  FAILIO                Hunh? No CE and DE but do have primary status!
+                                                  3810+* Input/Output operation successful
+
+0000049A  B904 0040                               3812          LGR   R4,R0                Restore SCHIB pointer
+0000049E  07FF                                    3813          BR    R15                  Return to caller
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3815 ***********************************************************************
+                                                  3816 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                  3817 ***********************************************************************
+
+000004A0  4900 0690                     00000690  3819 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000004A4  07DE                                    3820          BNHR  R14                    No, ignore
+
+000004A6  9002 04D8                     000004D8  3822          STM   R0,R2,MSGSAVE          Save registers
+
+000004AA  4900 0692                     00000692  3824          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000004AE  47D0 04B6                     000004B6  3825          BNH   MSGOK                  Yes, continue
+000004B2  4100 0080                     00000080  3826          LA    R0,L'MSGMSG            No, set to maximum
+
+000004B6  1820                                    3828 MSGOK    LR    R2,R0                  Copy length to work register
+000004B8  0620                                    3829          BCTR  R2,0                   Minus-1 for execute
+000004BA  4420 04E4                     000004E4  3830          EX    R2,MSGMVC              Copy message to O/P buffer
+
+000004BE  4120 200A                     0000000A  3832          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+000004C2  4110 04EA                     000004EA  3833          LA    R1,MSGCMD              Point to true command
+
+000004C6  83120008                                3835          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+000004CA  4780 04D0                     000004D0  3836          BZ    MSGRET                 Return if successful
+000004CE  0000                                    3837          DC    H'0'                   CRASH for debugging purposes
+
+000004D0  9802 04D8                     000004D8  3839 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+000004D4  07FE                                    3840          BR    R14                    Return to caller
+
+000004D8  00000000 00000000                       3842 MSGSAVE  DC    3F'0'                  Registers save area
+000004E4  D200 04F3 1000      000004F3  00000000  3843 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+000004EA  D4E2C7D5 D6C8405C                       3845 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+000004F3  40404040 40404040                       3846 MSGMSG   DC    CL128' '               The message text to be displayed
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3848 ***********************************************************************
+                                                  3849 *                         IOCB
+                                                  3850 ***********************************************************************
+                                                  3851 *
+                                                  3852 *         I/O Control Block -- Structure used by RAWIO macro
+                                                  3853 *         identifying the device and operation being performed
+                                                  3854 *
+                                                  3855 ***********************************************************************
+
+                                                  3857 IOCB_A80 IOCB  X'A80'     I/O Control Block for CCUU device X'A80'
+00000574  00000000                                3858+IOCB_A80 DC    A(0)            +0 Device Identifier (supplied by ENADEV macro)
+00000578  0A80                                    3859+         DC    AL2(X'A80')     +4 Device address or device number
+0000057A  0000                                    3860+         DC    H'0'            +6 Must be zeros
+0000057C  D3                                      3861+         DC    AL1(X'D3')      +8 Default detected unit errors
+0000057D  3F                                      3862+         DC    AL1(X'3F')      +9 Default detected channel errors
+0000057E  0000                                    3863+         DC    HL2'0'          +10 Accumulated unit and channel errors
+00000580  0000                                    3864+         DC    HL2'0'          +12 Tested unit and channel status
+00000582  00                                      3865+         DC    XL1'00'         +14 Accumulated subchannel status control from SCSW
+00000583  80                                      3866+         DC    XL1'80'         +15 Default unsoliticed wait condition
+00000584  00000000                                3867+         DC    F'0'            +16 I/O status CCW address
+00000588  00000000                                3868+         DC    F'0'            +20 residual count
+0000058C  00000000 00000604                       3869+         DC    ADL8(IORB0011)  +24  Address where ORB is located
+00000594  00000000 000005A4                       3870+         DC    ADL8(IIRB0011)  +32 Address where IRB stored
+0000059C  00000000 000005A4                       3871+         DC    ADL8(IIRB0011)  +40 Address where SCHIB stored
+000005A4  00000000 00000000                       3872+IIRB0011 DC    24F'0'              Embedded shared IRB and SCHIB area
+00000604                                          3874+IORB0011 DS    0XL12
+00000604  00000000                                3875+         DC    A(0)                         Word 0 - Interruption Parameter
+00000608  00                                      3876+         DC    AL1((0)*16+B'0000')          Word 1, bits 0-7
+00000609  80                                      3877+         DC    BL1'10000000'                Word 1, bits 8-15
+0000060A  FF                                      3878+         DC    AL1(255)                     Word 1, bits 16-23
+0000060B  00                                      3879+         DC    BL1'00000000'                 Word 1, bits 24-31
+0000060C  00000000                                3880+         DC    AL4(0)                       Word 2 - CCW address
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3882 ***********************************************************************
+                                                  3883 *                      WORKING STORAGE
+                                                  3884 ***********************************************************************
+
+                              00000610  00000001  3886 WKSTORG  EQU   *
+00000610                      00000610  00000FFF  3887          ORG   E7TEST+X'FFF'
+00000FFF  00                                      3888 TESTONLY DC    AL1(0)             Only do this one test if non-zero
+00001000                      00001000  00000610  3889          ORG   WKSTORG
+
+                              00000040  00000001  3891 CC       EQU   X'40'              Chain Command
+                              00000020  00000001  3892 SLI      EQU   X'20'              Suppress Incorrect Length Indication
+                              00000004  00000001  3893 IDA      EQU   X'04'              Indirect Data Addressing
+
+                              00000004  00000001  3895 SNS      EQU   X'04'              Basic Sense CCW opcode
+                              00000006  00000001  3896 RD       EQU   X'06'              Read Data CCW opcode
+                              0000003E  00000001  3897 RSD      EQU   X'3E'              Read Subsystem Data CCW opcode
+                              00000047  00000001  3898 LR       EQU   X'47'              Locate Record CCW opcode
+                              00000063  00000001  3899 DX       EQU   X'63'              Define Extent CCW opcode
+                              00000086  00000001  3900 RDMT     EQU   X'86'              Read Data Multi-track CCW opcode
+                              000000E7  00000001  3901 PFX      EQU   X'E7'              Prefix CCW opcode
+
+                                                  3903 *
+                                                  3904 **       TESTS CONTROL TABLE...
+                                                  3905 *
+
+00000610  00000618 00000006                       3907 ATESTTAB DC    A(TESTTAB,NUMTESTS)
+                              00000200  00000001  3908 TESTNUM  EQU   X'200'                 Current test number
+                                                  3909 *                                     (identifies failed test)
+
+00000618                                          3911 TESTTAB  DC    0A(0)
+                                                  3912          PRINT DATA
+00000618  00000001 000006E0                       3913          DC    A(1,T1_CHPGM,0,T1_MSGLN,T1_DESC)
+00000620  00000000 0000003E
+00000628  000006A0
+0000062C  00000002 00000748                       3914          DC    A(2,T2_CHPGM,0,T2_MSGLN,T2_DESC)
+00000634  00000000 00000055
+0000063C  000006F0
+00000640  00000003 000007C8                       3915          DC    A(3,T3_CHPGM,0,T3_MSGLN,T3_DESC)
+00000648  00000000 00000056
+00000650  00000770
+00000654  00000004 00000840                       3916          DC    A(4,T4_CHPGM,0,T4_MSGLN,T4_DESC)
+0000065C  00000000 00000056
+00000664  000007E8
+00000668  00000005 000008D8                       3917          DC    A(5,T5_CHPGM,1,T5_MSGLN,T5_DESC)  (1=Expect I/O ERROR)
+00000670  00000001 0000006F
+00000678  00000868
+0000067C  00000006 00000950                       3918          DC    A(6,T6_CHPGM,0,T6_MSGLN,T6_DESC)
+00000684  00000000 00000051
+0000068C  000008F8
+                                                  3919          PRINT NODATA
+                              00000006  00000001  3920 NUMTESTS EQU   6                      Number of test table entries
+                              00000014  00000001  3921 TESTLEN  EQU   (*-TESTTAB)/NUMTESTS   Width of each test table entry
+
+00000690                                          3923          LTORG ,        Literals Pool
+00000690  0000                                    3924                =H'0'
+00000692  0080                                    3925                =AL2(L'MSGMSG)
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3927 ***********************************************************************
+                                                  3928 *                 TEST CHANNEL PROGRAMS...
+                                                  3929 ***********************************************************************
+
+00000698                                          3931          DC    0D'0'
+00000698  04200020 00000970                       3932 SENSEPGM DC    AL1(SNS),AL1(SLI),AL2(L'SNSBYTES),AL4(SNSBYTES)
+
+
+
+
+
+                                                  3934 ***********************************************************************
+
+000006A0  E3C5E2E3 407BF17A                       3936 T1_DESC  DC    C'TEST #1: Format 2 PFX to obtain subsystem information (no IDA)'
+                              0000003E  00000001  3937 T1_MSGLN EQU   *-T1_DESC
+000006E0                                          3938          DC    0D'0'
+000006E0  E760004C 00000990                       3939 T1_CHPGM DC    AL1(PFX),AL1(CC+SLI),AL2(T1_E7LEN),AL4(T1_E7DAT)
+000006E8  3E200100 000009DC                       3940          DC    AL1(RSD),AL1(SLI),AL2(L'T1_3EBUF),AL4(T1_3EBUF)
+
+
+
+
+
+                                                  3942 ***********************************************************************
+
+000006F0  E3C5E2E3 407BF27A                       3944 T2_DESC  DC    C'TEST #2: Format 0 PFX with Define Extent Valid bit off (DX CCW chained) (Read 06 IDA)'
+                              00000055  00000001  3945 T2_MSGLN EQU   *-T2_DESC
+00000748                                          3946          DC    0D'0'
+00000748  E7600040 00000ADC                       3947 T2_CHPGM DC    AL1(PFX),AL1(CC+SLI),AL2(L'T2_E7DAT),AL4(T2_E7DAT)
+00000750  63600010 00000B1C                       3948          DC    AL1(DX),AL1(CC+SLI),AL2(L'T2_63DAT),AL4(T2_63DAT)
+00000758  47600010 00000B2C                       3949          DC    AL1(LR),AL1(CC+SLI),AL2(L'T2_47DAT),AL4(T2_47DAT)
+00000760  0624000A 00000768                       3950          DC    AL1(RD),AL1(SLI+IDA),AL2(L'T2_06BUF),AL4(T2_06IDA)
+00000768  00000000 00000B3C                       3951 T2_06IDA DC    AD(T2_06BUF)
+
+
+
+
+
+                                                  3953 ***********************************************************************
+
+00000770  E3C5E2E3 407BF37A                       3955 T3_DESC  DC    C'TEST #3: Format 0 PFX with Define Extent Valid bit on (DX CCW imbeded) (Read 06 1 IDA)'
+                              00000056  00000001  3956 T3_MSGLN EQU   *-T3_DESC
+000007C8                                          3957          DC    0D'0'
+000007C8  E7600040 00000B46                       3958 T3_CHPGM DC    AL1(PFX),AL1(CC+SLI),AL2(L'T3_E7DAT),AL4(T3_E7DAT)
+000007D0  47600010 00000B86                       3959          DC    AL1(LR),AL1(CC+SLI),AL2(L'T3_47DAT),AL4(T3_47DAT)
+000007D8  0624000A 000007E0                       3960          DC    AL1(RD),AL1(SLI+IDA),AL2(L'T3_06BUF),AL4(T3_06IDA)
+000007E0  00000000 00000B96                       3961 T3_06IDA DC    AD(T3_06BUF)
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3963 ***********************************************************************
+
+000007E8  E3C5E2E3 407BF47A                       3965 T4_DESC  DC    C'TEST #4: Format 2 PFX to obtain control unit information (PFX E7 2 IDA, Read 06 1 IDA)'
+                              00000056  00000001  3966 T4_MSGLN EQU   *-T4_DESC
+00000840                                          3967          DC    0D'0'
+00000840  E764004C 00000850                       3968 T4_CHPGM DC    AL1(PFX),AL1(CC+SLI+IDA),AL2(L'T4_E7DAT),AL4(T4_E7IDA)
+00000848  3E240100 00000860                       3969          DC    AL1(RSD),AL1(SLI+IDA),AL2(L'T4_3EBUF),AL4(T4_3EIDA)
+00000850  00000000 00001FD8                       3970 T4_E7IDA DC    AD(T4_E7DAT_PART1)
+00000858  00000000 00002000                       3971          DC    AD(T4_E7DAT_PART2)
+00000860  00000000 00000BA0                       3972 T4_3EIDA DC    AD(T4_3EBUF)
+
+
+
+
+
+                                                  3974 ***********************************************************************
+
+00000868  E3C5E2E3 407BF57A                       3976 T5_DESC  DC    C'TEST #5: Read 06 CCW should fail since LR operation is Read(16) and Read 06 CCW not multi-track (Read 06 1 IDA)'
+                              0000006F  00000001  3977 T5_MSGLN EQU   *-T5_DESC
+000008D8                                          3978          DC    0D'0'
+000008D8  E7600040 00000CA0                       3979 T5_CHPGM DC    AL1(PFX),AL1(CC+SLI),AL2(L'T5_E7DAT),AL4(T5_E7DAT)
+000008E0  47600010 00000CE0                       3980          DC    AL1(LR),AL1(CC+SLI),AL2(L'T5_47DAT),AL4(T5_47DAT)
+000008E8  0624000A 000008F0                       3981          DC    AL1(RD),AL1(SLI+IDA),AL2(L'T5_06BUF),AL4(T5_06IDA)
+000008F0  00000000 00000CF0                       3982 T5_06IDA DC    AD(T5_06BUF)
+
+
+
+
+
+                                                  3984 ***********************************************************************
+
+000008F8  E3C5E2E3 407BF67A                       3986 T6_DESC  DC    C'TEST #6: Same as Test #5, but properly uses multi-track Read (86) (Read 86 1 IDA)'
+                              00000051  00000001  3987 T6_MSGLN EQU   *-T6_DESC
+00000950                                          3988          DC    0D'0'
+00000950  E7600040 00000CFA                       3989 T6_CHPGM DC    AL1(PFX),AL1(CC+SLI),AL2(L'T6_E7DAT),AL4(T6_E7DAT)
+00000958  47600010 00000D3A                       3990          DC    AL1(LR),AL1(CC+SLI),AL2(L'T6_47DAT),AL4(T6_47DAT)
+00000960  8624000A 00000968                       3991          DC    AL1(RDMT),AL1(SLI+IDA),AL2(L'T6_86BUF),AL4(T6_86IDA)
+00000968  00000000 00000D4A                       3992 T6_86IDA DC    AD(T6_86BUF)
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3994 ***********************************************************************
+                                                  3995 *        TEST CHANNEL PROGRAM I/O DATA AND I/O BUFFERS...
+                                                  3996 ***********************************************************************
+
+00000970                                          3998          DC    0D'0'
+00000970  00000000 00000000                       3999 SNSBYTES DC    XL32'00'     (Generic SENSE buffer)
+
+
+
+                                                  4001 ***********************************************************************
+
+
+
+00000990  02000000 00000000                       4003 T1_E7DAT DC    X'02000000 00000000 00000000'           +00  PFX
+0000099C  00000000 00000000                       4004          DC    X'00000000 00000000 00000000 00000000'  +12  DEF EXT
+000009AC  00000000 00000000                       4005          DC    X'00000000 00000000 00000000 00000000'  +28
+000009BC  00000000 00000000                       4006          DC    X'00000000 00000000 00000000 00000000'  +44  LREC EXD
+000009CC  0000                                    4007          DC    X'0000'                                 +60
+000009CE  18000000 00004100                       4008          DC    X'    1800 00000000 41000000 00000000'  +62  PSF
+                              0000004C  00000001  4009 T1_E7LEN EQU   *-T1_E7DAT
+000009DC  00000000 00000000                       4010 T1_3EBUF DC    XL256'00'  (the subsystem data that was read)
+
+
+
+                                                  4012 ***********************************************************************
+
+
+
+00000ADC  00000000 00000000                       4014 T2_E7DAT DC    XL64'00'
+00000B1C  40C00000 00000000                       4015 T2_63DAT DC    XL16'40C00000 00000000 00000000 00000000'
+00000B2C  06000001 00000000                       4016 T2_47DAT DC    XL16'06000001 00000000 00000000 03000000'
+00000B3C  00000000 00000000                       4017 T2_06BUF DC    XL10'00'
+
+
+
+                                                  4019 ***********************************************************************
+
+
+
+00000B46                                          4021 T3_E7DAT DS   0XL64
+00000B46  00800000 00000000                       4022          DC    XL16'00800000 00000000 00000000 40C00000'
+00000B56  00000000 00000000                       4023          DC    XL16'00000000 00000000 00000000 00000000'
+00000B66  00000000 00000000                       4024          DC    XL16'00000000 00000000 00000000 00000000'
+00000B76  00000000 00000000                       4025          DC    XL16'00000000 00000000 00000000 00000000'
+00000B86  06000001 00000000                       4026 T3_47DAT DC    XL16'06000001 00000000 00000000 03000000'
+00000B96  00000000 00000000                       4027 T3_06BUF DC    XL10'00'
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+
+                                                  4030 ***********************************************************************
+
+00000BA0  00000000 00000000                       4032 T4_3EBUF            DC    XL256'00'
+                                                  4033                     PRINT DATA
+                              00000CA0  00000001  4034 T4_ORG              EQU   *
+                              0000004C  00000001  4035 T4_E7DAT_TOTAL_LEN  EQU   76
+                              00000028  00000001  4036 T4_E7DAT_PART1_LEN  EQU   40
+                              00000024  00000001  4037 T4_E7DAT_PART2_LEN  EQU   (T4_E7DAT_TOTAL_LEN-T4_E7DAT_PART1_LEN)
+00000CA0                      00000CA0  00001FD8  4038                     ORG   E7TEST+X'2000'-T4_E7DAT_PART1_LEN
+00001FD8                                          4039 T4_E7DAT            DS   0XL(T4_E7DAT_TOTAL_LEN)
+00001FD8                                          4040 T4_E7DAT_PART1      DS   0XL(T4_E7DAT_PART1_LEN)
+00001FD8  02000000 00000000                       4041                     DC    XL16'02000000 00000000 00000000 00000000'
+00001FE0  00000000 00000000
+00001FE8  00000000 00000000                       4042                     DC    XL16'00000000 00000000 00000000 00000000'
+00001FF0  00000000 00000000
+00001FF8  00000000 00000000                       4043                     DC    XL8' 00000000 00000000'
+00002000                                          4044 T4_E7DAT_PART2      DS   0XL(T4_E7DAT_PART2_LEN)
+00002000  00000000 00000000                       4045                     DC    XL8'                   00000000 00000000'
+00002008  00000000 00000000                       4046                     DC    XL16'00000000 00000000 00000000 00001800'
+00002010  00000000 00001800
+00002018  00000000 41000000                       4047                     DC    XL12'00000000 41000000 00000000'
+00002020  00000000
+00002024                      00002024  00000CA0  4048                     ORG   T4_ORG
+                                                  4049                     PRINT NODATA
+
+                                                  4051 ***********************************************************************
+
+
+00000CA0                                          4053 T5_E7DAT DS   0XL64
+00000CA0  00800000 00000000                       4054          DC    XL16'00800000 00000000 00000000 40C00000'
+00000CB0  00000000 00000000                       4055          DC    XL16'00000000 00000000 00000000 00000000'
+00000CC0  00000000 00000000                       4056          DC    XL16'00000000 00000000 00000000 00000000'
+00000CD0  00000000 00000000                       4057          DC    XL16'00000000 00000000 00000000 00000000'
+00000CE0  16000001 00000000                       4058 T5_47DAT DC    XL16'16000001 00000000 00000000 03000000'
+00000CF0  00000000 00000000                       4059 T5_06BUF DC    XL10'00'
+
+
+                                                  4061 ***********************************************************************
+
+
+00000CFA                                          4063 T6_E7DAT DS   0XL64
+00000CFA  00800000 00000000                       4064          DC    XL16'00800000 00000000 00000000 40C00000'
+00000D0A  00000000 00000000                       4065          DC    XL16'00000000 00000000 00000000 00000000'
+00000D1A  00000000 00000000                       4066          DC    XL16'00000000 00000000 00000000 00000000'
+00000D2A  00000000 00000000                       4067          DC    XL16'00000000 00000000 00000000 00000000'
+00000D3A  16000001 00000000                       4068 T6_47DAT DC    XL16'16000001 00000000 00000000 03000000'
+00000D4A  00000000 00000000                       4069 T6_86BUF DC    XL10'00'
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4071 ***********************************************************************
+                                                  4072 *        IOCB DSECT
+                                                  4073 ***********************************************************************
+
+                                                  4075          DSECTS NAME=IOCB
+                                                  4077+IOCB     DSECT
+                                                  4078+*     Field usage by: CH SC Description (R->program read-only, X->program read/write)
+00000000                                          4079+IOCBDID  DS    0F  +0     R  Device Identifier - Subsystem ID for channel subsystem
+00000000  0000                                    4080+         DS    H   +0  R       reserved - must be zeros
+00000002  0000                                    4081+IOCBDV   DS    H   +2  R       Channel Unit Device address of I/O operation
+00000004  0000                                    4082+IOCBDEV  DS    H   +4  X  X  Device address or device number (R after ENADEV)
+00000006  0000                                    4083+IOCBZERO DS    H   +6  R  R  Must be zeros
+00000008  00                                      4084+IOCBUM   DS    X   +8  X  X  Unit status test mask
+00000009  00                                      4085+IOCBCM   DS    X   +9  X  X  Channel status test mask
+0000000A                                          4086+IOCBST   DS    0H  +10 X  X  Input/Output unit and channel status accumulation
+0000000A  00                                      4087+IOCBUS   DS    X   +10 R  R  Accumulated unit status
+0000000B  00                                      4088+IOCBCS   DS    X   +11 R  R  Accumulated channel status
+0000000C  00                                      4089+IOCBUT   DS    X   +14 R  R  Used to test unit status
+0000000D  00                                      4090+IOCBCT   DS    X   +13 R  R  Used to test channel status
+0000000E  00                                      4091+IOCBSC   DS    X   +14    R  Accumulted subchanel status control
+0000000F  00                                      4092+IOCBWAIT DS    X   +15 X  X  Recognized unsolicited interruption unit status events
+00000010  00000000                                4093+IOCBSCCW DS    A   +16 R  R  I/O status CCW address
+00000014                                          4094+IOCBSCNT DS    0F  +20 R  R  I/O status residual count as a positive full word
+00000014  0000                                    4095+         DS    H   +20 R     reserved must be zeros
+00000016  0000                                    4096+IOCBRCNT DS    H   +22 R     I/O status residual count as an unsigned halfword
+00000018                                          4097+IOCBCAW  DS    0A  +24 X     Channel Address word
+00000018  00000000 00000000                       4098+IOCBORB  DS    AD  +24    X  Address of the ORB for channel subsystem I/O
+00000020  00000000 00000000                       4099+IOCBIRB  DS    AD  +32    X  Channel subsystem IRB address
+00000028  00000000 00000000                       4100+IOCBSIB  DS    AD  +40    X  Channel subsystem SCHIB address
+                              00000030  00000001  4101+IOCBL    EQU   *-IOCB  Length of IOCB control block (48) without embedded structures
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4103 ***********************************************************************
+                                                  4104 *        ORB DSECT
+                                                  4105 ***********************************************************************
+
+                                                  4107          DSECTS NAME=ORB
+                                                  4109+ORB      DSECT
+00000000  00000000                                4110+ORBPARM  DC    F'0'     Word 0, bits 0-31
+
+00000004  00                                      4112+ORB1_0   DC    X'00'    Word 1, bits 0-7
+                              000000F0  00000001  4113+ORBKEYM  EQU   X'F0'    Word 1, bits 0-3   - Storage Key Mask
+                              00000008  00000001  4114+ORBS     EQU   X'08'    Word 1, bit 4      - Suspend Control
+                              00000004  00000001  4115+ORBC     EQU   X'04'    Word 1, bit 5      - Streaming Mode Control
+                              00000002  00000001  4116+ORBM     EQU   X'02'    Word 1, bit 6      - Modification Control
+                              00000001  00000001  4117+ORBY     EQU   X'01'    Word 1, bit 7      - Synchronization Control
+
+00000005  00                                      4119+ORB1_8   DC    X'00'    Word 1, bits 8-15
+                              00000080  00000001  4120+ORBF     EQU   X'80'    Word 1, bit 8      - CCW Format-Control
+                              00000040  00000001  4121+ORBP     EQU   X'40'    Word 1, bit 9      - Pre-fetch control
+                              00000020  00000001  4122+ORBI     EQU   X'20'    Word 1, bit 10     - Initial-status Interruption Control
+                              00000010  00000001  4123+ORBA     EQU   X'10'    Word 1, bit 11     - Address Limit Checking Control
+                              00000008  00000001  4124+ORBU     EQU   X'08'    Word 1, bit 12     - Suppress-suspended-interruption control
+                              00000004  00000001  4125+ORBB     EQU   X'04'    Word 1, bit 13     - Channel-Program-Type Control
+                              00000002  00000001  4126+ORBH     EQU   X'02'    Word 1, bit 14     - Format 2-IDAW Control
+                              00000001  00000001  4127+ORBT     EQU   X'01'    Word 1, bit 15     - 2K-IDAW control
+00000006  00                                      4128+ORBLPM   DC    X'00'    Word 1, bits 16-23 - Logical Path Mask
+00000007  00                                      4129+ORRB1_24 DC    X'00'    Word 1, bits 24-31
+                              00000080  00000001  4130+ORBL     EQU   X'80'    Word 1, bit 24     - Incorrect Length Suppression Mode
+                              0000007F  00000001  4131+ORBRSV3  EQU   X'7F'    Word 1, bits 25-31 - reserved must be zeros
+                              00000040  00000001  4132+ORBD     EQU   X'40'    Word 1, bit 25     - MIDAW Addressing Control
+                              0000003E  00000001  4133+ORBRSV26 EQU   X'3E'    Word 1, bits 26-30 - reserved must be zeros
+                              0000007E  00000001  4134+ORBRSV25 EQU   X'7E'    Word 1, bits 25-30 - reserved must be zeros
+                              00000001  00000001  4135+ORBX     EQU   X'01'    Word 1, bit 31     - ORB-extension control
+
+00000008  00000000                                4137+ORBCCW   DC    A(0)     Word 2, bits 1-31  - Channel Program Address
+                              00000080  00000001  4138+ORBRSV4  EQU   X'80'    Word 2, bit 0      - reserved must be zero
+                              0000000C  00000001  4139+ORBLEN   EQU   *-ORB Length of standard ORB
+                                                  4140+* Extended ORB fields
+0000000C  00                                      4141+ORBCSS   DC    X'00'    Word 3, bits 0-7   - Channel Subsystem Priority
+0000000D  00                                      4142+ORBRSV5  DC    X'00'    Word 3, bits 8-15  - reserved must be zeros
+0000000E                                          4143+ORBPGM   DC    0X'00'   Word 3, bits 16-23 - Transport mode reserves for program use
+0000000E  00                                      4144+ORBCU    DC    X'00'    Word 3, bits 16-23 - Control Unit Priority
+0000000F  00                                      4145+ORBRSV6  DC    X'00'    Word 3, bits 24-31 - reserved must be zeros
+00000010  00000000 00000000                       4146+ORBRSV7  DC    XL16'00' Words 4-7          - reserved must be zeros
+                              00000020  00000001  4147+ORBXLEN  EQU   *-ORB Length of extended ORB
+
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4150 ***********************************************************************
+                                                  4151 *        IRB DSECT
+                                                  4152 ***********************************************************************
+
+                                                  4154          DSECTS NAME=IRB
+                                                  4156+IRB      DSECT Interruption          Response Block
+00000000  00000000 00000000                       4157+IRBSCSW  DC    XL12'00' Words 0-2 - Subchannel Status Word (Defined by DSECT SCSW)
+0000000C  00000000 00000000                       4158+IRBESW   DC    XL20'00' Words 3-7 - Extended Status Word
+00000020  00000000 00000000                       4159+IRBECW   DC    XL32'00' Words 8-15 - Extended Control Word
+                              00000040  00000001  4160+IRBL     EQU   *-IRB    IRB Length
+00000040  00000000 00000000                       4161+IRBEMW   DC    XL32'00' Words 16-23 - Extended Measurement Word
+                              00000060  00000001  4162+IRBXL    EQU   *-IRB    Extended IRB Length
+
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4165 ***********************************************************************
+                                                  4166 *        SCHIB DSECT
+                                                  4167 ***********************************************************************
+
+                                                  4169          DSECTS NAME=SCHIB
+                                                  4171+SCHIB    DSECT Subchannel          Information Block
+                                                  4172+* Fields marked RW may be changed by MSCH.  IN indicates installed value supplied
+00000000                                          4173+SCHPMCW  DC    0XL28'00'  Words 0-6 - Path-Management-Control Word
+00000000  00000000                                4174+PMCWIP   DC    F'0'   RW  Word 0, bits 0-31 - Interruption Parameter
+00000004  00                                      4175+PMCW1_0  DC    X'00'      Word 1, bits 0-7
+                              00000038  00000001  4176+PMCWISCM EQU   X'38'  RW  Interruption Subclass Code Mask
+
+00000005  00                                      4178+PMCW1_8  DC    X'00'      Word 1, bits 8-15
+                              00000080  00000001  4179+PMCWE    EQU   X'80'  RW  Word 1, bit 8 - Subchannel Enabled
+                              00000060  00000001  4180+PMCWLM   EQU   X'60'  RW  Word 1, bits 9,10 - Limit-Mode Mask
+                              00000020  00000001  4181+PMCWLMG  EQU   X'20'  RW  Word 1, bit 9 - Address must be GE to limit
+                              00000040  00000001  4182+PMCWLML  EQU   X'40'  RW  Word 1, bit 10 - Address must be less than the limit
+                              00000018  00000001  4183+PMCWMM   EQU   X'18'  RW  Word 1, bits 11,12 - Measurement Mode Mask
+                              00000010  00000001  4184+PMCWMME  EQU   X'10'  RW  Word 1, bit 11 - Measurement Block Update Enabled
+                              00000008  00000001  4185+PMCWMMC  EQU   X'08'  RW  Word 1, bit 12 - Device Connect Time Measurement Enabled
+                              00000004  00000001  4186+PMCWM    EQU   X'04'  RW  Word 1, bit 13 - Multipath Mode Enabled
+                              00000002  00000001  4187+PMCWT    EQU   X'02'  IN  Word 1, bit 14 - Timing facility availability
+                              00000001  00000001  4188+PMCWV    EQU   X'01'  IN  Word 1, bit 15 - Device number valid
+
+00000006  0000                                    4190+PMCWDNUM DC    H'0'   IN  Word 1, bits 16-31 - Device Number
+
+00000008  00                                      4192+PMCWLPM  DC    X'00'  RW  Word 2, bits 0-7   - Logical Path Mask
+00000009  00                                      4193+PMCWPNOM DC    X'00'  RW  Word 2, bits 8-15  - Logical Path Not Operational Mask
+0000000A  00                                      4194+PMCWLPUM DC    X'00'  IN  Word 2, bits 16-23 - Logical Path Used Mask
+0000000B  00                                      4195+PMCWPIM  DC    X'00'  IN  Word 2, bits 24-31 - Path-Installed Mask
+0000000C  0000                                    4196+PMCWMBI  DC    H'0'   RW  Word 3, bits 0-15  - Measurement Block Index
+0000000E  00                                      4197+PMCWPOM  DC    X'00'  RW  Word 3, bits 16-23 - Path-Operational Mask
+0000000F  00                                      4198+PMCWPAM  DC    X'00'  IN  Word 3, bits 24-31 - Path-Available Mask
+00000010  00                                      4199+PMCWCHP0 DC    X'00'  IN  Word 3, bits 0-7   - Channel Path Identifier 0
+00000011  00                                      4200+PMCWCHP1 DC    X'00'  IN  Word 3, bits 8-15  - Channel Path Identifier 1
+00000012  00                                      4201+PMCWCHP2 DC    X'00'  IN  Word 3, bits 16-23 - Channel Path Identifier 2
+00000013  00                                      4202+PMCWCHP3 DC    X'00'  IN  Word 3, bits 24-31 - Channel Path Identifier 3
+00000014  00                                      4203+PMCWCHP4 DC    X'00'  IN  Word 4, bits 0-7   - Channel Path Identifier 4
+00000015  00                                      4204+PMCWCHP5 DC    X'00'  IN  Word 4, bits 8-15  - Channel Path Identifier 5
+00000016  00                                      4205+PMCWCHP6 DC    X'00'  IN  Word 4, bits 16-23 - Channel Path Identifier 6
+00000017  00                                      4206+PMCWCHP7 DC    X'00'  IN  Word 4, bits 24-31 - Channel Path Identifier 7
+00000018                                          4207+PMCWRES1 DC    0XL4'00'   Word 6, bits 0-31  - reserved or pre-z systems
+00000018  000000                                  4208+PMCWRES2 DC    XL3'00'    Word 6, bits 0-23  - reserved on z systems
+0000001B  00                                      4209+PMCWEXC  DC    X'00'      Word 6, bits 24-28 - reserved
+                              00000004  00000001  4210+PMCWB    EQU   X'04'  RW  Word 6, bit 29     - Measurement Block Format Control
+                              00000002  00000001  4211+PMCWX    EQU   X'02'  RW  Word 6, bit 30     - Extended Measurement Word Mode Enable
+                              00000001  00000001  4212+PMCWS    EQU   X'01'  RW  Word 6, bit 31     - Concurrent Sense Enable
+
+0000001C  00000000 00000000                       4214+SCHSCSW  DC    XL12'00'   Words 7-9 - Subchannel Status Word (See DSECT SCSW)
+00000028                                          4215+SCHMDA3  DC    0XL12'00'  Words 10-12 - Model Dependent Area on pre-z systems
+00000028  00000000 00000000                       4216+SCHMBA   DC    AD(0)  RW  Words 10,11 - Measurement Block Address
+00000030  00000000                                4217+SCHMDA1  DC    XL4'00'    Word 12 - Model Dependent Area on z systems
+                              00000034  00000001  4218+SCHIBL   EQU   *-SCHIB Length of SCHIB
+
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4221 ***********************************************************************
+                                                  4222 *        SCSW DSECT
+                                                  4223 ***********************************************************************
+
+                                                  4225          DSECTS NAME=SCSW
+                                                  4227+SCSW     DSECT Subchannel          Status Word
+00000000  00                                      4228+SCSWFLAG DC    X'00'    Flags
+                              000000F0  00000001  4229+SCSWKEYM EQU   X'F0'    Storage Key Mask of subchannel storage key
+                              00000008  00000001  4230+SCSWSUSC EQU   X'08'    Suspend Control
+                              00000004  00000001  4231+SCSWESWF EQU   X'04'    Extended Status Word Format
+                              00000003  00000001  4232+SCSWDCCM EQU   X'03'    Deferred condiont code mask
+                              00000000  00000001  4233+SCSWDCC0 EQU   X'00'    Normal I/O interruption
+                              00000001  00000001  4234+SCSWDCC1 EQU   X'01'    Deferred condition code is 1
+                              00000003  00000001  4235+SCSWDCC3 EQU   X'03'    Deferred condition code is 3
+
+00000001  00                                      4237+SCSWCTLS DC    X'00'    General Controls
+                              00000080  00000001  4238+SCSWCCWF EQU   X'80'    CCW Format control when ...
+                              00000040  00000001  4239+SCSWCCWP EQU   X'40'    CCW Prefetch Control
+                              00000020  00000001  4240+SCSWISIC EQU   X'20'    Initial-Status-Interruption Control
+                              00000010  00000001  4241+SCSWALKC EQU   X'10'    Address-Limit-Checking Control
+                              00000008  00000001  4242+SCSWSSIC EQU   X'08'    Suppress suspended interruption
+                              00000004  00000001  4243+SCSW0CC  EQU   X'04'    Zero-Condition Code
+                              00000002  00000001  4244+SCSWECWC EQU   X'02'    Extended Control Word control
+                              00000001  00000001  4245+SCSWPNOP EQU   X'01'    Path Not Operational
+
+00000002  00                                      4247+SCSW1    DC    X'00'    Control Byte 1
+                              00000070  00000001  4248+SCSWFM   EQU   X'70'    Functional Control Mask
+                              00000040  00000001  4249+SCSWFS   EQU   X'40'    Function Control - Start Function
+                              00000020  00000001  4250+SCSWFH   EQU   X'20'    Function Control - Halt Function
+                              00000010  00000001  4251+SCSWFC   EQU   X'10'    Function Control - Clear Function
+                              00000008  00000001  4252+SCSWARP  EQU   X'08'    Activity Control - Resume pending
+                              00000004  00000001  4253+SCSWASP  EQU   X'04'    Activity Control - Start pending
+                              00000002  00000001  4254+SCSWAHP  EQU   X'02'    Activity Control - Halt pending
+                              00000001  00000001  4255+SCSWACP  EQU   X'01'    Activity Control - Clear pending
+00000003  00                                      4256+SCSW2    DC    X'00'    Control Byte 2
+                              00000080  00000001  4257+SCSWASA  EQU   X'80'    Activity Control - Subchannel Active
+                              00000040  00000001  4258+SCSWADA  EQU   X'40'    Activity Control - Device Active
+                              00000020  00000001  4259+SCSWASUS EQU   X'20'    Activity Control - Suspended
+                              00000010  00000001  4260+SCSWSAS  EQU   X'10'    Status Control   - Alert Status
+                              00000008  00000001  4261+SCSWSINT EQU   X'08'    Status Control   - Intermediate Status
+                              00000004  00000001  4262+SCSWSPRI EQU   X'04'    Status Control   - Primary Status
+                              00000002  00000001  4263+SCSWSSEC EQU   X'02'    Status Control   - Secondary Status
+                              00000001  00000001  4264+SCSWSPEN EQU   X'01'    Status Control   - Status Pending
+
+00000004  00000000                                4266+SCSWCCW  DC    A(0)     CCW Address
+
+00000008  00                                      4268+SCSWUS   DC    X'00'    Unit Status
+                              00000080  00000001  4269+SCSWATTN EQU   X'80'    Attention
+                              00000040  00000001  4270+SCSWSM   EQU   X'40'    Status modifier
+                              00000020  00000001  4271+SCSWCUE  EQU   X'20'    Control-unit end
+                              00000010  00000001  4272+SCSWBUSY EQU   X'10'    Busy
+                              00000008  00000001  4273+SCSWCE   EQU   X'08'    Channel end
+                              00000004  00000001  4274+SCSWDE   EQU   X'04'    Device end
+                              00000002  00000001  4275+SCSWUC   EQU   X'02'    Unit check
+                              00000001  00000001  4276+SCSWUX   EQU   X'01'    Unit exception
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000009  00                                      4278+SCSWCS   DC    X'00'    Channel Status
+                              00000080  00000001  4279+SCSWPCI  EQU   X'80'    Program-controlled interruption
+                              00000040  00000001  4280+SCSWIL   EQU   X'40'    Incorrect length
+                              00000020  00000001  4281+SCSWPRGM EQU   X'20'    Program check
+                              00000010  00000001  4282+SCSWPROT EQU   X'10'    Protection Check
+                              00000008  00000001  4283+SCSWCDAT EQU   X'08'    Channel-data check
+                              00000004  00000001  4284+SCSWCCTL EQU   X'04'    Channel-control check
+                              00000002  00000001  4285+SCSWICTL EQU   X'02'    Interface-control check
+                              00000001  00000001  4286+SCSWCHNG EQU   X'01'    Chaining check
+
+0000000A  0000                                    4288+SCSWCNT  DC    H'0'     Residual CCW count
+                              0000000C  00000001  4289+SCSWL    EQU   *-SCSW
+
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4292 ***********************************************************************
+                                                  4293 *        (other DSECTS needed by SATK)
+                                                  4294 ***********************************************************************
+
+                                                  4296          DSECTS PRINT=OFF,NAME=(ASA,CCW0,CCW1,CSW)
+                                                  4522          PRINT ON
+
+
+
+
+
+                                                  4524 ***********************************************************************
+                                                  4525 *        Register equates
+                                                  4526 ***********************************************************************
+
+
+                              00000000  00000001  4528 R0       EQU   0
+                              00000001  00000001  4529 R1       EQU   1
+                              00000002  00000001  4530 R2       EQU   2
+                              00000003  00000001  4531 R3       EQU   3
+                              00000004  00000001  4532 R4       EQU   4
+                              00000005  00000001  4533 R5       EQU   5
+                              00000006  00000001  4534 R6       EQU   6
+                              00000007  00000001  4535 R7       EQU   7
+                              00000008  00000001  4536 R8       EQU   8
+                              00000009  00000001  4537 R9       EQU   9
+                              0000000A  00000001  4538 R10      EQU   10
+                              0000000B  00000001  4539 R11      EQU   11
+                              0000000C  00000001  4540 R12      EQU   12
+                              0000000D  00000001  4541 R13      EQU   13
+                              0000000E  00000001  4542 R14      EQU   14
+                              0000000F  00000001  4543 R15      EQU   15
+
+
+
+                                                  4545          END
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    24
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ASA                 4    000000     512  4300  3568
+ASBEGIN             U    000000       1  4301  4306  4348  4384  4393  4411  4418  4424  4428  4432  4438  4455
+ASEND               U    000200       1  4454  4455
+ASLENGTH            U    000200       1  4455
+ATESTTAB            A    000610       4  3907  3612
+BAD66PSW            D    000328       8  3701  3676
+BAD77PSW            D    000338       8  3702  3678
+BAD88PSW            D    000348       8  3703  3680
+BAD99PSW            D    000358       8  3704  3682
+BCEXTCOD            H    00001A       2  4318
+BCIOCOD             H    00003A       2  4326
+BCMCKCOD            H    000032       2  4324
+BCPGMCOD            H    00002A       2  4322
+BCSVCCOD            H    000022       2  4320
+BEGIN               U    000200       1  3575  3545
+BEGIN0              I    000246       4  3610  3598
+CAW                 F    000048       4  4330
+CAWADDR             R    000049       3  4333
+CAWKEY              X    000048       1  4331
+CAWSUSP             U    000008       1  4332
+CC                  U    000040       1  3891  3939  3947  3948  3949  3958  3959  3968  3979  3980  3989  3990
+CCW0                4    000000       8  4459  4465
+CCW0ADDR            R    000001       3  4461
+CCW0CNT             H    000006       2  4464
+CCW0CODE            X    000000       1  4460
+CCW0FLGS            X    000004       1  4462
+CCW0L               U    000008       1  4465
+CCW1                4    000000       8  4477  4482
+CCW1ADDR            A    000004       4  4481
+CCW1CNT             H    000002       2  4480
+CCW1CODE            X    000000       1  4478
+CCW1FLGS            X    000001       1  4479
+CCW1L               U    000008       1  4482
+CCWCC               U    000040       1  4469
+CCWCD               U    000080       1  4468
+CCWIDA              U    000004       1  4473
+CCWPCI              U    000008       1  4472
+CCWSKIP             U    000010       1  4471
+CCWSLI              U    000020       1  4470
+CCWSUSP             U    000002       1  4474
+CHANID              F    0000A8       4  4385
+CHKZARCH            I    000228       4  3594  3586
+CODE                2    000000    8228  3520
+CPUID               U    00031B       1  4457
+CSW                 F    000040       8  4329
+CSWATTN             U    000080       1  4499
+CSWBUSY             U    000010       1  4502
+CSWCCTL             U    000004       1  4514
+CSWCCW              R    000001       3  4496
+CSWCDAT             U    000008       1  4513
+CSWCE               U    000008       1  4503  3808
+CSWCHNG             U    000001       1  4516
+CSWCNT              H    000006       2  4518
+CSWCS               X    000005       1  4508
+CSWCUE              U    000020       1  4501
+CSWDCC0             U    000000       1  4492
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    25
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+CSWDCC1             U    000001       1  4493
+CSWDCC3             U    000003       1  4494
+CSWDCCM             U    000003       1  4491
+CSWDE               U    000004       1  4504  3808
+CSWFLAG             X    000000       1  4486
+CSWFMT              4    000000       8  4485  4519
+CSWFMTL             U    000008       1  4519
+CSWICTL             U    000002       1  4515
+CSWIL               U    000040       1  4510
+CSWKEYM             U    0000F0       1  4487
+CSWLOG              U    000004       1  4490
+CSWPCI              U    000080       1  4509
+CSWPRGM             U    000020       1  4511
+CSWPROT             U    000010       1  4512
+CSWSM               U    000040       1  4500
+CSWSUSP             U    000008       1  4489
+CSWUC               U    000002       1  4505
+CSWUS               X    000004       1  4498
+CSWUX               U    000001       1  4506
+DOSENSE             I    0003DE       4  3763  3663
+DOTEST              I    00027C       4  3634  3623
+DX                  U    000063       1  3899  3948
+E7TEST              J    000000    8228  3520  3523  3530  3543  3547  3574  3887  4038  3567
+ENADEV              I    00038A       4  3732  3713
+ENAOKAY             I    0003DC       2  3757  3746
+ERRTEST             I    0002B8       4  3661  3655
+EXCP                I    0003E2       4  3764  3639
+EXTCPUAD            H    000084       2  4350
+EXTICODE            H    000086       2  4351
+EXTIPARM            F    000080       4  4349
+EXTNPSW             F    000058       8  4339
+EXTOPSW             F    000018       8  4311  4317
+FAIL                I    0002F8       6  3687  3677  3679  3681  3683  3685
+FAILCPU0            I    0002D0       4  3676  3587  3588  3596  3604
+FAILDEV             I    0002E0       4  3680  3737  3747  3752
+FAILIO              I    0002E8       4  3682  3776  3799  3809
+FAILPSW             D    000318       8  3695  3684
+FAILSCH             I    0002D8       4  3678  3645
+FAILTEST            I    0002F0       4  3684  3652  3658  3662
+FIND0008            A    0003D4       4  3754  3732
+FINL0008            H    000394       2  3735  3751
+FINM0008            A    0003D8       4  3755  3750
+FINN0008            H    0003C2       2  3748  3739  3741
+GOODPSW             D    000308       8  3694  3628
+IDA                 U    000004       1  3893  3950  3960  3968  3969  3981  3991
+IIRB0011            F    0005A4       4  3872  3870  3871
+IMAGE               1    000000    8228     0
+INIT                I    000368       4  3710  3610
+IOCB                4    000000      48  4077  4101  3569
+IOCBCAW             A    000018       4  4097
+IOCBCM              X    000009       1  4085
+IOCBCS              X    00000B       1  4088
+IOCBCT              X    00000D       1  4090
+IOCBDEV             H    000004       2  4082  3740
+IOCBDID             F    000000       4  4079  3641  3743  3772
+IOCBDV              H    000002       2  4081
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    26
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+IOCBIRB             A    000020       8  4099  3777
+IOCBL               U    000030       1  4101
+IOCBORB             A    000018       8  4098  3711  3774
+IOCBRCNT            H    000016       2  4096  3806
+IOCBSC              X    00000E       1  4091  3770  3801  3803
+IOCBSCCW            A    000010       4  4093  3805
+IOCBSCNT            F    000014       4  4094
+IOCBSIB             A    000028       8  4100  3642  3733
+IOCBST              H    00000A       2  4086  3771  3802
+IOCBUM              X    000008       1  4084
+IOCBUS              X    00000A       1  4087  3808
+IOCBUT              X    00000C       1  4089
+IOCBWAIT            X    00000F       1  4092
+IOCBZERO            H    000006       2  4083  3771
+IOCB_A80            A    000574       4  3858  3710
+IOELADDR            F    0000AC       4  4386
+IOICODE             H    0000BA       2  4391
+IOIID               F    0000C0       4  4396
+IOINIT              I    00037C       4  3721  3712
+IOIPARM             F    0000BC       4  4395
+IOMK0007            F    000384       4  3723  3721  3722
+ION0010             3    000438      16  3787  3784
+IONPSW              F    000078       8  4343
+IOOPSW              F    000038       8  4315  4325
+IORB0011            X    000604      12  3874  3869
+IOS0010             X    000448      16  3788  3783  3791
+IOSSID              F    0000B8       4  4394  3794
+IOWT0009            H    000414       2  3781  3795  3798  3804
+IPLCCW1             F    000008       8  4303
+IPLCCW2             F    000010       8  4304
+IPLPSW              F    000000       8  4302
+IRB                 4    000000      96  4156  4160  4162  3778
+IRBECW              X    000020      32  4159
+IRBEMW              X    000040      32  4161
+IRBESW              X    00000C      20  4158
+IRBL                U    000040       1  4160
+IRBSCSW             X    000000      12  4157  3801  3802  3805  3806
+IRBXL               U    000060       1  4162
+IRST0010            H    000458       2  3790  3787
+LCHANLOG            F    0000B0       4  4387
+LR                  U    000047       1  3898  3949  3959  3980  3990
+MCKLOG              F    000100       4  4419
+MCKNPSW             F    000070       8  4342
+MCKOPSW             F    000030       8  4314  4323
+MEASUREB            X    0000B9       1  4390
+MKARCHMD            X    0000A3       1  4378
+MKARS               F    000120       4  4417
+MKCLKCMP            F    0000E0       8  4403
+MKCPUTIM            F    0000D8       8  4402
+MKCRS               F    0001C0       4  4422
+MKDMGCOD            F    0000F4       4  4406
+MKFAILA             F    0000F8       4  4408
+MKFPRS              D    000160       8  4420
+MKICODE             F    0000E8       4  4404
+MKLOGOUT            F    000100       4  4410
+MKMODEL             F    0000FC       4  4409
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    27
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+MKXSAA              F    0000D4       4  4401
+MONCLS              H    000094       2  4366
+MONCODE             F    00009C       4  4373
+MONNUMBR            X    000095       1  4368
+MPGACCID            X    0000A2       1  4376
+MSG                 I    0004A0       4  3819  3620
+MSGCMD              C    0004EA       9  3845  3832  3833
+MSGMSG              C    0004F3     128  3846  3826  3843  3824
+MSGMVC              I    0004E4       6  3843  3830
+MSGOK               I    0004B6       2  3828  3825
+MSGRET              I    0004D0       4  3839  3836
+MSGSAVE             F    0004D8       4  3842  3822  3839
+NKGRS               F    000180       4  4421
+NUMTESTS            U    000006       1  3920  3921  3907
+ORB                 4    000000      32  4109  4139  4147  3572
+ORB1_0              X    000004       1  4112
+ORB1_8              X    000005       1  4119  3766
+ORBA                U    000010       1  4123
+ORBB                U    000004       1  4125
+ORBC                U    000004       1  4115
+ORBCCW              A    000008       4  4137  3764
+ORBCSS              X    00000C       1  4141
+ORBCU               X    00000E       1  4144
+ORBD                U    000040       1  4132
+ORBF                U    000080       1  4120  3766
+ORBH                U    000002       1  4126  3766
+ORBI                U    000020       1  4122
+ORBKEYM             U    0000F0       1  4113
+ORBL                U    000080       1  4130
+ORBLEN              U    00000C       1  4139
+ORBLPM              X    000006       1  4128
+ORBM                U    000002       1  4116
+ORBP                U    000040       1  4121
+ORBPARM             F    000000       4  4110
+ORBPGM              X    00000E       1  4143
+ORBRSV25            U    00007E       1  4134
+ORBRSV26            U    00003E       1  4133
+ORBRSV3             U    00007F       1  4131
+ORBRSV4             U    000080       1  4138
+ORBRSV5             X    00000D       1  4142
+ORBRSV6             X    00000F       1  4145
+ORBRSV7             X    000010      16  4146
+ORBS                U    000008       1  4114
+ORBT                U    000001       1  4127
+ORBU                U    000008       1  4124
+ORBX                U    000001       1  4135
+ORBXLEN             U    000020       1  4147
+ORBY                U    000001       1  4117
+ORRB1_24            X    000007       1  4129  3767
+PCFETO              A    0000C4       4  4397
+PERACCID            X    0000A1       1  4375
+PERADDR             F    000098       4  4372
+PERCODE             X    000096       1  4369
+PERCODMK            U    0000F0       1  4370
+PFX                 U    0000E7       1  3901  3939  3947  3958  3968  3979  3989
+PGMACCID            X    0000A0       1  4374
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    28
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+PGMDXC              F    000090       4  4364
+PGMICODE            H    00008E       2  4363
+PGMIID              F    00008C       4  4359
+PGMIILC             X    00008D       1  4361
+PGMIILCM            U    00000C       1  4362
+PGMNPSW             F    000068       8  4341
+PGMOPSW             F    000028       8  4313  4321
+PGMTRX              F    000090       4  4365
+PMCW1_0             X    000004       1  4175
+PMCW1_8             X    000005       1  4178  3738  3744
+PMCWB               U    000004       1  4210
+PMCWCHP0            X    000010       1  4199
+PMCWCHP1            X    000011       1  4200
+PMCWCHP2            X    000012       1  4201
+PMCWCHP3            X    000013       1  4202
+PMCWCHP4            X    000014       1  4203
+PMCWCHP5            X    000015       1  4204
+PMCWCHP6            X    000016       1  4205
+PMCWCHP7            X    000017       1  4206
+PMCWDNUM            H    000006       2  4190  3740
+PMCWE               U    000080       1  4179  3744
+PMCWEXC             X    00001B       1  4209
+PMCWIP              F    000000       4  4174
+PMCWISCM            U    000038       1  4176
+PMCWLM              U    000060       1  4180
+PMCWLMG             U    000020       1  4181
+PMCWLML             U    000040       1  4182
+PMCWLPM             X    000008       1  4192
+PMCWLPUM            X    00000A       1  4194
+PMCWM               U    000004       1  4186
+PMCWMBI             H    00000C       2  4196
+PMCWMM              U    000018       1  4183
+PMCWMMC             U    000008       1  4185
+PMCWMME             U    000010       1  4184
+PMCWPAM             X    00000F       1  4198
+PMCWPIM             X    00000B       1  4195
+PMCWPNOM            X    000009       1  4193
+PMCWPOM             X    00000E       1  4197
+PMCWRES1            X    000018       4  4207
+PMCWRES2            X    000018       3  4208
+PMCWS               U    000001       1  4212
+PMCWT               U    000002       1  4187
+PMCWV               U    000001       1  4188  3738
+PMCWX               U    000002       1  4211
+R0                  U    000000       1  4528  3567  3568  3576  3584  3595  3602  3619  3622  3636  3637  3763  3764  3765  3812
+                                               3819  3822  3824  3826  3828  3839
+R1                  U    000001       1  4529  3578  3583  3619  3637  3641  3833  3843
+R10                 U    00000A       1  4538  3612  3616  3619  3622  3624
+R11                 U    00000B       1  4539  3612  3626
+R12                 U    00000C       1  4540
+R13                 U    00000D       1  4541
+R14                 U    00000E       1  4542  3610  3620  3623  3634  3665  3666  3714  3820  3840
+R15                 U    00000F       1  4543  3639  3663  3712  3713  3725  3757  3813
+R2                  U    000002       1  4530  3579  3622  3654  3822  3828  3829  3830  3832  3839
+R3                  U    000003       1  4531  3569  3580  3582  3584  3601  3602  3710
+R4                  U    000004       1  4532  3570  3594  3595  3598  3599  3642  3644  3765  3812
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    29
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R5                  U    000005       1  4533  3571  3649
+R6                  U    000006       1  4534
+R7                  U    000007       1  4535
+R8                  U    000008       1  4536  3572  3711
+R9                  U    000009       1  4537  3676  3678  3680  3682  3684  3687  3688
+RD                  U    000006       1  3896  3950  3960  3981
+RDMT                U    000086       1  3900  3991
+RSD                 U    00003E       1  3897  3940  3969
+RSTNPSW             F    000000       8  4307
+RSTOPSW             F    000008       8  4308
+SCANOUT             X    000080       1  4345  4346
+SCANOUTL            U    000000       1  4346
+SCHIB               4    000000      52  4171  4218  3570  3734
+SCHIBL              U    000034       1  4218
+SCHMBA              A    000028       8  4216
+SCHMDA1             X    000030       4  4217
+SCHMDA3             X    000028      12  4215
+SCHPMCW             X    000000      28  4173
+SCHSCSW             X    00001C      12  4214  3649
+SCSW                4    000000      12  4227  4289  3571
+SCSW0CC             U    000004       1  4243
+SCSW1               X    000002       1  4247
+SCSW2               X    000003       1  4256  3801
+SCSWACP             U    000001       1  4255
+SCSWADA             U    000040       1  4258
+SCSWAHP             U    000002       1  4254
+SCSWALKC            U    000010       1  4241
+SCSWARP             U    000008       1  4252
+SCSWASA             U    000080       1  4257
+SCSWASP             U    000004       1  4253
+SCSWASUS            U    000020       1  4259
+SCSWATTN            U    000080       1  4269
+SCSWBUSY            U    000010       1  4272
+SCSWCCTL            U    000004       1  4284
+SCSWCCW             A    000004       4  4266  3805
+SCSWCCWF            U    000080       1  4238
+SCSWCCWP            U    000040       1  4239
+SCSWCDAT            U    000008       1  4283
+SCSWCE              U    000008       1  4273  3657  3661
+SCSWCHNG            U    000001       1  4286
+SCSWCNT             H    00000A       2  4288  3806
+SCSWCS              X    000009       1  4278  3651
+SCSWCTLS            X    000001       1  4237
+SCSWCUE             U    000020       1  4271
+SCSWDCC0            U    000000       1  4233
+SCSWDCC1            U    000001       1  4234
+SCSWDCC3            U    000003       1  4235
+SCSWDCCM            U    000003       1  4232
+SCSWDE              U    000004       1  4274  3657  3661
+SCSWECWC            U    000002       1  4244
+SCSWESWF            U    000004       1  4231
+SCSWFC              U    000010       1  4251
+SCSWFH              U    000020       1  4250
+SCSWFLAG            X    000000       1  4228
+SCSWFM              U    000070       1  4248
+SCSWFS              U    000040       1  4249
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    30
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SCSWICTL            U    000002       1  4285
+SCSWIL              U    000040       1  4280
+SCSWISIC            U    000020       1  4240
+SCSWKEYM            U    0000F0       1  4229
+SCSWL               U    00000C       1  4289
+SCSWPCI             U    000080       1  4279
+SCSWPNOP            U    000001       1  4245
+SCSWPRGM            U    000020       1  4281
+SCSWPROT            U    000010       1  4282
+SCSWSAS             U    000010       1  4260
+SCSWSINT            U    000008       1  4261
+SCSWSM              U    000040       1  4270
+SCSWSPEN            U    000001       1  4264
+SCSWSPRI            U    000004       1  4262  3803
+SCSWSSEC            U    000002       1  4263
+SCSWSSIC            U    000008       1  4242
+SCSWSUSC            U    000008       1  4230
+SCSWUC              U    000002       1  4275
+SCSWUS              X    000008       1  4268  3657  3661  3802
+SCSWUX              U    000001       1  4276
+SENSEPGM            R    000698       1  3932  3763
+SLI                 U    000020       1  3892  3932  3939  3940  3947  3948  3949  3950  3958  3959  3960  3968  3969  3979  3980
+                                               3981  3989  3990  3991
+SNS                 U    000004       1  3895  3932
+SNSBYTES            X    000970      32  3999  3932
+SSARCHMD            X    0000A3       1  4377
+SSARS               F    000120       4  4433
+SSCLKCMP            F    0000E0       8  4427
+SSCPUTIM            F    0000D8       8  4426
+SSCRS               F    0001C0       4  4436
+SSFPRS              D    000160       8  4434
+SSGRS               F    000180       4  4435
+SSMODEL             F    00010C       4  4431
+SSPREFIX            F    000108       4  4430
+SSPSW               F    000100       8  4429
+SSXSAA              A    0000D4       4  4425
+STFLDATA            F    0000C8       4  4398
+SVCICODE            H    00008A       2  4357
+SVCIID              F    000088       4  4353
+SVCIILC             X    000089       1  4355
+SVCIILCM            U    00000C       1  4356
+SVCNPSW             F    000060       8  4340
+SVCOPSW             F    000020       8  4312  4319
+T1_3EBUF            X    0009DC     256  4010  3940
+T1_CHPGM            R    0006E0       1  3939  3913
+T1_DESC             C    0006A0      62  3936  3937  3913
+T1_E7DAT            X    000990      12  4003  4009  3939
+T1_E7LEN            U    00004C       1  4009  3939
+T1_MSGLN            U    00003E       1  3937  3913
+T2_06BUF            X    000B3C      10  4017  3950  3951
+T2_06IDA            A    000768       8  3951  3950
+T2_47DAT            X    000B2C      16  4016  3949
+T2_63DAT            X    000B1C      16  4015  3948
+T2_CHPGM            R    000748       1  3947  3914
+T2_DESC             C    0006F0      85  3944  3945  3914
+T2_E7DAT            X    000ADC      64  4014  3947
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    31
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+T2_MSGLN            U    000055       1  3945  3914
+T3_06BUF            X    000B96      10  4027  3960  3961
+T3_06IDA            A    0007E0       8  3961  3960
+T3_47DAT            X    000B86      16  4026  3959
+T3_CHPGM            R    0007C8       1  3958  3915
+T3_DESC             C    000770      86  3955  3956  3915
+T3_E7DAT            X    000B46      64  4021  3958
+T3_MSGLN            U    000056       1  3956  3915
+T4_3EBUF            X    000BA0     256  4032  3969  3972
+T4_3EIDA            A    000860       8  3972  3969
+T4_CHPGM            R    000840       1  3968  3916
+T4_DESC             C    0007E8      86  3965  3966  3916
+T4_E7DAT            X    001FD8      76  4039  3968
+T4_E7DAT_PART1      X    001FD8      40  4040  3970
+T4_E7DAT_PART1_LEN
+                    U    000028       1  4036  4037  4038  4040
+T4_E7DAT_PART2      X    002000      36  4044  3971
+T4_E7DAT_PART2_LEN
+                    U    000024       1  4037  4044
+T4_E7DAT_TOTAL_LEN
+                    U    00004C       1  4035  4037  4039
+T4_E7IDA            A    000850       8  3970  3968
+T4_MSGLN            U    000056       1  3966  3916
+T4_ORG              U    000CA0       1  4034  4048
+T5_06BUF            X    000CF0      10  4059  3981  3982
+T5_06IDA            A    0008F0       8  3982  3981
+T5_47DAT            X    000CE0      16  4058  3980
+T5_CHPGM            R    0008D8       1  3979  3917
+T5_DESC             C    000868     111  3976  3977  3917
+T5_E7DAT            X    000CA0      64  4053  3979
+T5_MSGLN            U    00006F       1  3977  3917
+T6_47DAT            X    000D3A      16  4068  3990
+T6_86BUF            X    000D4A      10  4069  3991  3992
+T6_86IDA            A    000968       8  3992  3991
+T6_CHPGM            R    000950       1  3989  3918
+T6_DESC             C    0008F8      81  3986  3987  3918
+T6_E7DAT            X    000CFA      64  4063  3989
+T6_MSGLN            U    000051       1  3987  3918
+TESTLEN             U    000014       1  3921  3619  3624
+TESTLOOP            I    00024E       4  3614  3626
+TESTNEXT            I    000270       4  3624  3617
+TESTNUM             U    000200       1  3908  3577  3636  3687
+TESTOK              I    0002C4       4  3665  3659
+TESTONLY            R    000FFF       1  3888  3614  3616
+TESTR14             A    0002CC       4  3668  3634  3665
+TESTTAB             A    000618       4  3911  3921  3907
+TESTTHIS            I    000260       4  3619  3615
+TIMER               F    000050       4  4336
+TTDES               F    000054       4  4337
+UA0                 F    000010       8  4309
+UA1                 F    00004C       4  4334
+UA2                 F    0000A4       4  4379
+UA3                 F    0000B4       4  4388
+UA4                 X    0000B8       1  4389
+UA5                 X    0000CC       8  4399
+UA6                 X    0000EC       8  4405
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    32
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+UA7                 F    000118       8  4416
+UA8                 X    000180      32  4445
+WKSTORG             U    000610       1  3886  3889
+WPSW0010            3    000428      16  3786  3785
+ZARCHOK             I    000232       4  3598  3585
+ZBRKADDR            A    000110       8  4415
+ZEMONCNT            F    00010C       4  4414
+ZEMONCTR            A    000100       8  4412
+ZEMONSIZ            F    000108       4  4413
+ZEXTNPSW            X    0001B0      16  4448
+ZEXTOPSW            X    000130      16  4440
+ZIONPSW             X    0001F0      16  4452
+ZIOOPSW             X    000170      16  4444
+ZMCKNPSW            X    0001E0      16  4451
+ZMCKOPSW            X    000160      16  4443
+ZMKFAILA            F    0000F8       8  4407
+ZMONCODE            F    0000B0       8  4382
+ZPGMNPSW            X    0001D0      16  4450
+ZPGMOPSW            X    000150      16  4442
+ZPGMTRX             F    0000A8       8  4381
+ZRSTNPSW            X    0001A0      16  4447
+ZRSTOPSW            X    000120      16  4439
+ZSASDISP            U    0011C0       1  4453
+ZSVCNPSW            X    0001C0      16  4449
+ZSVCOPSW            X    000140      16  4441
+=AL2(L'MSGMSG)      R    000692       2  3925  3824
+=H'0'               H    000690       2  3924  3819
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    33
+
+ MACRO    DEFN  REFERENCES
+
+ANTR       115
+APROB      247
+ARCHIND    407   3437
+ARCHLVL    548   3436
+ASAIPL     674
+ASALOAD    754   3519
+ASAREA     809   4299
+ASAZAREA   994
+CPUWAIT   1077   3782
+DSECTS    1403   4075   4107   4154   4169   4225   4296
+DWAIT     1606
+DWAITEND  1663
+ENADEV    1671   3731
+ESA390    1771
+IOCB      1782   3857
+IOCBDS    1958   4076
+IOFMT     1992   4108   4155   4170   4226   4458   4476   4484
+IOINIT    2330   3720
+IOTRFR    2371
+ORB       2419   3873
+POINTER   2608
+PSWFMT    2636
+RAWAIT    2770
+RAWIO     2866   3769
+SIGCPU    3024
+SMMGR     3082
+SMMGRB    3182
+TRAP128   3231   3531
+TRAP64    3208   3521   3524
+TRAPS     3244
+ZARCH     3318
+ZEROH     3330
+ZEROL     3358
+ZEROLH    3386
+ZEROLL    3409
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    34
+
+   DESC    SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE   8228  0000-2023  0000-2023
+  Region   CODE    8228  0000-2023  0000-2023
+    CSECT  E7TEST  8228  0000-2023  0000-2023
+ASMA Ver. 0.2.1                         GitHub Issue #572 Prefix CCW tests                          29 Jun 2023 05:16:07  Page    35
+
+   STMT                                             FILE NAME
+
+1     C:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\E7Prefix\E7Prefix.asm
+2     C:\Users\Fish\Documents\Visual Studio 2008\Projects\Hercules\_Git\_Harold\SATK-0\srcasm\satk.mac
+
+
+** NO ERRORS FOUND **
+
+

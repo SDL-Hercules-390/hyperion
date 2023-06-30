@@ -1610,6 +1610,9 @@
     <None Include="util\zzsacard.bin">
       <Filter>Other Files\Utilities</Filter>
     </None>
+    <None Include="tests\3390.cckd64">
+      <Filter>Other Files\tests</Filter>
+    </None>
     <None Include="tests\awsbsf.aws">
       <Filter>Other Files\tests</Filter>
     </None>
@@ -1746,6 +1749,9 @@
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\CUSE-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\E7Prefix.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\dfp-080-from-packed.core">
@@ -2078,6 +2084,9 @@
     <None Include="tests\CUSE-02-performance.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\E7Prefix.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\dfp-080-from-packed.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2336,6 +2345,9 @@
     <None Include="tests\CUSE-02-performance.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\E7Prefix.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\dfp-080-from-packed.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2556,6 +2568,12 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\CUSE-02-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\E7Prefix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\E7Prefix.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\dfp-080-from-packed.list">
