@@ -989,6 +989,9 @@
     <None Include="readme\README.COMMADPT.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="readme\README.DAEMON.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.DYNMOD.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
@@ -4115,6 +4118,9 @@
       <Filter>Other Files\DOC\html\images</Filter>
     </Image>
     <Image Include="readme\images\herclogo.jpg">
+      <Filter>Other Files\DOC\README\images</Filter>
+    </Image>
+    <Image Include="readme\images\httpsrvr.jpg">
       <Filter>Other Files\DOC\README\images</Filter>
     </Image>
     <Image Include="readme\images\image_header_herculeshyperionSDL.png">

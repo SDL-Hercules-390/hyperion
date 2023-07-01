@@ -692,6 +692,7 @@
     <None Include="readme\README.CCKD64.md" />
     <None Include="readme\README.CMPSC.md" />
     <None Include="readme\README.COMMADPT.md" />
+    <None Include="readme\README.DAEMON.md" />
     <None Include="readme\README.DYNMOD.md" />
     <None Include="readme\README.ECPSVM.md" />
     <None Include="readme\README.EXTPKG.md" />
@@ -1578,6 +1579,7 @@
     <Image Include="html\images\waitoffu.gif" />
     <Image Include="html\images\waitonu.gif" />
     <Image Include="readme\images\herclogo.jpg" />
+    <Image Include="readme\images\httpsrvr.jpg" />
     <Image Include="readme\images\image_header_herculeshyperionSDL.png" />
   </ItemGroup>
   <ItemGroup>

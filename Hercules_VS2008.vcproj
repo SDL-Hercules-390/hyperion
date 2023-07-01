@@ -2111,6 +2111,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\readme\README.DAEMON.md"
+						>
+					</File>
+					<File
 						RelativePath=".\readme\README.DYNMOD.md"
 						>
 					</File>
@@ -2227,6 +2231,10 @@
 						>
 						<File
 							RelativePath=".\readme\images\herclogo.jpg"
+							>
+						</File>
+						<File
+							RelativePath=".\readme\images\httpsrvr.jpg"
 							>
 						</File>
 						<File
