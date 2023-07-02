@@ -469,27 +469,47 @@ RADR    raddr;                          /* Real storage address      */
 RADR    aaddr;                          /* Absolute storage address  */
 size_t  totamt;                         /* Total amount to be dumped */
 int     len;                            /* Number of bytes to alter  */
-int     i;                              /* Loop counter              */
+int     i, n;                           /* Loop counters             */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[64];                        /* MSGBUF work buffer        */
-char    absorr[8];                      /* Uppercase command         */
+char    cmd;
 
-    UNREFERENCED(argc);
-    UNREFERENCED(cmdline);
+    UNREFERENCED( argc );
 
-    /* We require only one operand */
-    if (argc != 2)
+    /* Ensure a minimum length command */
+    if (0
+        || !cmdline
+        || strlen( cmdline ) < 3
+    )
     {
         // "Missing or invalid argument(s)"
         WRMSG( HHC17000, "E" );
         return;
     }
 
-    /* Convert command to uppercase */
-    for (i = 0; argv[0][i]; i++)
-        absorr[i] = toupper((unsigned char)argv[0][i]);
-    absorr[i] = 0;
-    opnd = argv[1];
+    /* Convert entire command line to uppercase */
+    string_to_upper( cmdline );
+
+    /* Remove intervening blanks from command's operand(s),
+       being careful to stop at the '#' comment if present.
+    */
+    i = n = 2;
+    while (cmdline[n])
+    {
+        // Skip past blanks until next non-blank
+        while (cmdline[n] && cmdline[n] == ' ') ++n;
+
+        if (!cmdline[n] || cmdline[n] == '#')
+            break; // (STOP!)
+
+        // Copy chars until next blank or end of string
+        while (cmdline[n] && cmdline[n] != ' ')
+            cmdline[i++] = cmdline[n++];
+    }
+    cmdline[i] = 0; /* (terminate the [maybe] modified string) */
+
+    cmd  = cmdline[0];
+    opnd = &cmdline[2];
 
     /* Set limit for address range */
   #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -505,7 +525,7 @@ char    absorr[8];                      /* Uppercase command         */
     if (regs->mainlim == 0)
     {
         // "%c:"F_RADR"  Storage address is not valid"
-        WRMSG( HHC02327, "E", absorr[0], saddr );
+        WRMSG( HHC02327, "E", cmd, saddr );
         return;
     }
 
@@ -518,7 +538,7 @@ char    absorr[8];                      /* Uppercase command         */
             raddr = saddr + i;
 
             /* Convert real address to absolute address */
-            if ('R' == absorr[0])
+            if ('R' == cmd)
                 aaddr = APPLY_PREFIXING (raddr, regs->PX);
             else
                 aaddr = raddr; /* (is already absolute) */
@@ -560,7 +580,7 @@ char    absorr[8];                      /* Uppercase command         */
                 pageamt = totamt;
 
             /* Convert real address to absolute address */
-            if ('R' == absorr[0])
+            if ('R' == cmd)
                 aaddr = APPLY_PREFIXING( raddr, regs->PX );
             else
                 aaddr = raddr; /* (is already absolute) */
@@ -583,7 +603,7 @@ char    absorr[8];                      /* Uppercase command         */
 
             /* Now hexdump that absolute page */
             VERIFY( ARCH_DEP( dump_abs_page )( regs, aaddr, raddr,
-                pageoff, pageamt, absorr[0], addrwid ) == 0);
+                pageoff, pageamt, cmd, addrwid ) == 0);
 
             /* Check if we're done */
             if (!(totamt -= pageamt))
@@ -632,7 +652,7 @@ RADR    raddr;                          /* Real storage address      */
 RADR    aaddr;                          /* Absolute storage address  */
 int     stid;                           /* Segment table indication  */
 int     len;                            /* Number of bytes to alter  */
-int     i;                              /* Loop counter              */
+int     i, n;                           /* Loop counters             */
 int     arn = 0;                        /* Access register number    */
 U16     xcode;                          /* Exception code            */
 char    trans[16];                      /* Address translation mode  */
@@ -641,19 +661,43 @@ char    buf[96];                        /* Message buffer            */
 char    type;                           /* optional addr-space type  */
 size_t  totamt;                         /* Total amount to be dumped */
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    /* We require only one operand */
-    if (argc != 1)
+    /* Ensure a minimum length command */
+    if (0
+        || !cmdline
+        || strlen( cmdline ) < 3
+    )
     {
         // "Missing or invalid argument(s)"
         WRMSG( HHC17000, "E" );
         return;
     }
 
+    /* Convert entire command line to uppercase */
+    string_to_upper( cmdline );
+
+    /* Remove intervening blanks from command's operand(s),
+       being careful to stop at the '#' comment if present.
+    */
+    i = n = 2;
+    while (cmdline[n])
+    {
+        // Skip past blanks until next non-blank
+        while (cmdline[n] && cmdline[n] == ' ') ++n;
+
+        if (!cmdline[n] || cmdline[n] == '#')
+            break; // (STOP!)
+
+        // Copy chars until next blank or end of string
+        while (cmdline[n] && cmdline[n] != ' ')
+            cmdline[i++] = cmdline[n++];
+    }
+    cmdline[i] = 0; /* (terminate the [maybe] modified string) */
+
     /* Parse optional address-space prefix */
-    opnd = argv[0];
-    type = toupper( (unsigned char)*opnd );
+    opnd = &cmdline[2];
+    type = *opnd;
 
     if (1
         && type != 'P'
