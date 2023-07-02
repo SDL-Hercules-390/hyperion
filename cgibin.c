@@ -1721,7 +1721,7 @@ U32 addr = 0;
 
     hprintf(webblk->sock,"\"address\":\"%8.8X\",",addr);
     hprintf(webblk->sock,"\"fullwords\":\"%d\",",fw);
-    hprintf(webblk->sock,"\"mainsize\": %ld,",sysblk.mainsize);
+    hprintf(webblk->sock,"\"mainsize\": %"PRId64",",sysblk.mainsize);
 
     size = fw * 4;
 

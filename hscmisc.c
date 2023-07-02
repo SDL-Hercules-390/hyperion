@@ -475,6 +475,7 @@ char    buf[64];                        /* MSGBUF work buffer        */
 char    cmd;
 
     UNREFERENCED( argc );
+    UNREFERENCED( argv );
 
     /* Ensure a minimum length command */
     if (0
@@ -661,7 +662,8 @@ char    buf[96];                        /* Message buffer            */
 char    type;                           /* optional addr-space type  */
 size_t  totamt;                         /* Total amount to be dumped */
 
-    UNREFERENCED( cmdline );
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
 
     /* Ensure a minimum length command */
     if (0
