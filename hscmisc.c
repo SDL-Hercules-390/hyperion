@@ -470,12 +470,12 @@ RADR    aaddr;                          /* Absolute storage address  */
 size_t  totamt;                         /* Total amount to be dumped */
 int     len;                            /* Number of bytes to alter  */
 int     i, n;                           /* Loop counters             */
+int     opidx;                          /* cmdline index to operands */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[64];                        /* MSGBUF work buffer        */
 char    cmd;
 
     UNREFERENCED( argc );
-    UNREFERENCED( argv );
 
     /* Ensure a minimum length command */
     if (0
@@ -494,7 +494,7 @@ char    cmd;
     /* Remove intervening blanks from command's operand(s),
        being careful to stop at the '#' comment if present.
     */
-    i = n = 2;
+    i = n = opidx = str_caseless_eq( argv[0], "abs" ) ? 4 : 2;
     while (cmdline[n])
     {
         // Skip past blanks until next non-blank
@@ -510,7 +510,7 @@ char    cmd;
     cmdline[i] = 0; /* (terminate the [maybe] modified string) */
 
     cmd  = cmdline[0];
-    opnd = &cmdline[2];
+    opnd = &cmdline[ opidx ];
 
     /* Set limit for address range */
   #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
