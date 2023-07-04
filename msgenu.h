@@ -949,7 +949,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01083 "%1d:%04X COMM: cthread - socket write available"
 #define HHC01084 "%1d:%04X COMM: set mode %s"
 #define HHC01085 "%1d:%04X COMM: default command prefixes exhausted"
-#define HHC01086 "%1d:%04X COMM: device %1d:%04X already using prefix %s"
+#define HHC01086 "%1d:%04X COMM: device %1d:%04X already using prefix '%s'"
 //efine HHC01087 (available)
 //efine HHC01088 (available)
 //efine HHC01089 (available)

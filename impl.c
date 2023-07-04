@@ -831,6 +831,13 @@ int     rc;
     sysblk.logoptnotime = 0;
     sysblk.logoptnodate = 1;
 
+    sysblk.num_pfxs  = (int) strlen( DEF_CMDPREFIXES );
+    sysblk.cmd_pfxs  = malloc( sysblk.num_pfxs );
+    sysblk.used_pfxs = malloc( sysblk.num_pfxs );
+
+    memcpy( sysblk.cmd_pfxs, DEF_CMDPREFIXES, sysblk.num_pfxs );
+    memset( sysblk.used_pfxs,       0,        sysblk.num_pfxs );
+
     /* Initialize program name and version strings arrays */
     init_progname( argc, argv );
     init_sysblk_version_str_arrays( NULL );

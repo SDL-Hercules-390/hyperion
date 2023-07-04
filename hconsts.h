@@ -630,4 +630,10 @@
 #define IOBUF_MINSIZE       65536         /* Multiple of IOBUF_ALIGN */
 #define IOBUF_INCREASE      1048576       /* Multiple of IOBUF_ALIGN */
 
+/*-------------------------------------------------------------------*/
+/*         Default command prefixes for Integrated Consoles          */
+/*-------------------------------------------------------------------*/
+
+#define DEF_CMDPREFIXES     "/`=~@$%^&_:?0123456789"
+
 #endif // _HCONSTS_H

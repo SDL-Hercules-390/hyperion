@@ -94,6 +94,17 @@
   "to the console (such as when entering a password), simply prefix the\n"      \
   "reply with a '\\' backslash.\n"
 
+#define iconpfxs_cmd_desc       "Default integrated console prefix characters"
+#define iconpfxs_cmd_help       \
+                                \
+  "Format: \"ICONPFXS [string | *]\" where 'string' is the new list of\n"       \
+  "prefix characters you wish to use as the defaults for integrated console\n"  \
+  "devices. Refer to documentation for 1052-C and 3215-C devices for what\n"    \
+  "prefix characters are used for. Each character in the list must be unique.\n"\
+  "The default list is \""DEF_CMDPREFIXES"\". Enter the command with\n"         \
+  "no arguments to display the current list. Use '*' to reset the list to\n"   \
+  "its original default value.\n"
+
 #define hash_cmd_desc           "Silent comment"
 #define star_cmd_desc           "Loud comment"
 
@@ -2108,6 +2119,7 @@ COMMAND( "evm",                     ecpsvm_cmd,             SYSCMDNOPER,        
 COMMAND( "!message",                g_cmd,                  SYSCMD,             bangmsg_cmd_desc,       bangmsg_cmd_help    )
 COMMAND( ".reply",                  g_cmd,                  SYSCMD,             reply_cmd_desc,         reply_cmd_help      )
 COMMAND( "\\reply",                 g_cmd,                  SYSCMD,             supp_reply_cmd_desc,    supp_reply_cmd_help )
+COMMAND( "iconpfxs",                iconpfxs_cmd,           SYSCMD,             iconpfxs_cmd_desc,      iconpfxs_cmd_help   )
 COMMAND( "scpecho",                 scpecho_cmd,            SYSCMD,             scpecho_cmd_desc,       scpecho_cmd_help    )
 COMMAND( "scpimply",                scpimply_cmd,           SYSCMD,             scpimply_cmd_desc,      scpimply_cmd_help   )
 COMMAND( "ssd",                     ssd_cmd,                SYSCMD,             ssd_cmd_desc,           ssd_cmd_help        )

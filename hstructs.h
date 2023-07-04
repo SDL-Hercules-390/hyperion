@@ -936,6 +936,10 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         CHPBLK *firstchp;               /* -> First channel path     */
         LOCK    dasdcache_lock;         /* Global DASD caching lock  */
 
+        int     num_pfxs;               /* Number  command prefixes  */
+        char*   cmd_pfxs;               /* Default command prefixes  */
+        char*   used_pfxs;              /* Used    command prefixes  */
+
         /*-----------------------------------------------------------*/
         /*      I/O Management                                       */
         /*-----------------------------------------------------------*/

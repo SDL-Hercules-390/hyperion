@@ -8478,6 +8478,138 @@ int cmdsep_cmd( int argc, char* argv[], char* cmdline )
     return rc;
 }
 
+/*-------------------------------------------------------------------*/
+/* iconpfxs -- define integrated console prefix characters           */
+/*-------------------------------------------------------------------*/
+int iconpfxs_cmd( int argc, char* argv[], char* cmdline )
+{
+    int    rc = 0;
+    int    num_pfxs;                    /* Number  command prefixes  */
+    char*  cmd_pfxs;                    /* Default command prefixes  */
+    char*  used_pfxs;                   /* Used    command prefixes  */
+
+    UNREFERENCED( cmdline );
+
+    UPPER_ARGV_0( argv );
+
+    /* Display current settings? */
+    if (argc == 1)
+    {
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], sysblk.cmd_pfxs );
+        return 0;
+    }
+
+    /* Too many arguments? */
+    if (argc > 2)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    /* Reset list back to its original default? */
+    if (str_eq( argv[1], "*" ))
+    {
+        num_pfxs  = (int) strlen( DEF_CMDPREFIXES );
+        cmd_pfxs  = malloc( num_pfxs );
+        used_pfxs = malloc( num_pfxs );
+
+        if (!cmd_pfxs || !used_pfxs)
+        {
+            free( cmd_pfxs );
+            free( used_pfxs );
+
+            // "Out of memory"
+            WRMSG( HHC00152, "E" );
+            return -1;
+        }
+
+        memcpy( cmd_pfxs, DEF_CMDPREFIXES, num_pfxs );
+    }
+    else
+    {
+        char*    p;
+        size_t   i;
+
+        /* Define new set of command prefixes */
+
+        num_pfxs = (int) strlen( argv[1] );
+        ASSERT( num_pfxs > 0 );
+
+        /* Verify each character is unique */
+
+        for (i=0; i < num_pfxs-1; ++i)
+        {
+            p = memchr( &argv[1][i+1], argv[1][i], num_pfxs-i-1 );
+
+            if (p)
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[1], "" );
+                return -1;
+            }
+        }
+
+        cmd_pfxs  = malloc( num_pfxs );
+        used_pfxs = malloc( num_pfxs );
+
+        if (!cmd_pfxs || !used_pfxs)
+        {
+            free( cmd_pfxs );
+            free( used_pfxs );
+
+            // "Out of memory"
+            WRMSG( HHC00152, "E" );
+            return -1;
+        }
+
+        memcpy( cmd_pfxs, argv[1], num_pfxs );
+    }
+
+    OBTAIN_INTLOCK( NULL );
+    {
+        DEVBLK*  dev;
+        char*    p;
+        size_t   i;
+
+        /* Ensure the new "used" list is set accurately */
+
+        memset( used_pfxs, 0, num_pfxs );
+
+        for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
+        {
+            /* Is this device's prefix char in the new list? */
+            if (IS_INTEGRATED_CONS( dev ))
+            {
+                p = memchr( cmd_pfxs, dev->filename[0], num_pfxs );
+
+                if (p)
+                {
+                    i = (p - cmd_pfxs);
+                    used_pfxs[i] = TRUE;
+                }
+            }
+        }
+
+        /* Update sysblk with the new values */
+
+        sysblk.num_pfxs = num_pfxs;
+
+        free( sysblk.cmd_pfxs  );
+        free( sysblk.used_pfxs );
+
+        sysblk.cmd_pfxs  = cmd_pfxs;
+        sysblk.used_pfxs = used_pfxs;
+    }
+    RELEASE_INTLOCK( NULL );
+
+    // "%-14s set to %s"
+    WRMSG( HHC02204, "I", argv[0], sysblk.cmd_pfxs );
+
+    return 0;
+}
+
 #if defined( _FEATURE_SYSTEM_CONSOLE )
 /*-------------------------------------------------------------------*/
 /* ssd - signal shutdown command                                     */

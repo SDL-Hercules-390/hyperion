@@ -75,37 +75,6 @@ static BYTE  con1052_immed [256] =
 #endif
 
 /*-------------------------------------------------------------------*/
-/*                   Default Command Prefixes                        */
-/*-------------------------------------------------------------------*/
-static const char default_pfxs[] =
-{
-    0x2F,       //      /       slash
-    0x60,       //      `       backtick
-    0x3D,       //      =       equals
-    0x7E,       //      ~       tilde
-    0x40,       //      @       at sign
-    0x24,       //      $       dollar
-    0x25,       //      %       percent
-    0x5E,       //      ^       caret
-    0x26,       //      &       ampersand
-    0x5F,       //      _       underline
-    0x3A,       //      :       colon
-    0x3F,       //      ?       question
-    0x30,       //      0       zero
-    0x31,       //      1       one
-    0x32,       //      2       two
-    0x33,       //      3       three
-    0x34,       //      4       four
-    0x35,       //      5       five
-    0x36,       //      6       six
-    0x37,       //      7       seven
-    0x38,       //      8       eight
-    0x39,       //      9       nine
-};
-
-static char used_pfxs[ sizeof( default_pfxs ) ] = {0};
-
-/*-------------------------------------------------------------------*/
 /*             CLOSE THE 1052/3215 DEVICE HANDLER                    */
 /*-------------------------------------------------------------------*/
 static int con1052_close_device( DEVBLK *dev )
@@ -118,12 +87,12 @@ static int con1052_close_device( DEVBLK *dev )
     char* p;
     size_t i;
 
-    p = memchr( default_pfxs, dev->filename[0], sizeof( default_pfxs ));
+    p = memchr( sysblk.cmd_pfxs, dev->filename[0], sysblk.num_pfxs );
 
     if (p)
     {
-        i = (p - default_pfxs);
-        used_pfxs[i] = FALSE;
+        i = (p - sysblk.cmd_pfxs);
+        sysblk.used_pfxs[i] = FALSE;
     }
 
     dev->fd = -1;   /* device has now been closed */
@@ -213,7 +182,8 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
     /* Set default command prefix if one wasn't specified */
     if (!dev->filename[0])
     {
-        p = memchr( used_pfxs, 0, sizeof( used_pfxs ));
+        /* Locate an unused command prefix */
+        p = memchr( sysblk.used_pfxs, 0, sysblk.num_pfxs );
 
         if (!p)
         {
@@ -222,9 +192,9 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
             return -1;
         }
 
-        i = (p - used_pfxs);
-        used_pfxs[i] = TRUE;
-        dev->filename[0] = default_pfxs[i];
+        i = (p - sysblk.used_pfxs);
+        sysblk.used_pfxs[i] = TRUE;
+        dev->filename[0] = sysblk.cmd_pfxs[i];
         dev->filename[1] = 0;
     }
 
@@ -249,7 +219,7 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
 
             if (strncmp( our_pfx, their_pfx, shorter_pfxlen ) == 0)
             {
-                // "%1d:%04X COMM: device %1d:%04X already using prefix %s"
+                // "%1d:%04X COMM: device %1d:%04X already using prefix '%s'"
                 WRMSG( HHC01086, "E",
                     SSID_TO_LCSS( our_dev   -> ssid ), our_dev   -> devnum,
                     SSID_TO_LCSS( their_dev -> ssid ), their_dev -> devnum,
@@ -265,12 +235,12 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
        prefixes, then mark that command prefix character as
        being used and no longer available for use.
     */
-    p = memchr( default_pfxs, our_pfx[0], sizeof( default_pfxs ));
+    p = memchr( sysblk.cmd_pfxs, our_pfx[0], sysblk.num_pfxs );
 
     if (p)
     {
-        i = (p - default_pfxs);
-        used_pfxs[i] = TRUE;
+        i = (p - sysblk.cmd_pfxs);
+        sysblk.used_pfxs[i] = TRUE;
     }
 
     /* PROGRAMMING NOTE: it is CRITICAL that we set our file
