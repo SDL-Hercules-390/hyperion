@@ -41,7 +41,7 @@ struct DEVHND
                                                                                 \
     if (_class) *_class = _classname;                                           \
     if (!_dev || !_class || !_buflen || !_buffer) return;                       \
-    if (sysblk.devnameonly)                                                     \
+    if (sysblk.devnameonly && !IS_INTEGRATED_CONS( _dev ))                      \
     {                                                                           \
         STRLCPY( filename, basename( _dev->filename ));                         \
         if (strcmp( filename, "." ) == 0)                                       \

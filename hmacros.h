@@ -463,6 +463,16 @@ typedef int CMPFUNC(const void*, const void*);
     ((_dev)->allocated && ((_dev)->pmcw.flag5 & PMCW5_V))
 #endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
 
+#define INTEGRATED_CONS_FD              INT_MAX
+
+#define IS_INTEGRATED_CONS( _dev )          \
+    (1                                      \
+     && !(_dev)->console                    \
+     && (_dev)->connected                   \
+     && (_dev)->fd == INTEGRATED_CONS_FD    \
+     && strlen( (_dev)->filename ) > 0      \
+    )
+
 /*-------------------------------------------------------------------*/
 /*      HDL macro to call optional function override                 */
 /*-------------------------------------------------------------------*/

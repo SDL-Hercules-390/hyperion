@@ -126,6 +126,8 @@ static int con1052_close_device( DEVBLK *dev )
         used_pfxs[i] = FALSE;
     }
 
+    dev->fd = -1;   /* device has now been closed */
+
     return 0;
 }
 
@@ -137,11 +139,12 @@ static void con1052_query_device( DEVBLK *dev, char **devclass,
 {
     char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
 
+    ASSERT( IS_INTEGRATED_CONS( dev )); // (sanity check)
+
     BEGIN_DEVICE_CLASS_QUERY( "CON", dev, devclass, buflen, buffer );
 
-    snprintf( buffer, buflen, "*syscons cmdpref(%s)%s IO[%"PRIu64"]",
-        filename, !dev->prompt1052 ? " noprompt" : "", dev->excps );
-
+    snprintf( buffer, buflen, "*syscons cmdpref '%s' %sprompt IO[%"PRIu64"]",
+        filename, dev->prompt1052 ? "" : "no", dev->excps );
 }
 
 /*-------------------------------------------------------------------*/
@@ -160,6 +163,9 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
 
     /* reset excp count */
     dev->excps = 0;
+
+    /* Indicate that this is NOT a console device */
+    dev->console = 0;
 
     /* Integrated console is always connected */
     dev->connected = 1;
@@ -274,7 +280,7 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
        function so we can mark our prefix as being once again
        available for reuse.
     */
-    dev->fd = 999;  /* CRITICAL! See above Programming Note */
+    dev->fd = INTEGRATED_CONS_FD;  /* CRITICAL! See above! */
 
     return 0;
 }
@@ -304,12 +310,15 @@ static void* con1052_panel_command( char *cmd )
             && strncasecmp( cmd, dev->filename, pfxlen ) == 0
         )
         {
-            /* Echo that they typed to the Hercules console */
-            LOGMSG( "%s%s\n", "", cmd );
-
-            /* Convert ASCII input to EBCDIC */
+            /* Get past command prefix to the actual command */
             input = cmd + pfxlen;
 
+            /* Echo what they typed to the Hercules console */
+            // "'%s' input entered for console %1d:%04X: \"%s\""
+            WRMSG( HHC00013, "I", dev->filename, LCSS_DEVNUM, input );
+            LOGMSG( "%s\n", input );
+
+            /* Convert ASCII input to EBCDIC */
             for (i=0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint( (unsigned char)input[i] ) ?
                         host_to_guest( input[i] ) : ' ';
@@ -450,8 +459,8 @@ BYTE    c;                              /* Print character           */
         {
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
-                // "Enter input for console %1d:%04X"
-                WRMSG( HHC00010, "A", LCSS_DEVNUM );
+                // "Enter '%s' input for console %1d:%04X"
+                WRMSG( HHC00010, "A", dev->filename, LCSS_DEVNUM );
 
             obtain_lock( &dev->lock );
             {

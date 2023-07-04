@@ -238,10 +238,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00007 "Previous message from function '%s' at %s(%d)"
 //efine HHC00008 (available)
 #define HHC00009 "RRR...RING...GGG!\a"
-#define HHC00010 "Enter input for console %1d:%04X"
+#define HHC00010 "Enter '%s' input for console %1d:%04X"
 #define HHC00011 "Function %s failed; cache %d size %d: [%02d] %s"
 #define HHC00012 "Releasing inactive buffer storage"
-//efine HHC00013 (available)
+#define HHC00013 "'%s' input entered for console %1d:%04X: \"%s\""
 #define HHC00014 "select: %s"
 #define HHC00015 "keyboard read: %s"
 //efine HHC00016 (available)
