@@ -254,6 +254,7 @@ EXTRA_DIST =                    \
      E7Prefix.pdf               \
      E7Prefix.tst               \
      epsw.txt                   \
+     ex.txt                     \
      exrl.txt                   \
      FAC53.asm                  \
      FAC53.core                 \

@@ -5643,6 +5643,9 @@ BYTE   *ip;                             /* -> executed instruction   */
     if (ip != regs->exinst)
         memcpy (regs->exinst, ip, 8);
 
+    /* Or 2nd byte of instruction with low-order byte of R1 */
+    regs->exinst[1] |= r1 ? regs->GR_LHLCL(r1) : 0;
+
     /* Program check if recursive execute */
     if (0
         || regs->exinst[0] == 0x44
@@ -5655,9 +5658,6 @@ BYTE   *ip;                             /* -> executed instruction   */
 #endif
     )
         regs->program_interrupt( regs, PGM_EXECUTE_EXCEPTION );
-
-    /* Or 2nd byte of instruction with low-order byte of R1 */
-    regs->exinst[1] |= r1 ? regs->GR_LHLCL(r1) : 0;
 
     /* Save the address of the instruction in case the instruction
        being executed causes a break in sequential instruction flow.
@@ -5755,13 +5755,13 @@ DEF_INST(execute_relative_long)
     }
 #endif
 
+    /* Or 2nd byte of instruction with low-order byte of R1 */
+    regs->exinst[1] |= r1 ? regs->GR_LHLCL( r1 ) : 0;
+
     /* Program check if recursive execute */
     if (regs->exinst[0] == 0x44 ||
        (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f)))
         regs->program_interrupt( regs, PGM_EXECUTE_EXCEPTION );
-
-    /* Or 2nd byte of instruction with low-order byte of R1 */
-    regs->exinst[1] |= r1 ? regs->GR_LHLCL( r1 ) : 0;
 
     /* Save the address of the instruction in case the instruction
        being executed causes a break in sequential instruction flow.

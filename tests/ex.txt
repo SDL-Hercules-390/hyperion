@@ -1,0 +1,122 @@
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+***************************************************************
+*  EX test:  Verify EX --> EXRL = PIC3 and EX --> CHRL = Okay
+***************************************************************
+*
+*
+
+sysclear
+archlvl z/Arch
+
+
+
+*
+*
+*
+**          Low core ==> Restart and Program Check PSWs...
+*
+*
+
+r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1D0=00000001800000000000000000000214 # z/Arch pgm new PSW
+
+
+
+*
+*
+*
+**          First, verify that EX of EXRL cause a PIC 03...
+*
+*
+
+r 200=1F11          # SLR R1,R1       R1 <== 0
+r 202=44100320      # EX TARGET       Execute...
+
+r 206=0700
+r 208=07000700
+
+r 20C=B2B20310      # LPSWE FAILPSW   No PIC 03?! FAIL!
+
+r 210=07000700
+r 214=07000700      # Expected PIC 03 SHOULD come here...
+
+
+
+*
+*
+*
+**          After expected PIC 03, change pgm new PSW to disabled wait X'DEAD'...
+*
+*
+
+r 218=920201D1      # MVI PGMPSW+1,X'02'
+r 21C=92DE01DE      # MVI PGMPSW+16-2,X'DE'
+r 220=92AD01DF      # MVI PGMPSW+16-1,X'AD'
+
+
+
+*
+*
+*
+**          Now do what SHOULD be a completely valid EX...
+*
+*
+
+r 224=41100005      # LA R1,5         R1 <== 5
+r 228=44100320      # EX TARGET       Execute...
+r 22C=B2B20300      # LPSWE GOODPSW   SUCCESS!
+
+r 230=07000700
+
+
+
+*
+*
+*
+**          Working Storage...
+*
+*
+
+r 300=00020001800000000000000000000000 # SUCCESS! (everything worked!)
+r 310=00020001800000000000000000000BAD # FAIL!    (No PIC 03 occurred!)
+
+r 320=C60000000010  # Target of 'EX'...  (unaltered = EXRL instruction)
+
+
+
+*
+*
+*
+*
+*
+*
+**          Show them the test that we've constructed...
+*
+*
+*
+
+r 1a0.10
+r 1d0.10
+u 200.34
+r 300.26
+
+
+
+*
+*
+*
+**          Now run the test!  (should end with disabled wait X'0000')
+*
+*
+*
+
+restart

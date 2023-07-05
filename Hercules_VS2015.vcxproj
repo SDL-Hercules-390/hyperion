@@ -1365,6 +1365,7 @@
     <Text Include="tests\diag8.txt" />
     <Text Include="tests\dxtr.txt" />
     <Text Include="tests\epsw.txt" />
+    <Text Include="tests\ex.txt" />
     <Text Include="tests\exrl.txt" />
     <Text Include="tests\fiebr.txt" />
     <Text Include="tests\fixtr.txt" />

@@ -3492,6 +3492,9 @@
     <Text Include="tests\epsw.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
+    <Text Include="tests\ex.txt">
+      <Filter>Other Files\tests\scripts\txt</Filter>
+    </Text>
     <Text Include="tests\exrl.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>

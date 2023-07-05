@@ -3710,6 +3710,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\ex.txt"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\exrl.txt"
 							>
 						</File>
