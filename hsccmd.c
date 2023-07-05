@@ -8483,10 +8483,10 @@ int cmdsep_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int iconpfxs_cmd( int argc, char* argv[], char* cmdline )
 {
-    int    rc = 0;
     int    num_pfxs;                    /* Number  command prefixes  */
     char*  cmd_pfxs;                    /* Default command prefixes  */
     char*  used_pfxs;                   /* Used    command prefixes  */
+    char*  p;                           /* (work)                    */
 
     UNREFERENCED( cmdline );
 
@@ -8529,8 +8529,7 @@ int iconpfxs_cmd( int argc, char* argv[], char* cmdline )
     }
     else
     {
-        char*    p;
-        size_t   i;
+        int i;
 
         /* Define new set of command prefixes */
 
@@ -8570,7 +8569,6 @@ int iconpfxs_cmd( int argc, char* argv[], char* cmdline )
     OBTAIN_INTLOCK( NULL );
     {
         DEVBLK*  dev;
-        char*    p;
         size_t   i;
 
         /* Ensure the new "used" list is set accurately */
