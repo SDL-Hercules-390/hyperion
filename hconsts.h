@@ -127,6 +127,9 @@
 #define MAX_390_MAINSIZE_PAGES      (MAX_390_MAINSIZE_BYTES  >> SHIFT_4K)
 #define MAX_900_MAINSIZE_PAGES      (MAX_900_MAINSIZE_BYTES  >> SHIFT_4K)
 
+#define MIN_ARCH_MAINSIZE_BYTES     0   // (slot 0 = minimum for arch)
+#define MAX_ARCH_MAINSIZE_BYTES     1   // (slot 1 = maximum for arch)
+
 /*-------------------------------------------------------------------*/
 /* Miscellaneous system related constants we could be missing...     */
 /*-------------------------------------------------------------------*/

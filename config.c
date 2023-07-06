@@ -167,53 +167,53 @@ U64 adjust_mainsize( int archnum, U64 mainsize )
     {
 #if defined(       _ARCH_NUM_0 )
   #if       370 == _ARCH_NUM_0
-      { MIN_370_MAINSIZE_BYTES,
-        MAX_370_MAINSIZE_BYTES },
+      { MIN_370_MAINSIZE_BYTES,     // (MIN_ARCH_MAINSIZE_BYTES)
+        MAX_370_MAINSIZE_BYTES },   // (MAX_ARCH_MAINSIZE_BYTES)
 
   #elif     390 == _ARCH_NUM_0
-      { MIN_390_MAINSIZE_BYTES,
-        MAX_390_MAINSIZE_BYTES },
+      { MIN_390_MAINSIZE_BYTES,     // etc...
+        MAX_390_MAINSIZE_BYTES },   // etc...
 
   #else //  900 == _ARCH_NUM_0
-      { MIN_900_MAINSIZE_BYTES,
-        MAX_900_MAINSIZE_BYTES },
+      { MIN_900_MAINSIZE_BYTES,     // etc...
+        MAX_900_MAINSIZE_BYTES },   // etc...
   #endif
 #endif
 #if defined(       _ARCH_NUM_1 )
   #if       370 == _ARCH_NUM_1
-      { MIN_370_MAINSIZE_BYTES,
-        MAX_370_MAINSIZE_BYTES },
+      { MIN_370_MAINSIZE_BYTES,     // etc...
+        MAX_370_MAINSIZE_BYTES },   // etc...
 
   #elif     390 == _ARCH_NUM_1
-      { MIN_390_MAINSIZE_BYTES,
-        MAX_390_MAINSIZE_BYTES },
+      { MIN_390_MAINSIZE_BYTES,     // etc...
+        MAX_390_MAINSIZE_BYTES },   // etc...
 
   #else //  900 == _ARCH_NUM_1
-      { MIN_900_MAINSIZE_BYTES,
-        MAX_900_MAINSIZE_BYTES },
+      { MIN_900_MAINSIZE_BYTES,     // etc...
+        MAX_900_MAINSIZE_BYTES },   // etc...
   #endif
 #endif
 #if defined(       _ARCH_NUM_2 )
   #if       370 == _ARCH_NUM_2
-      { MIN_370_MAINSIZE_BYTES,
-        MAX_370_MAINSIZE_BYTES },
+      { MIN_370_MAINSIZE_BYTES,     // etc...
+        MAX_370_MAINSIZE_BYTES },   // etc...
 
   #elif     390 == _ARCH_NUM_2
-      { MIN_390_MAINSIZE_BYTES,
-        MAX_390_MAINSIZE_BYTES },
+      { MIN_390_MAINSIZE_BYTES,     // etc...
+        MAX_390_MAINSIZE_BYTES },   // etc...
 
   #else //  900 == _ARCH_NUM_2
-      { MIN_900_MAINSIZE_BYTES,
-        MAX_900_MAINSIZE_BYTES },
+      { MIN_900_MAINSIZE_BYTES,     // etc...
+        MAX_900_MAINSIZE_BYTES },   // etc...
   #endif
 #endif
     };
 
-    if (mainsize < minmax_mainsize[ archnum ][0])
-        mainsize = minmax_mainsize[ archnum ][0];
+    if (mainsize < minmax_mainsize[ archnum ][ MIN_ARCH_MAINSIZE_BYTES ])
+        mainsize = minmax_mainsize[ archnum ][ MIN_ARCH_MAINSIZE_BYTES ];
 
-    if (mainsize > minmax_mainsize[ archnum ][1])
-        mainsize = minmax_mainsize[ archnum ][1];
+    if (mainsize > minmax_mainsize[ archnum ][ MAX_ARCH_MAINSIZE_BYTES ])
+        mainsize = minmax_mainsize[ archnum ][ MAX_ARCH_MAINSIZE_BYTES ];
 
     /* Special case: if no CPUs then no storage is needed */
     if (sysblk.maxcpu <= 0)
