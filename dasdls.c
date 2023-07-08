@@ -16,6 +16,7 @@
  * Copied by Erwin Marschalk from 3.12 to 4.0 release
  * Further tweaks and fixes by Fish
  * Sorted report by Fish
+ * Support for multiple extents by Ian Shorter
  *********************************************************************/
 
 #include "hstdinc.h"
@@ -58,16 +59,33 @@ static int runflgs   = 0;       /* run flags set from command line   */
 #define rf_refdate   0x04       /*     show last-referenced dates    */
 #define rf_header    0x08       /*     show header                   */
 #define rf_info      0x10       /*     show F1 info                  */
+#define rf_cchh      0x20       /*     show extent cchh info         */
 
 /*********************************************************************/
 /* sort by dsname support                                            */
 
+static char** lcchhtab     = NULL;      /* Parts of a full line      */
 static char** lsegstab     = NULL;      /* Parts of a full line      */
 static char** linestab     = NULL;      /* Complete lines            */
+static int    numcchh      = 0;         /* #of segments in lcchhtab  */
 static int    numsegs      = 0;         /* #of segments in lsegstab  */
 static int    numlines     = 0;         /* #of lines in linestab     */
 static char   segbuf[256]  = {0};       /* Line segment buffer       */
-static char   linebuf[256] = {0};       /* Full line buffer          */
+static char   linebuf[256*256] = {0};   /* Full line buffer          */
+
+#define    CCHH_COLHDR  " Ext#  (BEG)      (END)    "
+static int cchh_colhdr_width;
+
+static void prtcchhseg( const char* fmt, ... )
+{
+    va_list   vl;
+    va_start( vl, fmt );
+
+    vsnprintf( segbuf, sizeof( segbuf ), fmt, vl );
+
+    lcchhtab = realloc( lcchhtab, (numcchh + 1) * sizeof( char* ));
+    lcchhtab[ numcchh++ ] = strdup( segbuf );
+}
 
 static void prtseg( const char* fmt, ... )
 {
@@ -93,25 +111,72 @@ static void prtline( const char* fmt, ... )
 
 static void print_line_from_segs()
 {
-    int  i;
-    char buffer[256] = {0};
+    int  cchhnum, segnum;
+    char buffer[256*256] = {0};
 
-    for (i=0; i < numsegs; ++i)
+    if (runflgs & rf_cchh)
     {
-        STRLCAT( buffer, lsegstab[i] );
-        free( lsegstab[i] );
+        /* For each extent that the dataset has... */
+        for (cchhnum=0; cchhnum < numcchh; ++cchhnum)
+        {
+            /* Print this extent's BEG/END CCHH */
+            STRLCPY( buffer, lcchhtab[ cchhnum ]);
+            free(            lcchhtab[ cchhnum ]);
+
+            /* Print the remainder of the information... */
+            for (segnum=0; segnum < numsegs; ++segnum)
+            {
+                /* (very first segment is always dsname) */
+                STRLCAT( buffer, lsegstab[ segnum ]);
+
+                /* (if this is extent #2, then we're done) */
+                if (cchhnum > 0)
+                {
+                    STRLCAT( buffer, "\n" );
+                    break;
+                }
+            }
+
+            prtline( "%s", buffer );
+        }
     }
+    else
+    {
+        /* Print the remainder of the information... */
+        for (segnum=0; segnum < numsegs; ++segnum)
+            STRLCAT( buffer, lsegstab[ segnum ]);
+
+        prtline( "%s", buffer );
+    }
+
+    free( lcchhtab );
+    lcchhtab = NULL;
+    numcchh = 0;
+
+    for (segnum=0; segnum < numsegs; ++segnum)
+        free( lsegstab[ segnum ]);
 
     free( lsegstab );
     lsegstab = NULL;
     numsegs = 0;
-
-    prtline( "%s", buffer );
 }
 
 static int sort_linestab( const void* a, const void* b )
 {
-    return strcmp( *(const char**)a, *(const char**)b );
+    const char* line_a = *(const char**)a;
+    const char* line_b = *(const char**)b;
+
+    // (we always sort by dataset name...)
+
+    if (runflgs & rf_cchh)
+    {
+        int  rc;
+        if ((rc = strncmp( line_a + cchh_colhdr_width,
+                           line_b + cchh_colhdr_width, dsnlen )) != 0)
+            return rc;
+    }
+
+    return strcmp( line_a, line_b );
 }
 
 /*********************************************************************/
@@ -248,6 +313,14 @@ int extents_array( DSXTENT extents[], int max, int *count, int heads )
         {
             size += extent_size( &extents[i], heads );
             *count -= 1;
+
+            if (runflgs & rf_cchh)
+            {
+                prtcchhseg("%3d  %4.4X/%4.4X  %4.4X/%4.4X  ",
+                            numcchh + 1,
+                            hword( extents[i].xtbcyl ), hword( extents[i].xtbtrk ),
+                            hword( extents[i].xtecyl ), hword( extents[i].xtetrk ) );
+            }
         }
         else
         {
@@ -333,7 +406,14 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent )
     {
         /* display column headers allowing for optional columns */
 
-        LOGMSG("%*s%s", -dsnlen, "Dsname",
+        char cchhbuf[32];
+
+        if (runflgs & rf_cchh)
+            STRLCPY( cchhbuf, CCHH_COLHDR );
+        else
+            cchhbuf[0] = 0;
+        
+        LOGMSG("%s%*s%s", cchhbuf, -dsnlen, "Dsname",
                                        runflgs & rf_caldate ? "  Created " : " CREDT");
         LOGMSG(runflgs & rf_refdate ? (runflgs & rf_caldate ? " Last Ref." : " REFDT") : "");
         LOGMSG(runflgs & rf_expdate ? (runflgs & rf_caldate ? " Exp. Date" : " EXPDT") : "");
@@ -556,7 +636,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent )
         /* NOW actually print them all for real */
         for (i=0; i < numlines; ++i)
         {
-            LOGMSG( "%s", linestab[i] );
+            LOGMSG( "%s\n", RTRIM( linestab[i] ));
             free( (linestab[i]) );
         }
 
@@ -663,6 +743,8 @@ char           *fn, *sfn;
         exit(2);
     }
 
+    cchh_colhdr_width = (int) strlen( CCHH_COLHDR );
+
     /*
      * If your version of Hercules doesn't have support in its
      * dasdutil.c for turning off verbose messages, then remove
@@ -698,6 +780,11 @@ char           *fn, *sfn;
         if (strcmp( fn, "-hdr" ) == 0)      /* show column headers */
         {
             runflgs |= (rf_header | rf_info);
+            continue;
+        }
+        if (strcmp( fn, "-cchh" ) == 0)     /* show extent cchh info */
+        {
+            runflgs |= (rf_cchh | rf_info);
             continue;
         }
         if (1
