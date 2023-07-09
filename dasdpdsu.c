@@ -103,14 +103,10 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         if (strcasecmp( argv[3+i], "ASCII" ) == 0)
             asciiflag = 1;
         else
-        {
-            // "Invalid argument: %s"
-            FWRMSG( stderr, HHC02465, "E", argv[3+i] );
-            return syntax( pgm );
-        }
+            i = -1;
     }
 
-    /* The forth argument is an optional output directory */
+    /* The forth (or third!) argument is an optional output directory */
     if (argc > (4+i) && argv[4+i])
     {
         struct stat statbuf;
