@@ -1906,8 +1906,6 @@ struct DEVBLK {                         /* Device configuration block*/
 #define QTYPE_WRITE  2
 #define QTYPE_DATA   3
 
-#if defined( OPTION_E7_PREFIX )
-
 // E7 Prefix CCW support...
 
         BYTE    ckdformat;              /* Prefix CCW Format byte    */
@@ -1926,8 +1924,6 @@ struct DEVBLK {                         /* Device configuration block*/
 // Auxiliary byte
 #define PFX_A_SMR           0x80        /* Suspend Multipath Reconn. */
 #define PFX_A_CHKALL        0x08        /* Check all DE+LRE parms    */
-
-#endif // defined( OPTION_E7_PREFIX )
 
         BYTE    ccwops[256];            /* CCW opcodes to trace      */
 

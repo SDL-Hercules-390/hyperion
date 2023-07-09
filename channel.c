@@ -646,7 +646,6 @@ int     j;
 } /* end function format_data */
 
 
-#if defined( OPTION_E7_TRACE_64 )
 /***************************************************************/
 /* SPECIAL HANDLING FOR E7 Prefix CCW TO TRACE ENTIRE 64 BYTES */
 /***************************************************************/
@@ -725,7 +724,6 @@ int     j;
         *buffer = 0;
 
 } /* end function format_data */
-#endif // defined( OPTION_E7_TRACE_64 )
 
 
 /*-------------------------------------------------------------------*/
@@ -751,7 +749,6 @@ BYTE    workarea[17];                   /* Character string work     */
 
 } /* end function format_iobuf_data */
 
-#if defined( OPTION_E7_TRACE_64 )
 /***************************************************************/
 /* SPECIAL HANDLING FOR E7 Prefix CCW TO TRACE ENTIRE 64 BYTES */
 /***************************************************************/
@@ -774,7 +771,6 @@ BYTE    workarea[4*17];                 /* Character string work     */
         *dest = 0;
 
 } /* end function format_iobuf_data */
-#endif // defined( OPTION_E7_TRACE_64 )
 
 
 #if !DEBUG_DUMP
@@ -913,20 +909,12 @@ static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
         BYTE len, amt;
 
         len = (BYTE) CAPPED_BUFFLEN( addr, count, dev );
-        amt =
-#if defined( OPTION_E7_TRACE_64 )
-        ccw[0] == 0xE7 ? 64 :
-#endif
-        16;
+        amt = (ccw[0] == 0xE7) ? 64 : 16;
         tf_1315( dev, ccw, addr, count, dev->mainstor + addr, MIN( amt, len ));
     }
     else
     {
-#if defined( OPTION_E7_TRACE_64 )
         BYTE area[4*64];    // (4 x to trace all 64 bytes of E7 Prefix CCW)
-#else
-        BYTE area[64];
-#endif
 
         /* No data to be formatted if CCW is a NOP or TIC
            or the CCW "Skip data transfer" flag is on. */
@@ -938,11 +926,9 @@ static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
             area[0] = 0;
         else
         {
-#if defined( OPTION_E7_TRACE_64 )
             if (ccw[0] == 0xE7)
                 e7_format_iobuf_data( addr, area, dev, count );
             else
-#endif
                 format_iobuf_data( addr, area, dev, count );
         }
 
@@ -1042,11 +1028,7 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
         BYTE len, amt;
 
         len = (BYTE) CAPPED_BUFFLEN( addr, count, dev );
-        amt =
-#if defined( OPTION_E7_TRACE_64 )
-        dev->code == 0xE7 ? 64 :
-#endif
-        16;
+        amt = (dev->code == 0xE7) ? 64 : 16;
         tf_1301( dev, addr, count, dev->mainstor + addr, MIN( amt, len ), flag, type );
     }
     else

@@ -3305,8 +3305,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         break;
 
-#if defined( OPTION_E7_PREFIX )
-
     case 0xE7: // Prefix
     /*---------------------------------------------------------------*/
     /* PREFIX        (SA22-1025 IBM Subsystem Reference Guide)       */
@@ -3393,8 +3391,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
         break;
-
-#endif // defined( OPTION_E7_PREFIX )
 
     case 0x27: // PERFORM SUBSYSTEM FUNCTION (maybe! see below!)
     case 0xF7: // DSOP: DEFINE SUBSYSTEM OPERATION (IBM RAMAC Array, GC26-7006-01)
@@ -5516,10 +5512,7 @@ static void PerformSubsystemFunction
     int    i;
     U32    num;
     BYTE*  orig_iobuf;
-
-#if defined( OPTION_E7_PREFIX )
-
-    BYTE ccwdata[ IOBUF_MINSIZE ];
+    BYTE   ccwdata[ IOBUF_MINSIZE ];
 
     /* If Prefix CCW, move iobuff data to where this function expects it */
     if (code == 0xE7)
@@ -5529,7 +5522,6 @@ static void PerformSubsystemFunction
         orig_iobuf = iobuf; // (save for later!)
         iobuf = &ccwdata[0];
     }
-#endif // defined( OPTION_E7_PREFIX )
 
     UNREFERENCED( more );
 
@@ -5878,13 +5870,11 @@ static void PerformSubsystemFunction
     if (*unitstat & CSW_UC)
         return;
 
-#if defined( OPTION_E7_PREFIX )
     /* If Prefix CCW, move prepared subsystem data (if any)
        back to where the channel expects it.
     */
     if (code == 0xE7 && dev->ckdssdlen)
         memmove( &orig_iobuf[0], &iobuf[0], dev->ckdssdlen );
-#endif
 
     /* Return normal status */
     *unitstat = CSW_CE | CSW_DE;
@@ -5918,10 +5908,7 @@ static void LocateRecordExtended
     U16         head;                   /* Head number               */
     BYTE        cchhr[5];               /* Search argument           */
     BYTE        binzero[5];             /* Binary zeros              */
-
-#if defined( OPTION_E7_PREFIX )
-
-    BYTE ccwdata[ IOBUF_MINSIZE ];
+    BYTE        ccwdata[ IOBUF_MINSIZE ];
 
     /* If Prefix CCW, move iobuff data to where this function expects it */
     if (code == 0xE7)
@@ -5930,7 +5917,6 @@ static void LocateRecordExtended
         count -= (count >= 44 ? 44 : count);
         iobuf = &ccwdata[0];
     }
-#endif // defined( OPTION_E7_PREFIX )
 
     UNREFERENCED( flags    );
     UNREFERENCED( chained  );
@@ -6587,13 +6573,10 @@ static void DefineExtent
     U32*     residual
 )
 {
-    BYTE fmask, xgattr;
-    U16 bcyl, bhead, ecyl, ehead, xblksz;
-    U32 num;
-
-#if defined( OPTION_E7_PREFIX )
-
-    BYTE ccwdata[ IOBUF_MINSIZE ];
+    U32   num;
+    U16   bcyl, bhead, ecyl, ehead, xblksz;
+    BYTE  fmask, xgattr;
+    BYTE  ccwdata[ IOBUF_MINSIZE ];
 
     /* If Prefix CCW, move iobuff data to where this function expects it */
     if (code == 0xE7)
@@ -6602,7 +6585,6 @@ static void DefineExtent
         count -= (count >= 12 ? 12 : count);
         iobuf = &ccwdata[0];
     }
-#endif // defined( OPTION_E7_PREFIX )
 
     UNREFERENCED( flags    );
     UNREFERENCED( chained  );

@@ -1885,7 +1885,6 @@ static inline void print_814_sigp( TF00814* rec )
 /*                                                                            */
 /******************************************************************************/
 
-#if defined( OPTION_E7_TRACE_64 )
 /*-------------------------------------------------------------------*/
 /*  e7_fmtdata -- format 64 bytes of hex and character buffer data   */
 /*-------------------------------------------------------------------*/
@@ -1941,18 +1940,15 @@ static const char* e7_fmtdata( BYTE code, BYTE* data, BYTE amt )
 
     return both_buf;
 }
-#endif // defined( OPTION_E7_TRACE_64 )
 
 /*-------------------------------------------------------------------*/
 /*   fmtdata -- format 16 bytes of hex and character buffer data     */
 /*-------------------------------------------------------------------*/
 static const char* fmtdata( BYTE code, BYTE* data, BYTE amt )
 {
-#if defined( OPTION_E7_TRACE_64 )
     if (code == 0xE7)
         return e7_fmtdata( code, data, amt );
     else
-#endif
     {
         static char both_buf[(16/16)*96] = {0};
                char byte_buf[(16/16)*64] = {0};

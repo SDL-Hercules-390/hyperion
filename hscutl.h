@@ -412,11 +412,7 @@ HUT_DLL_IMPORT bool are_big_endian();
 /*********************************************************************/
 /*********************************************************************/
 
-#if defined( OPTION_E7_TRACE_64 )
-  #define TF_FMT  '1'         // TraceFile file format number (0-9)
-#else
-  #define TF_FMT  '0'         // TraceFile file format number (0-9)
-#endif
+#define TF_FMT  '1'         // TraceFile file format number (0-9)
 
 #undef ATTRIBUTE_PACKED
 #if defined(_MSVC_)
