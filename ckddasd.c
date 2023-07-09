@@ -6073,7 +6073,7 @@ static void LocateRecordExtended
      * | Write Track           0B   x    x     x    00  |
      * | Read Tracks           0C  4C    x     x    00  |
      * | Read                  16  56   96    D6    00  |
-     * | Read                  06  56   96    D6    00  |
+     * | Read (E7 Prefix)      06  56   96    D6    00  |
      * | Write Any             3F   x    x     x    09  |
      * | Read Any              3F   x    x     x    0A  |
      * | Read Trackset         3F  7F    x     x    0E  |
@@ -6088,8 +6088,8 @@ static void LocateRecordExtended
         &&  dev->ckdloper != 0x03
         &&  dev->ckdloper != 0x0B
         &&  dev->ckdloper != 0x0C
-        &&  dev->ckdloper != 0x16
-        &&  dev->ckdloper != 0x06
+        && (dev->ckdloper != 0x16 && code == 0x4B)
+        && (dev->ckdloper != 0x06 && code == 0xE7) // E7 Prefix
 
         &&  dev->ckdloper != 0x43
         &&  dev->ckdloper != 0x4C
