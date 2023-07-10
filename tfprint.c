@@ -73,6 +73,19 @@ typedef struct mopt MOPT;
 #define TM struct tm
 
 /*-------------------------------------------------------------------*/
+/*           Table of thread-numbers and thread-names                */
+/*-------------------------------------------------------------------*/
+struct tidtab
+{
+    U64   tidnum;       // Thread-id number (not 'TID'!)
+    char  thrdname[16]; // Thread name
+};
+typedef struct tidtab TIDTAB;
+
+static TIDTAB* tidtab = NULL;   // (ptr to table)
+static numtids = 0;             // (number of entries)
+
+/*-------------------------------------------------------------------*/
 /*               static global work variables                        */
 /*-------------------------------------------------------------------*/
 static char* pgm       = NULL;          /* less any extension (.ext) */
@@ -679,6 +692,57 @@ static void tf_store_psw( PSW* psw, QWORD* qw, BYTE arch_mode )
         STORE_DW( addr + 8, psw->IA_G );
 }
 
+/*-------------------------------------------------------------------*/
+/*       Sort tidtab into ascending thread name sequence             */
+/*-------------------------------------------------------------------*/
+static int sort_tidtab_by_thrdname( const void* a, const void* b )
+{
+    const TIDTAB* tab_a = (const TIDTAB*)a;
+    const TIDTAB* tab_b = (const TIDTAB*)b;
+    int rc = strncmp( tab_a->thrdname, tab_b->thrdname, sizeof( tab_a->thrdname ));
+    if (!rc)
+        rc = (tab_a->tidnum - tab_b->tidnum);
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/*       Sort tidtab into ascending thread-id number sequence        */
+/*-------------------------------------------------------------------*/
+static int sort_tidtab_by_tidnum( const void* a, const void* b )
+{
+    const TIDTAB* tab_a = (const TIDTAB*)a;
+    const TIDTAB* tab_b = (const TIDTAB*)b;
+    return (tab_a->tidnum - tab_b->tidnum);
+}
+
+/*-------------------------------------------------------------------*/
+/*               Save threading information                          */
+/*-------------------------------------------------------------------*/
+static void tf_save_tidinfo( const TFHDR* hdr )
+{
+    TIDTAB* my_tidptr = tidtab;
+    int i;
+
+    /* Check if we already have this thread in our table */
+    for (i=0; i < numtids; ++i)
+    {
+        if (my_tidptr[i].tidnum > hdr->tidnum)
+            break; // (past it; not in table)
+
+        if (my_tidptr[i].tidnum == hdr->tidnum)
+            return; // (already in our table)
+    }
+
+    /* Add this new entry to our table */
+    tidtab = realloc( tidtab, sizeof( TIDTAB ) * (numtids + 1 ));
+    tidtab[ numtids ].tidnum = hdr->tidnum;
+    STRLCPY( tidtab[ numtids ].thrdname, hdr->thrdname );
+    numtids += 1;
+
+    /* Keep the table in ascending thread-id number order */
+    qsort( tidtab, numtids, sizeof( TIDTAB ), sort_tidtab_by_tidnum );
+}
+
 /******************************************************************************/
 /*                                                                            */
 /*                     RECORD FILTERING FUNCTIONS                             */
@@ -971,13 +1035,28 @@ static void tf_dev_do_blank_sep( TFHDR* hdr )
 
 /* Used by device trace messages 1300-1336... */
 #define PRINT_DEV_FUNC( _nnnn )                                       \
-    PRINT_DEV_TF0( _nnnn )
+    PRINT_DEV_TF1( _nnnn )
 
-/* Same as above but with filename before remaining printf arguments.
-   Used by device trace messages 0424-0442 and 0516-0520...
+/* Almost the entire device trace printing function,
+   except for last few printf arguments...
+*/
+#define PRINT_DEV_TF1( _nnnn )                                        \
+                                                                      \
+    static inline void print_TF0 ## _nnnn( TF0 ## _nnnn* rec )        \
+    {                                                                 \
+        char timstr[ 64] = {0};                                       \
+        FormatTIMEVAL( &rec->rhdr.tod, timstr, sizeof( timstr ));     \
+                                                                      \
+        TF_DEV_FLOGMSG( _nnnn ),                                      \
+            rec->rhdr.lcss, rec->rhdr.devnum
+
+//---------------------------------------------------------------------
+
+/* Same as above but with thread-id & filename before remaining printf
+   arguments. Used by device trace messages 0423-0442 and 0516-0520...
 */
 #define PRINT_DEV_FUNC0( _nnnn )                                      \
-    PRINT_DEV_TF0( _nnnn ), rec->filename     // (filename too!)
+    PRINT_DEV_TF0( _nnnn ), rec->filename
 
 /* Almost the entire device trace printing function,
    except for last few printf arguments...
@@ -990,7 +1069,7 @@ static void tf_dev_do_blank_sep( TFHDR* hdr )
         FormatTIMEVAL( &rec->rhdr.tod, timstr, sizeof( timstr ));     \
                                                                       \
         TF_DEV_FLOGMSG( _nnnn ),                                      \
-            rec->rhdr.lcss, rec->rhdr.devnum
+            rec->rhdr.tidnum, rec->rhdr.lcss, rec->rhdr.devnum
 
 /*-------------------------------------------------------------------*/
 /*                    print TFSYS record                             */
@@ -1016,14 +1095,14 @@ static void print_TFSYS( TFSYS* sys, bool was_bigend )
     FormatTIMEVAL( &sys->beg_tod, buffer, sizeof( buffer ));
     WRMSG( HHC03209, "I", "began", buffer );
 
-    // "Trace count: ins=%s records, dev=%s records"
-    fmt_S64( inscnt, (S64) sys->tot_ins );
-    fmt_S64( devcnt, (S64) sys->tot_dev );
-    WRMSG( HHC03211, "I", inscnt, devcnt );
-
     // "Trace %s: %s"
     FormatTIMEVAL( &sys->end_tod, buffer, sizeof( buffer ));
     WRMSG( HHC03209, "I", "ended", buffer );
+
+    // "Trace count: instruction=%s records, device=%s records"
+    fmt_S64( inscnt, (S64) sys->tot_ins );
+    fmt_S64( devcnt, (S64) sys->tot_dev );
+    WRMSG( HHC03211, "I", inscnt, devcnt );
 
     /* Build pre-formatted processor type strings for all CPUs */
     for (i=0; i < MAX_CPU_ENGS; ++i)
@@ -1990,83 +2069,83 @@ static const char* fmtdata( BYTE code, BYTE* data, BYTE amt )
 
 /*-------------------------------------------------------------------*/
 /*         The Device Trace printing functions themselves            */
-/*                  msgnum 424... and 516...                         */
+/*                  msgnum 423... and 516...                         */
 /*-------------------------------------------------------------------*/
 
-//HHC00423 "%1d:%04X CKD file %s: search key %s"
+//HHC00423 "Thread "TIDPAT" %1d:%04X CKD file %s: search key %s"
 PRINT_DEV_FUNC0( 0423 ), RTRIM( str_guest_to_host( rec->key, rec->key, rec->kl ))); }
 
-//HHC00424 "%1d:%04X CKD file %s: read trk %d cur trk %d"
+//HHC00424 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cur trk %d"
 PRINT_DEV_FUNC0( 0424 ), rec->trk, rec->bufcur ); }
 
-//HHC00425 "%1d:%04X CKD file %s: read track updating track %d"
+//HHC00425 "Thread "TIDPAT" %1d:%04X CKD file %s: read track updating track %d"
 PRINT_DEV_FUNC0( 0425 ), rec->bufcur ); }
 
-//HHC00426 "%1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
+//HHC00426 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
 PRINT_DEV_FUNC0( 0426 ), rec->trk, rec->idx ); }
 
-//HHC00427 "%1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
+//HHC00427 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
 PRINT_DEV_FUNC0( 0427 ), rec->trk ); }
 
-//HHC00428 "%1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
+//HHC00428 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
 PRINT_DEV_FUNC0( 0428 ), rec->trk, rec->idx ); }
 
-//HHC00429 "%1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
+//HHC00429 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
 PRINT_DEV_FUNC0( 0429 ), rec->trk, rec->fnum, rec->offset, rec->len ); }
 
-//HHC00430 "%1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
+//HHC00430 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
 PRINT_DEV_FUNC0( 0430 ), rec->trk, rec->buf[0], rec->buf[1], rec->buf[2], rec->buf[3], rec->buf[4] ); }
 
-//HHC00431 "%1d:%04X CKD file %s: seeking to cyl %d head %d"
+//HHC00431 "Thread "TIDPAT" %1d:%04X CKD file %s: seeking to cyl %d head %d"
 PRINT_DEV_FUNC0( 0431 ), rec->cyl, rec->head ); }
 
-//HHC00432 "%1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
+//HHC00432 "Thread "TIDPAT" %1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
 PRINT_DEV_FUNC0( 0432 ), rec->count, rec->mask ); }
 
-//HHC00433 "%1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
+//HHC00433 "Thread "TIDPAT" %1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
 PRINT_DEV_FUNC0( 0433 ), rec->cyl, rec->head ); }
 
-//HHC00434 "%1d:%04X CKD file %s: read count orientation %s"
+//HHC00434 "Thread "TIDPAT" %1d:%04X CKD file %s: read count orientation %s"
 static const char* orient[] = { "none", "index", "count", "key", "data", "eot" };
 PRINT_DEV_FUNC0( 0434 ), orient[ rec->orient ] ); }
 
-//HHC00435 "%1d:%04X CKD file %s: cyl %d head %d record %d kl %d dl %d of %d"
+//HHC00435 "Thread "TIDPAT" %1d:%04X CKD file %s: cyl %d head %d record %d kl %d dl %d of %d"
 PRINT_DEV_FUNC0( 0435 ), rec->cyl, rec->head, rec->record, rec->kl, rec->dl, rec->offset ); }
 
-//HHC00436 "%1d:%04X CKD file %s: read key %d bytes"
+//HHC00436 "Thread "TIDPAT" %1d:%04X CKD file %s: read key %d bytes"
 PRINT_DEV_FUNC0( 0436 ), rec->kl ); }
 
-//HHC00437 "%1d:%04X CKD file %s: read data %d bytes"
+//HHC00437 "Thread "TIDPAT" %1d:%04X CKD file %s: read data %d bytes"
 PRINT_DEV_FUNC0( 0437 ), rec->dl ); }
 
-//HHC00438 "%1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
+//HHC00438 "Thread "TIDPAT" %1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
 PRINT_DEV_FUNC0( 0438 ), rec->cyl, rec->head, rec->recnum, rec->keylen, rec->datalen ); }
 
-//HHC00439 "%1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
+//HHC00439 "Thread "TIDPAT" %1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
 PRINT_DEV_FUNC0( 0439 ), rec->cyl, rec->head, rec->recnum ); }
 
-//HHC00440 "%1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
+//HHC00440 "Thread "TIDPAT" %1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
 PRINT_DEV_FUNC0( 0440 ), rec->cyl, rec->head, rec->recnum, rec->keylen, rec->datalen ); }
 
-//HHC00441 "%1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
+//HHC00441 "Thread "TIDPAT" %1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
 PRINT_DEV_FUNC0( 0441 ), rec->cyl, rec->head, rec->recnum, rec->datalen ); }
 
-//HHC00442 "%1d:%04X CKD file %s: set file mask %02X"
+//HHC00442 "Thread "TIDPAT" %1d:%04X CKD file %s: set file mask %02X"
 PRINT_DEV_FUNC0( 0442 ), rec->mask ); }
 
-//HHC00516 "%1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
+//HHC00516 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
 PRINT_DEV_FUNC0( 0516 ), rec->blkgrp, rec->idx ); }
 
-//HHC00517 "%1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
+//HHC00517 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
 PRINT_DEV_FUNC0( 0517 ), rec->blkgrp ); }
 
-//HHC00518 "%1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
+//HHC00518 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
 PRINT_DEV_FUNC0( 0518 ), rec->blkgrp, rec->idx ); }
 
-//HHC00519 "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
+//HHC00519 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
 PRINT_DEV_FUNC0( 0519 ), rec->blkgrp, rec->offset, rec->len ); }
 
-//HHC00520 "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
+//HHC00520 "Thread "TIDPAT" %1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
 PRINT_DEV_FUNC0( 0520 ), rec->rba, rec->rba ); }
 
 /*-------------------------------------------------------------------*/
@@ -2739,6 +2818,7 @@ int main( int argc, char* argv[] )
     TFHDR*  hdr         = NULL;     /* Ptr to record header          */
     size_t  bytes_read  = 0;        /* Number of BYTES read          */
     bool    was_bigend  = false;    /* Endianness of TFSYS record    */
+    int     i;                      /* Work for iterating            */
 
     INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
@@ -2851,6 +2931,9 @@ int main( int argc, char* argv[] )
         /* Swap endianness of header, if needed */
         if (doendswap)
             tf_swap_hdr( hdr );
+
+        /* Save the thread information */
+        tf_save_tidinfo( hdr );
 
         /* Fix the 'cpuad' if this is a device trace record */
         if (hdr->cpuad == 0xFFFF)
@@ -2987,9 +3070,22 @@ int main( int argc, char* argv[] )
         FWRMSG( stdout, HHC03215, "I", tiocnt, "device I/O's" );
     }
 
+    printf( "\n" );
+
+    /* List thread-id numbers and their corresponding names... */
+    /* First, sort the list into a more user-friendly name sequence */
+    qsort( tidtab, numtids, sizeof( TIDTAB ), sort_tidtab_by_thrdname );
+    /* Now print it... */
+    for (i=0; i < numtids; ++i)
+    {
+        // Thread Id "TIDPAT" is %s"
+        FWRMSG( stdout, HHC03223, "I", tidtab[i].tidnum, tidtab[i].thrdname );
+    }
+
 done:
 
-    /* Close file and exit */
+    /* Free resources, close input file and exit */
+    free( tidtab );
     fclose( inf );
     return info_only ? 0 : ((totins > 0 || totios > 0) ? 0 : 1);
 

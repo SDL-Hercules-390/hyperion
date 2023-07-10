@@ -2728,6 +2728,7 @@ static bool tf_write( REGS* regs, void* rec, U16 curr, U16 msgnum )
     TFHDR*   hdr;
     size_t   written;
     TIMEVAL  tod;
+    TID      tid;
     bool     nostop;
     bool     auto_closed = false; // (true when MAX= reached)
     bool     ret = true;
@@ -2772,6 +2773,9 @@ static bool tf_write( REGS* regs, void* rec, U16 curr, U16 msgnum )
         hdr->msgnum    = msgnum;
         hdr->arch_mode = regs ? regs->arch_mode : 0xFF;
         hdr->tod       = tod;
+        tid             = hthread_self();
+        hdr->tidnum     = TID_CAST( tid );
+        get_thread_name( tid, hdr->thrdname );
 
         /* Update the TFSYS record's end time too */
         memcpy( &tfsys.end_tod, &tod, sizeof( tfsys.end_tod ));
@@ -3297,7 +3301,8 @@ DLL_EXPORT bool tf_0804( REGS* regs, BYTE* csw, U16 ioid, BYTE lcss )
 }
 
 //---------------------------------------------------------------------
-//                    I/O Interrupt
+//                    I/O Interrupt 
+//            (handles both HHC00805 and HHC00806)
 //---------------------------------------------------------------------
 DLL_EXPORT bool tf_0806( REGS* regs, U32 ioid, U32 ioparm, U32 iointid )
 {
@@ -3997,7 +4002,7 @@ DLL_EXPORT size_t  tf_MAX_RECSIZE()
     if (max_recsize < sizeof( TF00804 ))
         max_recsize = sizeof( TF00804 );
 
-    if (max_recsize < sizeof( TF00806 ))
+    if (max_recsize < sizeof( TF00806 )) // (handles both HHC00805 and HHC00806)
         max_recsize = sizeof( TF00806 );
 
     if (max_recsize < sizeof( TF00807 ))
@@ -4160,6 +4165,7 @@ DLL_EXPORT void tf_swap_hdr( TFHDR* hdr )
     hdr->devnum      = SWAP16( hdr->devnum      );
     hdr->tod.tv_sec  = SWAP32( hdr->tod.tv_sec  );
     hdr->tod.tv_usec = SWAP32( hdr->tod.tv_usec );
+    hdr->tidnum      = SWAP64( hdr->tidnum      );
 }
 
 /*-------------------------------------------------------------------*/
@@ -4413,7 +4419,7 @@ DLL_EXPORT void tf_swap_rec( TFHDR* hdr, U16 msgnum )
         }
         break;
 
-        case  806:
+        case  806: // (handles both HHC00805 and HHC00806)
         {
             TF00806* rec = (TF00806*) hdr;
             rec->ioid    = SWAP32( rec->ioid    );

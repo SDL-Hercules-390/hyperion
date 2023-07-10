@@ -412,7 +412,11 @@ HUT_DLL_IMPORT bool are_big_endian();
 /*********************************************************************/
 /*********************************************************************/
 
-#define TF_FMT  '1'         // TraceFile file format number (0-9)
+// Format 0 = original release
+// Format 1 = 64 bytes of CCW data (for E7 CCW support)
+// Format 2 = Add thread-id and name to TFHDR
+
+#define TF_FMT  '2'         // TraceFile file format number (0-9)
 
 #undef ATTRIBUTE_PACKED
 #if defined(_MSVC_)
@@ -455,6 +459,8 @@ struct TFHDR
     U16     cpuad;          // CPU Address
     U16     msgnum;         // Message Number (2269 - 2272, etc)
     TIMEVAL tod;            // Time of day of record/event
+    U64     tidnum;         // Thread-Id number (not 'TID'!)
+    char    thrdname[16];   // Thread name
     BYTE    arch_mode;      // Architecture mode for this CPU
     BYTE    lcss;           // LCSS (0-7)
     U16     devnum;         // Device number
@@ -884,6 +890,7 @@ CASSERT( sizeof( TF00804 ) % 8 == 0, hscutl_h );
 
 //---------------------------------------------------------------------
 //       TraceFile TF00806 I/O Interrupt Record
+//        (handles both HHC00805 and HHC00806)
 //---------------------------------------------------------------------
 struct TF00806
 {
@@ -1528,7 +1535,7 @@ HUT_DLL_IMPORT bool tf_0804( REGS* regs,               // I/O Interrupt (S/370)
                              U16   ioid,
                              BYTE  lcss );
 
-HUT_DLL_IMPORT bool tf_0806( REGS* regs,               // I/O Interrupt
+HUT_DLL_IMPORT bool tf_0806( REGS* regs,               // I/O Interrupt (handles both HHC00805 and HHC00806)
                              U32   ioid,
                              U32   ioparm,
                              U32   iointid );

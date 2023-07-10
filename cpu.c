@@ -1545,9 +1545,15 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
     /* Trace the I/O interrupt */
     if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace)
     {
-        if (regs->insttrace && sysblk.traceFILE)
-            tf_0806( regs, ioid, ioparm, iointid );
-        else
+        if (sysblk.traceFILE)
+        {
+            if (regs->insttrace || dev->ccwtrace)
+            {
+                // (handles both HHC00805 and HHC00806)
+                tf_0806( regs, ioid, ioparm, iointid );
+            }
+        }
+        else // (!sysblk.traceFILE)
         {
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( _FEATURE_IO_ASSIST )
             // "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X"

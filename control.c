@@ -5965,6 +5965,7 @@ char    log_buf[128];                   /* Log buffer                */
             if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, 2, cpad, status, parm, 0 );
             else
+                // "Processor %s: CC %d%s"
                 WRMSG( HHC00814, "I", log_buf, 2, "" );
         }
         return;
@@ -5991,6 +5992,7 @@ char    log_buf[128];                   /* Log buffer                */
             if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, 3, cpad, status, parm, 0 );
             else
+                // "Processor %s: CC %d%s"
                 WRMSG(HHC00814, "I", log_buf, 3, "");
         }
         return;
@@ -6019,6 +6021,7 @@ char    log_buf[128];                   /* Log buffer                */
             if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, 2, cpad, status, parm, 0 );
             else
+                // "Processor %s: CC %d%s"
                 WRMSG( HHC00814, "I", log_buf, 2, "" );
         }
         sched_yield();
@@ -6593,6 +6596,7 @@ char    log_buf[128];                   /* Log buffer                */
             if (regs->insttrace && sysblk.traceFILE)
                 tf_0814( regs, order, 0, cpad, status, parm, 0 );
             else
+                // "Processor %s: CC %d%s"
                 WRMSG( HHC00814, "I", log_buf, 0, "" );
         }
         else
@@ -6603,6 +6607,7 @@ char    log_buf[128];                   /* Log buffer                */
             {
                 char buf[40];
                 MSGBUF( buf, " status %8.8X", (U32) status );
+                // "Processor %s: CC %d%s"
                 WRMSG( HHC00814, "I", log_buf, 1, buf );
             }
         }

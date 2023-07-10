@@ -144,12 +144,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
         {                                                       \
             /* PROGRAMMING NOTE: we must call 'fwritemsg'       \
                directly since attempting to use the 'WRMSG'     \
-               macro instead seems to confuse gcc/clang.        \
+               macro confuses poor dumb gcc/clang. (SIGH!)      \
             */                                                  \
-            /* "%1d:%04X ....(debug trace message)... */        \
+            /* "Thread "TIDPAT" %1d:%04X .... */                \
             fwritemsg( __FILE__, __LINE__, __FUNCTION__,        \
                 WRMSG_NORMAL, stdout,                           \
                 #id "%s " id "\n", sev,                         \
+                hthread_self(),                                 \
                 SSID_TO_LCSS( dev->ssid ),                      \
                 dev->devnum, ## __VA_ARGS__ );                  \
         }                                                       \
@@ -518,26 +519,27 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00420 "%1d:%04X CKD file %s: error write kd orientation"
 #define HHC00421 "%1d:%04X CKD file %s: error write data orientation"
 #define HHC00422 "%1d:%04X CKD file %s: data chaining not supported for non-read CCW %02X"
-#define HHC00423 "%1d:%04X CKD file %s: search key %s"
-#define HHC00424 "%1d:%04X CKD file %s: read trk %d cur trk %d"
-#define HHC00425 "%1d:%04X CKD file %s: read track updating track %d"
-#define HHC00426 "%1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
-#define HHC00427 "%1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
-#define HHC00428 "%1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
-#define HHC00429 "%1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
-#define HHC00430 "%1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
-#define HHC00431 "%1d:%04X CKD file %s: seeking to cyl %d head %d"
-#define HHC00432 "%1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
-#define HHC00433 "%1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
-#define HHC00434 "%1d:%04X CKD file %s: read count orientation %s"
-#define HHC00435 "%1d:%04X CKD file %s: cyl %d head %d record %d kl %d dl %d of %d"
-#define HHC00436 "%1d:%04X CKD file %s: read key %d bytes"
-#define HHC00437 "%1d:%04X CKD file %s: read data %d bytes"
-#define HHC00438 "%1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
-#define HHC00439 "%1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
-#define HHC00440 "%1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
-#define HHC00441 "%1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
-#define HHC00442 "%1d:%04X CKD file %s: set file mask %02X"
+// LOGDEVTR...
+#define HHC00423 "Thread "TIDPAT" %1d:%04X CKD file %s: search key %s"
+#define HHC00424 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cur trk %d"
+#define HHC00425 "Thread "TIDPAT" %1d:%04X CKD file %s: read track updating track %d"
+#define HHC00426 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
+#define HHC00427 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
+#define HHC00428 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
+#define HHC00429 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
+#define HHC00430 "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
+#define HHC00431 "Thread "TIDPAT" %1d:%04X CKD file %s: seeking to cyl %d head %d"
+#define HHC00432 "Thread "TIDPAT" %1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
+#define HHC00433 "Thread "TIDPAT" %1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
+#define HHC00434 "Thread "TIDPAT" %1d:%04X CKD file %s: read count orientation %s"
+#define HHC00435 "Thread "TIDPAT" %1d:%04X CKD file %s: cyl %d head %d record %d kl %d dl %d of %d"
+#define HHC00436 "Thread "TIDPAT" %1d:%04X CKD file %s: read key %d bytes"
+#define HHC00437 "Thread "TIDPAT" %1d:%04X CKD file %s: read data %d bytes"
+#define HHC00438 "Thread "TIDPAT" %1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
+#define HHC00439 "Thread "TIDPAT" %1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
+#define HHC00440 "Thread "TIDPAT" %1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
+#define HHC00441 "Thread "TIDPAT" %1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
+#define HHC00442 "Thread "TIDPAT" %1d:%04X CKD file %s: set file mask %02X"
 //efine HHC00443 (available)
 //efine HHC00444 (available)
 #define HHC00445 "%1d:%04X CKD file %s: updating cyl %d head %d"
@@ -591,11 +593,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00513 "%1d:%04X FBA file %s: FBA origin mismatch: %d, expected %d,"
 #define HHC00514 "%1d:%04X FBA file %s: FBA numblk mismatch: %d, expected %d,"
 #define HHC00515 "%1d:%04X FBA file %s: FBA blksiz mismatch: %d, expected %d,"
-#define HHC00516 "%1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
-#define HHC00517 "%1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
-#define HHC00518 "%1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
-#define HHC00519 "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
-#define HHC00520 "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
+// LOGDEVTR...
+#define HHC00516 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
+#define HHC00517 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
+#define HHC00518 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
+#define HHC00519 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
+#define HHC00520 "Thread "TIDPAT" %1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
 #define HHC00521 "Maximum of %u %s in a 2GB file"
 //efine HHC00522 - HHC00599 (available)
 
@@ -2406,7 +2409,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03208 "Format-%c trace file created by: %s"
 #define HHC03209 "Trace %s: %s"
 #define HHC03210 "Incompatible MAX_CPU_ENGS"
-#define HHC03211 "Trace count: ins=%s records, dev=%s records"
+#define HHC03211 "Trace count: instruction=%s records, device=%s records"
 #define HHC03212 "File does not start with TFSYS record; aborting"
 #define HHC03213 "Unsupported Trace File format: %%TF%c"
 #define HHC03214 "Unsupported Trace File record: msgnum %"PRIu16
@@ -2418,7 +2421,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03220 "--date range is required when --time range specified"
 #define HHC03221 "Endianness of %s = %s"
 #define HHC03222 "WARNING: possible performance impact due to endianness!"
-//efine HHC03223 - HHC03249 (available)
+#define HHC03223 "Thread Id "TIDPAT" is %s"
+//efine HHC03224 - HHC03249 (available)
 
 // tfswap
 #define HHC03250 "Usage:  tfswap  infile  outfile\n"

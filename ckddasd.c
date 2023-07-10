@@ -3773,7 +3773,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             {
                 str_guest_to_host( iobuf, module, (u_int)kl );
                 // "%1d:%04X CKD file %s: search key %s"
-                WRMSG( HHC00423, "I", LCSS_DEVNUM, dev->filename, RTRIM( module ));
+                LOGDEVTR( HHC00423, "I", LCSS_DEVNUM, dev->filename, RTRIM( module ));
             }
         }
 
