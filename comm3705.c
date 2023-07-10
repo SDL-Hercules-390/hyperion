@@ -1470,6 +1470,8 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     }
     dev->commadpt->have_cthread=1;
 
+    /* Indicate things need to be closed */
+    dev->fd = 3705;     // too high an FD to be normally used
     /* Release the CA lock */
     release_lock(&dev->commadpt->lock);
     /* Indicate succesfull completion */
