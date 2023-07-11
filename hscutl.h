@@ -412,11 +412,11 @@ HUT_DLL_IMPORT bool are_big_endian();
 /*********************************************************************/
 /*********************************************************************/
 
-// Format 0 = original release
-// Format 1 = 64 bytes of CCW data (for E7 CCW support)
-// Format 2 = Add thread-id and name to TFHDR
+#define TF_FMT0   '0'       // Format 0 = original release
+#define TF_FMT1   '1'       // Format 1 = 64 bytes of E7 CCW data
+#define TF_FMT2   '2'       // Format 2 = TFHDR thread id/name
 
-#define TF_FMT  '2'         // TraceFile file format number (0-9)
+#define TF_FMT  TF_FMT2     // Current TraceFile file-format
 
 #undef ATTRIBUTE_PACKED
 #if defined(_MSVC_)
@@ -459,12 +459,15 @@ struct TFHDR
     U16     cpuad;          // CPU Address
     U16     msgnum;         // Message Number (2269 - 2272, etc)
     TIMEVAL tod;            // Time of day of record/event
-    U64     tidnum;         // Thread-Id number (not 'TID'!)
-    char    thrdname[16];   // Thread name
     BYTE    arch_mode;      // Architecture mode for this CPU
     BYTE    lcss;           // LCSS (0-7)
     U16     devnum;         // Device number
     BYTE    pad [ 4 ];      // (padding/alignment/unused)
+
+    // Format-2...
+
+    U64     tidnum;         // Thread-Id number (not 'TID'!)
+    char    thrdname[16];   // Thread name
 }
 ATTRIBUTE_PACKED; typedef struct TFHDR TFHDR;
 CASSERT( sizeof( TFHDR ) % 8 == 0, hscutl_h );
@@ -1052,9 +1055,17 @@ struct TF01301
     BYTE    amt;            // Data amount
     BYTE    type;           // IDA type (IDAW1/IDAW2/MIDAW)
     BYTE    mflag;          // MIDAW flag
-    BYTE    code;           // CCW opcode
+
+    // Format-0...
+
+//  BYTE    pad [ 3 ];      // (padding/alignment/unused)
+//  BYTE    data[16];       // IDAW/MIDAW data (amt <= 16)
+
+    // Format-1...
+
+    BYTE    code;           // CCW opcode (if E7, amt = 64)
     BYTE    pad [ 2 ];      // (padding/alignment/unused)
-    BYTE    data[64];       // CCW data
+    BYTE    data[64];       // IDAW/MIDAW data (amt <= 64)
 }
 ATTRIBUTE_PACKED; typedef struct TF01301 TF01301;
 CASSERT( sizeof( TF01301 ) % 8 == 0, hscutl_h );
@@ -1178,7 +1189,14 @@ struct TF01315
     BYTE    amt;            // Data amount
     BYTE    pad [ 1 ];      // (padding/alignment/unused)
     BYTE    ccw[8];         // CCW
-    BYTE    data[64];       // CCW data
+
+    // Format-0...
+
+//  BYTE    data[16];       // CCW data (amt <= 16)
+
+    // Format-1...
+
+    BYTE    data[64];       // CCW data (amt <= 64)
 }
 ATTRIBUTE_PACKED; typedef struct TF01315 TF01315;
 CASSERT( sizeof( TF01315 ) % 8 == 0, hscutl_h );
@@ -1677,7 +1695,7 @@ HUT_DLL_IMPORT bool tf_autostop();                     // Automatically stop all
 
 HUT_DLL_IMPORT bool tf_are_swaps_needed( TFSYS* sys );
 HUT_DLL_IMPORT void tf_swap_sys( TFSYS* sys );
-HUT_DLL_IMPORT void tf_swap_hdr( TFHDR* hdr );
+HUT_DLL_IMPORT void tf_swap_hdr( BYTE sys_ffmt, TFHDR* hdr );
 HUT_DLL_IMPORT void tf_swap_rec( TFHDR* hdr, U16 msgnum );
 
 #endif /* __HSCUTL_H__ */

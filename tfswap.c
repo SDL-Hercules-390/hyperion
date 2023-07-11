@@ -19,6 +19,9 @@
 
 static FILE*   infile = NULL;
 static double  filesize = 0;
+static BYTE    sys_ffmt = 0;
+static size_t  hdr_size = sizeof( TFHDR );
+static size_t  hdr_diff = 0;
 
 /*-------------------------------------------------------------------*/
 /*             Show them their command line arguments                */
@@ -212,13 +215,23 @@ int main( int argc, char* argv[] )
     }
 
     if (0
-        || sys->ffmt[3] < '0'
+        || sys->ffmt[3] < TF_FMT0
         || sys->ffmt[3] > TF_FMT
     )
     {
         // "Unsupported Trace File format: %%TF%c"
         FWRMSG( stderr, HHC03213, "E", sys->ffmt[3] );
         exit( -1 );
+    }
+
+    /* Remember the format of the file we're processing */
+    sys_ffmt = sys->ffmt[3];
+
+    /* Determine TFHDR size */
+    if (sys_ffmt < TF_FMT2)
+    {
+        hdr_size = offsetof( TFHDR, tidnum );
+        hdr_diff = sizeof( TFHDR ) - hdr_size;
     }
 
     /* Save the endianness of the file */
@@ -243,7 +256,7 @@ int main( int argc, char* argv[] )
     while (1)
     {
         /* Read just TFHDR for now, so we can identify record */
-        if ((bytes_read = fread( hdr, 1, sizeof( TFHDR ), infile )) != sizeof( TFHDR ))
+        if ((bytes_read = fread( hdr, 1, hdr_size, infile )) != hdr_size)
         {
             /* Stop when EOF reached */
             if (!bytes_read)
@@ -255,7 +268,7 @@ int main( int argc, char* argv[] )
         }
 
         /* Make sure we have a complete header to work with */
-        if (bytes_read < sizeof( TFHDR ))
+        if (bytes_read < hdr_size)
         {
             // "Truncated %s record; aborting"
             FWRMSG( stderr, HHC03253, "E", "TFHDR" );
@@ -267,11 +280,11 @@ int main( int argc, char* argv[] )
         msgnum = doendswap ? SWAP16( hdr->msgnum ) : hdr->msgnum;
 
         /* Swap the TFHDR we just read */
-        tf_swap_hdr( hdr );
+        tf_swap_hdr( sys_ffmt, hdr );
 
         /* Finish reading in the remainder of the record */
-        rec = (BYTE*) (hdr + 1);
-        amt = curr - sizeof( TFHDR );
+        rec = ((BYTE*)hdr + hdr_size); // (get past hdr)
+        amt = curr - hdr_size;
 
         if ((bytes_read = fread( rec, 1, amt, infile )) != (size_t)amt)
         {
@@ -293,11 +306,24 @@ int main( int argc, char* argv[] )
             exit( -1 );
         }
 
-        /* Swap the TF record just read */
-        tf_swap_rec( hdr, msgnum );
+        /* Swap the TF record just read. PROGRAMMING NOTE:
+           we adjust the TFHDR pointer that we pass to the
+           the tf_swap_rec function so that the actual rec
+           fields line up, and thus get swapped properly.
+
+           This is safe to do since tf_swap_rec never ever
+           accesses any of the TFHDR fields anyway. It only
+           modifies the record fields following the header.
+
+           The TFHDR part of the trace record was already
+           swapped earlier by the "tf_swap_hdr()" function
+           further above.
+        */
+        tf_swap_rec( (TFHDR*) ((BYTE*)hdr - hdr_diff), msgnum );
 
         /* Write out the swapped record */
-        amt += sizeof( TFHDR );
+        amt += hdr_size;
+        ASSERT( amt == curr ); // (quick sanity check)
         if (fwrite( hdr, 1, amt, outfile ) != (size_t)amt)
         {
             // "Error in function %s: %s"

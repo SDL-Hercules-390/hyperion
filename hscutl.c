@@ -4156,7 +4156,7 @@ DLL_EXPORT void tf_swap_sys( TFSYS* sys )
 /*-------------------------------------------------------------------*/
 /*        Do unconditional Endian swap of TFHDR record header        */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void tf_swap_hdr( TFHDR* hdr )
+DLL_EXPORT void tf_swap_hdr( BYTE sys_ffmt, TFHDR* hdr )
 {
     hdr->prev        = SWAP16( hdr->prev        );
     hdr->curr        = SWAP16( hdr->curr        );
@@ -4165,11 +4165,27 @@ DLL_EXPORT void tf_swap_hdr( TFHDR* hdr )
     hdr->devnum      = SWAP16( hdr->devnum      );
     hdr->tod.tv_sec  = SWAP32( hdr->tod.tv_sec  );
     hdr->tod.tv_usec = SWAP32( hdr->tod.tv_usec );
-    hdr->tidnum      = SWAP64( hdr->tidnum      );
+
+    // Format-2...
+
+    if (sys_ffmt >= TF_FMT2)
+        hdr->tidnum  = SWAP64( hdr->tidnum      );
 }
 
 /*-------------------------------------------------------------------*/
 /*     Do unconditional Endian swap of Trace File record fields      */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* PROGRAMMING NOTE: the TFHDR* passed to us by TFPRINT, from our    */
+/* point of view, appears to point to a "new" (current) format trace */
+/* record with both the header fields as well as the rec fields all  */
+/* properly aligned.                                                 */
+/*                                                                   */
+/* When TFSWAP calls us however, it passes an adjusted TFHDR pointer */
+/* wherein only the actual rec fields are aligned properly. This is  */
+/* safe to do since we don't ever access any of the header fields    */
+/* anyway. We only mess with the actual rec fields.                  */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void tf_swap_rec( TFHDR* hdr, U16 msgnum )
 {

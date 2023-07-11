@@ -83,7 +83,7 @@ struct tidtab
 typedef struct tidtab TIDTAB;
 
 static TIDTAB* tidtab = NULL;   // (ptr to table)
-static numtids = 0;             // (number of entries)
+static int numtids = 0;         // (number of entries)
 
 /*-------------------------------------------------------------------*/
 /*               static global work variables                        */
@@ -91,6 +91,7 @@ static numtids = 0;             // (number of entries)
 static char* pgm       = NULL;          /* less any extension (.ext) */
 static FILE* inf       = NULL;          /* Input file stream         */
 static int   arg_errs  = 0;             /* Parse options error count */
+static size_t hdr_size = sizeof(TFHDR); /* Size of file's TFHDR's    */
 static bool  info_only = false;         /* --info option             */
 static bool  regsfirst = false;         /* --traceopt REGSFIRST      */
 static bool  noregs    = false;         /* --traceopt NOREGS         */
@@ -119,6 +120,7 @@ static time_t  end_dat = {0};           /* --date option             */
 static U16   prvcpuad  = 0;             /* cpuad  of prv printed rec */
 static U16   prvdevnum = 0;             /* devnum of prv printed rec */
 static bool  previnst  = true;          /* prv was instruction print */
+static BYTE  sys_ffmt  = TF_FMT;        /* Saved TFSYS file format   */
 static char  pathname[ MAX_PATH ] = {0};/* Trace file name           */
 static BYTE  iobuff[ _64_KILOBYTE ];    /* Trace file I/O buffer     */
 
@@ -1069,7 +1071,7 @@ static void tf_dev_do_blank_sep( TFHDR* hdr )
         FormatTIMEVAL( &rec->rhdr.tod, timstr, sizeof( timstr ));     \
                                                                       \
         TF_DEV_FLOGMSG( _nnnn ),                                      \
-            rec->rhdr.tidnum, rec->rhdr.lcss, rec->rhdr.devnum
+        sys_ffmt >= TF_FMT2 ? rec->rhdr.tidnum : 0, rec->rhdr.lcss, rec->rhdr.devnum
 
 /*-------------------------------------------------------------------*/
 /*                    print TFSYS record                             */
@@ -2025,7 +2027,7 @@ static const char* e7_fmtdata( BYTE code, BYTE* data, BYTE amt )
 /*-------------------------------------------------------------------*/
 static const char* fmtdata( BYTE code, BYTE* data, BYTE amt )
 {
-    if (code == 0xE7)
+    if (sys_ffmt >= TF_FMT1 && code == 0xE7)
         return e7_fmtdata( code, data, amt );
     else
     {
@@ -2765,8 +2767,21 @@ static bool finish_reading_rec( U16 msgnum )
     rec = (BYTE*) (hdr + 1);          /* point past TFHDR to the rec */
     cpuad = (BYTE) hdr->cpuad;        /* which CPU this rec is for   */
 
-    /* Read in the remainder of this record */
-    amt = hdr->curr - sizeof( TFHDR );
+    /* Read in the remainder of this record. PROGRAMMING NOTE: we
+       read the rest of the record into our I/O buffer at an offset
+       that matches the CURRENT size of the THDR portion, such that
+       the entire record that ends up in our buffer (TFHDR + record
+       fields) ends up looking like a NEW (current) format record,
+       and not the old format of the file being read and processed.
+
+       This makes the rest of our trace file printing logic simpler
+       as they can then simply access the record fields directly
+       without being concerned about the difference in the THDR sizes
+       between the old and new formats, since will never access any
+       of the new TFHDR fields anyway without first checking if they
+       actually exist beforehand.
+    */
+    amt = hdr->curr - hdr_size;
     if ((bytes_read = fread( rec, 1, amt, inf )) < 0)
     {
         /* "Error reading trace file: %s" */
@@ -2782,6 +2797,12 @@ static bool finish_reading_rec( U16 msgnum )
         FWRMSG( stderr, HHC03207, "E", buf );
         exit( -1 );
     }
+
+    /* AT THIS POINT, the trace record in our buffer now looks like
+       what a NEW (current) format trace record looks like, with all
+       of its fields aligned correctly. This makes the remainder of
+       our processing logic much simpler and more straightforward.
+    /*
 
     /* Don't save this record if they're not interested in it */
     if (!is_wanted( hdr ))
@@ -2860,7 +2881,7 @@ int main( int argc, char* argv[] )
     }
 
     if (0
-        || sys->ffmt[3] < '0'
+        || sys->ffmt[3] < TF_FMT0
         || sys->ffmt[3] > TF_FMT
     )
     {
@@ -2868,6 +2889,13 @@ int main( int argc, char* argv[] )
         FWRMSG( stderr, HHC03213, "E", sys->ffmt[3] );
         exit( -1 );
     }
+
+    /* Remember the format of the file we're processing */
+    sys_ffmt = sys->ffmt[3];
+
+    /* Determine TFHDR size */
+    if (sys_ffmt < TF_FMT2)
+        hdr_size = offsetof( TFHDR, tidnum );
 
     if (sys->engs > MAX_CPU_ENGS)
     {
@@ -2905,7 +2933,7 @@ int main( int argc, char* argv[] )
     while (recnum < torec)
     {
         /* Read just TFHDR for now, so we can identify record */
-        if ((bytes_read = fread( hdr, 1, sizeof( TFHDR ), inf )) != sizeof( TFHDR ))
+        if ((bytes_read = fread( hdr, 1, hdr_size, inf )) != hdr_size)
         {
             /* Stop when EOF reached */
             if (!bytes_read)
@@ -2921,7 +2949,7 @@ int main( int argc, char* argv[] )
             show_file_progress();
 
         /* Make sure we have a complete header to work with */
-        if (bytes_read < sizeof( TFHDR ))
+        if (bytes_read < hdr_size)
         {
             // "Truncated %s record; aborting"
             FWRMSG( stderr, HHC03207, "E", "TFHDR" );
@@ -2930,16 +2958,20 @@ int main( int argc, char* argv[] )
 
         /* Swap endianness of header, if needed */
         if (doendswap)
-            tf_swap_hdr( hdr );
+            tf_swap_hdr( sys_ffmt, hdr );
 
         /* Save the thread information */
-        tf_save_tidinfo( hdr );
+        if (sys_ffmt >= TF_FMT2)
+            tf_save_tidinfo( hdr );
 
         /* Fix the 'cpuad' if this is a device trace record */
         if (hdr->cpuad == 0xFFFF)
             hdr->cpuad = MAX_CPU_ENGS;
 
-        /* Switch based on header's message number */
+        /* Now finish reading the rest of the record (via the
+           'finish_reading_rec()' function) and then process it
+           afterwards, all based on the hdr's message number.
+        */
         switch (hdr->msgnum)
         {
 
@@ -3070,16 +3102,20 @@ int main( int argc, char* argv[] )
         FWRMSG( stdout, HHC03215, "I", tiocnt, "device I/O's" );
     }
 
-    printf( "\n" );
-
     /* List thread-id numbers and their corresponding names... */
-    /* First, sort the list into a more user-friendly name sequence */
-    qsort( tidtab, numtids, sizeof( TIDTAB ), sort_tidtab_by_thrdname );
-    /* Now print it... */
-    for (i=0; i < numtids; ++i)
+    if (sys_ffmt >= TF_FMT2)
     {
-        // Thread Id "TIDPAT" is %s"
-        FWRMSG( stdout, HHC03223, "I", tidtab[i].tidnum, tidtab[i].thrdname );
+        printf( "\n" );
+
+        /* Sort the table into a more user-friendly name sequence */
+        qsort( tidtab, numtids, sizeof( TIDTAB ), sort_tidtab_by_thrdname );
+
+        /* Now print the table */
+        for (i=0; i < numtids; ++i)
+        {
+            // Thread Id "TIDPAT" is %s"
+            FWRMSG( stdout, HHC03223, "I", tidtab[i].tidnum, tidtab[i].thrdname );
+        }
     }
 
 done:
