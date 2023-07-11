@@ -6928,20 +6928,22 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
            and more threads can be created */
 
         /* the IOQ lock is obtained in order to write to sysblk.devtwait */
-        obtain_lock(&sysblk.ioqlock);
-        if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
+        OBTAIN_IOQLOCK();
         {
-            int rc;
+            if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
+            {
+                int rc;
 
-            rc = create_thread(&tid, DETACHED, device_thread, NULL, "idle device thread");
-            if (rc)
-                WRMSG(HHC00102, "E", strerror(rc));
+                rc = create_thread( &tid, DETACHED, device_thread, NULL, "idle device thread" );
+                if (rc)
+                    WRMSG(HHC00102, "E", strerror(rc));
+            }
+
+            /* Wakeup threads in case they need to terminate */
+            sysblk.devtwait = 0;
+            broadcast_condition( &sysblk.ioqcond );
         }
-
-        /* Wakeup threads in case they need to terminate */
-        sysblk.devtwait=0;
-        broadcast_condition (&sysblk.ioqcond);
-        release_lock(&sysblk.ioqlock);
+        RELEASE_IOQLOCK();
     }
     else
         WRMSG(HHC02242, "I",

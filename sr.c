@@ -122,15 +122,21 @@ BYTE     psw[16];
     RELEASE_INTLOCK(NULL);
 
     /* Wait for I/O queue to clear out */
+
     TRACE("SR: Waiting for I/O Queue to clear...\n");
-    obtain_lock (&sysblk.ioqlock);
-    while (sysblk.ioq)
+
+    OBTAIN_IOQLOCK();
     {
-        release_lock (&sysblk.ioqlock);
-        usleep (1000);
-        obtain_lock (&sysblk.ioqlock);
+        while (sysblk.ioq)
+        {
+            RELEASE_IOQLOCK();
+            {
+                usleep ( 1000 );
+            }
+            OBTAIN_IOQLOCK();
+        }
     }
-    release_lock (&sysblk.ioqlock);
+    RELEASE_IOQLOCK();
 
     /* Wait for active I/Os to complete */
     TRACE("SR: Waiting for Active I/Os to Complete...\n");

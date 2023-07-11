@@ -1,4 +1,3 @@
-
 /* HMACROS.H    (C) Copyright Roger Bowler, 1999-2012                */
 /*               Hercules macros...                                  */
 /*                                                                   */
@@ -445,6 +444,14 @@ typedef int CMPFUNC(const void*, const void*);
 
 #define OBTAIN_CRWLOCK()    obtain_lock( &sysblk.crwlock )
 #define RELEASE_CRWLOCK()   release_lock( &sysblk.crwlock )
+
+/*-------------------------------------------------------------------*/
+/*      Obtain/Release IOQ lock                                      */
+/*      ioqlock is used mostly by channel.c                          */
+/*-------------------------------------------------------------------*/
+
+#define OBTAIN_IOQLOCK()    obtain_lock(  &sysblk.ioqlock )
+#define RELEASE_IOQLOCK()   release_lock( &sysblk.ioqlock )
 
 /*-------------------------------------------------------------------*/
 /* Return whether specified CPU is waiting to acquire intlock or not */

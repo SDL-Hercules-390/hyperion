@@ -1601,35 +1601,38 @@ int     cc;                             /* Condition code            */
     else
     {
         cc = 1;
-        obtain_lock(&sysblk.ioqlock);
-        if(sysblk.ioq != NULL)
+
+        OBTAIN_IOQLOCK();
         {
-        DEVBLK *tmp;
-
-            /* special case for head of queue */
-            if(sysblk.ioq == dev)
+            if(sysblk.ioq != NULL)
             {
-                /* Remove device from the i/o queue */
-                sysblk.ioq = dev->nextioq;
-                cc = 0;
-            }
-            else
-            {
-                /* Search for device on i/o queue */
-                for(tmp = sysblk.ioq;
-                    tmp->nextioq != NULL && tmp->nextioq != dev;
-                    tmp = tmp->nextioq);
+            DEVBLK *tmp;
 
-                /* Remove from queue if found */
-                if(tmp->nextioq == dev)
+                /* special case for head of queue */
+                if(sysblk.ioq == dev)
                 {
-                    tmp->nextioq = tmp->nextioq->nextioq;
-                    sysblk.devtunavail = MAX(0, sysblk.devtunavail - 1);
+                    /* Remove device from the i/o queue */
+                    sysblk.ioq = dev->nextioq;
                     cc = 0;
+                }
+                else
+                {
+                    /* Search for device on i/o queue */
+                    for(tmp = sysblk.ioq;
+                        tmp->nextioq != NULL && tmp->nextioq != dev;
+                        tmp = tmp->nextioq);
+
+                    /* Remove from queue if found */
+                    if(tmp->nextioq == dev)
+                    {
+                        tmp->nextioq = tmp->nextioq->nextioq;
+                        sysblk.devtunavail = MAX(0, sysblk.devtunavail - 1);
+                        cc = 0;
+                    }
                 }
             }
         }
-        release_lock(&sysblk.ioqlock);
+        RELEASE_IOQLOCK();
 
         /* Reset the device */
         if(!cc)
@@ -2386,7 +2389,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
              * lock required before test to keep from entering queue and
              * becoming active prior to queue manipulation.
              */
-            obtain_lock( &sysblk.ioqlock );
+            OBTAIN_IOQLOCK();
             {
                 if (dev->startpending)
                 {
@@ -2412,7 +2415,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
                     dev->startpending = 0;
                 }
             }
-            release_lock( &sysblk.ioqlock );
+            RELEASE_IOQLOCK();
         }
     }
 
@@ -2707,122 +2710,130 @@ TID     tid;                            /* Thread ID                 */
 /*-------------------------------------------------------------------*/
 /* Execute a queued I/O                                              */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void *
-device_thread (void *arg)
+DLL_EXPORT void* device_thread( void* arg )
 {
-DEVBLK *dev;
+DEVBLK* dev;
 int     current_priority;               /* Current thread priority   */
 int     rc = 0;                         /* Return code               */
 u_int   waitcount = 0;                  /* Wait counter              */
 
-    UNREFERENCED(arg);
+    UNREFERENCED( arg );
 
     /* Automatically adjust to priority change if needed */
+
     current_priority = get_thread_priority();
+
     if (current_priority != sysblk.devprio)
     {
         set_thread_priority( sysblk.devprio );
         current_priority = sysblk.devprio;
     }
 
-    obtain_lock(&sysblk.ioqlock);
-
-    sysblk.devtwait = MAX(0, sysblk.devtwait - 1);
-
-    while (1)
+    OBTAIN_IOQLOCK();
     {
-        while ((dev=sysblk.ioq)  &&
-               !sysblk.shutdown)
+        sysblk.devtwait = MAX( 0, sysblk.devtwait - 1 );
+
+        while (1)
         {
-            /* Reset local wait count */
-            waitcount = 0;
-
-            /* Set next IOQ entry and zero pointer in current DEVBLK */
-            sysblk.ioq = dev->nextioq;
-            dev->nextioq = 0;
-
-            /* Decrement waiting IOQ count */
-            sysblk.devtunavail = MAX(0, sysblk.devtunavail - 1);
-
-            /* Create another device thread if pending work */
-            create_device_thread();
-
-            /* Set thread id */
-            dev->tid = thread_id();
-
-            /* Set thread name */
+            while ((dev=sysblk.ioq)  && !sysblk.shutdown)
             {
-                char thread_name[16];
-                MSGBUF( thread_name, "dev %4.4X thrd", dev->devnum );
-                SET_THREAD_NAME( thread_name );
+                /* Reset local wait count */
+                waitcount = 0;
+
+                /* Set next IOQ entry and zero pointer in current DEVBLK */
+                sysblk.ioq = dev->nextioq;
+                dev->nextioq = 0;
+
+                /* Decrement waiting IOQ count */
+                sysblk.devtunavail = MAX( 0, sysblk.devtunavail - 1 );
+
+                /* Create another device thread if pending work */
+                create_device_thread();
+
+                /* Set thread id */
+                dev->tid = thread_id();
+
+                /* Set thread name */
+                {
+                    char thread_name[16];
+                    MSGBUF( thread_name, "dev %4.4X thrd", dev->devnum );
+                    SET_THREAD_NAME( thread_name );
+                }
+
+                RELEASE_IOQLOCK();
+                {
+                    /* Set priority to requested device priority; should not */
+                    /* have any Hercules locks held                          */
+                    if (dev->devprio != current_priority)
+                    {
+                        set_thread_priority( dev->devprio);
+                        current_priority = dev->devprio;
+                    }
+
+                    /* Execute requested CCW chain */
+                    call_execute_ccw_chain( sysblk.arch_mode, dev );
+
+                    /* Reset priority back to device default priority */
+                    if (current_priority != sysblk.devprio)
+                    {
+                        set_thread_priority( sysblk.devprio);
+                        current_priority = sysblk.devprio;
+                    }
+                }
+                OBTAIN_IOQLOCK();
+
+                dev->tid = 0;
             }
+            // end while ((dev=sysblk.ioq)  && !sysblk.shutdown)
 
-            release_lock (&sysblk.ioqlock);
+            /* Shutdown thread on request, if idle for more than two     */
+            /* seconds, or more than four idle threads                   */
+            if (0
+                || (1
+                    && sysblk.devtmax == 0
+                    && waitcount >= 20
+                    && sysblk.devtwait > 3
+                   )
+                || (sysblk.devtmax > 0 && sysblk.devtnbr > sysblk.devtmax)
+                ||  sysblk.devtmax < 0
+                ||  sysblk.shutdown
+            )
+                break;
 
-            /* Set priority to requested device priority; should not */
-            /* have any Hercules locks held                          */
-            if (dev->devprio != current_priority)
+            /* Show thread as idle */
+            waitcount++;
+            sysblk.devtwait++;
+            SET_THREAD_NAME( "idle dev thrd" );
+
+            /* Wait for work to arrive */
+            rc = timed_wait_condition_relative_usecs
+                 (
+                     &sysblk.ioqcond,
+                     &sysblk.ioqlock,
+                     100000, // 100 ms
+                     NULL
+                 );
+
+            /* Decrement thread waiting count */
+            sysblk.devtwait = MAX( 0, sysblk.devtwait - 1 );
+
+            /* If shutdown requested, terminate the thread
+               after signaling next I/O thread to shutdown.
+            */
+            if (sysblk.shutdown)
             {
-                set_thread_priority( dev->devprio);
-                current_priority = dev->devprio;
+                signal_condition( &sysblk.ioqcond );
+                break;
             }
-
-            /* Execute requested CCW chain */
-            call_execute_ccw_chain(sysblk.arch_mode, dev);
-
-            /* Reset priority back to device default priority */
-            if (current_priority != sysblk.devprio)
-            {
-                set_thread_priority( sysblk.devprio);
-                current_priority = sysblk.devprio;
-            }
-
-            /* Done. Reset the threadid used by the device and       */
-            /* re-obtain ioqlock                                     */
-            obtain_lock(&sysblk.ioqlock);
-            dev->tid = 0;
         }
+        // end while (1)
 
-        /* Shutdown thread on request, if idle for more than two     */
-        /* seconds, or more than four idle threads                   */
-        if ((sysblk.devtmax == 0 &&
-                waitcount >= 20 &&
-                sysblk.devtwait > 3)                                 ||
-            (sysblk.devtmax >  0 && sysblk.devtnbr > sysblk.devtmax) ||
-            sysblk.devtmax < 0                                       ||
-            sysblk.shutdown)
-            break;
-
-        /* Show thread as idle */
-        waitcount++;
-        sysblk.devtwait++;
-        SET_THREAD_NAME( "idle dev thrd" );
-
-        /* Wait for work to arrive */
-        rc = timed_wait_condition_relative_usecs (&sysblk.ioqcond,
-                                                  &sysblk.ioqlock,
-                                                  100000 /* 100 ms */,
-                                                  NULL);
-
-        /* Decrement thread waiting count */
-        sysblk.devtwait = MAX(0, sysblk.devtwait - 1);
-
-        /* If shutdown requested, terminate the thread after signaling
-         * next I/O thread to shutdown.
-         */
-        if (sysblk.shutdown)
-        {
-            signal_condition (&sysblk.ioqcond);
-            break;
-        }
+        /* Decrement total number of device threads */
+        sysblk.devtnbr = MAX( 0, sysblk.devtnbr - 1 );
     }
+    RELEASE_IOQLOCK();
 
-    /* Decrement total number of device threads */
-    sysblk.devtnbr = MAX(0, sysblk.devtnbr - 1);
-
-    /* Release queue lock and return */
-    release_lock (&sysblk.ioqlock);
-    return (NULL);
+    return ( NULL );
 
 } /* end function device_thread */
 
@@ -2859,42 +2870,12 @@ ScheduleIORequest ( DEVBLK *dev )
     /* Determine if the device is resuming */
     device_resume = (dev->scsw.flag2 & SCSW2_AC_RESUM);
 
-    /* Lock the I/O request queue */
-    obtain_lock( &sysblk.ioqlock );
-
-    /* Insert this I/O request into the appropriate I/O queue slot */
-    for (ioq = sysblk.ioq, previoq = NULL, count = 0;
-        ioq;
-        ++count, previoq = ioq, ioq = ioq->nextioq)
+    OBTAIN_IOQLOCK();
     {
-        /* If DEVBLK already in queue, fail queueing of DEVBLK */
-        if (ioq == dev)
-        {
-            rc = 2;
-            BREAK_INTO_DEBUGGER();
-            break;
-        }
-
-        /* 1. Look for priority partition. */
-        if (dev->priority > ioq->priority)
-            break;
-        if (dev->priority < ioq->priority)
-            continue;
-
-        /* 2. Resumes precede Start I/Os in each priority partition */
-        if (device_resume > (ioq->scsw.flag2 & SCSW2_AC_RESUM))
-            break;
-    }
-
-    if (rc == 0)
-    {
-        /* Save next I/O queue position */
-        nextioq = ioq;
-
-        /* Validate and complete sanity count of I/O queue entries */
-        for (++count;
-             ioq;
-             ++count, ioq = ioq->nextioq)
+        /* Insert this I/O request into the appropriate I/O queue slot */
+        for (ioq = sysblk.ioq, previoq = NULL, count = 0;
+            ioq;
+            ++count, previoq = ioq, ioq = ioq->nextioq)
         {
             /* If DEVBLK already in queue, fail queueing of DEVBLK */
             if (ioq == dev)
@@ -2903,35 +2884,63 @@ ScheduleIORequest ( DEVBLK *dev )
                 BREAK_INTO_DEBUGGER();
                 break;
             }
+
+            /* 1. Look for priority partition. */
+            if (dev->priority > ioq->priority)
+                break;
+            if (dev->priority < ioq->priority)
+                continue;
+
+            /* 2. Resumes precede Start I/Os in each priority partition */
+            if (device_resume > (ioq->scsw.flag2 & SCSW2_AC_RESUM))
+                break;
         }
 
-        /* I/O queue has been validated, insert DEVBLK into I/O queue.
-         */
         if (rc == 0)
         {
-            /* Chain our request ahead of this one */
-            dev->nextioq = nextioq;
+            /* Save next I/O queue position */
+            nextioq = ioq;
 
-            /* Chain previous one (if any) to ours */
-            if (previoq != NULL)
-                previoq->nextioq = dev;
-            else
-                sysblk.ioq = dev;
+            /* Validate and complete sanity count of I/O queue entries */
+            for (++count;
+                 ioq;
+                 ++count, ioq = ioq->nextioq)
+            {
+                /* If DEVBLK already in queue, fail queueing of DEVBLK */
+                if (ioq == dev)
+                {
+                    rc = 2;
+                    BREAK_INTO_DEBUGGER();
+                    break;
+                }
+            }
 
-            /* Update device thread unavailable count. It will be
-             * decremented once a thread grabs this request.
+            /* I/O queue has been validated, insert DEVBLK into I/O queue.
              */
-            sysblk.devtunavail = count;
+            if (rc == 0)
+            {
+                /* Chain our request ahead of this one */
+                dev->nextioq = nextioq;
 
-            /* Create another device thread, if needed, to service this
-             * I/O
-             */
-            rc = create_device_thread();
+                /* Chain previous one (if any) to ours */
+                if (previoq != NULL)
+                    previoq->nextioq = dev;
+                else
+                    sysblk.ioq = dev;
+
+                /* Update device thread unavailable count. It will be
+                 * decremented once a thread grabs this request.
+                 */
+                sysblk.devtunavail = count;
+
+                /* Create another device thread, if needed, to service this
+                 * I/O
+                 */
+                rc = create_device_thread();
+            }
         }
     }
-
-    /* Release the I/O queue lock */
-    release_lock( &sysblk.ioqlock );
+    RELEASE_IOQLOCK();
 
     /* Return condition code */
     return rc;

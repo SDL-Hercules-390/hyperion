@@ -905,10 +905,12 @@ int     cpu;
         }
 
     /* Terminate device threads */
-    obtain_lock (&sysblk.ioqlock);
-    sysblk.devtwait=0;
-    broadcast_condition (&sysblk.ioqcond);
-    release_lock (&sysblk.ioqlock);
+    OBTAIN_IOQLOCK();
+    {
+        sysblk.devtwait = 0;
+        broadcast_condition( &sysblk.ioqcond );
+    }
+    RELEASE_IOQLOCK();
 
     /* release storage          */
     sysblk.lock_mainstor = 0;
