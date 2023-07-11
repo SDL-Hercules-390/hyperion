@@ -1033,6 +1033,17 @@ static void tf_dev_do_blank_sep( TFHDR* hdr )
     tf_dev_do_blank_sep( &rec->rhdr );                                \
     FLOGMSG( stdout, "%s " # _hhc "I " _hhc "\n", &timstr[ 11 ]
 
+// (same as above, but for "E" error message)
+#define TF_DEV_FLOGMSG_E( _nnnn )                                     \
+                                                                      \
+    TF_DEV_FLOGMSG_HHC_E( HHC0 ## _nnnn )
+
+// (same as TF_FLOGMSG_HHC, but for "E" error message)
+#define TF_DEV_FLOGMSG_HHC_E( _hhc )                                  \
+                                                                      \
+    tf_dev_do_blank_sep( &rec->rhdr );                                \
+    FLOGMSG( stdout, "%s " # _hhc "E " _hhc "\n", &timstr[ 11 ]
+
 //---------------------------------------------------------------------
 
 /* Used by device trace messages 1300-1336... */
@@ -1060,6 +1071,10 @@ static void tf_dev_do_blank_sep( TFHDR* hdr )
 #define PRINT_DEV_FUNC0( _nnnn )                                      \
     PRINT_DEV_TF0( _nnnn ), rec->filename
 
+// (same as above, but for "E" error message)
+#define PRINT_DEV_FUNC0_E( _nnnn )                                    \
+    PRINT_DEV_TF0_E( _nnnn ), rec->filename
+
 /* Almost the entire device trace printing function,
    except for last few printf arguments...
 */
@@ -1071,6 +1086,17 @@ static void tf_dev_do_blank_sep( TFHDR* hdr )
         FormatTIMEVAL( &rec->rhdr.tod, timstr, sizeof( timstr ));     \
                                                                       \
         TF_DEV_FLOGMSG( _nnnn ),                                      \
+        sys_ffmt >= TF_FMT2 ? rec->rhdr.tidnum : 0, rec->rhdr.lcss, rec->rhdr.devnum
+
+// (same as above, but for "E" error message)
+#define PRINT_DEV_TF0_E( _nnnn )                                      \
+                                                                      \
+    static inline void print_TF0 ## _nnnn( TF0 ## _nnnn* rec )        \
+    {                                                                 \
+        char timstr[ 64] = {0};                                       \
+        FormatTIMEVAL( &rec->rhdr.tod, timstr, sizeof( timstr ));     \
+                                                                      \
+        TF_DEV_FLOGMSG_E( _nnnn ),                                    \
         sys_ffmt >= TF_FMT2 ? rec->rhdr.tidnum : 0, rec->rhdr.lcss, rec->rhdr.devnum
 
 /*-------------------------------------------------------------------*/
@@ -2102,7 +2128,8 @@ PRINT_DEV_FUNC0( 0430 ), rec->trk, rec->buf[0], rec->buf[1], rec->buf[2], rec->b
 PRINT_DEV_FUNC0( 0431 ), rec->cyl, rec->head ); }
 
 //HHC00432 "Thread "TIDPAT" %1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
-PRINT_DEV_FUNC0( 0432 ), rec->count, rec->mask ); }
+// (Note: PRINT_DEV_FUNC0_E = "E" error message, not "I" informational message!)
+PRINT_DEV_FUNC0_E( 0432 ), rec->count, rec->mask ); }
 
 //HHC00433 "Thread "TIDPAT" %1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
 PRINT_DEV_FUNC0( 0433 ), rec->cyl, rec->head ); }
@@ -3001,14 +3028,19 @@ int main( int argc, char* argv[] )
         CASE_FOR_MSGNUM0( 802 ); // PER event
         CASE_FOR_MSGNUM0( 803 ); // Program interrupt loop
         CASE_FOR_MSGNUM0( 804 ); // I/O interrupt (S/370)
+
         CASE_FOR_MSGNUM0( 806 ); // I/O Interrupt
         CASE_FOR_MSGNUM0( 807 ); // Machine Check Interrupt
         CASE_FOR_MSGNUM0( 808 ); // Store Status
         CASE_FOR_MSGNUM0( 809 ); // Disabled Wait State
+
         CASE_FOR_MSGNUM0( 811 ); // Architecture mode
         CASE_FOR_MSGNUM0( 812 ); // Vector facility online (370/390)
+
         CASE_FOR_MSGNUM0( 814 ); // Signal Processor
+
         CASE_FOR_MSGNUM0( 840 ); // External Interrupt
+
         CASE_FOR_MSGNUM0( 844 ); // Block I/O Interrupt
         CASE_FOR_MSGNUM0( 845 ); // Block I/O External interrupt
         CASE_FOR_MSGNUM0( 846 ); // Service Signal External Interrupt
@@ -3017,8 +3049,11 @@ int main( int argc, char* argv[] )
         CASE_FOR_MSGNUM( 2270 ); // Floating Point Registers
         CASE_FOR_MSGNUM( 2271 ); // Control Registers
         CASE_FOR_MSGNUM( 2272 ); // Access Registers
+
         CASE_FOR_MSGNUM( 2276 ); // Floating Point Control Register
+
         CASE_FOR_MSGNUM( 2324 ); // Instruction Trace
+
         CASE_FOR_MSGNUM( 2326 ); // Instruction Operands
 
         // Device tracing ...
@@ -3052,6 +3087,7 @@ int main( int argc, char* argv[] )
 
         CASE_FOR_MSGNUM( 1300 ); // Halt subchannel
         CASE_FOR_MSGNUM( 1301 ); // IDAW/MIDAW
+
         CASE_FOR_MSGNUM( 1304 ); // Attention signaled
         CASE_FOR_MSGNUM( 1305 ); // Attention
         CASE_FOR_MSGNUM( 1306 ); // Initial status interrupt
@@ -3062,18 +3098,22 @@ int main( int argc, char* argv[] )
         CASE_FOR_MSGNUM( 1311 ); // Resumed
         CASE_FOR_MSGNUM( 1312 ); // I/O stat
         CASE_FOR_MSGNUM( 1313 ); // Sense
+
         CASE_FOR_MSGNUM( 1315 ); // CCW
         CASE_FOR_MSGNUM( 1316 ); // CSW (370)
         CASE_FOR_MSGNUM( 1317 ); // SCSW
         CASE_FOR_MSGNUM( 1318 ); // TEST I/O
+
         CASE_FOR_MSGNUM( 1320 ); // S/370 SIO conversion started
         CASE_FOR_MSGNUM( 1321 ); // S/370 SIO conversion success
+
         CASE_FOR_MSGNUM( 1329 ); // Halt I/O
         CASE_FOR_MSGNUM( 1330 ); // HIO modification
         CASE_FOR_MSGNUM( 1331 ); // Clear subchannel
         CASE_FOR_MSGNUM( 1332 ); // Halt subchannel
         CASE_FOR_MSGNUM( 1333 ); // Resume subchannel
         CASE_FOR_MSGNUM( 1334 ); // ORB
+
         CASE_FOR_MSGNUM( 1336 ); // Startio cc=2
 
         default:
