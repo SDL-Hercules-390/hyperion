@@ -4273,10 +4273,10 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
             if (dev->ccwtrace)
             {
                 if (sysblk.traceFILE)
-                    tf_1304( dev );
+                    tf_1305( dev );
                 else
-                    // "%1d:%04X CHAN: attention signaled"
-                    WRMSG( HHC01304, "I", LCSS_DEVNUM );
+                    // "%1d:%04X CHAN: attention"
+                    WRMSG( HHC01305, "I", LCSS_DEVNUM );
             }
 
             /* We already have INTLOCK and dev->lock held, so now
