@@ -371,11 +371,13 @@ int     attn = 0;
     // If socket device, create a listening socket
     // to accept connections on.
 
-    if(attn)
+    if (attn)
     {
-        release_lock (&dev->lock);
-        device_attention (dev, CSW_DE);
-        obtain_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
+        {
+            device_attention( dev, CSW_DE );
+        }
+        OBTAIN_DEVLOCK( dev );
     }
 
     if (sockdev && !bind_device(dev,dev->filename))

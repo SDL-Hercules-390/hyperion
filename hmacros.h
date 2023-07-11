@@ -446,12 +446,18 @@ typedef int CMPFUNC(const void*, const void*);
 #define RELEASE_CRWLOCK()   release_lock( &sysblk.crwlock )
 
 /*-------------------------------------------------------------------*/
-/*      Obtain/Release IOQ lock                                      */
-/*      ioqlock is used mostly by channel.c                          */
+/*      Obtain/Release lock helper macros                            */
+/*      used mostly by channel.c                                     */
 /*-------------------------------------------------------------------*/
 
-#define OBTAIN_IOQLOCK()    obtain_lock(  &sysblk.ioqlock )
-#define RELEASE_IOQLOCK()   release_lock( &sysblk.ioqlock )
+#define OBTAIN_IOQLOCK()          obtain_lock(  &sysblk.ioqlock )
+#define RELEASE_IOQLOCK()         release_lock( &sysblk.ioqlock )
+
+#define OBTAIN_IOINTQLK()         obtain_lock(  &sysblk.iointqlk )
+#define RELEASE_IOINTQLK()        release_lock( &sysblk.iointqlk )
+
+#define OBTAIN_DEVLOCK( dev )     obtain_lock(  &dev->lock )
+#define RELEASE_DEVLOCK( dev )    release_lock( &dev->lock )
 
 /*-------------------------------------------------------------------*/
 /* Return whether specified CPU is waiting to acquire intlock or not */

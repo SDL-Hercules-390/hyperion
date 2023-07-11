@@ -2522,7 +2522,7 @@ static void raise_adapter_interrupt( DEVBLK* dev )
         if (TRY_OBTAIN_INTLOCK( NULL ) == 0)
         {
             /* Interrupt lock obtained; queue the interrupt */
-            obtain_lock( &dev->lock );
+            OBTAIN_DEVLOCK( dev );
             {
                 if (grp->debugmask & DBGQETHINTRUPT)
                     DBGTRC( dev, "Adapter Interrupt" );
@@ -2531,14 +2531,14 @@ static void raise_adapter_interrupt( DEVBLK* dev )
                 dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
                 dev->pciscsw.chanstat = CSW_PCI;
 
-                obtain_lock( &sysblk.iointqlk );
+                OBTAIN_IOINTQLK();
                 {
                     QUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint, FALSE );
                     UPDATE_IC_IOPENDING_QLOCKED();
                 }
-                release_lock( &sysblk.iointqlk );
+                RELEASE_IOINTQLK();
             }
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
 
             RELEASE_INTLOCK( NULL );
             return;

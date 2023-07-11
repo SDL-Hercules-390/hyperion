@@ -1708,78 +1708,78 @@ char     trcmsg[32];
         serverSend (dev, ix, hdr, NULL, 0);
         dev->shrd[ix]->disconnect = 1;
 
-        obtain_lock (&dev->lock);
-
-        /* Make the device available if this system active on it */
-        if (dev->shioactive == id)
+        OBTAIN_DEVLOCK( dev );
         {
-            if (!dev->suspended)
+            /* Make the device available if this system active on it */
+            if (dev->shioactive == id)
             {
-                dev->busy = 0;
-                dev->shioactive = DEV_SYS_NONE;
+                if (!dev->suspended)
+                {
+                    dev->busy = 0;
+                    dev->shioactive = DEV_SYS_NONE;
+                }
+                else
+                    dev->shioactive = DEV_SYS_LOCAL;
+                if (dev->shiowaiters)
+                    signal_condition (&dev->shiocond);
             }
-            else
-                dev->shioactive = DEV_SYS_LOCAL;
-            if (dev->shiowaiters)
-                signal_condition (&dev->shiocond);
         }
-
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
         break;
 
     case SHRD_START:
     case SHRD_RESUME:
 
-        obtain_lock (&dev->lock);
-
-        /* If the device is suspended locally then grab it */
-        if (dev->shioactive == DEV_SYS_LOCAL && dev->suspended && !dev->reserved)
-            dev->shioactive = id;
-
-        /* Check if the device is busy */
-        if (dev->shioactive != id && dev->shioactive != DEV_SYS_NONE)
+        OBTAIN_DEVLOCK( dev );
         {
-            SHRDTRACE( "server request busy id=%d shioactive=%d reserved=%d",
-                    id, dev->shioactive, dev->reserved );
-            /* If the 'nowait' bit is on then respond 'busy' */
-            if (flag & SHRD_NOWAIT)
+            /* If the device is suspended locally then grab it */
+            if (dev->shioactive == DEV_SYS_LOCAL && dev->suspended && !dev->reserved)
+                dev->shioactive = id;
+
+            /* Check if the device is busy */
+            if (dev->shioactive != id && dev->shioactive != DEV_SYS_NONE)
             {
-                release_lock (&dev->lock);
-                SHRD_SET_HDR (hdr, SHRD_BUSY, 0, dev->devnum, id, 0);
-                serverSend (dev, ix, hdr, NULL, 0);
-                break;
+                SHRDTRACE( "server request busy id=%d shioactive=%d reserved=%d",
+                        id, dev->shioactive, dev->reserved );
+                /* If the 'nowait' bit is on then respond 'busy' */
+                if (flag & SHRD_NOWAIT)
+                {
+                    RELEASE_DEVLOCK( dev );
+                    SHRD_SET_HDR (hdr, SHRD_BUSY, 0, dev->devnum, id, 0);
+                    serverSend (dev, ix, hdr, NULL, 0);
+                    break;
+                }
+
+                dev->shrd[ix]->waiting = 1;
+
+                /* Wait while the device is busy by the local system */
+                while (dev->shioactive == DEV_SYS_LOCAL && !dev->suspended)
+                {
+                    dev->shiowaiters++;
+                    wait_condition (&dev->shiocond, &dev->lock);
+                    dev->shiowaiters--;
+                }
+
+                /* Return with the 'waiting' bit on if busy by a remote system */
+                if (dev->shioactive != DEV_SYS_NONE && dev->shioactive != DEV_SYS_LOCAL)
+                {
+                    RELEASE_DEVLOCK( dev );
+                    break;
+                }
+
+                dev->shrd[ix]->waiting = 0;
             }
 
-            dev->shrd[ix]->waiting = 1;
+            /* Make this system active on the device */
+            dev->shioactive = id;
+            dev->busy = 1;
+            sysblk.shrdcount++;
+            SHRDTRACE( "server request active id=%d", id );
 
-            /* Wait while the device is busy by the local system */
-            while (dev->shioactive == DEV_SYS_LOCAL && !dev->suspended)
-            {
-                dev->shiowaiters++;
-                wait_condition (&dev->shiocond, &dev->lock);
-                dev->shiowaiters--;
-            }
-
-            /* Return with the 'waiting' bit on if busy by a remote system */
-            if (dev->shioactive != DEV_SYS_NONE && dev->shioactive != DEV_SYS_LOCAL)
-            {
-                release_lock (&dev->lock);
-                break;
-            }
-
-            dev->shrd[ix]->waiting = 0;
+            /* Increment excp count */
+            dev->excps++;
         }
-
-        /* Make this system active on the device */
-        dev->shioactive = id;
-        dev->busy = 1;
-        sysblk.shrdcount++;
-        SHRDTRACE( "server request active id=%d", id );
-
-        /* Increment excp count */
-        dev->excps++;
-
-        release_lock(&dev->lock);
+        RELEASE_DEVLOCK( dev );
 
         /* Call the i/o start or resume exit */
         if (cmd == SHRD_START && dev->hnd->start)
@@ -1822,35 +1822,35 @@ char     trcmsg[32];
         else if (cmd == SHRD_SUSPEND && dev->hnd->suspend)
             (dev->hnd->suspend) (dev);
 
-        obtain_lock (&dev->lock);
-
-        /* Make the device available if it's not reserved */
-        if (!dev->reserved)
+        OBTAIN_DEVLOCK( dev );
         {
-            /* If locally suspended then return the device to local */
-            if (dev->suspended)
+            /* Make the device available if it's not reserved */
+            if (!dev->reserved)
             {
-                dev->shioactive = DEV_SYS_LOCAL;
-                dev->busy = 1;
-            }
-            else
-            {
-                dev->shioactive = DEV_SYS_NONE;
-                dev->busy = 0;
-            }
+                /* If locally suspended then return the device to local */
+                if (dev->suspended)
+                {
+                    dev->shioactive = DEV_SYS_LOCAL;
+                    dev->busy = 1;
+                }
+                else
+                {
+                    dev->shioactive = DEV_SYS_NONE;
+                    dev->busy = 0;
+                }
 
-            /* Reset any 'waiting' bits */
-            for (i = 0; i < SHARED_MAX_SYS; i++)
-                if (dev->shrd[i])
-                    dev->shrd[i]->waiting = 0;
+                /* Reset any 'waiting' bits */
+                for (i = 0; i < SHARED_MAX_SYS; i++)
+                    if (dev->shrd[i])
+                        dev->shrd[i]->waiting = 0;
 
-            /* Notify any waiters */
-            if (dev->shiowaiters)
-                signal_condition (&dev->shiocond);
+                /* Notify any waiters */
+                if (dev->shiowaiters)
+                    signal_condition (&dev->shiocond);
+            }
+            SHRDTRACE( "server request inactive id=%d", id );
         }
-        SHRDTRACE( "server request inactive id=%d", id );
-
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
 
         /* Send response back */
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 0);
@@ -1866,9 +1866,11 @@ char     trcmsg[32];
             break;
         }
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 1;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 1;
+        }
+        RELEASE_DEVLOCK( dev );
 
         SHRDTRACE( "server request reserved id=%d", id );
 
@@ -1893,9 +1895,11 @@ char     trcmsg[32];
         /* Call the I/O release exit */
         if (dev->hnd->release) (dev->hnd->release) (dev);
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 0;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 0;
+        }
+        RELEASE_DEVLOCK( dev );
 
         SHRDTRACE( "server request released id=%d", id );
 
@@ -2406,12 +2410,12 @@ char            threadname[16] = {0};
     }
 
     /* Obtain the device lock */
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
 
     /* Find an available slot for the connection */
     if ((rc = serverLocate( dev, id, &ix )) >= 0)
     {
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         serverError( NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
                      "already connected" );
         close_socket( csock );
@@ -2421,7 +2425,7 @@ char            threadname[16] = {0};
     /* Error if no available slot */
     if (ix < 0)
     {
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         serverError( NULL, -csock, SHRD_ERROR_NOTAVAIL, cmd,
                      "too many connections" );
         close_socket( csock );
@@ -2431,7 +2435,7 @@ char            threadname[16] = {0};
     /* Obtain SHRD block */
     if (!(dev->shrd[ix] = calloc( sizeof( SHRD ), 1 )))
     {
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         serverError( NULL, -csock, SHRD_ERROR_NOMEM, cmd,
                      "calloc() failure" );
         close_socket( csock );
@@ -2457,7 +2461,7 @@ char            threadname[16] = {0};
     /* Return if device thread already active */
     if (dev->shrdtid)
     {
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         return NULL;
     }
 
@@ -2533,7 +2537,7 @@ char            threadname[16] = {0};
             wait.tv_sec = SHARED_SELECT_WAIT;
             wait.tv_usec = 0;
 
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             {
                 dev->shrdwait = 1;
                 {
@@ -2541,7 +2545,7 @@ char            threadname[16] = {0};
                 }
                 dev->shrdwait = 0;
             }
-            obtain_lock( &dev->lock );
+            OBTAIN_DEVLOCK( dev );
 
             SHRDTRACE("select rc %d", rc );
 
@@ -2586,7 +2590,7 @@ char            threadname[16] = {0};
         }
 
         /* Found a pending request */
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
 
         SHRDTRACE("select ready %d id=%d",
             dev->shrd[ix]->fd, dev->shrd[ix]->id );
@@ -2607,7 +2611,7 @@ char            threadname[16] = {0};
                 WRMSG( HHC00734, "E", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id );
                 dev->shrd[ix]->disconnect = 1;
                 dev->shrd[ix]->pending = 0;
-                obtain_lock( &dev->lock );
+                OBTAIN_DEVLOCK( dev );
                 continue;
             }
         }
@@ -2615,7 +2619,7 @@ char            threadname[16] = {0};
         /* Process the request */
         serverRequest( dev, ix, hdr, buf );
 
-        obtain_lock( &dev->lock );
+        OBTAIN_DEVLOCK( dev );
 
         /* If the 'waiting' bit is on then the start/resume request
            failed because the device is busy on some other remote
@@ -2633,7 +2637,7 @@ char            threadname[16] = {0};
     } /* while (dev->shrdconn) */
 
     dev->shrdtid = 0;
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
 
     if (MLVL( VERBOSE ))
         LOG_THREAD_END( threadname  );

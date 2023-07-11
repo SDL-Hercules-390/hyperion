@@ -593,33 +593,31 @@ BYTE            skey1, skey2;           /* Storage keys of first and
         return 2;
     }
 
-    /* Obtain the device lock */
-    obtain_lock (&dev->lock);
-
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
-    /* Return code 5 and condition code 1 if status pending */
-    if ((dev->scsw.flag3 & SCSW3_SC_PEND)
-        || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
+    OBTAIN_DEVLOCK( dev );
     {
-        release_lock (&dev->lock);
-        regs->GR_L(15) = 5;
-        return 1;
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+        /* Return code 5 and condition code 1 if status pending */
+        if ((dev->scsw.flag3 & SCSW3_SC_PEND)
+            || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
+        {
+            RELEASE_DEVLOCK( dev );
+            regs->GR_L(15) = 5;
+            return 1;
+        }
+#endif
+
+        /* Return code 5 and condition code 1 if device is busy */
+        if (dev->busy || IOPENDING(dev))
+        {
+            RELEASE_DEVLOCK( dev );
+            regs->GR_L(15) = 5;
+            return 1;
+        }
+
+        /* Set the device busy indicator */
+        dev->busy = 1;
     }
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
-
-    /* Return code 5 and condition code 1 if device is busy */
-    if (dev->busy || IOPENDING(dev))
-    {
-        release_lock (&dev->lock);
-        regs->GR_L(15) = 5;
-        return 1;
-    }
-
-    /* Set the device busy indicator */
-    dev->busy = 1;
-
-    /* Release the device lock */
-    release_lock (&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
     /* Process each entry in the SBILIST */
     for (blkcount = 0; blkcount < sbicount; blkcount++)
@@ -835,33 +833,31 @@ BYTE            chanstat = 0;           /* Subchannel status         */
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
     }
 
-    /* Obtain the interrupt lock */
-    obtain_lock (&dev->lock);
-
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
-    /* Return code 5 and condition code 1 if status pending */
-    if ((dev->scsw.flag3 & SCSW3_SC_PEND)
-        || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
+    OBTAIN_DEVLOCK( dev );
     {
-        release_lock (&dev->lock);
-        regs->GR_L(15) = 5;
-        return 1;
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+        /* Return code 5 and condition code 1 if status pending */
+        if ((dev->scsw.flag3 & SCSW3_SC_PEND)
+            || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
+        {
+            RELEASE_DEVLOCK( dev );
+            regs->GR_L(15) = 5;
+            return 1;
+        }
+#endif
+
+        /* Return code 5 and condition code 1 if device is busy */
+        if (dev->busy || IOPENDING(dev))
+        {
+            RELEASE_DEVLOCK( dev );
+            regs->GR_L(15) = 5;
+            return 1;
+        }
+
+        /* Set the device busy indicator */
+        dev->busy = 1;
     }
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
-
-    /* Return code 5 and condition code 1 if device is busy */
-    if (dev->busy || IOPENDING(dev))
-    {
-        release_lock (&dev->lock);
-        regs->GR_L(15) = 5;
-        return 1;
-    }
-
-    /* Set the device busy indicator */
-    dev->busy = 1;
-
-    /* Release the device lock */
-    release_lock (&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
     /* Build the operation request block */
     memset (&dev->orb, 0, sizeof(ORB));
@@ -883,11 +879,13 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     residual = (dev->scsw.count[0] << 8) | dev->scsw.count[1];
 
     /* Clear the interrupt pending and device busy conditions */
-    obtain_lock (&dev->lock);
-    dev->busy = dev->pending = 0;
-    dev->scsw.flag2 = 0;
-    dev->scsw.flag3 = 0;
-    release_lock (&dev->lock);
+    OBTAIN_DEVLOCK( dev );
+    {
+        dev->busy = dev->pending = 0;
+        dev->scsw.flag2 = 0;
+        dev->scsw.flag3 = 0;
+    }
+    RELEASE_DEVLOCK( dev );
 
     /* Store the last CCW address in the parameter list */
     ioparm.lastccw[0] = (lastccw >> 24) & 0xFF;

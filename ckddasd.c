@@ -818,7 +818,7 @@ U64             offset;                 /* File offsets              */
 int             i,o,f;                  /* Indexes                   */
 CKD_TRKHDR     *trkhdr;                 /* -> New track header       */
 
-    // "%1d:%04X CKD file %s: read trk %d cur trk %d"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cur trk %d"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0424( dev, trk );
     else
@@ -842,7 +842,7 @@ CKD_TRKHDR     *trkhdr;                 /* -> New track header       */
     /* Write the previous track image if modified */
     if (dev->bufupd)
     {
-        // "%1d:%04X CKD file %s: read track updating track %d"
+        // "Thread "TIDPAT" %1d:%04X CKD file %s: read track updating track %d"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0425( dev );
         else
@@ -919,7 +919,7 @@ ckd_read_track_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        // "%1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
+        // "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0426( dev, trk, i );
         else
@@ -949,7 +949,7 @@ ckd_read_track_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        // "%1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
+        // "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0427( dev, trk );
         else
@@ -962,7 +962,7 @@ ckd_read_track_retry:
 
     /* Cache miss */
 
-    // "%1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0428( dev, trk, o );
     else
@@ -986,7 +986,7 @@ ckd_read_track_retry:
     dev->ckdtrkoff = (U64)(CKD_DEVHDR_SIZE +
          ((U64)(trk - (f ? dev->ckdhitrk[f-1] : 0))) * dev->ckdtrksz);
 
-    // "%1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0429( dev, trk, f+1 );
     else
@@ -1040,7 +1040,7 @@ ckd_read_track_retry:
 
     /* Validate the track header */
 
-    // "%1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0430( dev, trk );
     else
@@ -1576,7 +1576,7 @@ static int ckd_seek ( DEVBLK *dev, int cyl, int head,
 {
 int             rc;                     /* Return code               */
 
-    // "%1d:%04X CKD file %s: seeking to cyl %d head %d"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: seeking to cyl %d head %d"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0431( dev, cyl, head );
     else
@@ -1619,7 +1619,7 @@ int             head;                   /* Next head for multitrack  */
     if (dev->ckdlcount == 0 &&
         (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
     {
-        // "%1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
+        // "Thread "TIDPAT" %1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0432( dev );
         else
@@ -1656,7 +1656,7 @@ int             head;                   /* Next head for multitrack  */
         cyl++;
     }
 
-    // "%1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0433( dev, cyl, head );
     else
@@ -1713,7 +1713,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
     )
         skipr0 = true;
 
-    // "%1d:%04X CKD file %s: read count orientation %s"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: read count orientation %s"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0434( dev );
     else
@@ -1768,7 +1768,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         else
             dev->ckdtrkof = 0;
 
-        // "%1d:%04X CKD file %s: cyl %d head %d record %d kl %d dl %d of %d"
+        // "Thread "TIDPAT" %1d:%04X CKD file %s: cyl %d head %d record %d kl %d dl %d of %d"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0435( dev );
         else
@@ -1901,7 +1901,7 @@ CKD_RECHDR      rechdr;                 /* CKD record header         */
         if (rc < 0) return rc;
     }
 
-    // "%1d:%04X CKD file %s: read key %d bytes"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: read key %d bytes"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0436( dev );
     else
@@ -1957,7 +1957,7 @@ CKD_RECHDR      rechdr;                 /* Record header             */
     if (dev->ckdorient == CKDORIENT_COUNT)
         dev->bufoff += dev->ckdcurkl;
 
-    // "%1d:%04X CKD file %s: read data %d bytes"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: read data %d bytes"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0437( dev );
     else
@@ -2089,7 +2089,7 @@ U32             ckdlen;                 /* Count+key+data length     */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < (int)ckdlen) buf[len++] = '\0';
 
-    // "%1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0438( dev, recnum, keylen, datalen );
     else
@@ -2099,7 +2099,7 @@ U32             ckdlen;                 /* Count+key+data length     */
     /* Set track overflow flag if called for */
     if (trk_ovfl)
     {
-        // "%1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
+        // "Thread "TIDPAT" %1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0439( dev, recnum );
         else
@@ -2161,7 +2161,7 @@ int             kdlen;                  /* Key+data length           */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < kdlen) buf[len++] = '\0';
 
-    // "%1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0440( dev );
     else
@@ -2209,7 +2209,7 @@ int             rc;                     /* Return code               */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < dev->ckdcurdl) buf[len++] = '\0';
 
-    // "%1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
+    // "Thread "TIDPAT" %1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0441( dev );
     else
@@ -3596,7 +3596,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Extract the file mask from the I/O buffer */
         dev->ckdfmask = iobuf[0];
 
-        // "%1d:%04X CKD file %s: set file mask %02X"
+        // "Thread "TIDPAT" %1d:%04X CKD file %s: set file mask %02X"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0442( dev );
         else
@@ -3767,12 +3767,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             BYTE module[45];
             size_t kl = MIN( (size_t)num, sizeof( module ) - 1 );
 
+            // "Thread "TIDPAT" %1d:%04X CKD file %s: search key %s"
             if (sysblk.traceFILE)
                 tf_0423( dev, kl, iobuf );
             else
             {
                 str_guest_to_host( iobuf, module, (u_int)kl );
-                // "%1d:%04X CKD file %s: search key %s"
                 LOGDEVTR( HHC00423, "I", dev->filename, RTRIM( module ));
             }
         }
@@ -5072,9 +5072,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Call the release exit and mark the device not reserved */
         if (dev->hnd->release) (dev->hnd->release) (dev);
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 0;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 0;
+        }
+        RELEASE_DEVLOCK( dev );
 
         /* Perform the operation of a sense command */
         goto sense;
@@ -5099,9 +5101,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Mark the device reserved and call the reserve exit */
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 1;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 1;
+        }
+        RELEASE_DEVLOCK( dev );
 
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
 

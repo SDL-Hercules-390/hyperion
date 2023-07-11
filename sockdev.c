@@ -297,7 +297,7 @@ void socket_device_connection_handler( bind_struct* bs )
 
     /* Obtain the device lock */
 
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
     {
         /* Reject if device is busy or interrupt pending */
 
@@ -310,7 +310,7 @@ void socket_device_connection_handler( bind_struct* bs )
             close_socket( csock );
             // "%1d:%04X COMM: client %s, IP %s connection to device %s rejected: device busy or interrupt pending"
             WRMSG( HHC01037, "E", LCSS_DEVNUM, clientname, clientip, bs->spec );
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
@@ -322,7 +322,7 @@ void socket_device_connection_handler( bind_struct* bs )
             // "%1d:%04X COMM: client %s, IP %s connection to device %s rejected: client %s ip %s still connected"
             WRMSG( HHC01038, "E", LCSS_DEVNUM, clientname, clientip, bs->spec,
                 bs->clientname, bs->clientip );
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
@@ -345,14 +345,14 @@ void socket_device_connection_handler( bind_struct* bs )
             dev->fd = -1;
             // "%1d:%04X COMM: client %s, IP %s connection to device %s rejected: by onconnect callback"
             WRMSG( HHC01039, "E", LCSS_DEVNUM, clientname, clientip, bs->spec );
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
         // "%1d:%04X COMM: client %s, IP %s connected to device %s"
         WRMSG( HHC01040, "I", LCSS_DEVNUM, clientname, clientip, bs->spec );
     }
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
 
     device_attention( dev, CSW_DE );
 }

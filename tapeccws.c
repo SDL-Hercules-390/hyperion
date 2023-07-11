@@ -1627,7 +1627,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             STRLCPY( newfile, TAPE_UNLOADED );
 
         /* Obtain the device lock */
-        obtain_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
 
         /* Validate the given path... */
         if ( strcmp( newfile, TAPE_UNLOADED ) != 0 )
@@ -1641,7 +1641,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             { \
                 WRMSG(HHC00205, "E", LCSS_DEVNUM, _file, TTYPSTR(dev->tapedevt), "auto-mount", _reason); \
                 build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code); \
-                release_lock (&dev->lock); \
+                RELEASE_DEVLOCK( dev ); \
                 break; \
             }
 
@@ -1700,7 +1700,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         {
             WRMSG(HHC00214, "E", LCSS_DEVNUM, newfile, TTYPSTR(dev->tapedevt));
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
-            release_lock (&dev->lock);
+            RELEASE_DEVLOCK( dev );
             break;
         }
 
@@ -1767,7 +1767,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         }
 
         /* Release the device lock and exit function... */
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
         break;
 
     } /* End case 0x4B: SET DIAGNOSE */

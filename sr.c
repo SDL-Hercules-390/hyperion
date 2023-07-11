@@ -46,21 +46,23 @@ DEVBLK *dev;
 
     for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
-        obtain_lock (&dev->lock);
-        if (dev->busy && !dev->suspended)
+        OBTAIN_DEVLOCK( dev );
         {
-            if (dev->devtype != 0x3088)
+            if (dev->busy && !dev->suspended)
             {
-                release_lock (&dev->lock);
-                return dev;
-            }
-            else
-            {
-                usleep(50000);
-                dev->busy = 0;
+                if (dev->devtype != 0x3088)
+                {
+                    RELEASE_DEVLOCK( dev );
+                    return dev;
+                }
+                else
+                {
+                    usleep(50000);
+                    dev->busy = 0;
+                }
             }
         }
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
     }
     return NULL;
 }

@@ -871,11 +871,11 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
     {
         TRACE( "+++ CALLING device_attention( 0x%04.4X, CSW_DE )\n", dev->devnum );
 
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         {
             rc = device_attention( dev, CSW_DE );
         }
-        obtain_lock( &dev->lock );
+        OBTAIN_DEVLOCK( dev );
     }
 
     return rc;
@@ -1339,7 +1339,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         /* If some other thread (not us) owns it, then wait for it */
         if (rc != EBUSY)
         {
-            obtain_lock( &dev->lock );
+            OBTAIN_DEVLOCK( dev );
             lock_obtained = true; /* (so we know to release it) */
         }
         /* (else: presume we already owned it) */
@@ -1736,7 +1736,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     if (0 != rc)
     {
         if (lock_obtained) // (release lock only if WE obtained it)
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
         return -1;
     }
 
@@ -1771,7 +1771,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     }
 
     if (lock_obtained) // (release lock only if WE obtained it)
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
 
     UpdateDisplay(dev);
     rc = ReqAutoMount(dev);
@@ -2652,7 +2652,7 @@ void *autoload_wait_for_tapemount_thread(void *db)
 int      rc   =  -1;
 DEVBLK  *dev  =  (DEVBLK*) db;
 
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
     {
         while
         (
@@ -2661,12 +2661,14 @@ DEVBLK  *dev  =  (DEVBLK*) db;
             (rc = autoload_mount_next( dev )) != 0
         )
         {
-            release_lock( &dev->lock );
-            SLEEP(AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS);
-            obtain_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
+            {
+                SLEEP( AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS );
+            }
+            OBTAIN_DEVLOCK( dev );
         }
     }
-    release_lock(&dev->lock);
+    RELEASE_DEVLOCK( dev );
     if ( rc == 0 )
         device_attention(dev,CSW_DE);
     return NULL;
@@ -2876,7 +2878,7 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
                 // Inefficient, yes, but it's the only sure way
                 // to prevent GitHub Issue #518 from occurring.
 
-                obtain_lock( &dev->lock );
+                OBTAIN_DEVLOCK( dev );
                 {
                     /* Check for exit condition */
                     if (0
@@ -2892,24 +2894,24 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
                         if (dev->blockid < blockid && !dev->hetb)
                             rc = -1; // (hetb disappeared!)
 
-                        release_lock( &dev->lock );
+                        RELEASE_DEVLOCK( dev );
                         break; // (block located or error occurred)
                     }
                 }
-                release_lock( &dev->lock );
+                RELEASE_DEVLOCK( dev );
 
                 // Between the above release and the below obtain is
                 // the window of opportunity for I/O instructions to
                 // acquire dev->lock for themselves if they need to.
 
-                obtain_lock( &dev->lock );
+                OBTAIN_DEVLOCK( dev );
                 {
                     if (!dev->hetb)
                         rc = -1;
                     else
                         rc = dev->tmh->fsb( dev, unitstat, code );
                 }
-                release_lock( &dev->lock );
+                RELEASE_DEVLOCK( dev );
 
             } // end while
         } // end if special .HET file handling

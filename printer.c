@@ -665,26 +665,26 @@ static void* spthread (void* arg)
             break;
     }
 
-    obtain_lock( &dev->lock );
-
-    // PROGRAMMING NOTE: the following tells us whether we detected
-    // the error or if the device thread already did. If the device
-    // thread detected it while we were sleeping (and subsequently
-    // closed the connection) then we don't need to do anything at
-    // all; just exit. If we were the ones that detected the error
-    // however, then we need to close the connection so the device
-    // thread can learn of it...
-
-    if (dev->fd == fd)
+    OBTAIN_DEVLOCK( dev );
     {
-        dev->fd = -1;
-        close_socket( fd );
-        // "%1d:%04X Printer: client %s, IP %s disconnected from device %s"
-        WRMSG (HHC01100, "I", LCSS_DEVNUM,
-               dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
-    }
+        // PROGRAMMING NOTE: the following tells us whether we detected
+        // the error or if the device thread already did. If the device
+        // thread detected it while we were sleeping (and subsequently
+        // closed the connection) then we don't need to do anything at
+        // all; just exit. If we were the ones that detected the error
+        // however, then we need to close the connection so the device
+        // thread can learn of it...
 
-    release_lock( &dev->lock );
+        if (dev->fd == fd)
+        {
+            dev->fd = -1;
+            close_socket( fd );
+            // "%1d:%04X Printer: client %s, IP %s disconnected from device %s"
+            WRMSG (HHC01100, "I", LCSS_DEVNUM,
+                   dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
+        }
+    }
+    RELEASE_DEVLOCK( dev );
 
     return NULL;
 
@@ -940,9 +940,11 @@ int   fcbsize;                          /* FCB size for this devtype */
     {
         (dev->hnd->close)( dev );
 
-        release_lock( &dev->lock );
-        device_attention( dev, CSW_DE );
-        obtain_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
+        {
+            device_attention( dev, CSW_DE );
+        }
+        OBTAIN_DEVLOCK( dev );
     }
 
     dev->excps = 0;

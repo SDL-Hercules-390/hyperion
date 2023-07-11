@@ -625,13 +625,13 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
 
    /* Attach the environment to the DEVBLK */
    /* Lock the DEVBLK in case another thread wants it */
-   obtain_lock (&dev->lock);
+   OBTAIN_DEVLOCK( dev );
    if (dev->vmd250env == NULL)
    {
        /* If an environment does not exist, establish it */
        dev->vmd250env = bioenv ;
        /* No need to hold the device lock now, environment is set */
-       release_lock (&dev->lock);
+       RELEASE_DEVLOCK( dev );
 
        /* Set the appropriate successful return and condition codes */
        if (isRO)
@@ -652,7 +652,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
        /*   3. Reset the retuned environment to NULL and         */
        /*   4. Reset return and condition codes to reflect       */
        /*      the error condition                               */
-       release_lock (&dev->lock);
+       RELEASE_DEVLOCK( dev );
        free(bioenv);
        bioenv = NULL ;
        *rc = RC_STATERR;
@@ -691,7 +691,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
 /* enhancement.                                                    */
 static void d250_preserve(DEVBLK *dev)
 {
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Wait for the device to become available      */
@@ -717,12 +717,12 @@ static void d250_preserve(DEVBLK *dev)
     dev->reserved = 1;
     if (dev->hnd->reserve)
     {
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
        (dev->hnd->reserve)(dev);
     }
     else
     {
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
     }
 }
 
@@ -732,29 +732,36 @@ static void d250_preserve(DEVBLK *dev)
 /* WARNING: This function MUST not be called with the device lock held */
 static void d250_restore(DEVBLK *dev)
 {
-    obtain_lock(&dev->lock);
-    if (dev->hnd->release)
+    OBTAIN_DEVLOCK( dev );
     {
-       release_lock(&dev->lock);
-       (dev->hnd->release)(dev);
-       obtain_lock(&dev->lock);
-    }
-    /* Both fbadasd.c and ckddasd.c reset the local reserved flag     */
-    /* after calling the shared device client                         */
-    dev->reserved = 0;
-    if (dev->sns_pending)
-    {
-       /* Restore the pending sense */
-       memcpy(&dev->sense,&dev->vmd250env->sense,sizeof(dev->sense));
-       if (dev->ccwtrace)
-       {  WRMSG (HHC01920, "I", dev->devnum);
-       }
-    }
+        if (dev->hnd->release)
+        {
+            RELEASE_DEVLOCK( dev );
+            {
+                (dev->hnd->release)( dev );
+            }
+            OBTAIN_DEVLOCK( dev );
+        }
+
+        /* Both fbadasd.c and ckddasd.c reset the local reserved flag     */
+        /* after calling the shared device client                         */
+        dev->reserved = 0;
+
+        if (dev->sns_pending)
+        {
+            /* Restore the pending sense */
+            memcpy(&dev->sense,&dev->vmd250env->sense,sizeof(dev->sense));
+
+            if (dev->ccwtrace)
+                // %04X d250_restore pending sense restored"
+                WRMSG (HHC01920, "I", dev->devnum);
+        }
 #if defined( OPTION_SHARED_DEVICES )
-    dev->shioactive = DEV_SYS_NONE;
-#endif // defined( OPTION_SHARED_DEVICES )
-    dev->busy = 0;
-    release_lock(&dev->lock);
+        dev->shioactive = DEV_SYS_NONE;
+#endif
+        dev->busy = 0;
+    }
+    RELEASE_DEVLOCK( dev );
 }
 
 /*-------------------------------------------------------------------*/
@@ -785,14 +792,14 @@ int       cc;                        /* Condition code to return     */
 
    /* Attach the environment to the DEVBLK */
    /* Lock the DEVBLK in case another CPU is trying something */
-   obtain_lock (&dev->lock);
+   OBTAIN_DEVLOCK( dev );
    bioenv=dev->vmd250env;
    if (dev->vmd250env == NULL)
    {
        /* If an environment does not exist, it should be */
        /* Return the environment state error return code */
        /* and failed condition code                      */
-       release_lock (&dev->lock);
+       RELEASE_DEVLOCK( dev );
        *rc = RC_STATERR;
        cc = CC_FAILED;
    }
@@ -811,7 +818,7 @@ int       cc;                        /* Condition code to return     */
        }
        dev->vmd250env = NULL ;
        /* No need to hold the device lock while freeing the environment */
-       release_lock (&dev->lock);
+       RELEASE_DEVLOCK( dev );
        free(bioenv);
        if (dev->ccwtrace)
        {
@@ -833,7 +840,7 @@ U32  residual;     /* Residual byte count */
 
 /* Note: Not called with device lock held */
 
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
     if (dev->ccwtrace)
     {
        WRMSG(HHC01922, "I", dev->devnum, blksize, pblknum);
@@ -841,7 +848,7 @@ U32  residual;     /* Residual byte count */
 
     if (dev->vmd250env->isCKD)
     {
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
        /* Do CKD I/O */
 
        /* CKD to be supplied */
@@ -870,7 +877,7 @@ U32  residual;     /* Residual byte count */
        /* Call the I/O end exit */
        if (dev->hnd->end) (dev->hnd->end) (dev);
 
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
     }
     /* If an I/O error occurred, return status of I/O Error */
     if ( unitstat != ( CSW_CE | CSW_DE ) )
@@ -897,7 +904,7 @@ static int d250_write(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
 BYTE unitstat;     /* Device unit status */
 U32  residual;     /* Residual byte count */
 
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
     if (dev->ccwtrace)
     {
        WRMSG(HHC01922, "I", dev->devnum, blksize, pblknum);
@@ -905,12 +912,12 @@ U32  residual;     /* Residual byte count */
 
     if (!dev->vmd250env)
     {
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
        return BIOE_ABORTED;
     }
     if (dev->vmd250env->isCKD)
     {
-        release_lock(&dev->lock);
+        RELEASE_DEVLOCK( dev );
         /* Do CKD I/O */
 
         /* CKD to be supplied */
@@ -938,7 +945,7 @@ U32  residual;     /* Residual byte count */
        /* Call the I/O end exit */
        if (dev->hnd->end) (dev->hnd->end) (dev);
 
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
     }
 
     /* If an I/O error occurred, return status of 1 */
@@ -1278,7 +1285,7 @@ int     rc2;
        if(rc2)
        {
           WRMSG (HHC00102, "E", strerror(rc2));
-          release_lock (&dev->lock);
+          RELEASE_DEVLOCK( dev );
           *rc = RC_ERROR;
           return CC_FAILED;
        }
@@ -1885,7 +1892,7 @@ int     rc2;
        if(rc2)
        {
           WRMSG (HHC00102, "E", strerror(rc2));
-          release_lock (&dev->lock);
+          RELEASE_DEVLOCK( dev );
           *rc = RC_ERROR;
           return CC_FAILED;
        }

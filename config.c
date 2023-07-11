@@ -623,7 +623,7 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 /*                        get_devblk                                 */
 /*-------------------------------------------------------------------*/
 
-/* NOTE: also does obtain_lock(&dev->lock); */
+/* NOTE: also does OBTAIN_DEVLOCK( dev ); */
 
 static DEVBLK *get_devblk(U16 lcss, U16 devnum)
 {
@@ -679,7 +679,7 @@ char      buf[32];
     }
 
     /* Obtain the device lock. Caller will release it. */
-    obtain_lock (&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
     dev->group = NULL;
     dev->member = 0;
@@ -747,7 +747,7 @@ char      buf[32];
 /*                        ret_devblk                                 */
 /*-------------------------------------------------------------------*/
 
-/* NOTE: also does release_lock(&dev->lock);*/
+/* NOTE: also does RELEASE_DEVLOCK( dev );*/
 
 static void ret_devblk(DEVBLK *dev)
 {
@@ -761,7 +761,7 @@ static void ret_devblk(DEVBLK *dev)
     /* Mark device invalid */
     dev->allocated = 0;
     dev->pmcw.flag5 &= ~PMCW5_V;
-    release_lock(&dev->lock);
+    RELEASE_DEVLOCK( dev );
 }
 
 /*-------------------------------------------------------------------*/
@@ -787,7 +787,7 @@ int     i;                              /* Loop index                */
 
     /* Obtain the device lock. ret_devblk will release it */
     if (!locked)
-        obtain_lock(&dev->lock);
+        OBTAIN_DEVLOCK( dev );
 
     DelSubchanFastLookup(dev->ssid, dev->subchan);
     if(dev->pmcw.flag5 & PMCW5_V)
@@ -830,7 +830,7 @@ int     i;                              /* Loop index                */
     free(dev->typname);
 
     /* Release lock and return the device to the DEVBLK pool */
-    ret_devblk( dev ); /* also does release_lock(&dev->lock);*/
+    ret_devblk( dev ); /* also does RELEASE_DEVLOCK( dev );*/
 
     return 0;
 } /* end function detach_devblk */
@@ -1310,7 +1310,7 @@ int     i;                              /* Loop index                */
     }
 
     /* Obtain device block from our DEVBLK pool and lock the device. */
-    dev = get_devblk(lcss, devnum); /* does obtain_lock(&dev->lock); */
+    dev = get_devblk(lcss, devnum); /* does OBTAIN_DEVLOCK( dev ); */
 
     // PROGRAMMING NOTE: the rule is, once a DEVBLK has been obtained
     // from the pool it can be returned back to the pool via a simple
@@ -1323,7 +1323,7 @@ int     i;                              /* Loop index                */
     {
         // "%1d:%04X devtype %s not recognized"
         WRMSG (HHC01462, "E", lcss, devnum, type);
-        ret_devblk(dev); /* also does release_lock(&dev->lock);*/
+        ret_devblk(dev); /* also does RELEASE_DEVLOCK( dev );*/
         release_lock(&sysblk.config);
         return 1;
     }
@@ -1393,7 +1393,7 @@ int     i;                              /* Loop index                */
     }
 
     /* Release device lock */
-    release_lock(&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Build Channel Report */
@@ -1490,7 +1490,7 @@ DEVBLK *dev;                            /* -> Device block           */
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Obtain the device lock */
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
     /* Update the device number in the DEVBLK */
     dev->devnum = newdevn;
@@ -1503,7 +1503,7 @@ DEVBLK *dev;                            /* -> Device block           */
     AddDevnumFastLookup(dev,lcss,newdevn);
 
     /* Release device lock */
-    release_lock(&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Build Channel Report */

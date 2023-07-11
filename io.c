@@ -246,7 +246,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     PERFORM_CHKPT_SYNC( regs );
 
     /* Obtain the device lock */
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
     {
         /* Condition code 1 if subchannel is status pending
            with other than intermediate status */
@@ -257,7 +257,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
         {
             PTIO( ERR, "*MSCH" );
             regs->psw.cc = 1;
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
@@ -266,7 +266,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
         {
             PTIO( ERR, "*MSCH" );
             regs->psw.cc = 2;
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
@@ -327,7 +327,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
         dev->priority |= 0x00800000ULL >> ((dev->pmcw.flag4 & PMCW4_ISC) >> 3);
 
     }
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
 
     /* Set condition code 0 */
     regs->psw.cc = 0;
@@ -676,26 +676,24 @@ static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
     /* Scan DEVBLK chain for busy devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        /* Obtain the device lock */
-        obtain_lock(&dev->lock);
-
-        if (1
-            &&  dev->allocated                     /* Valid DEVBLK   */
-            && (dev->pmcw.flag5 & PMCW5_V)         /* Valid device   */
-            && (dev->pmcw.flag5 & PMCW5_E)         /* Device enabled */
-            && (dev->scsw.flag3 & SCSW3_AC_SCHAC)  /* Subchan active */
-            && (dev->scsw.flag3 & SCSW3_AC_DEVAC)  /* Device active  */
-           )
+        OBTAIN_DEVLOCK( dev );
         {
-            /* Retrieve active CHPID */
-            chpid = dev->pmcw.chpid[msbn[dev->pmcw.lpum]];
+            if (1
+                &&  dev->allocated                     /* Valid DEVBLK   */
+                && (dev->pmcw.flag5 & PMCW5_V)         /* Valid device   */
+                && (dev->pmcw.flag5 & PMCW5_E)         /* Device enabled */
+                && (dev->scsw.flag3 & SCSW3_AC_SCHAC)  /* Subchan active */
+                && (dev->scsw.flag3 & SCSW3_AC_DEVAC)  /* Device active  */
+               )
+            {
+                /* Retrieve active CHPID */
+                chpid = dev->pmcw.chpid[msbn[dev->pmcw.lpum]];
 
-            /* Update channel path status work area */
-            work[chpid/8] |= 0x80 >> (chpid % 8);
+                /* Update channel path status work area */
+                work[chpid/8] |= 0x80 >> (chpid % 8);
+            }
         }
-
-        /* Release the device lock */
-        release_lock(&dev->lock);
+        RELEASE_DEVLOCK( dev );
     }
 
     /* Store channel path status word at operand address */
@@ -786,14 +784,14 @@ SCHIB   schib;                          /* Subchannel information blk*/
     /* Build the subchannel information block */
     schib.pmcw = dev->pmcw;
 
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
     {
         if (dev->pciscsw.flag3 & SCSW3_SC_PEND)
             schib.scsw = dev->pciscsw;
         else
             schib.scsw = dev->scsw;
     }
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
 
     memset( schib.moddep, 0, sizeof( schib.moddep ));
 

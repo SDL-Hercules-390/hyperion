@@ -1734,7 +1734,7 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
     // Changes to DEVBLK are lock protected as the CTCE_RecvThread
     // might update as well.
-    obtain_lock( &pDEVBLK->lock );
+    OBTAIN_DEVLOCK( pDEVBLK );
 
     // The CCW Flags Command Chaining indicator being set indicates
     // that a CCW Program is in progress.  The last CCW in the chain
@@ -1894,7 +1894,7 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
             CTCE_SND_NS ) ) ), &CTCE_Info, pUnitStat );
     }
 
-    release_lock( &pDEVBLK->lock );
+    RELEASE_DEVLOCK( pDEVBLK );
 
 } // CTCE_ExecuteCCW
 
@@ -1927,9 +1927,11 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
         if( dev->fd < 0 )
         {
             dev->allocated = 0;
-            release_lock( &dev->lock );
-            usleep(700000);
-            obtain_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
+            {
+                usleep( 700000 );
+            }
+            OBTAIN_DEVLOCK( dev );
             dev->allocated = 1;
         }
         else
@@ -2341,7 +2343,7 @@ static void*  CTCE_ListenThread( void* argp )
                                 )
                             )
                         {
-                            obtain_lock( &dev->lock );
+                            OBTAIN_DEVLOCK( dev );
 
                             // We might need to re-initialise our TID following a CTCE recovery.
                             dev->ctce_listen_tid = hthread_self();
@@ -2432,7 +2434,7 @@ static void*  CTCE_ListenThread( void* argp )
                             }
 
                             // We break out of the device search loop.
-                            release_lock( &dev->lock );
+                            RELEASE_DEVLOCK( dev );
                             break ;
                         } // matching device found
                     } // device search loop
@@ -2588,7 +2590,7 @@ static void     CTCE_Send(        DEVBLK*             pDEVBLK,
         }
 
         obtain_lock( &pDEVBLK->ctceEventLock );
-        release_lock( &pDEVBLK->lock );
+        RELEASE_DEVLOCK( pDEVBLK );
 
         pCTCE_Info->wait_rc = timed_wait_condition_relative_usecs(
             &pDEVBLK->ctceEvent,
@@ -2596,7 +2598,7 @@ static void     CTCE_Send(        DEVBLK*             pDEVBLK,
             1000000000,
             NULL );
 
-        obtain_lock( &pDEVBLK->lock );
+        OBTAIN_DEVLOCK( pDEVBLK );
         release_lock( &pDEVBLK->ctceEventLock );
 
         // Trace the non-zero WAIT RC (e.g. timeout, RC=138 (windows) or 110 (unix)).
@@ -2690,7 +2692,7 @@ static void*  CTCE_RecvThread( void* argp )
     int            i = 0;                        // temporary variable
 
     // When the receiver thread is (re-)started, the CTCE devblk is (re-)initialized
-    obtain_lock( &pDEVBLK->lock );
+    OBTAIN_DEVLOCK( pDEVBLK );
 
     // Enhanced CTC adapter intiialization for y-side command register.
     pDEVBLK->ctceyCmd = 0x00;
@@ -2703,7 +2705,7 @@ static void*  CTCE_RecvThread( void* argp )
     pSokBuf = ( CTCE_SOKPFX* ) ( pDEVBLK->buf + ( pDEVBLK->ctce_buf_next_write ? 0 : pDEVBLK->bufsize / 2 ) );
 
     // CTCE DEVBLK (re-)initialisation completed.
-    release_lock( &pDEVBLK->lock );
+    RELEASE_DEVLOCK( pDEVBLK );
 
     // Initialise our CTCE_Info as needed.
     CTCE_Info.de_ready_attn_rc   = 0;
@@ -2724,7 +2726,7 @@ static void*  CTCE_RecvThread( void* argp )
 
         // Commands sent by the other (y-)side most likely cause DEVBLK
         // changes to our (x-)side and thus need to be lock protected.
-        obtain_lock( &pDEVBLK->lock );
+        OBTAIN_DEVLOCK( pDEVBLK );
 
         // An iLength==0 means the other end has closed down the connection,
         // an iLength<0  means a receive error, which in a non-abnormal case
@@ -2756,7 +2758,7 @@ static void*  CTCE_RecvThread( void* argp )
                 (void) CTCE_Recovery( pDEVBLK ) ;
                 CTCE_RESTART_CCWTRACE( pDEVBLK );
             }
-            release_lock( &pDEVBLK->lock );
+            RELEASE_DEVLOCK( pDEVBLK );
             return NULL;    // make compiler happy
         } // if( iLength <= 0 )
 
@@ -2933,17 +2935,19 @@ static void*  CTCE_RecvThread( void* argp )
             // indicating Ready then this has to be presented on this side.
             else if( CTCE_Info.de_ready )
             {
-                release_lock( &pDEVBLK->lock );
-                ctce_recv_mods_UnitStat = CSW_DE;
-
-                // We may receive a de_ready from the other y-side before
-                // our x-side is ready for it, in which case we retry.
-                do
+                RELEASE_DEVLOCK( pDEVBLK );
                 {
-                    CTCE_Info.de_ready_attn_rc = device_attention( pDEVBLK, CSW_DE );
-                } while( ( CTCE_Info.de_ready_attn_rc == 3 ) && ( usleep( 100 ) == 0 ) );
+                    ctce_recv_mods_UnitStat = CSW_DE;
 
-                obtain_lock( &pDEVBLK->lock );
+                    // We may receive a de_ready from the other y-side before
+                    // our x-side is ready for it, in which case we retry.
+                    do
+                    {
+                        CTCE_Info.de_ready_attn_rc = device_attention( pDEVBLK, CSW_DE );
+                    }
+                    while ((CTCE_Info.de_ready_attn_rc == 3) && (usleep( 100 ) == 0));
+                }
+                OBTAIN_DEVLOCK( pDEVBLK );
 
                 // Another attention would be harmful and is not needed.
                 CLR_CTCE_ATTN( CTCE_Info.actions );
@@ -2977,7 +2981,7 @@ static void*  CTCE_RecvThread( void* argp )
                 // may have come in between, causing a device busy
                 // and a possible other (y-)side status update. So
                 // we may need to re-try the ATTN if needed at all.
-                release_lock( &pDEVBLK->lock );
+                RELEASE_DEVLOCK( pDEVBLK );
                 CTCE_Info.working_attn_rc = 1;
                 for( CTCE_Info.busy_waits = 0;
                      ( CTCE_Info.working_attn_rc == 1 ) &&
@@ -3020,7 +3024,7 @@ static void*  CTCE_RecvThread( void* argp )
                         }
                     }
                 }
-                obtain_lock( &pDEVBLK->lock );
+                OBTAIN_DEVLOCK( pDEVBLK );
 
                 // We will show the ATTN status if it was signalled.
                 if( CTCE_Info.working_attn_rc == 0 )
@@ -3056,7 +3060,7 @@ static void*  CTCE_RecvThread( void* argp )
         CTCE_Info.working_attn_rc  = 0;
         CTCE_Info.busy_waits       = 0;
 
-        release_lock( &pDEVBLK->lock );
+        RELEASE_DEVLOCK( pDEVBLK );
     }
 
 } // CTCE_RecvThread
@@ -3071,7 +3075,7 @@ static void CTCE_Reset( DEVBLK* pDEVBLK )
     CCWC            Residual = 0;           // Only used as CTCE_Send needs it.
     CTCE_INFO       CTCE_Info = { 0 };      // CTCE information (also for tracing)
 
-    // The caller already did an obtain_lock( &pDEVBLK->lock ).
+    // The caller already did an OBTAIN_DEVLOCK( pDEVBLK ).
 
     // Initialise our CTCE_Info previous x- and y-states for CTCE_Trace.
     CTCE_Info.state_x_prev       = pDEVBLK->ctcexState;
@@ -3602,7 +3606,7 @@ static void*  CTCE_ConnectThread( void* argp )
 
 
     // Obtain a socket to connect to the other end.
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
 
     // We must keep on trying to connect until it is successful,
     // which is why we do this in a separate dedicated thread.
@@ -3610,7 +3614,7 @@ static void*  CTCE_ConnectThread( void* argp )
     {
         if ( ( fd = CTCE_Get_Socket( dev, CTCE_SOK_CON ) ) < 0 )
         {
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return NULL;
         }
 
@@ -3623,14 +3627,14 @@ static void*  CTCE_ConnectThread( void* argp )
         addr.sin_port = htons( dev->ctce_rport );
 
         // During the blocking connect() and a possible retry wait interval we release the device lock.
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         rc = connect( fd, ( struct sockaddr * )&addr, sizeof( addr ) );
         if ( rc < 0 )
         {
             close_socket( fd );
             usleep(connect_retry_interval * 1000) ;
         }
-        obtain_lock( &dev->lock );
+        OBTAIN_DEVLOCK( dev );
 
         // A successful connect() is immediately followed by a initial write.
         if ( rc == 0 )
@@ -3683,7 +3687,7 @@ static void*  CTCE_ConnectThread( void* argp )
         close_socket( fd );
     }
 
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
     return NULL;
 
 } // CTCE_ConnectThread
@@ -3837,11 +3841,15 @@ static int    CTCE_Recovery( DEVBLK* dev )
     int       rc;                                          // Return Code from devinit_cmd
 
     MSGBUF( devnum, "%1d:%04X", CTCE_DEVNUM( dev ) );
+
     WRMSG( HHC05086, "I",  // CTCE: Recovery is about to issue Hercules command: %s %s"
         CTCX_DEVNUM( dev ), argv[0], argv[1] );
-    release_lock( &dev->lock );
-    rc = devinit_cmd( sizeof( argv ) / sizeof( argv[0] ), argv, NULL );
-    obtain_lock( &dev->lock );
+
+    RELEASE_DEVLOCK( dev );
+    {
+        rc = devinit_cmd( sizeof( argv ) / sizeof( argv[0] ), argv, NULL );
+    }
+    OBTAIN_DEVLOCK( dev );
     return rc;
 
 } // CTCE_Recovery

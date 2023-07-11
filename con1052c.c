@@ -300,16 +300,16 @@ static void* con1052_panel_command( char *cmd )
             /* Wakup the channel if it's waiting for input
                or present unsolicited attention interrupt.
             */
-            obtain_lock( &dev->lock );
+            OBTAIN_DEVLOCK( dev );
 
             if (dev->kbwaiters)
             {
                 signal_condition( &dev->kbcond );
-                release_lock( &dev->lock );
+                RELEASE_DEVLOCK( dev );
             }
             else
             {
-                release_lock( &dev->lock );
+                RELEASE_DEVLOCK( dev );
                 device_attention( dev, CSW_ATTN );
             }
             return NULL;
@@ -432,13 +432,13 @@ BYTE    c;                              /* Print character           */
                 // "Enter '%s' input for console %1d:%04X"
                 WRMSG( HHC00010, "A", dev->filename, LCSS_DEVNUM );
 
-            obtain_lock( &dev->lock );
+            OBTAIN_DEVLOCK( dev );
             {
                 dev->kbwaiters++;
                 wait_condition( &dev->kbcond, &dev->lock );
                 dev->kbwaiters--;
             }
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
         }
 
         /* Calculate number of bytes to move and residual byte count */

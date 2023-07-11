@@ -222,12 +222,14 @@ static void raise_adapter_interrupt(DEVBLK *dev)
 {
     DBGTRC( dev, "Adapter Interrupt dev(%4.4x)\n", dev->devnum );
 
-    obtain_lock(&dev->lock);
-    dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
-    dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
-    dev->pciscsw.chanstat = CSW_PCI;
-    QUEUE_IO_INTERRUPT(&dev->pciioint,FALSE);
-    release_lock (&dev->lock);
+    OBTAIN_DEVLOCK( dev );
+    {
+        dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
+        dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
+        dev->pciscsw.chanstat = CSW_PCI;
+        QUEUE_IO_INTERRUPT( &dev->pciioint, FALSE );
+    }
+    RELEASE_DEVLOCK( dev );
 
     /* Update interrupt status */
     OBTAIN_INTLOCK( NULL );

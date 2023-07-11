@@ -80,7 +80,7 @@ int devlock_obtained;
         subchan = ((U32)dev->subchan)              & CRW_RSID_MASK;
     }
     if (devlock_obtained)
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
 
     /* Build Subchannel Alert Channel Report */
     crwarray[crwcount++] =
@@ -124,7 +124,7 @@ int devlock_obtained;
         subchan = ((U32)dev->subchan)              & CRW_RSID_MASK;
     }
     if (devlock_obtained)
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
 
     /* Build Subchannel Alert Channel Report */
     crwarray[crwcount++] =

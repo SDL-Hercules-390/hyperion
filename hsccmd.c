@@ -6494,12 +6494,12 @@ int detach_cmd( int argc, char* argv[], char* cmdline )
     */
     if (!force)
     {
-        obtain_lock( &dev->lock );
+        OBTAIN_DEVLOCK( dev );
         {
             /* Check if specified device is busy */
             if (dev->busy)
             {
-                release_lock( &dev->lock );
+                RELEASE_DEVLOCK( dev );
                 if (intlock_needed)
                     RELEASE_INTLOCK( NULL );
                 // "%1d:%04X busy or interrupt pending"
@@ -6517,7 +6517,7 @@ int detach_cmd( int argc, char* argv[], char* cmdline )
                 {
                     if ((memdev = group->memdev[i])->busy)
                     {
-                        release_lock( &dev->lock );
+                        RELEASE_DEVLOCK( dev );
                         if (intlock_needed)
                             RELEASE_INTLOCK( NULL );
                         // "%1d:%04X busy or interrupt pending"
@@ -6527,7 +6527,7 @@ int detach_cmd( int argc, char* argv[], char* cmdline )
                 }
             }
         }
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
     }
 
     /* Note: 'detach_device' will call 'detach_devblk' which obtains
@@ -7232,14 +7232,14 @@ BYTE     unitstat, code = 0;
     }
 
     /* Obtain the device lock */
-    obtain_lock (&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
     /* Reject if device is busy or interrupt pending */
     if ( dev->busy || IOPENDING(dev) || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         if (!sysblk.sys_reset)      // is the system in a reset status?
         {
-            release_lock (&dev->lock);
+            RELEASE_DEVLOCK( dev );
             WRMSG(HHC02231, "E", lcss, devnum );
             return -1;
         }
@@ -7250,7 +7250,7 @@ BYTE     unitstat, code = 0;
 
     if ( strcmp(devclass,"TAPE") != 0 )
     {
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
         WRMSG(HHC02209, "E", lcss, devnum, "TAPE" );
         return -1;
 
@@ -7259,7 +7259,7 @@ BYTE     unitstat, code = 0;
     ASSERT( dev->tmh && dev->tmh->tapeloaded );
     if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) )
     {
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
         WRMSG(HHC02298, "E", LCSS_DEVNUM);
         return -1;
     }
@@ -7482,7 +7482,7 @@ BYTE     unitstat, code = 0;
         }
     }
 
-    release_lock (&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
     WRMSG( HHC02802, "I", LCSS_DEVNUM, dev->curfilen );
     WRMSG( HHC02803, "I", LCSS_DEVNUM, dev->blockid  );
@@ -7526,7 +7526,7 @@ char   **save_argv = NULL;
     }
 
     /* Obtain the device lock */
-    obtain_lock (&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
     /* wait up to 0.1 seconds for the busy to go away */
     {
@@ -7535,9 +7535,9 @@ char   **save_argv = NULL;
                          || IOPENDING(dev)
                          || (dev->scsw.flag3 & SCSW3_SC_PEND)))
         {
-            release_lock(&dev->lock);
+            RELEASE_DEVLOCK( dev );
             usleep(5000);
-            obtain_lock(&dev->lock);
+            OBTAIN_DEVLOCK( dev );
         }
     }
 
@@ -7546,7 +7546,7 @@ char   **save_argv = NULL;
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
       && !sysblk.sys_reset)
     {
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
         WRMSG(HHC02231, "E", lcss, devnum );
         return -1;
     }
@@ -7611,7 +7611,7 @@ char   **save_argv = NULL;
     dev->reinit = 0;
 
     /* Release the device lock */
-    release_lock (&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
     /* Free work memory */
     if (save_argv)

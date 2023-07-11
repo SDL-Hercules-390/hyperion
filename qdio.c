@@ -86,13 +86,13 @@ DEVBLK *dev;                            /* -> device block           */
     }
 
     /* Obtain the device lock */
-    obtain_lock (&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
     /* Check that device is QDIO active */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
         PTIO(ERR,"*SIGA");
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
         regs->psw.cc = 1;
         return;
     }
@@ -156,7 +156,7 @@ DEVBLK *dev;                            /* -> device block           */
 
     }
 
-    release_lock (&dev->lock);
+    RELEASE_DEVLOCK( dev );
 }
 
 

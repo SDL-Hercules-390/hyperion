@@ -2252,16 +2252,16 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
     *pclientip   = NULL;
     *pclientname = NULL;
 
-    obtain_lock (&dev->lock);
-
-    if (dev->bs             /* if device is a socket device,   */
-        && dev->fd != -1)   /* and a client is connected to it */
+    OBTAIN_DEVLOCK( dev );
     {
-        *pclientip   = strdup(dev->bs->clientip);
-        *pclientname = strdup(dev->bs->clientname);
+        if (dev->bs             /* if device is a socket device,   */
+            && dev->fd != -1)   /* and a client is connected to it */
+        {
+            *pclientip   = strdup( dev->bs->clientip );
+            *pclientname = strdup( dev->bs->clientname );
+        }
     }
-
-    release_lock (&dev->lock);
+    RELEASE_DEVLOCK( dev );
 }
 
 /*-------------------------------------------------------------------*/

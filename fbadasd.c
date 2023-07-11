@@ -599,7 +599,7 @@ fba_read_blkgrp_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        // "%1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
+        // "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0516( dev, blkgrp, i );
         else
@@ -619,7 +619,7 @@ fba_read_blkgrp_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        // "%1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
+        // "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0517( dev, blkgrp );
         else
@@ -630,7 +630,7 @@ fba_read_blkgrp_retry:
     }
 
     /* Cache miss */
-    // "%1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
+    // "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0518( dev, blkgrp, o );
     else
@@ -649,7 +649,7 @@ fba_read_blkgrp_retry:
     offset = (off_t)((S64)blkgrp * CFBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    // "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
+    // "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
     if (dev->ccwtrace && sysblk.traceFILE)
         tf_0519( dev, blkgrp, offset, fba_blkgrp_len( dev, blkgrp ));
     else
@@ -1111,7 +1111,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbalcblk - dev->fbaxfirst
                       ) * dev->fbablksiz;
 
-        // "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
+        // "Thread "TIDPAT" %1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
         if (dev->ccwtrace && sysblk.traceFILE)
             tf_0520( dev );
         else
@@ -1234,9 +1234,11 @@ int     repcnt;                         /* Replication count         */
 
         if (dev->hnd->release) (dev->hnd->release) (dev);
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 0;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 0;
+        }
+        RELEASE_DEVLOCK( dev );
 
         /* Return sense information */
         goto sense;
@@ -1255,9 +1257,11 @@ int     repcnt;                         /* Replication count         */
 
         /* Reserve device to the ID of the active channel program */
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 1;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 1;
+        }
+        RELEASE_DEVLOCK( dev );
 
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
 
@@ -1278,9 +1282,11 @@ int     repcnt;                         /* Replication count         */
 
         /* Reserve device to the ID of the active channel program */
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 1;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 1;
+        }
+        RELEASE_DEVLOCK( dev );
 
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
 
