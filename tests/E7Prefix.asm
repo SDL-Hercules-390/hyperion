@@ -44,6 +44,12 @@
 *   read to elsewhere.
 *
 *
+*   The set of tests to be run is controlled by the "TESTTAB". All
+*   tests in the table are run one after the other by default. To
+*   run just one specific test, set the byte at address X'FFF' to
+*   the specific test number you want to run in your .tst script.
+*
+*
 ***********************************************************************
                                                                 EJECT
          PRINT OFF
@@ -351,14 +357,15 @@ TESTTAB  DC    0A(0)
          DC    A(4,T4_CHPGM,0,T4_MSGLN,T4_DESC)
          DC    A(5,T5_CHPGM,1,T5_MSGLN,T5_DESC)  (1=Expect I/O ERROR)
          DC    A(6,T6_CHPGM,0,T6_MSGLN,T6_DESC)
+         DC    A(7,T7_CHPGM,0,T7_MSGLN,T7_DESC)
          PRINT NODATA
-NUMTESTS EQU   6                      Number of test table entries
+NUMTESTS EQU     7                    Number of test table entries
 TESTLEN  EQU   (*-TESTTAB)/NUMTESTS   Width of each test table entry
-                                                                SPACE
+                                                                EJECT
          LTORG ,        Literals Pool
                                                                 EJECT
 ***********************************************************************
-*                 TEST CHANNEL PROGRAMS...
+*                 CHANNEL PROGRAMS...
 ***********************************************************************
                                                                 SPACE
          DC    0D'0'
@@ -423,9 +430,16 @@ T6_CHPGM DC    AL1(PFX),AL1(CC+SLI),AL2(L'T6_E7DAT),AL4(T6_E7DAT)
          DC    AL1(LR),AL1(CC+SLI),AL2(L'T6_47DAT),AL4(T6_47DAT)
          DC    AL1(RDMT),AL1(SLI+IDA),AL2(L'T6_86BUF),AL4(T6_86IDA)
 T6_86IDA DC    AD(T6_86BUF)
+                                                                SPACE 5
+***********************************************************************
+                                                                SPACE
+T7_DESC  DC    C'TEST #7: Peter''s z/VM SSI issue (PFX 01 CMDREJ)'
+T7_MSGLN EQU   *-T7_DESC
+         DC    0D'0'
+T7_CHPGM DC    AL1(PFX),AL1(SLI),AL2(T7_E7LEN),AL4(T7_E7DAT)
                                                                 EJECT
 ***********************************************************************
-*        TEST CHANNEL PROGRAM I/O DATA AND I/O BUFFERS...
+*               I/O DATA AND I/O BUFFERS...
 ***********************************************************************
                                                                 SPACE
          DC    0D'0'
@@ -500,6 +514,16 @@ T6_E7DAT DS   0XL64
          DC    XL16'00000000 00000000 00000000 00000000'
 T6_47DAT DC    XL16'16000001 00000000 00000000 03000000'
 T6_86BUF DC    XL10'00'
+                                                                EJECT
+                                                                SPACE 2
+***********************************************************************
+                                                                SPACE
+T7_E7DAT DC    X'01800000 00000000 00000000'           +00  PFX
+         DC    X'40C01000 00000042 00020000 00020000'  +12  DEF EXT
+         DC    X'00000000 00000000 00000000 00000000'  +28
+         DC    X'06000001 00020000 00020000 01290000'  +44  LREC EXD
+         DC    X'00000000'                             +60
+T7_E7LEN EQU   *-T7_E7DAT
                                                                 EJECT
 ***********************************************************************
 *        IOCB DSECT
