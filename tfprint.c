@@ -2829,7 +2829,7 @@ static bool finish_reading_rec( U16 msgnum )
        what a NEW (current) format trace record looks like, with all
        of its fields aligned correctly. This makes the remainder of
        our processing logic much simpler and more straightforward.
-    /*
+    */
 
     /* Don't save this record if they're not interested in it */
     if (!is_wanted( hdr ))
