@@ -1789,14 +1789,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         )
             break;
 
-        /* End of track found, so terminate with no record found
-           error if this is a LOCATE RECORD or WRITE CKD NEXT TRACK
-           command; or if this is the second end of track in this
-           channel program without an intervening read of the home
-           address or data area and without an intervening write,
-           sense, or control command --
-           -- except when multitrack READ or SEARCH [KEY?] command
-           operates outside the domain of a locate record */
+        /*  ((( Something to do with LR/LRE Read Count Suffix?? )))  */
         if (1
             && IS_CCW_MTRACK( code )
             && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
@@ -1814,6 +1807,15 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
             continue;
         }
 
+        /* End of track found, so terminate with no record found
+           error if this is a LOCATE RECORD or WRITE CKD NEXT TRACK
+           command; or if this is the second end of track in this
+           channel program without an intervening read of the home
+           address or data area and without an intervening write,
+           sense, or control command --
+           -- except when multitrack READ or SEARCH [KEY?] command
+           operates outside the domain of a locate record
+        */
         if (0
             || code == 0x47 // LOCATE RECORD
             || code == 0x4B // LOCATE RECORD EXTENDED
@@ -3892,10 +3894,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!(((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-                       && dev->ckdlcount ==
-                           ((dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1))
-                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
+            if (!(0
+                  ||     (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
+                  || (1
+                      && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+                      && dev->ckdlcount == ((dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1)
+                     )
+                 )
+            )
             {
                 ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3909,8 +3915,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                case a transfer length factor of 8 is used instead */
             if ((dev->ckdxgattr & CKDGATR_CKDCONV) == 0)
             {
-                if ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
-                    && dev->ckdcurrec == 0)
+                if (1
+                    && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
+                    && dev->ckdcurrec == 0
+                )
                     num = 8;
                 else
                     num = dev->ckdltranlf;
@@ -4100,10 +4108,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!(((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-                       && dev->ckdlcount ==
-                           ((dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1))
-                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
+            if (!(0
+                  ||     (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
+                  || (1
+                      && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+                      && dev->ckdlcount == ((dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1)
+                     )
+                 )
+            )
             {
                 ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
