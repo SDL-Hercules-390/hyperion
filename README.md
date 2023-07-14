@@ -85,3 +85,4 @@ to our **bug report tracking system** by adding/creating a new
 [HQA Build Scenarios](readme/README.HQA.md)  
 [Low-level Test Cases](tests/README.md)  
 [PTT Tracing](readme/README.PTT.md)  
+[Trace-to-File Support](readme/README.TRACEFILE.md)  
