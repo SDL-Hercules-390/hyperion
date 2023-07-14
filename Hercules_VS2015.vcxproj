@@ -719,6 +719,7 @@
     <None Include="readme\README.TAPE.md" />
     <None Include="readme\README.TCPIP.md" />
     <None Include="readme\README.TCPNJE.md" />
+    <None Include="readme\README.TRACEFILE.md" />
     <None Include="readme\README.VMFPLC2.md" />
     <None Include="readme\README.WIN64.md" />
     <None Include="RELEASE.NOTES" />

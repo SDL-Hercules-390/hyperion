@@ -888,6 +888,7 @@ EXTRA_DIST =                  \
   readme/README.TAPE.md           \
   readme/README.TCPIP.md          \
   readme/README.TCPNJE.md         \
+  readme/README.TRACEFILE.md      \
   readme/README.VMFPLC2.md        \
   readme/README.WIN64.md          \
   RELEASE.NOTES               \

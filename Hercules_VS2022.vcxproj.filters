@@ -1067,6 +1067,9 @@
     <None Include="readme\README.TCPNJE.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="readme\README.TRACEFILE.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.VMFPLC2.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
