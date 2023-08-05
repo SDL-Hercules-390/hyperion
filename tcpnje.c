@@ -500,7 +500,7 @@ static int tcpnje_connout(struct TCPNJE *tn)
         DBGMSG(256, "HHCTN033I %4.4X:TCPNJE - delaying link %s - %s active open for %d attempt(s)\n",
                      tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                                  guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode), tn->activeopendelay);
-        if (tn->activeopendelay > 3) usleep(1000);
+        if (tn->activeopendelay > 3) USLEEP(1000);
         tn->activeopendelay--;
 
         /* Pretend we failed to connect */

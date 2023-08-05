@@ -132,7 +132,7 @@ static void delayed_exit (int exit_code)
 
     /* Delay exiting is to give the system
      * time to display the error message. */
-    usleep(100000);
+    USLEEP(100000);
     exit(exit_code);
 }
 #define DELAYED_EXIT(rc)  delayed_exit(rc) /* use this macro to exit */
@@ -596,7 +596,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         DELAYED_EXIT( RC_ERROR_OPENING_SCSI_DEVICE );
     }
 
-    usleep(50000);
+    USLEEP(50000);
 
     /* Set the tape device to process variable length blocks */
     opblk.mt_op = MTSETBLK;
@@ -610,7 +610,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         DELAYED_EXIT( RC_ERROR_SETTING_SCSI_VARBLK_PROCESSING );
     }
 
-    usleep(50000);
+    USLEEP(50000);
 
     /* Rewind the tape to the beginning */
     opblk.mt_op = MTREW;
@@ -624,7 +624,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         DELAYED_EXIT( RC_ERROR_REWINDING_SCSI );
     }
 
-    usleep(50000);
+    USLEEP(50000);
 
     /* Obtain the tape status */
     rc = obtain_status ((devnamein ? devnamein : devnameout), devfd, &mtget);

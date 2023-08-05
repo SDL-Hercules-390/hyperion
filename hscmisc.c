@@ -1455,7 +1455,7 @@ static void do_shutdown_now()
     // (hack to prevent minor message glitch during shutdown)
     fflush( stdout );
     fflush( stderr );
-    usleep( 10000 );
+    USLEEP( 10000 );
 
     ASSERT( !sysblk.shutfini );   // (sanity check)
     sysblk.shutfini = FALSE;      // (shutdown NOT finished yet)
@@ -1467,7 +1467,7 @@ static void do_shutdown_now()
         for (n=0; sysblk.devtnbr && n < 100; ++n)
         {
             signal_condition( &sysblk.ioqcond );
-            usleep( 10000 );
+            USLEEP( 10000 );
         }
     }
 
@@ -1477,7 +1477,7 @@ static void do_shutdown_now()
     // (hack to prevent minor message glitch during shutdown)
     fflush( stdout );
     fflush( stderr );
-    usleep( 10000 );
+    USLEEP( 10000 );
 
 #if !defined( _MSVC_ )
     logger_unredirect();

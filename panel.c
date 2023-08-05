@@ -2953,7 +2953,7 @@ FinishShutdown:
         {
             if ( sysblk.shutfini ) break;
             /* wait for system to finish shutting down */
-            usleep(10000);
+            USLEEP(10000);
             lmsmax = INT_MAX;
             goto FinishShutdown;
         }

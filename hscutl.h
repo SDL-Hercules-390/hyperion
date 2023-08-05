@@ -154,6 +154,9 @@ strlcat(char *dst, const char *src, size_t siz);
 #define STRLCPY( dst, src )     strlcpy( (dst), (src), sizeof(dst) )
 #define STRLCAT( dst, src )     strlcat( (dst), (src), sizeof(dst) )
 
+#define USLEEP( _u ) herc_usleep( _u )
+HUT_DLL_IMPORT int herc_usleep( useconds_t usecs );
+
 /* Subtract/add gettimeofday struct timeval */
 HUT_DLL_IMPORT int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval);
 HUT_DLL_IMPORT int timeval_add      (struct timeval *dif_timeval, struct timeval *accum_timeval);

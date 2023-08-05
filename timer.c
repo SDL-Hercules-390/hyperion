@@ -328,10 +328,10 @@ bool    txf_PPA;                        /* true == PPA assist needed */
            interrupts? (By waiting slightly longer than normal?)
         */
         if (txf_PPA)
-            usleep( sysblk.txf_timerint );
+            USLEEP( sysblk.txf_timerint );
         else
 #endif
-            usleep ( sysblk.timerint );
+            USLEEP( sysblk.timerint );
 
     } /* end while */
 
@@ -429,7 +429,7 @@ void* rubato_thread( void* argp )
             */
             release_lock( &sysblk.rublock );
             {
-                usleep( sysblk.txf_timerint );
+                USLEEP( sysblk.txf_timerint );
             }
             obtain_lock( &sysblk.rublock );
         }

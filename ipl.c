@@ -226,7 +226,7 @@ int ARCH_DEP( system_reset )( const int target_mode, const bool clear,
                     /* Release intlock, take a nap, and re-acquire */
                     RELEASE_INTLOCK( NULL );
                     {
-                        usleep( 10000 );  // (wait 10 milliseconds)
+                        USLEEP( 10000 );  // (wait 10 milliseconds)
                     }
                     OBTAIN_INTLOCK( NULL );
                 }

@@ -3632,7 +3632,7 @@ int prev_rlen3270;
             {
                 // "COMM: pselect() failed: %s"
                 CONERROR( HHC90508, "D", strerror( select_errno ));
-                usleep( 50000 ); // (wait a bit; maybe it'll fix itself??)
+                USLEEP( 50000 ); // (wait a bit; maybe it'll fix itself??)
             }
             continue;
 
@@ -3696,7 +3696,7 @@ int prev_rlen3270;
                 {
                     // "COMM: accept() failed: %s"
                     CONERROR( HHC90509, "D", strerror( accept_errno ));
-                    usleep( 50000 ); // (wait a bit; maybe it'll fix itself??)
+                    USLEEP( 50000 ); // (wait a bit; maybe it'll fix itself??)
                 }
                 continue;
             }

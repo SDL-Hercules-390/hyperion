@@ -604,6 +604,21 @@ DLL_EXPORT void list_all_symbols()
             WRMSG( HHC02199, "I", tok->var, tok->val ? tok->val : "" );
 }
 
+/* Hercules microsecond sleep */
+DLL_EXPORT int herc_usleep( useconds_t usecs )
+{
+    int  rc;
+    if ((rc = usleep( usecs )) != 0)
+    {
+        int save_errno = errno;
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", "usleep()", strerror( save_errno ));
+        errno = save_errno;
+        rc = -1;
+    }
+    return rc;
+}
+
 /* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */
 /* Return code: success == 0, error == -1 (difference was negative) */
 

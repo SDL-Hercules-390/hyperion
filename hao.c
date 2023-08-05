@@ -611,7 +611,7 @@ static void* hao_thread(void* dummy)
             // "HAO thread waiting for logger facility to become active"
             WRMSG( HHC00090, "W" );
         }
-        usleep( 50 * 1000 );    /* (wait for a bit) */
+        USLEEP( 50 * 1000 );    /* (wait for a bit) */
     }
 
     if (!sysblk.shutdown && did_waiting_msg)

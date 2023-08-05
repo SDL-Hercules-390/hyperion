@@ -1206,7 +1206,7 @@ HWORD              comp;                /* Returned compression parm */
             WRMSG( HHC00722, "E", LCSS_DEVNUM, dev->filename, strerror( HSO_errno ));
 
         if (rc < 0 && retry)
-            usleep( 20000 );    // (20ms between connect retries?!)
+            USLEEP( 20000 );    // (20ms between connect retries?!)
     }
     while (rc < 0 && retry && retries--);
 

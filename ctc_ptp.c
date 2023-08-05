@@ -2263,7 +2263,7 @@ void*  ptp_read_thread( void* arg )
                 // Don't use schedyield() here; use an actual non-dispatchable
                 // delay instead so as to allow another [possibly lower priority]
                 // thread to 'read' (remove) the packet(s) from the read buffer.
-                usleep( PTP_DELAY_USECS );  // (wait a bit before retrying...)
+                USLEEP( PTP_DELAY_USECS );  // (wait a bit before retrying...)
 
                 continue;
 

@@ -4443,7 +4443,7 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
             else if (QTYPE_DATA == group->memdev[i]->qtype)
                 qeth_halt_data_device( group->memdev[i], grp );
         }
-        usleep( OSA_TIMEOUTUS ); /* give it time to exit */
+        USLEEP( OSA_TIMEOUTUS ); /* give it time to exit */
         PTT_QETH_TRACE( "af clos halt", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos ttfd", 0,0,0 );

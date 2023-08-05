@@ -280,7 +280,7 @@ int     msgcount = 22;
         panel_command(command);
         // Wait a bit before proceeding in case
         // the command issues a lot of messages
-        usleep(50000);
+        USLEEP(50000);
     }
 
     if((value = cgi_variable(webblk,"msgcount")))
@@ -1623,7 +1623,7 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
         panel_command(command);
         // Wait a bit before proceeding in case
         // the command issues a lot of messages
-        usleep(50000);
+        USLEEP(50000);
         hprintf(webblk->sock,"{\"command\": \"%s\",",command);
     } 
     else

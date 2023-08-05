@@ -57,7 +57,7 @@ DEVBLK *dev;
                 }
                 else
                 {
-                    usleep(50000);
+                    USLEEP(50000);
                     dev->busy = 0;
                 }
             }
@@ -118,7 +118,7 @@ BYTE     psw[16];
             }
         }
         RELEASE_INTLOCK(NULL);
-        usleep (1000);
+        USLEEP(1000);
         OBTAIN_INTLOCK(NULL);
     }
     RELEASE_INTLOCK(NULL);
@@ -133,7 +133,7 @@ BYTE     psw[16];
         {
             RELEASE_IOQLOCK();
             {
-                usleep ( 1000 );
+                USLEEP( 1000 );
             }
             OBTAIN_IOQLOCK();
         }
@@ -151,7 +151,7 @@ BYTE     psw[16];
             // "SR: waiting for device %04X"
             WRMSG(HHC02002, "W", dev->devnum);
         }
-        usleep (10000);
+        USLEEP(10000);
     }
     if (dev != NULL)
     {

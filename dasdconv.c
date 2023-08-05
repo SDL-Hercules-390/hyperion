@@ -195,7 +195,7 @@ static void delayed_exit (int exit_code)
 {
     /* Delay exiting is to give the system
      * time to display the error message. */
-    usleep(100000);
+    USLEEP(100000);
     exit(exit_code);
 }
 

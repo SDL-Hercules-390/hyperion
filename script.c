@@ -217,7 +217,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
         WRMSG(HHC01432, "S", 1, fname, "fopen()", strerror(errno));
         fflush(stderr);
         fflush(stdout);
-        usleep(100000);
+        USLEEP(100000);
         return -1;
     }
 

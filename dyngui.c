@@ -2177,7 +2177,7 @@ HDL_FINAL_SECTION
     if (sysblk.shutdown)
     {
         bDoneProcessing = TRUE;     // (tell main loop to stop processing)
-        usleep(100000);             // (brief delay to give GUI time
+        USLEEP(100000);             // (brief delay to give GUI time
                                     //  to display ALL shutdown msgs)
     }
 }
