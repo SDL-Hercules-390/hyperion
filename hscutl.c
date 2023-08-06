@@ -605,16 +605,29 @@ DLL_EXPORT void list_all_symbols()
 }
 
 /* Hercules microsecond sleep */
-DLL_EXPORT int herc_usleep( useconds_t usecs )
+DLL_EXPORT int herc_usleep( useconds_t usecs, const char* file, int line )
 {
-    int  rc;
-    if ((rc = usleep( usecs )) != 0)
+    int  rc, save_errno;
+
+    while (1
+        && (rc = usleep( usecs )) != 0
+        && (save_errno = errno) == EINTR
+    )
+        continue;
+
+    if (rc != 0)
     {
-        int save_errno = errno;
+        char fnc[128], msg[128];
+
+        MSGBUF( fnc, "USLEEP() at %s(%d)",
+            TRIMLOC( file ), line);
+
+        MSGBUF( msg, "rc=%d, errno=%d: %s",
+            rc, save_errno, strerror( save_errno ));
+
         // "Error in function %s: %s"
-        WRMSG( HHC00075, "E", "usleep()", strerror( save_errno ));
+        WRMSG( HHC00075, "E", fnc, msg );
         errno = save_errno;
-        rc = -1;
     }
     return rc;
 }
