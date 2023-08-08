@@ -1474,7 +1474,7 @@ static void *commadpt_thread(void *vca)
                 if(ca->inbfr.havedata || ca->eol_flag)
                 {
                     if (ca->term == COMMADPT_TERM_2741) {
-                        usleep(10000);
+                        USLEEP(10000);
                     }
                     ca->curpending=COMMADPT_PEND_IDLE;
                     signal_condition(&ca->ipc);

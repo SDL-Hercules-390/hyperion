@@ -877,7 +877,7 @@ U32   code;
         for (i=0; i < secs; ++i)
             SLEEP(1);       /* (sleep one second at a time) */
         if (usecs)
-            usleep(usecs);  /* (remaining microseconds, if any) */
+            USLEEP(usecs);  /* (remaining microseconds, if any) */
         break;
     }
 

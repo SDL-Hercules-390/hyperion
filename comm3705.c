@@ -1158,7 +1158,7 @@ static void *telnet_thread(void *vca)
         ca->hangup = 0;
         for (;;)
         {
-            usleep(50000);
+            USLEEP(50000);
             if (ca->hangup)
                 break;
             /* read_socket has changed from 3.04 to 3.06 - we need old way */
@@ -1224,7 +1224,7 @@ static void *commadpt_thread(void *vca)
         release_lock(&ca->lock);
         if(ca->ackspeed == 0) delay = 50000 + (ca->unack_attn_count * 100000);         /* Max's reliable algorithm      */
         else delay = (ca->unack_attn_count * ca->unack_attn_count + 1) * ca->ackspeed; /* much faster but TCAM hates it */
-        usleep(min(1000000,delay));                                                    /* go to sleep, max. 1 second    */
+        USLEEP(min((int)(ONE_MILLION-1),delay));                                       /* go to sleep, max. 1 second    */
         obtain_lock(&ca->lock);
         make_sna_requests2(ca);
         make_sna_requests3(ca);

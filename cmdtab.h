@@ -1828,7 +1828,8 @@
   "When the z/Arch Transactional-Execution Facility *is* installed and\n"       \
   "enabled the minimum and default intervals are 200 and 400 microseconds.\n"   \
   "\n"                                                                          \
-  "The maximum allowed interval is 1000000 microseconds (one second).\n"        \
+  "The maximum allowed interval is "QSTR( MAX_TOD_UPDATE_USECS )" microseconds (one microsecond\n" \
+  "less than one second).\n"                                        \
   "\n"                                                                          \
   "Also note that due to host system limitations and/or design, some\n"         \
   "hosts may round up and/or coalesce short microsecond intervals to a\n"       \

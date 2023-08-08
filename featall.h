@@ -70,7 +70,7 @@
 
 #define MIN_TOD_UPDATE_USECS         50 /* Min TOD updt freq (usecs) */
 #define DEF_TOD_UPDATE_USECS         50 /* Def TOD updt freq (usecs) */
-#define MAX_TOD_UPDATE_USECS    1000000 /* Max TOD updt freq (usecs) */
+#define MAX_TOD_UPDATE_USECS     999999 /* Max TOD updt freq (usecs) */
 
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 //efine OPTION_LONG_HOSTINFO            /* Detailed host & logo info */

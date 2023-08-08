@@ -357,7 +357,7 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
                 {
                     pttracen = 0;
                     RELEASE_PTTLOCK;
-                    usleep(1000);
+                    USLEEP(1000);
                     OBTAIN_PTTLOCK;
                     free (pttrace);
                     pttrace = NULL;

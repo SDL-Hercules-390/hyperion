@@ -745,7 +745,7 @@ static void* quit_thread( void* arg )
     // messages at least twice to ensure that the "exit"
     // command has time to be echoed to the screen.
 
-    usleep( quitdelay_usecs );
+    USLEEP( quitdelay_usecs );
 
     // Now proceed with a normal shutdown, which waits for
     // the guest to quiesce itself beforehand (if appropriate)
@@ -1987,7 +1987,7 @@ static void try_scsi_refresh( DEVBLK* dev )
     gen_parms.dev     = dev;
 
     VERIFY( dev->tmh->generic( &gen_parms ) == 0 ); // (maybe update status)
-    usleep( 10 * 1000 );                            // (let thread start/end)
+    USLEEP( 10 * 1000 );                            // (let thread start/end)
 }
 
 /*-------------------------------------------------------------------*/
@@ -7536,7 +7536,7 @@ char   **save_argv = NULL;
                          || (dev->scsw.flag3 & SCSW3_SC_PEND)))
         {
             RELEASE_DEVLOCK( dev );
-            usleep(5000);
+            USLEEP(5000);
             OBTAIN_DEVLOCK( dev );
         }
     }

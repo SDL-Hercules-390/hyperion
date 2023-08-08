@@ -1691,7 +1691,7 @@ static void  UpdatePortStarted( int bStarted, DEVBLK* pDEVBLK, PLCSPORT pLCSPORT
     release_lock( &pLCSPORT->PortEventLock );
 
     PTT_DEBUG( "UPDTPORT pause 150", 000, pDEVBLK->devnum, pLCSPORT->bPort );
-    usleep( 150*1000 );
+    USLEEP( 150*1000 );
 }
 
 // ====================================================================
@@ -2191,7 +2191,7 @@ static void LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply, size_t iS
         // Wait for LCS_Read to empty the buffer...
 
         ASSERT( ENOBUFS == errno );
-        usleep( CTC_DELAY_USECS );
+        USLEEP( CTC_DELAY_USECS );
     }
     PTT_TIMING( "af repNQ", 0, iSize, 0 );
     PTT_DEBUG( "ENQ RepFrame EXIT ", pReply->bCmdCode, pDEVBLK->devnum, bPort );
@@ -2798,7 +2798,7 @@ static void LCS_EnqueueEthFrame( PLCSPORT pLCSPORT, PLCSDEV pLCSDEV, BYTE* pData
         // Wait for LCS_Read to empty the buffer...
 
         ASSERT( ENOBUFS == errno );
-        usleep( CTC_DELAY_USECS );
+        USLEEP( CTC_DELAY_USECS );
     }
     PTT_TIMING( "af enqueue", 0, iSize, 0 );
     PTT_DEBUG( "ENQ EthFrame EXIT ", 000, pDEVBLK->devnum, bPort );
@@ -4150,7 +4150,7 @@ static void*  LCS_AttnThread( void* arg)
                 {
 
                     // Wait a small (but increasing) amount of time.
-                    usleep(interval);
+                    USLEEP(interval);
 
 //??                // is there still something in our frame buffer?
 //??                if (!pLCSDEV->fDataPending && !pLCSDEV->fReplyPending)

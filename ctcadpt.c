@@ -1929,7 +1929,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
             dev->allocated = 0;
             RELEASE_DEVLOCK( dev );
             {
-                usleep( 700000 );
+                USLEEP( 700000 );
             }
             OBTAIN_DEVLOCK( dev );
             dev->allocated = 1;
@@ -2945,7 +2945,7 @@ static void*  CTCE_RecvThread( void* argp )
                     {
                         CTCE_Info.de_ready_attn_rc = device_attention( pDEVBLK, CSW_DE );
                     }
-                    while ((CTCE_Info.de_ready_attn_rc == 3) && (usleep( 100 ) == 0));
+                    while ((CTCE_Info.de_ready_attn_rc == 3) && (USLEEP( 100 ) == 0));
                 }
                 OBTAIN_DEVLOCK( pDEVBLK );
 
@@ -2995,7 +2995,7 @@ static void*  CTCE_RecvThread( void* argp )
                     // which needs to be configured using the CTCE option ATTNDELAY <nnn>
                     if( pDEVBLK->ctce_attn_delay && CTCE_Info.busy_waits == 0 )
                     {
-                        usleep( pDEVBLK->ctce_attn_delay );
+                        USLEEP( pDEVBLK->ctce_attn_delay );
                     }
 
                     CTCE_Info.working_attn_rc = device_attention( pDEVBLK, CSW_ATTN );
@@ -3014,7 +3014,7 @@ static void*  CTCE_RecvThread( void* argp )
                         {
                             i = i * 2;
                         }
-                        usleep(i);
+                        USLEEP(i);
 
                         // Cancel the ATTN in case a CCW program
                         // has started in the mean time.
@@ -3632,7 +3632,7 @@ static void*  CTCE_ConnectThread( void* argp )
         if ( rc < 0 )
         {
             close_socket( fd );
-            usleep(connect_retry_interval * 1000) ;
+            USLEEP(connect_retry_interval * 1000) ;
         }
         OBTAIN_DEVLOCK( dev );
 

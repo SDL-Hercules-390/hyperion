@@ -338,7 +338,7 @@ typedef struct PREFETCH PREFETCH;
 #define IODELAY(_dev) \
 do { \
   if (sysblk.iodelay > 0 && (_dev)->devchar[10] == 0x20) \
-    usleep(sysblk.iodelay); \
+    USLEEP(sysblk.iodelay); \
 } while(0)
 #else
 #define IODELAY(_dev)
@@ -4151,7 +4151,7 @@ do {                                                                   \
 #ifdef FEATURE_S370_CHANNEL
             if (dev->devtype == 0x2703)
                 if (dev->commadpt->lnctl == COMMADPT_LNCTL_ASYNC)
-                    usleep(5000);
+                    USLEEP(5000);
 #endif
 
 #if DEBUG_DUMP

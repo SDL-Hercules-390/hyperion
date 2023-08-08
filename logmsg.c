@@ -246,7 +246,7 @@ static int do_write_pipe( int fd, const char *msg, int len)
             if (errno == EAGAIN)
             {
                 // logger is backlogged; wait a bit before retrying
-                usleep(10000);
+                USLEEP(10000);
                 continue;
             }
             break;

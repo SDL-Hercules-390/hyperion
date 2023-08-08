@@ -115,11 +115,11 @@ static void delayed_exit (int exit_code)
 
     fflush(stderr);
     fflush(stdout);
-    usleep(100000);
+    USLEEP(100000);
     do_shutdown();
     fflush(stderr);
     fflush(stdout);
-    usleep(100000);
+    USLEEP(100000);
     return;
 }
 
@@ -201,7 +201,7 @@ static void do_emergency_shutdown()
     else // (already in progress)
     {
         while (!sysblk.shutfini)
-            usleep(100000);
+            USLEEP(100000);
     }
 }
 
@@ -708,7 +708,7 @@ void* log_do_callback( void* dummy )
         }
 
         /* wait a bit for new message(s) to arrive before retrying */
-        usleep( PANEL_REFRESH_RATE_FAST * 1000 );
+        USLEEP( PANEL_REFRESH_RATE_FAST * 1000 );
     }
 
     /* Let them know logger thread has ended */
@@ -762,7 +762,7 @@ static void* process_rc_file( void* dummy )
         /* Wait for panel thread to engage */
         if (!sysblk.daemon_mode)
             while (!sysblk.panel_init)
-                usleep( 10 * 1000 );
+                USLEEP( 10 * 1000 );
 
 #endif // ZZ FIXME: THIS NEEDS TO GO
 
@@ -788,7 +788,7 @@ static void arghelp()
 
     fflush( stderr );
     fflush( stdout );
-    usleep( 100000 );
+    USLEEP( 100000 );
 }
 
 /* Functions in module skey.h/.c, needed by impl.c */
@@ -1332,7 +1332,7 @@ int     rc;
     {
         if (hdl_loadmod( "dyngui", HDL_LOAD_NOUNLOAD ) != 0)
         {
-            usleep( 10000 ); // (give logger time to show them the error message)
+            USLEEP( 10000 ); // (give logger time to show them the error message)
             // "Load of dyngui.dll failed, hercules terminated"
             WRMSG( HHC01409, "S" );
             delayed_exit( -1 );
@@ -1359,7 +1359,7 @@ int     rc;
 
         if (err)
         {
-            usleep( 10000 ); // (give logger time to display message)
+            USLEEP( 10000 ); // (give logger time to display message)
             // "Hercules terminating, see previous messages for reason"
             WRMSG( HHC01408, "S");
             delayed_exit( -1 );
@@ -1586,7 +1586,7 @@ int     rc;
                 || sysblk.started_mask  /* CPU(s) still running?     */
                 || !sysblk.config_mask  /* ZERO CPUs configured?     */
             )
-                usleep( 10 * 1000 );    /* Wait on CPU(s) or forever */
+                USLEEP( 10 * 1000 );    /* Wait on CPU(s) or forever */
 
             if (sysblk.config_mask)     /* If NUMCPU > 0, then do    */
                 quit_cmd( 0, 0, 0);     /* normal/clean shutdown     */
@@ -1605,7 +1605,7 @@ int     rc;
     socket_deinit();
 #endif
     fflush( stdout );
-    usleep( 10000 );
+    USLEEP( 10000 );
     return 0; /* return back to bootstrap.c */
 } /* end function impl */
 

@@ -140,7 +140,7 @@ int             rc, i;                  /* Return code, Loop index   */
     while (cckd->ras)
     {
         release_lock(&cckdblk.ralock);
-        usleep(1);
+        USLEEP(1);
         obtain_lock(&cckdblk.ralock);
     }
     release_lock(&cckdblk.ralock);
