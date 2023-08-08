@@ -609,13 +609,9 @@ DLL_EXPORT int herc_usleep( useconds_t usecs, const char* file, int line )
 {
     int  rc, save_errno;
 
-    while (1
+    if (1
         && (rc = usleep( usecs )) != 0
-        && (save_errno = errno) == EINTR
-    )
-        continue;
-
-    if (rc != 0)
+        && (save_errno = errno) != EINTR)
     {
         char fnc[128], msg[128];
 
