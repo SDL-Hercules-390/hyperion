@@ -1271,7 +1271,7 @@ void cgibin_api_v1_version(WEBBLK *webblk)
     hprintf(webblk->sock,"\"%s\"",_ARCH_900_NAME);
 #endif
     hprintf(webblk->sock,"], \"max_cpu_engines\":%d,",  MAX_CPU_ENGS );
-    
+
     hprintf(webblk->sock,"\"build_info\":\"");
 
     num_strs = get_buildinfo_strings( &ppszBldInfoStr );
@@ -1368,7 +1368,7 @@ void cgibin_api_v1_cpus(WEBBLK *webblk)
                 , psw[  0 ], psw[  1 ], psw[  2 ], psw[  3 ]
                 , psw[  4 ], psw[  5 ], psw[  6 ], psw[  7 ]
                 , psw[  8 ], psw[  9 ], psw[ 10 ], psw[ 11 ]
-                , psw[ 12 ], psw[ 13 ], psw[ 14 ], psw[ 15 ] 
+                , psw[ 12 ], psw[ 13 ], psw[ 14 ], psw[ 15 ]
                 );
         }
         else
@@ -1380,42 +1380,42 @@ void cgibin_api_v1_cpus(WEBBLK *webblk)
         }
 
         hprintf( webblk->sock, "\"general_registers\":{");
-        for (gpr=0; gpr < 16; gpr++) 
+        for (gpr=0; gpr < 16; gpr++)
         {
 
             if (ARCH_900_IDX == regs->arch_mode)
                 hprintf( webblk->sock, "\"GR%d\": \"%16.16"PRIX64"\"", gpr, (U64) regs->GR_G( gpr ));
             else
                 hprintf( webblk->sock, "\"GR%d\": \"%8.8"PRIX32"\"", gpr, (U32) regs->GR_L( gpr ));
-            
+
             if (gpr < 15)
                 hprintf( webblk->sock,","); //  JSON doesn't allow trailing commas
         }
         hprintf( webblk->sock, "},");
 
         hprintf( webblk->sock, "\"control_registers\":{");
-        for (cr=0; cr < 16; cr++) 
+        for (cr=0; cr < 16; cr++)
         {
             if (ARCH_900_IDX == regs->arch_mode)
                 hprintf( webblk->sock, "\"CR%d\": \"%16.16"PRIX64"\"", cr, (U64) regs->CR_G( cr ));
             else
                 hprintf( webblk->sock, "\"CR%d\": \"%8.8"PRIX32"\"", cr, (U32) regs->CR_L( cr ));
-            
+
             if (cr < 15)
                 hprintf( webblk->sock,","); //  JSON doesn't allow trailing commas
         }
         hprintf( webblk->sock, "},");
 
         hprintf( webblk->sock, "\"access_registers\":{");
-        for (ar=0; ar < 16; ar++) 
+        for (ar=0; ar < 16; ar++)
         {
-            
+
             hprintf( webblk->sock, "\"AR%d\": \"%8.8X\"", ar, regs->AR( ar ));
-            
+
             if (ar < 15)
                 hprintf( webblk->sock,","); //  JSON doesn't allow trailing commas
         }
-        hprintf( webblk->sock, "}"); 
+        hprintf( webblk->sock, "}");
 
 
         if (cpu < sysblk.maxcpu - 1)
@@ -1424,7 +1424,7 @@ void cgibin_api_v1_cpus(WEBBLK *webblk)
             hprintf(webblk->sock,"}"); // End of a CPU
     }
 
-    hprintf(webblk->sock,"]}"); // End of JSON 
+    hprintf(webblk->sock,"]}"); // End of JSON
 
 }
 
@@ -1505,15 +1505,15 @@ void cgibin_api_v1_maxrates(WEBBLK *webblk)
             hprintf(webblk->sock,"\"from\":\"%s\",\"to\":\"%s\",",
                         pszPrevIntervalStartDateTime,
                         pszCurrIntervalStartDateTime);
-            hprintf(webblk->sock, "\"MIPS\": %d.%02d,", 
+            hprintf(webblk->sock, "\"MIPS\": %d.%02d,",
                         prev_high_mips_rate / 1000000,
                         prev_high_mips_rate % 1000000);
             hprintf(webblk->sock,  "\"IO\": %d,", prev_high_sios_rate);
         }
-        hprintf(webblk->sock,"\"from\":\"%s\",\"to\":\"%s\",", 
+        hprintf(webblk->sock,"\"from\":\"%s\",\"to\":\"%s\",",
                     pszCurrIntervalStartDateTime,
                     pszCurrentDateTime);
-        hprintf(webblk->sock, "\"MIPS\": %d.%02d,", 
+        hprintf(webblk->sock, "\"MIPS\": %d.%02d,",
                     curr_high_mips_rate / 1000000,
                     curr_high_mips_rate % 1000000);
        hprintf(webblk->sock,  "\"IO\": %d,", curr_high_sios_rate);
@@ -1565,7 +1565,7 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
     if (!regs) regs = &sysblk.dummyregs;
 
     json_header( webblk );
-    
+
     if( regs->arch_mode != ARCH_900_IDX )
     {
         copy_psw (regs, qword);
@@ -1625,13 +1625,13 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
         // the command issues a lot of messages
         USLEEP(50000);
         hprintf(webblk->sock,"{\"command\": \"%s\",",command);
-    } 
+    }
     else
         hprintf(webblk->sock,"{\"command\": \"\",");
 
     if((value = cgi_variable(webblk,"msgcount")))
         msgcount = atoi(value);
-    
+
     hprintf(webblk->sock,"\"msgcount\": %d,",msgcount);
     hprintf(webblk->sock,"\"syslog\": [\"");
 
@@ -1731,9 +1731,9 @@ U32 addr = 0;
         size = sysblk.mainsize;
 
     hprintf(webblk->sock,"\"storage\":\"");
-    
+
     for(i = 0; i < size; i += 4)
-    {    
+    {
         U32 m;
         FETCH_FW(m,sysblk.mainstor + i + addr);
         hprintf(webblk->sock,"%8.8X",m);
@@ -1745,7 +1745,7 @@ U32 addr = 0;
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1_devices                        */
 /*-------------------------------------------------------------------*/
-/* Return an array of all the devices and information about them     */ 
+/* Return an array of all the devices and information about them     */
 /* with the following format:                                        */
 /*{                                                                  */
 /*    "devices": [                                                   */
@@ -1788,7 +1788,7 @@ void cgibin_api_v1_devices(WEBBLK *webblk)
     for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
         total++;
 
-    for(dev = sysblk.firstdev; dev; dev = dev->nextdev) 
+    for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
         if(dev->pmcw.flag5 & PMCW5_V)
         {
@@ -1816,7 +1816,7 @@ void cgibin_api_v1_devices(WEBBLK *webblk)
                                    dev->devtype,
                                    (dev->fd > 2 ? "open " : ""),
                                    (dev->busy ? "busy " : ""),
-                                   (IOPENDING(dev) ? "pending " : ""), 
+                                   (IOPENDING(dev) ? "pending " : ""),
                                    devnam,
                                    (count == total - 1 ? "" : "," ));
         }

@@ -412,7 +412,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent )
             STRLCPY( cchhbuf, CCHH_COLHDR );
         else
             cchhbuf[0] = 0;
-        
+
         LOGMSG("%s%*s%s", cchhbuf, -dsnlen, "Dsname",
                                        runflgs & rf_caldate ? "  Created " : " CREDT");
         LOGMSG(runflgs & rf_refdate ? (runflgs & rf_caldate ? " Last Ref." : " REFDT") : "");

@@ -2010,7 +2010,7 @@ do {                                                                  \
   // S/370 without the "FEATURE_370_EXTENSION" BUILD option defined,
   // which causes the "FEATURE_BASIC_FP_EXTENSIONS" BUILD option to
   // NOT be #defined, which provides normal S/370 behavior.
-    
+
   #define FPR2I(_r)     (_r)        /* Convert fpr to index */
   #define FPREX           2         /* Offset of extended register */
 
