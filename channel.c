@@ -61,6 +61,71 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 #endif
 
 /*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
+
+
+
+/*--------------------------------------------------------------------*/
+/* CHADDRCHK - validate guest channel i/o subsystem address           */
+/*--------------------------------------------------------------------*/
+#undef CHADDRCHK
+#if defined( FEATURE_ADDRESS_LIMIT_CHECKING )
+  #define CHADDRCHK( _addr, _dev )                      \
+  (                                                     \
+    ((_addr) > (_dev)->mainlim)                         \
+    ||                                                  \
+    (                                                   \
+        ((_dev)->orb.flag5 & ORB5_A)                    \
+        &&                                              \
+        (                                               \
+            (                                           \
+                ((_dev)->pmcw.flag5 & PMCW5_LM_LOW)     \
+                &&                                      \
+                ((_addr) < sysblk.addrlimval)           \
+            )                                           \
+            ||                                          \
+            (                                           \
+                ((_dev)->pmcw.flag5 & PMCW5_LM_HIGH)    \
+                &&                                      \
+                ((_addr) >= sysblk.addrlimval)          \
+            )                                           \
+        )                                               \
+    )                                                   \
+  )
+#else
+  #define CHADDRCHK( _addr, _dev )  ((_addr) > (_dev)->mainlim)
+#endif
+
+
+
+#if 0 // TODO... (this function will replace complex 'if' statement)
+/*-------------------------------------------------------------------*/
+/*                    is_valid_ccw_data_addr                         */
+/*-------------------------------------------------------------------*/
+static bool ARCH_DEP( is_valid_ccw_data_addr )( DEVBLK* dev, U32 addr, U32 count, BYTE ccwfmt, BYTE flags )
+{
+    return true;
+}
+#endif // TODO...
+
+
+
+/*-------------------------------------------------------------------*/
 /* CCW Tracing helper macros                                         */
 /*-------------------------------------------------------------------*/
 
@@ -123,55 +188,60 @@ static INLINE U8 IS_CCW_IMMEDIATE( const DEVBLK* dev, const BYTE code )
     return
     (0
         || (dev->hnd->immed && dev->hnd->immed[code])
-        || (dev->immed      && dev->immed[code])
+        || (dev->     immed && dev->     immed[code])
         || IS_CCW_NOP( dev->code )
     );
 }
 
-static INLINE void
-set_subchannel_busy(DEVBLK* dev)
+/*-------------------------------------------------------------------*/
+
+static INLINE void set_subchannel_busy( DEVBLK* dev )
 {
     dev->busy = 1;
     dev->scsw.flag3 |= SCSW3_AC_SCHAC | SCSW3_SC_INTER;
 }
 
-static INLINE void
-set_device_busy(DEVBLK* dev)
+/*-------------------------------------------------------------------*/
+
+static INLINE void set_device_busy( DEVBLK* dev )
 {
-    set_subchannel_busy(dev);
+    set_subchannel_busy( dev );
     dev->scsw.flag3 |= SCSW3_AC_DEVAC;
 }
 
-static INLINE void
-clear_subchannel_busy_scsw(SCSW* scsw)
+/*-------------------------------------------------------------------*/
+
+static INLINE void clear_subchannel_busy_scsw( SCSW* scsw )
 {
     scsw->flag3 &= ~(SCSW3_AC_SCHAC |
                      SCSW3_AC_DEVAC |
                      SCSW3_SC_INTER);
 }
 
-static INLINE void
-clear_subchannel_busy(DEVBLK* dev)
+/*-------------------------------------------------------------------*/
+
+static INLINE void clear_subchannel_busy( DEVBLK* dev )
 {
-    clear_subchannel_busy_scsw(&dev->scsw);
+    clear_subchannel_busy_scsw( &dev->scsw );
     dev->startpending = 0;
     dev->busy = 0;
 }
 
-static INLINE void
-clear_device_busy_scsw(SCSW* scsw)
+/*-------------------------------------------------------------------*/
+
+static INLINE void clear_device_busy_scsw( SCSW* scsw )
 {
     scsw->flag3 &= ~SCSW3_AC_DEVAC;
 }
 
-static INLINE void
-clear_device_busy(DEVBLK* dev)
+/*-------------------------------------------------------------------*/
+
+static INLINE void clear_device_busy( DEVBLK* dev )
 {
-    clear_device_busy_scsw(&dev->scsw);
+    clear_device_busy_scsw( &dev->scsw );
 }
 
 #endif /*CHANNEL_INLINES*/
-
 
 /*-------------------------------------------------------------------*/
 /* Internal I/O Buffer Structure and Inline Support Routines         */
@@ -218,22 +288,24 @@ struct IOBUF
              *        of the space is presently done.
              */
         };
-        BYTE    pad[IOBUF_HDRSIZE];     /* Pad to alignment boundary */
+        BYTE    pad[ IOBUF_HDRSIZE ];   /* Pad to alignment boundary */
     };
-    BYTE    data[IOBUF_MINSIZE];        /* Channel I/O buffer itself */
+    BYTE    data[ IOBUF_MINSIZE ];      /* Channel I/O buffer itself */
 };
 typedef struct IOBUF IOBUF;
 
-static INLINE void
-iobuf_initialize (IOBUF *iobuf, const u_int size)
+/*--------------------------------------------------------------------*/
+
+static INLINE void iobuf_initialize( IOBUF* iobuf, const u_int size )
 {
     iobuf->size  = size;
     iobuf->start = (BYTE *)iobuf->data;
     iobuf->end   = (BYTE *)iobuf->start + (size - 1);
 }
 
-static INLINE IOBUF *
-iobuf_create (u_int size)
+/*--------------------------------------------------------------------*/
+
+static INLINE IOBUF* iobuf_create( u_int size )
 {
     IOBUF *iobuf;
     size = ROUND_UP( size, IOBUF_INCREASE );
@@ -243,8 +315,9 @@ iobuf_create (u_int size)
     return iobuf;
 }
 
-static INLINE u_int
-iobuf_validate (IOBUF *iobuf)
+/*--------------------------------------------------------------------*/
+
+static INLINE u_int iobuf_validate( IOBUF* iobuf )
 {
     return
     ((iobuf == NULL                         ||
@@ -254,8 +327,9 @@ iobuf_validate (IOBUF *iobuf)
      0 : 1);
 }
 
-static INLINE void
-iobuf_destroy (IOBUF *iobuf)
+/*--------------------------------------------------------------------*/
+
+static INLINE void iobuf_destroy( IOBUF* iobuf )
 {
     /* PROGRAMMING NOTE: The tests below are purposely neither macros
      * or inlined routines. This is to permit breakpoints during
@@ -265,18 +339,19 @@ iobuf_destroy (IOBUF *iobuf)
      * cleanup performed, and a Channel Check, and/or a Machine Check,
      * will be returned.
      */
-    if (iobuf == NULL)
+    if (!iobuf)
         return;
-    if (!iobuf_validate(iobuf))
+    if (!iobuf_validate( iobuf ))
         CRASH();
     if (iobuf->size > IOBUF_MINSIZE)
-        free_aligned(iobuf);
+        free_aligned( iobuf );
 }
 
-static INLINE IOBUF*
-iobuf_reallocate (IOBUF *iobuf, const u_int size)
+/*--------------------------------------------------------------------*/
+
+static INLINE IOBUF* iobuf_reallocate( IOBUF* iobuf, const u_int size )
 {
-    IOBUF *iobufnew;
+    IOBUF* iobufnew;
     /* PROGRAMMING NOTE: The tests below are purposely neither macros
      * or inlined routines. This is to permit breakpoints during
      * development and testing. In the future, instead of aborting
@@ -345,36 +420,18 @@ do { \
 #endif
 
 /*--------------------------------------------------------------------*/
-/* CHADDRCHK - validate guest channel i/o subsystem address           */
-/*--------------------------------------------------------------------*/
-#undef CHADDRCHK
-#if defined(FEATURE_ADDRESS_LIMIT_CHECKING)
-#define CHADDRCHK(_addr,_dev)                   \
-  (   ((_addr) > (_dev)->mainlim)               \
-    || (((_dev)->orb.flag5 & ORB5_A)            \
-      && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
-        && ((_addr) < sysblk.addrlimval))       \
-      || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH)  \
-        && ((_addr) >= sysblk.addrlimval)) ) ))
-#else /* !defined(FEATURE_ADDRESS_LIMIT_CHECKING) */
-#define CHADDRCHK(_addr,_dev) \
-        ((_addr) > (_dev)->mainlim)
-#endif /* defined(FEATURE_ADDRESS_LIMIT_CHECKING) */
-
-/*--------------------------------------------------------------------*/
 /*              C H A N N E L   P R O C E S S I N G                   */
 /*--------------------------------------------------------------------*/
-#ifndef _CHANNEL_C
-#define _CHANNEL_C
+#if !defined( _CHANNEL_C )
+#define       _CHANNEL_C
 
-static INLINE U64
-BytesToEndOfStorage( const RADR addr, const DEVBLK* dev )
+static INLINE U64 BytesToEndOfStorage( const RADR addr, const DEVBLK* dev )
 {
     if (dev) return ((addr <= dev->mainlim)   ? (dev->mainlim+1  - addr) : 0);
     else     return ((addr < sysblk.mainsize) ? (sysblk.mainsize - addr) : 0);
 }
 
-#define CAPPED_BUFFLEN(_addr,_len,_dev) \
+#define CAPPED_BUFFLEN( _addr, _len, _dev ) \
     ((u_int)MIN((U64)(_len),(U64)BytesToEndOfStorage((_addr),(_dev))))
 
 
@@ -388,38 +445,37 @@ BytesToEndOfStorage( const RADR addr, const DEVBLK* dev )
 /*                                                                    */
 /*--------------------------------------------------------------------*/
 
-static INLINE void
-scsw_clear_n_C (SCSW* scsw)
+static INLINE void scsw_clear_n_C( SCSW* scsw )
 {
     scsw->flag1 &= ~SCSW1_N;
 }
 
+/*--------------------------------------------------------------------*/
 
-static INLINE void
-scsw_clear_q_C (SCSW* scsw)
+static INLINE void scsw_clear_q_C( SCSW* scsw )
 {
     scsw->flag2 &= ~SCSW2_Q;
 }
 
+/*--------------------------------------------------------------------*/
 
-static INLINE void
-scsw_clear_fc_C (SCSW* scsw)
+static INLINE void scsw_clear_fc_C( SCSW* scsw )
 {
     scsw->flag2 &= ~SCSW2_FC;
 }
 
+/*--------------------------------------------------------------------*/
 
-static INLINE void
-scsw_clear_fc_Nc (SCSW* scsw)
+static INLINE void scsw_clear_fc_Nc( SCSW* scsw )
 {
     if (scsw->flag2 & SCSW2_FC_HALT &&
         scsw->flag3 & SCSW3_AC_SUSP)
         scsw_clear_fc_C(scsw);
 }
 
+/*--------------------------------------------------------------------*/
 
-static INLINE void
-scsw_clear_ac_Cp (SCSW* scsw)
+static INLINE void scsw_clear_ac_Cp( SCSW* scsw )
 {
     scsw->flag2 &= ~(SCSW2_AC_RESUM |
                          SCSW2_AC_START |
@@ -428,9 +484,9 @@ scsw_clear_ac_Cp (SCSW* scsw)
     scsw->flag3 &= ~SCSW3_AC_SUSP;
 }
 
+/*--------------------------------------------------------------------*/
 
-static INLINE void
-scsw_clear_ac_Nr (SCSW* scsw)
+static INLINE void scsw_clear_ac_Nr( SCSW* scsw )
 {
     if (scsw->flag2 & SCSW2_FC_START &&
         scsw->flag3 & SCSW3_AC_SUSP)
@@ -445,9 +501,9 @@ scsw_clear_ac_Nr (SCSW* scsw)
     }
 }
 
+/*--------------------------------------------------------------------*/
 
-static INLINE void
-scsw_clear_sc_Cs (SCSW* scsw)
+static INLINE void scsw_clear_sc_Cs( SCSW* scsw )
 {
     scsw->flag3 &= ~(SCSW3_SC_ALERT |
                      SCSW3_SC_INTER |
@@ -456,7 +512,6 @@ scsw_clear_sc_Cs (SCSW* scsw)
                      SCSW3_SC_PEND);
 }
 
-
 /*--------------------------------------------------------------------*/
 /*  AIPSX (dev)                                                       */
 /*                                                                    */
@@ -464,8 +519,7 @@ scsw_clear_sc_Cs (SCSW* scsw)
 /*  Condition-Code Meaning for Status-Pending Subchannel, Figure      */
 /*  16-5.                                                             */
 /*--------------------------------------------------------------------*/
-static INLINE U8
-AIPSX (const SCSW* scsw)
+static INLINE U8 AIPSX( const SCSW* scsw )
 {
     U8  result =  (scsw->flag1 & SCSW1_A)           /* >> 4 << 4  */
                | ((scsw->flag1 & SCSW1_I) >> 2      /* >> 5 << 3  */
@@ -488,8 +542,7 @@ AIPSX (const SCSW* scsw)
 /*  Locks Used                                                        */
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
-static INLINE void
-queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
+static INLINE void queue_io_interrupt_and_update_status_locked( DEVBLK* dev, int clrbsy )
 {
     OBTAIN_IOINTQLK();
     {
@@ -519,7 +572,6 @@ queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
 #endif // defined( OPTION_SHARED_DEVICES )
 }
 
-
 /*--------------------------------------------------------------------*/
 /*  Queue I/O interrupt and update status                             */
 /*                                                                    */
@@ -532,8 +584,7 @@ queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
 /*    sysblk.intlock                                                  */
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
-static INLINE void
-queue_io_interrupt_and_update_status(DEVBLK* dev, int clrbsy)
+static INLINE void queue_io_interrupt_and_update_status( DEVBLK* dev, int clrbsy )
 {
     if (likely(dev->scsw.flag3 & SCSW3_SC_PEND))
     {
@@ -566,7 +617,6 @@ queue_io_interrupt_and_update_status(DEVBLK* dev, int clrbsy)
 #endif // defined( OPTION_SHARED_DEVICES )
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Copy memory backwards for READ BACKWARDS                          */
 /*                                                                   */
@@ -576,8 +626,7 @@ queue_io_interrupt_and_update_status(DEVBLK* dev, int clrbsy)
 /*       of failure.                                                 */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static INLINE void
-memcpy_backwards ( BYTE *to, BYTE *from, int length )
+static INLINE void memcpy_backwards( BYTE* to, BYTE* from, int length )
 {
     if (length)
     {
@@ -586,18 +635,18 @@ memcpy_backwards ( BYTE *to, BYTE *from, int length )
     }
 }
 
-
 /*-------------------------------------------------------------------*/
 /* FORMAT DATA                                                       */
 /*-------------------------------------------------------------------*/
-#if !defined(format_data)
+#if !defined( format_data )
 #   define format_data(_buffer,_buflen,_data,_datalen)                 \
           _format_data((BYTE *)(_buffer),(u_int)(_buflen),             \
                        (BYTE *)(_data),(u_int)(_datalen))
 #endif
-static INLINE void
-_format_data ( BYTE *buffer,  const u_int buflen,
-               const BYTE *a, const u_int len )
+static INLINE void _format_data (       BYTE*  buffer,
+                                  const u_int  buflen,
+                                  const BYTE*  a,
+                                  const u_int  len )
 {
 u_int   i, k;                           /* Array subscripts          */
 int     j;
@@ -647,18 +696,20 @@ int     j;
 
 } /* end function format_data */
 
-
 /***************************************************************/
 /* SPECIAL HANDLING FOR E7 Prefix CCW TO TRACE ENTIRE 64 BYTES */
 /***************************************************************/
-#if !defined(e7_format_data)
-#   define e7_format_data(_buffer,_buflen,_data,_datalen)                 \
-          _e7_format_data((BYTE *)(_buffer),(u_int)(_buflen),             \
-                       (BYTE *)(_data),(u_int)(_datalen))
+#if !defined( e7_format_data )
+      #define e7_format_data( _buffer, _buflen, _data, _datalen )   \
+             _e7_format_data( (BYTE*) (_buffer),                    \
+                              (u_int) (_buflen),                    \
+                              (BYTE*) (_data),                      \
+                              (u_int) (_datalen) )
 #endif
-static INLINE void
-_e7_format_data ( BYTE *buffer,  const u_int buflen,
-               const BYTE *a, const u_int len )
+static INLINE void _e7_format_data ( BYTE*        buffer,
+                                     const u_int  buflen,
+                                     const BYTE*  a,
+                                     const u_int  len )
 {
 u_int   i, k;                           /* Array subscripts          */
 int     j;
@@ -727,13 +778,13 @@ int     j;
 
 } /* end function format_data */
 
-
 /*-------------------------------------------------------------------*/
 /* FORMAT I/O BUFFER DATA                                            */
 /*-------------------------------------------------------------------*/
-static INLINE void
-format_iobuf_data ( const RADR addr, BYTE *dest, const DEVBLK *dev,
-                    const u_int len )
+static INLINE void format_iobuf_data ( const RADR     addr,
+                                             BYTE*    dest,
+                                       const DEVBLK*  dev,
+                                       const u_int    len )
 {
 u_int   k;                              /* Array subscripts          */
 BYTE    workarea[17];                   /* Character string work     */
@@ -754,9 +805,10 @@ BYTE    workarea[17];                   /* Character string work     */
 /***************************************************************/
 /* SPECIAL HANDLING FOR E7 Prefix CCW TO TRACE ENTIRE 64 BYTES */
 /***************************************************************/
-static INLINE void
-e7_format_iobuf_data ( const RADR addr, BYTE *dest, const DEVBLK *dev,
-                    const u_int len )
+static INLINE void e7_format_iobuf_data ( const RADR     addr,
+                                                BYTE*    dest,
+                                          const DEVBLK*  dev,
+                                          const u_int    len )
 {
 u_int   k;                              /* Array subscripts          */
 BYTE    workarea[4*17];                 /* Character string work     */
@@ -774,7 +826,6 @@ BYTE    workarea[4*17];                 /* Character string work     */
 
 } /* end function format_iobuf_data */
 
-
 #if !DEBUG_DUMP
 #define DUMP( _desc, _addr, _len )
 #define DUMP_STORAGE( _desc, _addr, _len )
@@ -782,7 +833,6 @@ BYTE    workarea[4*17];                 /* Character string work     */
 /*-------------------------------------------------------------------*/
 /* Dump data block                                                   */
 /*-------------------------------------------------------------------*/
-
 #define DUMP( _desc, _addr, _len ) \
        _dump( (char*)(_desc), (BYTE*)(_addr), (u_int)(_len), \
                __FILE__, __LINE__, __FUNCTION__ )
@@ -820,11 +870,9 @@ char    msgbuf[133];
     }
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Dump Storage                                                      */
 /*-------------------------------------------------------------------*/
-
 #define DUMP_STORAGE( _desc, _addr, _len ) \
        _dump_storage( (char*)(_desc), (RADR)(_addr), (u_int)(_len), \
                        __FILE__, __LINE__, __FUNCTION__ )
@@ -883,11 +931,9 @@ char    msgbuf[133];                    /* Message buffer            */
 }
 #endif // DEBUG_DUMP
 
-
 /*-------------------------------------------------------------------*/
 /* Display channel command word and data                             */
 /*-------------------------------------------------------------------*/
-
 #define DISPLAY_CCW( _did, _dev, _ccw, _addr, _count, _flags ) \
     _display_ccw( (_did), (_dev), (_ccw), (_addr), (_count), (_flags), \
                   __FILE__, __LINE__, __FUNCTION__ )
@@ -950,7 +996,6 @@ static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
     *did_ccw_trace = true; // (remember we did this)
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Format default interpretation of first two sense bytes            */
 /*-------------------------------------------------------------------*/
@@ -978,11 +1023,9 @@ DLL_EXPORT void default_sns( char* buf, size_t buflen, BYTE b0, BYTE b1 )
     );
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Display interpretation of first two sense bytes                   */
 /*-------------------------------------------------------------------*/
-
 #define DISPLAY_SENSE( _dev ) \
     _display_sense( (_dev), __FILE__, __LINE__, __FUNCTION__ )
 
@@ -1006,11 +1049,9 @@ static void _display_sense( const DEVBLK* dev,
     );
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Display IDAW and Data                                             */
 /*-------------------------------------------------------------------*/
-
 #define DISPLAY_IDAW( _dev, _type, _flag, _addr, _count ) \
     _display_idaw( (_dev), (_type), (_flag), (_addr), (_count), \
                     __FILE__, __LINE__, __FUNCTION__ )
@@ -1071,11 +1112,9 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
     }
 }
 
-
 /*-------------------------------------------------------------------*/
 /* DISPLAY CHANNEL STATUS WORD                                       */
 /*-------------------------------------------------------------------*/
-
 #define DISPLAY_CSW( _dev, _scsw ) \
     _display_csw( (_dev), (_scsw), __FILE__, __LINE__, __FUNCTION__ )
 
@@ -1101,11 +1140,9 @@ static void _display_csw( const DEVBLK* dev, const BYTE csw[],
     }
 }
 
-
 /*-------------------------------------------------------------------*/
 /* DISPLAY SUBCHANNEL STATUS WORD                                    */
 /*-------------------------------------------------------------------*/
-
 #define DISPLAY_SCSW( _dev, _scsw ) \
     _display_scsw( (_dev), (_scsw), __FILE__, __LINE__, __FUNCTION__ )
 
@@ -1141,7 +1178,6 @@ static void _display_scsw( const DEVBLK* dev, const SCSW scsw,
         );
     }
 }
-
 
 /*-------------------------------------------------------------------*/
 /*  Display prefetch table                                           */
@@ -1238,12 +1274,10 @@ char    msgbuf[133];
 }
 #endif /* DEBUG_PREFETCH */
 
-
 /*-------------------------------------------------------------------*/
 /* STORE CHANNEL ID                                                  */
 /*-------------------------------------------------------------------*/
-int
-stchan_id (REGS *regs, U16 chan)
+int stchan_id( REGS* regs, U16 chan )
 {
 U32     chanid;                         /* Channel identifier word   */
 int     devcount = 0;                   /* #of devices on channel    */
@@ -1260,9 +1294,9 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
         /* Skip the device if not on specified channel */
         if ((dev->devnum & 0xFF00) != chan
          || (dev->pmcw.flag5 & PMCW5_V) == 0
-#if defined(FEATURE_CHANNEL_SWITCHING)
+#if defined( FEATURE_CHANNEL_SWITCHING )
          || regs->chanset != dev->chanset
-#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
+#endif
                                             )
             continue;
 
@@ -1311,12 +1345,10 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
 
 } /* end function stchan_id */
 
-
 /*-------------------------------------------------------------------*/
 /* TEST CHANNEL                                                      */
 /*-------------------------------------------------------------------*/
-int
-testch (REGS *regs, U16 chan)
+int testch( REGS* regs, U16 chan )
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int     devcount = 0;                   /* Number of devices found   */
@@ -1332,9 +1364,9 @@ int     cc = 0;                         /* Returned condition code   */
         /* Skip the device if not on specified channel */
         if ((dev->devnum & 0xFF00) != chan
          || (dev->pmcw.flag5 & PMCW5_V) == 0
-#if defined(FEATURE_CHANNEL_SWITCHING)
+#if defined( FEATURE_CHANNEL_SWITCHING )
          || regs->chanset != dev->chanset
-#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
+#endif
                                           )
             continue;
 
@@ -1357,12 +1389,10 @@ int     cc = 0;                         /* Returned condition code   */
 
 } /* end function testch */
 
-
 /*-------------------------------------------------------------------*/
 /* TEST I/O                                                          */
 /*-------------------------------------------------------------------*/
-int
-testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
+int testio( REGS* regs, DEVBLK* dev, BYTE ibyte )
 {
     int     cc;                         /* Condition code            */
     IRB     irb;                        /* Interrupt request block   */
@@ -1431,7 +1461,6 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
     return (cc);
 
 } /* end function testio */
-
 
 /*-------------------------------------------------------------------*/
 /* HALT I/O                                                          */
@@ -1563,7 +1592,6 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
 
 } /* end function haltio */
 
-
 /*-------------------------------------------------------------------*/
 /* CANCEL SUBCHANNEL                                                 */
 /*-------------------------------------------------------------------*/
@@ -1576,8 +1604,7 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
 /*      1=status pending (no action taken)                           */
 /*      2=function not applicable                                    */
 /*-------------------------------------------------------------------*/
-int
-cancel_subchan (REGS *regs, DEVBLK *dev)
+int cancel_subchan( REGS* regs, DEVBLK* dev )
 {
 int     cc;                             /* Condition code            */
 
@@ -1585,7 +1612,7 @@ int     cc;                             /* Condition code            */
 
     OBTAIN_DEVLOCK( dev );
     {
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
         if(SIE_MODE(regs)
           && (regs->siebk->zone != dev->pmcw.zone
             || !(dev->pmcw.flag27 & PMCW27_I)))
@@ -1668,13 +1695,11 @@ int     cc;                             /* Condition code            */
 
 } /* end function cancel_subchan */
 
-
 /*-------------------------------------------------------------------*/
 /*  Perform DEVBLK cleanup following queueing/dequeueing of          */
 /*  interrupt                                                        */
 /*-------------------------------------------------------------------*/
-static INLINE void
-subchannel_interrupt_queue_cleanup(DEVBLK* dev)
+static INLINE void subchannel_interrupt_queue_cleanup( DEVBLK* dev )
 {
     /* Begin the deprecation of the pending status bits in the
      * DEVBLK; the pending bits are now set from the corresponding
@@ -1691,7 +1716,6 @@ subchannel_interrupt_queue_cleanup(DEVBLK* dev)
     dev->attnpending = (dev->attnscsw.flag3 & SCSW3_SC_PEND) ? 1 : 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Perform clear operation for TEST SUBCHANNEL                       */
 /*                                                                   */
@@ -1702,8 +1726,7 @@ subchannel_interrupt_queue_cleanup(DEVBLK* dev)
 /*   dev->lock                                                       */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static INLINE int
-test_subchan_clear(DEVBLK* dev, SCSW* scsw)
+static INLINE int test_subchan_clear( DEVBLK* dev, SCSW* scsw )
 {
     int cc = 1;                         /* Status not cleared        */
 
@@ -1759,7 +1782,6 @@ test_subchan_clear(DEVBLK* dev, SCSW* scsw)
     return (cc);
 }
 
-
 /*-------------------------------------------------------------------*/
 /* TEST SUBCHANNEL (LOCKED)                                          */
 /*-------------------------------------------------------------------*/
@@ -1782,9 +1804,8 @@ test_subchan_clear(DEVBLK* dev, SCSW* scsw)
 /*      dev->lock       Held by caller                               */
 /*      iointqlk        Held by caller                               */
 /*-------------------------------------------------------------------*/
-int
-test_subchan_locked (REGS* regs, DEVBLK* dev,
-                     IRB* irb, IOINT** ioint, SCSW** scsw)
+int test_subchan_locked( REGS* regs, DEVBLK* dev, IRB* irb,
+                         IOINT** ioint, SCSW** scsw )
 {
     enum                                /* Status types              */
     {                                   /* ...                       */
@@ -1857,7 +1878,6 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
     return (cc);
 }
 
-
 /*-------------------------------------------------------------------*/
 /* TEST SUBCHANNEL                                                   */
 /*-------------------------------------------------------------------*/
@@ -1871,8 +1891,7 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
 /*      instruction:  0=status was pending and is now cleared,       */
 /*      1=no status was pending.  The IRB is updated in both cases.  */
 /*-------------------------------------------------------------------*/
-int
-test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
+int test_subchan( REGS* regs, DEVBLK* dev, IRB* irb )
 {
     int     cc;                         /* Condition code            */
     IOINT*  ioint;                      /* I/O interrupt structure   */
@@ -1882,7 +1901,7 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
     {
         OBTAIN_DEVLOCK( dev );
         {
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
             if(SIE_MODE(regs))
             {
                 if (regs->siebk->zone != dev->pmcw.zone
@@ -1932,7 +1951,6 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
 
 } /* end function test_subchan */
 
-
 /*-------------------------------------------------------------------*/
 /* Perform CLEAR SUBCHANNEL operation                                */
 /*-------------------------------------------------------------------*/
@@ -1947,8 +1965,7 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
 /* Locks Used                                                        */
 /*      sysblk.iointqlk                                             */
 /*-------------------------------------------------------------------*/
-void
-perform_clear_subchan (DEVBLK *dev)
+void perform_clear_subchan( DEVBLK* dev )
 {
     /* Dequeue pending interrupts */
     OBTAIN_IOINTQLK();
@@ -2014,7 +2031,6 @@ perform_clear_subchan (DEVBLK *dev)
     }
 #endif // defined( OPTION_SHARED_DEVICES )
 }
-
 
 /*-------------------------------------------------------------------*/
 /* CLEAR SUBCHANNEL                                                  */
@@ -2108,7 +2124,6 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 
 } /* end function clear_subchan */
 
-
 /*-------------------------------------------------------------------*/
 /* Perform HALT and release device lock                              */
 /*-------------------------------------------------------------------*/
@@ -2121,8 +2136,7 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 /*      dev->lock must be held by caller on entry; lock is released  */
 /*                prior to return.                                   */
 /*-------------------------------------------------------------------*/
-void
-perform_halt_and_release_lock (DEVBLK *dev)
+void perform_halt_and_release_lock( DEVBLK* dev )
 {
     /* If status incomplete,
      * [15.4.2] Perform halt function signaling
@@ -2196,7 +2210,6 @@ perform_halt_and_release_lock (DEVBLK *dev)
     RELEASE_DEVLOCK( dev );
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Perform HALT                                                      */
 /*-------------------------------------------------------------------*/
@@ -2211,8 +2224,7 @@ perform_halt_and_release_lock (DEVBLK *dev)
 /* Locks Used                                                        */
 /*      dev->lock                                                    */
 /*-------------------------------------------------------------------*/
-void
-perform_halt (DEVBLK *dev)
+void perform_halt( DEVBLK* dev )
 {
     OBTAIN_INTLOCK( NULL );
     {
@@ -2221,7 +2233,6 @@ perform_halt (DEVBLK *dev)
     }
     RELEASE_INTLOCK( NULL );
 }
-
 
 /*-------------------------------------------------------------------*/
 /* HALT SUBCHANNEL                                                   */
@@ -2234,7 +2245,7 @@ perform_halt (DEVBLK *dev)
 /*      instruction:  0=Halt initiated, 1=Non-intermediate status    */
 /*      pending, 2=Busy                                              */
 /*-------------------------------------------------------------------*/
-int halt_subchan( REGS* regs, DEVBLK* dev)
+int halt_subchan( REGS* regs, DEVBLK* dev )
 {
     UNREFERENCED( regs );
 
@@ -2435,7 +2446,6 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
 
 } /* end function halt_subchan */
 
-
 /*-------------------------------------------------------------------*/
 /* Reset a device to initialized status                              */
 /*                                                                   */
@@ -2446,8 +2456,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
 /*                                                                   */
 /*   Caller holds `intlock'                                          */
 /*-------------------------------------------------------------------*/
-static void
-device_reset (DEVBLK *dev)
+static void device_reset( DEVBLK* dev )
 {
     OBTAIN_DEVLOCK( dev );
     {
@@ -2542,7 +2551,6 @@ device_reset (DEVBLK *dev)
     RELEASE_DEVLOCK( dev );
 } /* end device_reset() */
 
-
 /*-------------------------------------------------------------------*/
 /* Reset all devices on a particular channelset                      */
 /*                                                                   */
@@ -2550,8 +2558,7 @@ device_reset (DEVBLK *dev)
 /*     SIGP_IMPL    (control.c)                                      */
 /*     SIGP_IPR     (control.c)                                      */
 /*-------------------------------------------------------------------*/
-void
-channelset_reset(REGS *regs)
+void channelset_reset( REGS* regs )
 {
 DEVBLK *dev;                            /* -> Device control block   */
 
@@ -2567,7 +2574,6 @@ DEVBLK *dev;                            /* -> Device control block   */
     }
 } /* end function channelset_reset */
 
-
 /*-------------------------------------------------------------------*/
 /* Reset all devices on a particular chpid                           */
 /* Called by io.c 'RHCP' Reset Channel Path instruction.             */
@@ -2575,8 +2581,7 @@ DEVBLK *dev;                            /* -> Device control block   */
 /* FIXME: Console code belongs in the device code.                   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-int
-chp_reset(BYTE chpid, int solicited)
+int chp_reset( BYTE chpid, int solicited )
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int i;
@@ -2606,7 +2611,6 @@ int reset = 0;
 
 } /* end function chp_reset */
 
-
 /*-------------------------------------------------------------------*/
 /* I/O RESET  --  handle the "Channel Subsystem Reset" signal        */
 /* Resets status of all devices ready for IPL.  Note that device     */
@@ -2618,8 +2622,7 @@ int reset = 0;
 /* FIXME: Console references belong in the console device driver     */
 /*        code!                                                      */
 /*-------------------------------------------------------------------*/
-void
-io_reset (void)
+void io_reset()
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int i;
@@ -2655,7 +2658,6 @@ int i;
 
 } /* end function io_reset */
 
-
 /*-------------------------------------------------------------------*/
 /* Create a device thread                                            */
 /*-------------------------------------------------------------------*/
@@ -2665,8 +2667,7 @@ int i;
 /* sysblk->ioqlock must be held.                                     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static int
-create_device_thread ()
+static int create_device_thread ()
 {
 int     rc;                             /* Return code               */
 TID     tid;                            /* Thread ID                 */
@@ -2713,7 +2714,6 @@ TID     tid;                            /* Thread ID                 */
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* Execute a queued I/O                                              */
@@ -2845,7 +2845,6 @@ u_int   waitcount = 0;                  /* Wait counter              */
 
 } /* end function device_thread */
 
-
 /*-------------------------------------------------------------------*/
 /* Schedule I/O Request (second half of Schedule IOQ)                */
 /*-------------------------------------------------------------------*/
@@ -2867,8 +2866,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
 /*  2 - Unable to schedule channel thread (this RC belongs in IOP)   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static int
-ScheduleIORequest ( DEVBLK *dev )
+static int ScheduleIORequest( DEVBLK* dev )
 {
     DEVBLK *ioq, *previoq, *nextioq;    /* Device I/O queue pointers */
     int     count;                      /* I/O queue length          */
@@ -2954,7 +2952,6 @@ ScheduleIORequest ( DEVBLK *dev )
     return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /*  SCHEDULE IOQ                                                     */
 /*-------------------------------------------------------------------*/
@@ -2983,9 +2980,7 @@ ScheduleIORequest ( DEVBLK *dev )
 /*  2 - Unable to schedule channel thread (this RC belongs in IOP)   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-
-static int
-schedule_ioq (const REGS *regs, DEVBLK *dev)
+static int schedule_ioq( const REGS* regs, DEVBLK* dev )
 {
     int result = 2;                     /* 0=Thread scheduled        */
                                         /* 2=Unable to schedule      */
@@ -3013,7 +3008,6 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
 
     return (result);
 }
-
 
 /*-------------------------------------------------------------------*/
 /* RESUME SUBCHANNEL                                                 */
@@ -3117,8 +3111,7 @@ void shared_iowait (DEVBLK *dev)
     }
 }
 #endif // defined( OPTION_SHARED_DEVICES )
-#endif /*!defined(_CHANNEL_C)*/
-
+#endif /* !defined( _CHANNEL_C ) */
 
 /*-------------------------------------------------------------------*/
 /* RAISE A PCI INTERRUPT                                             */
@@ -3145,7 +3138,7 @@ ARCH_DEP(raise_pci) (DEVBLK *dev,       /* -> Device block           */
                      BYTE ccwfmt,       /* CCW format (0 or 1)       */
                      U32 ccwaddr)       /* Main storage addr of CCW  */
 {
-#if !defined(FEATURE_CHANNEL_SUBSYSTEM)
+#if !defined( FEATURE_CHANNEL_SUBSYSTEM )
     UNREFERENCED(ccwfmt);
 #endif
 
@@ -3184,7 +3177,6 @@ ARCH_DEP(raise_pci) (DEVBLK *dev,       /* -> Device block           */
     RELEASE_INTLOCK( NULL );
 
 } /* end function raise_pci */
-
 
 /*-------------------------------------------------------------------*/
 /* FETCH A CHANNEL COMMAND WORD FROM MAIN STORAGE                    */
@@ -3383,8 +3375,7 @@ BYTE    storkey;                        /* Storage key               */
 
 } /* end function fetch_idaw */
 
-
-#if defined(FEATURE_MIDAW_FACILITY)
+#if defined( FEATURE_MIDAW_FACILITY )
 /*-------------------------------------------------------------------*/
 /* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE     */
 /*-------------------------------------------------------------------*/
@@ -3493,8 +3484,7 @@ U16     maxlen;                         /* Maximum allowable length  */
     *flags = mflags;
 
 } /* end function fetch_midaw */
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
-
+#endif /* defined( FEATURE_MIDAW_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
 /* COPY DATA BETWEEN CHANNEL I/O BUFFER AND MAIN STORAGE             */
@@ -3530,45 +3520,45 @@ RADR    page,startpage,endpage;         /* Storage key pages         */
 BYTE    to_iobuf;                       /* 1=READ, SENSE, or RDBACK  */
 BYTE    to_memory;                      /* 1=READ, SENSE, or RDBACK  */
 BYTE    readbackwards;                  /* 1=RDBACK                  */
-#if defined(FEATURE_MIDAW_FACILITY)
+#if defined( FEATURE_MIDAW_FACILITY )
 int     midawseq;                       /* MIDAW counter (0=1st)     */
 U32     midawptr;                       /* Real addr of MIDAW        */
 U16     midawrem;                       /* CCW bytes remaining       */
 U16     midawlen=0;                     /* MIDAW data length         */
 RADR    midawdat=0;                     /* MIDAW data area addr      */
 BYTE    midawflg;                       /* MIDAW flags               */
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
+#endif
 
-#if !defined(set_chanstat)
-#define set_chanstat(_status)                                          \
-do {                                                                   \
+#if !defined( set_chanstat )
+  #define     set_chanstat( _status )                                  \
+  do {                                                                 \
     if (prefetch->seq)                                                 \
         prefetch->chanstat[ps] = (_status);                            \
     else                                                               \
         *chanstat = (_status);                                         \
-} while(0)
+  } while(0)
 #endif
 
-#if !defined(get_new_prefetch_entry)
-#define get_new_prefetch_entry(_idawtype,_idawaddr)                    \
-do {                                                                   \
-    if (prefetch->seq)                                                 \
-    {                                                                  \
-        ps = prefetch->seq++;                                          \
-        if (prefetch->seq > PF_SIZE)                                   \
-        {                                                              \
-            *chanstat = CSW_CDC;                                       \
-            break;                                                     \
-        }                                                              \
-        prefetch->ccwaddr[ps] = prefetch->ccwaddr[ps-1];               \
-        if ((_idawtype) != PF_NO_IDAW)                                 \
-        {                                                              \
-            prefetch->idawtype[ps] = (_idawtype);                      \
-            prefetch->idawaddr[ps] = (_idawaddr);                      \
-        }                                                              \
-    }                                                                  \
-    *chanstat = 0;                                                     \
-} while(0)
+#if !defined( get_new_prefetch_entry )
+  #define     get_new_prefetch_entry( _idawtype, _idawaddr )           \
+    do {                                                               \
+      if (prefetch->seq)                                               \
+      {                                                                \
+          ps = prefetch->seq++;                                        \
+          if (prefetch->seq > PF_SIZE)                                 \
+          {                                                            \
+              *chanstat = CSW_CDC;                                     \
+              break;                                                   \
+          }                                                            \
+          prefetch->ccwaddr[ps] = prefetch->ccwaddr[ps-1];             \
+          if ((_idawtype) != PF_NO_IDAW)                               \
+          {                                                            \
+              prefetch->idawtype[ps] = (_idawtype);                    \
+              prefetch->idawaddr[ps] = (_idawaddr);                    \
+          }                                                            \
+      }                                                                \
+      *chanstat = 0;                                                   \
+    } while(0)
 #endif
 
     /* Set current prefetch sequence */
@@ -3604,8 +3594,7 @@ do {                                                                   \
         to_memory = !to_iobuf;
     }
 
-
-#if defined(FEATURE_MIDAW_FACILITY)
+#if defined( FEATURE_MIDAW_FACILITY )
     /* Move data when modified indirect data addressing is used */
     if (flags & CCW_FLAGS_MIDAW)
     {
@@ -3796,7 +3785,7 @@ do {                                                                   \
 
     } /* end if(CCW_FLAGS_MIDAW) */
     else
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
+#endif /* defined( FEATURE_MIDAW_FACILITY ) */
     /* Move data when indirect data addressing is used */
     if (flags & CCW_FLAGS_IDA)
     {
@@ -4182,7 +4171,6 @@ do {                                                                   \
 
 } /* end function copy_iobuf */
 
-
 /*-------------------------------------------------------------------*/
 /* DEVICE ATTENTION                                                  */
 /* Raises an unsolicited interrupt condition for a specified device. */
@@ -4325,7 +4313,6 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 
     return 0;
 } /* end function device_attention */
-
 
 /*-------------------------------------------------------------------*/
 /* START A CHANNEL PROGRAM                                           */
@@ -4473,7 +4460,6 @@ int     rc;                             /* Return code               */
 
 } /* end function startio */
 
-
 /*-------------------------------------------------------------------*/
 /* execute_ccw_chain exit functions                                  */
 /*-------------------------------------------------------------------*/
@@ -4518,7 +4504,6 @@ static INLINE void* execute_ccw_chain_clear_busy_and_return
     return execute_ccw_chain_clear_busy_unlock_and_return( dev, pIOBUF, pInitial_IOBUF, pvRetVal );
 }
 #endif // EXECUTE_CCW_CHAIN_RETURN_FUNCS
-
 
 /*-------------------------------------------------------------------*/
 /* EXECUTE A CHANNEL PROGRAM                                         */
@@ -4721,15 +4706,15 @@ resume_suspend:
     dev->chained = dev->prev_chained =
     dev->code    = dev->prevcode     = dev->ccwseq = 0;
 
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
  #define _IOA_MBO sysblk.zpb[dev->pmcw.zone].mbo
  #define _IOA_MBM sysblk.zpb[dev->pmcw.zone].mbm
  #define _IOA_MBK sysblk.zpb[dev->pmcw.zone].mbk
-#else /*defined(_FEATURE_IO_ASSIST)*/
+#else
  #define _IOA_MBO sysblk.mbo
  #define _IOA_MBM sysblk.mbm
  #define _IOA_MBK sysblk.mbk
-#endif /*defined(_FEATURE_IO_ASSIST)*/
+#endif
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* Update the measurement block if applicable */
@@ -5086,7 +5071,7 @@ execute_halt:
         // {}
         -------------------------------------------------------------*/
 
-#if !defined(FEATURE_MIDAW_FACILITY)
+#if !defined( FEATURE_MIDAW_FACILITY )
         /* Channel program check if MIDAW not installed */
         if (flags & CCW_FLAGS_MIDAW)
         {
@@ -5095,11 +5080,9 @@ execute_halt:
                 goto prefetch;
             goto breakchain;
         }
-#endif /*!defined(FEATURE_MIDAW_FACILITY)*/
-
-#if defined(FEATURE_MIDAW_FACILITY)
-        /* Channel program check if MIDAW not enabled in ORB, or     */
-        /* with SKIP or IDA specified                                */
+#else
+        /* Channel program check if MIDAW not enabled in ORB,        */
+        /* or with SKIP or IDA specified                             */
         if ((flags & CCW_FLAGS_MIDAW) &&
             ((dev->orb.flag7 & ORB7_D) == 0 ||
              (flags & (CCW_FLAGS_SKIP | CCW_FLAGS_IDA))))
@@ -5109,7 +5092,7 @@ execute_halt:
                 goto prefetch;
             goto breakchain;
         }
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
+#endif
 
         /* Suspend supported prior to GA22-7000-10 for the S/370     */
         /* Suspend channel program if suspend flag is set */
@@ -5271,33 +5254,93 @@ execute_halt:
         /*  p. 15-24, Data Address                                   */
         /*  p. 15-25, Count                                          */
         /*  pp. 15-25 -- 15-27, Designation of Storage Area          */
-        if ((count &&
-             (!(flags & CCW_FLAGS_SKIP)) &&
-             (((flags & CCW_FLAGS_IDA)   &&
-               ((addr & 0x03) ||
-                CHADDRCHK(addr, dev)))                      ||
-#if defined(FEATURE_MIDAW_FACILITY)
-              ((flags & CCW_FLAGS_MIDAW) &&
-               ((addr & 0x0F) ||
-                CHADDRCHK(addr, dev)))                      ||
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
-              (!(flags & (CCW_FLAGS_IDA | CCW_FLAGS_MIDAW))     &&
-               ((ccwfmt == 0 &&
-                 ((addr & ~0x00FFFFFF)                      ||
-                  ((addr + (count - 1)) & ~0x00FFFFFF)      ||
-                  CHADDRCHK((addr + (count - 1)), dev)))    ||
-#if defined(FEATURE_CHANNEL_SUBSYSTEM)
-                (ccwfmt == 1 &&
-                 ((addr & ~0x7FFFFFFF)                      ||
-                  ((addr + count - 1) & ~0x7FFFFFFF)        ||
-                  CHADDRCHK((addr + (count - 1)), dev)))        ||
-#endif /*defined(FEATURE_CHANNEL_SUBSYSTEM)*/
-                 CHADDRCHK(addr, dev)))))
-#if defined(FEATURE_CHANNEL_SUBSYSTEM)
-         || (!count &&
-             (ccwfmt == 1 && (flags & CCW_FLAGS_CD)))
-#endif /*defined(FEATURE_CHANNEL_SUBSYSTEM)*/
-            )
+        if (0
+
+
+// --------------------------------------------------------------------
+            || (1
+                && count
+                && !(flags & CCW_FLAGS_SKIP)
+                && (0
+                    || (1
+                        && (flags & CCW_FLAGS_IDA)
+                        && (0
+                            || (addr & 0x03)
+                            || CHADDRCHK( addr, dev )
+                           )
+                       )
+                    ||
+
+
+
+#if defined( FEATURE_MIDAW_FACILITY )
+                       (1
+                        && (flags & CCW_FLAGS_MIDAW)
+                        && (0
+                            || (addr & 0x0F)
+                            || CHADDRCHK( addr, dev )
+                           )
+                       )
+                    ||
+#endif /* defined( FEATURE_MIDAW_FACILITY ) */
+
+
+
+                       (1
+                        && !(flags & (CCW_FLAGS_IDA | CCW_FLAGS_MIDAW))
+                        && (0
+                            || (1
+                                && ccwfmt == 0
+                                && (0
+                                    ||  (addr & ~0x00FFFFFF)
+                                    || ((addr+(count-1)) & ~0x00FFFFFF)
+                                    || CHADDRCHK( (addr+(count-1)), dev )
+                                   )
+                               )
+                            ||
+
+
+
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+                               (1
+                                && ccwfmt == 1
+                                && (0
+                                    || (addr & ~0x7FFFFFFF)
+                                    || ((addr+(count-1)) & ~0x7FFFFFFF)
+                                    || CHADDRCHK( (addr+(count-1)), dev)
+                                   )
+                               )
+                            ||
+#endif /* defined( FEATURE_CHANNEL_SUBSYSTEM ) */
+
+
+
+                               CHADDRCHK( addr, dev )
+                           )
+                       )
+                   )
+               )
+// --------------------------------------------------------------------
+
+
+
+
+
+// --------------------------------------------------------------------
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+            || (1
+                && !count
+                && ccwfmt == 1
+                && (flags & CCW_FLAGS_CD)
+               )
+#endif /* defined( FEATURE_CHANNEL_SUBSYSTEM ) */
+// --------------------------------------------------------------------
+
+
+
+
+
+        )
         {
             chanstat = CSW_PROGC;
             if (prefetch.seq)
@@ -6056,7 +6099,6 @@ breakchain:
 
 } /* end function execute_ccw_chain */
 
-
 /*-------------------------------------------------------------------*/
 /* TEST WHETHER INTERRUPTS ARE ENABLED FOR THE SPECIFIED DEVICE      */
 /* When configured for S/370 channels, the PSW system mask and/or    */
@@ -6086,13 +6128,13 @@ int     i;                              /* Interruption subclass     */
     if (!(dev->pmcw.flag5 & PMCW5_V))
         return 0;
 
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
     /* For I/O Assist the zone must match the guest zone */
     if(SIE_MODE(regs) && regs->siebk->zone != dev->pmcw.zone)
         return 0;
 #endif
 
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
     /* The interrupt interlock control bit must be on
        if not we must intercept */
     if(SIE_MODE(regs) && !(dev->pmcw.flag27 & PMCW27_I))
@@ -6101,21 +6143,21 @@ int     i;                              /* Interruption subclass     */
 
 #ifdef FEATURE_S370_CHANNEL
 
-#if defined(FEATURE_CHANNEL_SWITCHING)
+#if defined( FEATURE_CHANNEL_SWITCHING )
     /* Is this device on a channel connected to this CPU? */
     if(
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
        !SIE_MODE(regs) &&
 #endif
        regs->chanset != dev->chanset)
         return 0;
-#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
+#endif /* defined( FEATURE_CHANNEL_SWITCHING ) */
 
     /* Isolate the channel number */
     i = dev->devnum >> 8;
     if (!ECMODE(&regs->psw) && i < 6)
     {
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
         /* We must always intercept in BC mode */
         if(SIE_MODE(regs))
             return SIE_INTERCEPT_IOINT;
@@ -6134,7 +6176,7 @@ int     i;                              /* Interruption subclass     */
         if (i > 31) i = 31;
         if ((CHANNEL_MASKS(regs) & (0x80000000 >> i)) == 0)
             return
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
                    SIE_MODE(regs) ? SIE_INTERCEPT_IOINTP :
 #endif
                                                            0;
@@ -6148,7 +6190,7 @@ int     i;                              /* Interruption subclass     */
 
     /* Isolate the interruption subclass */
     i =
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
         /* For I/O Assisted devices use the guest (V)ISC */
         SIE_MODE(regs) ? (dev->pmcw.flag25 & PMCW25_VISC) :
 #endif
@@ -6157,7 +6199,7 @@ int     i;                              /* Interruption subclass     */
     /* Test interruption subclass mask bit in CR6 */
     if ((regs->CR_L(6) & (0x80000000 >> i)) == 0)
         return
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
                    SIE_MODE(regs) ? SIE_INTERCEPT_IOINTP :
 #endif
                                                            0;
@@ -6214,8 +6256,8 @@ int     icode = 0;                      /* Intercept code            */
 bool    dotsch = true;                  /* perform TSCH after int    */
                                         /* except for THININT        */
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
-#if defined(FEATURE_QDIO_THININT)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( _FEATURE_IO_ASSIST )
+#if defined( FEATURE_QDIO_THININT )
 /* The 2 following variables are only used for QDIO Thin Interrupt Processing */
 bool    saved_dotsch  = dotsch;
 bool    PCI_dequeued  = false;
@@ -6224,7 +6266,7 @@ bool    PCI_dequeued  = false;
 
     UNREFERENCED_370(ioparm);
     UNREFERENCED_370(iointid);
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
     UNREFERENCED_390(iointid);
 #endif
     UNREFERENCED_390(csw);
@@ -6419,7 +6461,7 @@ retry:
 #endif /*defined( FEATURE_QDIO_THININT )*/
 
                 *iointid = (
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
                             /* For I/O Assisted devices use (V)ISC */
                             (SIE_MODE(regs)) ?
                               (icode == SIE_NO_INTERCEPT) ?
@@ -6430,7 +6472,7 @@ retry:
 #endif
                              ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
                                | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
                                | (dev->pmcw.zone << 16)
                                | ((dev->pmcw.flag27 & PMCW27_I) << 8)
 #endif
@@ -6517,21 +6559,22 @@ retry:
 /*-------------------------------------------------------------------*/
 /* present_zone_io_interrupt                                         */
 /*-------------------------------------------------------------------*/
-#if defined(_FEATURE_IO_ASSIST)
-int
-ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
-                                     U32 *iointid, BYTE zone)
+#if defined( _FEATURE_IO_ASSIST )
+int ARCH_DEP( present_zone_io_interrupt )( U32* ioid, U32* ioparm,
+                                           U32* iointid, BYTE zone )
 {
-IOINT  *io;                             /* -> I/O interrupt entry    */
-DEVBLK *dev;                            /* -> Device control block   */
-typedef struct _DEVLIST {               /* list of device block ptrs */
-    struct _DEVLIST *next;              /* next list entry or NULL   */
-    DEVBLK          *dev;               /* DEVBLK in requested zone  */
+IOINT*  io;                             /* -> I/O interrupt entry    */
+DEVBLK* dev;                            /* -> Device control block   */
+typedef struct _DEVLIST                 /* list of device block ptrs */
+{
+    struct _DEVLIST* next;              /* next list entry or NULL   */
+    DEVBLK*          dev;               /* DEVBLK in requested zone  */
     U16              ssid;              /* Subsystem ID incl. lcssid */
     U16              subchan;           /* Subchannel number         */
     FWORD            intparm;           /* Interruption parameter    */
     int              visc;              /* Guest Interrupt Subclass  */
-} DEVLIST;
+}
+DEVLIST;
 DEVLIST *pDEVLIST, *pPrevDEVLIST = NULL;/* (work)                    */
 DEVLIST *pZoneDevs = NULL;              /* devices in requested zone */
 
@@ -6643,24 +6686,53 @@ DEVLIST *pZoneDevs = NULL;              /* devices in requested zone */
     return 1;
 
 } /* end function present_zone_io_interrupt */
-#endif
+
+#endif /* defined( _FEATURE_IO_ASSIST ) */
 
 /*-------------------------------------------------------------------*/
 /*            END OF PRIMARY CHANNEL PROCESSING CODE                 */
 /*-------------------------------------------------------------------*/
 
-#if !defined(_GEN_ARCH)
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "channel.c"
-#endif
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "channel.c"
-#endif
+  // All of the architecture dependent (i.e. "ARCH_DEP") functions
+  // for the default "_ARCH_NUM_0" build architecture have now just
+  // been built (usually 370).
+
+  // Now we need to build the same architecture dependent "ARCH_DEP"
+  // functions for all of the OTHER build architectures that remain
+  // (usually S/390 and z/Arch), so we #include ourselves again but
+  // with the next build archiecture #defined instead...
+
+  #if defined(              _ARCH_NUM_1 )     // (usually 390)
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "channel.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )     // (usually 900)
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "channel.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
 /*            Exported non-ARCH_DEP functions go here                */
@@ -6670,17 +6742,17 @@ DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
 {
     switch(sysblk.arch_mode)
     {
-#if defined(_370)
+#if defined(     _370 )
         case ARCH_370_IDX:
             /* Do NOT raise if initial power-on state */
             if (!INITIAL_POWERON_370())
                 return s370_device_attention(dev, unitstat);
             return 3;   /* subchannel is not valid or not enabled */
 #endif
-#if defined(_390)
+#if defined(     _390 )
         case ARCH_390_IDX: return s390_device_attention(dev, unitstat);
 #endif
-#if defined(_900)
+#if defined(     _900 )
         case ARCH_900_IDX: return z900_device_attention(dev, unitstat);
 #endif
         default: CRASH();
@@ -6688,17 +6760,19 @@ DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
     return 3;   /* subchannel is not valid or not enabled */
 }
 
+/*-------------------------------------------------------------------*/
+
 void call_execute_ccw_chain (int arch_mode, void* pDevBlk)
 {
     switch (arch_mode)
     {
-#if defined(_370)
+#if defined(     _370 )
         case ARCH_370_IDX: s370_execute_ccw_chain((DEVBLK*)pDevBlk); break;
 #endif
-#if defined(_390)
+#if defined(     _390 )
         case ARCH_390_IDX: s390_execute_ccw_chain((DEVBLK*)pDevBlk); break;
 #endif
-#if defined(_900)
+#if defined(     _900 )
         case ARCH_900_IDX: z900_execute_ccw_chain((DEVBLK*)pDevBlk); break;
 #endif
         default: CRASH();
@@ -6718,6 +6792,8 @@ DLL_EXPORT void Queue_IO_Interrupt( IOINT* io, U8 clrbsy, const char* location )
     }
     RELEASE_IOINTQLK();
 }
+
+/*-------------------------------------------------------------------*/
 
 DLL_EXPORT void Queue_IO_Interrupt_QLocked( IOINT* io, U8 clrbsy, const char* location )
 {
@@ -6774,6 +6850,8 @@ IOINT* prev;
 #endif
 }
 
+/*-------------------------------------------------------------------*/
+
 DLL_EXPORT int Dequeue_IO_Interrupt( IOINT* io, const char* location )
 {
 int rc;
@@ -6784,6 +6862,8 @@ int rc;
     RELEASE_IOINTQLK();
     return rc;
 }
+
+/*-------------------------------------------------------------------*/
 
 DLL_EXPORT int Dequeue_IO_Interrupt_QLocked( IOINT* io, const char* location )
 {
@@ -6842,6 +6922,8 @@ DLL_EXPORT void Update_IC_IOPENDING()
     RELEASE_IOINTQLK();
 }
 
+/*-------------------------------------------------------------------*/
+
 DLL_EXPORT void Update_IC_IOPENDING_QLocked()
 {
     if (!sysblk.iointq)
@@ -6854,4 +6936,4 @@ DLL_EXPORT void Update_IC_IOPENDING_QLocked()
     }
 }
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif /* !defined( _GEN_ARCH ) */
