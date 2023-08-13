@@ -156,6 +156,8 @@ strlcat(char *dst, const char *src, size_t siz);
 
 #define USLEEP( _u ) herc_usleep( _u, __FILE__, __LINE__ )
 HUT_DLL_IMPORT int herc_usleep( useconds_t usecs, const char* file, int line );
+#define USLEEP_MIN 1
+#define NANOSLEEP_EINTR_RETRY_WARNING_TRESHOLD 6
 
 /* Subtract/add gettimeofday struct timeval */
 HUT_DLL_IMPORT int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval);
@@ -1684,7 +1686,7 @@ HUT_DLL_IMPORT bool tf_2324( REGS* regs,               // Primary Instruction Tr
                              BYTE* inst );
 
 HUT_DLL_IMPORT bool tf_2326( REGS*    regs,            // Instruction Storage
-                             TF02326* tf2326,
+                             TF02326* tf2326, 
                              BYTE     opcode1,
                              BYTE     opcode2,
                              int      b1,
