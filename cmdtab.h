@@ -538,7 +538,7 @@
   "Format: \"ecpsvm\". This command invokes ECPS:VM Subcommands.\n"              \
   "Type \"ecpsvm help\" to see a list of available commands\n"
 
-#define engines_cmd_desc        "Set engines parameter"
+#define engines_cmd_desc        "Set or display ENGINES parameter"
 #define evm_cmd_desc            "Command deprecated - Use \"ECPSVM\""
 #define evm_cmd_help            \
                                 \

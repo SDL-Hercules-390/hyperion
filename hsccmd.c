@@ -3266,64 +3266,139 @@ int sclproot_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* engines command                                                   */
 /*-------------------------------------------------------------------*/
-int engines_cmd(int argc, char *argv[], char *cmdline)
+int engines_cmd( int argc, char* argv[], char* cmdline )
 {
-char *styp;                           /* -> Engine type string     */
-BYTE ptyp;                           /* Processor engine type     */
-int  cpu,count;
-BYTE c;
-char *strtok_str = NULL;
+    int cpu, count;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    /* Parse processor engine types operand */
-    /* example: ENGINES 4*CP,AP,2*IP */
-    if ( argc == 2 )
+    UPPER_ARGV_0( argv );
+
+    if (argc < 1 || argc > 2)
     {
-        styp = strtok_r(argv[1],",",&strtok_str );
-        for (cpu = 0; styp != NULL; )
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
+
+    if (argc == 2)
+    {
+        BYTE   c;
+        BYTE   type;                    /* Processor engine type     */
+        BYTE   ptyp[ MAX_CPU_ENGS ];    /* SCCB ptyp for each engine */
+        char*  styp;                    /* -> Engine type string     */
+        char*  strtok_str = NULL;       /* strtok_r work variable    */
+        char*  arg1 = strdup( argv[1] );/* (save before modifying)   */
+
+        /* Parse processor engine types operand, and save the results
+           for eventual sysblk update if no errors are detected.
+           Example: "ENGINES  4*CP,AP,2*IP"
+        */
+        styp = strtok_r( argv[1], ",", &strtok_str );
+
+        for (cpu=0; styp;)
         {
             count = 1;
-            if (isdigit((unsigned char)styp[0]))
+
+            if (isdigit( (unsigned char)styp[0] ))
             {
                 if (0
-                    || sscanf(styp, "%d%c", &count, &c) != 2
+                    || sscanf( styp, "%d%c", &count, &c ) != 2
                     || c != '*'
                     || count < 1
                 )
                 {
                     // "Invalid syntax %s for %s"
                     WRMSG( HHC01456, "E", styp, argv[0] );
+                    free( arg1 );
                     return -1;
                 }
-                styp = strchr(styp,'*') + 1;
+
+                styp = strchr( styp, '*' ) + 1;
             }
-                 if (CMD( styp, CP, 2)) ptyp = short2ptyp( "CP" );
-            else if (CMD( styp, CF, 2)) ptyp = short2ptyp( "CF" );
-            else if (CMD( styp, IL, 2)) ptyp = short2ptyp( "IL" );
-            else if (CMD( styp, AP, 2)) ptyp = short2ptyp( "AP" );
-            else if (CMD( styp, IP, 2)) ptyp = short2ptyp( "IP" );
+
+                 if (CMD( styp, CP, 2)) type = short2ptyp( "CP" );
+            else if (CMD( styp, CF, 2)) type = short2ptyp( "CF" );
+            else if (CMD( styp, IL, 2)) type = short2ptyp( "IL" );
+            else if (CMD( styp, AP, 2)) type = short2ptyp( "AP" );
+            else if (CMD( styp, IP, 2)) type = short2ptyp( "IP" );
             else
             {
                 // "Invalid value %s specified for %s"
                 WRMSG( HHC01451, "E", styp, argv[0] );
+                free( arg1 );
                 return -1;
             }
+
+            /* (update ptyp work array) */
             while (count-- > 0 && cpu < sysblk.maxcpu)
-            {
-                sysblk.ptyp[cpu] = ptyp;
-                // "Processor %s%02X: engine %02X type %1d set: %s"
-                WRMSG( HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, ptyp2short( ptyp ));
-                cpu++;
-            }
-            styp = strtok_r(NULL,",",&strtok_str );
+                ptyp[ cpu++ ] = type;
+
+            styp = strtok_r( NULL, ",", &strtok_str );
         }
+
+        /* If we make it this far, then update sysblk */
+        for (cpu=0; cpu < sysblk.maxcpu; ++cpu)
+        {
+            sysblk.ptyp[ cpu ] = ptyp[ cpu ];
+
+            // "Processor %s%02X: engine %02X type %1d set: %s"
+            WRMSG( HHC00827, "I"
+                , PTYPSTR( cpu ), cpu
+                , cpu
+                , ptyp[ cpu ]
+                , ptyp2short( ptyp[ cpu ])
+            );
+        }
+
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], arg1 );
+        free( arg1 );
     }
-    else
+    else // (display current setting)
     {
-        // "Invalid number of arguments for %s"
-        WRMSG( HHC01455, "E", argv[0] );
-        return -1;
+        char typ[ 7 + 1 ];  // "nnn*XX,\0"
+        char arg1[ (MAX_CPU_ENGS * 7) + 1 ] = {0};
+
+        count = 0;
+
+        for (cpu=0; cpu < sysblk.maxcpu; ++cpu)
+        {
+            if (cpu == 0)
+                count = 1;
+            else
+            {
+                if (sysblk.ptyp[ cpu ] == sysblk.ptyp[ cpu-1 ])
+                    ++count;
+                else
+                {
+                    if (count == 1)
+                        MSGBUF( typ, "%s,", PTYPSTR( cpu-1 ));
+                    else
+                        MSGBUF( typ, "%1d*%s,", count, PTYPSTR( cpu-1 ));
+
+                    STRLCAT( arg1, typ );
+                    count = 1;
+                }
+            }
+        }
+
+        if (count <= 1)
+        {
+            if (count)
+                MSGBUF( typ, "%s,", PTYPSTR( cpu-1 ));
+            else
+                STRLCPY( typ, "(none)" );
+        }
+        else
+            MSGBUF( typ, "%1d*%s,", count, PTYPSTR( cpu-1 ));
+
+        STRLCAT( arg1, typ );
+
+        RTRIMS( arg1, "," );
+
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], arg1 );
     }
 
     return 0;
