@@ -614,26 +614,27 @@ DLL_EXPORT int herc_usleep( useconds_t usecs, const char* file, int line )
     usecs_left.tv_sec  = usecs_left.tv_nsec / ONE_BILLION;
     usecs_left.tv_nsec %=                     ONE_BILLION;
 
-    while ( 1
-        && ( rc = nanosleep( &usecs_left, &usecs_left ) != 0 )
-        && ( save_errno = errno ) == EINTR         
-        && ( 0 
-           || usecs_left.tv_sec != 0  
-           || usecs_left.tv_nsec > ( USLEEP_MIN * 1000 )                  
+    while (1
+        && (rc = nanosleep( &usecs_left, &usecs_left ) != 0)
+        && (save_errno = errno) == EINTR
+        && (0
+            || usecs_left.tv_sec != 0
+            || usecs_left.tv_nsec > (USLEEP_MIN * 1000)
            )
     )
         ++eintr_retrys; // (keep retrying until done or min reached)
 
-    if ( 0
-       || rc != 0  
-       || eintr_retrys > NANOSLEEP_EINTR_RETRY_WARNING_TRESHOLD )            
+    if (0
+        || rc != 0
+        || eintr_retrys > NANOSLEEP_EINTR_RETRY_WARNING_TRESHOLD
+    )
     {
         char fnc[128], msg[128];
 
         MSGBUF( fnc, "USLEEP() at %s(%d)",
-            TRIMLOC( file ), line);
-         
-        if ( save_errno != EINTR )
+            TRIMLOC( file ), line );
+
+        if (save_errno != EINTR)
         {
             MSGBUF( msg, "rc=%d, errno=%d: %s",
                 rc, save_errno, strerror( save_errno ));
@@ -643,15 +644,15 @@ DLL_EXPORT int herc_usleep( useconds_t usecs, const char* file, int line )
             errno = save_errno;
         }
 
-        if ( eintr_retrys > NANOSLEEP_EINTR_RETRY_WARNING_TRESHOLD )
+        if (eintr_retrys > NANOSLEEP_EINTR_RETRY_WARNING_TRESHOLD)
         {
             MSGBUF( msg, "rc=%d, EINTR retrys count=%d",
                 rc, eintr_retrys );
 
-            // "Warning in function %s: %s"           
+            // "Warning in function %s: %s"
             WRMSG( HHC00092, "W", fnc, msg );
         }
-    }     
+    }
     return rc;
 }
 
@@ -2344,12 +2345,12 @@ static const char *ordername[] =
 DLL_EXPORT const char* perc2name( BYTE perc, char* buf, size_t bufsiz )
 {   /*
            Hex    Bit   PER Event
-            80     0    Successful-branching 
+            80     0    Successful-branching
             40     1    Instruction-fetching
             20     2    Storage-alteration
             10     3    Storage-key-alteration
-            08     4    Store-using-real-address 
-            04     5    Zero-address-detection 
+            08     4    Store-using-real-address
+            04     5    Zero-address-detection
             02     6    Transaction-end
             01     7    Instruction-fetching nullification (PER-3) */
 
@@ -3352,7 +3353,7 @@ DLL_EXPORT bool tf_0804( REGS* regs, BYTE* csw, U16 ioid, BYTE lcss )
 }
 
 //---------------------------------------------------------------------
-//                    I/O Interrupt 
+//                    I/O Interrupt
 //            (handles both HHC00805 and HHC00806)
 //---------------------------------------------------------------------
 DLL_EXPORT bool tf_0806( REGS* regs, U32 ioid, U32 ioparm, U32 iointid )
@@ -4141,7 +4142,7 @@ DLL_EXPORT size_t  tf_MAX_RECSIZE()
 
     if (max_recsize < sizeof( TF01321 ))
         max_recsize = sizeof( TF01321 );
-    
+
     if (max_recsize < sizeof( TF01329 ))
         max_recsize = sizeof( TF01329 );
 

@@ -1686,7 +1686,7 @@ HUT_DLL_IMPORT bool tf_2324( REGS* regs,               // Primary Instruction Tr
                              BYTE* inst );
 
 HUT_DLL_IMPORT bool tf_2326( REGS*    regs,            // Instruction Storage
-                             TF02326* tf2326, 
+                             TF02326* tf2326,
                              BYTE     opcode1,
                              BYTE     opcode2,
                              int      b1,
