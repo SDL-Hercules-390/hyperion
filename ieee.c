@@ -535,7 +535,7 @@ static INLINE void ARCH_DEP( BFP_RM_check )( REGS* regs, BYTE mask )
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
     if (FACILITY_ENABLED( 037_FP_EXTENSION, regs ))
     {
-        if (mask > 7 || !map_valid_m3_values_FPX[ (mask & 0x7) ]) 
+        if (mask > 7 || !map_valid_m3_values_FPX[ (mask & 0x7) ])
             regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
@@ -5423,7 +5423,7 @@ DEF_INST( divide_integer_bfp_short_reg )
             }
         }
         else                                                        /* Exception flagged...we have work to do.          */
-        {                                                                                                          
+        {
             if (softfloat_exceptionFlags & softfloat_flag_overflow) /* on oveflow, scale result and set cc=1 or 3       */
                                                                     /* and recalculate the remainder using a scaled     */
                                                                     /* quotient in 64-bit precision                     */

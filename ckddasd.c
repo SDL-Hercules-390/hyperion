@@ -3288,7 +3288,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         *residual = 0;  // ZZ FIXME (Fish: always?! I question this!)
 
-        // Command reject if count is less than minimum 
+        // Command reject if count is less than minimum
         if (count < 64)
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3 );

@@ -241,7 +241,7 @@ char    fmt_mem[8];
         if (aaddr >= sysblk.mainsize)
         {
             int rc;
-       
+
             if (read( fd, &rc, 1 ) > 0)
             {
                 rc = +1;

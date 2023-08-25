@@ -994,7 +994,7 @@ int     rc;
     sysblk.zpbits  = DEF_CMPSC_ZP_BITS;
 #endif
 
-    /* Initialize Trace File helper function pointers */ 
+    /* Initialize Trace File helper function pointers */
     sysblk.s370_gsk = &s370_get_storage_key;
     sysblk.s390_gsk = &s390_get_storage_key;
     sysblk.z900_gsk = &z900_get_storage_key;
