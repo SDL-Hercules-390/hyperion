@@ -837,9 +837,8 @@ DEF_INST(shift_left_single)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-U32     n, n2;                          /* 32-bit operand values     */
-U32     j;                              /* Integer work areas        */
-U64     n1;
+U32     n, n1, n2;                      /* 32-bit operand values     */
+U32     i, j;                           /* Integer work areas        */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -854,29 +853,23 @@ U64     n1;
         return;
     }
 
-    if (n > 31)  /* special case result will be zero */
-    {
+    /* Load the numeric and sign portions from the R1 register */
+    n1 = regs->GR_L(r1) & 0x7FFFFFFF;
+    n2 = regs->GR_L(r1) & 0x80000000;
 
-        if (regs->GR_L(r1))     /* if contain anything sing will change */
+    /* Shift the numeric portion left n positions */
+    for (i = 0, j = 0; i < n; i++)
+    {
+        /* Shift bits 1-31 left one bit position */
+        n1 <<= 1;
+
+        /* Overflow if bit shifted out is unlike the sign bit */
+        if ((n1 & 0x80000000) != n2)
             j = 1;
-        regs->GR_L(r1) = 0;     /* always will be zero */
     }
-    else
-    {
-        /* Load the numeric and sign portions from the R1 register */
-        n1 = regs->GR_L(r1); // & 0x7FFFFFFF; 
-        n2 = regs->GR_L(r1) & 0x80000000;
 
-        if (n2) // if sing non zero fill hi DWORD of U64 by 1
-            n1 |= 0xFFFFFFFF00000000;
-        n1 <<= n;
-        /* check for sign change */
-        j = (n2 ? 
-                  ((n1 & 0xFFFFFFFF00000000) ^ 0xFFFFFFFF00000000) /* some zero bits shifted left*/
-                : (n1 & 0xFFFFFFFF00000000)) || (0x80000000 & n1); /* soze one bits shifted left*/
-        /* Load the updated value into the R1 register */
-        regs->GR_L(r1) = (n1 & 0x7FFFFFFF) | n2;
-    }
+    /* Load the updated value into the R1 register */
+    regs->GR_L(r1) = (n1 & 0x7FFFFFFF) | n2;
 
     /* Condition code 3 and program check if overflow occurred */
     if (j)
