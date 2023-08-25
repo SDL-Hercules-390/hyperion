@@ -2685,7 +2685,7 @@ int i_cmd( int argc, char* argv[], char* cmdline )
 }
 
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 /*-------------------------------------------------------------------*/
 /* icount command - display instruction counts                       */
 /*-------------------------------------------------------------------*/
@@ -2928,7 +2928,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
 
     return 0;
 }
-#endif /* defined( OPTION_INSTRUCTION_COUNTING ) */
+#endif /* defined( OPTION_INSTR_COUNT_AND_TIME ) */
 
 
 /*-------------------------------------------------------------------*/

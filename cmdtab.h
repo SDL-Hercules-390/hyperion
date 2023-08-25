@@ -2181,7 +2181,7 @@ COMMAND( "rmmod",                   rmmod_cmd,              SYSCMDNOPER,        
 COMMAND( "hao",                     hao_cmd,                SYSPROGDEVEL,       hao_cmd_desc,           hao_cmd_help        )
 #endif
 COMMAND( "http",                    http_cmd,               SYSCONFIG,          http_cmd_desc,          http_cmd_help       )
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 COMMAND( "icount",                  icount_cmd,             SYSCMDNOPER,        icount_cmd_desc,        icount_cmd_help     )
 #endif
 #if defined( OPTION_IODELAY_KLUDGE )

@@ -75,7 +75,7 @@
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 //efine OPTION_LONG_HOSTINFO            /* Detailed host & logo info */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
-#undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
+#undef  OPTION_INSTR_COUNT_AND_TIME     /* First use trace and count */
 #undef  MODEL_DEPENDENT_STCM            /* STCM, STCMH always store  */
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 

@@ -1075,7 +1075,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         gid_t   rgid, egid, sgid;
 #endif /*!defined(NO_SETUID)*/
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 
         bool    icount;                 /* true = enabled, else not. */
         struct timeval start_time;      /* OPCODE start time         */
@@ -1166,7 +1166,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
             + sizeof(sysblk.imapedT) \
             + sizeof(sysblk.imapxxT) )
 
-#endif // defined( OPTION_INSTRUCTION_COUNTING )
+#endif // defined( OPTION_INSTR_COUNT_AND_TIME )
 
         char    *cnslport;              /* console port string       */
         char    *sysgport;              /* SYSG console port string  */

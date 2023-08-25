@@ -225,9 +225,9 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
 /*               Individual instruction counting                     */
 /*-------------------------------------------------------------------*/
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 
-#define ICOUNT_INST( _inst, _regs )                                 \
+#define BEG_COUNT_INSTR( _inst, _regs )                             \
     do                                                              \
     {                                                               \
         if (sysblk.icount)                                          \
@@ -305,24 +305,26 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
         }                                                           \
     } while (0)
 
-#else // !defined( OPTION_INSTRUCTION_COUNTING )
+#else // !defined( OPTION_INSTR_COUNT_AND_TIME )
 
-#define ICOUNT_INST(_inst, _regs)
+#define BEG_COUNT_INSTR(_inst, _regs)
 
-#endif // defined( OPTION_INSTRUCTION_COUNTING )
+#endif // defined( OPTION_INSTR_COUNT_AND_TIME )
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 
-#define ICOUNT_INST_(_inst, _regs)                                  \
+#define END_COUNT_INSTR(_inst, _regs)                               \
     do                                                              \
     {                                                               \
         if (sysblk.icount)                                          \
         {                                                           \
             struct timeval end_time;                                \
             struct timeval dur;                                     \
+            U64 elapsed_usecs;                                       \
+                                                                    \
             gettimeofday(&end_time, NULL);                          \
             timeval_subtract(&sysblk.start_time, &end_time, &dur);  \
-            U64 elapsed_usecs = (dur.tv_sec * 1000000) + dur.tv_usec;\
+            elapsed_usecs = (dur.tv_sec * 1000000) + dur.tv_usec;   \
                                                                     \
             switch ((_inst)[0]) {                                   \
             case 0x01:                                              \
@@ -389,9 +391,9 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
     } while (0)
 
 
-#else // !defined( OPTION_INSTRUCTION_COUNTING )
-#define ICOUNT_INST_(_inst, _regs)
-#endif // defined( OPTION_INSTRUCTION_COUNTING )
+#else // !defined( OPTION_INSTR_COUNT_AND_TIME )
+#define END_COUNT_INSTR(_inst, _regs)
+#endif // defined( OPTION_INSTR_COUNT_AND_TIME )
 
 
 
@@ -1466,9 +1468,9 @@ do { \
 #define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                       \
 do {                                                                  \
     FOOTPRINT( (_ip), (_regs) );                                      \
-    ICOUNT_INST( (_ip), (_regs) );                                    \
+    BEG_COUNT_INSTR( (_ip), (_regs) );                                \
     (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                     \
-    ICOUNT_INST_( (_ip), (_regs) );                                   \
+    END_COUNT_INSTR( (_ip), (_regs) );                                \
 } while (0)
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
@@ -1478,9 +1480,9 @@ do {                                                                  \
   do {                                                                \
       CHECK_TXF_CONSTRAINTS( (_ip), (_regs) );                        \
       FOOTPRINT( (_ip), (_regs) );                                    \
-      ICOUNT_INST( (_ip), (_regs) );                                  \
+      BEG_COUNT_INSTR( (_ip), (_regs) );                              \
       (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                   \
-      ICOUNT_INST_( (_ip), (_regs) );                                 \
+      END_COUNT_INSTR( (_ip), (_regs) );                              \
   } while (0)
 
   #undef  TXF_UNROLLED_EXECUTE
