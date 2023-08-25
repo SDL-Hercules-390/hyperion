@@ -872,10 +872,8 @@ U64     n1;
         n1 <<= n;
         /* check for sign change */
         j = (n2 ? 
-                  ((n1 & 0xFFFFFFFF00000000) ^ 0xFFFFFFFF00000000) /* some 0 bits shifted left */
-                : (n1 & 0xFFFFFFFF00000000)                        /* some 1 bits shifted left */
-            )
-            || (0x80000000 & n1) != n2;                            /* sign changed             */
+                  ((n1 & 0xFFFFFFFF00000000) ^ 0xFFFFFFFF00000000) /* some zero bits shifted left*/
+                : (n1 & 0xFFFFFFFF00000000)) || (0x80000000 & n1); /* soze one bits shifted left*/
         /* Load the updated value into the R1 register */
         regs->GR_L(r1) = (n1 & 0x7FFFFFFF) | n2;
     }
