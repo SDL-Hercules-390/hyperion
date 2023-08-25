@@ -2311,15 +2311,15 @@ DEF_INST( perform_floating_point_operation )
     case 0x00: opcode += 10; break;  // HFP Short        source
     case 0x01: opcode += 20; break;  // HFP Long         source
     case 0x02: opcode += 30; break;  // HFP Extended     source
-                                   
+
     case 0x05: opcode += 40; break;  // BFP Short        source
     case 0x06: opcode += 50; break;  // BFP Long         source
     case 0x07: opcode += 60; break;  // BFP Extended     source
-                                   
+
     case 0x08: opcode += 70; break;  // DFP Short        source
     case 0x09: opcode += 80; break;  // DFP Long         source
     case 0x0A: opcode += 90; break;  // DFP Extended     source
-                                   
+
     default:   numout = -1;  break;  // Reserved/Invalid source
     }
     if (numout == -1)

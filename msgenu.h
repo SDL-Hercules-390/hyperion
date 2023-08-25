@@ -287,7 +287,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00089 "The are no HAO rules defined"
 #define HHC00090 "HAO thread waiting for logger facility to become active"
 #define HHC00091 "Logger facility now active; HAO thread proceeding"
-//efine HHC00092 - HHC00099 (available)
+#define HHC00092 "Warning in function %s: %s"
+//efine HHC00093 - HHC00099 (available)
 
 // reserve 100-129 thread related
 #define HHC00100 "Thread id "TIDPAT", prio %d, name '%s' started"

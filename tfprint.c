@@ -1725,7 +1725,7 @@ static inline void print_840_ext_rupt( TF00840* rec )
             pfx[23] = '2'; // HHC00842I
             FLOGMSG( stdout, "%s: CPU timer=%16.16"PRIX64"\n", pfx, rec->cpu_timer );
             break;
-            
+
         case EXT_INTERVAL_TIMER_INTERRUPT:
 
             // "Processor %s%02X: External interrupt: interval timer"
@@ -2288,7 +2288,7 @@ static inline void print_TF01315( TF01315* rec )
 
     // "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
     TF_DEV_FLOGMSG( 1315 ),
-        rec->rhdr.lcss, rec->rhdr.devnum, 
+        rec->rhdr.lcss, rec->rhdr.devnum,
         rec->ccw[0], rec->ccw[1], rec->ccw[2], rec->ccw[3],
         rec->ccw[4], rec->ccw[5], rec->ccw[6], rec->ccw[7],
         fmtdata( rec->ccw[0], rec->data, rec->amt ));
@@ -2643,7 +2643,7 @@ static void process_TF02324( TF02324* rec )
        PLEASE NOTE that we wish to treat each instruction that is
        printed as if it were a single line (even though multiple
        lines are always ptinted for each).
-       
+
        Thus the "print_all_available_regs" function prints the blank
        line for us before it prints the registers, but only does so
        if the REGSFIRST option was specified. Otherwise it doesn't,
@@ -3979,8 +3979,8 @@ static void parse_option_date( const char* optname )
         goto opt_error;
 
     *pDash = 0;
-    STRLCPY( begstr, optarg ); 
-    STRLCPY( endstr, pDash+1); 
+    STRLCPY( begstr, optarg );
+    STRLCPY( endstr, pDash+1);
     *pDash = '-';
 
     if (!parse_date_str( begstr, &beg_dat ))
@@ -4012,8 +4012,8 @@ static void parse_option_time( const char* optname )
         goto opt_error;
 
     *pDash = 0;
-    STRLCPY( begstr, optarg ); 
-    STRLCPY( endstr, pDash+1); 
+    STRLCPY( begstr, optarg );
+    STRLCPY( endstr, pDash+1);
     *pDash = '-';
 
     if (!parse_time_str( begstr, &beg_tim ))

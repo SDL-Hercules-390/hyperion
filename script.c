@@ -1117,7 +1117,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
                 else
                 if (secs > MAX_RUNTEST_DUR)
                     secs = MAX_RUNTEST_DUR;
-                else 
+                else
                     secs = DEF_RUNTEST_DUR;
 
                 // NOTE: fails if secs < 0.5 (new_secs = 0)
