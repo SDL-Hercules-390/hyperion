@@ -488,26 +488,42 @@ char    cmd;
         return;
     }
 
-    /* Convert entire command line to uppercase */
-    string_to_upper( cmdline );
-
     /* Remove intervening blanks from command's operand(s),
        being careful to stop at the '#' comment if present.
+       (Skip this logic if operand is a quoted string!)
     */
     i = n = opidx = str_caseless_eq( argv[0], "abs" ) ? 4 : 2;
-    while (cmdline[n])
+
+    /* Is operand a quoted string? */
+    if (1
+        && (opnd = strchr( cmdline, '=' ))
+        && ((++opnd)[0] == '\"')
+    )
     {
-        // Skip past blanks until next non-blank
-        while (cmdline[n] && cmdline[n] == ' ') ++n;
-
-        if (!cmdline[n] || cmdline[n] == '#')
-            break; // (STOP!)
-
-        // Copy chars until next blank or end of string
-        while (cmdline[n] && cmdline[n] != ' ')
-            cmdline[i++] = cmdline[n++];
+        /* Null terminate command following ending quote */
+        for (++opnd; opnd[0] && opnd[0] != '\"'; ++opnd);
+        opnd[0] = 0;
     }
-    cmdline[i] = 0; /* (terminate the [maybe] modified string) */
+    else // (NOT quoted string; remove intervening blanks)
+    {
+        /* Convert entire command line to uppercase */
+        string_to_upper( cmdline );
+
+        while (cmdline[n])
+        {
+            // Skip past blanks until next non-blank
+            while (cmdline[n] && cmdline[n] == ' ') ++n;
+
+            if (!cmdline[n] || cmdline[n] == '#')
+                break; // (STOP!)
+
+            // Copy chars until next blank or end of string
+            while (cmdline[n] && cmdline[n] != ' ')
+                cmdline[i++] = cmdline[n++];
+        }
+
+        cmdline[i] = 0; /* (terminate the [maybe] modified string) */
+    }
 
     cmd  = cmdline[0];
     opnd = &cmdline[ opidx ];
