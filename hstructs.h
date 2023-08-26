@@ -1075,9 +1075,10 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         gid_t   rgid, egid, sgid;
 #endif /*!defined(NO_SETUID)*/
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 
         bool    icount;                 /* true = enabled, else not. */
+        struct timeval start_time;      /* OPCODE start time         */
 
 #define IMAP_FIRST      sysblk.imap01
 
@@ -1102,6 +1103,27 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         U64 imaped[256];
         U64 imapxx[256];
 
+        U64 imap01T[256];
+        U64 imapa4T[256];
+        U64 imapa5T[ 16];
+        U64 imapa6T[256];
+        U64 imapa7T[ 16];
+        U64 imapb2T[256];
+        U64 imapb3T[256];
+        U64 imapb9T[256];
+        U64 imapc0T[ 16];
+        U64 imapc2T[ 16];
+        U64 imapc4T[ 16];
+        U64 imapc6T[ 16];
+        U64 imapc8T[ 16];
+        U64 imape3T[256];
+        U64 imape4T[256];
+        U64 imape5T[256];
+        U64 imapebT[256];
+        U64 imapecT[256];
+        U64 imapedT[256];
+        U64 imapxxT[256];
+
 #define IMAP_SIZE \
             ( sizeof(sysblk.imap01) \
             + sizeof(sysblk.imapa4) \
@@ -1122,9 +1144,29 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
             + sizeof(sysblk.imapeb) \
             + sizeof(sysblk.imapec) \
             + sizeof(sysblk.imaped) \
-            + sizeof(sysblk.imapxx) )
+            + sizeof(sysblk.imapxx) \
+            + sizeof(sysblk.imap01T) \
+            + sizeof(sysblk.imapa4T) \
+            + sizeof(sysblk.imapa5T) \
+            + sizeof(sysblk.imapa6T) \
+            + sizeof(sysblk.imapa7T) \
+            + sizeof(sysblk.imapb2T) \
+            + sizeof(sysblk.imapb3T) \
+            + sizeof(sysblk.imapb9T) \
+            + sizeof(sysblk.imapc0T) \
+            + sizeof(sysblk.imapc2T) /*@Z9*/ \
+            + sizeof(sysblk.imapc4T) /*208*/ \
+            + sizeof(sysblk.imapc6T) /*208*/ \
+            + sizeof(sysblk.imapc8T) \
+            + sizeof(sysblk.imape3T) \
+            + sizeof(sysblk.imape4T) \
+            + sizeof(sysblk.imape5T) \
+            + sizeof(sysblk.imapebT) \
+            + sizeof(sysblk.imapecT) \
+            + sizeof(sysblk.imapedT) \
+            + sizeof(sysblk.imapxxT) )
 
-#endif // defined( OPTION_INSTRUCTION_COUNTING )
+#endif // defined( OPTION_INSTR_COUNT_AND_TIME )
 
         char    *cnslport;              /* console port string       */
         char    *sysgport;              /* SYSG console port string  */

@@ -2685,7 +2685,7 @@ int i_cmd( int argc, char* argv[], char* cmdline )
 }
 
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 /*-------------------------------------------------------------------*/
 /* icount command - display instruction counts                       */
 /*-------------------------------------------------------------------*/
@@ -2697,6 +2697,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
                                      in architecture instruction set */
     U64  total;
     U64  count[ MAX_ICOUNT_INSTR ];
+    U64  time [ MAX_ICOUNT_INSTR ];
 
     unsigned char opcode1[ MAX_ICOUNT_INSTR ];
     unsigned char opcode2[ MAX_ICOUNT_INSTR ];
@@ -2756,6 +2757,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
     memset( opcode1, 0, sizeof( opcode1 ));
     memset( opcode2, 0, sizeof( opcode2 ));
     memset( count,   0, sizeof( count   ));
+    memset( time,    0, sizeof( time    ));
 
     /* (collect...) */
 
@@ -2766,7 +2768,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
     {
       switch (i1)
       {
-#define ICOUNT_COLLECT_CASE( _case, _map, _nn )             \
+#define ICOUNT_COLLECT_CASE( _case, _map, _mapT, _nn )      \
                                                             \
         case _case:                                         \
         {                                                   \
@@ -2776,7 +2778,8 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             {                                               \
               opcode1[ i ] = i1;                            \
               opcode2[ i ] = i2;                            \
-              count[ i++ ] = sysblk._map[ i2 ];             \
+              count[ i ]   = sysblk._map[ i2 ];             \
+              time[ i++ ]  = sysblk._mapT[ i2 ];            \
               total += sysblk._map[ i2 ];                   \
                                                             \
               if (i == (MAX_ICOUNT_INSTR - 1))              \
@@ -2790,25 +2793,25 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
           break;                                            \
         }
 
-        ICOUNT_COLLECT_CASE( 0x01, imap01, 256 )
-        ICOUNT_COLLECT_CASE( 0xA4, imapa4, 256 )
-        ICOUNT_COLLECT_CASE( 0xA5, imapa5,  16 )
-        ICOUNT_COLLECT_CASE( 0xA6, imapa6, 256 )
-        ICOUNT_COLLECT_CASE( 0xA7, imapa7,  16 )
-        ICOUNT_COLLECT_CASE( 0xB2, imapb2, 256 )
-        ICOUNT_COLLECT_CASE( 0xB3, imapb3, 256 )
-        ICOUNT_COLLECT_CASE( 0xB9, imapb9, 256 )
-        ICOUNT_COLLECT_CASE( 0xC0, imapc0,  16 )
-        ICOUNT_COLLECT_CASE( 0xC2, imapc2,  16 )
-        ICOUNT_COLLECT_CASE( 0xC4, imapc4,  16 )
-        ICOUNT_COLLECT_CASE( 0xC6, imapc6,  16 )
-        ICOUNT_COLLECT_CASE( 0xC8, imapc8,  16 )
-        ICOUNT_COLLECT_CASE( 0xE3, imape3, 256 )
-        ICOUNT_COLLECT_CASE( 0xE4, imape4, 256 )
-        ICOUNT_COLLECT_CASE( 0xE5, imape5, 256 )
-        ICOUNT_COLLECT_CASE( 0xEB, imapeb, 256 )
-        ICOUNT_COLLECT_CASE( 0xEC, imapec, 256 )
-        ICOUNT_COLLECT_CASE( 0xED, imaped, 256 )
+        ICOUNT_COLLECT_CASE( 0x01, imap01, imap01T, 256 )
+        ICOUNT_COLLECT_CASE( 0xA4, imapa4, imapa4T, 256 )
+        ICOUNT_COLLECT_CASE( 0xA5, imapa5, imapa5T,  16 )
+        ICOUNT_COLLECT_CASE( 0xA6, imapa6, imapa6T, 256 )
+        ICOUNT_COLLECT_CASE( 0xA7, imapa7, imapa7T,  16 )
+        ICOUNT_COLLECT_CASE( 0xB2, imapb2, imapb2T, 256 )
+        ICOUNT_COLLECT_CASE( 0xB3, imapb3, imapb3T, 256 )
+        ICOUNT_COLLECT_CASE( 0xB9, imapb9, imapb9T, 256 )
+        ICOUNT_COLLECT_CASE( 0xC0, imapc0, imapc0T,  16 )
+        ICOUNT_COLLECT_CASE( 0xC2, imapc2, imapc2T,  16 )
+        ICOUNT_COLLECT_CASE( 0xC4, imapc4, imapc4T,  16 )
+        ICOUNT_COLLECT_CASE( 0xC6, imapc6, imapc6T,  16 )
+        ICOUNT_COLLECT_CASE( 0xC8, imapc8, imapc8T,  16 )
+        ICOUNT_COLLECT_CASE( 0xE3, imape3, imape3T, 256 )
+        ICOUNT_COLLECT_CASE( 0xE4, imape4, imape4T, 256 )
+        ICOUNT_COLLECT_CASE( 0xE5, imape5, imape5T, 256 )
+        ICOUNT_COLLECT_CASE( 0xEB, imapeb, imapebT, 256 )
+        ICOUNT_COLLECT_CASE( 0xEC, imapec, imapecT, 256 )
+        ICOUNT_COLLECT_CASE( 0xED, imaped, imapedT, 256 )
 
         default:
         {
@@ -2816,7 +2819,8 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
           {
             opcode1[ i ] = i1;
             opcode2[ i ] = 0;
-            count[ i++ ] = sysblk.imapxx[ i1 ];
+            count[ i ] = sysblk.imapxx[ i1 ];
+            time[ i++ ] = sysblk.imapxxT[ i1 ];
             total += sysblk.imapxx[ i1 ];
 
             if (i == (MAX_ICOUNT_INSTR - 1))
@@ -2848,14 +2852,17 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
       opcode1[ (MAX_ICOUNT_INSTR - 1) ] = opcode1[ i1 ];
       opcode2[ (MAX_ICOUNT_INSTR - 1) ] = opcode2[ i1 ];
       count  [ (MAX_ICOUNT_INSTR - 1) ] = count  [ i1 ];
+      time   [ (MAX_ICOUNT_INSTR - 1) ] = time   [ i1 ];
 
       opcode1[ i1 ] = opcode1[ i3 ];
       opcode2[ i1 ] = opcode2[ i3 ];
       count  [ i1 ] = count  [ i3 ];
+      time   [ i1 ] = time   [ i3 ];
 
       opcode1[ i3 ] = opcode1[ (MAX_ICOUNT_INSTR - 1) ];
       opcode2[ i3 ] = opcode2[ (MAX_ICOUNT_INSTR - 1) ];
       count  [ i3 ] = count  [ (MAX_ICOUNT_INSTR - 1) ];
+      time   [ i3 ] = time   [ (MAX_ICOUNT_INSTR - 1) ];
     }
 
 #define  ICOUNT_WIDTH  "12"     /* Print field width */
@@ -2891,10 +2898,12 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
         {
           MSGBUF
           (
-            buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64 " (%2d%%)",
+            buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64 " (%2d%%) time %" ICOUNT_WIDTH PRIu64 " (%f)",
             opcode1[ i1 ], opcode2[ i1 ],
             count[ i1 ],
-            (int) (count[ i1 ] * 100 / total)
+            (int) (count[ i1 ] * 100 / total),
+            time[ i1 ],
+            ((float)time[ i1 ] / count[ i1 ])
           );
           // "%s"
           WRMSG( HHC02292, "I", buf );
@@ -2904,9 +2913,11 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
         {
           MSGBUF
           (
-            buf, "Inst '%2.2X'   count %" ICOUNT_WIDTH PRIu64 " (%2d%%)",
+            buf, "Inst '%2.2X'   count %" ICOUNT_WIDTH PRIu64 " (%2d%%) time %" ICOUNT_WIDTH PRIu64 " (%f)",
             opcode1[ i1 ], count[ i1 ],
-            (int) (count[ i1 ] * 100 / total)
+            (int) (count[ i1 ] * 100 / total),
+            time [ i1 ],
+            ((float)time[ i1 ] / count[ i1 ])
           );
           // "%s"
           WRMSG( HHC02292, "I", buf );
@@ -2917,7 +2928,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
 
     return 0;
 }
-#endif /* defined( OPTION_INSTRUCTION_COUNTING ) */
+#endif /* defined( OPTION_INSTR_COUNT_AND_TIME ) */
 
 
 /*-------------------------------------------------------------------*/
