@@ -1597,7 +1597,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
            transaction was aborted as a result of this intercepted
            program interrupt. For safety, return a "NULL" (empty)
            Interception TDB instead. (Sorry Dan! Could not locate
-           Claudia Schiffer's phone number!)
+           Claudia Schiffer’s phone number!)
         */
         memset( HOSTREGS->mainstor + itdba, 0, sizeof( TDB ));
     }
