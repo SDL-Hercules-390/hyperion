@@ -2689,6 +2689,8 @@ char* str_arch_psw( int arch_mode, REGS* regs, char* buf, int buflen );
 #define DISPLAY_PSW(         _regs, _buf ) display_psw  (          (_regs), (_buf), (int) sizeof( _buf ))
 #define STR_PSW(             _regs, _buf ) str_psw      (          (_regs), (_buf), (int) sizeof( _buf ))
 #define STR_ARCH_PSW( _arch, _regs, _buf ) str_arch_psw ( (_arch), (_regs), (_buf), (int) sizeof( _buf ))
+
+#define DO_AUTOMATIC_TRACING() if (sysblk.auto_trace_amt) do_automatic_tracing();
 void do_automatic_tracing();
 
 

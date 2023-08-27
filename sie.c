@@ -1225,7 +1225,7 @@ sie_fetch_instruction:
                 UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
-                do_automatic_tracing();
+                DO_AUTOMATIC_TRACING();
                 goto endloop;
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
@@ -1259,7 +1259,7 @@ txf_facility_loop:
                 UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
-                do_automatic_tracing();
+                DO_AUTOMATIC_TRACING();
                 goto endloop;
 
 txf_slower_loop:
@@ -1286,7 +1286,7 @@ txf_slower_loop:
                 UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
-                do_automatic_tracing();
+                DO_AUTOMATIC_TRACING();
                 goto endloop;
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -1336,7 +1336,7 @@ endloop:        ; // (nop to make compiler happy)
                 UPDATE_SYSBLK_INSTCOUNT( MAX_CPU_LOOPS/2 );
 
                 /* Perform automatic instruction tracing if it's enabled */
-                do_automatic_tracing();
+                DO_AUTOMATIC_TRACING();
             }
         }
 
@@ -1597,7 +1597,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
            transaction was aborted as a result of this intercepted
            program interrupt. For safety, return a "NULL" (empty)
            Interception TDB instead. (Sorry Dan! Could not locate
-           Claudia Schiffer’s phone number!)
+           Claudia Schiffer's phone number!)
         */
         memset( HOSTREGS->mainstor + itdba, 0, sizeof( TDB ));
     }
