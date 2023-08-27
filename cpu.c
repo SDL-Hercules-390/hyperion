@@ -2034,7 +2034,7 @@ int     aswitch;
         UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
         /* Perform automatic instruction tracing if it's enabled */
-        do_automatic_tracing();
+        DO_AUTOMATIC_TRACING();
     }
 
     /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
@@ -2094,7 +2094,7 @@ enter_fastest_no_txf_loop:
     UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
     /* Perform automatic instruction tracing if it's enabled */
-    do_automatic_tracing();
+    DO_AUTOMATIC_TRACING();
     goto fastest_no_txf_loop;
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
@@ -2131,7 +2131,7 @@ enter_txf_faster_loop:
     UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
     /* Perform automatic instruction tracing if it's enabled */
-    do_automatic_tracing();
+    DO_AUTOMATIC_TRACING();
 
 //txf_slower_loop:
 
@@ -2165,7 +2165,7 @@ enter_txf_slower_loop:
     UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
     /* Perform automatic instruction tracing if it's enabled */
-    do_automatic_tracing();
+    DO_AUTOMATIC_TRACING();
     goto txf_facility_loop;
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -2731,8 +2731,8 @@ void do_automatic_tracing()
     int cpu;
 
     /* Return immediately if automatic tracing not enabled or active */
-    if (!sysblk.auto_trace_amt)
-        return;
+    //if (!sysblk.auto_trace_amt)
+    //    return;
 
     OBTAIN_INTLOCK( NULL );
     {
