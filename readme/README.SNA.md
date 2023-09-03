@@ -44,6 +44,13 @@ The SNA protocols aren't IP, and thus Hercules needs some means to send and rece
 frames to get them onto the network medium. Therefore, Hercules supports the TUNTAP interfaces.
 TAP interfaces work on Layer 2 of the OSI stack and provide the necessary functionality.
 
+* _**NOTE:** The following text assumes you are using **wired Ethernet.** WiFi in theory should be a
+pure OSI Layer 2 infrastructure, being agnostic to L3 protocols. In practice, it often is not.
+There are numerous combinations of WiFi chipsets, drivers, access points and bridges out there
+"in the wild", and each and every one can block SNA frames for reasons unknown to the end user.
+It's therefore safe to assume that **"SNA over WiFi will not work"** unless testing for a given
+combination proves otherwise._
+
 The general lack of proper documentation for TUNTAP makes it necessary to have some example
 configurations shown here, so users can get ahead quickly. However, a basic understanding
 about networking certainly helps.
@@ -229,11 +236,12 @@ network:
 ```
 
 
-**Note:** Update the IP addresses and domain names to match your local requirements or you could
-use DHCP on the bridge interface by changing dhcp4 to "yes" and removing the addresses:,
-gateway4: and nameservers: information. If you want this interface to be SNA-only, you could
-probably use DHCP4:no and not include any address information, though I haven't tried that.
-Reboot or use "netplan apply" to apply any changes to this file to your network.
+_**Note:**_ Update the IP addresses and domain names to match your local requirements,
+or use DHCP on the bridge interface by changing `dhcp4:` to `yes` and removing the
+`addresses:`, `gateway4:` and `nameservers:` information. If you want this interface to be
+SNA-only, you could probably use `DHCP4:no` and not include any address information, though
+I haven't tried that. Reboot or use `'netplan apply'` to apply any changes to this file to
+your network.
 
 I have not found a way to create taps in netplan yet, so for now, I do them after the system
 is started, with a script:
@@ -270,13 +278,13 @@ manually configured adjacencies.
 Normally, you'd need just this:
 
 ```
-  0E40   LCS  -e SNA  tap0
+  0E40  LCS  -e SNA  tap0
 ```
 
 For debugging purposes, use these two lines:
 
 <pre>
-  0E40    LCS  -e SNA  <b>-d</b>  tap0
+  0E40  LCS  -e SNA  <b>-d</b> tap0
   <b>t+0E40</b>
 </pre>
 
@@ -300,7 +308,7 @@ It required changing the parmlib member _IECIOS00_:
 I verified successfully that it works after the next IPL, with `D IOS,MIH,DEV=E40`:
 
 ```
-  0E40=00:00.
+  0E40=00:00
 ```
 
 **Note:** I have added the same configuration change to the E20-E21 devices (CTCI), used solely for
@@ -321,14 +329,18 @@ Configuring Hercules to run this OS is out of scope for this document.
 Steps being necessary to make the environment being presented on the CD images compatible
 so it can be run with Hercules is out of scope for this document.
 
-Extensive documentation about VTAM configuration can be found  at https://ibmdocs.pocnet.net.
-Scroll down to (or search for) the _"z/OS Communications Server"_ section.
+~Extensive documentation about VTAM configuration can be found  at https://ibmdocs.pocnet.net.
+Scroll down to (or search for) the _"z/OS Communications Server"_ section.~
+
+_(Note: IBM documentation is no longer available from [pocnet.net](https://ibmdocs.pocnet.net)
+due to copyright issues. It is recommended that you use
+[IBM's Publication Center](https://www.ibm.com/resources/publications) instead.)_
 
 Of particular interest might be:
 
-- <a href="https://ibmdocs.pocnet.net/SC31-8777-02.pdf">SNA Network Implementation Guide</a>
-- <a href="https://ibmdocs.pocnet.net/SC27-3675-02.pdf">SNA Resource Definition Reference</a>
-- <a href="https://ibmdocs.pocnet.net/SC31-8836-00.pdf">SNA Resource Definition Samples</a>
+- <a href="https://publibfp.dhe.ibm.com/epubs/pdf/f1a2b513.pdf">SNA Network Implementation Guide</a>
+- <a href="https://publibfp.dhe.ibm.com/epubs/pdf/f1a2b613.pdf">SNA Resource Definition Reference</a>
+- <a href="https://publibfp.dhe.ibm.com/epubs/pdf/f1a2e700.pdf">SNA Resource Definition Samples</a>
 
 The configuration shown below is by no means refined and accordingly reduced to a working
 minimum set of definitions yet. Helpful input and testing is well appreciated! Nonetheless,
@@ -580,9 +592,9 @@ traces and so I am trying to remember all of this from memory. But basically, th
 something like this:
 
 
-```
-  START GTF           (an operator command)
-```
+<pre>
+  START GTF           <i>(an operator command)</i>
+</pre>
 
 After GTF starts, it will prompt you at the console for the kind of trace you want and what types
 of records you wish to trace. As best I can recall, VTAM traces needed GTF to record USR trace entries.
@@ -620,7 +632,7 @@ for the first time, but once done, it is easy to just issue the commands to star
 as needed and review the results, repeatedly.
 
 In order to find the data you are looking for, you'll need a manual which I believe was called
-**[SNA Formats](http://bitsavers.trailing-edge.com/pdf/ibm/sna/GA27-3136-10_SNA_Formats_Jun89.pdf)**.
+**[SNA Formats](https://publibfp.dhe.ibm.com/epubs/pdf/d50a5005.pdf)**.
 It should have the layout and description of the data streams that VTAM will send and receive
 from your node. I believe that they were called PIUs.
 
