@@ -2073,8 +2073,8 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
 
         if (badrc)
         {
-            // "CTC: ioctl %s failed for device %s: %s"
-            WRMSG( HHC00941, "E", what, pLCSPORT->szNetIfName, strerror( errnum ));
+            // "CTC: ioctl %s failed for device %s: %s; ... ignoring and continuing"
+            WRMSG( HHC00941, "W", what, pLCSPORT->szNetIfName, strerror( errnum ));
             STORE_HW( pLCSIPMFRM->bLCSCmdHdr.hwReturnCode, 0xFFFF );
         }
 #endif // defined( SIOCGIFHWADDR )
@@ -3217,9 +3217,9 @@ void    GetIfMACAddress( PLCSPORT pLCSPORT )
 
         if (rc != 0)
         {
-            // "CTC: ioctl %s failed for device %s: %s"
+            // "CTC: ioctl %s failed for device %s: %s; ... ignoring and continuing"
             rc = HSO_errno;
-            WRMSG( HHC00941, "E", "SIOCGIFHWADDR", pLCSPORT->szNetIfName, strerror( rc ));
+            WRMSG( HHC00941, "W", "SIOCGIFHWADDR", pLCSPORT->szNetIfName, strerror( rc ));
             return;
         }
 

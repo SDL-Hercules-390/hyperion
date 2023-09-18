@@ -818,7 +818,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00938 "CTC: lcs device port %2.2X: %s Large Send Offload enabled"
 #define HHC00939 "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X %s compiled size 0x%4.4X: ignored"
 #define HHC00940 "CTC: error in function %s: %s"
-#define HHC00941 "CTC: ioctl %s failed for device %s: %s"
+#define HHC00941 "CTC: ioctl %s failed for device %s: %s; ... ignoring and continuing"
 #define HHC00942 "CTC: lcs interface %s using mac %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
 #define HHC00943 "CTC: lcs interface %s not using mac %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
 #define HHC00944 "CTC: lcs interface %s read error from port %2.2X: %s"
