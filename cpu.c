@@ -1959,7 +1959,7 @@ int     aswitch;
         if (regs->vf->online)
         {
             if (regs->insttrace && sysblk.traceFILE)
-                tf_0812( regs, get_arch_name( regs ));
+                tf_0812( regs );
 
             // "Processor %s%02X: vector facility online"
             WRMSG( HHC00812, "I", PTYPSTR( cpu ), cpu );
