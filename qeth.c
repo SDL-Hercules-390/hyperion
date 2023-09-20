@@ -128,7 +128,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 /* QETH Debugging                                                    */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
+//#define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
 #define QETH_PTT_TRACING        // #define to enable PTT debug tracing
 #define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
