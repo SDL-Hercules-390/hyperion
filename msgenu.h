@@ -2821,7 +2821,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC91900 - HHC91998 (available)
 //efine HHC91999  (dbgtrace.h)
 
-//efine HHC92000 - HHC91998 (available)
+//efine HHC92000 - HHC92699 (available)
 
 //efine HHC92700 (available)
 //efine HHC92701 (available)
