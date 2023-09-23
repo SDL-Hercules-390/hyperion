@@ -6162,9 +6162,9 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
                 MSGBUF( cdevnum, "%1d:%04X", SSID_TO_LCSS( dev->ssid ),
                     dev->devnum );
 
-            MSGBUF( buf, "%s %4.4X %s %s%s%s"
+            MSGBUF( buf, "%s %s %s %s%s%s"
                 , cdevnum
-                , dev->devtype
+                , dev->typname
                 , devstat
                 , dev->fd   >  2   ? "open "    : ""
                 , dev->busy        ? "busy "    : ""
