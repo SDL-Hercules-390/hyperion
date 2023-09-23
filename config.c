@@ -794,7 +794,7 @@ int     i;                              /* Loop index                */
         DelDevnumFastLookup(LCSS_DEVNUM);
 
     /* Close file or socket */
-    if ((dev->fd > 2) || dev->console)
+    if ((dev->fd >= 0) || dev->console)
         /* Call the device close handler */
         (dev->hnd->close)(dev);
 

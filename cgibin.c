@@ -844,8 +844,8 @@ char   *devclass;
                                    dev->subchan,dev->subchan,
                                    devclass,
                                    dev->devtype,
-                                   (dev->fd > 2 ? "open " : ""),
-                                   (dev->busy ? "busy " : ""),
+                                   (dev->fd >= 0   ? "open "    : ""),
+                                   (dev->busy      ? "busy "    : ""),
                                    (IOPENDING(dev) ? "pending " : ""));
         }
 
@@ -1814,11 +1814,11 @@ void cgibin_api_v1_devices(WEBBLK *webblk)
                                    dev->devnum,dev->subchan,
                                    devclass,
                                    dev->devtype,
-                                   (dev->fd > 2 ? "open " : ""),
-                                   (dev->busy ? "busy " : ""),
-                                   (IOPENDING(dev) ? "pending " : ""),
+                                   (dev->fd >= 0       ? "open "    : ""),
+                                   (dev->busy          ? "busy "    : ""),
+                                   (IOPENDING(dev)     ? "pending " : ""),
                                    devnam,
-                                   (count == total - 1 ? "" : "," ));
+                                   (count == total - 1 ? ""         : "," ));
         }
         count++;
     }

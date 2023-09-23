@@ -1367,7 +1367,7 @@ static void NP_update(REGS *regs)
 
         online = (dev->console && dev->connected) || strlen(dev->filename) > 0;
         busy   = dev->busy != 0 || IOPENDING(dev) != 0;
-        open   = dev->fd > 2;
+        open   = dev->fd >= 0;
 
         /* device identifier */
         if (!NPdevices_valid || online != NPonline[i])
