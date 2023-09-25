@@ -1,0 +1,1306 @@
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *            SP instruction tests
+                                                     5 *
+                                                     6 ***********************************************************************
+                                                     7 ***********************************************************************
+                                                     8 *
+                                                     9 *  This program ONLY tests performance of the SP instruction.
+                                                    10 *
+                                                    11 ***********************************************************************
+                                                    12 *  NOTE: When assembling using SATK, use the "-t S390" option.
+                                                    13 ***********************************************************************
+                                                    14 *
+                                                    15 *  Example Hercules Testcase:
+                                                    16 *
+                                                    17 *        *Testcase SP-02-performance (Test SP performance)
+                                                    18 *        mainsize    1
+                                                    19 *        numcpu      1
+                                                    20 *        sysclear
+                                                    21 *        archlvl     z/Arch
+                                                    22 *        loadcore    "$(testpath)/SP-02-performance.core"
+                                                    23 *        runtest     1
+                                                    24 *        *Done
+                                                    25 *
+                                                    26 ***********************************************************************
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    28          PRINT OFF
+                                                  3409          PRINT ON
+
+                                                  3411 ***********************************************************************
+                                                  3412 *        SATK prolog stuff...
+                                                  3413 ***********************************************************************
+
+                                                  3415          ARCHLVL  ZARCH=NO,MNOTE=NO
+                                                  3417+$AL      OPSYN AL
+                                                  3418+$ALR     OPSYN ALR
+                                                  3419+$B       OPSYN B
+                                                  3420+$BAS     OPSYN BAS
+                                                  3421+$BASR    OPSYN BASR
+                                                  3422+$BC      OPSYN BC
+                                                  3423+$BCTR    OPSYN BCTR
+                                                  3424+$BE      OPSYN BE
+                                                  3425+$BH      OPSYN BH
+                                                  3426+$BL      OPSYN BL
+                                                  3427+$BM      OPSYN BM
+                                                  3428+$BNE     OPSYN BNE
+                                                  3429+$BNH     OPSYN BNH
+                                                  3430+$BNL     OPSYN BNL
+                                                  3431+$BNM     OPSYN BNM
+                                                  3432+$BNO     OPSYN BNO
+                                                  3433+$BNP     OPSYN BNP
+                                                  3434+$BNZ     OPSYN BNZ
+                                                  3435+$BO      OPSYN BO
+                                                  3436+$BP      OPSYN BP
+                                                  3437+$BXLE    OPSYN BXLE
+                                                  3438+$BZ      OPSYN BZ
+                                                  3439+$CH      OPSYN CH
+                                                  3440+$L       OPSYN L
+                                                  3441+$LH      OPSYN LH
+                                                  3442+$LM      OPSYN LM
+                                                  3443+$LPSW    OPSYN LPSW
+                                                  3444+$LR      OPSYN LR
+                                                  3445+$LTR     OPSYN LTR
+                                                  3446+$NR      OPSYN NR
+                                                  3447+$SL      OPSYN SL
+                                                  3448+$SLR     OPSYN SLR
+                                                  3449+$SR      OPSYN SR
+                                                  3450+$ST      OPSYN ST
+                                                  3451+$STM     OPSYN STM
+                                                  3452+$X       OPSYN X
+                                                  3453+$AHI     OPSYN AHI
+                                                  3454+$B       OPSYN J
+                                                  3455+$BC      OPSYN BRC
+                                                  3456+$BE      OPSYN JE
+                                                  3457+$BH      OPSYN JH
+                                                  3458+$BL      OPSYN JL
+                                                  3459+$BM      OPSYN JM
+                                                  3460+$BNE     OPSYN JNE
+                                                  3461+$BNH     OPSYN JNH
+                                                  3462+$BNL     OPSYN JNL
+                                                  3463+$BNM     OPSYN JNM
+                                                  3464+$BNO     OPSYN JNO
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3465+$BNP     OPSYN JNP
+                                                  3466+$BNZ     OPSYN JNZ
+                                                  3467+$BO      OPSYN JO
+                                                  3468+$BP      OPSYN JP
+                                                  3469+$BXLE    OPSYN JXLE
+                                                  3470+$BZ      OPSYN JZ
+                                                  3471+$CHI     OPSYN CHI
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3473 ***********************************************************************
+                                                  3474 *        Initiate the SP02 CSECT in the CODE region
+                                                  3475 *        with the location counter at 0
+                                                  3476 ***********************************************************************
+
+                                                  3478 SP02     ASALOAD  REGION=CODE
+                              00000000  00000B3F  3479+SP02     START 0,CODE
+00000000  000A0000 00000008                       3481+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+00000008                      00000008  00000058  3482+         ORG   SP02+X'058'
+00000058  000A0000 00000018                       3484+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+00000060  000A0000 00000020                       3485+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+00000068  000A0000 00000028                       3486+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+00000070  000A0000 00000030                       3487+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+00000078  000A0000 00000038                       3488+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+00000080                      00000080  00000200  3489+         ORG   SP02+512
+
+
+
+                                                  3491 ***********************************************************************
+                                                  3492 *        Create IPL (restart) PSW
+                                                  3493 ***********************************************************************
+
+                                                  3495          ASAIPL   IA=BEGIN
+                              00000000  00000B3F  3496+SP02     CSECT
+00000200                      00000200  00000000  3497+         ORG   SP02
+00000000  00080000 00000200                       3498+         PSW   0,0,0,0,BEGIN,24
+00000008                      00000008  00000200  3499+         ORG   SP02+512         Reset CSECT to end of assigned storage area
+                              00000000  00000B3F  3500+SP02     CSECT
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3502 ***********************************************************************
+                                                  3503 *               The actual "AP02" program itself...
+                                                  3504 ***********************************************************************
+                                                  3505 *
+                                                  3506 *  Architecture Mode: 390
+                                                  3507 *  Addressing Mode:   31-bit
+                                                  3508 *  Register Usage:
+                                                  3509 *
+                                                  3510 *   R0       (work)
+                                                  3511 *   R1       I/O device used by ENADEV and RAWIO macros
+                                                  3512 *   R2       First base register
+                                                  3513 *   R3       IOCB pointer for ENADEV and RAWIO macros
+                                                  3514 *   R4       IO work register used by ENADEV and RAWIO
+                                                  3515 *   R5-R7    (work)
+                                                  3516 *   R8       ORB pointer
+                                                  3517 *   R9       Second base register
+                                                  3518 *   R10-R13  (work)
+                                                  3519 *   R14      Subroutine call
+                                                  3520 *   R15      Secondary Subroutine call or work
+                                                  3521 *
+                                                  3522 ***********************************************************************
+
+00000200                      00000000            3524          USING  ASA,R0          Low core addressability
+00000200                      00000200            3525          USING  BEGIN,R2        FIRST Base Register
+00000200                      00001200            3526          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00000000            3527          USING  IOCB,R3
+00000200                      00000000            3528          USING  SP02,R0
+
+00000200  0520                                    3530 BEGIN    BALR  R2,0             Initalize FIRST base register
+00000202  0620                                    3531          BCTR  R2,0             Initalize FIRST base register
+00000204  0620                                    3532          BCTR  R2,0             Initalize FIRST base register
+
+00000206  4190 2800                     00000800  3534          LA    R9,2048(,R2)     Initalize SECOND base register
+0000020A  4190 9800                     00000800  3535          LA    R9,2048(,R9)     Initalize SECOND base register
+
+0000020E  45E0 273C                     0000093C  3537          BAL   R14,INIT
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3539 ***********************************************************************
+                                                  3540 *        Run the test...
+                                                  3541 ***********************************************************************
+
+00000212  95FF 2884                     00000A84  3543          CLI    ACTIVE,X'FF'
+00000216  4770 27AE                     000009AE  3544          BNE    EOJ
+0000021A  45E0 2022                     00000222  3545          BAL    R14,TESTSP02
+0000021E  47F0 27AE                     000009AE  3546          B      EOJ              Yes, then normal completion!
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3548 ***********************************************************************
+                                                  3549 *        MACRO
+                                                  3550 ***********************************************************************
+                                                  3551          MACRO
+                                                  3552          OVERONLY &NUM
+                                                  3553          LCLA     &CTR
+                                                  3554 &CTR     SETA     &NUM
+                                                  3555 .LOOP    ANOP
+                                                  3556 .*
+                                                  3557          NOP
+                                                  3558 .*
+                                                  3559 &CTR     SETA     &CTR-1
+                                                  3560          AIF      (&CTR GT 0).LOOP
+                                                  3561          MEND
+                                                  3562
+                                                  3563          MACRO
+                                                  3564          DOINSTR  &NUM
+                                                  3565          LCLA     &CTR
+                                                  3566 &CTR     SETA     &NUM
+                                                  3567 .LOOP    ANOP
+                                                  3568 .*
+                                                  3569          NOP
+                                                  3570          SP       OPL1,OPR1
+                                                  3571 .*
+                                                  3572 &CTR     SETA     &CTR-1
+                                                  3573          AIF      (&CTR GT 0).LOOP
+                                                  3574          MEND
+                                                  3575
+                                                  3576 ***********************************************************************
+                                                  3577 *        TESTAP02
+                                                  3578 ***********************************************************************
+
+00000222  4700 0000                     00000000  3580 TESTSP02 NOP
+00000226  5870 0000                     00000000  3581          L        R7, NULLOOPS
+0000022A  B205 28B0                     00000AB0  3582          STCK     BEGCLOCK
+                                                  3583
+0000022E  0560                                    3584          BALR     R6,0
+                                                  3585          OVERONLY 2
+00000230  4700 0000                     00000000  3586+         NOP
+00000234  4700 0000                     00000000  3587+         NOP
+                                                  3588          PRINT    OFF
+                                                  3686          PRINT    ON
+                                                  3687          OVERONLY 2
+000003B8  4700 0000                     00000000  3688+         NOP
+000003BC  4700 0000                     00000000  3689+         NOP
+
+000003C0  0676                                    3691          BCTR     R7,R6
+000003C2  B205 28B8                     00000AB8  3692          STCK     ENDCLOCK
+000003C6  45F0 25D4                     000007D4  3693          BAL      R15,CALCDUR
+000003CA  D207 28C8 28C0      00000AC8  00000AC0  3694          MVC      OVERHEAD,DURATION
+
+000003D0  5870 0000                     00000000  3696          L        R7, NULLOOPS
+000003D4  B205 28B0                     00000AB0  3697          STCK     BEGCLOCK
+
+000003D8  0560                                    3699          BALR     R6,0
+                                                  3700          DOINSTR 2
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000003DA  4700 0000                     00000000  3701+         NOP
+000003DE  FBFF 2888 2898      00000A88  00000A98  3702+         SP    OPL1,OPR1
+000003E4  4700 0000                     00000000  3703+         NOP
+000003E8  FBFF 2888 2898      00000A88  00000A98  3704+         SP    OPL1,OPR1
+                                                  3705          PRINT    OFF
+                                                  3899          PRINT    ON
+                                                  3900          DOINSTR  2
+000007AE  4700 0000                     00000000  3901+         NOP
+000007B2  FBFF 2888 2898      00000A88  00000A98  3902+         SP    OPL1,OPR1
+000007B8  4700 0000                     00000000  3903+         NOP
+000007BC  FBFF 2888 2898      00000A88  00000A98  3904+         SP    OPL1,OPR1
+
+000007C2  0676                                    3906          BCTR     R7,R6
+000007C4  B205 28B8                     00000AB8  3907          STCK     ENDCLOCK
+
+000007C8                                          3909          DROP     R5        RPTSPEED uses R5 as a work register
+
+000007C8  D204 2911 2870      00000B11  00000A70  3911          MVC      PRTLINE+33(5),=CL6' AP  '
+000007CE  45F0 2660                     00000860  3912          BAL      R15,RPTSPEED
+                                                  3913
+000007D2  07FE                                    3914 TESTEND  BR     R14
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3916 ***********************************************************************
+                                                  3917 *        CALCDUR               Calc duration
+                                                  3918 ***********************************************************************
+000007D4  50F0 2618                     00000818  3919 CALCDUR  ST    R15,CALCRET        Save return address
+000007D8  9057 261C                     0000081C  3920          STM   R5,R7,CALCWORK     Save work registers
+
+000007DC  9867 28B0                     00000AB0  3922          LM    R6,R7,BEGCLOCK     Remove CPU number from clock value
+000007E0  8C60 0006                     00000006  3923          SRDL  R6,6                            "
+000007E4  8D60 0006                     00000006  3924          SLDL  R6,6                            "
+000007E8  9067 28B0                     00000AB0  3925          STM   R6,R7,BEGCLOCK                  "
+
+000007EC  9867 28B8                     00000AB8  3927          LM    R6,R7,ENDCLOCK     Remove CPU number from clock value
+000007F0  8C60 0006                     00000006  3928          SRDL  R6,6                            "
+000007F4  8D60 0006                     00000006  3929          SLDL  R6,6                            "
+000007F8  9067 28B8                     00000AB8  3930          STM   R6,R7,ENDCLOCK                  "
+
+000007FC  4150 28B0                     00000AB0  3932          LA    R5,BEGCLOCK        Starting time
+00000800  4160 28B8                     00000AB8  3933          LA    R6,ENDCLOCK        Ending time
+00000804  4170 28C0                     00000AC0  3934          LA    R7,DURATION        Difference
+00000808  45F0 2628                     00000828  3935          BAL   R15,SUBDWORD       Calculate duration
+
+0000080C  9857 261C                     0000081C  3937          LM    R5,R7,CALCWORK     Restore work registers
+00000810  58F0 2618                     00000818  3938          L     R15,CALCRET        Restore return address
+00000814  07FF                                    3939          BR    R15                Return to caller
+
+00000818  00000000                                3941 CALCRET  DC    F'0'               R15 save area
+0000081C  00000000 00000000                       3942 CALCWORK DC    3F'0'              R5-R7 save area
+
+
+
+
+                                                  3944 ***********************************************************************
+                                                  3945 *        SUBDWORD                 Subtract two doublewords
+                                                  3946 *        R5 --> subtrahend, R6 --> minuend, R7 --> result
+                                                  3947 ***********************************************************************
+
+00000828  90AD 2650                     00000850  3949 SUBDWORD STM   R10,R13,SUBDWSAV   Save registers
+
+0000082C  98AB 5000                     00000000  3951          LM    R10,R11,0(R5)      Subtrahend  (value to subtract)
+00000830  98CD 6000                     00000000  3952          LM    R12,R13,0(R6)      Minuend     (what to subtract FROM)
+00000834  1FDB                                    3953          SLR   R13,R11            Subtract LOW part
+00000836  47B0 263E                     0000083E  3954          BNM   *+4+4              (branch if no borrow)
+0000083A  5FC0 286C                     00000A6C  3955          SL    R12,=F'1'          (otherwise do borrow)
+0000083E  1FCA                                    3956          SLR   R12,R10            Subtract HIGH part
+00000840  90CD 7000                     00000000  3957          STM   R12,R13,0(R7)      Store results
+
+00000844  98AD 2650                     00000850  3959          LM    R10,R13,SUBDWSAV   Restore registers
+00000848  07FF                                    3960          BR    R15                Return to caller
+
+00000850  00000000 00000000                       3962 SUBDWSAV DC    2D'0'              R10-R13 save area
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3964 ***********************************************************************
+                                                  3965 *        RPTSPEED                 Report instruction speed
+                                                  3966 ***********************************************************************
+
+00000860  50F0 2738                     00000938  3968 RPTSPEED ST    R15,RPTSAVE        Save return address
+00000864  45F0 25D4                     000007D4  3969          BAL   R15,CALCDUR        Calculate duration
+
+00000868  4150 28C8                     00000AC8  3971          LA    R5,OVERHEAD        Subtract overhead
+0000086C  4160 28C0                     00000AC0  3972          LA    R6,DURATION        From raw timing
+00000870  4170 28C0                     00000AC0  3973          LA    R7,DURATION        Yielding true instruction timing
+00000874  45F0 2628                     00000828  3974          BAL   R15,SUBDWORD       Do it
+
+00000878  98CD 28C0                     00000AC0  3976          LM    R12,R13,DURATION   Convert to...
+0000087C  8CC0 000C                     0000000C  3977          SRDL  R12,12             ... microseconds
+
+00000880  4EC0 28D0                     00000AD0  3979          CVD   R12,TICKSAAA       convert HIGH part to decimal
+00000884  4ED0 28D8                     00000AD8  3980          CVD   R13,TICKSBBB       convert LOW  part to decimal
+
+00000888  F877 28E0 28D0      00000AE0  00000AD0  3982          ZAP   TICKSTOT,TICKSAAA            Calculate...
+0000088E  FC75 28E0 2876      00000AE0  00000A76  3983          MP    TICKSTOT,=P'4294967296'      ...decimal...
+00000894  FA77 28E0 28D8      00000AE0  00000AD8  3984          AP    TICKSTOT,TICKSBBB            ...microseconds
+
+0000089A  D20B 291B 2934      00000B1B  00000B34  3986          MVC   PRTLINE+43(L'EDIT),EDIT          (edit into...
+000008A0  DE0B 291B 28E3      00000B1B  00000AE3  3987          ED    PRTLINE+43(L'EDIT),TICKSTOT+3     ...print line)
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3989          RAWIO 4,FAIL=FAILIO      Print elapsed time on console
+000008A6  9200 300E                     0000000E  3990+         MVI   IOCBSC,X'00'          Clear SC information
+000008AA  D201 300A 3006      0000000A  00000006  3991+         MVC   IOCBST,IOCBZERO       Clear accumulated status
+000008B0  5810 3000                     00000000  3992+         L     1,IOCBDID             Remember the device ID with which I am working
+                                                  3993+* Initiate Subchannel-based input/output operation
+000008B4  5840 3018                     00000018  3994+         $L    4,IOCBORB             Locate the ORB for the channel subsystem
+000008B8  B233 4000                     00000000  3995+         SSCH  0(4)                  Initiate the I/O operation
+000008BC  A774 008A                     000009D0  3996+         $BC   B'0111',FAILIO        ..Start function failed, report/handle the error
+000008C0  5840 3020                     00000020  3997+         $L    4,IOCBIRB             Locate the IRB storage area
+000008C4                      00000000            3998+         USING IRB,4                 Make it addressable
+
+                                                  4000+* Wait for I/O operation to present status via an interruption
+000008C4                                          4001+IOWT0013 DS    0H  Wait for I/O to complete
+000008C4  D207 26E8 0078      000008E8  00000078  4003+         MVC   IOS0014(8),120(0)               Save Input/Output new PSW
+000008CA  D207 0078 26E0      00000078  000008E0  4004+         MVC   120(8,0),ION0014               Establish Input/Ouput new PSW
+000008D0  8200 26D8                     000008D8  4005+         $LPSW WPSW0014                       Wait for event
+000008D8  020A0000 00000000                       4006+WPSW0014 PSW   2,0,2,0,0                      Wait for event
+000008E0  00082000 000008F0                       4007+ION0014  PSW   0,0,0,32,IRST0014,24                I/O New PSW: cc==2
+000008E8  00000000 00000000                       4008+IOS0014  DC    XL8'00'
+                                                  4009+* Handle input/output interruption
+000008F0                                          4010+IRST0014 DS    0H
+000008F0  D207 0078 26E8      00000078  000008E8  4011+         MVC   120(8,0),IOS0014             Restore input/output new PSW
+                                                  4012+* Process the interruption...
+                                                  4013+* Validate interruption is for the expected subchannel
+000008F6  5510 00B8                     000000B8  4014+         CL    1,IOSSID              Is this the device for which I am waiting?
+000008FA  A774 FFE5                     000008C4  4015+         $BNE  IOWT0013              ..No, continue waiting for it
+                                                  4016+* Accumulate interruption information from IRB
+000008FE  B235 4000                     00000000  4017+         TSCH  0(4)                  Retrive interrupt information
+00000902  A744 FFE1                     000008C4  4018+         $BC   B'0100',IOWT0013      CC1 (not status pending), wait for it to arrive
+00000906  A714 0065                     000009D0  4019+         $BC   B'0001',FAILIO        CC3 (not operational), an error then
+                                                  4020+*                                    CC0 (status was pending), accumulate the status
+0000090A  D600 300E 4003      0000000E  00000003  4021+         OC    IOCBSC,IRBSCSW+SCSW2  Accumulate status control
+00000910  D601 300A 4008      0000000A  00000008  4022+         OC    IOCBST,IRBSCSW+SCSWUS Accumulate device and channel status
+00000916  9104 300E                     0000000E  4023+         TM    IOCBSC,SCSWSPRI       Primary subchannel status?
+0000091A  A7E4 FFD5                     000008C4  4024+         $BNO  IOWT0013              ..No, wait for primary status
+0000091E  D203 3010 4004      00000010  00000004  4025+         MVC   IOCBSCCW,IRBSCSW+SCSWCCW  CCW address
+00000924  D201 3016 400A      00000016  0000000A  4026+         MVC   IOCBRCNT,IRBSCSW+SCSWCNT  Residual count
+                                                  4027+* Test for errors as specified in the IOCB
+0000092A  910C 300A                     0000000A  4028+         TM    IOCBUS,CSWCE+CSWDE    Channel end and device end both accumulated?
+0000092E  A7E4 0051                     000009D0  4029+         $BNO  FAILIO                Hunh? No CE and DE but do have primary status!
+                                                  4030+* Input/Output operation successful
+
+
+00000932  58F0 2738                     00000938  4032          L     R15,RPTSAVE        Restore return address
+00000936  07FF                                    4033          BR    R15                Return to caller
+
+00000938  00000000                                4035 RPTSAVE  DC    F'0'               R15 save area
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4037 ***********************************************************************
+                                                  4038 *        Program Initialization
+                                                  4039 ***********************************************************************
+
+0000093C                                          4041 INIT     DS     0H              Program Initialization
+
+0000093C  4130 27F0                     000009F0  4043          LA     R3,IOCB_009     Point to IOCB
+00000940  5880 3018                     00000018  4044          L      R8,IOCBORB      Point to ORB
+
+00000944  45F0 274E                     0000094E  4046          BAL    R15,IOINIT      Initialize the CPU for I/O operations
+00000948  45F0 275E                     0000095E  4047          BAL    R15,ENADEV      Enable our device making ready for use
+0000094C  07FE                                    4048          BR     R14             Return to caller
+
+
+
+
+
+                                                  4050 ***********************************************************************
+                                                  4051 *        Initialize the CPU for I/O operations
+                                                  4052 ***********************************************************************
+
+
+                                                  4054 IOINIT   IOINIT ,
+0000094E  B766 2758                     00000958  4055+IOINIT   LCTL  6,6,IOMK0015       Enable subchannel subclasses for interruptions
+00000952  47F0 275C                     0000095C  4056+         B     IOMK0015+4
+00000958                                          4057+IOMK0015 DS    0F
+00000958  FF000000                                4058+         DC    XL4'FF000000'         All subchannel subclasses enabled
+
+
+0000095C  07FF                                    4060          BR    R15                Return to caller
+
+
+
+
+                                                  4062 ***********************************************************************
+                                                  4063 *        Enable the device, making it ready for use
+                                                  4064 ***********************************************************************
+
+
+                                                  4066 ENADEV   ENADEV ENAOKAY,FAILDEV,REG=4
+0000095E  5810 27A4                     000009A4  4067+ENADEV   L     1,FIND0016
+00000962  5840 3028                     00000028  4068+         $L    4,IOCBSIB          Locate where the SCHIB is to be stored
+00000966                      00000000            4069+         USING SCHIB,4
+00000966                                          4070+FINL0016 DS    0H   Retrieve Subchannel Information Block for desired device number
+00000966  B234 4000                     00000000  4071+         STSCH 0(4)               Store the SCHIB for first subchannel
+0000096A  A774 002B                     000009C0  4072+         $BC   B'0111',FAILDEV    Subchannel does not exist and device number not found
+0000096E  9101 4005                     00000005  4073+         TM    PMCW1_8,PMCWV      Is the subchannel device number valid?
+00000972  A784 0011                     00000994  4074+         $BZ   FINN0016           ..No, check the next subchannel
+00000976  D501 4006 3004      00000006  00000004  4075+         CLC   PMCWDNUM,IOCBDEV   Is this the device number being sought?
+0000097C  A774 000C                     00000994  4076+         $BNE  FINN0016           ..No, check the next subchannel
+                                                  4077+* Subchannel found!
+00000980  5010 3000                     00000000  4078+         ST    1,IOCBDID          Remember the subchannel so I/O can be done to it.
+00000984  9680 4005                     00000005  4079+         OI    PMCW1_8,PMCWE      Make sure it is enabled so I/O requests accepted
+00000988  B232 4000                     00000000  4080+         MSCH  0(4)               Enable the subchannel to the channel sub-system
+0000098C  A784 0010                     000009AC  4081+         $BC   B'1000',ENAOKAY    CC0 (SCHIB updated), device is ready.
+00000990  A7F4 0018                     000009C0  4082+         $B    FAILDEV            CC1,CC2,CC3 (SCHIB update failed), quit
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000994                                          4083+FINN0016 DS    0H  Advance to next subchannel
+00000994  4110 1001                     00000001  4084+         LA    1,1(0,1)           Advance to next subchannel
+00000998  5510 27A8                     000009A8  4085+         CL    1,FINM0016         Beyond maximum subchannel
+0000099C  A7D4 FFE5                     00000966  4086+         $BNH  FINL0016           ..No, examine the next subchannel
+000009A0  A724 0010                     000009C0  4087+         $BH   FAILDEV            ..Yes, failed to enable the device
+000009A4                                          4088+         DROP  4                  Forget SCHIB addressing
+000009A4  00010000                                4089+FIND0016 DC    A(X'00010000')     First subchannel subsystem ID
+000009A8  0001FFFF                                4090+FINM0016 DC    A(X'0001FFFF')     Last subchannel subsystem ID
+
+
+000009AC  07FF                                    4092 ENAOKAY  BR    R15                Return to caller
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4094 ***********************************************************************
+                                                  4095 *        Normal completion or Abnormal termination PSWs
+                                                  4096 ***********************************************************************
+
+
+
+
+                                                  4098 EOJ      DWAITEND LOAD=YES             Normal completion
+000009AE                                          4100+EOJ      DS    0H
+000009AE  8200 27B8                     000009B8  4101+         LPSW  DWAT0018
+000009B8  000A0000 00000000                       4102+DWAT0018 PSW   0,0,2,0,X'000000'
+
+
+
+
+                                                  4104 FAILDEV  DWAIT LOAD=YES,CODE=01        ENADEV failed
+000009C0                                          4105+FAILDEV  DS    0H
+000009C0  8200 27C8                     000009C8  4106+         LPSW  DWAT0019
+000009C8  000A0000 00010001                       4107+DWAT0019 PSW   0,0,2,0,X'010001'
+
+
+
+
+                                                  4109 FAILIO   DWAIT LOAD=YES,CODE=02        RAWIO failed
+000009D0                                          4110+FAILIO   DS    0H
+000009D0  8200 27D8                     000009D8  4111+         LPSW  DWAT0020
+000009D8  000A0000 00010002                       4112+DWAT0020 PSW   0,0,2,0,X'010002'
+
+
+
+
+                                                  4114 FAILTEST DWAIT LOAD=YES,CODE=BAD       Abnormal termination
+000009E0                                          4115+FAILTEST DS    0H
+000009E0  8200 27E8                     000009E8  4116+         LPSW  DWAT0021
+000009E8  000A0000 00010BAD                       4117+DWAT0021 PSW   0,0,2,0,X'010BAD'
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4119 IOCB_009 IOCB  X'009',CCW=CONPGM
+000009F0  00000000                                4120+IOCB_009 DC    A(0)            +0 Device Identifier (supplied by ENADEV macro)
+000009F4  0009                                    4121+         DC    AL2(X'009')     +4 Device address or device number
+000009F6  0000                                    4122+         DC    H'0'            +6 Must be zeros
+000009F8  D3                                      4123+         DC    AL1(X'D3')      +8 Default detected unit errors
+000009F9  3F                                      4124+         DC    AL1(X'3F')      +9 Default detected channel errors
+000009FA  0000                                    4125+         DC    HL2'0'          +10 Accumulated unit and channel errors
+000009FC  0000                                    4126+         DC    HL2'0'          +12 Tested unit and channel status
+000009FE  00                                      4127+         DC    XL1'00'         +14 Accumulated subchannel status control from SCSW
+000009FF  80                                      4128+         DC    XL1'80'         +15 Default unsoliticed wait condition
+00000A00  00000000                                4129+         DC    F'0'            +16 I/O status CCW address
+00000A04  00000000                                4130+         DC    F'0'            +20 residual count
+00000A08  00000A60                                4131+         DC    A(IORB0022)     +24  Address where ORB is located
+00000A0C  00000000                                4132+         DC    A(0)            +28  reserved
+00000A10  00000A20                                4133+         DC    A(IIRB0022)     +32 Address where IRB stored
+00000A14  00000000                                4134+         DC    A(0)            +36 reserved
+00000A18  00000A20                                4135+         DC    A(IIRB0022)     +40 Address where SCHIB stored
+00000A1C  00000000                                4136+         DC    A(0)            +44 reserved
+00000A20  00000000 00000000                       4137+IIRB0022 DC    16F'0'              Embedded shared IRB and SCHIB area
+00000A60                                          4139+IORB0022 DS    0XL12
+00000A60  00000000                                4140+         DC    A(0)                         Word 0 - Interruption Parameter
+00000A64  00                                      4141+         DC    AL1((0)*16+B'0000')          Word 1, bits 0-7
+00000A65  80                                      4142+         DC    BL1'10000000'                Word 1, bits 8-15
+00000A66  FF                                      4143+         DC    AL1(255)                     Word 1, bits 16-23
+00000A67  00                                      4144+         DC    BL1'00000000'                 Word 1, bits 24-31
+00000A68  00000AE8                                4145+         DC    AL4(CONPGM)                  Word 2 - CCW address
+                                                  4146 ***********************************************************************
+                                                  4147 *
+                                                  4148 ***********************************************************************
+
+
+00000A6C                                          4150          LTORG ,
+00000A6C  00000001                                4151                =F'1'
+00000A70  40C1D740 4040                           4152                =CL6' AP  '
+00000A76  04294967 296C                           4153                =P'4294967296'
+00000A7C  00000000                                4154 SAVER1   DC    F'0'
+00000A80  00000000                                4155 SAVEPGN  DC    F'0'
+00000A84  00000000                                4156 ACTIVE   DC    F'00'
+00000A88  99999999 99999999                       4157 OPL1     DC    X'9999999999999999999999999999999C'
+00000A98  00000000 00000000                       4158 OPR1     DC    X'0000000000000000000000000000001C'
+00000AA8  00002710                                4159 NULLOOPS DC    F'10000'
+00000AB0  BBBBBBBB BBBBBBBB                       4160 BEGCLOCK DC    0D'0',8X'BB'
+00000AB8  EEEEEEEE EEEEEEEE                       4161 ENDCLOCK DC    0D'0',8X'EE'
+00000AC0  DDDDDDDD DDDDDDDD                       4162 DURATION DC    0D'0',8X'DD'
+00000AC8  FFFFFFFF FFFFFFFF                       4163 OVERHEAD DC    0D'0',8X'FF'
+00000AD0  00000000 0000000C                       4164 TICKSAAA DC    PL8'0'
+00000AD8  00000000 0000000C                       4165 TICKSBBB DC    PL8'0'
+00000AE0  00000000 0000000C                       4166 TICKSTOT DC    PL8'0'
+                                                  4167
+00000AE8  09000044 00000AF0                       4168 CONPGM   CCW1  X'09',PRTLINE,0,PRTLNG
+00000AF0  40404040 40404040                       4169 PRTLINE  DC    C'         1,000,000 iterations of XXXXX'
+00000B16  40A39696 9240F9F9                       4170          DC    C' took 999,999,999 microseconds'
+                              00000044  00000001  4171 PRTLNG   EQU   *-PRTLINE
+00000B34  40202020 6B202020                       4172 EDIT     DC    X'402020206B2020206B202120'
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4174 ***********************************************************************
+                                                  4175 *        IOCB DSECT
+                                                  4176 ***********************************************************************
+
+                                                  4178          DSECTS NAME=IOCB
+                                                  4180+IOCB     DSECT
+                                                  4181+*     Field usage by: CH SC Description (R->program read-only, X->program read/write)
+00000000                                          4182+IOCBDID  DS    0F  +0     R  Device Identifier - Subsystem ID for channel subsystem
+00000000  0000                                    4183+         DS    H   +0  R       reserved - must be zeros
+00000002  0000                                    4184+IOCBDV   DS    H   +2  R       Channel Unit Device address of I/O operation
+00000004  0000                                    4185+IOCBDEV  DS    H   +4  X  X  Device address or device number (R after ENADEV)
+00000006  0000                                    4186+IOCBZERO DS    H   +6  R  R  Must be zeros
+00000008  00                                      4187+IOCBUM   DS    X   +8  X  X  Unit status test mask
+00000009  00                                      4188+IOCBCM   DS    X   +9  X  X  Channel status test mask
+0000000A                                          4189+IOCBST   DS    0H  +10 X  X  Input/Output unit and channel status accumulation
+0000000A  00                                      4190+IOCBUS   DS    X   +10 R  R  Accumulated unit status
+0000000B  00                                      4191+IOCBCS   DS    X   +11 R  R  Accumulated channel status
+0000000C  00                                      4192+IOCBUT   DS    X   +14 R  R  Used to test unit status
+0000000D  00                                      4193+IOCBCT   DS    X   +13 R  R  Used to test channel status
+0000000E  00                                      4194+IOCBSC   DS    X   +14    R  Accumulted subchanel status control
+0000000F  00                                      4195+IOCBWAIT DS    X   +15 X  X  Recognized unsolicited interruption unit status events
+00000010  00000000                                4196+IOCBSCCW DS    A   +16 R  R  I/O status CCW address
+00000014                                          4197+IOCBSCNT DS    0F  +20 R  R  I/O status residual count as a positive full word
+00000014  0000                                    4198+         DS    H   +20 R     reserved must be zeros
+00000016  0000                                    4199+IOCBRCNT DS    H   +22 R     I/O status residual count as an unsigned halfword
+00000018                                          4200+IOCBCAW  DS    0A  +24 X     Channel Address word
+00000018  00000000 00000000                       4201+IOCBORB  DS    AD  +24    X  Address of the ORB for channel subsystem I/O
+00000020  00000000 00000000                       4202+IOCBIRB  DS    AD  +32    X  Channel subsystem IRB address
+00000028  00000000 00000000                       4203+IOCBSIB  DS    AD  +40    X  Channel subsystem SCHIB address
+                              00000030  00000001  4204+IOCBL    EQU   *-IOCB  Length of IOCB control block (48) without embedded structures
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4206 ***********************************************************************
+                                                  4207 *        ORB DSECT
+                                                  4208 ***********************************************************************
+
+                                                  4210          DSECTS NAME=ORB
+                                                  4212+ORB      DSECT
+00000000  00000000                                4213+ORBPARM  DC    F'0'     Word 0, bits 0-31
+
+00000004  00                                      4215+ORB1_0   DC    X'00'    Word 1, bits 0-7
+                              000000F0  00000001  4216+ORBKEYM  EQU   X'F0'    Word 1, bits 0-3   - Storage Key Mask
+                              00000008  00000001  4217+ORBS     EQU   X'08'    Word 1, bit 4      - Suspend Control
+                              00000004  00000001  4218+ORBC     EQU   X'04'    Word 1, bit 5      - Streaming Mode Control
+                              00000002  00000001  4219+ORBM     EQU   X'02'    Word 1, bit 6      - Modification Control
+                              00000001  00000001  4220+ORBY     EQU   X'01'    Word 1, bit 7      - Synchronization Control
+
+00000005  00                                      4222+ORB1_8   DC    X'00'    Word 1, bits 8-15
+                              00000080  00000001  4223+ORBF     EQU   X'80'    Word 1, bit 8      - CCW Format-Control
+                              00000040  00000001  4224+ORBP     EQU   X'40'    Word 1, bit 9      - Pre-fetch control
+                              00000020  00000001  4225+ORBI     EQU   X'20'    Word 1, bit 10     - Initial-status Interruption Control
+                              00000010  00000001  4226+ORBA     EQU   X'10'    Word 1, bit 11     - Address Limit Checking Control
+                              00000008  00000001  4227+ORBU     EQU   X'08'    Word 1, bit 12     - Suppress-suspended-interruption control
+                              00000004  00000001  4228+ORBB     EQU   X'04'    Word 1, bit 13     - Channel-Program-Type Control
+                              00000002  00000001  4229+ORBH     EQU   X'02'    Word 1, bit 14     - Format 2-IDAW Control
+                              00000001  00000001  4230+ORBT     EQU   X'01'    Word 1, bit 15     - 2K-IDAW control
+00000006  00                                      4231+ORBLPM   DC    X'00'    Word 1, bits 16-23 - Logical Path Mask
+00000007  00                                      4232+ORRB1_24 DC    X'00'    Word 1, bits 24-31
+                              00000080  00000001  4233+ORBL     EQU   X'80'    Word 1, bit 24     - Incorrect Length Suppression Mode
+                              0000007F  00000001  4234+ORBRSV3  EQU   X'7F'    Word 1, bits 25-31 - reserved must be zeros
+                              00000040  00000001  4235+ORBD     EQU   X'40'    Word 1, bit 25     - MIDAW Addressing Control
+                              0000003E  00000001  4236+ORBRSV26 EQU   X'3E'    Word 1, bits 26-30 - reserved must be zeros
+                              0000007E  00000001  4237+ORBRSV25 EQU   X'7E'    Word 1, bits 25-30 - reserved must be zeros
+                              00000001  00000001  4238+ORBX     EQU   X'01'    Word 1, bit 31     - ORB-extension control
+
+00000008  00000000                                4240+ORBCCW   DC    A(0)     Word 2, bits 1-31  - Channel Program Address
+                              00000080  00000001  4241+ORBRSV4  EQU   X'80'    Word 2, bit 0      - reserved must be zero
+                              0000000C  00000001  4242+ORBLEN   EQU   *-ORB Length of standard ORB
+                                                  4243+* Extended ORB fields
+0000000C  00                                      4244+ORBCSS   DC    X'00'    Word 3, bits 0-7   - Channel Subsystem Priority
+0000000D  00                                      4245+ORBRSV5  DC    X'00'    Word 3, bits 8-15  - reserved must be zeros
+0000000E                                          4246+ORBPGM   DC    0X'00'   Word 3, bits 16-23 - Transport mode reserves for program use
+0000000E  00                                      4247+ORBCU    DC    X'00'    Word 3, bits 16-23 - Control Unit Priority
+0000000F  00                                      4248+ORBRSV6  DC    X'00'    Word 3, bits 24-31 - reserved must be zeros
+00000010  00000000 00000000                       4249+ORBRSV7  DC    XL16'00' Words 4-7          - reserved must be zeros
+                              00000020  00000001  4250+ORBXLEN  EQU   *-ORB Length of extended ORB
+
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4253 ***********************************************************************
+                                                  4254 *        IRB DSECT
+                                                  4255 ***********************************************************************
+
+                                                  4257          DSECTS NAME=IRB
+                                                  4259+IRB      DSECT Interruption          Response Block
+00000000  00000000 00000000                       4260+IRBSCSW  DC    XL12'00' Words 0-2 - Subchannel Status Word (Defined by DSECT SCSW)
+0000000C  00000000 00000000                       4261+IRBESW   DC    XL20'00' Words 3-7 - Extended Status Word
+00000020  00000000 00000000                       4262+IRBECW   DC    XL32'00' Words 8-15 - Extended Control Word
+                              00000040  00000001  4263+IRBL     EQU   *-IRB    IRB Length
+00000040  00000000 00000000                       4264+IRBEMW   DC    XL32'00' Words 16-23 - Extended Measurement Word
+                              00000060  00000001  4265+IRBXL    EQU   *-IRB    Extended IRB Length
+
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4268 ***********************************************************************
+                                                  4269 *        SCSW DSECT
+                                                  4270 ***********************************************************************
+
+                                                  4272          DSECTS NAME=SCSW
+                                                  4274+SCSW     DSECT Subchannel          Status Word
+00000000  00                                      4275+SCSWFLAG DC    X'00'    Flags
+                              000000F0  00000001  4276+SCSWKEYM EQU   X'F0'    Storage Key Mask of subchannel storage key
+                              00000008  00000001  4277+SCSWSUSC EQU   X'08'    Suspend Control
+                              00000004  00000001  4278+SCSWESWF EQU   X'04'    Extended Status Word Format
+                              00000003  00000001  4279+SCSWDCCM EQU   X'03'    Deferred condiont code mask
+                              00000000  00000001  4280+SCSWDCC0 EQU   X'00'    Normal I/O interruption
+                              00000001  00000001  4281+SCSWDCC1 EQU   X'01'    Deferred condition code is 1
+                              00000003  00000001  4282+SCSWDCC3 EQU   X'03'    Deferred condition code is 3
+
+00000001  00                                      4284+SCSWCTLS DC    X'00'    General Controls
+                              00000080  00000001  4285+SCSWCCWF EQU   X'80'    CCW Format control when ...
+                              00000040  00000001  4286+SCSWCCWP EQU   X'40'    CCW Prefetch Control
+                              00000020  00000001  4287+SCSWISIC EQU   X'20'    Initial-Status-Interruption Control
+                              00000010  00000001  4288+SCSWALKC EQU   X'10'    Address-Limit-Checking Control
+                              00000008  00000001  4289+SCSWSSIC EQU   X'08'    Suppress suspended interruption
+                              00000004  00000001  4290+SCSW0CC  EQU   X'04'    Zero-Condition Code
+                              00000002  00000001  4291+SCSWECWC EQU   X'02'    Extended Control Word control
+                              00000001  00000001  4292+SCSWPNOP EQU   X'01'    Path Not Operational
+
+00000002  00                                      4294+SCSW1    DC    X'00'    Control Byte 1
+                              00000070  00000001  4295+SCSWFM   EQU   X'70'    Functional Control Mask
+                              00000040  00000001  4296+SCSWFS   EQU   X'40'    Function Control - Start Function
+                              00000020  00000001  4297+SCSWFH   EQU   X'20'    Function Control - Halt Function
+                              00000010  00000001  4298+SCSWFC   EQU   X'10'    Function Control - Clear Function
+                              00000008  00000001  4299+SCSWARP  EQU   X'08'    Activity Control - Resume pending
+                              00000004  00000001  4300+SCSWASP  EQU   X'04'    Activity Control - Start pending
+                              00000002  00000001  4301+SCSWAHP  EQU   X'02'    Activity Control - Halt pending
+                              00000001  00000001  4302+SCSWACP  EQU   X'01'    Activity Control - Clear pending
+00000003  00                                      4303+SCSW2    DC    X'00'    Control Byte 2
+                              00000080  00000001  4304+SCSWASA  EQU   X'80'    Activity Control - Subchannel Active
+                              00000040  00000001  4305+SCSWADA  EQU   X'40'    Activity Control - Device Active
+                              00000020  00000001  4306+SCSWASUS EQU   X'20'    Activity Control - Suspended
+                              00000010  00000001  4307+SCSWSAS  EQU   X'10'    Status Control   - Alert Status
+                              00000008  00000001  4308+SCSWSINT EQU   X'08'    Status Control   - Intermediate Status
+                              00000004  00000001  4309+SCSWSPRI EQU   X'04'    Status Control   - Primary Status
+                              00000002  00000001  4310+SCSWSSEC EQU   X'02'    Status Control   - Secondary Status
+                              00000001  00000001  4311+SCSWSPEN EQU   X'01'    Status Control   - Status Pending
+
+00000004  00000000                                4313+SCSWCCW  DC    A(0)     CCW Address
+
+00000008  00                                      4315+SCSWUS   DC    X'00'    Unit Status
+                              00000080  00000001  4316+SCSWATTN EQU   X'80'    Attention
+                              00000040  00000001  4317+SCSWSM   EQU   X'40'    Status modifier
+                              00000020  00000001  4318+SCSWCUE  EQU   X'20'    Control-unit end
+                              00000010  00000001  4319+SCSWBUSY EQU   X'10'    Busy
+                              00000008  00000001  4320+SCSWCE   EQU   X'08'    Channel end
+                              00000004  00000001  4321+SCSWDE   EQU   X'04'    Device end
+                              00000002  00000001  4322+SCSWUC   EQU   X'02'    Unit check
+                              00000001  00000001  4323+SCSWUX   EQU   X'01'    Unit exception
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000009  00                                      4325+SCSWCS   DC    X'00'    Channel Status
+                              00000080  00000001  4326+SCSWPCI  EQU   X'80'    Program-controlled interruption
+                              00000040  00000001  4327+SCSWIL   EQU   X'40'    Incorrect length
+                              00000020  00000001  4328+SCSWPRGM EQU   X'20'    Program check
+                              00000010  00000001  4329+SCSWPROT EQU   X'10'    Protection Check
+                              00000008  00000001  4330+SCSWCDAT EQU   X'08'    Channel-data check
+                              00000004  00000001  4331+SCSWCCTL EQU   X'04'    Channel-control check
+                              00000002  00000001  4332+SCSWICTL EQU   X'02'    Interface-control check
+                              00000001  00000001  4333+SCSWCHNG EQU   X'01'    Chaining check
+
+0000000A  0000                                    4335+SCSWCNT  DC    H'0'     Residual CCW count
+                              0000000C  00000001  4336+SCSWL    EQU   *-SCSW
+
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4339 ***********************************************************************
+                                                  4340 *        (other DSECTS needed by SATK)
+                                                  4341 ***********************************************************************
+
+                                                  4343          DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1,CSW)
+                                                  4619          PRINT ON
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4621 ***********************************************************************
+                                                  4622 *        Register equates
+                                                  4623 ***********************************************************************
+
+
+                              00000000  00000001  4625 R0       EQU   0
+                              00000001  00000001  4626 R1       EQU   1
+                              00000002  00000001  4627 R2       EQU   2
+                              00000003  00000001  4628 R3       EQU   3
+                              00000004  00000001  4629 R4       EQU   4
+                              00000005  00000001  4630 R5       EQU   5
+                              00000006  00000001  4631 R6       EQU   6
+                              00000007  00000001  4632 R7       EQU   7
+                              00000008  00000001  4633 R8       EQU   8
+                              00000009  00000001  4634 R9       EQU   9
+                              0000000A  00000001  4635 R10      EQU   10
+                              0000000B  00000001  4636 R11      EQU   11
+                              0000000C  00000001  4637 R12      EQU   12
+                              0000000D  00000001  4638 R13      EQU   13
+                              0000000E  00000001  4639 R14      EQU   14
+                              0000000F  00000001  4640 R15      EQU   15
+
+
+
+
+                                                  4642          END
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    23
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ACTIVE              F    000A84       4  4156  3543
+ASA                 4    000000     512  4347  3524
+ASBEGIN             U    000000       1  4348  4353  4395  4431  4440  4458  4465  4471  4475  4479  4485  4502
+ASEND               U    000200       1  4501  4502
+ASLENGTH            U    000200       1  4502
+BCEXTCOD            H    00001A       2  4365
+BCIOCOD             H    00003A       2  4373
+BCMCKCOD            H    000032       2  4371
+BCPGMCOD            H    00002A       2  4369
+BCSVCCOD            H    000022       2  4367
+BEGCLOCK            D    000AB0       8  4160  3582  3697  3922  3925  3932
+BEGIN               I    000200       2  3530  3498  3525  3526
+CALCDUR             I    0007D4       4  3919  3693  3969
+CALCRET             F    000818       4  3941  3919  3938
+CALCWORK            F    00081C       4  3942  3920  3937
+CAW                 F    000048       4  4377
+CAWADDR             R    000049       3  4380
+CAWKEY              X    000048       1  4378
+CAWSUSP             U    000008       1  4379
+CCW0                4    000000       8  4506  4512
+CCW0ADDR            R    000001       3  4508
+CCW0CNT             H    000006       2  4511
+CCW0CODE            X    000000       1  4507
+CCW0FLGS            X    000004       1  4509
+CCW0L               U    000008       1  4512
+CCW1                4    000000       8  4524  4529
+CCW1ADDR            A    000004       4  4528
+CCW1CNT             H    000002       2  4527
+CCW1CODE            X    000000       1  4525
+CCW1FLGS            X    000001       1  4526
+CCW1L               U    000008       1  4529
+CCWCC               U    000040       1  4516
+CCWCD               U    000080       1  4515
+CCWIDA              U    000004       1  4520
+CCWPCI              U    000008       1  4519
+CCWSKIP             U    000010       1  4518
+CCWSLI              U    000020       1  4517
+CCWSUSP             U    000002       1  4521
+CHANID              F    0000A8       4  4432
+CODE                2    000000    2880  3479
+CONPGM              W    000AE8       8  4168  4145
+CPUID               U    00031B       1  4504
+CSW                 F    000040       8  4376
+CSWATTN             U    000080       1  4546
+CSWBUSY             U    000010       1  4549
+CSWCCTL             U    000004       1  4561
+CSWCCW              R    000001       3  4543
+CSWCDAT             U    000008       1  4560
+CSWCE               U    000008       1  4550  4028
+CSWCHNG             U    000001       1  4563
+CSWCNT              H    000006       2  4565
+CSWCS               X    000005       1  4555
+CSWCUE              U    000020       1  4548
+CSWDCC0             U    000000       1  4539
+CSWDCC1             U    000001       1  4540
+CSWDCC3             U    000003       1  4541
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    24
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+CSWDCCM             U    000003       1  4538
+CSWDE               U    000004       1  4551  4028
+CSWFLAG             X    000000       1  4533
+CSWFMT              4    000000       8  4532  4566
+CSWFMTL             U    000008       1  4566
+CSWICTL             U    000002       1  4562
+CSWIL               U    000040       1  4557
+CSWKEYM             U    0000F0       1  4534
+CSWLOG              U    000004       1  4537
+CSWPCI              U    000080       1  4556
+CSWPRGM             U    000020       1  4558
+CSWPROT             U    000010       1  4559
+CSWSM               U    000040       1  4547
+CSWSUSP             U    000008       1  4536
+CSWUC               U    000002       1  4552
+CSWUS               X    000004       1  4545
+CSWUX               U    000001       1  4553
+DURATION            D    000AC0       8  4162  3694  3934  3972  3973  3976
+DWAT0018            3    0009B8       8  4102  4101
+DWAT0019            3    0009C8       8  4107  4106
+DWAT0020            3    0009D8       8  4112  4111
+DWAT0021            3    0009E8       8  4117  4116
+EDIT                X    000B34      12  4172  3986  3987
+ENADEV              I    00095E       4  4067  4047
+ENAOKAY             I    0009AC       2  4092  4081
+ENDCLOCK            D    000AB8       8  4161  3692  3907  3927  3930  3933
+EOJ                 H    0009AE       2  4100  3544  3546
+EXTCPUAD            H    000084       2  4397
+EXTICODE            H    000086       2  4398
+EXTIPARM            F    000080       4  4396
+EXTNPSW             F    000058       8  4386
+EXTOPSW             F    000018       8  4358  4364
+FAILDEV             H    0009C0       2  4105  4072  4082  4087
+FAILIO              H    0009D0       2  4110  3996  4019  4029
+FAILTEST            H    0009E0       2  4115
+FIND0016            A    0009A4       4  4089  4067
+FINL0016            H    000966       2  4070  4086
+FINM0016            A    0009A8       4  4090  4085
+FINN0016            H    000994       2  4083  4074  4076
+IIRB0022            F    000A20       4  4137  4133  4135
+IMAGE               1    000000    2880     0
+INIT                H    00093C       2  4041  3537
+IOCB                4    000000      48  4180  4204  3527
+IOCBCAW             A    000018       4  4200
+IOCBCM              X    000009       1  4188
+IOCBCS              X    00000B       1  4191
+IOCBCT              X    00000D       1  4193
+IOCBDEV             H    000004       2  4185  4075
+IOCBDID             F    000000       4  4182  3992  4078
+IOCBDV              H    000002       2  4184
+IOCBIRB             A    000020       8  4202  3997
+IOCBL               U    000030       1  4204
+IOCBORB             A    000018       8  4201  3994  4044
+IOCBRCNT            H    000016       2  4199  4026
+IOCBSC              X    00000E       1  4194  3990  4021  4023
+IOCBSCCW            A    000010       4  4196  4025
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    25
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+IOCBSCNT            F    000014       4  4197
+IOCBSIB             A    000028       8  4203  4068
+IOCBST              H    00000A       2  4189  3991  4022
+IOCBUM              X    000008       1  4187
+IOCBUS              X    00000A       1  4190  4028
+IOCBUT              X    00000C       1  4192
+IOCBWAIT            X    00000F       1  4195
+IOCBZERO            H    000006       2  4186  3991
+IOCB_009            A    0009F0       4  4120  4043
+IOELADDR            F    0000AC       4  4433
+IOICODE             H    0000BA       2  4438
+IOIID               F    0000C0       4  4443
+IOINIT              I    00094E       4  4055  4046
+IOIPARM             F    0000BC       4  4442
+IOMK0015            F    000958       4  4057  4055  4056
+ION0014             3    0008E0       8  4007  4004
+IONPSW              F    000078       8  4390
+IOOPSW              F    000038       8  4362  4372
+IORB0022            X    000A60      12  4139  4131
+IOS0014             X    0008E8       8  4008  4003  4011
+IOSSID              F    0000B8       4  4441  4014
+IOWT0013            H    0008C4       2  4001  4015  4018  4024
+IPLCCW1             F    000008       8  4350
+IPLCCW2             F    000010       8  4351
+IPLPSW              F    000000       8  4349
+IRB                 4    000000      96  4259  4263  4265  3998
+IRBECW              X    000020      32  4262
+IRBEMW              X    000040      32  4264
+IRBESW              X    00000C      20  4261
+IRBL                U    000040       1  4263
+IRBSCSW             X    000000      12  4260  4021  4022  4025  4026
+IRBXL               U    000060       1  4265
+IRST0014            H    0008F0       2  4010  4007
+LCHANLOG            F    0000B0       4  4434
+MCKLOG              F    000100       4  4466
+MCKNPSW             F    000070       8  4389
+MCKOPSW             F    000030       8  4361  4370
+MEASUREB            X    0000B9       1  4437
+MKARCHMD            X    0000A3       1  4425
+MKARS               F    000120       4  4464
+MKCLKCMP            F    0000E0       8  4450
+MKCPUTIM            F    0000D8       8  4449
+MKCRS               F    0001C0       4  4469
+MKDMGCOD            F    0000F4       4  4453
+MKFAILA             F    0000F8       4  4455
+MKFPRS              D    000160       8  4467
+MKICODE             F    0000E8       4  4451
+MKLOGOUT            F    000100       4  4457
+MKMODEL             F    0000FC       4  4456
+MKXSAA              F    0000D4       4  4448
+MONCLS              H    000094       2  4413
+MONCODE             F    00009C       4  4420
+MONNUMBR            X    000095       1  4415
+MPGACCID            X    0000A2       1  4423
+NKGRS               F    000180       4  4468
+NULLOOPS            F    000AA8       4  4159
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    26
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+OPL1                X    000A88      16  4157  3702  3704  3708  3710  3712  3714  3716  3718  3720  3722  3724  3726  3728  3730
+                                               3732  3734  3736  3738  3740  3742  3744  3746  3748  3750  3752  3754  3756  3758
+                                               3760  3762  3764  3766  3768  3770  3772  3774  3776  3778  3780  3782  3784  3786
+                                               3788  3790  3792  3794  3796  3798  3800  3802  3804  3806  3808  3810  3812  3814
+                                               3816  3818  3820  3822  3824  3826  3828  3830  3832  3834  3836  3838  3840  3842
+                                               3844  3846  3848  3850  3852  3854  3856  3858  3860  3862  3864  3866  3868  3870
+                                               3872  3874  3876  3878  3880  3882  3884  3886  3888  3890  3892  3894  3896  3898
+                                               3902  3904
+OPR1                X    000A98      16  4158  3702  3704  3708  3710  3712  3714  3716  3718  3720  3722  3724  3726  3728  3730
+                                               3732  3734  3736  3738  3740  3742  3744  3746  3748  3750  3752  3754  3756  3758
+                                               3760  3762  3764  3766  3768  3770  3772  3774  3776  3778  3780  3782  3784  3786
+                                               3788  3790  3792  3794  3796  3798  3800  3802  3804  3806  3808  3810  3812  3814
+                                               3816  3818  3820  3822  3824  3826  3828  3830  3832  3834  3836  3838  3840  3842
+                                               3844  3846  3848  3850  3852  3854  3856  3858  3860  3862  3864  3866  3868  3870
+                                               3872  3874  3876  3878  3880  3882  3884  3886  3888  3890  3892  3894  3896  3898
+                                               3902  3904
+ORB                 4    000000      32  4212  4242  4250
+ORB1_0              X    000004       1  4215
+ORB1_8              X    000005       1  4222
+ORBA                U    000010       1  4226
+ORBB                U    000004       1  4228
+ORBC                U    000004       1  4218
+ORBCCW              A    000008       4  4240
+ORBCSS              X    00000C       1  4244
+ORBCU               X    00000E       1  4247
+ORBD                U    000040       1  4235
+ORBF                U    000080       1  4223
+ORBH                U    000002       1  4229
+ORBI                U    000020       1  4225
+ORBKEYM             U    0000F0       1  4216
+ORBL                U    000080       1  4233
+ORBLEN              U    00000C       1  4242
+ORBLPM              X    000006       1  4231
+ORBM                U    000002       1  4219
+ORBP                U    000040       1  4224
+ORBPARM             F    000000       4  4213
+ORBPGM              X    00000E       1  4246
+ORBRSV25            U    00007E       1  4237
+ORBRSV26            U    00003E       1  4236
+ORBRSV3             U    00007F       1  4234
+ORBRSV4             U    000080       1  4241
+ORBRSV5             X    00000D       1  4245
+ORBRSV6             X    00000F       1  4248
+ORBRSV7             X    000010      16  4249
+ORBS                U    000008       1  4217
+ORBT                U    000001       1  4230
+ORBU                U    000008       1  4227
+ORBX                U    000001       1  4238
+ORBXLEN             U    000020       1  4250
+ORBY                U    000001       1  4220
+ORRB1_24            X    000007       1  4232
+OVERHEAD            D    000AC8       8  4163  3694  3971
+PCFETO              A    0000C4       4  4444
+PERACCID            X    0000A1       1  4422
+PERADDR             F    000098       4  4419
+PERCODE             X    000096       1  4416
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    27
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+PERCODMK            U    0000F0       1  4417
+PGMACCID            X    0000A0       1  4421
+PGMDXC              F    000090       4  4411
+PGMICODE            H    00008E       2  4410
+PGMIID              F    00008C       4  4406
+PGMIILC             X    00008D       1  4408
+PGMIILCM            U    00000C       1  4409
+PGMNPSW             F    000068       8  4388
+PGMOPSW             F    000028       8  4360  4368
+PGMTRX              F    000090       4  4412
+PMCW1_0             X    000004       1  4573
+PMCW1_8             X    000005       1  4576  4073  4079
+PMCWB               U    000004       1  4608
+PMCWCHP0            X    000010       1  4597
+PMCWCHP1            X    000011       1  4598
+PMCWCHP2            X    000012       1  4599
+PMCWCHP3            X    000013       1  4600
+PMCWCHP4            X    000014       1  4601
+PMCWCHP5            X    000015       1  4602
+PMCWCHP6            X    000016       1  4603
+PMCWCHP7            X    000017       1  4604
+PMCWDNUM            H    000006       2  4588  4075
+PMCWE               U    000080       1  4577  4079
+PMCWEXC             X    00001B       1  4607
+PMCWIP              F    000000       4  4572
+PMCWISCM            U    000038       1  4574
+PMCWLM              U    000060       1  4578
+PMCWLMG             U    000020       1  4579
+PMCWLML             U    000040       1  4580
+PMCWLPM             X    000008       1  4590
+PMCWLPUM            X    00000A       1  4592
+PMCWM               U    000004       1  4584
+PMCWMBI             H    00000C       2  4594
+PMCWMM              U    000018       1  4581
+PMCWMMC             U    000008       1  4583
+PMCWMME             U    000010       1  4582
+PMCWPAM             X    00000F       1  4596
+PMCWPIM             X    00000B       1  4593
+PMCWPNOM            X    000009       1  4591
+PMCWPOM             X    00000E       1  4595
+PMCWRES1            X    000018       4  4605
+PMCWRES2            X    000018       3  4606
+PMCWS               U    000001       1  4610
+PMCWT               U    000002       1  4585
+PMCWV               U    000001       1  4586  4073
+PMCWX               U    000002       1  4609
+PRTLINE             C    000AF0      38  4169  4171  3911  3986  3987  4168
+PRTLNG              U    000044       1  4171  4168
+R0                  U    000000       1  4625  3524  3528
+R1                  U    000001       1  4626
+R10                 U    00000A       1  4635  3949  3951  3956  3959
+R11                 U    00000B       1  4636  3951  3953
+R12                 U    00000C       1  4637  3952  3955  3956  3957  3976  3977  3979
+R13                 U    00000D       1  4638  3949  3952  3953  3957  3959  3976  3980
+R14                 U    00000E       1  4639  3537  3545  3914  4048
+R15                 U    00000F       1  4640  3693  3912  3919  3935  3938  3939  3960  3968  3969  3974  4032  4033  4046  4047
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    28
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+                                               4060  4092
+R2                  U    000002       1  4627  3525  3530  3531  3532  3534
+R3                  U    000003       1  4628  3527  4043
+R4                  U    000004       1  4629
+R5                  U    000005       1  4630  3909  3920  3932  3937  3951  3971
+R6                  U    000006       1  4631  3584  3691  3699  3906  3922  3923  3924  3925  3927  3928  3929  3930  3933  3952
+                                               3972
+R7                  U    000007       1  4632  3581  3691  3696  3906  3920  3922  3925  3927  3930  3934  3937  3957  3973
+R8                  U    000008       1  4633  4044
+R9                  U    000009       1  4634  3526  3534  3535
+RPTSAVE             F    000938       4  4035  3968  4032
+RPTSPEED            I    000860       4  3968  3912
+RSTNPSW             F    000000       8  4354
+RSTOPSW             F    000008       8  4355
+SAVEPGN             F    000A80       4  4155
+SAVER1              F    000A7C       4  4154
+SCANOUT             X    000080       1  4392  4393
+SCANOUTL            U    000000       1  4393
+SCHIB               4    000000      52  4569  4616  4069
+SCHIBL              U    000034       1  4616
+SCHMBA              A    000028       8  4614
+SCHMDA1             X    000030       4  4615
+SCHMDA3             X    000028      12  4613
+SCHPMCW             X    000000      28  4571
+SCHSCSW             X    00001C      12  4612
+SCSW                4    000000      12  4274  4336
+SCSW0CC             U    000004       1  4290
+SCSW1               X    000002       1  4294
+SCSW2               X    000003       1  4303  4021
+SCSWACP             U    000001       1  4302
+SCSWADA             U    000040       1  4305
+SCSWAHP             U    000002       1  4301
+SCSWALKC            U    000010       1  4288
+SCSWARP             U    000008       1  4299
+SCSWASA             U    000080       1  4304
+SCSWASP             U    000004       1  4300
+SCSWASUS            U    000020       1  4306
+SCSWATTN            U    000080       1  4316
+SCSWBUSY            U    000010       1  4319
+SCSWCCTL            U    000004       1  4331
+SCSWCCW             A    000004       4  4313  4025
+SCSWCCWF            U    000080       1  4285
+SCSWCCWP            U    000040       1  4286
+SCSWCDAT            U    000008       1  4330
+SCSWCE              U    000008       1  4320
+SCSWCHNG            U    000001       1  4333
+SCSWCNT             H    00000A       2  4335  4026
+SCSWCS              X    000009       1  4325
+SCSWCTLS            X    000001       1  4284
+SCSWCUE             U    000020       1  4318
+SCSWDCC0            U    000000       1  4280
+SCSWDCC1            U    000001       1  4281
+SCSWDCC3            U    000003       1  4282
+SCSWDCCM            U    000003       1  4279
+SCSWDE              U    000004       1  4321
+SCSWECWC            U    000002       1  4291
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    29
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SCSWESWF            U    000004       1  4278
+SCSWFC              U    000010       1  4298
+SCSWFH              U    000020       1  4297
+SCSWFLAG            X    000000       1  4275
+SCSWFM              U    000070       1  4295
+SCSWFS              U    000040       1  4296
+SCSWICTL            U    000002       1  4332
+SCSWIL              U    000040       1  4327
+SCSWISIC            U    000020       1  4287
+SCSWKEYM            U    0000F0       1  4276
+SCSWL               U    00000C       1  4336
+SCSWPCI             U    000080       1  4326
+SCSWPNOP            U    000001       1  4292
+SCSWPRGM            U    000020       1  4328
+SCSWPROT            U    000010       1  4329
+SCSWSAS             U    000010       1  4307
+SCSWSINT            U    000008       1  4308
+SCSWSM              U    000040       1  4317
+SCSWSPEN            U    000001       1  4311
+SCSWSPRI            U    000004       1  4309  4023
+SCSWSSEC            U    000002       1  4310
+SCSWSSIC            U    000008       1  4289
+SCSWSUSC            U    000008       1  4277
+SCSWUC              U    000002       1  4322
+SCSWUS              X    000008       1  4315  4022
+SCSWUX              U    000001       1  4323
+SP02                J    000000    2880  3479  3482  3489  3497  3499  3528
+SSARCHMD            X    0000A3       1  4424
+SSARS               F    000120       4  4480
+SSCLKCMP            F    0000E0       8  4474
+SSCPUTIM            F    0000D8       8  4473
+SSCRS               F    0001C0       4  4483
+SSFPRS              D    000160       8  4481
+SSGRS               F    000180       4  4482
+SSMODEL             F    00010C       4  4478
+SSPREFIX            F    000108       4  4477
+SSPSW               F    000100       8  4476
+SSXSAA              A    0000D4       4  4472
+STFLDATA            F    0000C8       4  4445
+SUBDWORD            I    000828       4  3949  3935  3974
+SUBDWSAV            D    000850       8  3962  3949  3959
+SVCICODE            H    00008A       2  4404
+SVCIID              F    000088       4  4400
+SVCIILC             X    000089       1  4402
+SVCIILCM            U    00000C       1  4403
+SVCNPSW             F    000060       8  4387
+SVCOPSW             F    000020       8  4359  4366
+TESTEND             I    0007D2       2  3914
+TESTSP02            I    000222       4  3580  3545
+TICKSAAA            P    000AD0       8  4164  3979  3982
+TICKSBBB            P    000AD8       8  4165  3980  3984
+TICKSTOT            P    000AE0       8  4166  3982  3983  3984  3987
+TIMER               F    000050       4  4383
+TTDES               F    000054       4  4384
+UA0                 F    000010       8  4356
+UA1                 F    00004C       4  4381
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    30
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+UA2                 F    0000A4       4  4426
+UA3                 F    0000B4       4  4435
+UA4                 X    0000B8       1  4436
+UA5                 X    0000CC       8  4446
+UA6                 X    0000EC       8  4452
+UA7                 F    000118       8  4463
+UA8                 X    000180      32  4492
+WPSW0014            3    0008D8       8  4006  4005
+ZBRKADDR            A    000110       8  4462
+ZEMONCNT            F    00010C       4  4461
+ZEMONCTR            A    000100       8  4459
+ZEMONSIZ            F    000108       4  4460
+ZEXTNPSW            X    0001B0      16  4495
+ZEXTOPSW            X    000130      16  4487
+ZIONPSW             X    0001F0      16  4499
+ZIOOPSW             X    000170      16  4491
+ZMCKNPSW            X    0001E0      16  4498
+ZMCKOPSW            X    000160      16  4490
+ZMKFAILA            F    0000F8       8  4454
+ZMONCODE            F    0000B0       8  4429
+ZPGMNPSW            X    0001D0      16  4497
+ZPGMOPSW            X    000150      16  4489
+ZPGMTRX             F    0000A8       8  4428
+ZRSTNPSW            X    0001A0      16  4494
+ZRSTOPSW            X    000120      16  4486
+ZSASDISP            U    0011C0       1  4500
+ZSVCNPSW            X    0001C0      16  4496
+ZSVCOPSW            X    000140      16  4488
+=CL6' AP  '         C    000A70       6  4152  3911
+=F'1'               F    000A6C       4  4151  3955
+=P'4294967296'      P    000A76       6  4153  3983
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    31
+
+ MACRO    DEFN  REFERENCES
+
+ANTR        94
+APROB      226
+ARCHIND    386   3416
+ARCHLVL    527   3415
+ASAIPL     653   3495
+ASALOAD    733   3478
+ASAREA     788   4346
+ASAZAREA   973
+CPUWAIT   1056   4002
+DOINSTR   3564   3700   3706   3900
+DSECTS    1382   4178   4210   4257   4272   4343
+DWAIT     1585   4099   4104   4109   4114
+DWAITEND  1642   4098
+ENADEV    1650   4066
+ESA390    1750
+IOCB      1761   4119
+IOCBDS    1937   4179
+IOFMT     1971   4211   4258   4273   4505   4523   4531   4568
+IOINIT    2309   4054
+IOTRFR    2350
+ORB       2398   4138
+OVERONLY  3552   3585   3589   3687
+POINTER   2587
+PSWFMT    2615
+RAWAIT    2749
+RAWIO     2845   3989
+SIGCPU    3003
+SMMGR     3061
+SMMGRB    3161
+TRAP128   3210
+TRAP64    3187   3480   3483
+TRAPS     3223
+ZARCH     3297
+ZEROH     3309
+ZEROL     3337
+ZEROLH    3365
+ZEROLL    3388
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    32
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   2880  000-B3F  000-B3F
+  Region   CODE    2880  000-B3F  000-B3F
+    CSECT  SP02    2880  000-B3F  000-B3F
+ASMA Ver. 0.2.1              SP-02-performance (Test SP instruction)                                25 Sep 2023 10:07:59  Page    33
+
+   STMT                             FILE NAME
+
+1     /home/bav/hercules/herctest/hyperion/tests/SP-02-performance.asm
+2     /home/bav/SATK/srcasm/satk.mac
+
+
+** NO ERRORS FOUND **
+
+
