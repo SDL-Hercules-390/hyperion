@@ -30,7 +30,7 @@
   instructions in a loop in the first place before calling INTERRUPT_PENDING()
   macro. We don't want to call INTERRUPT_PENDING() macro TOO often, but we
   should MAYBE be calling it more frequently than we are. The trick is to
-  determine HOW often is should be called for best performance ON A GIVEN
+  determine HOW often it should be called for best performance ON A GIVEN
   HOST SYSTEM. It should be a dynamially calculated value that is calculated
   during startup to prevent our current defined fixed value from unfairly
   penalizing those users with slower/faster Hercules host systems.
