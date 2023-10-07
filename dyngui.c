@@ -1676,6 +1676,8 @@ void  UpdateDeviceStatus ()
     DEVBLK* pDEVBLK;
     char*   pDEVClass;
     BYTE    chOnlineStat, chBusyStat, chPendingStat, chOpenStat;
+    BYTE    lcss;
+    char    lcss_num[4];
 
     if (sysblk.shutdown) return;
 
@@ -1718,15 +1720,20 @@ void  UpdateDeviceStatus ()
         if (IOPENDING(pDEVBLK))                                               chPendingStat = '1';
         if (pDEVBLK->fd > MAX(STDIN_FILENO,MAX(STDOUT_FILENO,STDERR_FILENO))) chOpenStat    = '1';
 
+        if ((lcss = SSID_TO_LCSS( pDEVBLK->ssid )) >= 1)
+            MSGBUF( lcss_num, "%1d:", lcss );
+        else
+            lcss_num[0] = 0;
+
         // Send status message back to gui...
 
 #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
         if (pDEVBLK == sysblk.sysgdev)
-        {
             gui_fprintf( fStatusStream,
 
-                "DEV=0000 SYSG %-4.4s %c%c%c%c %s\n"
+                "DEV=%s0000 SYSG %-4.4s %c%c%c%c %s\n"
 
+                ,lcss_num
                 ,pDEVClass
 
                 ,chOnlineStat
@@ -1736,24 +1743,24 @@ void  UpdateDeviceStatus ()
 
                 ,szQueryDeviceBuff
             );
-        }
         else
 #endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-        gui_fprintf(fStatusStream,
+            gui_fprintf(fStatusStream,
 
-            "DEV=%4.4X %4.4X %-4.4s %c%c%c%c %s\n"
+                "DEV=%s%4.4X %4.4X %-4.4s %c%c%c%c %s\n"
 
-            ,pDEVBLK->devnum
-            ,pDEVBLK->devtype
-            ,pDEVClass
+                ,lcss_num
+                ,pDEVBLK->devnum
+                ,pDEVBLK->devtype
+                ,pDEVClass
 
-            ,chOnlineStat
-            ,chBusyStat
-            ,chPendingStat
-            ,chOpenStat
+                ,chOnlineStat
+                ,chBusyStat
+                ,chPendingStat
+                ,chOpenStat
 
-            ,szQueryDeviceBuff
-        );
+                ,szQueryDeviceBuff
+            );
     }
 
     // Since the device list can be in any order and devices can be added
@@ -1774,6 +1781,8 @@ void  NewUpdateDevStats ()
     BYTE        chOnlineStat, chBusyStat, chPendingStat, chOpenStat;
     BOOL        bUpdatesSent = FALSE;
     static BOOL bFirstBatch  = TRUE;
+    BYTE        lcss;
+    char        lcss_num[4];
 
     if (sysblk.shutdown) return;
 
@@ -1785,6 +1794,11 @@ void  NewUpdateDevStats ()
     for (pDEVBLK = sysblk.firstdev; pDEVBLK != NULL; pDEVBLK = pDEVBLK->nextdev)
     {
         pGUIStat = pDEVBLK->pGUIStat;
+
+        if ((lcss = SSID_TO_LCSS( pDEVBLK->ssid )) >= 1)
+            MSGBUF( lcss_num, "%1d:", lcss );
+        else
+            lcss_num[0] = 0;
 
         // Does this device exist in the configuration?
 
@@ -1799,7 +1813,7 @@ void  NewUpdateDevStats ()
             {
                 // Send "device deleted" message...
 
-                gui_fprintf ( fStatusStream, "DEVD=%4.4X\n", pDEVBLK->devnum );
+                gui_fprintf ( fStatusStream, "DEVD=%s%4.4X\n", lcss_num, pDEVBLK->devnum );
                 bUpdatesSent = TRUE;
 
                 *pGUIStat->pszNewStatStr = 0;   // (prevent re-reporting it)
@@ -1844,12 +1858,13 @@ void  NewUpdateDevStats ()
 
 #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
         if (pDEVBLK == sysblk.sysgdev)
-        {
             snprintf( pGUIStat->pszNewStatStr, GUI_STATSTR_BUFSIZ,
 
-                "DEV%c=0000 SYSG %-4.4s %c%c%c%c %s"
+                "DEV%c=%s0000 SYSG %-4.4s %c%c%c%c %s"
 
                 ,*pGUIStat->pszOldStatStr ? 'C' : 'A'
+
+                ,lcss_num
                 ,pDEVClass
 
                 ,chOnlineStat
@@ -1859,25 +1874,26 @@ void  NewUpdateDevStats ()
 
                 ,szQueryDeviceBuff
             );
-        }
         else
 #endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-        snprintf( pGUIStat->pszNewStatStr, GUI_STATSTR_BUFSIZ,
+            snprintf( pGUIStat->pszNewStatStr, GUI_STATSTR_BUFSIZ,
 
-            "DEV%c=%4.4X %4.4X %-4.4s %c%c%c%c %s"
+                "DEV%c=%s%4.4X %4.4X %-4.4s %c%c%c%c %s"
 
-            ,*pGUIStat->pszOldStatStr ? 'C' : 'A'
-            ,pDEVBLK->devnum
-            ,pDEVBLK->devtype
-            ,pDEVClass
+                ,*pGUIStat->pszOldStatStr ? 'C' : 'A'
 
-            ,chOnlineStat
-            ,chBusyStat
-            ,chPendingStat
-            ,chOpenStat
+                ,lcss_num
+                ,pDEVBLK->devnum
+                ,pDEVBLK->devtype
+                ,pDEVClass
 
-            ,szQueryDeviceBuff
-        );
+                ,chOnlineStat
+                ,chBusyStat
+                ,chPendingStat
+                ,chOpenStat
+
+                ,szQueryDeviceBuff
+            );
 
         *(pGUIStat->pszNewStatStr + GUI_STATSTR_BUFSIZ - 1) = 0;
 
