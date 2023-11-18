@@ -2898,6 +2898,154 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         break;
 
+    case 0x0A:
+    /*---------------------------------------------------------------*/
+    /* DIAGNOSTIC READ HOME ADDRESS                                  */
+    /*---------------------------------------------------------------*/
+    /*                                                               */
+    /*  The Diagnostic RHA is for handling the Skip Displacement     */
+    /*  and similar functions for DASD surface management. This      */
+    /*  isn't relevant for Hercules DASD emulation of course, so     */
+    /*  it is only being implemented to allow ICKDSF to run without  */
+    /*  receiving and reporting any CMDREJ errors. The matching      */
+    /*  DIAGNOSTIC WRITE HOME ADDRESS isn't used at all by ICKDSF    */
+    /*  INIT on error-free volumes and isn't implemented at all.     */
+    /*                                                               */
+    /*---------------------------------------------------------------*/
+    {
+        int HAoff;                  /* Offset to where Flag+CC+HH
+                                       appears in the returned data  */
+
+        /* Command is not available on older machinery */
+        if (!(0
+              || (dev->ckd3990)
+              || (dev->ckdcu->devt == 0x3880)
+              || (dev->ckdcu->devt == 0x2105)
+             )
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* For 3880, only 3375 and 3380 use this command, but we also
+           accept 3390 too, since this is a bypass for allowing ICKDSF
+           to run under TurnKey MVS.
+        */
+        if ((dev->ckdcu->devt == 0x3880) && !(0
+            || (dev->devtype == 0x3375)
+            || (dev->devtype == 0x3380)
+            || (dev->devtype == 0x3390)   // (for Turnkey MVS)
+        ))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
+           Locate Record, Read IPL, or Recalibrate command. The same
+           requirement is in place for 3880 with FC 3005. The 2105 and
+           later machines however, are not (yet?) considered.
+        */
+        if ((dev->ckd3990 || dev->ckdcu->devt == 0x3880)
+            && dev->ckdseek  == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Check operation code if within domain of a Locate Record */
+        if (dev->ckdlcount > 0)
+        {
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA ||
+                 ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16 &&
+                  (dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_INDEX))
+            )
+            {
+                ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+        }
+        else // (outside LR)
+        {
+            /* Check that the file mask allows the operation... */
+
+            /* For 3880, diagnostic commands must be allowed.
+               Bit 5 permits indicates Diagnostic commands.
+               Bit 6 will additionally inhibit some internal
+                     recovery for data checks.
+            */
+            if (dev->ckdcu->devt == 0x3880)
+            {
+                if ((dev->ckdfmask & CKDMASK_AAUTH_DIAG) != CKDMASK_AAUTH_DIAG)
+                {
+                    ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_5 );
+                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                    break;
+                }
+            }
+
+            /* For 3990, diagnostic commands must be allowed.
+               Bits 5+6 should be '10'. */
+            if (dev->ckd3990)
+            {
+                if (!(1
+                      && ((dev->ckdfmask & CKDMASK_AAUTH_DIAG) == CKDMASK_AAUTH_DIAG)
+                      && ((dev->ckdfmask & CKDMASK_AAUTH_DSF) == 0)
+                     )
+                )
+                {
+                    ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_5 );
+                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                    break;
+                }
+            }
+        }
+
+        /* Seek to beginning of track */
+        rc = ckd_seek( dev, dev->ckdcurcyl, dev->ckdcurhead, &trkhdr, unitstat );
+        if (rc < 0) break;
+
+        /* Calculate number of bytes and set residual */
+        if (dev->devtype == 0x3375)
+        {
+            size = 27;      // (3375 complete HA length)
+            HAoff = 18;     // (offset to Flag field)
+        }
+        else
+        {
+            size = 28;      // (3380 and 3390 complete HA length)
+            HAoff = 19;     // (offset to Flag field)
+        }
+
+        num = (count < size) ? count : size;
+        *residual = count - num;
+        if (count < size) *more = 1;
+
+        /* Copy the classical HA fields to the I/O buffer.
+           Only Flag+CC+HH will contain data. The rest is zeros.
+           Definitely not correct data, but if written back,
+           it would at least be ignored!
+        */
+        memset( iobuf, 0, size );
+        memcpy( &iobuf[ HAoff ], &trkhdr, CKD_TRKHDR_SIZE );
+
+        /* Save size and offset of data not used by this CCW */
+        dev->ckdpos = (U16)(num);
+        dev->ckdrem = (U16)(size - num);
+
+        /* Return normal status */
+        *unitstat = CSW_CE | CSW_DE;
+
+        break;
+    }
+
     case 0x1A:
     case 0x9A:
     /*---------------------------------------------------------------*/
@@ -2967,10 +3115,19 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* WRITE HOME ADDRESS                                            */
     /*---------------------------------------------------------------*/
+        /*
+           The traditional HA of IBM DASDs contains a flag byte and
+           2+2 bytes of CC and HH. The flag byte is used to indicate
+           the track location of primary or alternate plus the track
+           condition of good or bad. Since Hercules DASD emulation
+           does not need this concept, the flag byte is always zero,
+           so the IBM HA and Hercules 'track header' have identical
+           contents.
+        */
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
         if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdseek  == 0 && dev->ckdskcyl == 0
             && dev->ckdlocat == 0 && dev->ckdrdipl == 0
             && dev->ckdrecal == 0)
         {
@@ -2982,14 +3139,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
-            if (!(0
-                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || (1
-                      && (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ16
-                      && (dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_INDEX
-                     )
-                 )
-            )
+            /* The ECKD chaining requirement is Format Write operation,
+               orient to Home Address. Command Reject if it's not.
+            */
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT &&
+                  (dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_HOME))
             {
                 ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3009,14 +3163,19 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         rc = ckd_seek (dev, dev->ckdcurcyl, dev->ckdcurhead, &trkhdr, unitstat);
         if (rc < 0) break;
 
-        /* Calculate number of bytes to write and set residual count */
-        size = CKD_TRKHDR_SIZE;
-        num = (count < size) ? count : size;
-    /* FIXME: what devices want 5 bytes, what ones want 7, and what
-        ones want 11? Do this right when we figure that out */
         /* ISW20030819-1 Indicate WRHA performed */
-        dev->ckdwrha=1;
-        *residual = 0;
+        dev->ckdwrha = 1;
+
+        /* Calculate number of bytes to write and set residual count */
+        switch (dev->devtype)
+        {
+            case 0x3340: size =  7; break;
+            case 0x3350: size = 11; break;
+            default:     size =  5; break;  /* Standard HA length */
+        }
+        num = (count < size) ? count : size;
+        *residual = count - num;
+        if (count < size) *more = 1;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -4382,7 +4541,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            compared equal on all 4 bytes, or a Write Home Address not
            within the domain of a Locate Record */
         /* ISW20030819-1 : Added check for previously issued WRHA */
-        if (dev->ckdlcount == 0 && dev->ckdhaeq == 0 && dev->ckdwrha==0)
+        if (dev->ckdlcount == 0 && dev->ckdhaeq == 0 && dev->ckdwrha == 0)
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -4882,7 +5041,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
          && (dev->devtype != 0x3390)
          && (dev->devtype != 0x9345))
         {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
