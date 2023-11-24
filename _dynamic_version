@@ -21,11 +21,11 @@ MIN_GIT_VERSION="1.8"   # (earlier versions of git return inaccurate results)
 #   $3:  second version to be compared  (e.g. "1.2")
 #
 # The algorithm takes into account leading zeros as well
-# as missing components (4.08 < 4.08.01, 3.2.0.9 > 3.2)
-# but only exact equality is supported for for strings
+# as missing components (4.08 < 4.08.01, 3.2.0.9 > 3.2),
+# but only exact equality is supported for text strings
 # which have non-numeric components (1.2rc3 = 1.2rc3).
 #
-# Returns:  0 = success  if relationship is true.
+# Returns:  0 = success  if relationship is true
 # Returns:  1 = failure  if relationship is false
 #
 # We use 0 for true and 1 for false so that the caller
@@ -166,8 +166,8 @@ else
   # Count the number of commits and use that as our "build" number
 
   # PROGRAMMING NOTE: we purposely do NOT use the simpler, newer, easier,
-  # slightly faster and harder to get wrong "rev-list --count" technique
-  # since older gits that comes with some still in use older distros likely
+  # slightly faster, and harder to get wrong "rev-list --count" technique,
+  # since older gits that come with some still in use older distros likely
   # don't understand the "--count" option.  Thus, we use the slightly
   # slower, older, more complex and much easier to get wrong technique
   # of piping the output of "log --pretty..." into "wc -l".  Please also
