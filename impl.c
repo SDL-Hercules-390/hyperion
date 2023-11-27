@@ -40,6 +40,7 @@ static struct option longopts[] =
 {
     { "externalgui",    no_argument, NULL, 'e' },
     { "help",     optional_argument, NULL, 'h' },
+    { "version",        no_argument, NULL, 'V' },
     { "config",   required_argument, NULL, 'f' },
     { "output",   required_argument, NULL, 'o' },
     { "logfile",  required_argument, NULL, 'o' },
@@ -88,7 +89,11 @@ extern int process_script_file( const char*, bool );
 
 /* Forward declarations:                                             */
 static void init_progname( int argc, char* argv[] );
+
 static int process_args( int argc, char* argv[] );
+#define PROCESS_ARGS_OK     0
+#define PROCESS_ARGS_ERROR  1
+#define PROCESS_ARGS_EXIT   2
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
@@ -842,6 +847,24 @@ int     rc;
     init_progname( argc, argv );
     init_sysblk_version_str_arrays( NULL );
 
+    /* Process two common Unix options right here to avoid displaying
+       a bunch of unrelated threading messages on exit which just clutter
+       up the output and hide the real information.
+
+       Yes, this is a kludge, but it's not the only one in this thing.
+    */
+    if (argc == 2 && strcmp(argv[1], "--version") == 0)
+    {
+        display_version(stdout, 0, NULL);
+        return 0;
+    }
+
+    if (argc == 2 && strcmp(argv[1], "--usage") == 0)
+    {
+        arghelp();
+        return 0;
+    }
+
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
 
@@ -1139,27 +1162,34 @@ int     rc;
        messages until after the logger has been initialized, since it
        is the logger that processes all WRMSG() calls.
     */
-    /* Log our own thread started message (better late than never) */
-    LOG_THREAD_BEGIN( IMPL_THREAD_NAME  );
 
-    /* Set the priority of the logger thread and log its started msg */
-    set_thread_priority_id( sysblk.loggertid, sysblk.srvprio );
-    LOG_TID_BEGIN( sysblk.loggertid, LOGGER_THREAD_NAME );
-
-    /* Always show version right away */
-    display_version( stdout, 0, NULL );
+    /* Set the priority of the logger thread */
+    set_thread_priority_id(sysblk.loggertid, sysblk.srvprio);
 
     /* Process command-line arguments. Exit if any serious errors. */
-    if ((rc = process_args( argc, argv )) != 0)
+    if ((rc = process_args( argc, argv )) != PROCESS_ARGS_OK)
     {
-        /* Show them our command line arguments */
-        arghelp();
+        switch (rc)
+        {
+          case PROCESS_ARGS_ERROR:
+            display_version(stdout, 0, NULL);
 
-        // "Terminating due to %d argument errors"
-        WRMSG( HHC02343, "S", rc );
-        delayed_exit( rc );
-        return rc;
+            /* Show them our command line arguments */
+            arghelp();
+
+            // "Terminating due to %d argument errors"
+            WRMSG( HHC02343, "S", rc );
+
+          case PROCESS_ARGS_EXIT:
+            delayed_exit( rc );
+            return rc;
+        }
     }
+
+    /* The following comment is incorrect and misleading because
+       logger_init() had already been called above, before the
+       display_version() call.  So we won't do it again here.
+    */
 
     /* Now display the version information again after logger_init
        has been called so that either the panel display thread or the
@@ -1175,9 +1205,19 @@ int     rc;
        cepted and handled by the logger facility thereby allowing the
        panel thread or external gui to "see" it and thus display it.
     */
-    display_version       ( stdout, 0, NULL );
+
+    /* Always show version right away */
+    display_version(stdout, 0, NULL);
     display_build_options ( stdout, 0 );
     display_extpkg_vers   ( stdout, 0 );
+
+    /* We log these *after* the version number display. */
+
+    /* Log our own thread started message (better late than never) */
+    LOG_THREAD_BEGIN(IMPL_THREAD_NAME);
+
+    /* Log the logger thread */
+    LOG_TID_BEGIN(sysblk.loggertid, LOGGER_THREAD_NAME);
 
     /* Warn if crash dumps aren't enabled */
 #if !defined( _MSVC_ )
@@ -1641,7 +1681,7 @@ static void init_progname( int argc, char* argv[] )
 /*-------------------------------------------------------------------*/
 static int process_args( int argc, char* argv[] )
 {
-    int  arg_error = 0;                 /* 1=Invalid arguments       */
+    int  arg_error = PROCESS_ARGS_OK;
     int  c = 0;                         /* Next option flag          */
 
     // Save a copy of the command line before getopt mangles argv[]
@@ -1668,7 +1708,7 @@ static int process_args( int argc, char* argv[] )
 
     if (2 <= argc && !strcmp(argv[1], "-?"))
     {
-        arg_error++;
+        arg_error = PROCESS_ARGS_ERROR;
         goto error;
     }
 
@@ -1692,6 +1732,11 @@ static int process_args( int argc, char* argv[] )
 
                 break;
 
+            case 'V':
+                display_version(stdout, 0, NULL);
+                arg_error = PROCESS_ARGS_EXIT;
+                break;
+
             case 'h':       /* -h[=type] or --help[=type] */
 
                 if (optarg) /* help type specified? */
@@ -1700,6 +1745,7 @@ static int process_args( int argc, char* argv[] )
                         || strcasecmp( optarg, "short"  ) == 0
                     )
                     {
+                        arg_error = PROCESS_ARGS_ERROR;  // (forced by help option)
                         ;   // (do nothing)
                     }
                     else if (0
@@ -1707,12 +1753,14 @@ static int process_args( int argc, char* argv[] )
                     )
                     {
                         display_version( stdout, 0, NULL );
+                        arg_error = PROCESS_ARGS_EXIT;
                     }
                     else if (0
                         || strcasecmp( optarg, "build"   ) == 0
                     )
                     {
                         display_build_options( stdout, 0 );
+                        arg_error = PROCESS_ARGS_EXIT;
                     }
                     else if (0
                         || strcasecmp( optarg, "all"  ) == 0
@@ -1723,15 +1771,23 @@ static int process_args( int argc, char* argv[] )
                         display_version      ( stdout, 0, NULL );
                         display_build_options( stdout, 0 );
                         display_extpkg_vers  ( stdout, 0 );
+                        arg_error = PROCESS_ARGS_EXIT;
                     }
                     else
                     {
                         // "Invalid help option argument: %s"
                         WRMSG( HHC00025, "E", optarg );
+                        arg_error = PROCESS_ARGS_ERROR;  // (forced by help option)
                     }
                 }
+                else
+                {
+                    /* Show them our command line arguments */
+                    display_version(stdout, 0, NULL);
+                    arghelp();
+                    arg_error = PROCESS_ARGS_EXIT;
+                }
 
-                arg_error++;  // (forced by help option)
                 break;
 
             case 'f':
@@ -1847,7 +1903,7 @@ static int process_args( int argc, char* argv[] )
                     {
                         // "Test timeout factor %s outside of valid range 1.0 to %3.1f"
                         WRMSG( HHC00020, "S", optarg, max_factor );
-                        arg_error++;
+                        arg_error = PROCESS_ARGS_ERROR;
                     }
                 }
                 break;
@@ -1863,7 +1919,7 @@ static int process_args( int argc, char* argv[] )
 
                 // "Invalid/unsupported option: %s"
                 WRMSG( HHC00023, "S", buf );
-                arg_error++;
+                arg_error = PROCESS_ARGS_ERROR;
             }
             break;
 
@@ -1874,13 +1930,13 @@ static int process_args( int argc, char* argv[] )
     {
         // "Unrecognized option: %s"
         WRMSG( HHC00024, "S", argv[ optind++ ]);
-        arg_error++;
+        arg_error = PROCESS_ARGS_ERROR;
     }
 
 error:
 
     /* Terminate if invalid arguments were detected */
-    if (arg_error)
+    if (arg_error != PROCESS_ARGS_OK)
     {
         /* Do nothing. Caller will call "arghelp" to
           show them our command-line arguments... */
@@ -1935,7 +1991,7 @@ error:
                 // "%s file '%s' not found: %s"
                 WRMSG( HHC02342, "S", cfgorrc[i].whatfile,
                     cfgorrc[i].filename, strerror( errno ));
-                arg_error++;
+                arg_error = PROCESS_ARGS_ERROR;
             }
         }
     }
