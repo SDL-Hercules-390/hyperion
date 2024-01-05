@@ -2213,7 +2213,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02781 "Invalid %s parameter: %s"
 #define HHC02782 "LRECL %i and BLOCK %i exceeds maximum AWS blocksize of %i"
 #define HHC02783 "Parameter %s ignored due to NLTAPE option"
-//efine HHC02784 - HHC02799 (available)
+#define HHC02784 "Error reading from file' %s': %s"
+//efine HHC02785 - HHC02799 (available)
 
 // mt_cmd
 #define HHC02800 "%1d:%04X %s complete"

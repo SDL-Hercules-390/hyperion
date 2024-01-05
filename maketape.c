@@ -44,6 +44,8 @@
 #define RC_HDR_IOERR    4          /* I/O error writing AWS header         */
 #define RC_DATA_IOERR   5          /* I/O error writing data block         */
 #define RC_WTM_IOERR    6          /* I/O error writing tapemark           */
+#define RC_OPEN_INPUT   7          /* Open input file error                */
+#define RC_READ_IOERR   8          /* Error reading input file             */
 
 /*-------------------------------------------------------------------------*/
 /*                        Global variables                                 */
@@ -821,6 +823,7 @@ int main( int argc, char* argv[] )
 char   *pgm;                       /* less any extension (.ext)            */
 int     i;                         /* used to index string vars            */
 int     offset;                    /* used for building blocked records    */
+int     lastrec = 0;               /* Size of last record if binary        */
 
     INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
@@ -890,6 +893,7 @@ int     offset;                    /* used for building blocked records    */
         {
             // "Error opening %s file %i '%s': %s"
             FWRMSG( stderr, HHC02773, "E", "input", inFileSeq, inFileID[ inFileSeq ], strerror( errno ));
+            ErrExit( RC_OPEN_INPUT );
         }
 
         /* if multiple output files specified, write header labels */
@@ -907,18 +911,34 @@ int     offset;                    /* used for building blocked records    */
             {
                 i = fread( &buf[ offset ], 1, lrecl, inData );
 
-                if (!i)
-                    break;
+                if (i < 1)      /* (error or EOF) */
+                {
+                    if (ferror( inData ))
+                    {
+                        // "Error reading from input file' %s': %s"
+                        FWRMSG( stderr, HHC02784, "E", inFileID[ inFileSeq ], strerror( errno ));
+                        ErrExit( RC_READ_IOERR );
+                    }
+                    break; /* (normal EOF) */
+                }
 
-                /* auto-pad to LRECL */
+                /* Last/final input record? */
                 if (i < lrecl)
-                    memset( &buf[ offset + i ], 0, lrecl - i );
+                    lastrec = i;
             }
             else
             {
                 /* exit inner loop when EOF reached on data file */
                 if (!fgets( &buf[ offset ], MAXLRECL, inData ))
-                    break;
+                {
+                    if (ferror( inData ))
+                    {
+                        // "Error reading from input file' %s': %s"
+                        FWRMSG( stderr, HHC02784, "E", inFileID[ inFileSeq ], strerror( errno ));
+                        ErrExit( RC_READ_IOERR );
+                    }
+                    break; /* (normal EOF) */
+                }
 
                 /* copy i/p to o/p buffer until newline or LRECL reached */
                 for (i=0; i < lrecl && buf[offset+i] != '\n'; i++);
@@ -929,14 +949,17 @@ int     offset;                    /* used for building blocked records    */
             }
 
             /* update block pointer and check for end of block */
-            offset += lrecl;
+            offset += lastrec ? lastrec : lrecl;
 
-            if (offset >= blkSize)
+            if (lastrec || offset >= blkSize)
             {
                 writeBuffer( offset );
                 blkCount++;
                 offset = 0;
             }
+
+            lastrec = 0;
+
         } /* while (processing current input data file) */
 
         fclose( inData );              /* close input data file */
