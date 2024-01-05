@@ -43,7 +43,7 @@ output file. That is to say, any records shorter than the specified `LRECL:` are
 
 If this option is _not_ specified however, then each input record is considered to be a text record and will first be
 padded with blanks to reach the specified `LRECL:` and then translated from ASCII to EBCDIC using the Code Page specified
-by the `CODEPAGE` option before being written to the output tape.
+by the `CODEPAGE:` option before being written to the output tape.
 
 
 _**BLOCK:**_
