@@ -37,12 +37,18 @@ Specifying the `ANSI` option causes ANSI format Standard Labels to be written to
 
 _**BINARY**_
 
-Specify the `BINARY` option to prevent any ASCII to EBCDIC translation from occurring when writing the chosen input file to the tape output file. When this option is specified the input data will be written <i><u>exactly as-is</u></i> to the output file. If this option is not specified, then each input record will first be translated from ASCII to EBCDIC using the Code Page specified by the `CODEPAGE` option before being written to the output tape.
+Specify the `BINARY` option to prevent any ASCII to EBCDIC translation from occurring when writing the chosen input file
+to the tape output file. When this option is specified the input data will be written <i><u>exactly as-is</u></i> to the
+output file. That is to say, any records shorter than the specified `LRECL:` are _not_ padded with blanks nor translated.
+
+If this option is _not_ specified however, then each input record is considered to be a text record and will first be
+padded with blanks to reach the specified `LRECL:` and then translated from ASCII to EBCDIC using the Code Page specified
+by the `CODEPAGE` option before being written to the output tape.
 
 
 _**BLOCK:**_
 
-Specifies the desired Blocking Factor to be used in determining how large each tape output block will be. The blocking factor is used to calculate the size of the tape output blocks. The logical record length (LRECL) multiplied by the blocking factor is how many bytes large each output tape block will be.
+Specifies the desired Blocking Factor to be used in determining how large each tape output block will be. The blocking factor is used to calculate the size of the tape output blocks. The logical record length (`LRECL:`) multiplied by the blocking factor (`BLOCK:`) is how many bytes large each output tape block will be.
 
 
 _**CODEPAGE:**_
@@ -64,7 +70,10 @@ Specifies the full path filename of your desired input file. If the first charac
 
 _**LRECL:**_
 
-Specifies the Logical Record Length (LRECL) that each input and output logical data record is expected to be. Input records which are longer than this value will be truncated. Records shorter than this value will be padded with blanks.
+Specifies the Logical Record Length that each input and output data record is expected to be. Input records which are
+longer than this value will be truncated. Records shorter than this value will be padded with blanks unless the `BINARY`
+option is specified. _(When the `BINARY` option is specified, records shorter than this value are <u>not</u> padded at
+all and are instead written out <u>exactly as-is</u> to the output file.)_
 
 
 _**NLTAPE**_
