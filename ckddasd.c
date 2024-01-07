@@ -3322,6 +3322,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             {
                 DefineExtent( dev, code, flags, chained, count, prevcode,
                               ccwseq, iobuf, more, unitstat, residual );
+                prevcode = 0x63; // DEFINE EXTENT
             }
             else
             {
@@ -3339,10 +3340,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                               ccwseq, iobuf, more, unitstat, residual );
                 if (*unitstat != (CSW_CE | CSW_DE))
                     break; // (error!)
+                prevcode = 0x63; // DEFINE EXTENT
             }
 
             LocateRecordExtended( dev, code, flags, chained, count, prevcode,
                                   ccwseq, iobuf, more, unitstat, residual );
+            prevcode = 0x4B; // LOCATE RECORD EXTENDED
             break; // Done!
 
         case PFX_F_DE_PSF:
