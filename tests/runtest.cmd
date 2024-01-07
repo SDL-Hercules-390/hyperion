@@ -195,11 +195,20 @@
   set "file_ext=%~2"
   set "%var_name%="
   set "@="
-  for /f "delims=/ tokens=1-3" %%a in ("%date:~4%") do (
-    for /f "delims=:. tokens=1-4" %%d in ("%time: =0%") do (
+
+  ::-------------------------------------------------------------------
+  :: PROGRAMMING NOTE: the 'delims=' clauses in the below 'for' loops
+  :: might need to be adjusted to support other non-English date/time
+  :: field separators. English uses "MM/DD/YY" and "HH:MM:SS.nn",
+  :: wheras German for example uses "DD.MM.YY" and "HH:MM:SS,nn".
+  ::-------------------------------------------------------------------
+
+  for /f "delims=/. tokens=1-3" %%a in ("%date:~4%") do (
+    for /f "delims=:., tokens=1-4" %%d in ("%time: =0%") do (
       set "@=TMP%%c%%a%%b%%d%%e%%f%%g%random%%file_ext%"
     )
   )
+
   endlocal && set "%var_name%=%@%"
   %return%
 
@@ -246,6 +255,7 @@
   set    "formula=(((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) / 1000000.0 / %msto%)"
 
   call   :tempfn                            calc_mttof_rexx    .rexx
+
   echo   PARSE ARG '"' formula '"'     >   %calc_mttof_rexx%
   echo   INTERPRET 'mttof = 'formula   >>  %calc_mttof_rexx%
   echo   SAY FORMAT(mttof,,1)          >>  %calc_mttof_rexx%
