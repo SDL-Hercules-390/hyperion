@@ -2121,7 +2121,7 @@ U32     n;                              /* 32-bit operand values     */
             (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
 }
 
-#if defined(_MSVC_) && (_MSC_VER >= 1920) && (_MSC_VER <= 1938)
+#if defined(_MSVC_) && (_MSC_VER >= VS2019) && (_MSC_VER <= VS2022_8)
 PUSH_MSVC_WARNINGS()
 DISABLE_MSVC_WARNING( 4789 )
 #endif
@@ -2307,7 +2307,7 @@ U16     rmask = 0x0000;                 /* (modified registers mask) */
 #endif
 }
 
-#if defined(_MSVC_) && (_MSC_VER >= 1920) && (_MSC_VER <= 1938)
+#if defined(_MSVC_) && (_MSC_VER >= VS2019) && (_MSC_VER <= VS2022_8)
 POP_MSVC_WARNINGS()
 #endif
 
