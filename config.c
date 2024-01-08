@@ -2172,18 +2172,12 @@ int parse_and_attach_devices(const char *sdevnum,
                if(rc!=0)
                {
                    baddev=1;
-                   break;
                }
-            }
-            if(baddev)
-            {
-                break;
             }
         }
 
         free(newargv);
         free(orig_newargv);
-
         free(dnd.da);
         return baddev?-1:0;
 }
