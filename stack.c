@@ -29,7 +29,7 @@
 
 #include "hstdinc.h"
 
-// #define  STACK_DEBUG
+// #define  STACK_DEBUG    // (#define to enable debugging messages)
 
 #define _STACK_C_
 #define _HENGINE_DLL_
@@ -37,6 +37,12 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+
+#ifdef STACK_DEBUG
+  #define DBGMSG        if (1) LOGMSG
+#else
+  #define DBGMSG        if (0) LOGMSG
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Linkage stack macro definitions                                   */
@@ -400,12 +406,10 @@ int     i;                              /* Array subscript           */
     memcpy (&lsed, regs->mainstor+absold, sizeof(LSED));
     lseaold = lsea;
 
-#ifdef STACK_DEBUG
-    LOGMSG( "stack: Current stack entry at " F_VADR "\n", lsea );
-    LOGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
+    DBGMSG( "stack: Current stack entry at " F_VADR "\n", lsea );
+    DBGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed.uet, lsed.si, lsed.rfs[0],
             lsed.rfs[1], lsed.nes[0], lsed.nes[1] );
-#endif /*STACK_DEBUG*/
 
     /* Check whether the current linkage stack section has enough
        remaining free space to contain the new stack entry */
@@ -423,9 +427,7 @@ int     i;                              /* Array subscript           */
         abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
         FETCH_FSHA(fsha, regs->mainstor + abs);
 
-#ifdef STACK_DEBUG
-        LOGMSG( "stack: Forward section header addr " F_VADR "\n", fsha );
-#endif /*STACK_DEBUG*/
+        DBGMSG( "stack: Forward section header addr " F_VADR "\n", fsha );
 
         /* Stack full exception if forward address is not valid */
         if ((fsha & LSTE_FVALID) == 0)
@@ -440,12 +442,10 @@ int     i;                              /* Array subscript           */
         memcpy (&lsed, regs->mainstor+absold, sizeof(LSED));
         lseaold = fsha;
 
-#ifdef STACK_DEBUG
-        logmsg (_("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X "
-                "nes=%2.2X%2.2X\n"),
+        DBGMSG("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X "
+                "nes=%2.2X%2.2X\n",
                 lsed.uet, lsed.si, lsed.rfs[0],
                 lsed.rfs[1], lsed.nes[0], lsed.nes[1]);
-#endif /*STACK_DEBUG*/
 
         /* Program check if the next linkage stack section does not
            have enough free space to contain the new stack entry */
@@ -485,9 +485,7 @@ int     i;                              /* Array subscript           */
                         ((lsea + (LSSE_SIZE - 1)) & PAGEFRAME_PAGEMASK,
                         regs, ACCTYPE_WRITE);
 
-#ifdef STACK_DEBUG
-    LOGMSG( "stack: New stack entry at " F_VADR "\n", lsea );
-#endif /*STACK_DEBUG*/
+    DBGMSG( "stack: New stack entry at " F_VADR "\n", lsea );
 
     /* If a new section then place updated backward stack
        entry address in the new section's header entry */
@@ -502,18 +500,14 @@ int     i;                              /* Array subscript           */
         /* Store the 64-bit general register in the stack entry */
         STORE_DW(regs->mainstor + abs, regs->GR_G(i));
 
-      #ifdef STACK_DEBUG
-        logmsg (_("stack: GPR%d=" F_GREG " stored at V:" F_VADR
-                " A:" F_RADR "\n"), i, regs->GR_G(i), lsea, abs);
-      #endif /*STACK_DEBUG*/
+        DBGMSG("stack: GPR%d=" F_GREG " stored at V:" F_VADR
+                " A:" F_RADR "\n", i, regs->GR_G(i), lsea, abs);
 #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         /* Store the 32-bit general register in the stack entry */
         STORE_FW(regs->mainstor + abs, regs->GR_L(i));
 
-      #ifdef STACK_DEBUG
-        logmsg (_("stack: GPR%d=" F_GREG " stored at V:" F_VADR
-                " A:" F_RADR "\n"), i, regs->GR_L(i), lsea, abs);
-      #endif /*STACK_DEBUG*/
+        DBGMSG("stack: GPR%d=" F_GREG " stored at V:" F_VADR
+                " A:" F_RADR "\n", i, regs->GR_L(i), lsea, abs);
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Update the virtual and absolute addresses */
@@ -534,10 +528,8 @@ int     i;                              /* Array subscript           */
         /* Store the access register in the stack entry */
         STORE_FW(regs->mainstor + abs, regs->AR(i));
 
-      #ifdef STACK_DEBUG
-        logmsg (_("stack: AR%d=" F_AREG " stored at V:" F_VADR
-                " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs);
-      #endif /*STACK_DEBUG*/
+        DBGMSG("stack: AR%d=" F_AREG " stored at V:" F_VADR
+                " A:" F_RADR "\n", i, regs->AR(i), lsea, abs);
 
         /* Update the virtual and absolute addresses */
         lsea += 4;
@@ -556,16 +548,14 @@ int     i;                              /* Array subscript           */
     STORE_HW(regs->mainstor + abs + 4, regs->CR_LHH(8));
     STORE_HW(regs->mainstor + abs + 6, regs->CR_LHL(4));
 
-  #ifdef STACK_DEBUG
-    logmsg (_("stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X "
+    DBGMSG("stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X "
             "EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
-            "stored at V:" F_VADR " A:" F_RADR "\n"),
+            "stored at V:" F_VADR " A:" F_RADR "\n",
             regs->mainstor[abs], regs->mainstor[abs+1],
             regs->mainstor[abs+2], regs->mainstor[abs+3],
             regs->mainstor[abs+4], regs->mainstor[abs+5],
             regs->mainstor[abs+6], regs->mainstor[abs+7],
             lsea, abs);
-  #endif /*STACK_DEBUG*/
 
     /* Update virtual and absolute addresses to point to byte 136 */
     lsea += 8;
@@ -610,15 +600,13 @@ int     i;                              /* Array subscript           */
     STORE_FW(regs->mainstor + abs + 4, retna);
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-  #ifdef STACK_DEBUG
-    logmsg (_("stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-            "stored at V:" F_VADR " A:" F_RADR "\n"),
+    DBGMSG("stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+            "stored at V:" F_VADR " A:" F_RADR "\n",
             regs->mainstor[abs], regs->mainstor[abs+1],
             regs->mainstor[abs+2], regs->mainstor[abs+3],
             regs->mainstor[abs+4], regs->mainstor[abs+5],
             regs->mainstor[abs+6], regs->mainstor[abs+7],
             lsea, abs);
-  #endif /*STACK_DEBUG*/
 
     /* Update virtual and absolute addresses to point to byte 144 */
     lsea += 8;
@@ -688,15 +676,13 @@ int     i;                              /* Array subscript           */
     /* For ESAME, store the return address in bytes 168-175 */
     STORE_DW (regs->mainstor + abs, retna);
 
-  #ifdef STACK_DEBUG
-    logmsg (_("stack: PSW2=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-            "stored at V:" F_VADR " A:" F_RADR "\n"),
+    DBGMSG("stack: PSW2=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+            "stored at V:" F_VADR " A:" F_RADR "\n",
             regs->mainstor[abs], regs->mainstor[abs+1],
             regs->mainstor[abs+2], regs->mainstor[abs+3],
             regs->mainstor[abs+4], regs->mainstor[abs+5],
             regs->mainstor[abs+6], regs->mainstor[abs+7],
             lsea, abs);
-  #endif /*STACK_DEBUG*/
 
     /* Update virtual and absolute addresses to point to byte 176 */
     lsea += 8;
@@ -715,16 +701,14 @@ int     i;                              /* Array subscript           */
         STORE_FW(regs->mainstor + abs, regs->CR_H(3));
         STORE_FW(regs->mainstor + abs + 4, regs->CR_H(4));
 
-      #ifdef STACK_DEBUG
-        logmsg (_("stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X "
+        DBGMSG("stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X "
                 "PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
-                "stored at V:" F_VADR " A:" F_RADR "\n"),
+                "stored at V:" F_VADR " A:" F_RADR "\n",
                 regs->mainstor[abs], regs->mainstor[abs+1],
                 regs->mainstor[abs+2], regs->mainstor[abs+3],
                 regs->mainstor[abs+4], regs->mainstor[abs+5],
                 regs->mainstor[abs+6], regs->mainstor[abs+7],
                 lsea, abs);
-      #endif /*STACK_DEBUG*/
 
     } /* end if(ASN_AND_LX_REUSE_ENABLED) */
 
@@ -743,10 +727,8 @@ int     i;                              /* Array subscript           */
         /* Store the access register in the stack entry */
         STORE_FW(regs->mainstor + abs, regs->AR(i));
 
-      #ifdef STACK_DEBUG
-        logmsg (_("stack: AR%d=" F_AREG " stored at V:" F_VADR
-                " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs);
-      #endif /*STACK_DEBUG*/
+        DBGMSG("stack: AR%d=" F_AREG " stored at V:" F_VADR
+                " A:" F_RADR "\n", i, regs->AR(i), lsea, abs);
 
         /* Update the virtual and absolute addresses */
         lsea += 4;
@@ -772,32 +754,26 @@ int     i;                              /* Array subscript           */
        or bytes 288-295 for ESAME) */
     memcpy (regs->mainstor+abs, &lsed2, sizeof(LSED));
 
-#ifdef STACK_DEBUG
-    LOGMSG( "stack: New stack entry at " F_VADR "\n", lsea );
-    LOGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
+    DBGMSG( "stack: New stack entry at " F_VADR "\n", lsea );
+    DBGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed2.uet, lsed2.si, lsed2.rfs[0],
             lsed2.rfs[1], lsed2.nes[0], lsed2.nes[1] );
-#endif /*STACK_DEBUG*/
 
     /* [5.12.3.3] Update the current entry */
     STORE_HW(lsed.nes, LSSE_SIZE);
     absold = ARCH_DEP(abs_stack_addr) (lseaold, regs, ACCTYPE_WRITE);
     memcpy (regs->mainstor+absold, &lsed, sizeof(LSED));
 
-#ifdef STACK_DEBUG
-    LOGMSG( "stack: Previous stack entry updated at A:" F_RADR "\n",
+    DBGMSG( "stack: Previous stack entry updated at A:" F_RADR "\n",
             absold );
-    LOGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
+    DBGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed.uet, lsed.si, lsed.rfs[0],
             lsed.rfs[1], lsed.nes[0], lsed.nes[1] );
-#endif /*STACK_DEBUG*/
 
     /* [5.12.3.4] Update control register 15 */
     regs->CR(15) = lsea & CR15_LSEA;
 
-#ifdef STACK_DEBUG
-    LOGMSG( "stack: CR15=" F_CREG "\n", regs->CR( 15 ));
-#endif /*STACK_DEBUG*/
+    DBGMSG( "stack: CR15=" F_CREG "\n", regs->CR( 15 ));
 
 } /* end function ARCH_DEP(form_stack_entry) */
 
@@ -849,12 +825,10 @@ VADR    bsea;                           /* Backward stack entry addr */
     abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
     memcpy (lsedptr, regs->mainstor+abs, sizeof(LSED));
 
-#ifdef STACK_DEBUG
-    LOGMSG( "stack: Stack entry located at " F_VADR "\n", lsea );
-    LOGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
+    DBGMSG( "stack: Stack entry located at " F_VADR "\n", lsea );
+    DBGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsedptr->uet, lsedptr->si, lsedptr->rfs[0],
             lsedptr->rfs[1], lsedptr->nes[0], lsedptr->nes[1] );
-#endif /*STACK_DEBUG*/
 
     /* Check for a header entry */
     if ((lsedptr->uet & LSED_UET_ET) == LSED_UET_HDR)
@@ -873,9 +847,7 @@ VADR    bsea;                           /* Backward stack entry addr */
         abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
         FETCH_BSEA(bsea,regs->mainstor + abs);
 
-#ifdef STACK_DEBUG
-        LOGMSG( "stack: Stack entry located at " F_VADR "\n", bsea );
-#endif /*STACK_DEBUG*/
+        DBGMSG( "stack: Stack entry located at " F_VADR "\n", bsea );
 
         /* Stack empty exception if backward address is not valid */
         if ((bsea & LSHE_BVALID) == 0)
@@ -889,12 +861,10 @@ VADR    bsea;                           /* Backward stack entry addr */
         abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
         memcpy (lsedptr, regs->mainstor+abs, sizeof(LSED));
 
-#ifdef STACK_DEBUG
-        logmsg (_("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X "
-                "nes=%2.2X%2.2X\n"),
+        DBGMSG("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X "
+                "nes=%2.2X%2.2X\n",
                 lsedptr->uet, lsedptr->si, lsedptr->rfs[0],
                 lsedptr->rfs[1], lsedptr->nes[0], lsedptr->nes[1]);
-#endif /*STACK_DEBUG*/
 
         /* Stack specification exception if this is also a header */
         if ((lsedptr->uet & LSED_UET_ET) == LSED_UET_HDR)
@@ -1128,10 +1098,8 @@ int     i;                              /* Array subscript           */
         abs2 = ARCH_DEP(abs_stack_addr)
                  (lastbyte & PAGEFRAME_PAGEMASK, regs, ACCTYPE_READ);
 
-  #ifdef STACK_DEBUG
-    LOGMSG( "stack: Unstacking registers %d-%d from " F_VADR "\n",
+    DBGMSG( "stack: Unstacking registers %d-%d from " F_VADR "\n",
             r1, r2, lsea );
-  #endif /*STACK_DEBUG*/
 
     /* Load general registers from bytes 0-63 (for ESA/390), or
        bytes 0-127 (for ESAME) of the state entry */
@@ -1153,18 +1121,14 @@ int     i;                              /* Array subscript           */
                 FETCH_FW(regs->GR_L(i), regs->mainstor + abs + 4);
             }
 
-          #ifdef STACK_DEBUG
-            logmsg (_("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
-                    " A:" F_RADR "\n"), i, regs->GR(i), lsea, abs);
-          #endif /*STACK_DEBUG*/
+            DBGMSG("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
+                    " A:" F_RADR "\n", i, regs->GR(i), lsea, abs);
     #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             /* For ESA/390, load a 32-bit general register */
             FETCH_FW(regs->GR_L(i), regs->mainstor + abs);
 
-          #ifdef STACK_DEBUG
-            logmsg (_("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
-                    " A:" F_RADR "\n"), i, regs->GR(i), lsea, abs);
-          #endif /*STACK_DEBUG*/
+            DBGMSG("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
+                    " A:" F_RADR "\n", i, regs->GR(i), lsea, abs);
     #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         }
 
@@ -1199,10 +1163,8 @@ int     i;                              /* Array subscript           */
             FETCH_FW(regs->AR(i),regs->mainstor + abs);
             SET_AEA_AR(regs, i);
 
-          #ifdef STACK_DEBUG
-            logmsg (_("stack: AR%d=" F_AREG " loaded from V:" F_VADR
-                    " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs);
-          #endif /*STACK_DEBUG*/
+            DBGMSG("  stack: AR%d=" F_AREG " loaded from V:" F_VADR
+                    " A:" F_RADR "\n", i, regs->AR(i), lsea, abs);
         }
 
         /* Update the virtual and absolute addresses */
@@ -1293,16 +1255,14 @@ VADR    lsep;                           /* Virtual addr of entry desc.
         /* Fetch the PASN from bytes 134-135 of the stack entry */
         FETCH_HW(pasn,regs->mainstor + abs + 6);
 
-      #ifdef STACK_DEBUG
-        logmsg (_("stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X "
+        DBGMSG("  stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X "
                 "EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
-                "loaded from V:" F_VADR " A:" F_RADR "\n"),
+                "loaded from V:" F_VADR " A:" F_RADR "\n",
                 regs->mainstor[abs], regs->mainstor[abs+1],
                 regs->mainstor[abs+2], regs->mainstor[abs+3],
                 regs->mainstor[abs+4], regs->mainstor[abs+5],
                 regs->mainstor[abs+6], regs->mainstor[abs+7],
                 lsea, abs);
-      #endif /*STACK_DEBUG*/
 
         /* Load PKM into CR3 bits 0-15 (32-47) */
         regs->CR_LHH(3) = pkm;
@@ -1330,15 +1290,13 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     /* Save the PER mode bit from the current PSW */
     permode = (regs->psw.sysmask & PSW_PERMODE) ? 1 : 0;
 
-  #ifdef STACK_DEBUG
-    logmsg (_("stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-            "loaded from V:" F_VADR " A:" F_RADR "\n"),
+    DBGMSG("  stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+            "loaded from V:" F_VADR " A:" F_RADR "\n",
             regs->mainstor[abs], regs->mainstor[abs+1],
             regs->mainstor[abs+2], regs->mainstor[abs+3],
             regs->mainstor[abs+4], regs->mainstor[abs+5],
             regs->mainstor[abs+6], regs->mainstor[abs+7],
             lsea, abs);
-  #endif /*STACK_DEBUG*/
 
     /* Copy PSW bits 0-63 from bytes 136-143 of the stack entry */
     memcpy (newpsw, regs->mainstor + abs, 8);
@@ -1374,16 +1332,14 @@ VADR    lsep;                           /* Virtual addr of entry desc.
         FETCH_FW(regs->CR_H(3), regs->mainstor + abs);
         FETCH_FW(regs->CR_H(4), regs->mainstor + abs + 4);
 
-      #ifdef STACK_DEBUG
-        logmsg (_("stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X "
+        DBGMSG("  stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X "
                 "PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
-                "loaded from V:" F_VADR " A:" F_RADR "\n"),
+                "loaded from V:" F_VADR " A:" F_RADR "\n",
                 regs->mainstor[abs], regs->mainstor[abs+1],
                 regs->mainstor[abs+2], regs->mainstor[abs+3],
                 regs->mainstor[abs+4], regs->mainstor[abs+5],
                 regs->mainstor[abs+6], regs->mainstor[abs+7],
                 lsea, abs);
-      #endif /*STACK_DEBUG*/
 
     } /* end if(LSED_UET_PC && ASN_AND_LX_REUSE_ENABLED) */
 
@@ -1411,9 +1367,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     /* restore PER masks which could have been wiped out by load_psw */
     SET_IC_MASK(regs);
 
-#ifdef STACK_DEBUG
-    LOGMSG( "stack: CR15=" F_CREG "\n", regs->CR( 15 ));
-#endif /*STACK_DEBUG*/
+    DBGMSG( "stack: CR15=" F_CREG "\n", regs->CR( 15 ));
 
     /* Return the entry type of the unstacked state entry */
     return (lsed.uet & LSED_UET_ET);
