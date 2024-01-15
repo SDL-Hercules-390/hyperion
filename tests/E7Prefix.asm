@@ -1,54 +1,58 @@
- TITLE '                       GitHub Issue #572 Prefix CCW tests'
+ TITLE '                          Various CKD Dasd CCW tests...'
 ***********************************************************************
 *
-*                            E7Prefix
+*                   Various CKD Dasd CCW tests...
 *
-*                       GitHub Issue #572
-*
-*      "z/VM 7.2 IPL'ing as guest of itself CCW Command Rejects"
-*
-*       https://github.com/SDL-Hercules-390/hyperion/issues/572
-*               #issuecomment-1606223921
-*
-*   (Thank you to Aaron Finerman for devising these tests for us!)
-*
-*
-*                           OVERVIEW
-*
+*                   (mostly GitHub Issue #572)
 *
 *   This test program simply executes a few selected E7 Prefix CCW
 *   channel programs to verify Hercules's E7 Prefix CCW support is
-*   working properly.
+*   working properly. The current list of tests that this program
+*   performs is as follows:
+*
+*     01  Format 2 PFX to obtain subsystem information (no IDA)
+*     02  Format 0 PFX with Define Extent Valid bit off (DX CCW
+*         chained) (Read 06 IDA)
+*     03  Format 0 PFX with Define Extent Valid bit on (DX CCW
+*         imbeded) (Read 06 1 IDA)
+*     04  Format 2 PFX to obtain control unit information (PFX
+*         E7 2 IDA, Read 06 1 IDA)
+*     05  Read 06 CCW should fail since LR operation is Read(16)
+*         and Read 06 CCW not multi-track (Read 06 1 IDA)
+*     06  Same as Test #5, but properly uses multi-track Read
+*         (86) (Read 86 1 IDA)
+*     07  Peter's z/VM SSI issue (PFX 01 CMDREJ)
+*     08  (NEW) Write Data erase remainder of track.
+*     09  (NEW) Read record 3 on track 0 (verify test #08 erase)
+*         (https://github.com/SDL-Hercules-390/hyperion/issues/601)
 *
 *
-*   All channel programs (except for one of them) are expected to
+*   By default, all tests in the TESTTAB table are run one after
+*   the other. To run just one specific test, in your .tst script,
+*   set the TESTONLY byte at X'FFF' to the specific test number.
+*
+*   All channel programs (except for two of them) are expected to
 *   complete normally without error (SCSW = CE+DE = X'0C00').
 *
-*   One them however (test #5) is purposely designed to always fail
+*   Tests #5 and #9 however are purposely designed to always fail
 *   in order to verify Hercules properly rejects the invalid channel
 *   program and does not mistakenly accept and process it instead.
-*   Test #6 is the corrected form of this same test which should,
-*   just like all of the other tests, always succeed.
+*   Test #6 is the corrected form of test #5 which, just like all
+*   of the other tests (except #9), should always succeed.
 *
+*   Except for Tests #1 and #7, most of the other tests (#2-#6)
+*   also specify IDA (Indirect Data Addressing) in some of their
+*   CCWs in order to verify proper Hercules handling of that too.
 *
-*   Except for Test #1, all of the other tests (#2-#6) also specify
-*   IDA (Indirect Data Addressing) in some of their CCWs in order
-*   to verify proper Hercules handling of that too.
+*   Tests #4, #8 and #9 are especially important in that #4 specifies
+*   IDA in its E7 Prefix CCW so as to cause its data to be accessed
+*   in TWO chunks (i.e. its IDAL contains TWO entries in it), and
+*   test #8 and #9 together verify proper track erasure, whereas all
+*   of the other IDA usage is only used in the Read 06 and Read 86
+*   CCWs where the IDAL only has one entry in it to simply redirect
+*   the read to elsewhere.
 *
-*
-*   Test #4 is especially important in that it specifies IDA in its
-*   E7 Prefix CCW to cause its data to be accessed in TWO chunks
-*   (i.e. its IDAL contains TWO entries in it), whereas all other
-*   IDA usage is only used in the Read 06 and Read 86 CCWs where
-*   the IDAL only has one entry in it so as to simply redirect the
-*   read to elsewhere.
-*
-*
-*   The set of tests to be run is controlled by the "TESTTAB". All
-*   tests in the table are run one after the other by default. To
-*   run just one specific test, set the byte at address X'FFF' to
-*   the specific test number you want to run in your .tst script.
-*
+*   Thank you to Aaron Finerman for devising most of these tests.
 *
 ***********************************************************************
                                                                 EJECT
@@ -334,34 +338,46 @@ SLI      EQU   X'20'              Suppress Incorrect Length Indication
 IDA      EQU   X'04'              Indirect Data Addressing
                                                                 SPACE
 SNS      EQU   X'04'              Basic Sense CCW opcode
+WD       EQU   X'05'              Write Data
 RD       EQU   X'06'              Read Data CCW opcode
+SEEK     EQU   X'07'              Seek to BBCCHH
+TIC      EQU   X'08'              Transfer in Channel
 RSD      EQU   X'3E'              Read Subsystem Data CCW opcode
 LR       EQU   X'47'              Locate Record CCW opcode
 DX       EQU   X'63'              Define Extent CCW opcode
+SIDEQ    EQU   X'31'              Search ID Equal
 RDMT     EQU   X'86'              Read Data Multi-track CCW opcode
 PFX      EQU   X'E7'              Prefix CCW opcode
                                                                 SPACE
-*
-**       TESTS CONTROL TABLE...
-*
+ATESTTAB DC    A(TESTTAB,NUMTESTS) Address of testtab & Number of tests
                                                                 SPACE
-ATESTTAB DC    A(TESTTAB,NUMTESTS)
-TESTNUM  EQU   X'200'                 Current test number
-*                                     (identifies failed test)
+TESTNUM  EQU   X'200'             Current test number (if failure,
+*                                 identifies which test failed)
+                                                                EJECT
+***********************************************************************
+*                    TESTS CONTROL TABLE
+***********************************************************************
+                                                                SPACE
+         PRINT DATA
                                                                 SPACE
 TESTTAB  DC    0A(0)
-         PRINT DATA
+                                                                SPACE
          DC    A(1,T1_CHPGM,0,T1_MSGLN,T1_DESC)
+TESTLEN  EQU   (*-TESTTAB)            Width of each test table entry
+                                                                SPACE 2
          DC    A(2,T2_CHPGM,0,T2_MSGLN,T2_DESC)
          DC    A(3,T3_CHPGM,0,T3_MSGLN,T3_DESC)
          DC    A(4,T4_CHPGM,0,T4_MSGLN,T4_DESC)
          DC    A(5,T5_CHPGM,1,T5_MSGLN,T5_DESC)  (1=Expect I/O ERROR)
          DC    A(6,T6_CHPGM,0,T6_MSGLN,T6_DESC)
          DC    A(7,T7_CHPGM,0,T7_MSGLN,T7_DESC)
+         DC    A(8,T8_CHPGM,0,T8_MSGLN,T8_DESC)
+         DC    A(9,T9_CHPGM,1,T9_MSGLN,T9_DESC)  (1=Expect I/O ERROR)
+                                                                SPACE
          PRINT NODATA
-NUMTESTS EQU     7                    Number of test table entries
-TESTLEN  EQU   (*-TESTTAB)/NUMTESTS   Width of each test table entry
-                                                                EJECT
+                                                                SPACE 2
+NUMTESTS EQU   (*-TESTTAB)/TESTLEN    Number of test table entries
+                                                                SPACE 4
          LTORG ,        Literals Pool
                                                                 EJECT
 ***********************************************************************
@@ -437,6 +453,25 @@ T7_DESC  DC    C'TEST #7: Peter''s z/VM SSI issue (PFX 01 CMDREJ)'
 T7_MSGLN EQU   *-T7_DESC
          DC    0D'0'
 T7_CHPGM DC    AL1(PFX),AL1(SLI),AL2(T7_E7LEN),AL4(T7_E7DAT)
+                                                                EJECT
+***********************************************************************
+                                                                SPACE
+T8_DESC  DC    C'TEST #8: Write Data erase remainder of track'
+T8_MSGLN EQU   *-T8_DESC
+         DC    0D'0'
+T8_CHPGM DC    AL1(DX),AL1(CC),AL2(T8_DXLEN),AL4(T8_DXDAT)
+         DC    AL1(LR),AL1(CC),AL2(T8_LRLEN),AL4(T8_LRDAT)
+         DC    AL1(WD),AL1(0),AL2(T8_WDLEN),AL4(T8_WDDAT)
+                                                                SPACE 5
+***********************************************************************
+                                                                SPACE
+T9_DESC  DC    C'TEST #9: Read track 0 rec 3 (verify test #08 erase)'
+T9_MSGLN EQU   *-T9_DESC
+         DC    0D'0'
+T9_CHPGM DC    AL1(SEEK),AL1(CC),AL2(T9_SKLEN),AL4(T9_SKDAT)
+T9_SICCW DC    AL1(SIDEQ),AL1(CC),AL2(T9_SILEN),AL4(T9_SIDAT)
+         DC    AL1(TIC),AL1(0),AL2(0),AL4(T9_SICCW)
+         DC    AL1(RD),AL1(SLI),AL2(T9_RDLEN),AL4(T9_RDDAT)
                                                                 EJECT
 ***********************************************************************
 *               I/O DATA AND I/O BUFFERS...
@@ -517,13 +552,37 @@ T6_86BUF DC    XL10'00'
                                                                 EJECT
                                                                 SPACE 2
 ***********************************************************************
-                                                                SPACE
+                                                                SPACE 2
 T7_E7DAT DC    X'01800000 00000000 00000000'           +00  PFX
          DC    X'40C01000 00000042 00020000 00020000'  +12  DEF EXT
          DC    X'00000000 00000000 00000000 00000000'  +28
          DC    X'06000001 00020000 00020000 01290000'  +44  LREC EXD
          DC    X'00000000'                             +60
 T7_E7LEN EQU   *-T7_E7DAT
+                                                                SPACE 2
+***********************************************************************
+                                                                SPACE 2
+T8_DXDAT DC    X'00C00000 00000000 00000000 00000000'  
+T8_DXLEN EQU   *-T8_DXDAT
+
+T8_LRDAT DC    X'0B000001 00000000 00000000 00000000'  
+T8_LRLEN EQU   *-T8_LRDAT
+
+T8_WDDAT DC    XL8'00'
+T8_WDLEN EQU   *-T8_WDDAT
+                                                                SPACE 2
+***********************************************************************
+                                                                SPACE 2
+T9_SKDAT DC    X'000000000000'    BIN=0,CYL=0,HEAD=0
+T9_SKLEN EQU   *-T9_SKDAT
+
+T9_SIDAT DC    X'0000000003'      CC=0,HH=0,R=3
+T9_SILEN EQU   *-T9_SIDAT
+
+T9_RDDAT DC    CL80' '            Volume Serial
+T9_RDLEN EQU   *-T9_RDDAT
+                                                                SPACE 2
+***********************************************************************
                                                                 EJECT
 ***********************************************************************
 *        IOCB DSECT
