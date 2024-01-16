@@ -152,38 +152,80 @@ struct DSXTENT {                        /* Dataset extent descriptor */
 #define XTTYPE_SHARCYL          0x80    /* Shared cylinders          */
 #define XTTYPE_CYLBOUND         0x81    /* Extent on cyl boundary    */
 
-struct FORMAT1_DSCB {                   /* DSCB1: Dataset descriptor */
-        BYTE    ds1dsnam[44];           /* Key (44 byte dataset name)*/
-        BYTE    ds1fmtid;               /* Format identifier (0xF1)  */
-        BYTE    ds1dssn[6];             /* Volume serial number      */
-        HWORD   ds1volsq;               /* Volume sequence number    */
-        BYTE    ds1credt[3];            /* Dataset creation date...
+struct FORMAT1_DSCB                     /* DSCB1: Dataset descriptor */
+{
+/*00*/  BYTE    ds1dsnam[44];           /* Key (44 byte dataset name)*/
+/*2C*/  BYTE    ds1fmtid;               /* Format identifier (0xF1)  */
+/*2D*/  BYTE    ds1dssn[6];             /* Volume serial number      */
+/*33*/  HWORD   ds1volsq;               /* Volume sequence number    */
+/*35*/  BYTE    ds1credt[3];            /* Dataset creation date...
                                            ...byte 0: Binary year-1900
                                            ...bytes 1-2: Binary day  */
-        BYTE    ds1expdt[3];            /* Dataset expiry date       */
-        BYTE    ds1noepv;               /* Number of extents         */
-        BYTE    ds1bodbd;               /* #bytes used in last dirblk*/
-        BYTE    resv1;                  /* Reserved                  */
-        BYTE    ds1syscd[13];           /* System code (IBMOSVS2)    */
-        BYTE    resv2[7];               /* Reserved                  */
-        BYTE    ds1dsorg[2];            /* Dataset organization      */
-        BYTE    ds1recfm;               /* Record format             */
-        BYTE    ds1optcd;               /* Option codes              */
-        HWORD   ds1blkl;                /* Block length              */
-        HWORD   ds1lrecl;               /* Logical record length     */
-        BYTE    ds1keyl;                /* Key length                */
-        HWORD   ds1rkp;                 /* Relative key position     */
-        BYTE    ds1dsind;               /* Dataset indicators        */
-        FWORD   ds1scalo;               /* Secondary allocation...
+/*38*/  BYTE    ds1expdt[3];            /* Dataset expiry date       */
+/*3B*/  BYTE    ds1noepv;               /* Number of extents         */
+/*3C*/  BYTE    ds1bodbd;               /* #bytes used in last dirblk*/
+/*3D*/  BYTE    ds1flag1;               /* Flags byte                */
+#define DS1LARGE                0x08    /* Large format data set     */
+
+/*3E*/  BYTE    ds1syscd[13];           /* System code (IBMOSVS2)    */
+/*4B*/  BYTE    ds1refdt[3];            /* Last reference date ('YDD'
+                                           or 0 if not maintained).
+                                           Add 1900 to 'Y' for year. */
+/*4E*/  BYTE    ds1smsfg;               /* SMS indicators            */
+#define DS1STRP                 0x04    /* Extended-format data set  */
+
+/*4F*/  BYTE    ds1scext[3];            /* Secondary space extension */
+/*52*/  BYTE    ds1dsorg[2];            /* Dataset organization      */
+/*54*/  BYTE    ds1recfm;               /* Record format             */
+/*55*/  BYTE    ds1optcd;               /* Option codes              */
+/*56*/  HWORD   ds1blkl;                /* Block length              */
+/*58*/  HWORD   ds1lrecl;               /* Logical record length     */
+/*5A*/  BYTE    ds1keyl;                /* Key length                */
+/*5B*/  HWORD   ds1rkp;                 /* Relative key position     */
+/*5D*/  BYTE    ds1dsind;               /* Dataset indicators        */
+/*5E*/  FWORD   ds1scalo;               /* Secondary allocation...
                                            ...byte 0: Allocation units
                                            ...bytes 1-3: Quantity    */
-        BYTE    ds1lstar[3];            /* Last used TTR             */
-        HWORD   ds1trbal;               /* Bytes unused on last trk  */
-        BYTE    resv3[2];               /* Reserved                  */
-        DSXTENT ds1ext1;                /* First extent descriptor   */
-        DSXTENT ds1ext2;                /* Second extent descriptor  */
-        DSXTENT ds1ext3;                /* Third extent descriptor   */
-        BYTE    ds1ptrds[5];            /* CCHHR of F2 or F3 DSCB    */
+/*62*/  BYTE    ds1lstar[3];            /* Last used TTR (see below) */
+
+/*                     PROGRAMMING NOTE
+
+    For NORMAL datasets, the last block pointer (TTR) is in the
+    DS1LSTAR field. So the size of the dataset in number of tracks
+    is in the first two bytes (TT) of DS1LSTAR. (The last right-
+    most byte of DS1LSTAR being the 'R' part of the 'TTR'.)
+
+    For DSNTYPE=LARGE however, the size of the dataset is 3 bytes
+    in size (i.e. TTT, not just TT). So you use the first two
+    high-order bytes of DS1LSTAR (just like you do for for normal
+    format datasets), but in addition to that, the high-order byte
+    of the 3-byte TTT is kept in the DS1TTTHI field.
+   
+    For DSNTYPE=EXTENDED, the size of the dataset in tracks is of
+    course 4 bytes in size (TTTT), with the low-order 2 bytes of
+    that 4-byte TTTT coming from the high-order two bytes of the
+    DS1LSTAR field (just for for normal/large format datasets),
+    but the two HIGH-order bytes of the 4-byte TTTT is in DS1TRBAL.
+
+            SUMMARY OF DATASET SIZE IN NUMBER OF TRACKS:
+
+    Normal:      TT   =                high-order 2 bytes of ds1lstar
+    Large:      TTT   =   ds1ttthi(1), high-order 2 bytes of ds1lstar
+    Extended:  TTTT   =   ds1trbal(2), high-order 2 bytes of ds1lstar
+
+*/
+/*65*/  HWORD   ds1trbal;               /* Normal/Large: bytes unused
+                                           on last track.
+                                           Extended: high-order bytes
+                                           of TTTTTR.                */
+/*67*/  BYTE    resv1;                  /* Reserved                  */
+/*68*/  BYTE    ds1ttthi;               /* Large format: high-order
+                                           byte of TTTR.             */
+/*69*/  DSXTENT ds1ext1;                /* First extent descriptor   */
+/*73*/  DSXTENT ds1ext2;                /* Second extent descriptor  */
+/*7D*/  DSXTENT ds1ext3;                /* Third extent descriptor   */
+/*87*/  BYTE    ds1ptrds[5];            /* CCHHR of F2 or F3 DSCB    */
+/*8C*/                                  /* Total len/size: 140 bytes */
 };
 
 /* Bit definitions for ds1dsind */

@@ -2072,7 +2072,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02693 "search_key_equal rc %d"
 #define HHC02694 "writing %s"
 #define HHC02695 "Closed output file %s"
-//efine HHC02696 - HHC02699 (available)
+#define HHC02696 "Data set format is %s"
+//efine HHC02697 - HHC02699 (available)
 
 #define HHC02700 "SCSI tapes are not supported with this build"
 #define HHC02701 "Abnormal termination"

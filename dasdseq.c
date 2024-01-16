@@ -578,6 +578,47 @@ void showf1(    FORMAT1_DSCB    *f1dscb,
 }
 
 //---------------------------------------------------------------------
+//                Calculate lstartrack value
+//---------------------------------------------------------------------
+
+u_int  calc_lstartrack( FORMAT1_DSCB* f1dscb, int verbose )
+{
+    u_int        numtracks;
+    const char*  ds_format;
+
+    // Extended:  TTTT   =   ds1trbal(2), high-order 2 bytes of ds1lstar
+    // Large:      TTT   =   ds1ttthi(1), high-order 2 bytes of ds1lstar
+    // Normal:      TT   =                high-order 2 bytes of ds1lstar
+
+    if (f1dscb->ds1smsfg & DS1STRP)
+    {
+        ds_format = "Extended";
+        numtracks = (f1dscb->ds1trbal[0] << 24) | (f1dscb->ds1trbal[1] << 16)
+            | (f1dscb->ds1lstar[0] << 8) | (f1dscb->ds1lstar[1] << 0);
+    }
+    else if (f1dscb->ds1flag1 & DS1LARGE)
+    {
+        ds_format = "Large";
+        numtracks = (f1dscb->ds1ttthi << 16)
+            | (f1dscb->ds1lstar[0] << 8) | (f1dscb->ds1lstar[1] << 0);
+    }
+    else
+    {
+        ds_format = "Normal";
+        numtracks = 0
+            | (f1dscb->ds1lstar[0] << 8) | (f1dscb->ds1lstar[1] << 0);
+    }
+
+    if (verbose)
+    {
+        // "Data set format is %s"
+        WRMSG( HHC02696, "I", ds_format );
+    }
+
+    return numtracks;
+}
+
+//---------------------------------------------------------------------
 //  Copy DSORG=PS RECFM=F[B] dataset to output file
 //
 //  Input:
@@ -624,7 +665,8 @@ int fbcopy(     FILE            *fout,
     U16     len, offset;
     int     rc_copy = 0;
     int     recs_written = 0, lrecl, num_extents;
-    u_int   lstartrack = 0, lstarrec = 0, lstarvalid = 0;
+    u_int   lstartrack = 0, lstarrec = 0;
+    bool    lstarvalid = false;
     BYTE    *buffer;
     char    *pascii = NULL;
     char    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // ascii dsn
@@ -646,13 +688,18 @@ int fbcopy(     FILE            *fout,
     {
         make_asciiz(zdsn, sizeof(zdsn),
                 f1dscb->ds1dsnam, sizeof(f1dscb->ds1dsnam));
-        if ((f1dscb->ds1lstar[0] !=0) ||
-                (f1dscb->ds1lstar[1] != 0) ||
-                (f1dscb->ds1lstar[2] != 0))
+
+        // Valid ds1lstar value?
+        if (0
+            || (f1dscb->ds1lstar[0] != 0)
+            || (f1dscb->ds1lstar[1] != 0)
+            || (f1dscb->ds1lstar[2] != 0)
+        )
         {
-            lstartrack = (f1dscb->ds1lstar[0] << 8) | (f1dscb->ds1lstar[1]);
+            // Calculate last track
+            lstartrack = calc_lstartrack( f1dscb, verbose );
             lstarrec = f1dscb->ds1lstar[2];
-            lstarvalid = 1;     // DS1LSTAR valid
+            lstarvalid = true; // DS1LSTAR valid
         }
     }
 
