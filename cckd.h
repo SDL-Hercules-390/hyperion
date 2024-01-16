@@ -268,7 +268,8 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
                          debug:1,       /* 1=CCW trace debug msgs    */
                          dtax:1,        /* 1=Dump Table At Exit      */
                          sfmerge:1,     /* 1=sf-* merge              */
-                         sfforce:1;     /* 1=sf-* force              */
+                         sfforce:1,     /* 1=sf-* force              */
+                         termwr:1;      /* 1=terminate wr threads    */
         int              sflevel;       /* sfk xxxx level            */
         int              batchml;       /* message level for batch ops  */
 
