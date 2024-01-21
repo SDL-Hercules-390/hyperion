@@ -737,8 +737,14 @@ int fbcopy(     FILE            *fout,
         }
     }
 
+    if (lstarvalid)
+        EXTGUIMSG( "TRKS=%d\n", lstartrack );
+
     while (1)   // output records until something stops us
     {
+        if (lstarvalid)
+            EXTGUIMSG( "TRK=%d\n", trk );
+
         //  Honor DS1LSTAR when valid
 
         if ((lstarvalid) && (trk == lstartrack) && (rec > lstarrec))
