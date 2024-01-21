@@ -2375,36 +2375,91 @@ DLL_EXPORT void set_verbose_util( bool v ) {        verbose = v; }
 DLL_EXPORT bool is_verbose_util()          { return verbose;     }
 DLL_EXPORT int  next_util_devnum()         { return nextnum++;   }
 
-DLL_EXPORT int valid_dsname( const char *pszdsname )
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                      Data Set Naming Rules                        */
+/*                                                                   */
+/*               https://www.ibm.com/docs/en/zos/2.4.0?              */
+/*               topic=conventions-data-set-naming-rules             */
+/*                                                                   */
+/*    A data set name consists of one or more parts connected        */
+/*    by periods. Each part is called a qualifier.                   */
+/*                                                                   */
+/*     - Each qualifier must begin with an alphabetic character      */
+/*       (A-Z) or the special characters $, #, @.                    */
+/*                                                                   */
+/*     - The remaining characters in each qualifier can be           */
+/*       alphabetic, digits (0-9), a hyphen (-), or the special      */
+/*       characters $, #, @.                                         */
+/*                                                                   */
+/*     - Each qualifier must be one to eight characters long.        */
+/*                                                                   */
+/*     - The maximum length of a complete data set name before       */
+/*       specifying a member name is 44 characters, including        */
+/*       the periods.                                                */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+#define VALID_BEG_QUAL_CHARS    "ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@"
+#define VALID_QUAL_CHARS        VALID_BEG_QUAL_CHARS "-0123456789"
+
+static const char*  g_valid_beg_qual_chars  = VALID_BEG_QUAL_CHARS;
+static const char*  g_valid_qual_chars      = VALID_QUAL_CHARS;
+
+static bool valid_qualifier( const char* qualifier )
 {
-    int i;
-    int iLen = (int)strlen(pszdsname);
+    int len = (int) strlen( qualifier );
+    char beg[2] = {0};
 
-    if ( iLen > 44 || iLen == 0 ) return FALSE;
+    beg[0] = *qualifier;
 
-    for ( i = 0; i < iLen; i++ )
+    if (0
+        || len < 1
+        || len > 8
+        || strspn( qualifier, g_valid_qual_chars     ) < len
+        || strspn( beg,       g_valid_beg_qual_chars ) < 1
+    )
+        return false;
+    return true;
+}
+
+DLL_EXPORT bool valid_dsname( const char* dsname )
+{
+    int i, n = 0, len = (int) strlen( dsname );
+    char qualifier[9] = {0};
+    char qchar;
+
+    if (0
+        || len < 1
+        || len > 44
+        || dsname[0] == '.'
+    )
+        return false;
+
+    for (i=0; i < len; ++i)
     {
-        BYTE c = pszdsname[i];
-        if ( isalnum( (unsigned char)c ) )
-            continue;
-        else if ( c == '$' )
-            continue;
-        else if ( c == '@' )
-            continue;
-        else if ( c == '#' )
-            continue;
-        else if ( c == '-' )
-            continue;
-        else if ( c == '.' )
-            continue;
-        else if ( c == '{' )
-            continue;
-        else if ( i > 1 && c == '\0' )
-            break;
+        if ((qchar = dsname[i]) == '.')
+        {
+            if (!valid_qualifier( qualifier ))
+                return false;
+            n = 0;
+        }
         else
-            return FALSE;
+        {
+            if (n >= 8)
+                return false;
+
+            qualifier[n++] = qchar;
+            qualifier[n] = 0;
+        }
     }
-    return TRUE;
+
+    qualifier[n] = 0;
+
+    if (!valid_qualifier( qualifier ))
+        return false;
+
+    return true;
 }
 
 /*-------------------------------------------------------------------*/

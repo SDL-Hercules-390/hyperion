@@ -551,7 +551,7 @@ DUT_DLL_IMPORT void set_verbose_util( bool v );
 DUT_DLL_IMPORT bool is_verbose_util();
 DUT_DLL_IMPORT int  next_util_devnum();
 
-DUT_DLL_IMPORT int valid_dsname( const char *pszdsname );
+DUT_DLL_IMPORT bool valid_dsname( const char* dsname );
 
 DUT_DLL_IMPORT int ckd_tracklen( DEVBLK* dev, BYTE* buf );
 
