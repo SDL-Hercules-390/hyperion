@@ -72,6 +72,7 @@ bool  nltape        = false;       /* whether this is a non-labelled tape  */
 bool  ansi          = false;       /* whether this is an ANSI-label tape   */
 
 int   inFileSeq;                   /* used to index inFileID               */
+int   totfiles;                    /* Total files in inFileID              */
 int   blkSize;                     /* physical block size                  */
 int   blkCount;                    /* block count for EOF1                 */
 
@@ -79,11 +80,12 @@ FILE*  inMeta;                     /* pointer to meta file stream          */
 FILE*  inData;                     /* pointer to input data file stream    */
 FILE*  outf;                       /* output file                          */
 
-char   julianToday[5+1];           /* today's date in julian format        */
-char   volSer[6];                  /* volume serial number (no end NULL!)  */
+char  julianToday[5+1];            /* today's date in julian format        */
+char  volSer[6];                   /* volume serial number (no end NULL!)  */
 
-char   inFileID[ MAXFILES ][ FILENAME_MAX + 1 ]; /* array of MAXFILES files
+char  inFileID[ MAXFILES ][ FILENAME_MAX + 5 ];  /* array of MAXFILES files
                                                     to read/include        */
+bool  inBINopt[ MAXFILES ];        /* array of "BIN" flags for each file   */
 
 char  buf[ MAXAWSBUFF ];           /* output AWSTAPE buffer                */
 
@@ -432,7 +434,10 @@ bool errors;                       /* indicate missing/invalid arguments   */
 
     /* initialize input file path table to null values */
     for (inFileSeq = 0; inFileSeq < MAXFILES; inFileSeq++)
+    {
         STRLCPY( inFileID[ inFileSeq ], "" );
+        inBINopt[ inFileSeq ] = binary;
+    }
 
     /* if single input file specified */
     if (strncasecmp( pInFileID, "@", 1 ) != 0)
@@ -447,7 +452,9 @@ bool errors;                       /* indicate missing/invalid arguments   */
         {
             fclose( inData );
             inData = NULL;
+            totfiles = 1;
             STRLCPY( inFileID[0], pInFileID );
+            inBINopt[0] = binary;
         }
     }
     else /* specified file is a @meta file */
@@ -461,6 +468,9 @@ bool errors;                       /* indicate missing/invalid arguments   */
         else
         {
             int k;
+            bool binflag;
+            const char* pFilename;
+
             i = 0;
             inFileSeq = 0;
 
@@ -470,7 +480,7 @@ bool errors;                       /* indicate missing/invalid arguments   */
                 i++;
 
                 /* exit while when EOF reached on META file */
-                if (!fgets( buf, FILENAME_MAX, inMeta ))
+                if (!fgets( buf, FILENAME_MAX + 5, inMeta ))
                     break;
 
                 /* replace newline character if present */
@@ -478,10 +488,23 @@ bool errors;                       /* indicate missing/invalid arguments   */
                 if (k >= 1 && buf[k-1] == '\n')
                     buf[k-1] = 0;
 
-                if (!(inData = fopen( buf, "r" )))
+                /* Check for optional BIN flag */
+                if (str_caseless_eq_n( buf, "BIN ", 4 ))
+                {
+                    pFilename = &buf[4];
+                    binflag = true;
+                }
+                else
+                {
+                    pFilename = &buf[0];
+                    binflag = binary;   // (default)
+                }
+
+
+                if (!(inData = fopen( pFilename, "r" )))
                 {
                     // "Error opening %s file %i '%s': %s"
-                    FWRMSG( stderr, HHC02773, "E", "included input", i, buf, strerror( errno ));
+                    FWRMSG( stderr, HHC02773, "E", "included input", i, pFilename, strerror( errno ));
                     errors = true;
                 }
                 else
@@ -497,7 +520,8 @@ bool errors;                       /* indicate missing/invalid arguments   */
                     }
                     else
                     {
-                        STRLCPY( inFileID[ inFileSeq ], buf );
+                        STRLCPY( inFileID[ inFileSeq ], pFilename );
+                        inBINopt[ inFileSeq ] = binflag;
                         inFileSeq++;
                     }
                 }
@@ -505,6 +529,7 @@ bool errors;                       /* indicate missing/invalid arguments   */
 
             fclose( inMeta );
             inMeta = NULL;
+            totfiles = inFileSeq;
 
         } /* else (meta file open succeeded) */
     } /* else (is a meta file) */
@@ -866,10 +891,14 @@ int     lastrec = 0;               /* Size of last record if binary        */
             buf[79] = '1';
 
         save = binary;
-        binary = ansi;
-        writeBuffer( 80 );
+        {
+            binary = ansi;
+            writeBuffer( 80 );
+        }
         binary = save;
     }
+
+    EXTGUIMSG( "FILES=%d\n", totfiles );
 
     inFileSeq = 0;                   /* index of input files        */
     blkSize = lrecl * blkfactor;     /* compute physical block size */
@@ -886,8 +915,12 @@ int     lastrec = 0;               /* Size of last record if binary        */
     /* loop for processing all specified input files */
     while (1)
     {
+        EXTGUIMSG( "FILE=%d\n", inFileSeq+1 );
+
         // "Processing input from: '%s'"
         WRMSG( HHC02777, "I", inFileID[ inFileSeq ]);
+        binary = inBINopt[ inFileSeq ];
+        mode = binary ? "rb" : "r";
 
         if (!(inData = fopen( inFileID[ inFileSeq ], mode )))
         {

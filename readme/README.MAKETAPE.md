@@ -32,19 +32,28 @@ For example, if the `NLTAPE` option is specified, then the `VOLSER:` and `DATASE
 
 _**ANSI**_
 
-Specifying the `ANSI` option causes ANSI format Standard Labels to be written to your output tape file. Choosing this option also causes your chosen input data to <i><u>not</u></i> be translated to EBCDIC before writing it to the output tape file.
+Specifying the `ANSI` option causes ANSI format Standard Labels to be written to your output tape file.
+
+Choosing this option also causes your chosen input data to <i><u>not</u></i> be translated to EBCDIC before writing it to the output tape file.
 
 
 _**BINARY**_
 
 Specify the `BINARY` option to prevent any ASCII to EBCDIC translation from occurring when writing the chosen input file
-to the tape output file. When this option is specified the input data will be written <i><u>exactly as-is</u></i> to the
+to the tape output file.
+
+When this option is specified the input data will be written <i><u>exactly as-is</u></i> to the
 output file. That is to say, any records shorter than the specified `LRECL:` are _not_ padded with blanks nor translated.
 
 If this option is _not_ specified however, then each input record is considered to be a text record and will first be
 padded with blanks to reach the specified `LRECL:` and then translated from ASCII to EBCDIC using the Code Page specified
 by the `CODEPAGE:` option before being written to the output tape.
 
+**NOTE:** When a **"meta-file"** is used as input (refer to the `INPUT:` option further below), 
+the `BINARY` option is applied by default to _all_ files listed in your meta-file. 
+If you wish to be able to have some files processed as binary files and other files 
+processed as text files, then do _not_ specify the `BINARY` option, and use the `'BIN'` 
+meta-file keyword instead.
 
 _**BLOCK:**_
 
@@ -65,8 +74,21 @@ Specifies the 1-17 character dataset name to be used in the HDR1 Standard Label 
 
 _**INPUT:**_
 
-Specifies the full path filename of your desired input file. If the first character of the filename begins with an "@" (['at' sign)](https://en.wikipedia.org/wiki/At_sign)], then the specified file is actually a file containing a list files to be used as input. Enclose the value within double quotes if it contains any blanks.
+Specifies the full path filename of your desired input file. Enclose the value within 
+double quotes if it contains any blanks.
 
+If the first character of the filename begins with an "@" 
+(['at' sign)](https://en.wikipedia.org/wiki/At_sign)], then the 
+specified file is actually a _**"meta-file"**_ containing the actual 
+list files to be used for input.
+
+If the use of a _**"meta-file"**_ is specified, each statement of the meta-file is the name 
+of the actual input file to be used, optionally preceded with the keyword `'BIN'` and separated 
+from the filename with a single blank. This allows you to create a tape with a mixture of 
+both `BINARY` and text files. Text file meta-file statements consist of only the filename. 
+Binary file meta-file statements begin with the keyword `'BIN'` followed by a single blank 
+and then the name of the input file. The maximum number of files that may be specified in 
+a meta-file is 50. Any excess is ignored with a warning message.
 
 _**LRECL:**_
 
@@ -83,7 +105,7 @@ Specifying the `NLTAPE` option will cause the output tape to be created without 
 
 _**OUTPUT:**_
 
-Specifies the full path filename of your desired output file. Enclose the value within double quotes if it contains any blanks.
+Specifies the full path filename of your desired .AWS tape output file. Enclose the value within double quotes if it contains any blanks.
 
 
 _**UNIQUE**_
