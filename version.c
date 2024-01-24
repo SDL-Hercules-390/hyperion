@@ -410,6 +410,8 @@ static const char *build_info[] = {
     "Interix Environment"
 #elif defined(sgi) || defined(__sgi)
     "IRIX"
+#elif defined(__linux__)    // non-GNU-based Linuxes do exist
+    "Linux"
 #elif defined(__Lynx__)
     "LynxOS"
 #elif defined(macintosh) || defined(Macintosh) ||                       \

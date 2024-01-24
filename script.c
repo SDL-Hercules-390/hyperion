@@ -730,7 +730,6 @@ char    script_path[MAX_PATH];          /* Full path of script file  */
 FILE   *fp          = NULL;             /* Script FILE pointer       */
 char    stmt[ MAX_SCRIPT_STMT ];        /* script statement buffer   */
 int     stmtlen     = 0;                /* Length of current stmt    */
-int     stmtnum     = 0;                /* Current stmt line number  */
 TID     tid         = thread_id();      /* Our thread Id             */
 char   *p;                              /* (work)                    */
 int     rc;                             /* (work)                    */
@@ -829,8 +828,6 @@ int     rc;                             /* (work)                    */
 
     do
     {
-        stmtnum++;
-
         /* Skip past blanks to start of statement */
         for (p = stmt; isspace( (unsigned char)*p ); p++)
             ; /* (nop; do nothing) */

@@ -207,6 +207,40 @@ typedef pthread_rwlock_t        HRWLOCK;
 #endif /* !defined( OPTION_FTHREADS ) */
 
 /*-------------------------------------------------------------------*/
+/*                      Apple QOS support                            */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  macOS uses a different method of setting thread priorities than  */
+/*  other POSIX systems with pthreads. It defines a set of classes   */
+/*  of service, and uses that information to decide whether to       */
+/*  schedule each thread on an efficiency (slow but power-sipping)   */
+/*  CPU core or a performance (fast but power-hungry) core. The idea */
+/*  is that background tasks go on an efficiency core, while tasks   */
+/*  the user interacts with go on the performance cores.             */
+/*                                                                   */
+/*  This has some serious benefits for battery life in the normal    */
+/*  case, but it means that Hercules runs much more slowly than the  */
+/*  user expects. We define the Hercules console and HTTP server as  */
+/*  being used for user interaction, and the remainder as being used */
+/*  for user-initiated tasks, which will tell macOS that they can    */
+/*  be scheduled on performance cores whenever available. This makes */
+/*  a dramatic difference in Hercules performance, at the cost of    */
+/*  shorter battery life in a laptop environment.                    */
+/*                                                                   */
+/*  We only do this when building for Apple Silicon, as no macOS     */
+/*  system on Intel has efficiency cores.                            */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+#if defined( BUILD_APPLE_M1 )
+  #define SET_THREAD_PRIORITY( PRI, QOS ) \
+    { rc = pthread_set_qos_class_self_np( (QOS), (PRI) - sysblk.minprio ); }
+#else
+  #define SET_THREAD_PRIORITY( PRI, QOS ) \
+    { rc = set_thread_priority( (PRI) ); }
+#endif
+
+/*-------------------------------------------------------------------*/
 /*       Hercules threading macros, consts and typedefs              */
 /*-------------------------------------------------------------------*/
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )

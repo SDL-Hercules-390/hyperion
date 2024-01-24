@@ -1095,8 +1095,10 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             release_lock( &pLCSPORT->PortEventLock );
             PTT_DEBUG( "join_thread       ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             join_thread( tid, NULL );
+#if defined( OPTION_FTHREADS) 
             PTT_DEBUG( "detach_thread     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
-            detach_thread( tid );
+            detach_thread( tid );   // only needed for Fish threads
+#endif
         }
 
         if (pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN  ] && pLCSDEV->pDEVBLK[LCS_READ_SUBCHANN]->fd >= 0)

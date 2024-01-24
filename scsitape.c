@@ -1701,6 +1701,7 @@ static void* get_stape_status_thread( void* notused )
     DEVBLK*       dev = NULL;
     struct mtget  mtget;
     int           timeout;
+    int           rc;
 
     UNREFERENCED( notused );
 
@@ -1721,7 +1722,8 @@ static void* get_stape_status_thread( void* notused )
     // in order to prevent their wait from timing out. We ensure this
     // by setting our own priority HIGHER than theirs.
 
-    set_thread_priority( sysblk.devprio + 1 );
+    SET_THREAD_PRIORITY( sysblk.devprio + 1, sysblk.qos_user_interactive );
+    UNREFERENCED(rc);
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
     LOG_THREAD_BEGIN( SCSISTAT_THREAD_NAME  );

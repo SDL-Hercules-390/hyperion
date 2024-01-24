@@ -1155,7 +1155,9 @@ int deconfigure_cpu( int target_cpu )
 
             /* Wait for cpu_thread to completely exit */
             join_thread( sysblk.cputid[ target_cpu ], NULL );
-            detach_thread( sysblk.cputid[ target_cpu ]);
+#if defined( OPTION_FTHREADS )
+            detach_thread( sysblk.cputid[ target_cpu ]);    // only needed for Fish threads
+#endif
 
             /*-----------------------------------------------------------*/
             /* Note: While this is the logical place to cleanup and to   */

@@ -797,14 +797,18 @@ void* cckd_realloc( DEVBLK *dev, char *id, void* p, size_t size )
 {
     void* p2 = NULL;
 
+    // shut up GCC 12 warning about using a pointer after realloc()
+    char p_string[33];
+    MSGBUF( p_string, "%p", p );
+
     if (size)
         p2 = realloc( p, size );
-    CCKD_TRACE( "%s realloc %p len %ld", id, p, (long) size );
+    CCKD_TRACE( "%s realloc %s len %ld", id, p_string, (long) size );
 
     if (!p2)
     {
         char buf[64];
-        MSGBUF( buf, "realloc( %p, %d )", p, (int) size );
+        MSGBUF( buf, "realloc( %s, %d )", p_string, (int) size );
         // "%1d:%04X CCKD file: error in function %s: %s"
         WRMSG( HHC00303, "E", LCSS_DEVNUM, buf, strerror( errno ));
         cckd_print_itrace();
@@ -1798,7 +1802,7 @@ int             wrs;
     if (!cckdblk.batch)
     {
         cckdblk.wrprio = sysblk.cpuprio - 1;
-        set_thread_priority( cckdblk.wrprio );
+        SET_THREAD_PRIORITY( cckdblk.wrprio, sysblk.qos_user_initiated );
     }
 
     obtain_lock( &cckdblk.wrlock );
@@ -6722,7 +6726,7 @@ void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
 
             TIDPAT" @ %s.%6.6ld %1d:%04X",  // "HHHHHHHH @ hh:mm:ss.uuuuuu n:CCUU"
 
-            hthread_self(),                 // "HHHHHHHH" (TIDPAT)
+            TID_CAST(hthread_self()),       // "HHHHHHHH" (TIDPAT)
             todwrk + 11,                    // "hh:mm:ss" (%s)
             (long int)timeval.tv_usec,      // "uuuuuu"   (%6.6ld
             LCSS_DEVNUM                     // "n:CCUU"   (%1d:%04X)

@@ -96,7 +96,7 @@ CPB cap =
              0x80
 #endif
 /*        ( 0x80 * ( SIZEOF_SIZE_T == 8 ) ) */
-#if   defined(__gnu_linux__)
+#if   defined(__gnu_linux__) || defined(__linux__)
           + 0x01
 #elif defined(WIN32)
           + 0x02

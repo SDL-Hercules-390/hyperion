@@ -314,7 +314,7 @@
 /*-------------------------------------------------------------------*/
 /* Hard-coded GNU Linux-specific features and options...             */
 /*-------------------------------------------------------------------*/
-#elif defined(__gnu_linux__)            /* GNU Linux options         */
+#elif defined(__gnu_linux__) || defined(__linux__) /* Linux options  */
 
 #define DLL_IMPORT              extern
 #define DLL_EXPORT

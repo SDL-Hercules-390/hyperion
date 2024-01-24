@@ -154,6 +154,10 @@ static int dummydev_init_handler (DEVBLK *dev, int argc, char *argv[])
                 break;
         }
     }
+    if(errcnt>0)
+    {
+        return(-1);
+    }
     /*
      * Check parameters consistency
     */

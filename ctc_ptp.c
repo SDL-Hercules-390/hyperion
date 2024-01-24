@@ -859,10 +859,10 @@ int  ptp_close( DEVBLK* pDEVBLK )
 
         TID tid = pPTPBLK->tid;
         pPTPBLK->fCloseInProgress = 1;  // (ask read thread to exit)
-#if defined(_MSVC_)
         join_thread( tid, NULL );       // (wait for thread to end)
-#endif
+#if defined( OPTION_FTHREADS )
         detach_thread( tid );           // (wait for thread to end)
+#endif
     }
 
     pDEVBLK->fd = -1;           // indicate we're now closed

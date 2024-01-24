@@ -64,7 +64,9 @@ static void term_sockdev( void* arg )
     if (!init_done) init_sockdev();
     SIGNAL_SOCKDEV_THREAD();
     join_thread   ( sysblk.socktid, NULL );
-    detach_thread ( sysblk.socktid );
+#if defined( OPTION_FTHREADS )
+    detach_thread ( sysblk.socktid );  // only needed for fthreads
+#endif
 }
 
 /*-------------------------------------------------------------------*/
@@ -404,7 +406,7 @@ void* socket_thread( void* arg )
 
     UNREFERENCED( arg );
 
-    set_thread_priority( sysblk.srvprio );
+    SET_THREAD_PRIORITY( sysblk.srvprio, sysblk.qos_user_initiated );
 
     /* Display thread started message on control panel */
     LOG_THREAD_BEGIN( SOCKET_THREAD_NAME  );

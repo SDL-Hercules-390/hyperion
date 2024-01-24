@@ -1307,7 +1307,7 @@ static void *commadpt_thread(void *vca)
     init_signaled=0;
 
     /* Set server thread priority; ignore any errors */
-    set_thread_priority( sysblk.srvprio);
+    SET_THREAD_PRIORITY( sysblk.srvprio, sysblk.qos_user_initiated );
 
     MSGBUF(threadname, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
     LOG_THREAD_BEGIN( threadname );

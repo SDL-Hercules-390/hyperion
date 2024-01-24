@@ -607,10 +607,10 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 
         TID tid = pCTCBLK->tid;
         pCTCBLK->fCloseInProgress = 1;  // (ask read thread to exit)
-#if defined(_MSVC_)
         join_thread( tid, NULL );       // (wait for thread to end)
+#if defined( OPTION_FTHREADS )
+        detach_thread( tid );           // only needed for Fish threads
 #endif
-        detach_thread( tid );           // (wait for thread to end)
     }
 
     pDEVBLK->fd = -1;           // indicate we're now closed

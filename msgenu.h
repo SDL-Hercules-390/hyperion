@@ -150,7 +150,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
             fwritemsg( __FILE__, __LINE__, __FUNCTION__,        \
                 WRMSG_NORMAL, stdout,                           \
                 #id "%s " id "\n", sev,                         \
-                hthread_self(),                                 \
+                TID_CAST(hthread_self()),                       \
                 SSID_TO_LCSS( dev->ssid ),                      \
                 dev->devnum, ## __VA_ARGS__ );                  \
         }                                                       \
@@ -303,7 +303,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00110 "Defaulting all threads to priority %d"
 #define HHC00111 "Thread CPU Time IS available (_POSIX_THREAD_CPUTIME=%ld)"
 #define HHC00112 "Thread CPU Time is NOT available."
-//efine HHC00113 - HHC00129 (available)
+#define HHC00113 "Setting main thread QoS to USER_INITIATED failed: %s"
+//efine HHC00114 - HHC00129 (available)
 
 #define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
 #define HHC00131 "A licensed program product operating system detected, all processors have been stopped"

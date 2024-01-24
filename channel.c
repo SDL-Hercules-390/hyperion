@@ -2733,7 +2733,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
 
     if (current_priority != sysblk.devprio)
     {
-        set_thread_priority( sysblk.devprio );
+        SET_THREAD_PRIORITY( sysblk.devprio, sysblk.qos_user_initiated );
         current_priority = sysblk.devprio;
     }
 
@@ -2774,7 +2774,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
                     /* have any Hercules locks held                          */
                     if (dev->devprio != current_priority)
                     {
-                        set_thread_priority( dev->devprio);
+                        SET_THREAD_PRIORITY( dev->devprio, sysblk.qos_user_initiated );
                         current_priority = dev->devprio;
                     }
 
@@ -2784,7 +2784,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
                     /* Reset priority back to device default priority */
                     if (current_priority != sysblk.devprio)
                     {
-                        set_thread_priority( sysblk.devprio);
+                        SET_THREAD_PRIORITY( sysblk.devprio, sysblk.qos_user_initiated );
                         current_priority = sysblk.devprio;
                     }
                 }

@@ -1897,7 +1897,8 @@ static INSTR_FUNC gen_opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
 /*    DISASM_xxx functions must come BEFORE the GENx370x390x900 tables.       */
 /*----------------------------------------------------------------------------*/
 
-typedef int IPRTFUNC();         /* instruction printing function type */
+typedef int IPRTFUNC(int arch_mode, BYTE inst[], char unused[], char *prtbuf);
+                                        /* instruction printing function type */
 
 /*----------------------------------------------------------------------------*/
 /*      ROUTE_IPRINT  -  common instruction print routing logic               */

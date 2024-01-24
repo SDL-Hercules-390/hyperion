@@ -878,7 +878,7 @@ struct timeval      timeout;            /* timeout value             */
     hdl_addshut("http_shutdown",http_shutdown, NULL);
 
     /* Set server thread priority; ignore any errors */
-    set_thread_priority( sysblk.srvprio);
+    SET_THREAD_PRIORITY( sysblk.srvprio, sysblk.qos_user_interactive );
 
     /* Display thread started message on control panel */
     LOG_THREAD_BEGIN( HTTP_SRVR_THREAD_NAME  );

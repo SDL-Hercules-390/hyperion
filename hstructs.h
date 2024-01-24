@@ -622,6 +622,10 @@ enum OPERATION_MODE
     om_emif  = 2    /*  lparmode = 1; cpuidfmt = 1; partitions 0-255 */
 };
 
+/* We use the below in sysblk, but it's not defined except on Apple. */
+#if !defined( BUILD_APPLE_M1 )
+    typedef unsigned qos_class_t;
+#endif
 
 /*-------------------------------------------------------------------*/
 /* System configuration block                                        */
@@ -1046,6 +1050,13 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         int     devprio;                /* Device thread priority    */
         int     srvprio;                /* Listeners thread priority */
         TID     httptid;                /* HTTP listener thread id   */
+
+     /* Classes of service for macOS's scheduler on Apple Silicon.   */
+        qos_class_t qos_user_interactive;
+        qos_class_t qos_user_initiated;
+        qos_class_t qos_default;
+        qos_class_t qos_utility;
+        qos_class_t qos_background;
 
      /* Fields used by SYNCHRONIZE_CPUS */
         bool    syncing;                /* 1=Sync in progress        */

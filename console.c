@@ -2864,7 +2864,7 @@ int                     csock;          /* Client socket             */
 
 int                     rc;             /* Return code               */
 DEVBLK                 *dev;            /* -> Device block           */
-size_t                  len;            /* Data length               */
+size_t                  len = 0;        /* Data length               */
 
 struct sockaddr_in      client;         /* Client address structure  */
 socklen_t               namelen;        /* Length of client structure*/
@@ -3405,7 +3405,7 @@ int prev_rlen3270;
     UNREFERENCED( arg );
 
     /* Set server thread priority; ignore any errors */
-    set_thread_priority( sysblk.srvprio );
+    SET_THREAD_PRIORITY( sysblk.srvprio, sysblk.qos_user_interactive );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
     LOG_THREAD_BEGIN( CON_CONN_THREAD_NAME  );

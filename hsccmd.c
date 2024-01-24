@@ -7661,7 +7661,7 @@ char   **save_argv = NULL;
     if (dev->argv)
         free(dev->argv);
     dev->argc = init_argc;
-    if (init_argc)
+    if (init_argc > 0)
     {
         dev->argv = malloc ( init_argc * sizeof(char*) );
         for (i = 0; i < init_argc; i++)

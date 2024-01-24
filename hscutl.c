@@ -841,11 +841,15 @@ int set_socket_keepalive( int sfd,
     struct protoent * tcpproto;
 
     /* Retrieve TCP protocol value (mostly for FreeBSD portability) */
-    tcpproto = getprotobyname("TCP");
+    tcpproto = getprotobyname("tcp");
     if (!tcpproto)
     {
-        WRMSG( HHC02219, "E", "getprotobyname(\"TCP\")", strerror( HSO_errno ));
-        return -1;
+        tcpproto = getprotobyname("TCP");
+        if (!tcpproto)
+        {
+            WRMSG( HHC02219, "E", "getprotobyname(\"tcp\")", strerror( HSO_errno ));
+            return -1;
+        }
     }
     l_tcp = tcpproto->p_proto;
 
@@ -949,11 +953,15 @@ int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval,
     socklen_t  optlen = sizeof( optval );
 
     /* Retrieve TCP protocol value (mostly for FreeBSD portability) */
-    tcpproto = getprotobyname("TCP");
+    tcpproto = getprotobyname("tcp");
     if (!tcpproto)
     {
-        WRMSG( HHC02219, "E", "getprotobyname(\"TCP\")", strerror( HSO_errno ));
-        return -1;
+        tcpproto = getprotobyname("TCP");
+        if (!tcpproto)
+        {
+            WRMSG( HHC02219, "E", "getprotobyname(\"tcp\")", strerror( HSO_errno ));
+            return -1;
+        }
     }
     l_tcp = tcpproto->p_proto;
 #else

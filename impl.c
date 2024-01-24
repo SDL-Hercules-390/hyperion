@@ -471,6 +471,7 @@ static void* watchdog_thread( void* arg )
     int   sleep_seconds  = WATCHDOG_SECS;
     int   sleep_secs2nd  = 3;
     int   slept_secs;
+    int   rc;
 
     bool  deadlock_reported = false;
     bool  hung_cpu_reported = false;
@@ -485,7 +486,8 @@ static void* watchdog_thread( void* arg )
     /* Set watchdog priority LOWER than the CPU thread priority
        such that it will not invalidly detect an inoperable CPU
     */
-    set_thread_priority( MAX( sysblk.minprio, sysblk.cpuprio - 1 ));
+    SET_THREAD_PRIORITY( MAX( sysblk.minprio, sysblk.cpuprio - 1 ), sysblk.qos_user_initiated);
+    UNREFERENCED(rc);
 
     do
     {
@@ -809,15 +811,25 @@ DLL_EXPORT int impl( int argc, char* argv[] )
 {
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
-int     rc;
+int     rc, maxprio, minprio;
 
     SET_THREAD_NAME( IMPL_THREAD_NAME );
 
     /* Seed the pseudo-random number generator */
     init_random();
 
+    /* Save minprio/maxprio, which were set in bootstrap.c when it
+       called SET_THREAD_NAME at or near the beginning of main().
+    */
+    minprio = sysblk.minprio;
+    maxprio = sysblk.maxprio;
+
     /* Clear the system configuration block */
     memset( &sysblk, 0, sizeof( SYSBLK ) );
+
+    /* Restore saved minprio/maxprio into SYSBLK */
+    sysblk.minprio = minprio;
+    sysblk.maxprio = maxprio;
 
     /* Lock SYSBLK into memory since it's referenced so frequently.
        Note that the call could fail when the working set is small
@@ -1140,11 +1152,26 @@ int     rc;
     sysblk.hercprio = DEFAULT_HERC_PRIO  /*     V     */;
     sysblk.todprio  = DEFAULT_TOD_PRIO;  /* (highest) */
 
+#if defined( BUILD_APPLE_M1 )
+    /* Initialize default qos classes high to low */
+    sysblk.qos_user_interactive = QOS_CLASS_USER_INTERACTIVE;
+    sysblk.qos_user_initiated   = QOS_CLASS_USER_INITIATED;
+    sysblk.qos_default          = QOS_CLASS_DEFAULT;
+    sysblk.qos_utility          = QOS_CLASS_UTILITY;
+    sysblk.qos_background       = QOS_CLASS_BACKGROUND;
+#endif
+
     /* Set the priority of the main Hercules thread */
-    if ((rc = set_thread_priority( sysblk.hercprio )) != 0)
+    SET_THREAD_PRIORITY( sysblk.hercprio, sysblk.qos_user_initiated );
+    if (rc != 0)
     {
+#if defined( BUILD_APPLE_M1 )
+        // "Setting main thread QoS to USER_INITIATED failed: %s"
+        WRMSG( HHC00113, "E", strerror( rc ));
+#else
         // "set_thread_priority( %d ) failed: %s"
         WRMSG( HHC00109, "E", sysblk.hercprio, strerror( rc ));
+#endif
 
         // "Defaulting all threads to priority %d"
         WRMSG( HHC00110, "W", sysblk.minprio );
@@ -1179,6 +1206,7 @@ int     rc;
 
             // "Terminating due to %d argument errors"
             WRMSG( HHC02343, "S", rc );
+            /* FALLTHROUGH */ // silence GCC warning
 
           case PROCESS_ARGS_EXIT:
             delayed_exit( rc );
