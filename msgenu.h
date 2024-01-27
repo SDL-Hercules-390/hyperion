@@ -486,7 +486,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00387 "%1d:%04X CCKD%s image %s is SEVERELY fragmented!"
 #define HHC00388 "%1d:%04X CCKD%s image %s is moderately fragmented"
 #define HHC00389 "%1d:%04X CCKD%s image %s is slightly fragmented"
-//efine HHC00390 (available)
+#define HHC00390 "%1d:%04X CCKD file: device has no shadow files"
 //efine HHC00391 (available)
 //efine HHC00392 (available)
 //efine HHC00393 (available)

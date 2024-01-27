@@ -4248,20 +4248,25 @@ BYTE            buf[64*1024];           /* Buffer                    */
         cckdblk.sfmerge = cckdblk.sfforce = 0;
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
         {
-            if ((cckd = dev->cckd_ext))
+            if ((cckd = dev->cckd_ext)) /* Compressed device? */
             {
-                // "%1d:%04X CCKD file: merging shadow files..."
-                WRMSG( HHC00321, "I", LCSS_DEVNUM );
-                cckd->sfmerge = merge;
-                cckd->sfforce = force;
-                cckd_sf_remove( dev );
-                n++;
+                if (cckd->sfn) /* Any active shadow file(s)? */
+                {
+                    // "%1d:%04X CCKD file: merging shadow files..."
+                    WRMSG( HHC00321, "I", LCSS_DEVNUM );
+                    cckd->sfmerge = merge;
+                    cckd->sfforce = force;
+                    cckd_sf_remove( dev );
+                    n++;
+                }
             }
         }
         // "CCKD file number of devices processed: %d"
         WRMSG( HHC00316, "I", n );
         return NULL;
     }
+
+    /* Specific device... */
 
     if (dev->cckd64)
         return cckd64_sf_remove( data );
@@ -4270,6 +4275,13 @@ BYTE            buf[64*1024];           /* Buffer                    */
     {
         // "%1d:%04X CCKD file: device is not a cckd device"
         WRMSG( HHC00317, "W", LCSS_DEVNUM );
+        return NULL;
+    }
+
+    if (!cckd->sfn)
+    {
+        // "%1d:%04X CCKD file: device has no shadow files"
+        WRMSG( HHC00390, "W", LCSS_DEVNUM );
         return NULL;
     }
 
