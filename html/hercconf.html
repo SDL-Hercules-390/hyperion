@@ -4766,6 +4766,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
         last referenced field for a readonly file) and any writes appear to
         be successful even though nothing actually gets written.
         <p>
+        Please also note the <code>fakewrite</code> option is only valid when
+        the <code>readonly</code> option is also specified. That is to say,
+        regardless of whether the host dasd image file is actually read/only
+        or read/write, specifying the <code>fakewrite</code> option without
+        the <code>readonly</code> option also being specified, is invalid.
+        The <code>fakewrite</code> option should always be considered to be
+        a <i><u>subset</u></i> of the <code>readonly</code> option.
+        <p>
         <code>fakewrite</code> may be abbreviated as
         <code>fakewrt</code> or <code>fw</code>
         <p>

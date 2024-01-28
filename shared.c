@@ -160,6 +160,13 @@ char    *strtok_str = NULL;             /* last position             */
                 strcasecmp ("fakewrt",   argv[i]) == 0 ||
                 strcasecmp ("fw",        argv[i]) == 0)
             {
+                if (!dev->ckdrdonly)
+                {
+                    // "%1d:%04X Shared: CKD file: 'fakewrite' invalid without 'readonly'"
+                    WRMSG( HHC00745, "E", LCSS_DEVNUM );
+                    return -1;
+                }
+
                 dev->ckdfakewr = 1;
                 continue;
             }

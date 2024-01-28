@@ -162,6 +162,13 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
             strcasecmp ("fakewrt",   argv[i]) == 0 ||
             strcasecmp ("fw",        argv[i]) == 0)
         {
+            if (!dev->ckdrdonly)
+            {
+                // "%1d:%04X CKD file: 'fakewrite' invalid without 'readonly'"
+                WRMSG( HHC00443, "E", LCSS_DEVNUM );
+                return -1;
+            }
+
             dev->ckdfakewr = 1;
             continue;
         }
@@ -207,7 +214,8 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         dev->fd = HOPEN (dev->filename, dev->ckdrdonly ?
                         O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
-        {   /* Try read-only if shadow file present */
+        {
+            /* Try read-only if shadow file present */
             if (!dev->ckdrdonly && dev->dasdsfn != NULL)
                 dev->fd = HOPEN (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
