@@ -4374,7 +4374,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            logmsg("DEBUG : WR0 OUTSIDE PACK\n");
             break;
         }
 
@@ -4387,7 +4386,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            logmsg("DEBUG : WR0 CASE 2\n");
             break;
         }
 
@@ -4396,7 +4394,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            logmsg("DEBUG : WR0 BAD FM\n");
             break;
         }
 
@@ -4412,7 +4409,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             {
                 ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                logmsg("DEBUG : LOC REC 2\n");
                 break;
             }
         }
