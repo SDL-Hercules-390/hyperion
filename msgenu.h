@@ -2295,7 +2295,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03002 "Missing input-file specification"
 #define HHC03003 "Extraneous parameter: %s"
 #define HHC03004 "Unsupported dasd image file format"
-#define HHC03005 "Device type %4.4X not found in dasd table"
+#define HHC03005 "Device type '%2.2X' not found in dasd table"
 #define HHC03006 "%s error: %s"
 #define HHC03007 "File size:      (%s bytes)"
 #define HHC03008 "Compressed device header inconsistency(s) found! code: %4.4X"
