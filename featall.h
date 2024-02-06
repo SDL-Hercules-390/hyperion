@@ -48,6 +48,8 @@
 #define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
 #define OPTION_SIE_PURGE_DAT_ALWAYS     // Ivan 2016-07-30: purge DAT
                                         // ALWAYS at start SIE mode
+#define OPTION_NOASYNC_SF_CMDS          // Bypass bug in cache logic
+                                        // (see GitHub Issue #618!)
 //#define NO_OPTINST                      // Doesn't really help much?
 #define OPTION_NO_E3_OPTINST            // Problematic!
 

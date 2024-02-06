@@ -7040,7 +7040,6 @@ U16      devnum;                        /* Device number             */
 U16      lcss;                          /* Logical CSS               */
 int      flag = 1;                      /* sf- flag (default merge)  */
 int      level = 2;                     /* sfk level (default 2)     */
-TID      tid;                           /* sf command thread id      */
 char     c;                             /* work for sscan            */
 int      rc;
 
@@ -7183,11 +7182,20 @@ int      rc;
     /* Process the command */
     switch (action)
     {
+#if defined( OPTION_NOASYNC_SF_CMDS )
+        case '+': cckd_sf_add   ( dev ); break;
+        case '-': cckd_sf_remove( dev ); break;
+        case 'c': cckd_sf_comp  ( dev ); break;
+        case 'd': cckd_sf_stats ( dev ); break;
+        case 'k': cckd_sf_chk   ( dev ); break;
+#else
+        TID tid;
         case '+': if (create_thread( &tid, DETACHED, cckd_sf_add,    dev, "sf+ command" )) cckd_sf_add   ( dev ); break;
         case '-': if (create_thread( &tid, DETACHED, cckd_sf_remove, dev, "sf- command" )) cckd_sf_remove( dev ); break;
         case 'c': if (create_thread( &tid, DETACHED, cckd_sf_comp,   dev, "sfc command" )) cckd_sf_comp  ( dev ); break;
         case 'd': if (create_thread( &tid, DETACHED, cckd_sf_stats,  dev, "sfd command" )) cckd_sf_stats ( dev ); break;
         case 'k': if (create_thread( &tid, DETACHED, cckd_sf_chk,    dev, "sfk command" )) cckd_sf_chk   ( dev ); break;
+#endif
     }
 
     return 0;

@@ -714,6 +714,9 @@ static const char *build_info[] = {
 #if defined( OPTION_SIE2BK_FLD_COPY )           // SIE2BK 'fld' is NOT a mask
     "With    OPTION_SIE2BK_FLD_COPY",
 #endif
+#if defined( OPTION_NOASYNC_SF_CMDS )           // Bypass bug in cache logic
+    "With    OPTION_NOASYNC_SF_CMDS",           // (see GitHub Issue #618!)
+#endif
 
 //---------------------------------------------------------------------
 
