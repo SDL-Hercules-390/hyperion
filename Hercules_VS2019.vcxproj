@@ -752,6 +752,8 @@
     <None Include="tests\agf.listing" />
     <None Include="tests\agf.tst" />
     <None Include="tests\awsbsf.aws" />
+    <None Include="tests\3330.cckd64" />
+    <None Include="tests\3380.cckd64" />
     <None Include="tests\3390.cckd64" />
     <None Include="tests\awsbsf.tst" />
     <None Include="tests\bc-ilc.asm" />
@@ -985,6 +987,11 @@
     <None Include="tests\float.list" />
     <None Include="tests\float.tst" />
     <None Include="tests\float.pdf" />
+    <None Include="tests\GH615.asm" />
+    <None Include="tests\GH615.core" />
+    <None Include="tests\GH615.list" />
+    <None Include="tests\GH615.pdf" />
+    <None Include="tests\GH615.tst" />
     <None Include="tests\csxtr.assemble" />
     <None Include="tests\csxtr.listing" />
     <None Include="tests\csxtr.tst" />

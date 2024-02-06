@@ -10,6 +10,8 @@ EXTRA_DIST =                    \
      agf.listing                \
      agf.tst                    \
      alsi.txt                   \
+     3330.cckd64                \
+     3380.cckd64                \
      3390.cckd64                \
      awsbsf.aws                 \
      awsbsf.tst                 \
@@ -278,6 +280,11 @@ EXTRA_DIST =                    \
      float.list                 \
      float.tst                  \
      float.pdf                  \
+     GH615.asm                  \
+     GH615.core                 \
+     GH615.list                 \
+     GH615.pdf                  \
+     GH615.tst                  \
      hetbsf-bzip2.het           \
      hetbsf.het                 \
      hetbsf.tst                 \

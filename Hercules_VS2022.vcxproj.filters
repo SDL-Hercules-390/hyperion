@@ -1616,6 +1616,12 @@
     <None Include="util\zzsacard.bin">
       <Filter>Other Files\Utilities</Filter>
     </None>
+    <None Include="tests\3330.cckd64">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\3380.cckd64">
+      <Filter>Other Files\tests</Filter>
+    </None>
     <None Include="tests\3390.cckd64">
       <Filter>Other Files\tests</Filter>
     </None>
@@ -1767,6 +1773,9 @@
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\FAC53.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\GH615.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\TRE-01-basic.core">
@@ -2099,6 +2108,9 @@
     <None Include="tests\dfp-080-to-packed.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\GH615.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\digest.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2363,6 +2375,9 @@
     <None Include="tests\dc-float.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\GH615.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\PERZAD.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2586,6 +2601,12 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\dfp-080-to-packed.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\GH615.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\GH615.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\PERZAD.list">

@@ -1,0 +1,677 @@
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *                    ICKDSF related changes #615
+                                                     5 *
+                                                     6 ***********************************************************************
+                                                     7 *
+                                                     8 *   This program verifies proper handling of various ICKDSF related
+                                                     9 *   CCW chains related to home address alternate track handling as
+                                                    10 *   documented in SDL-Hyperion GitHub Issue #615. A big thank you to
+                                                    11 *   Anders Edlund for the actual tests. All I (Fish) did was to make
+                                                    12 *   them into a formal QA (Quality Assurance) 'runtest' test.
+                                                    13 *
+                                                    14 ***********************************************************************
+                                                    15 *
+                                                    16 *   Example Hercules Testcase:
+                                                    17 *
+                                                    18 *   NOTE: the 'attach' statements are actually very long, spanning
+                                                    19 *   well past column 71, so they have been split into multiple lines
+                                                    20 *   in the below example. In the actual test script they should each
+                                                    21 *   be one long line.
+                                                    22 *
+                                                    23 *       *Testcase GH615 ICKDSF related changes
+                                                    24 *
+                                                    25 *       mainsize    2
+                                                    26 *       numcpu      1
+                                                    27 *       sysclear
+                                                    28 *       archmode    S/370
+                                                    29 *
+                                                    30 *       attach      0333 3330 "$(testpath)/3330.cckd64" ro ...
+                                                    31 *                   ... sf="$(testpath)/3330-shadow_*.cckd64"
+                                                    32 *
+                                                    33 *       attach      0338 3380 "$(testpath)/3380.cckd64" ro ...
+                                                    34 *                   ... sf="$(testpath)/3380-shadow_*.cckd64"
+                                                    35 *
+                                                    36 *       attach      0339 3390 "$(testpath)/3390.cckd64" ro ...
+                                                    37 *                   ... sf="$(testpath)/3390-shadow_*.cckd64"
+                                                    38 *
+                                                    39 *       sf+333
+                                                    40 *       sf+338
+                                                    41 *       sf+339
+                                                    42 *
+                                                    43 *       loadcore    "$(testpath)/GH615.core"
+                                                    44 *       runtest     1.0
+                                                    45 *
+                                                    46 *       sf-333 nomerge
+                                                    47 *       sf-338 nomerge
+                                                    48 *       sf-339 nomerge
+                                                    49 *
+                                                    50 *       detach 0333
+                                                    51 *       detach 0338
+                                                    52 *       detach 0339
+                                                    53 *
+                                                    54 *       *Done
+                                                    55 *
+                                                    56 ***********************************************************************
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    58 ***********************************************************************
+                                                    59 *                         LOW CORE
+                                                    60 ***********************************************************************
+
+
+
+                              00000000  000006CC    62 TEST     START 0
+00000000                      00000000              63          USING TEST,0           Use absolute addressing
+
+
+00000000                      00000000  00000000    65          ORG   TEST+X'00'       Restart new PSW
+00000000  00080000                                  66          DC    XL4'00080000'
+00000004  00000200                                  67          DC    A(BEGIN)         --> Restart routine = program begin
+
+
+
+
+
+00000008                      00000008  00000044    69          ORG   TEST+X'44'       CSW unit/channel status
+00000044  00                                        70 CSWUS    DC    X'00'            unit-status
+00000045  00                                        71 CSWCS    DC    X'00'            channel-status
+
+
+
+
+
+00000046                      00000046  00000048    73          ORG   TEST+X'48'       CAW
+00000048  00000000                                  74 CAW      DC    A(0)             --> Channel program
+
+
+
+
+
+0000004C                      0000004C  00000068    76          ORG   TEST+X'68'       Program new psw
+00000068  000A0000                                  77          DC    XL4'000A0000'
+0000006C  0000DEAD                                  78          DC    A(X'DEAD')
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    80 ***********************************************************************
+                                                    81 *                 MAIN TESTS EXECUTION LOOP...
+                                                    82 ***********************************************************************
+
+00000070                      00000070  00000200    84          ORG   TEST+X'200'
+
+
+                                                    86 *                   Register Usage...
+                                                    87 *
+                                                    88 *       R0  <==  Constant zero
+                                                    89 *       R1  -->  Tests table
+                                                    90 *
+                                                    91 *       R2  <==  CUU to use for test
+                                                    92 *       R3  -->  Test's Channel Program
+                                                    93 *       R4  -->  Test's Verification Routine
+                                                    94 *       R5  <==  Test's expectation: 0 = normal, 1 = I/O error
+                                                    95 *       R6  <==  Test number
+                                                    96 *
+                                                    97 *       R13 -->  Where the failing test failed
+                                                    98 *       R14 -->  Subroutine calling and return
+
+
+00000200                      00000000             100          USING TESTTAB,R1       TESTS table entry layout
+
+
+00000200  1F00                                     102 BEGIN    SLR   R0,R0            R0 <== constant zero
+00000202  5810 0328                     00000328   103          L     R1,=A(TESTS)     R1 --> Tests Table
+
+00000206  4820 100A                     0000000A   105 TESTLOOP LH    R2,CUU           R2 <== CUU of device
+0000020A  9834 1000                     00000000   106          LM    R3,R4,ACHPROG    R3 --> Channel Program
+                                                   107 *                               R4 --> verify Routine
+0000020E  4350 1008                     00000008   108          IC    R5,EXPECT        R5 <== Expectation
+00000212  4360 1009                     00000009   109          IC    R6,TESTNUM       R6 <== Test number
+
+00000216  D2FF 0490 032E      00000490  0000032E   111          MVC   BUFFER,=256X'FF' (Re-)Initialize generic buffer
+0000021C  45E0 0242                     00000242   112          BAL   R14,DOTESTIO     Perform this test's I/O...
+00000220  05E4                                     113          BALR  R14,R4           Verify this test's results...
+
+00000222  4110 100C                     0000000C   115          LA    R1,TESTNEXT      R1 --> Next table entry
+
+00000226  5500 1000                     00000000   117          CL    R0,0(,R1)        End of table?
+0000022A  4770 0206                     00000206   118          BNE   TESTLOOP         No, looooop...
+0000022E  47F0 0232                     00000232   119          B     GOODEOJ          ALL TESTS SUCCEEDED!
+
+
+
+00000232  8200 0318                     00000318   121 GOODEOJ  LPSW  GOODPSW          Load successful completion PSW
+
+00000236  4260 0327                     00000327   123 FAILEOJ  STC   R6,FAILTEST      Plug test# into failure PSW
+0000023A  4BD0 032C                     0000032C   124          SH    R13,=H'4'        Backup to actual failure location
+0000023E  8200 0320                     00000320   125          LPSW  FAILPSW          Load abnormal termination PSW
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   127 ***********************************************************************
+                                                   128 *            Subroutine to perform an individual test
+                                                   129 ***********************************************************************
+
+00000242  5030 0048                     00000048   131 DOTESTIO ST    R3,CAW           CAW --> channel program
+
+00000246  9C00 2000                     00000000   133 STARTIO  SIO   0(R2)            Start the I/O to the device...
+0000024A  4710 026E                     0000026E   134          BC    B'0001',FAILIO   CC3 (not operational)
+0000024E  4720 0246                     00000246   135          BC    B'0010',STARTIO  CC2 (busy)
+00000252  4740 0276                     00000276   136          BC    B'0100',CHECKIO  CC1 (CSW stored)
+00000256  4780 025A                     0000025A   137          BC    B'1000',TESTIO   CC0 (started)
+
+0000025A  9D00 2000                     00000000   139 TESTIO   TIO   0(R2)            Test the I/O's progress...
+0000025E  4710 026E                     0000026E   140          BC    B'0001',FAILIO   CC3 (not operational)
+00000262  4720 025A                     0000025A   141          BC    B'0010',TESTIO   CC2 (busy)
+00000266  4740 0276                     00000276   142          BC    B'0100',CHECKIO  CC1 (CSW stored)
+0000026A  4780 026E                     0000026E   143          BC    B'1000',FAILIO   CC0 (available)
+
+0000026E  4360 042E                     0000042E   145 FAILIO   IC    R6,=X'33'        Indicate CUU error
+00000272  45D0 0236                     00000236   146          BAL   R13,FAILEOJ      TEST FAILED!
+
+
+
+00000276  9102 0044                     00000044   148 CHECKIO  TM    CSWUS,X'02'      Check if this I/O had an error
+0000027A  4770 0290                     00000290   149          BNZ   ERRORIO          Go issue sense if it did
+
+0000027E  950E 0326                     00000326   151          CLI   ERRFLAG,X'0E'    Was this the sense I/O?
+00000282  9200 0326                     00000326   152          MVI   ERRFLAG,X'00'    Reset error flag
+00000286  077E                                     153          BNER  R14              No, TEST SUCCESS! Return to caller
+
+00000288  1255                                     155          LTR   R5,R5            Was I/O error expected?
+0000028A  077E                                     156          BNZR  R14              Yes, TEST SUCCESS! Return to caller
+
+0000028C  45D0 0236                     00000236   158          BAL   R13,FAILEOJ      No, TEST FAILED!
+
+
+
+00000290  920E 0326                     00000326   160 ERRORIO  MVI   ERRFLAG,X'0E'    Set I/O error flag in failure PSW
+00000294  4130 0468                     00000468   161          LA    R3,SNSPGM        R3 --> sense channel program
+00000298  47F0 0242                     00000242   162          B     DOTESTIO         Go issue sense I/O
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   164 ***********************************************************************
+                                                   165 *                 Test 1 verification routine
+                                                   166 ***********************************************************************
+
+0000029C                                           168 VERIFY1  DS    0H
+                                                   169 *
+                                                   170 *     The last data area will contain the R0 of the track, i.e:
+                                                   171 *
+                                                   172 *           04590000 00000008 00000000 00000000
+                                                   173 *
+                                                   174 *     after the chain is complete.
+                                                   175 *
+
+
+0000029C  D204 05FE 05E8      000005FE  000005E8   177          MVC   RHADATA1,WHADATA1    (copy what test1 wrote)
+000002A2  9200 05FE                     000005FE   178          MVI   RHADATA1,X'00'       (but with leading 01 to 00 instead)
+
+000002A6  D504 05FE 0490      000005FE  00000490   180          CLC   RHADATA1,BUFFER
+000002AC  4780 02B4                     000002B4   181          BE    VERIFY12
+
+000002B0  45D0 0236                     00000236   183          BAL   R13,FAILEOJ
+
+
+000002B4  D50F 05ED 04A0      000005ED  000004A0   185 VERIFY12 CLC   WR0DATA1,BUFFER+16
+000002BA  078E                                     186          BER   R14
+
+000002BC  45D0 0236                     00000236   188          BAL   R13,FAILEOJ
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   190 ***********************************************************************
+                                                   191 *                 Test 2 verification routine
+                                                   192 ***********************************************************************
+
+000002C0                                           194 VERIFY2  DS    0H
+                                                   195 *
+                                                   196 *     The data area of X'0A' (DRHA = Diagnostic Read Home Address)
+                                                   197 *     should contain the HA of 0004590000 at offset 19 decimal.
+                                                   198 *
+                                                   199 *     The X'16' command (RR0 = Read Record 0) should read the R0
+                                                   200 *     of 04590000 00000008 00000000 00000000.
+                                                   201 *
+
+
+000002C0  D204 0648 05E8      00000648  000005E8   203          MVC   DHA219,WHADATA1    (copy what test1 wrote)
+000002C6  9200 0648                     00000648   204          MVI   DHA219,X'00'       (but with leading 01 to 00 instead)
+
+000002CA  D504 0648 04A3      00000648  000004A3   206          CLC   DHA219,BUFFER+19
+000002D0  4780 02D8                     000002D8   207          BE    VERIFY22
+
+000002D4  45D0 0236                     00000236   209          BAL   R13,FAILEOJ
+
+
+000002D8  D50F 05ED 04B0      000005ED  000004B0   211 VERIFY22 CLC   WR0DATA1,BUFFER+32
+000002DE  078E                                     212          BER   R14
+
+000002E0  45D0 0236                     00000236   214          BAL   R13,FAILEOJ
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   216 ***********************************************************************
+                                                   217 *                 Test 3 verification routine
+                                                   218 ***********************************************************************
+
+000002E4                                           220 VERIFY3  DS    0H
+                                                   221 *
+                                                   222 *     Should return a CMDREJ (80) sense with byte 07 set to 01.
+                                                   223 *     Without the fix 02 would be returned.
+                                                   224 *
+
+
+000002E4  9501 0477                     00000477   226          CLI   SNSBYTES+7,X'01'   Message code 01?
+000002E8  078E                                     227          BER   R14                Yes, all is well
+
+000002EA  45D0 0236                     00000236   229          BAL   R13,FAILEOJ        No?! TEST FAILED!
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   231 ***********************************************************************
+                                                   232 *                 Test 4 verification routine
+                                                   233 ***********************************************************************
+
+000002EE                                           235 VERIFY4  DS    0H
+                                                   236 *
+                                                   237 *     Well it is really a change for 3340 or 3350 from 5,
+                                                   238 *     which is for all older and newer!
+                                                   239 *
+
+
+000002EE  D204 06C8 06B3      000006C8  000006B3   241          MVC   RHADATA4,WHADATA4+6  (copy what was written)
+000002F4  9200 06C8                     000006C8   242          MVI   RHADATA4,X'00'       (but with leading 01 to 00 instead)
+
+000002F8  D504 06C8 0490      000006C8  00000490   244          CLC   RHADATA4,BUFFER
+000002FE  4780 0306                     00000306   245          BE    VERIFY42
+
+00000302  45D0 0236                     00000236   247          BAL   R13,FAILEOJ
+
+
+00000306  D50F 06B8 04A0      000006B8  000004A0   249 VERIFY42 CLC   WR0DATA4,BUFFER+16
+0000030C  078E                                     250          BER   R14
+
+0000030E  45D0 0236                     00000236   252          BAL   R13,FAILEOJ
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   254 ***********************************************************************
+                                                   255 *                      WORKING STORAGE
+                                                   256 ***********************************************************************
+
+00000318                                           258 GOODPSW  DC    0D'0'            All tests succeeded PSW
+00000318  000A0000                                 259          DC    XL4'000A0000'
+0000031C  00000000                                 260          DC    XL4'00000000'
+
+
+
+00000320                                           262 FAILPSW  DC    0D'0'            Test failure PSW
+00000320  000A0000                                 263          DC    XL4'000A0000'
+00000324  00                                       264          DC    XL1'00'
+00000325  00                                       265          DC    XL1'00'
+00000326  00                                       266 ERRFLAG  DC    XL1'00'          if 0E = I/O error occurred
+00000327  FF                                       267 FAILTEST DC    XL1'FF'          Test number or X'33' = CUU error
+
+
+
+00000328                                           269          LTORG ,                literals pool
+00000328  00000430                                 270                =A(TESTS)
+0000032C  0004                                     271                =H'4'
+0000032E  FFFFFFFF FFFFFFFF                        272                =256X'FF'
+0000042E  33                                       273                =X'33'
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   275 ***********************************************************************
+                                                   276 *                        EQUATES
+                                                   277 ***********************************************************************
+
+                                                   279 *
+                                                   280 **                  CCW Flag Equates...
+                                                   281 *
+                              00000080  00000001   282 CD       EQU   X'80'            Chain data
+                              00000040  00000001   283 CC       EQU   X'40'            Chain command
+                              00000020  00000001   284 SLI      EQU   X'20'            Suppress length indication
+
+
+
+                                                   286 *
+                                                   287 **                 CCW Command Equates...
+                                                   288 *
+                              00000004  00000001   289 SENSE    EQU   X'04'            Basic Sense
+                              00000007  00000001   290 SEEK     EQU   X'07'            Seek
+                              0000000A  00000001   291 DRHA     EQU   X'0A'            Diagnostic Read Home Address
+                              00000015  00000001   292 WR0      EQU   X'15'            Write Record 0
+                              00000016  00000001   293 RR0      EQU   X'16'            Read Record 0
+                              00000019  00000001   294 WHA      EQU   X'19'            Write Home Address
+                              0000001A  00000001   295 RHA      EQU   X'1A'            Read Home Address
+                              0000001F  00000001   296 SFM      EQU   X'1F'            Set File Mask
+                              00000023  00000001   297 SETSECT  EQU   X'23'            Set Sector
+                              00000039  00000001   298 SHAEQ    EQU   X'39'            Search Home Address Equal
+                              00000047  00000001   299 LR       EQU   X'47'            Locate Record
+                              00000063  00000001   300 DX       EQU   X'63'            Define Extent
+                              00000064  00000001   301 RDC      EQU   X'64'            Read Device Characteristics                                                                EJECT
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   303 ***********************************************************************
+                                                   304 *                        TESTS TABLE
+                                                   305 ***********************************************************************
+
+                                                   307 *             ------------------------------------
+                                                   308 *             |  Table of tests to be performed  |
+                                                   309 *             ------------------------------------
+
+00000430                                           311 TESTS    DC    0D'0'
+
+00000430  00000590 0000029C                        313          DC    A(TEST1),A(VERIFY1),AL1(0),AL1(1),AL2(X'339')
+0000043C  00000608 000002C0                        314          DC    A(TEST2),A(VERIFY2),AL1(0),AL1(2),AL2(X'339')
+00000448  00000650 000002E4                        315          DC    A(TEST3),A(VERIFY3),AL1(1),AL1(3),AL2(X'333')  (*)
+00000454  00000658 000002EE                        316          DC    A(TEST4),A(VERIFY4),AL1(0),AL1(4),AL2(X'338')
+
+00000460  00000000                                 318          DC    A(0)     ZERO = End of table
+
+
+                                                   320 *                   (*)     I/O Error expected!
+
+
+
+
+
+
+
+
+
+                                                   322 *        Basic Sense channel program in case of I/O error
+
+00000468                                           324          DC    0D'0'                  (alignment)
+00000468  04000470 20000020                        325 SNSPGM   DC    AL1(SENSE),AL3(SNSBYTES),AL1(SLI),AL1(0),AL2(L'SNSBYTES)
+00000470  FFFFFFFF FFFFFFFF                        326 SNSBYTES DC    0XL32'FF',32X'FF'
+
+
+
+
+
+00000490                                           328          DC    0D'0'                  (alignment)
+00000490  FFFFFFFF FFFFFFFF                        329 BUFFER   DC    0XL256'FF',256X'FF'    Generic 256-byte data buffer
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   331 ***********************************************************************
+                                                   332 *              TEST 1: Write HA in a ECKD chain (X'19')
+                                                   333 ***********************************************************************
+
+00000590                                           335 TEST1    DC    0D'0'
+00000590  630005C8 40000010                        336          DC    AL1(DX),AL3(DXDATA1),AL1(CC),AL1(0),AL2(L'DXDATA1)
+00000598  470005D8 40000010                        337          DC    AL1(LR),AL3(LRDATA1),AL1(CC),AL1(0),AL2(L'LRDATA1)
+000005A0  190005E8 40000005                        338          DC    AL1(WHA),AL3(WHADATA1),AL1(CC),AL1(0),AL2(L'WHADATA1)
+000005A8  150005ED 40000010                        339          DC    AL1(WR0),AL3(WR0DATA1),AL1(CC),AL1(0),AL2(L'WR0DATA1)
+000005B0  230005FD 40000001                        340          DC    AL1(SETSECT),AL3(SECT1),AL1(CC),AL1(0),AL2(L'SECT1)
+000005B8  1A000490 40000005                        341          DC    AL1(RHA),AL3(BUFFER),AL1(CC),AL1(0),AL2(5)
+000005C0  160004A0 00000010                        342          DC    AL1(RR0),AL3(BUFFER+16),AL1(0),AL1(0),AL2(16)
+
+
+
+000005C8                                           344 TEST1DAT DC    0D'0'
+000005C8  C2C40000 00000000                        345 DXDATA1  DC    XL16'C2C4000000000000045900000459000E'
+000005D8  43000002 04590000                        346 LRDATA1  DC    XL16'43000002045900000459000000000000'
+000005E8  01045900 00                              347 WHADATA1 DC    XL5'0104590000'
+000005ED  04590000 00000008                        348 WR0DATA1 DC    XL16'04590000000000080000000000000000'
+000005FD  00                                       349 SECT1    DC    XL1'00'
+000005FE  00045900 00                              350 RHADATA1 DC    XL5'0004590000'
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   352 ***********************************************************************
+                                                   353 *              TEST 2: Diagnostic read HA (X'0A')
+                                                   354 ***********************************************************************
+
+00000608                                           356 TEST2    DC    0D'0'
+00000608  63000628 40000010                        357          DC    AL1(DX),AL3(DXDATA2),AL1(CC),AL1(0),AL2(L'DXDATA2)
+00000610  47000638 40000010                        358          DC    AL1(LR),AL3(LRDATA2),AL1(CC),AL1(0),AL2(L'LRDATA2)
+00000618  0A000490 4000001C                        359          DC    AL1(DRHA),AL3(BUFFER),AL1(CC),AL1(0),AL2(28)
+00000620  160004B0 00000010                        360          DC    AL1(RR0),AL3(BUFFER+32),AL1(0),AL1(0),AL2(16)
+
+
+
+00000628                                           362 TEST2DAT DC    0D'0'
+00000628  06C40000 00000000                        363 DXDATA2  DC    XL16'06C4000000000000045900000459000E'
+00000638  D6000002 04590000                        364 LRDATA2  DC    XL16'D6000002045900000459000000000000'
+00000648  00045900 00                              365 DHA219   DC    XL5'0004590000' (same as WHADATA1 but with 00 not 01)
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   367 ***********************************************************************
+                                                   368 *        TEST 3: Read Device Characteristic on pre-3380
+                                                   369 ***********************************************************************
+
+00000650                                           371 TEST3    DC    0D'0'
+00000650  64000490 00000040                        372          DC    AL1(RDC),AL3(BUFFER),AL1(0),AL1(0),AL2(64)
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   374 ***********************************************************************
+                                                   375 *         TEST 4: Actual byte count for Write HA on 3380
+                                                   376 ***********************************************************************
+
+00000658                                           378 TEST4    DC    0D'0'
+00000658  070006A0 40000006                        379          DC    AL1(SEEK),AL3(SEEKADR4),AL1(CC),AL1(0),AL2(L'SEEKADR4)
+00000660  1F0006A6 40000001                        380          DC    AL1(SFM),AL3(FMASK4),AL1(CC),AL1(0),AL2(L'FMASK4)
+00000668  230006A7 40000001                        381          DC    AL1(SETSECT),AL3(SECT41),AL1(CC),AL1(0),AL2(L'SECT41)
+00000670  390006A9 40000004                        382          DC    AL1(SHAEQ),AL3(SRCHHA4),AL1(CC),AL1(0),AL2(L'SRCHHA4)
+00000678  190006AD 4000000B                        383          DC    AL1(WHA),AL3(WHADATA4),AL1(CC),AL1(0),AL2(L'WHADATA4)
+00000680  150006B8 40000010                        384          DC    AL1(WR0),AL3(WR0DATA4),AL1(CC),AL1(0),AL2(L'WR0DATA4)
+00000688  230006A8 40000001                        385          DC    AL1(SETSECT),AL3(SECT42),AL1(CC),AL1(0),AL2(L'SECT42)
+00000690  1A000490 40000005                        386          DC    AL1(RHA),AL3(BUFFER),AL1(CC),AL1(0),AL2(5)
+00000698  160004A0 00000010                        387          DC    AL1(RR0),AL3(BUFFER+16),AL1(0),AL1(0),AL2(16)
+
+
+
+000006A0                                           389 TEST4DAT DC    0D'0'
+000006A0  00000375 0000                            390 SEEKADR4 DC    XL6'000003750000'
+000006A6  C0                                       391 FMASK4   DC    XL1'C0'
+000006A7  00                                       392 SECT41   DC    XL1'00'
+000006A8  00                                       393 SECT42   DC    XL1'00'
+000006A9  03750000                                 394 SRCHHA4  DC    XL4'03750000'
+000006AD  00000000 00000103                        395 WHADATA4 DC    XL11'0000000000000103750000'
+000006B8  03750000 00000008                        396 WR0DATA4 DC    XL16'03750000000000080000000000000000'
+000006C8  00037500 00                              397 RHADATA4 DC    XL5'0003750000'
+                                                   398
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   400 ***********************************************************************
+                                                   401 *                    Tests Table DSECT
+                                                   402 ***********************************************************************
+
+                                                   404 TESTTAB  DSECT
+
+00000000  00000000                                 406 ACHPROG  DS    A        Address of channel program
+00000004  00000000                                 407 AVERIFY  DS    A        Address of verification routine
+00000008  00                                       408 EXPECT   DS    X        0 = normal completion, 1 = I/O error expected
+00000009  00                                       409 TESTNUM  DS    X        Test number
+0000000A  0000                                     410 CUU      DS    H        CUU to be used for this test
+
+                              0000000C  00000001   412 TESTNEXT EQU   *        Next table entry...
+
+
+
+
+
+
+
+
+
+
+                              00000000  00000001   415 R0       EQU   0                Register 0
+                              00000001  00000001   416 R1       EQU   1                Register 1
+                              00000002  00000001   417 R2       EQU   2                Register 2
+                              00000003  00000001   418 R3       EQU   3                Register 3
+                              00000004  00000001   419 R4       EQU   4                Register 4
+                              00000005  00000001   420 R5       EQU   5                Register 5
+                              00000006  00000001   421 R6       EQU   6                Register 6
+                              00000007  00000001   422 R7       EQU   7                Register 7
+                              00000008  00000001   423 R8       EQU   8                Register 8
+                              00000009  00000001   424 R9       EQU   9                Register 9
+                              0000000A  00000001   425 R10      EQU   10               Register 10
+                              0000000B  00000001   426 R11      EQU   11               Register 11
+                              0000000C  00000001   427 R12      EQU   12               Register 12
+                              0000000D  00000001   428 R13      EQU   13               Register 13
+                              0000000E  00000001   429 R14      EQU   14               Register 14
+                              0000000F  00000001   430 R15      EQU   15               Register 15
+
+
+
+
+
+                                        00000000   432          END   TEST
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    17
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ACHPROG             A    000000       4   406  106
+AVERIFY             A    000004       4   407
+BEGIN               I    000200       2   102   67
+BUFFER              X    000490     256   329  111  180  185  206  211  244  249  341  342  359  360  372  386  387
+CAW                 A    000048       4    74  131
+CC                  U    000040       1   283  336  337  338  339  340  341  357  358  359  379  380  381  382  383  384  385  386
+CD                  U    000080       1   282
+CHECKIO             I    000276       4   148  136  142
+CSWCS               X    000045       1    71
+CSWUS               X    000044       1    70  148
+CUU                 H    00000A       2   410  105
+DHA219              X    000648       5   365  203  204  206
+DOTESTIO            I    000242       4   131  112  162
+DRHA                U    00000A       1   291  359
+DX                  U    000063       1   300  336  357
+DXDATA1             X    0005C8      16   345  336
+DXDATA2             X    000628      16   363  357
+ERRFLAG             X    000326       1   266  151  152  160
+ERRORIO             I    000290       4   160  149
+EXPECT              X    000008       1   408  108
+FAILEOJ             I    000236       4   123  146  158  183  188  209  214  229  247  252
+FAILIO              I    00026E       4   145  134  140  143
+FAILPSW             D    000320       8   262  125
+FAILTEST            X    000327       1   267  123
+FMASK4              X    0006A6       1   391  380
+GOODEOJ             I    000232       4   121  119
+GOODPSW             D    000318       8   258  121
+IMAGE               1    000000    1741     0
+LR                  U    000047       1   299  337  358
+LRDATA1             X    0005D8      16   346  337
+LRDATA2             X    000638      16   364  358
+R0                  U    000000       1   415  102  117
+R1                  U    000001       1   416  100  103  115  117
+R10                 U    00000A       1   425
+R11                 U    00000B       1   426
+R12                 U    00000C       1   427
+R13                 U    00000D       1   428  124  146  158  183  188  209  214  229  247  252
+R14                 U    00000E       1   429  112  113  153  156  186  212  227  250
+R15                 U    00000F       1   430
+R2                  U    000002       1   417  105  133  139
+R3                  U    000003       1   418  106  131  161
+R4                  U    000004       1   419  106  113
+R5                  U    000005       1   420  108  155
+R6                  U    000006       1   421  109  123  145
+R7                  U    000007       1   422
+R8                  U    000008       1   423
+R9                  U    000009       1   424
+RDC                 U    000064       1   301  372
+RHA                 U    00001A       1   295  341  386
+RHADATA1            X    0005FE       5   350  177  178  180
+RHADATA4            X    0006C8       5   397  241  242  244
+RR0                 U    000016       1   293  342  360  387
+SECT1               X    0005FD       1   349  340
+SECT41              X    0006A7       1   392  381
+SECT42              X    0006A8       1   393  385
+SEEK                U    000007       1   290  379
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    18
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SEEKADR4            X    0006A0       6   390  379
+SENSE               U    000004       1   289  325
+SETSECT             U    000023       1   297  340  381  385
+SFM                 U    00001F       1   296  380
+SHAEQ               U    000039       1   298  382
+SLI                 U    000020       1   284  325
+SNSBYTES            X    000470      32   326  226  325
+SNSPGM              R    000468       1   325  161
+SRCHHA4             X    0006A9       4   394  382
+STARTIO             I    000246       4   133  135
+TEST                J    000000    1741    62   65   69   73   76   84   63  432
+TEST1               D    000590       8   335  313
+TEST1DAT            D    0005C8       8   344
+TEST2               D    000608       8   356  314
+TEST2DAT            D    000628       8   362
+TEST3               D    000650       8   371  315
+TEST4               D    000658       8   378  316
+TEST4DAT            D    0006A0       8   389
+TESTIO              I    00025A       4   139  137  141
+TESTLOOP            I    000206       4   105  118
+TESTNEXT            U    00000C       1   412  115
+TESTNUM             X    000009       1   409  109
+TESTS               D    000430       8   311  103
+TESTTAB             4    000000      12   404  100
+VERIFY1             H    00029C       2   168  313
+VERIFY12            I    0002B4       6   185  181
+VERIFY2             H    0002C0       2   194  314
+VERIFY22            I    0002D8       6   211  207
+VERIFY3             H    0002E4       2   220  315
+VERIFY4             H    0002EE       2   235  316
+VERIFY42            I    000306       6   249  245
+WHA                 U    000019       1   294  338  383
+WHADATA1            X    0005E8       5   347  177  203  338
+WHADATA4            X    0006AD      11   395  241  383
+WR0                 U    000015       1   292  339  384
+WR0DATA1            X    0005ED      16   348  185  211  339
+WR0DATA4            X    0006B8      16   396  249  384
+=256X'FF'           X    00032E       1   272  111
+=A(TESTS)           A    000328       4   270  103
+=H'4'               H    00032C       2   271  124
+=X'33'              X    00042E       1   273  145
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    19
+
+MACRO  DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    20
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   1741  000-6CC  000-6CC
+  Region           1741  000-6CC  000-6CC
+    CSECT  TEST    1741  000-6CC  000-6CC
+ASMA Ver. 0.7.0                                ICKDSF related changes                               06 Feb 2024 14:32:02  Page    21
+
+   STMT                                        FILE NAME
+
+1     C:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\GH615\GH615.asm
+
+
+** NO ERRORS FOUND **
+
+

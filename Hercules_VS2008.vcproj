@@ -3272,6 +3272,14 @@
 				Name="tests"
 				>
 				<File
+					RelativePath=".\tests\3330.cckd64"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\3380.cckd64"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\3390.cckd64"
 					>
 				</File>
@@ -3512,6 +3520,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\float.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\GH615.core"
 						>
 					</File>
 					<File
@@ -4586,6 +4598,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\GH615.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\hetbsf.tst"
 							>
 						</File>
@@ -5042,6 +5058,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\GH615.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\mhi.asm"
 							>
 						</File>
@@ -5486,6 +5506,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\float.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\GH615.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\GH615.pdf"
 								>
 							</File>
 							<File
