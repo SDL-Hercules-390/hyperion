@@ -283,6 +283,9 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
             case 0xE5:                                              \
                 used = sysblk.imape5[(_inst)[1]]++;                 \
                 break;                                              \
+            case 0xE7:                                              \
+                used = sysblk.imape7[(_inst)[1]]++;                 \
+                break;                                              \
             case 0xEB:                                              \
                 used = sysblk.imapeb[(_inst)[5]]++;                 \
                 break;                                              \
