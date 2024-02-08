@@ -1437,6 +1437,7 @@ void ckd_build_sense( DEVBLK *dev, BYTE sense0, BYTE sense1,
                       BYTE sense2, BYTE format, BYTE message )
 {
 int shift;  /* num of bits to shift left 'high cyl' in sense6 */
+
     /* Clear the sense bytes */
     memset( dev->sense, 0, sizeof(dev->sense) );
 
@@ -1460,54 +1461,56 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
 
     if (dev->devtype == 0x2305)
     {
-       /*             0x40=ONLINE             0x04=END OF CYL */
+        /*             0x40=ONLINE             0x04=END OF CYL */
         dev->sense[3] = (((dev->sense[1]) & 0x20) >> 3) | 0x40;
     }
     if (dev->devtype == 0x2311)
     {
-       /* 0x80=READY, 0x40=ONLINE 0x08=ONLINE 0x04=END OF CYL */
+        /* 0x80=READY, 0x40=ONLINE 0x08=ONLINE 0x04=END OF CYL */
         dev->sense[3] = (((dev->sense[1]) & 0x20) >> 3) | 0xC8;
     }
     if (dev->devtype == 0x2314)
     {
-       /*             0x40=ONLINE             0x04=END OF CYL */
+        /*             0x40=ONLINE             0x04=END OF CYL */
         dev->sense[3] = (((dev->sense[1]) & 0x20) >> 3) | 0x40;
     }
     if (dev->devtype == 0x3330)
     {
-     /* bits 0-1 = controller address */
-     /* bits 2-7: drive A = 111000, B = 110001, ... H = 000111 */
-       dev->sense[4] = (dev->devnum & 0x07) | ((~(dev->devnum) & 0x07) << 3);
+        /* bits 0-1 = controller address */
+        /* bits 2-7: drive A = 111000, B = 110001, ... H = 000111 */
+        dev->sense[4] = (dev->devnum & 0x07) | ((~(dev->devnum) & 0x07) << 3);
     }
     if (dev->devtype == 0x3340)
     {
-     /* X'01' = 35 MB drive, X'02' = 70 MB drive  (same as 'model') */
-     /* X'80' RPS feature installed */
-       dev->sense[2] |= 0x80 | dev->devid[6];  /* RPS + model */
-       /* drive A = bit 0 (0x80), ... drive H = bit 7 (0x01) */
-       dev->sense[4] =  0x80 >> (dev->devnum & 0x07);
+        /* X'01' = 35 MB drive, X'02' = 70 MB drive  (same as 'model') */
+        /* X'80' RPS feature installed */
+        dev->sense[2] |= 0x80 | dev->devid[6];  /* RPS + model */
+
+        /* drive A = bit 0 (0x80), ... drive H = bit 7 (0x01) */
+        dev->sense[4] =  0x80 >> (dev->devnum & 0x07);
     }
     if (dev->devtype == 0x3350)
     {
-       /* drive 0 = bit 0 (0x80), ... drive 7 = bit 7 (0x01) */
-       dev->sense[4] =  0x80 >> (dev->devnum & 0x07);
+        /* drive 0 = bit 0 (0x80), ... drive 7 = bit 7 (0x01) */
+        dev->sense[4] =  0x80 >> (dev->devnum & 0x07);
     }
     if (dev->devtype == 0x3375)
     {
-       /* bits 3-4 = controller address, bits 5-7 = device address */
-       dev->sense[4] = dev->devnum & 0x07;
+        /* bits 3-4 = controller address, bits 5-7 = device address */
+        dev->sense[4] = dev->devnum & 0x07;
     }
     if (dev->devtype == 0x3380)
     {
-       /* bits 4-7 = device address */
-       dev->sense[4] = dev->devnum & 0x0F;
+        /* bits 4-7 = device address */
+        dev->sense[4] = dev->devnum & 0x0F;
     }
 
     /* Sense byte 5 contains bits 8-15 of the cylinder address
-       and sense byte 6 contains bits 4-7 of the cylinder
-       address followed by bits 12-15 of the head address,
-       unless the device has more than 4095 cylinders, in
-       which case sense bytes 5 and 6 both contain X'FF' */
+       and sense byte 6 contains bits 4-7 of the cylinder address,
+       followed by bits 12-15 of the head address -- UNLESS...
+       the device has more than 4095 cylinders, in which case
+       sense bytes 5 and 6 both contain X'FF'.
+    */
     if (dev->ckdcyls > 4095)
     {
         dev->sense[5] = 0xFF;
@@ -1515,57 +1518,72 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     }
     else
     {
-     if ((dev->devtype == 0x2311 ) || (dev->devtype == 0x2314 )
-      || (dev->devtype == 0x2305 ))
-     {
-     }
-     else
-     {
-        dev->sense[5] = dev->ckdcurcyl & 0xFF;
+        if (0
+            || (dev->devtype == 0x2311 )
+            || (dev->devtype == 0x2314 )
+            || (dev->devtype == 0x2305 )
+        )
+        {
+            /* (do nothing) */
+        }
+        else
+        {
+            dev->sense[5] = dev->ckdcurcyl & 0xFF;
 
-     /* sense byte 6 bits     c = cyl high byte, h=head    */
-     /*                          0 1 2 3 4 5 6 7   shift   */
-     /* 3330-1                   - c - h h h h h      6    */
-     /* 3330-11 3350             - c c h h h h h      5    */
-     /* 3340                     - c c - h h h h      5    */
-     /* 3375                     c c - - h h h h      6    */
-     /* 3380                     c c c c h h h h      4    */
-       switch (dev->devtype) {
-        case 0x3330:
-            if (dev->devid[6] == 0x01)
-                shift = 6;        /* 3330-1  */
-            else
-                shift = 5;        /* 3330-11 */
-            break;
-        case 0x3340:
-        case 0x3350:
-            shift = 5;
-            break;
-        case 0x3375:
-            shift = 6;
-            break;
-        default:                        shift = 4; break;
-       }
-        dev->sense[6] = (BYTE)(( (dev->ckdcurcyl >> 8) << shift )
-                        | (dev->ckdcurhead & 0x1F));
-     }
+            /* sense byte 6 bits     c = cyl high byte, h=head    */
+            /*                          0 1 2 3 4 5 6 7   shift   */
+            /* 3330-1                   - c - h h h h h      6    */
+            /* 3330-11 3350             - c c h h h h h      5    */
+            /* 3340                     - c c - h h h h      5    */
+            /* 3375                     c c - - h h h h      6    */
+            /* 3380                     c c c c h h h h      4    */
+            switch (dev->devtype)
+            {
+                case 0x3330:
+
+                    if (dev->devid[6] == 0x01)
+                        shift = 6;        /* 3330-1  */
+                    else
+                        shift = 5;        /* 3330-11 */
+                    break;
+
+                case 0x3340:
+                case 0x3350:
+
+                    shift = 5;
+                    break;
+
+                case 0x3375:
+
+                    shift = 6;
+                    break;
+
+                default:
+
+                    shift = 4;
+                    break;
+            }
+
+            dev->sense[6] = (BYTE)(( (dev->ckdcurcyl >> 8) << shift )
+                          | (dev->ckdcurhead & 0x1F));
+        }
     }
 
     /* Sense byte 7 contains the format code and message type */
     dev->sense[7] = (format << 4) | (message & 0x0F);
 
     /* Sense bytes 8-23 depend on the format code */
-    switch (format) {
+    switch (format)
+    {
+        case FORMAT_4: /* Data check */
+        case FORMAT_5: /* Data check with displacement information */
 
-    case FORMAT_4: /* Data check */
-    case FORMAT_5: /* Data check with displacement information */
-        /* Sense bytes 8-12 contain the CCHHR of the record in error */
-        store_hw( &dev->sense[ 8], (U16)dev->ckdcurcyl  );
-        store_hw( &dev->sense[10], (U16)dev->ckdcurhead );
-        dev->sense[12] = (BYTE) dev->ckdcurrec;
-        break;
-
-    } /* end switch(format) */
+            /* Sense bytes 8-12 contain the CCHHR of the record in error */
+            store_hw( &dev->sense[ 8], (U16)dev->ckdcurcyl  );
+            store_hw( &dev->sense[10], (U16)dev->ckdcurhead );
+            dev->sense[12] = (BYTE) dev->ckdcurrec;
+            break;
+    }
 
     /* Sense byte 27 bit 0 indicates 24-byte compatibility sense data*/
     dev->sense[27] = 0x80;
