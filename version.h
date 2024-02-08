@@ -19,7 +19,7 @@
 #include "hercules.h"
 
 #define HERCULES_COPYRIGHT \
-       "(C) Copyright 1999-2023 by Roger Bowler, Jan Jaeger, and others"
+       "(C) Copyright 1999-2024 by Roger Bowler, Jan Jaeger, and others"
 
 #if !defined( _MSVC_ )
 

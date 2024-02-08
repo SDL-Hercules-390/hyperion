@@ -24,7 +24,7 @@
 #endif
 
 #define HERCULES_PRODUCT          "The Hercules System/370, ESA/390, and z/Architecture Emulator"
-#define HERCULES_COPYRIGHT        "(C) Copyright 1999-2023"
+#define HERCULES_COPYRIGHT        "(C) Copyright 1999-2024"
 #define HERCULES_COMPANY          "by Roger Bowler, Jan Jaeger, and others"
 #define HERCULES_PRODUCT_URL      "http://sdl-hercules-390.github.io/html"
 #define HERCULES_PRODUCT_EMAIL    "group@hercules-390.groups.io"
