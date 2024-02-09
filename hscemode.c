@@ -2855,7 +2855,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
     }
 
     /* (sort...) */
-    qsort(icount, i, sizeof(ICOUNT_INSTR), icount_cmd_sort);				
+    qsort(icount, i, sizeof(ICOUNT_INSTR), icount_cmd_sort);
 
 #define  ICOUNT_WIDTH  "12"     /* Print field width */
 
@@ -2864,43 +2864,43 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
     // "%s"
     WRMSG( HHC02292, "I", "Sorted icount display:" );
 
-	for (i1 = 0; i1 < i; i1++)
-	{
-		memset(fakeinst, 0, sizeof(fakeinst));
-		int bufl = 0;
-		switch (icount[i1].opcode1)
-		{
-		case 0x01:
-		case 0xA4:
-		case 0xA5:
-		case 0xA6:
-		case 0xA7:
-		case 0xB2:
-		case 0xB3:
-		case 0xB9:
-		case 0xC0:
-		case 0xC2:
-		case 0xC4:
-		case 0xC6:
-		case 0xC8:
-		case 0xE3:
-		case 0xE4:
-		case 0xE5:
-		case 0xE7:
-		case 0xEB:
-		case 0xEC:
-		case 0xED:
-		{
+   for (i1 = 0; i1 < i; i1++)
+   {
+      memset(fakeinst, 0, sizeof(fakeinst));
+      int bufl = 0;
+      switch (icount[i1].opcode1)
+      {
+      case 0x01:
+      case 0xA4:
+      case 0xA5:
+      case 0xA6:
+      case 0xA7:
+      case 0xB2:
+      case 0xB3:
+      case 0xB9:
+      case 0xC0:
+      case 0xC2:
+      case 0xC4:
+      case 0xC6:
+      case 0xC8:
+      case 0xE3:
+      case 0xE4:
+      case 0xE5:
+      case 0xE7:
+      case 0xEB:
+      case 0xEC:
+      case 0xED:
+      {
             MSGBUF(instText, "'%2.2X%2.2X'", icount[i1].opcode1, icount[i1].opcode2);
             fakeinst[icount[i1].opc2pos] = icount[i1].opcode2;
-			break;
-		}
-		default:
-		{
+         break;
+      }
+        default:
+      {
             MSGBUF(instText, "'%2.2X'  ", icount[i1].opcode1);
-			break;
-		}
-		}
+            break;
+        }
+      }
         bufl = MSGBUF
         (
             buf, "Inst %s count %" ICOUNT_WIDTH PRIu64 " (%2d%%) time %" ICOUNT_WIDTH PRIu64 " (%10f) ",
@@ -2908,9 +2908,9 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             icount[i1].time, ((float)icount[i1].time / icount[i1].count)
         );
         fakeinst[0] = icount[i1].opcode1;
-		bufl += PRINT_INST(regs->arch_mode, fakeinst, buf + bufl);
-		WRMSG(HHC02292, "I", buf);
-	}
+      bufl += PRINT_INST(regs->arch_mode, fakeinst, buf + bufl);
+      WRMSG(HHC02292, "I", buf);
+   }
 
     return 0;
 }
