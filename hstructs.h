@@ -1109,6 +1109,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         U64 imape3[256];
         U64 imape4[256];
         U64 imape5[256];
+        U64 imape7[256];
         U64 imapeb[256];
         U64 imapec[256];
         U64 imaped[256];
@@ -1130,6 +1131,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         U64 imape3T[256];
         U64 imape4T[256];
         U64 imape5T[256];
+        U64 imape7T[256];
         U64 imapebT[256];
         U64 imapecT[256];
         U64 imapedT[256];
@@ -1152,6 +1154,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
             + sizeof(sysblk.imape3) \
             + sizeof(sysblk.imape4) \
             + sizeof(sysblk.imape5) \
+            + sizeof(sysblk.imape7) \
             + sizeof(sysblk.imapeb) \
             + sizeof(sysblk.imapec) \
             + sizeof(sysblk.imaped) \
@@ -1172,6 +1175,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
             + sizeof(sysblk.imape3T) \
             + sizeof(sysblk.imape4T) \
             + sizeof(sysblk.imape5T) \
+            + sizeof(sysblk.imape7T) \
             + sizeof(sysblk.imapebT) \
             + sizeof(sysblk.imapecT) \
             + sizeof(sysblk.imapedT) \
