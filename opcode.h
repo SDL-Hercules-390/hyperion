@@ -232,7 +232,7 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
     {                                                               \
         if (sysblk.icount)                                          \
         {                                                           \
-            int used;                                               \
+            U64 used;                                               \
             gettimeofday(&sysblk.start_time, NULL);                 \
             switch ((_inst)[0]) {                                   \
             case 0x01:                                              \
@@ -323,7 +323,7 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
         {                                                           \
             struct timeval end_time;                                \
             struct timeval dur;                                     \
-            U64 elapsed_usecs;                                       \
+            U64 elapsed_usecs;                                      \
                                                                     \
             gettimeofday(&end_time, NULL);                          \
             timeval_subtract(&sysblk.start_time, &end_time, &dur);  \
