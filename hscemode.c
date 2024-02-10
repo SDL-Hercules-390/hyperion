@@ -2694,7 +2694,7 @@ typedef struct {
     unsigned char opcode1; // Operation code, first byte
     unsigned char opcode2; // Operation code, second byte
     U8 opc2pos;            // Opcode2 position in Instr
-    U64 count;             // Execution count from sysblk.imap??
+    U64 count;             // Execution count from sysblk.imaps.imap??
     U64 time;              // Execution time
 } ICOUNT_INSTR;
 
@@ -2744,7 +2744,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             || CMD( argv[1], ZERO,  1 )
         )
         {
-            memset( IMAP_FIRST, 0, IMAP_SIZE );
+            memset( &sysblk.imaps, 0, sizeof sysblk.imaps );
             // "%-14s set to %s"
             WRMSG( HHC02204, "I", argv[0], "ZERO" );
             return 0;
@@ -2789,14 +2789,14 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             {                                                       \
                 for (i2=0; i2 < _nn; i2++)                          \
                 {                                                   \
-                    if (sysblk._map[ i2 ])                          \
+                    if (sysblk.imaps._map[ i2 ])                    \
                     {                                               \
                         icount[i].opcode1 = i1;                     \
                         icount[i].opcode2 = i2;                     \
                         icount[i].opc2pos = _pos;                   \
-                        icount[i].time = sysblk._mapT[ i2 ];        \
-                        icount[i++].count = sysblk._map[ i2 ];      \
-                        total += sysblk._map[ i2 ];                 \
+                        icount[i].time = sysblk.imaps._mapT[ i2 ];  \
+                        icount[i++].count = sysblk.imaps._map[ i2 ];\
+                        total += sysblk.imaps._map[ i2 ];           \
                                                                     \
                         if (i == (MAX_ICOUNT_INSTR - 1))            \
                         {                                           \
@@ -2833,15 +2833,15 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             default:
             {
 
-                if (sysblk.imapxx[ i1 ])
+                if (sysblk.imaps.imapxx[ i1 ])
                 {
                     icount[i].opcode1 = i1;
                     icount[i].opcode2 = 0;
                     icount[i].opc2pos = 0;
-                    icount[i].time = sysblk.imapxxT[ i1 ];
-                    icount[i++].count = sysblk.imapxx[i1];
+                    icount[i].time = sysblk.imaps.imapxxT[ i1 ];
+                    icount[i++].count = sysblk.imaps.imapxx[i1];
 
-                    total += sysblk.imapxx[ i1 ];
+                    total += sysblk.imaps.imapxx[ i1 ];
 
                     if (i == (MAX_ICOUNT_INSTR - 1))
                     {

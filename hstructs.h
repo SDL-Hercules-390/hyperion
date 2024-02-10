@@ -1091,95 +1091,51 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         bool    icount;                 /* true = enabled, else not. */
         struct timeval start_time;      /* OPCODE start time         */
 
-#define IMAP_FIRST      sysblk.imap01
+        struct IMAPS {
+            U64 imap01[256];
+            U64 imapa4[256];
+            U64 imapa5[16];
+            U64 imapa6[256];
+            U64 imapa7[16];
+            U64 imapb2[256];
+            U64 imapb3[256];
+            U64 imapb9[256];
+            U64 imapc0[16];
+            U64 imapc2[16];
+            U64 imapc4[16];
+            U64 imapc6[16];
+            U64 imapc8[16];
+            U64 imape3[256];
+            U64 imape4[256];
+            U64 imape5[256];
+            U64 imape7[256];
+            U64 imapeb[256];
+            U64 imapec[256];
+            U64 imaped[256];
+            U64 imapxx[256];
 
-        U64 imap01[256];
-        U64 imapa4[256];
-        U64 imapa5[ 16];
-        U64 imapa6[256];
-        U64 imapa7[ 16];
-        U64 imapb2[256];
-        U64 imapb3[256];
-        U64 imapb9[256];
-        U64 imapc0[ 16];
-        U64 imapc2[ 16];
-        U64 imapc4[ 16];
-        U64 imapc6[ 16];
-        U64 imapc8[ 16];
-        U64 imape3[256];
-        U64 imape4[256];
-        U64 imape5[256];
-        U64 imape7[256];
-        U64 imapeb[256];
-        U64 imapec[256];
-        U64 imaped[256];
-        U64 imapxx[256];
-
-        U64 imap01T[256];
-        U64 imapa4T[256];
-        U64 imapa5T[ 16];
-        U64 imapa6T[256];
-        U64 imapa7T[ 16];
-        U64 imapb2T[256];
-        U64 imapb3T[256];
-        U64 imapb9T[256];
-        U64 imapc0T[ 16];
-        U64 imapc2T[ 16];
-        U64 imapc4T[ 16];
-        U64 imapc6T[ 16];
-        U64 imapc8T[ 16];
-        U64 imape3T[256];
-        U64 imape4T[256];
-        U64 imape5T[256];
-        U64 imape7T[256];
-        U64 imapebT[256];
-        U64 imapecT[256];
-        U64 imapedT[256];
-        U64 imapxxT[256];
-
-#define IMAP_SIZE \
-            ( sizeof(sysblk.imap01) \
-            + sizeof(sysblk.imapa4) \
-            + sizeof(sysblk.imapa5) \
-            + sizeof(sysblk.imapa6) \
-            + sizeof(sysblk.imapa7) \
-            + sizeof(sysblk.imapb2) \
-            + sizeof(sysblk.imapb3) \
-            + sizeof(sysblk.imapb9) \
-            + sizeof(sysblk.imapc0) \
-            + sizeof(sysblk.imapc2) /*@Z9*/ \
-            + sizeof(sysblk.imapc4) /*208*/ \
-            + sizeof(sysblk.imapc6) /*208*/ \
-            + sizeof(sysblk.imapc8) \
-            + sizeof(sysblk.imape3) \
-            + sizeof(sysblk.imape4) \
-            + sizeof(sysblk.imape5) \
-            + sizeof(sysblk.imape7) \
-            + sizeof(sysblk.imapeb) \
-            + sizeof(sysblk.imapec) \
-            + sizeof(sysblk.imaped) \
-            + sizeof(sysblk.imapxx) \
-            + sizeof(sysblk.imap01T) \
-            + sizeof(sysblk.imapa4T) \
-            + sizeof(sysblk.imapa5T) \
-            + sizeof(sysblk.imapa6T) \
-            + sizeof(sysblk.imapa7T) \
-            + sizeof(sysblk.imapb2T) \
-            + sizeof(sysblk.imapb3T) \
-            + sizeof(sysblk.imapb9T) \
-            + sizeof(sysblk.imapc0T) \
-            + sizeof(sysblk.imapc2T) /*@Z9*/ \
-            + sizeof(sysblk.imapc4T) /*208*/ \
-            + sizeof(sysblk.imapc6T) /*208*/ \
-            + sizeof(sysblk.imapc8T) \
-            + sizeof(sysblk.imape3T) \
-            + sizeof(sysblk.imape4T) \
-            + sizeof(sysblk.imape5T) \
-            + sizeof(sysblk.imape7T) \
-            + sizeof(sysblk.imapebT) \
-            + sizeof(sysblk.imapecT) \
-            + sizeof(sysblk.imapedT) \
-            + sizeof(sysblk.imapxxT) )
+            U64 imap01T[256];
+            U64 imapa4T[256];
+            U64 imapa5T[16];
+            U64 imapa6T[256];
+            U64 imapa7T[16];
+            U64 imapb2T[256];
+            U64 imapb3T[256];
+            U64 imapb9T[256];
+            U64 imapc0T[16];
+            U64 imapc2T[16];
+            U64 imapc4T[16];
+            U64 imapc6T[16];
+            U64 imapc8T[16];
+            U64 imape3T[256];
+            U64 imape4T[256];
+            U64 imape5T[256];
+            U64 imape7T[256];
+            U64 imapebT[256];
+            U64 imapecT[256];
+            U64 imapedT[256];
+            U64 imapxxT[256];
+        } imaps;
 
 #endif // defined( OPTION_INSTR_COUNT_AND_TIME )
 
