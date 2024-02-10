@@ -236,67 +236,67 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
             gettimeofday(&sysblk.start_time, NULL);                 \
             switch ((_inst)[0]) {                                   \
             case 0x01:                                              \
-                used = sysblk.imap01[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imap01[(_inst)[1]]++;           \
                 break;                                              \
             case 0xA4:                                              \
-                used = sysblk.imapa4[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapa4[(_inst)[1]]++;           \
                 break;                                              \
             case 0xA5:                                              \
-                used = sysblk.imapa5[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapa5[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xA6:                                              \
-                used = sysblk.imapa6[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapa6[(_inst)[1]]++;           \
                 break;                                              \
             case 0xA7:                                              \
-                used = sysblk.imapa7[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapa7[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xB2:                                              \
-                used = sysblk.imapb2[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapb2[(_inst)[1]]++;           \
                 break;                                              \
             case 0xB3:                                              \
-                used = sysblk.imapb3[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapb3[(_inst)[1]]++;           \
                 break;                                              \
             case 0xB9:                                              \
-                used = sysblk.imapb9[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapb9[(_inst)[1]]++;           \
                 break;                                              \
             case 0xC0:                                              \
-                used = sysblk.imapc0[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc0[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xC2:                                              \
-                used = sysblk.imapc2[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc2[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xC4:                                              \
-                used = sysblk.imapc4[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc4[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xC6:                                              \
-                used = sysblk.imapc6[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc6[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xC8:                                              \
-                used = sysblk.imapc8[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc8[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xE3:                                              \
-                used = sysblk.imape3[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imape3[(_inst)[5]]++;           \
                 break;                                              \
             case 0xE4:                                              \
-                used = sysblk.imape4[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imape4[(_inst)[1]]++;           \
                 break;                                              \
             case 0xE5:                                              \
-                used = sysblk.imape5[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imape5[(_inst)[1]]++;           \
                 break;                                              \
             case 0xE7:                                              \
-                used = sysblk.imape7[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imape7[(_inst)[5]]++;           \
                 break;                                              \
             case 0xEB:                                              \
-                used = sysblk.imapeb[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imapeb[(_inst)[5]]++;           \
                 break;                                              \
             case 0xEC:                                              \
-                used = sysblk.imapec[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imapec[(_inst)[5]]++;           \
                 break;                                              \
             case 0xED:                                              \
-                used = sysblk.imaped[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imaped[(_inst)[5]]++;           \
                 break;                                              \
             default:                                                \
-                used = sysblk.imapxx[(_inst)[0]]++;                 \
+                used = sysblk.imaps.imapxx[(_inst)[0]]++;           \
             }                                                       \
                                                                     \
             if (!used)                                              \
@@ -331,67 +331,67 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
                                                                     \
             switch ((_inst)[0]) {                                   \
             case 0x01:                                              \
-                sysblk.imap01T[(_inst)[1]]+=elapsed_usecs;          \
+                sysblk.imaps.imap01T[(_inst)[1]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xA4:                                              \
-                sysblk.imapa4T[(_inst)[1]]+=elapsed_usecs;          \
+                sysblk.imaps.imapa4T[(_inst)[1]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xA5:                                              \
-                sysblk.imapa5T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                sysblk.imaps.imapa5T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
                 break;                                              \
             case 0xA6:                                              \
-                sysblk.imapa6T[(_inst)[1]]+=elapsed_usecs;          \
+                sysblk.imaps.imapa6T[(_inst)[1]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xA7:                                              \
-                sysblk.imapa7T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                sysblk.imaps.imapa7T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
                 break;                                              \
             case 0xB2:                                              \
-                sysblk.imapb2T[(_inst)[1]]+=elapsed_usecs;          \
+                sysblk.imaps.imapb2T[(_inst)[1]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xB3:                                              \
-                sysblk.imapb3T[(_inst)[1]]+=elapsed_usecs;          \
+                sysblk.imaps.imapb3T[(_inst)[1]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xB9:                                              \
-                sysblk.imapb9T[(_inst)[1]]+=elapsed_usecs;          \
+                sysblk.imaps.imapb9T[(_inst)[1]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xC0:                                              \
-                sysblk.imapc0T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                sysblk.imaps.imapc0T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
                 break;                                              \
             case 0xC2:                                              \
-                sysblk.imapc2T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                sysblk.imaps.imapc2T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
                 break;                                              \
             case 0xC4:                                              \
-                sysblk.imapc4T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                sysblk.imaps.imapc4T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
                 break;                                              \
             case 0xC6:                                              \
-                sysblk.imapc6T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                sysblk.imaps.imapc6T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
                 break;                                              \
             case 0xC8:                                              \
-                sysblk.imapc8T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                sysblk.imaps.imapc8T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
                 break;                                              \
             case 0xE3:                                              \
-                sysblk.imape3T[(_inst)[5]]+=elapsed_usecs;          \
+                sysblk.imaps.imape3T[(_inst)[5]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xE4:                                              \
-                sysblk.imape4T[(_inst)[1]]+=elapsed_usecs;          \
+                sysblk.imaps.imape4T[(_inst)[1]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xE5:                                              \
-                sysblk.imape5T[(_inst)[1]]+=elapsed_usecs;          \
+                sysblk.imaps.imape5T[(_inst)[1]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xE7:                                              \
-                sysblk.imape7T[(_inst)[5]]+=elapsed_usecs;          \
+                sysblk.imaps.imape7T[(_inst)[5]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xEB:                                              \
-                sysblk.imapebT[(_inst)[5]]+=elapsed_usecs;          \
+                sysblk.imaps.imapebT[(_inst)[5]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xEC:                                              \
-                sysblk.imapecT[(_inst)[5]]+=elapsed_usecs;          \
+                sysblk.imaps.imapecT[(_inst)[5]]+=elapsed_usecs;    \
                 break;                                              \
             case 0xED:                                              \
-                sysblk.imapedT[(_inst)[5]]+=elapsed_usecs;          \
+                sysblk.imaps.imapedT[(_inst)[5]]+=elapsed_usecs;    \
                 break;                                              \
             default:                                                \
-                sysblk.imapxxT[(_inst)[0]]+=elapsed_usecs;          \
+                sysblk.imaps.imapxxT[(_inst)[0]]+=elapsed_usecs;    \
             }                                                       \
         }                                                           \
     } while (0)
