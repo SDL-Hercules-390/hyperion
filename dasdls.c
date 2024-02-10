@@ -60,6 +60,7 @@ static int runflgs   = 0;       /* run flags set from command line   */
 #define rf_header    0x08       /*     show header                   */
 #define rf_info      0x10       /*     show F1 info                  */
 #define rf_cchh      0x20       /*     show extent cchh info         */
+#define rf_nosort    0x40       /*     do NOT sort results           */
 
 /*********************************************************************/
 /* sort by dsname support                                            */
@@ -629,7 +630,8 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent )
         int i;
 
         /* Sort them into ascending sequence by dsname */
-        qsort( linestab, numlines, sizeof( linestab ), sort_linestab );
+        if (!(runflgs & rf_nosort))
+            qsort( linestab, numlines, sizeof( linestab ), sort_linestab );
 
         /* NOW actually print them all for real */
         for (i=0; i < numlines; ++i)
@@ -755,6 +757,11 @@ char           *fn, *sfn;
     {
         fn = *argv;
 
+        if (strcmp( fn, "-nosort" ) == 0)   /* do NOT sort results */
+        {
+            runflgs |= rf_nosort;
+            continue;
+        }
         if (strcmp( fn, "-info" ) == 0)     /* show F1 info */
         {
             runflgs |= rf_info;
