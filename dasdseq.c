@@ -21,7 +21,7 @@
 /*  we want the DSCB as read from dasd so we can check some of the   */
 /*  file attributes (such as DSORG, RECFM, LRECL).                   */
 /*                                                                   */
-/*  Dasdseq now uses the same case for the output dataset as the     */
+/*  Dasdseq now uses the same case for the output file as the        */
 /*  user specifies on the command line.  Prior versions always       */
 /*  used upper case, which seems unnecessarily loud.                 */
 /*                                                                   */
@@ -127,7 +127,7 @@ char    *sfn;                   // shadow file parm
 int     absvalid = 0;           // 1 = -abs specified, use CCHH not dsn
 char    *argdsn;                // MVS dataset name
 int     expert = 0;             // enable -abs help
-int     tran_ascii = 0;         // 1 = ascii output
+bool    tran_ascii  = false;    // true = ascii output to terminal
 
 #ifdef DEBUG
 int     debug = 1;              // enable debug code
@@ -150,7 +150,7 @@ void showhelp(char *pgm)
     {
         strlcpy( part1,
             "[-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec\n"
-            "HHC02660I   -debug    optional - Enables debug mode, additional debug help appears\n"
+            "HHC02660I   -debug    optional - Enables debug mode, additional debug help appears.\n"
             , sizeof( part1 ));
     }
     else
@@ -161,22 +161,23 @@ void showhelp(char *pgm)
     }
 
     strlcpy( part2,
-        "HHC02660I   -expert   optional - Additional help describes expert operands\n"
-        "HHC02660I   -ascii    optional - translate output file to ascii, trim trailing blanks\n"
-        "HHC02660I   image     required - [path/]filename of dasd image file (dasd volume)\n"
-        "HHC02660I   shadow    optional - [path/]filename of shadow file (note sf=)\n"
+        "HHC02660I   -expert   optional - Additional help describes expert operands.\n"
+        "HHC02660I   -ascii    optional - translate input to ASCII, trimming trailing blanks,\n"
+        "HHC02660I                        displaying results to stdout.\n"
+        "HHC02660I   image     required - [path/]filename of dasd image file (dasd volume).\n"
+        "HHC02660I   shadow    optional - [path/]filename of shadow file (note sf=).\n"
         , sizeof( part2 ));
 
     if (expert)
     {
         MSGBUF( part3,
-            "HHC02660I   ALL EXPERT FACILITIES ARE EXPERIMENTAL\n"
-            "HHC02660I   attr      optional - dataset attributes (only useful with -abs)\n"
+            "HHC02660I   ALL EXPERT FACILITIES ARE EXPERIMENTAL!\n"
+            "HHC02660I   attr      optional - dataset attributes (only useful with -abs).\n"
             "HHC02660I             attr syntax: [-recfm fb] [-lrecl aa]\n"
-            "HHC02660I             -recfm designates RECFM, reserved for future support\n"
-            "HHC02660I             fb - fixed, blocked (only RECFM currently supported)\n"
-            "HHC02660I             -lrecl designates dataset LRECL\n"
-            "HHC02660I             aa - decimal logical record length (default 80)\n"
+            "HHC02660I             -recfm designates RECFM, reserved for future support.\n"
+            "HHC02660I             fb - fixed, blocked (only RECFM currently supported).\n"
+            "HHC02660I             -lrecl designates dataset LRECL.\n"
+            "HHC02660I             aa - decimal logical record length (default 80).\n"
             "HHC02660I                  Blocksize need not be specified; dasdseq handles whatever\n"
             "HHC02660I                  block size comes off the volume.\n"
             "HHC02660I   filespec  required (optional sub-operands in the following order):\n"
@@ -198,40 +199,40 @@ void showhelp(char *pgm)
             "HHC02660I                  due to potentially missing EOF markers in the extent, and the\n"
             "HHC02660I                  fact that the F1 DSCB DS1LSTAR field is not valid.\n"
             "HHC02660I                  Check your output file before you panic.\n"
-            "HHC02660I                  Fbcopy ignores EOF, in case you are attempting to recovery PDS\n"
+            "HHC02660I                  fbcopy ignores EOF in case you are attempting to recovery PDS\n"
             "HHC02660I                  member(s) from a damaged dasd volume, preferring to wait until\n"
             "HHC02660I                  all tracks in the extent have been processed.\n"
             "HHC02660I                  Tracks containing PDS members may have more than one EOF per track.\n"
             "HHC02660I                  Expect a lot of associated manual effort with -abs.\n"
-            "HHC02660I             -heads defines # tracks per cylinder on device;\n"
+            "HHC02660I             -heads defines # tracks per cylinder on device.\n"
             "HHC02660I             xx - decimal number of heads per cylinder on device\n"
-            "HHC02660I                  default xx = 15 (valid for 3380s, 3390s)\n"
+            "HHC02660I                  default xx = 15 (valid for 3380s, 3390s).\n"
             "HHC02660I             -abs indicates the beginning of each extent's location in terms of\n"
             "HHC02660I                  absolute dasd image location.\n"
-            "HHC02660I             cc - decimal cylinder number (relative zero)\n"
-            "HHC02660I             hh - decimal head number (relative zero)\n"
-            "HHC02660I             tt - decimal number of tracks in extent\n"
-            "HHC02660I             filename will be the filename of the output file in the current directory;\n"
-            "HHC02660I                  output filename in the same case as the command line filename.\n"
+            "HHC02660I             cc - decimal cylinder number (relative to zero).\n"
+            "HHC02660I             hh - decimal head number (relative to zero).\n"
+            "HHC02660I             tt - decimal number of tracks in extent.\n"
+            "HHC02660I             filename will be the filename of the output file in the current directory.\n"
+            "HHC02660I                  output filename will be in the same case as the command line filename.\n"
             , MAX_EXTENTS );
     }
     else
     {
         strlcpy( part3,
-            "HHC02660I   filespec  required - MVS dataset name of DSORG=PS dataset, output filename\n"
+            "HHC02660I   filespec  required - MVS dataset name of DSORG=PS dataset, output filename.\n"
             , sizeof( part3 ));
     }
 
     if (debug)
     {
         strlcpy( part4,
-            "HHC02660I Debugging options (at end of dasdseq command)\n"
+            "HHC02660I Debugging options (at end of dasdseq command):\n"
             "HHC02660I   [verbose [x [y [z]]]]\n"
-            "HHC02660I   verbose   debug output level (default = 0 when not specified)\n"
-            "HHC02660I       x  main program (default = 1 when verbose specified)\n"
-            "HHC02660I       y  copyfile + showf1\n"
-            "HHC02660I       z  dasdutil\n"
-            "HHC02660I       Higher numbers produces more output"
+            "HHC02660I   verbose   debug output level (default = 0 when not specified).\n"
+            "HHC02660I       x  main program (default = 1 when verbose specified).\n"
+            "HHC02660I       y  copyfile + showf1.\n"
+            "HHC02660I       z  dasdutil.\n"
+            "HHC02660I       Higher numbers produces more output."
             , sizeof( part4 ));
     }
     else
@@ -259,7 +260,8 @@ int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
 
     //  Usage: dasdseq [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec
 
-    argv++;                             // skip dasdseq command argv[0]
+    argv++;  // skip dasdseq command argv[0]
+
     if ((*argv) && (strcasecmp(*argv, "-debug") == 0))
     {
         argv++;
@@ -267,6 +269,7 @@ int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
         // "%s mode enabled"
         WRMSG( HHC02672, "D", "Debug" );
     }
+
     if ((*argv) && (strcasecmp(*argv, "-expert") == 0))
     {
         argv++;
@@ -274,92 +277,110 @@ int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
         // "% mode enabled"
         if (debug) WRMSG( HHC02672, "I", "EXPERT" );
     }
+
     if ((*argv) && (strcasecmp(*argv, "-ascii") == 0))
     {
         argv++;
-        tran_ascii = 1;
+        tran_ascii = true;
         // "%s mode enabled"
         if (debug) WRMSG( HHC02672, "I", "ASCII translation" );
     }
     if (*argv) din = *argv++;           // dasd image filename
+
     if (debug)
     {
         // "%s file%s '%s'"
         WRMSG( HHC02673, "D", "Image", "", din );
     }
+
     if (*argv && strlen(*argv) > 3 && !memcmp(*argv, "sf=", 3))
     {
-        sfn = *argv++;                  // shadow file parm
+        sfn = *argv++;  // shadow file parm
     }
     else
         sfn = NULL;
+
     if (debug)
     {
         // "%s file%s '%s'"
         WRMSG( HHC02673, "D", "SHADOW", "(s)", sfn );
     }
+
     dadsm->f1buf.ds1recfm =
                 RECFM_FORMAT_F | RECFM_BLOCKED; // recfm FB for fbcopy
+
     if ((*argv) && (strcasecmp(*argv, "-recfm") == 0))
     {
-        argv++;                                 // skip -recfm
+        argv++;  // skip -recfm
+
         if ((*argv) && (strcasecmp(*argv, "fb") == 0))
         {
-            argv++;                             // skip fb
+            argv++;  // skip fb
+
             // "%s=%s"
             if (debug) WRMSG( HHC02674, "D", "RECFM", "FB" );
         }
         else
         {
             // "Invalid argument: %s"
-            argv++;                             // skip bad recfm
+            argv++;  // skip bad recfm
             MSGBUF( msgbuf, "-recfm %s", *argv );
             WRMSG( HHC02465, "I", msgbuf);
         }
     }
+
     if ((*argv) && (strcasecmp(*argv, "-lrecl") == 0))
     {
-        argv++;                                         // skip -lrecl
-        if (*argv) lrecl = atoi(*argv++);               // lrecl value
+        argv++;                            // skip -lrecl
+        if (*argv) lrecl = atoi(*argv++);  // lrecl value
+
         if (debug)
         {
             // "%s=%d"
             WRMSG( HHC02675, "D", "LRECL", lrecl );
         }
     }
-    dadsm->f1buf.ds1lrecl[0] = lrecl >> 8;      // for fbcopy
+
+    dadsm->f1buf.ds1lrecl[0] = lrecl >> 8; // for fbcopy
     dadsm->f1buf.ds1lrecl[1] = lrecl - ((lrecl >> 8) << 8);
+
     if ((*argv) && (strcasecmp(*argv, "-heads") == 0))
     {
-        argv++;                                 // skip -heads
-        if (*argv) heads = atoi(*argv++);       // heads value
+        argv++;                            // skip -heads
+        if (*argv) heads = atoi(*argv++);  // heads value
     }
+
     if (debug)
     {
         // "%s=%d"
         WRMSG( HHC02675, "D", "HEADS", heads );
     }
+
     if ((*argv) && (strcasecmp(*argv, "-abs") == 0))
     {
-        absvalid = 1;                               // CCHH valid
+        absvalid = 1;  // CCHH valid
+
         while ((*argv) && (strcasecmp(*argv, "-abs") == 0))
         {
-            argv++;                                 // skip -abs
-            abscyl = 0; abshead = 0; abstrk = 1;    // defaults
-            if (*argv) abscyl = atoi(*argv++);      // abs cc
-            if (*argv) abshead = atoi(*argv++);     // abs hh
-            if (*argv) abstrk = atoi(*argv++);      // abs tracks
+            argv++;                               // skip -abs
+            abscyl = 0; abshead = 0; abstrk = 1;  // defaults
+
+            if (*argv) abscyl = atoi(*argv++);    // abs cc
+            if (*argv) abshead = atoi(*argv++);   // abs hh
+            if (*argv) abstrk = atoi(*argv++);    // abs tracks
 
             // Build extent entry for -abs group
             makext(extnum, heads,
                     (DSXTENT *) &dadsm->f1ext, abscyl, abshead, abstrk);
             extnum++;
-            dadsm->f1buf.ds1noepv = extnum;         // for fbcopy
+            dadsm->f1buf.ds1noepv = extnum;  // for fbcopy
+
             if (debug)
             {
                 // "Absolute CC %d HH %d [%04X%04X] Track %d/%X"
                 WRMSG( HHC02676, "D", abscyl, abshead, abscyl, abshead, abstrk, abstrk);
             }
+
             if (extnum > MAX_EXTENTS)
             {
                 // "Requested number of extents %d exceeds maximum %d; utility ends"
@@ -369,36 +390,45 @@ int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
         }
         // if (debug) sayext(MAX_EXTENTS, dadsm->f1ext);// show extent table
     }
+
     if (debug)
     {
         // "%s"
         WRMSG( HHC02677, "D", "Completed Format 1 DSCB:" );
         data_dump(&dadsm->f1buf, sizeof(FORMAT1_DSCB));
     }
-    if (*argv) argdsn = *argv++;        // [MVS dataset name/]output filename
+
+    if (*argv) argdsn = *argv++;  // [MVS dataset name/]output filename
+
     if (debug)
     {
         // "Dataset '%s'"
         WRMSG( HHC02678, "D", argdsn );
     }
-    if ((*argv) && (            // support deprecated 'ascii' operand
+
+    // support deprecated 'ascii' operand
+    if ((*argv) && (
                 (strcasecmp(*argv, "ascii") == 0) ||
                 (strcasecmp(*argv, "-ascii") == 0)
                 )
         )
     {
         argv++;
-        tran_ascii = 1;
+        tran_ascii = true;
         // "%s mode enabled"
         if (debug) WRMSG( HHC02672, "D", "ASCII translation" );
     }
+
     set_verbose_util(0);                // default util verbosity
+
     if ((*argv) && (strcasecmp(*argv, "verbose") == 0))
     {
         local_verbose = 1;
         argv++;
+
         if (*argv) local_verbose = atoi(*argv++);
         if (*argv) copy_verbose = atoi(*argv++);
+
         if (*argv)
         {
             util_verbose = atoi(*argv++);
@@ -421,6 +451,7 @@ int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
         showhelp(pgm);                     // show syntax before bailing
         exit(2);
     }
+
     return 0;
 }
 
@@ -622,7 +653,7 @@ u_int  calc_lstartrack( FORMAT1_DSCB* f1dscb, int verbose )
 //  Copy DSORG=PS RECFM=F[B] dataset to output file
 //
 //  Input:
-//      fout            FILE * (opened "w" for ascii, "wb" for ebcdic)
+//      fout            FILE * ("wb" for EBCDIC)
 //      cif             dasdutil control block
 //      f1dscb          F1 DSCB
 //      extent          dataset extent array
@@ -681,6 +712,7 @@ int fbcopy(     FILE            *fout,
     if (absvalid)
     {
         STRLCPY( zdsn, argdsn );
+
         // "%s"
         if (debug) WRMSG( HHC02677, "D", "absvalid" );
     }
@@ -729,6 +761,7 @@ int fbcopy(     FILE            *fout,
     if (tran)   // need ASCII translation buffer?
     {
         pascii = malloc(lrecl + 1);
+
         if (pascii == NULL)
         {
             // "%s: unable to allocate ASCII buffer"
@@ -757,6 +790,7 @@ int fbcopy(     FILE            *fout,
                 WRMSG( HHC02684, "I", f1dscb->ds1lstar[0], f1dscb->ds1lstar[1],
                     f1dscb->ds1lstar[2], trk, rec );
             }
+
             rc_copy = recs_written;
             break;
         }
@@ -766,7 +800,9 @@ int fbcopy(     FILE            *fout,
         if (trkconv != trk)     // avoid converting for each block
         {
             trkconv = trk;      // current track converted
+
             rc = convert_tt(trk, num_extents, extent, cif->heads, &cyl, &head);
+
             if (rc < 0)
             {
                 // "%s: convert_tt() track %5.5d/x'%04X', rc %d"
@@ -777,6 +813,7 @@ int fbcopy(     FILE            *fout,
                     rc_copy = -1;
                 break;
             }
+
             if (verbose > 1)
             {
                 // "Convert TT %5.5d/x'%04X' CCHH[%04X%04X]"
@@ -791,7 +828,9 @@ int fbcopy(     FILE            *fout,
             // "Reading track %5.5d/x'%04X' record %d/x'%X' CCHHR[%04X%04X%02X]"
             WRMSG( HHC02686, "I", trk, trk, rec, rec, cyl, head, rec );
         }
+
         rc_rb = read_block(cif, cyl, head, rec, NULL, NULL, &buffer, &len);
+
         if (rc_rb < 0)          // error
         {
             // "In %s: function %s rc %d%s"
@@ -825,6 +864,7 @@ int fbcopy(     FILE            *fout,
                 // "%s track %5.5d/x'%04X' rec %d"
                 WRMSG( HHC02687, "I", "EOF", trk, trk, rec );
             }
+
             if (absvalid)   // capture as much -abs data as possible
             {
                 if (verbose)
@@ -839,11 +879,13 @@ int fbcopy(     FILE            *fout,
                 break;
             }
         }
+
         if (verbose > 3)
         {
             // "read %d bytes"
             WRMSG( HHC02688, "I", len );
         }
+
         if (verbose > 2)
         {
             // "%s"
@@ -852,7 +894,7 @@ int fbcopy(     FILE            *fout,
             WRMSG( HHC02681, "I", "< END OF BUFFER DUMP" );
         }
 
-        //  Deblock input dasd block, write records to output dataset
+        //  Deblock input dasd block, write records to output file
 
         for (offset=0; offset < len; offset += lrecl)
         {
@@ -862,18 +904,21 @@ int fbcopy(     FILE            *fout,
                 WRMSG( HHC02689, "I", offset, lrecl, recs_written );
             }
 
-            if (tran)   // ASCII output
+            if (tran)   // ASCII display
             {
                 memset( pascii, 0, lrecl + 1 );
                 make_asciiz( pascii, lrecl + 1, buffer + offset, lrecl );
+
                 if (verbose > 4)
                 {
                     // "buffer offset %d rec %d:"
                     WRMSG( HHC02690, "I", offset, rec );
                     data_dump( buffer + offset, lrecl );
                 }
+
                 // "ascii> '%s'"
                 WRMSG( HHC02691, "I", pascii );
+
                 if (verbose > 3)
                     data_dump( pascii, lrecl );
             }
@@ -885,16 +930,22 @@ int fbcopy(     FILE            *fout,
                     WRMSG( HHC02681, "I", "EBCDIC buffer:" );
                     data_dump( buffer + offset, lrecl );
                 }
-                fwrite(buffer + offset, lrecl, 1, fout);
+
+                fwrite( buffer + offset, lrecl, 1, fout );
+
+                if (ferror( fout ))
+                {
+                    // "File %s; %s error: %s"
+                    FWRMSG( stderr, HHC02468, "E", zdsn, "fwrite()", strerror( errno ));
+                    rc_copy = -1;
+                    break;
+                }
             }
-            if (ferror(fout))
-            {
-                // "File %s; %s error: %s"
-                FWRMSG( stderr, HHC02468, "E", zdsn, "fwrite()", strerror( errno ));
-                rc_copy = -1;
-            }
-            recs_written++;
+
+            recs_written++;  // (or displayed if -ascii)
         }
+        /* end for (...)  */
+
         if (rc_copy != 0)
             break;
         else
@@ -1542,27 +1593,32 @@ int main(int argc, char **argv)
         }
     }
 
-    //  Open output dataset (EBCDIC requires binary open)
+    //  Open output file (EBCDIC requires binary open)
 
-    hostpath(pathname, argdsn, sizeof(pathname));
-
-    fout = fopen(pathname, (tran_ascii) ? "wb" : "w");
-    if (fout == NULL)
+    if (!tran_ascii) // EBCDIC
     {
-        // "File %s; %s error: %s"
-        FWRMSG( stderr, HHC02468, "E", argdsn, "fopen()", strerror( errno ));
-        close_ckd_image(cif);
-        exit(22);
-    }
-    if (local_verbose)
-    {
-        // "writing %s"
-        WRMSG( HHC02694, "I", argdsn );
+        hostpath(pathname, argdsn, sizeof(pathname));
+
+        fout = fopen(pathname, "wb");
+
+        if (fout == NULL)
+        {
+            // "File %s; %s error: %s"
+            FWRMSG( stderr, HHC02468, "E", argdsn, "fopen()", strerror( errno ));
+            close_ckd_image(cif);
+            exit(22);
+        }
+        if (local_verbose)
+        {
+            // "writing %s"
+            WRMSG( HHC02694, "I", argdsn );
+        }
     }
 
-    //  Write dasd data to output dataset
+    //  Write dasd data to output file (or just display it if -ascii)
 
     dsn_recs_written = fbcopy(fout, cif, &dadsm, tran_ascii, copy_verbose);
+
     if (dsn_recs_written == -1)
     {
         // "Error processing %s"
@@ -1570,17 +1626,24 @@ int main(int argc, char **argv)
     }
     else
     {
-        // "Records written to %s: %d"
-        WRMSG( HHC02475, "I", argdsn, dsn_recs_written );
+        // Records %s %s: %d"
+        WRMSG( HHC02475, "I",
+            tran_ascii ? "displayed on" : "written to",
+            tran_ascii ? "terminal" : argdsn,
+            dsn_recs_written );
     }
 
-    //  Close output dataset, dasd image and return to caller
+    //  Close output file, input dasd image and return to caller
 
-    fclose(fout);
-    if (local_verbose > 2)
+    if (!tran_ascii) // EBCDIC
     {
-        // "Closed output file %s"
-        WRMSG( HHC02695, "I", argdsn );
+        fclose(fout);
+
+        if (local_verbose > 2)
+        {
+            // "Closed output file %s"
+            WRMSG( HHC02695, "I", argdsn );
+        }
     }
 
     if (local_verbose > 3)

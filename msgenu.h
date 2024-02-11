@@ -1783,7 +1783,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02472 "Dataset is not RECFM %s; utility ends"
 #define HHC02473 "Dataset is not DSORG %s; utility ends"
 #define HHC02474 "Error processing %s"
-#define HHC02475 "Records written to %s: %d"
+#define HHC02475 "Records %s %s: %d"
 #define HHC02476 "Dataset %s not found"
 #define HHC02477 "In %s: function %s rc %d%s"
 #define HHC02478 "Length invalid for KEY %d or DATA %d%s"
