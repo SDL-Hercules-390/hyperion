@@ -128,7 +128,8 @@ int     absvalid = 0;           // 1 = -abs specified, use CCHH not dsn
 char    *argdsn;                // MVS dataset name
 int     expert = 0;             // enable -abs help
 bool    tran_ascii  = false;    // true = ascii output to terminal
-
+bool    record_mode = false;    // true = prefix records w/ftp-like
+                                // prefix: X'80'+XL2'lrecl'.
 #ifdef DEBUG
 int     debug = 1;              // enable debug code
 #else
@@ -149,14 +150,14 @@ void showhelp(char *pgm)
     if (expert)
     {
         strlcpy( part1,
-            "[-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec\n"
+            "[-debug] [-expert] [-ascii] [-record] image [sf=shadow] [attr] filespec\n"
             "HHC02660I   -debug    optional - Enables debug mode, additional debug help appears.\n"
             , sizeof( part1 ));
     }
     else
     {
         strlcpy( part1,
-            "[-expert] [-ascii] image [sf=shadow] filespec\n"
+            "[-expert] [-ascii] [-record] image [sf=shadow] filespec\n"
             , sizeof( part1 ));
     }
 
@@ -164,6 +165,8 @@ void showhelp(char *pgm)
         "HHC02660I   -expert   optional - Additional help describes expert operands.\n"
         "HHC02660I   -ascii    optional - translate input to ASCII, trimming trailing blanks,\n"
         "HHC02660I                        displaying results to stdout.\n"
+        "HHC02660I   -record   optional - Prefix each o/p record with X'80', XL2'lrecl'.\n"
+        "HHC02660I                        Note: mutually exclusive with -ascii option.\n"
         "HHC02660I   image     required - [path/]filename of dasd image file (dasd volume).\n"
         "HHC02660I   shadow    optional - [path/]filename of shadow file (note sf=).\n"
         , sizeof( part2 ));
@@ -258,7 +261,7 @@ int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
         int     lrecl = 80;             // default F1 DSCB lrecl
         char    msgbuf[128];            // message work area
 
-    //  Usage: dasdseq [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec
+    //  Usage: dasdseq [-debug] [-expert] [-ascii] [-record] image [sf=shadow] [attr] filespec
 
     argv++;  // skip dasdseq command argv[0]
 
@@ -285,6 +288,14 @@ int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
         // "%s mode enabled"
         if (debug) WRMSG( HHC02672, "I", "ASCII translation" );
     }
+    else if ((*argv) && (strcasecmp(*argv, "-record") == 0))
+    {
+        argv++;
+        record_mode = true;
+        // "%s mode enabled"
+        if (debug) WRMSG( HHC02672, "I", "RECORD" );
+    }
+
     if (*argv) din = *argv++;           // dasd image filename
 
     if (debug)
@@ -702,6 +713,7 @@ int fbcopy(     FILE            *fout,
     char    *pascii = NULL;
     char    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // ascii dsn
     char    msgbuf[128];                            // message work area
+    BYTE    prefix[3] = {0x80,0x00,0x00};           // record prefix
 
     // Kludge to avoid rewriting this code (for now):
     memcpy(&extent, (void *)&(dadsm->f1ext), sizeof(extent));
@@ -931,7 +943,16 @@ int fbcopy(     FILE            *fout,
                     data_dump( buffer + offset, lrecl );
                 }
 
-                fwrite( buffer + offset, lrecl, 1, fout );
+                if (record_mode)
+                {
+                    prefix[1] = (lrecl >> 8) & 0xFF;
+                    prefix[2] = (lrecl >> 0) & 0xFF;
+
+                    fwrite( prefix, 3, 1, fout );
+                }
+
+                if (!ferror( fout ))
+                    fwrite( buffer + offset, lrecl, 1, fout );
 
                 if (ferror( fout ))
                 {
