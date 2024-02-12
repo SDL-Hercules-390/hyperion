@@ -6,7 +6,7 @@
 #  Specification exceptions are not tested.
 # ---------------------------------------------------------------------
 
-mainsize    16
+mainsize    4
 numcpu      1
 sysclear
 archlvl     z/Arch

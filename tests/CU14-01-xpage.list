@@ -1,4 +1,4 @@
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     1
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -23,7 +23,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
                                                     19 *  Specification exceptions are not tested.
                                                     20 *
                                                     21 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
-                                                    22 *  obvious coding errors.  None of the tests are through.  They are
+                                                    22 *  obvious coding errors.  None of the tests are thorough.  They are
                                                     23 *  NOT designed to test all aspects of any of the instructions.
                                                     24 *
                                                     25 ***********************************************************************
@@ -50,7 +50,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
                                                     46 *        *Done
                                                     47 *
                                                     48 ***********************************************************************
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     2
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -77,7 +77,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 
 
 000001E0                      000001E0  00000200    67          ORG   CU14TST+X'200'        Start of actual test program...
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     3
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -118,7 +118,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
                                                    103 *
 0000020E  45E0 8302                     00000502   104          BAL   R14,TEST01       Test CU14   instruction
                                                    105 *
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     4
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -150,7 +150,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 
 
 00000402                      00000402  00000502   129          ORG   *+X'100'
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     5
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -209,7 +209,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 00000560  4710 835C                     0000055C   181          BC    B'0001',CU14MOD     cc=3, not finished
                                                    182
 00000564  44B0 83C4                     000005C4   183          EX    R11,CU14BC         fail if...
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     6
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -232,7 +232,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 00000598  4770 83BE                     000005BE   201          BNE   CU14FAIL          No, FAILTEST!
                                                    202 *
                                                    203 *        shift source/target addresses and try again to
-                                                   204 *        ensure multiple cross pabe bounday tests
+                                                   204 *        ensure multiple cross page bounday tests
                                                    205 *
 0000059C  4110 1001                     00000001   206          LA    R1,1(,R1)
 000005A0  41F0 F001                     00000001   207          LA    R15,1(,R15)
@@ -255,7 +255,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 
 000005C8                                           222          DROP  R7
 000005C8                      00000200             223          USING BEGIN,R8
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     7
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -299,7 +299,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
                               00008000  00000001   247 K32      EQU   (32*K)           32 KB
                               00010000  00000001   248 K64      EQU   (64*K)           64 KB
                               00100000  00000001   249 MB       EQU   (K*K)             1 MB
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     8
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -347,7 +347,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 
 
 
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page     9
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     9
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -384,7 +384,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 00000624  00000000                                 310          DC    A(0)     end of table
 00000628  00000000                                 311          DC    A(0)     end of table
                                                    312
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page    10
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    10
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -432,7 +432,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 00000673  4E                                       355          DC    XL1'4E'  N
 00000674  44                                       356          DC    XL1'44'  D
 00000675                                           357 UTF8AEND DS    0X
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page    11
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    11
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -472,7 +472,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 000006EC  00000044                                 392          DC    X'00000044'
 000006F0                                           393 UTF32AED DS    0X
                                                    394
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page    12
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    12
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -506,7 +506,7 @@ ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)        
 
 
                                                    417          END
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page    13
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    13
 
      SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
 
@@ -566,7 +566,7 @@ TNUM                X    000000        1   258  141
 TST1INIT            U    00052A        1   156  208
 TST1LOOP            U    00050A        1   140  212
 UTF32A              X    000680        1   364  299  363
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page    14
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    14
 
      SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
 
@@ -576,12 +576,12 @@ UTF8A               H    000638        2   320  300  319
 UTF8AEND            X    000675        1   357  300  319
 UTF8ALN             A    000634        4   319
 =F'0'               F    0005F4        4   242  211
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page    15
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    15
 
 MACRO  DEFN  REFERENCES
 
 No defined macros
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page    16
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    16
 
    DESC     SYMBOL  SIZE    POS      ADDR
 
@@ -590,11 +590,11 @@ Entry: 0
 Image      IMAGE    1776  000-6EF  000-6EF
   Region            1776  000-6EF  000-6EF
     CSECT  CU14TST  1776  000-6EF  000-6EF
-ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            10 Feb 2024 15:11:35  Page    17
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    17
 
-   STMT               FILE NAME
+   STMT                FILE NAME
 
-1     /devstor/dev/tests/CU14-01-xpage.asm
+1     /devstor/dev/tests/./CU14-01-xpage.asm
 
 
 ** NO ERRORS FOUND **

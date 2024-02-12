@@ -37,7 +37,7 @@
 #              1,000,000 iterations of CU14  took  11,811,615 microseconds
 # ------------------------------------------------------------------------------
 
-mainsize    16
+mainsize    8
 numcpu      1
 sysclear
 archlvl     z/Arch

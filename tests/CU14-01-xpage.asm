@@ -19,7 +19,7 @@
 *  Specification exceptions are not tested.
 *
 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
-*  obvious coding errors.  None of the tests are through.  They are
+*  obvious coding errors.  None of the tests are thorough.  They are
 *  NOT designed to test all aspects of any of the instructions.
 *
 ***********************************************************************
@@ -201,7 +201,7 @@ CU14MOD  CU14  R2,R4              Start with CU14 and m3=0
          BNE   CU14FAIL          No, FAILTEST!
 *
 *        shift source/target addresses and try again to
-*        ensure multiple cross pabe bounday tests
+*        ensure multiple cross page bounday tests
 *
          LA    R1,1(,R1)
          LA    R15,1(,R15)
