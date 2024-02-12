@@ -1757,6 +1757,12 @@
     <None Include="tests\CLCLE-04-performance.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\CU12-01-xpage.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\CU14-01-xpage.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -2099,6 +2105,12 @@
     <None Include="tests\csxtr.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\CU12-01-xpage.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\CU14-01-xpage.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2369,6 +2381,12 @@
     <None Include="tests\CLCLE-04-performance.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\CU12-01-xpage.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\CU14-01-xpage.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2595,6 +2613,18 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\CLCLE-04-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU12-01-xpage.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU12-01-xpage.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\CU14-01-xpage.list">

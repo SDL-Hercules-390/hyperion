@@ -4935,21 +4935,27 @@ bool    wfc;                            /* Well-Formedness-Checking  */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf8_to_utf16)
 {
-int     r1, r2;                         /* Register numbers          */
-int     m3;                             /* Mask                      */
-int     i;                              /* Loop counter              */
-int     cc = 0;                         /* Condition code            */
-VADR    addr1, addr2;                   /* Operand addresses         */
-GREG    len1, len2;                     /* Operand lengths           */
-int     pair;                           /* 1=Store Unicode pair      */
-U16     uvwxy;                          /* Unicode work area         */
-U16     unicode1;                       /* Unicode character         */
-U16     unicode2 = 0;                   /* Unicode low surrogate     */
-GREG    n;                              /* Number of UTF-8 bytes - 1 */
-BYTE    utf[4];                         /* UTF-8 bytes               */
-#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
-bool    wfc;                            /* WellFormednessChecking    */
-#endif
+    int     r1, r2;                         /* Register numbers          */
+    int     m3;                             /* Mask                      */
+    int     i;                              /* Loop counter              */
+    int     cc = 0;                         /* Condition code            */
+    VADR    addr1, addr2;                   /* Operand addresses         */
+    GREG    len1, len2;                     /* Operand lengths           */
+    int     pair;                           /* 1=Store Unicode pair      */
+    U16     uvwxy;                          /* Unicode work area         */
+    U16     unicode1;                       /* Unicode character         */
+    U16     unicode2 = 0;                   /* Unicode low surrogate     */
+    GREG    n;                              /* Number of UTF-8 bytes - 1 */
+    BYTE    utf[4];                         /* UTF-8 bytes               */
+    #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
+    bool    wfc;                            /* WellFormednessChecking    */
+    #endif
+
+    BYTE*   s2;                    // Source mainstor address (ie. addr2)
+    BYTE*   s2pg;                  // Source base page
+    BYTE*   d1;                    // Destination mainstor address (ie. addr1)
+    BYTE*   d1pg;                  // Destination base page
+    int     d1len;                 // Destination bytes written
 
     RRF_M(inst, regs, r1, r2, m3);
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
@@ -4974,6 +4980,14 @@ bool    wfc;                            /* WellFormednessChecking    */
     if (len1 == 0 && len2 > 0)
         cc = 1;
 
+    /* Get mainstor address to Source byte */
+    s2 = MADDRL( addr2, 1, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+    s2pg = MAINSTOR_PAGEBASE ( s2 );
+
+    /* Get mainstor address to Destination byte */
+    d1 = MADDRL( addr1, 1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
+    d1pg = MAINSTOR_PAGEBASE ( d1 );
+
     /* Process operands from left to right */
     for (i = 0; len1 > 0 && len2 > 0; i++)
     {
@@ -4984,8 +4998,10 @@ bool    wfc;                            /* WellFormednessChecking    */
             break;
         }
 
-        /* Fetch first UTF-8 byte from source operand */
-        utf[0] = ARCH_DEP(vfetchb) ( addr2, r2, regs );
+        /* Fetch a UTF-8 character (1 to 4 bytes) */
+        /* first character is always on page */
+        utf[0] = *s2;
+        //utf[0] = ARCH_DEP(vfetchb) ( addr2, r2, regs );
 
         /* Convert UTF-8 to Unicode */
         if (utf[0] < (BYTE)0x80)
@@ -5013,7 +5029,18 @@ bool    wfc;                            /* WellFormednessChecking    */
             if (len2 <= n) break;
 
             /* Fetch two UTF-8 bytes from source operand */
-            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+            //ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+
+            /* Get the next byte */
+            // does the utf8 character cross a page boundary
+            if (s2pg ==  MAINSTOR_PAGEBASE ( s2 + 1 ))
+            {
+                utf[1] = *(s2 + 1);
+            }
+            else
+            {
+                utf[1] = ARCH_DEP(vfetchb)(addr2 + 1, r2, regs);
+            }
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormednessChecking */
@@ -5038,7 +5065,19 @@ bool    wfc;                            /* WellFormednessChecking    */
             if (len2 <= n) break;
 
             /* Fetch three UTF-8 bytes from source operand */
-            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+            //ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+
+            /* Get the next 2 bytes */
+            // does the utf8 character cross a page boundary
+            if (s2pg ==  MAINSTOR_PAGEBASE ( s2 + 2 ))
+            {
+                utf[1] = *(s2 + 1);
+                utf[2] = *(s2 + 2);
+            }
+            else
+            {
+                ARCH_DEP(vfetchc)(&utf[1], 1, addr2 + 1, r2, regs);
+            }
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
@@ -5099,7 +5138,20 @@ bool    wfc;                            /* WellFormednessChecking    */
             if (len2 <= n) break;
 
             /* Fetch four UTF-8 bytes from source operand */
-            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+            //ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+
+            /* Get the next 3 bytes */
+            // does the utf8 character cross a page boundary
+            if (s2pg ==  MAINSTOR_PAGEBASE ( s2 + 3 ))
+            {
+                utf[1] = *(s2 + 1);
+                utf[2] = *(s2 + 2);
+                utf[3] = *(s2 + 3);
+            }
+            else
+            {
+                ARCH_DEP(vfetchc)(&utf[1], 2, addr2 + 1, r2, regs);
+            }
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
@@ -5159,8 +5211,28 @@ bool    wfc;                            /* WellFormednessChecking    */
             }
 
             /* Store Unicode surrogate pair in destination */
-            ARCH_DEP(vstore4) ( ((U32)unicode1 << 16) | (U32)unicode2,
-                        addr1, r1, regs );
+            // ARCH_DEP(vstore4) ( ((U32)unicode1 << 16) | (U32)unicode2,
+            //             addr1, r1, regs );
+
+            /* Write UTF16 pair */
+            // does the utf16 pair character cross a page boundary
+            if (d1pg ==  MAINSTOR_PAGEBASE ( d1 + 3 ))
+            {
+                /*make big endian*/
+                U32 upair = CSWAP32 ( ((U32)unicode1 << 16) | (U32)unicode2 );
+
+                *(d1 +0) = *( ((Byte*) &upair)    );
+                *(d1 +1) = *( ((Byte*) &upair)  +1);
+                *(d1 +2) = *( ((Byte*) &upair)  +2);
+                *(d1 +3) = *( ((Byte*) &upair)  +3);
+            }
+            else
+            {
+                ARCH_DEP(vstore4) ( ((U32)unicode1 << 16) | (U32)unicode2,
+                            addr1, r1, regs );
+            }
+            d1len = 4;
+
             addr1 += 4;
             addr1 &= ADDRESS_MAXWRAP(regs);
             len1 -= 4;
@@ -5175,7 +5247,23 @@ bool    wfc;                            /* WellFormednessChecking    */
             }
 
             /* Store Unicode character in destination */
-            ARCH_DEP(vstore2) ( unicode1, addr1, r1, regs );
+            //ARCH_DEP(vstore2) ( unicode1, addr1, r1, regs );
+
+            /* Write UTF16 character */
+            // does the utf16 pair character cross a page boundary
+            if (d1pg ==  MAINSTOR_PAGEBASE ( d1 + 1 ))
+            {
+                U16 uchar = CSWAP16 ( unicode1 );      /*make big endian*/
+
+                *(d1 +0) = *( ((Byte*) &uchar)   );
+                *(d1 +1) = *( ((Byte*) &uchar) +1);
+            }
+            else
+            {
+                ARCH_DEP(vstore2) ( unicode1, addr1, r1, regs );
+            }
+            d1len = 2;
+
             addr1 += 2;
             addr1 &= ADDRESS_MAXWRAP(regs);
             len1 -= 2;
@@ -5191,6 +5279,21 @@ bool    wfc;                            /* WellFormednessChecking    */
         SET_GR_A(r1+1, regs,len1);
         SET_GR_A(r2, regs,addr2);
         SET_GR_A(r2+1, regs,len2);
+
+        // Update mainstor addresses; source and destination
+        s2 += n + 1;
+        if (s2pg !=  MAINSTOR_PAGEBASE ( s2 ))
+        {
+            s2 = MADDRL( addr2, 1, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+            s2pg = MAINSTOR_PAGEBASE ( s2 );
+        }
+
+        d1 += d1len;
+        if (d1pg !=  MAINSTOR_PAGEBASE ( d1 ))
+        {
+            d1 = MADDRL( addr1, 1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
+            d1pg = MAINSTOR_PAGEBASE ( d1 );
+        }
 
         if (len1 == 0 && len2 != 0)
             cc = 1;

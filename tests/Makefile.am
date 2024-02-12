@@ -221,6 +221,16 @@ EXTRA_DIST =                    \
      csxtr.assemble             \
      csxtr.listing              \
      csxtr.tst                  \
+     CU12-01-xpage.asm          \
+     CU12-01-xpage.core         \
+     CU12-01-xpage.list         \
+     CU12-01-xpage.pdf          \
+     CU12-01-xpage.tst          \
+     CU12-02-performance.asm    \
+     CU12-02-performance.core   \
+     CU12-02-performance.list   \
+     CU12-02-performance.pdf    \
+     CU12-02-performance.tst    \
      CU14-01-xpage.asm          \
      CU14-01-xpage.core         \
      CU14-01-xpage.list         \
