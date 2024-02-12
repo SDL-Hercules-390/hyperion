@@ -2379,7 +2379,7 @@ DEF_INST(convert_utf8_to_utf32)
     s1 = MADDRL( srce, 1, r2, regs, ACCTYPE_READ, regs->psw.pkey );
     s1pg = MAINSTOR_PAGEBASE ( s1 );
 
-    // /* Get mainstor address to Destination byte */
+    /* Get mainstor address to Destination byte */
     d1 = MADDRL( dest, 1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
     d1pg = MAINSTOR_PAGEBASE ( d1 );
 
