@@ -782,13 +782,27 @@ static int w32_nanosleep ( const struct timespec* rqtp )
 
 DLL_EXPORT int nanosleep ( const struct timespec* rqtp, struct timespec* rmtp )
 {
+    /* "If the rmtp argument is non-NULL, the timespec structure referenced by it
+        is updated to contain the amount of time remaining in the interval (the
+        requested time minus the time actually slept). The rqtp and rmtp arguments
+        MAY point to the same object."
+    */
+    int rc = w32_nanosleep( rqtp );
+
     if (unlikely( rmtp ))
     {
+        // Windows always sleeps for the requested interval,
+        // so there will never be any remaining sleep time.
+
+        // Note that we must be careful do the below AFTER
+        // we've slept and not before, since rmtp MAY point
+        // to the same place as rqtp!
+
         rmtp->tv_sec  = 0;
         rmtp->tv_nsec = 0;
     }
 
-    return w32_nanosleep ( rqtp );
+    return rc;
 }
 
 #endif // !defined( HAVE_NANOSLEEP )
