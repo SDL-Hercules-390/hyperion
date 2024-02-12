@@ -3487,6 +3487,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\CU14-01-xpage.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\CU14-02-performance.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\CUSE-01-basic.core"
 						>
 					</File>
@@ -4566,6 +4574,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CU14-01-xpage.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\CU14-02-performance.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\CUSE-01-basic.tst"
 							>
 						</File>
@@ -5018,6 +5034,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CU14-01-xpage.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\CU14-02-performance.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\CUSE-01-basic.asm"
 							>
 						</File>
@@ -5444,6 +5468,23 @@
 								RelativePath=".\tests\CMPSC.pdf"
 								>
 							</File>
+							<File
+								RelativePath=".\tests\CU14-01-xpage.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CU14-01-xpage.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CU14-02-performance.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CU14-02-performance.pdf"
+								>
+							</File>
+
 							<File
 								RelativePath=".\tests\CUSE-01-basic.list"
 								>

@@ -1,0 +1,602 @@
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *        CU14 cross page boundary instruction tests
+                                                     5 *
+                                                     6 *        NOTE: This test is based the CLCL-et-al Test
+                                                     7 *              modified to only test the CU14 instruction.
+                                                     8 *
+                                                     9 *        James Wekel February 2024
+                                                    10 ***********************************************************************
+
+
+                                                    12 ***********************************************************************
+                                                    13 *
+                                                    14 *            CU14 cross page instruction tests
+                                                    15 *
+                                                    16 ***********************************************************************
+                                                    17 *  This program tests functioning of the CU14 instruction
+                                                    18 *  across page boundaties. Only M3=0 is tested and CC=0 is expected.
+                                                    19 *  Specification exceptions are not tested.
+                                                    20 *
+                                                    21 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    22 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    23 *  NOT designed to test all aspects of any of the instructions.
+                                                    24 *
+                                                    25 ***********************************************************************
+                                                    26 *
+                                                    27 *  Example Hercules Testcase:
+                                                    28 *
+                                                    29 *        *Testcase CU14-01-xpage (Test cross page CU14 instruction )
+                                                    30 *
+                                                    31 *        # ------------------------------------------------------------
+                                                    32 *        #  This tests only the function of the CU14 instruction where
+                                                    33 *        #  operands cross page boundaries.
+                                                    34 *        #  Specification Exceptions are NOT tested.
+                                                    35 *        # ------------------------------------------------------------
+                                                    36 *
+                                                    37 *        mainsize    16
+                                                    38 *        numcpu      1
+                                                    39 *        sysclear
+                                                    40 *        archlvl     z/Arch
+                                                    41 *
+                                                    42 *        loadcore    "$(testpath)/CU14-01-xpage.core" 0x0
+                                                    43 *
+                                                    44 *        runtest     2
+                                                    45 *
+                                                    46 *        *Done
+                                                    47 *
+                                                    48 ***********************************************************************
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    50 ***********************************************************************
+                                                    51 *
+                                                    52 *              Low Core PSWs
+                                                    53 *
+                                                    54 ***********************************************************************
+
+
+                              00000000  000006EF    56 CU14TST START 0
+00000000                      00000000              57          USING CU14TST,R0            Low core addressability
+
+
+00000000                      00000000  000001A0    59          ORG   CU14TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                         60          DC    X'0000000180000000'
+000001A8  00000000 00000200                         61          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0    63          ORG   CU14TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                         64          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                         65          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200    67          ORG   CU14TST+X'200'        Start of actual test program...
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    69 ***********************************************************************
+                                                    70 *               The actual "CU14TST" program itself...
+                                                    71 ***********************************************************************
+                                                    72 *
+                                                    73 *  Architecture Mode: z/Arch
+                                                    74 *  Register Usage:
+                                                    75 *
+                                                    76 *   R0       interation count for current test
+                                                    77 *   R1       current target address
+                                                    78 *   R2       CU14 - First-Operand Address  - target
+                                                    79 *   R3       CU14 - First-Operand Length
+                                                    80 *   R4       CU14 - Second-Operand Address  - source
+                                                    81 *   R5       CU14 - Second-Operand length
+                                                    82 *   R6       (work)
+                                                    83 *   R7       CU14CTL base
+                                                    84 *   R8       First base register
+                                                    85 *   R9       Second base register
+                                                    86 *   R10-R13  (work) (copy source)
+                                                    87 *   R14      Subroutine call
+                                                    88 *   R15      Secondary Subroutine call or current source address
+                                                    89 *
+                                                    90 ***********************************************************************
+
+00000200                      00000200              92          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200              93          USING  BEGIN+4096,R9   SECOND Base Register
+
+00000200  0580                                      95 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                      96          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                      97          BCTR  R8,0             Initalize FIRST base register
+
+00000206  4190 8800                     00000800    99          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800   100          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                   101 *
+                                                   102 **       Run the tests...
+                                                   103 *
+0000020E  45E0 8302                     00000502   104          BAL   R14,TEST01       Test CU14   instruction
+                                                   105 *
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   107 ***********************************************************************
+                                                   108 *         Test for normal or unexpected test completion...
+                                                   109 ***********************************************************************
+
+00000212  9501 8200                     00000400   111          CLI   TESTNUM,X'01'    Did we end on expected test?
+00000216  4770 83F0                     000005F0   112          BNE   FAILTEST         No?! Then FAIL the test!
+
+0000021A  9504 8201                     00000401   114          CLI   SUBTEST,X'04'    Did we end on expected SUB-test?
+0000021E  4770 83F0                     000005F0   115          BNE   FAILTEST         No?! Then FAIL the test!
+
+00000222  47F0 83D8                     000005D8   117          B     EOJ              Yes, then normal completion!
+
+
+
+
+                                                   119 ***********************************************************************
+                                                   120 *        Fixed test storage locations ...
+                                                   121 ***********************************************************************
+
+
+00000226                      00000226  00000400   123          ORG   BEGIN+X'200'
+                                                   124
+00000400                                           125 TESTADDR DS    0D         Where test/subtest numbers will go
+00000400  99                                       126 TESTNUM  DC    X'99'      Test number of active test
+00000401  99                                       127 SUBTEST  DC    X'99'      Active test sub-test number
+
+
+00000402                      00000402  00000502   129          ORG   *+X'100'
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   131 ***********************************************************************
+                                                   132 *        TEST01                   Test CU14 instruction
+                                                   133 ***********************************************************************
+
+00000502  9201 8200                     00000400   135 TEST01   MVI   TESTNUM,X'01'
+                                                   136
+00000506  4170 83F8                     000005F8   137          LA    R7,CU14CTL          Point R7 --> testing control table
+0000050A                      00000000             138          USING CU14TEST,R7         What each table entry looks like
+                                                   139
+                              0000050A  00000001   140 TST1LOOP EQU   *
+0000050A  4360 7000                     00000000   141          IC    R6,TNUM            Set test number
+0000050E  4260 8200                     00000400   142          STC   R6,TESTNUM
+                                                   143
+00000512  5800 7010                     00000010   144          L     R0,OP2LEN          source length
+                                                   145 *
+00000516  58F0 7014                     00000014   146          L     R15,OP1WHERE       Calculate Target address
+0000051A  1BF0                                     147          SR    R15,R0
+0000051C  41F0 F001                     00000001   148          LA    R15,1(,R15)
+                                                   149 *
+00000520  5810 7018                     00000018   150          L     R1,OP2WHERE         Calculate source address
+00000524  1B10                                     151          SR    R1,R0
+00000526  4110 1001                     00000001   152          LA    R1,1(,R1)
+                                                   153 *
+                                                   154 **       Initialize source operand data (move data to testing address)
+                                                   155 *
+                              0000052A  00000001   156 TST1INIT EQU   *
+                                                   157 *                                   Source
+0000052A  18A1                                     158          LR    R10,R1               Where to move operand-2 data to
+0000052C  58B0 7010                     00000010   159          L     R11,OP2LEN             How much of it there is
+00000530  58C0 700C                     0000000C   160          L     R12,OP2DATA          Where op2 data is right now
+00000534  58D0 7010                     00000010   161          L     R13,OP2LEN             How much of it there is
+00000538  0EAC                                     162          MVCL  R10,R12
+                                                   163
+
+
+
+                                                   165 *       Execute CU14 instruction and check for expected condition code
+
+0000053A  182F                                     167          LR    R2,R15              Target
+0000053C  5830 7008                     00000008   168          L     R3,OP1LEN              target length
+00000540  1841                                     169          LR    R4,R1               source
+00000542  5850 7010                     00000010   170          L     R5,OP2LEN              source length
+                                                   171
+00000546  1B66                                     172          SR    R6,R6              get M3 bits for CU14
+00000548  4360 7003                     00000003   173          IC    R6,M3              (M3)
+0000054C  4260 835E                     0000055E   174          STC   R6,CU14MOD+2       DYNAMICALLY MODIFIED CODE
+                                                   175
+00000550  58B0 701C                     0000001C   176          L     R11,FAILMASK       (failure CC)
+00000554  89B0 0004                     00000004   177          SLL   R11,4              (shift to BC instr CC position)
+                                                   178
+00000558  9200 8201                     00000401   179          MVI   SUBTEST,X'00'      (primary CU14)
+0000055C  B9B0 0024                                180 CU14MOD  CU14  R2,R4              Start with CU14 and m3=0
+00000560  4710 835C                     0000055C   181          BC    B'0001',CU14MOD     cc=3, not finished
+                                                   182
+00000564  44B0 83C4                     000005C4   183          EX    R11,CU14BC         fail if...
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   185 **       Verify R3,R5  contain (or still contain!) expected values
+00000568  9201 8201                     00000401   186          MVI   SUBTEST,X'01'      (R3 result - TARGET remaining len)
+0000056C  5930 7020                     00000020   187          C     R3,ENDLN1              R3 correct?
+00000570  4770 83BE                     000005BE   188          BNE   CU14FAIL           No, FAILTEST!
+                                                   189
+00000574  9202 8201                     00000401   190          MVI   SUBTEST,X'02'      (R5 result - SOURCE remaining len)
+00000578  5950 7024                     00000024   191          C     R5,ENDLN2              R5 correct
+0000057C  4770 83BE                     000005BE   192          BNE   CU14FAIL           No, FAILTEST!
+                                                   193
+00000580  9203 8201                     00000401   194          MVI   SUBTEST,X'03'      (TARGET IS CORRECT?)
+00000584  182F                                     195          LR    R2,R15             conversion result
+00000586  5830 7008                     00000008   196          L     R3,OP1LEN
+0000058A  5840 7004                     00000004   197          L     R4,OP1DATA         expected result
+0000058E  5850 7008                     00000008   198          L     R5,OP1LEN
+00000592  0F24                                     199          CLCL  R2,R4
+00000594  4710 8390                     00000590   200          BC    B'0001',*-4          not finished?
+00000598  4770 83BE                     000005BE   201          BNE   CU14FAIL          No, FAILTEST!
+                                                   202 *
+                                                   203 *        shift source/target addresses and try again to
+                                                   204 *        ensure multiple cross page bounday tests
+                                                   205 *
+0000059C  4110 1001                     00000001   206          LA    R1,1(,R1)
+000005A0  41F0 F001                     00000001   207          LA    R15,1(,R15)
+000005A4  4600 832A                     0000052A   208          BCT   R0,TST1INIT
+                                                   209
+000005A8  4170 7028                     00000028   210          LA    R7,CU14NEXT        Go on to next table entry
+000005AC  D503 83F4 7000      000005F4  00000000   211          CLC   =F'0',0(R7)        End of table?
+000005B2  4770 830A                     0000050A   212          BNE   TST1LOOP           No, loop...
+                                                   213
+000005B6  9204 8201                     00000401   214          MVI   SUBTEST,X'04'       Done
+000005BA  47F0 83C2                     000005C2   215          B     CU14DONE            Done! (success!)
+
+
+000005BE  41E0 83F0                     000005F0   217 CU14FAIL LA    R14,FAILTEST       Unexpected results!
+000005C2  07FE                                     218 CU14DONE BR    R14                Return to caller or FAILTEST
+
+
+000005C4  4700 83BE                     000005BE   220 CU14BC   BC    0,CU14FAIL          (fail if unexpected condition code)
+
+
+000005C8                                           222          DROP  R7
+000005C8                      00000200             223          USING BEGIN,R8
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   225 ***********************************************************************
+                                                   226 *        Normal completion or Abnormal termination PSWs
+                                                   227 ***********************************************************************
+
+
+
+
+
+000005C8  00020001 80000000                        229 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+000005D8  B2B2 83C8                     000005C8   231 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+000005E0  00020001 80000000                        233 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+000005F0  B2B2 83E0                     000005E0   235 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                                   237 ***********************************************************************
+                                                   238 *        Working Storage
+                                                   239 ***********************************************************************
+
+
+000005F4                                           241          LTORG ,                Literals pool
+000005F4  00000000                                 242                =F'0'
+
+                              00000400  00000001   244 K        EQU   1024             One KB
+                              00001000  00000001   245 PAGE     EQU   (4*K)            Size of one page
+                              00004000  00000001   246 K16      EQU   (16*K)           16 KB
+                              00008000  00000001   247 K32      EQU   (32*K)           32 KB
+                              00010000  00000001   248 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   249 MB       EQU   (K*K)             1 MB
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000000  000006EF   251 CU14TST CSECT  ,
+
+
+                                                   253 ***********************************************************************
+                                                   254 *        CU14TEST DSECT
+                                                   255 ***********************************************************************
+
+
+                                                   257 CU14TEST DSECT ,
+00000000  00                                       258 TNUM     DC    X'00'          CU14 test number
+00000001  00                                       259          DC    X'00'
+00000002  00                                       260          DC    X'00'
+00000003  00                                       261 M3       DC    X'00'          M3 byte stored into CU14 instruction
+
+
+
+                                                   263
+00000004  00000000                                 264 OP1DATA  DC    A(0)           Pointer to Operand 1       - result
+00000008  00000000                                 265 OP1LEN   DC    F'0'             length                   - result
+0000000C  00000000                                 266 OP2DATA  DC    A(0)           Pointer to Operand-2 data  - source
+00000010  00000000                                 267 OP2LEN   DC    F'0'             length                   - source
+
+
+                              00000014  00000001   269 OPSWHERE EQU   *
+00000014  00000000                                 270 OP1WHERE DC    A(0)           result - Where should be placed
+00000018  00000000                                 271 OP2WHERE DC    A(0)           source - Where should be placed
+
+
+0000001C  00000000                                 273 FAILMASK DC    A(0)           Failure Branch on Condition mask
+
+
+                                                   275 *                             Ending register values
+00000020  00000000                                 276 ENDLN1   DC    A(0)              target length
+00000024  00000000                                 277 ENDLN2   DC    A(0)              source length
+                                                   278
+
+
+                              00000028  00000001   280 CU14NEXT EQU   *              Start of next table entry...
+
+
+
+
+
+
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000000  000006EF   283 CU14TST CSECT  ,
+
+
+                                                   285 ***********************************************************************
+                                                   286 *        CU14 Testing Control tables   (ref: CU14TEST DSECT)
+                                                   287 ***********************************************************************
+                                                   288          PRINT DATA
+000005F8                                           289 CU14CTL  DC    0A(0)    start of table
+                                                   290 ***********************************************************************
+                                                   291 *        tests with CC=0 M3=0
+                                                   292 ***********************************************************************
+
+
+000005F8                                           294 CC0T1    DS    0F
+000005F8  01                                       295          DC    X'01'                       Test Num
+000005F9  0000                                     296          DC    X'00',X'00'
+000005FB  00                                       297          DC    X'00'                       M3
+                                                   298 *
+000005FC  00000680 00000070                        299          DC    A(UTF32A),A(UTF32AED-UTF32A)   target - Op1 & length
+00000604  00000638 0000003D                        300          DC    A(UTF8A),A(UTF8AEND-UTF8A)     Source - Op2 & length
+                                                   301
+0000060C  00100000                                 302          DC    A(1*MB+(0*K16))                target
+00000610  00200000                                 303          DC    A(2*MB+(0*K16))                source
+                                                   304 *
+00000614  00000007                                 305          DC    A(7)                           FailCC - not CC0
+00000618  00000000                                 306          DC    A(0)                           Result - target len
+0000061C  00000000                                 307          DC    A(0)                           Result - source len
+
+
+00000620  00000000                                 309          DC    A(0)     end of table
+00000624  00000000                                 310          DC    A(0)     end of table
+00000628  00000000                                 311          DC    A(0)     end of table
+                                                   312
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   314 ***********************************************************************
+                                                   315 *        CU14  UTF-8 test data
+                                                   316 ***********************************************************************
+
+0000062C  E4E3C6F8 7A4040                          318          DC    C'UTF8:  '                 eye catcher
+00000634  0000003D                                 319 UTF8ALN  DC    A(UTF8AEND-UTF8A)
+00000638                                           320 UTF8A    DS    0H
+00000638  00                                       321          DC    XL1'00'  first UTF-8 1 Byte character
+00000639  31                                       322          DC    XL1'31'  1
+0000063A  39                                       323          DC    XL1'39'  9
+0000063B  40                                       324          DC    XL1'40'  @
+0000063C  41                                       325          DC    XL1'41'  A
+0000063D  42                                       326          DC    XL1'42'  B
+0000063E  7F                                       327          DC    XL1'7F'  last UTF-8 1 Byte character
+
+0000063F  C280                                     329          DC    XL2'C280'  first UTF-8 2 Byte character
+00000641  C380                                     330          DC    XL2'C380'  c3 80	LATIN CAPITAL LETTER A WITH GRAVE
+00000643  C3B8                                     331          DC    XL2'C3B8'  c3 b8	LATIN SMALL LETTER O WITH STROKE
+00000645  D09C                                     332          DC    XL2'D09C'  D0 9C	М	Cyrillic Capital Letter Em
+00000647  DFBF                                     333          DC    XL2'DFBF'  last UTF-8 2 Byte character DF BF	߿
+
+00000649  43                                       335          DC    XL1'43'  C
+
+0000064A  E0A080                                   337          DC    XL3'E0A080'  first UTF-8 3 Byte character
+                                                   338 *                           E0 A0 80 ࠀ Samaritan Letter Alaf
+0000064D  E0A18D                                   339          DC    XL3'E0A18D'  E0 A1 8D ࡍ Mandaic Letter An
+00000650  EA9FBD                                   340          DC    XL3'EA9FBD'  EA 9F BD ꟽ Latin Epigraphic Inverted M
+00000653  EFBF87                                   341          DC    XL3'EFbf87'  EF BF 87 ￇ Halfwidth Hangul Letter E
+00000656  EFBFBF                                   342          DC    XL3'EFBFBF'  last UTF-8 3 Byte character EF BF BF
+
+00000659  44                                       344          DC    XL1'44'  D
+
+0000065A  F0908080                                 346          DC    XL4'F0908080'  first UTF-8 4 Byte character
+                                                   347 *                           F0 90 80 80	𐀀	Linear B Syllable B008 A
+0000065E  F0908487                                 348          DC    XL4'F0908487' F0 90 84 87	𐄇	Aegean Number One
+00000662  F09294B5                                 349          DC    XL4'F09294B5' F0 92 94 B5 Cuneiform Sign She Plus Sar
+00000666  F09082B8                                 350          DC    XL4'F09082B8'  F0 90 82 B8 𐂸 Linear B Ideogram B177
+0000066A  F096AB83                                 351          DC    XL4'F096AB83'  F0 96 A8 83 𖨃 Bamum Letter Phase-f Ka
+0000066E  F0989A9F                                 352          DC    XL4'F0989A9F'  last UTF-8 4 Byte character
+
+00000672  45                                       354          DC    XL1'45'  E
+00000673  4E                                       355          DC    XL1'4E'  N
+00000674  44                                       356          DC    XL1'44'  D
+00000675                                           357 UTF8AEND DS    0X
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   359 ***********************************************************************
+                                                   360 *        CU14  UTF-32 Result
+                                                   361 ***********************************************************************
+00000675  E4E3C6F3 F27A40                          362          DC    C'UTF32: '                 eye catcher
+0000067C  00000070                                 363 UTF32ALN DC    A(UTF32AED-UTF32A)
+00000680                                           364 UTF32A   DC    0X
+00000680  00000000                                 365          DC    X'00000000'
+00000684  00000031                                 366          DC    X'00000031'
+00000688  00000039                                 367          DC    X'00000039'
+0000068C  00000040                                 368          DC    X'00000040'
+00000690  00000041                                 369          DC    X'00000041'
+00000694  00000042                                 370          DC    X'00000042'
+00000698  0000007F                                 371          DC    X'0000007F'
+0000069C  00000080                                 372          DC    X'00000080'
+000006A0  000000C0                                 373          DC    X'000000C0'
+000006A4  000000F8                                 374          DC    X'000000F8'
+000006A8  0000041C                                 375          DC    X'0000041C'
+000006AC  000007FF                                 376          DC    X'000007FF'
+000006B0  00000043                                 377          DC    X'00000043'
+000006B4  00000800                                 378          DC    X'00000800'
+000006B8  0000084D                                 379          DC    X'0000084D'
+000006BC  0000A7FD                                 380          DC    X'0000A7FD'
+000006C0  0000FFC7                                 381          DC    X'0000FFC7'
+000006C4  0000FFFF                                 382          DC    X'0000FFFF'
+000006C8  00000044                                 383          DC    X'00000044'
+000006CC  00010000                                 384          DC    X'00010000'
+000006D0  00010107                                 385          DC    X'00010107'
+000006D4  00012535                                 386          DC    X'00012535'
+000006D8  000100B8                                 387          DC    X'000100B8'
+000006DC  00016AC3                                 388          DC    X'00016AC3'
+000006E0  0001869F                                 389          DC    X'0001869F'
+000006E4  00000045                                 390          DC    X'00000045'
+000006E8  0000004E                                 391          DC    X'0000004E'
+000006EC  00000044                                 392          DC    X'00000044'
+000006F0                                           393 UTF32AED DS    0X
+                                                   394
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   396 ***********************************************************************
+                                                   397 *        Register equates
+                                                   398 ***********************************************************************
+
+
+                              00000000  00000001   400 R0       EQU   0
+                              00000001  00000001   401 R1       EQU   1
+                              00000002  00000001   402 R2       EQU   2
+                              00000003  00000001   403 R3       EQU   3
+                              00000004  00000001   404 R4       EQU   4
+                              00000005  00000001   405 R5       EQU   5
+                              00000006  00000001   406 R6       EQU   6
+                              00000007  00000001   407 R7       EQU   7
+                              00000008  00000001   408 R8       EQU   8
+                              00000009  00000001   409 R9       EQU   9
+                              0000000A  00000001   410 R10      EQU   10
+                              0000000B  00000001   411 R11      EQU   11
+                              0000000C  00000001   412 R12      EQU   12
+                              0000000D  00000001   413 R13      EQU   13
+                              0000000E  00000001   414 R14      EQU   14
+                              0000000F  00000001   415 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                   417          END
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    13
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+BEGIN               I    000200        2    95  123   61   92   93  223
+CC0T1               F    0005F8        4   294
+CU14BC              I    0005C4        4   220  183
+CU14CTL             A    0005F8        4   289  137
+CU14DONE            I    0005C2        2   218  215
+CU14FAIL            I    0005BE        4   217  188  192  201  220
+CU14MOD             I    00055C        4   180  174  181
+CU14NEXT            U    000028        1   280  210
+CU14TEST            4    000000       40   257  138
+CU14TST             J    000000     1776    56   59   63   67   57
+ENDLN1              A    000020        4   276  187
+ENDLN2              A    000024        4   277  191
+EOJ                 I    0005D8        4   231  117
+EOJPSW              D    0005C8        8   229  231
+FAILMASK            A    00001C        4   273  176
+FAILPSW             D    0005E0        8   233  235
+FAILTEST            I    0005F0        4   235  112  115  217
+IMAGE               1    000000     1776     0
+K                   U    000400        1   244  245  246  247  248  249
+K16                 U    004000        1   246  302  303
+K32                 U    008000        1   247
+K64                 U    010000        1   248
+M3                  X    000003        1   261  173
+MB                  U    100000        1   249  302  303
+OP1DATA             A    000004        4   264  197
+OP1LEN              F    000008        4   265  168  196  198
+OP1WHERE            A    000014        4   270  146
+OP2DATA             A    00000C        4   266  160
+OP2LEN              F    000010        4   267  144  159  161  170
+OP2WHERE            A    000018        4   271  150
+OPSWHERE            U    000014        1   269
+PAGE                U    001000        1   245
+R0                  U    000000        1   400   57  144  147  151  208
+R1                  U    000001        1   401  150  151  152  158  169  206
+R10                 U    00000A        1   410  158  162
+R11                 U    00000B        1   411  159  176  177  183
+R12                 U    00000C        1   412  160  162
+R13                 U    00000D        1   413  161
+R14                 U    00000E        1   414  104  217  218
+R15                 U    00000F        1   415  146  147  148  167  195  207
+R2                  U    000002        1   402  167  180  195  199
+R3                  U    000003        1   403  168  187  196
+R4                  U    000004        1   404  169  180  197  199
+R5                  U    000005        1   405  170  191  198
+R6                  U    000006        1   406  141  142  172  173  174
+R7                  U    000007        1   407  137  138  210  211  222
+R8                  U    000008        1   408   92   95   96   97   99  223
+R9                  U    000009        1   409   93   99  100
+SUBTEST             X    000401        1   127  114  179  186  190  194  214
+TEST01              I    000502        4   135  104
+TESTADDR            D    000400        8   125
+TESTNUM             X    000400        1   126  111  135  142
+TNUM                X    000000        1   258  141
+TST1INIT            U    00052A        1   156  208
+TST1LOOP            U    00050A        1   140  212
+UTF32A              X    000680        1   364  299  363
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    14
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+UTF32AED            X    0006F0        1   393  299  363
+UTF32ALN            A    00067C        4   363
+UTF8A               H    000638        2   320  300  319
+UTF8AEND            X    000675        1   357  300  319
+UTF8ALN             A    000634        4   319
+=F'0'               F    0005F4        4   242  211
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    15
+
+MACRO  DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    16
+
+   DESC     SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE    1776  000-6EF  000-6EF
+  Region            1776  000-6EF  000-6EF
+    CSECT  CU14TST  1776  000-6EF  000-6EF
+ASMA Ver. 0.7.0         CU14-01-xpage (Test cross page CU14 instruction)                            12 Feb 2024 00:07:54  Page    17
+
+   STMT                FILE NAME
+
+1     /devstor/dev/tests/./CU14-01-xpage.asm
+
+
+** NO ERRORS FOUND **
+
+
