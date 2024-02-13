@@ -943,6 +943,16 @@
     <None Include="tests\cmd-rv-4K-64.subxxx" />
     <None Include="tests\cmd-rv.xxx" />
     <None Include="tests\cr.tst" />
+    <None Include="tests\CU12-01-xpage.asm" />
+    <None Include="tests\CU12-01-xpage.core" />
+    <None Include="tests\CU12-01-xpage.list" />
+    <None Include="tests\CU12-01-xpage.pdf" />
+    <None Include="tests\CU12-01-xpage.tst" />
+    <None Include="tests\CU12-02-performance.asm" />
+    <None Include="tests\CU12-02-performance.core" />
+    <None Include="tests\CU12-02-performance.list" />
+    <None Include="tests\CU12-02-performance.pdf" />
+    <None Include="tests\CU12-02-performance.tst" />
     <None Include="tests\CU14-01-xpage.asm" />
     <None Include="tests\CU14-01-xpage.core" />
     <None Include="tests\CU14-01-xpage.list" />
