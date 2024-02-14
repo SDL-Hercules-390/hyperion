@@ -332,7 +332,7 @@
 #define SHARED_PURGE_MAX           16   /* Max size of purge list    */
 #define SHARED_MAX_MSGLEN         255   /* Max message length        */
 #define SHARED_TIMEOUT            120   /* Disconnect timeout (sec)  */
-#define SHARED_SELECT_WAIT         10   /* Select timeout (sec)      */
+#define SHARED_SELECT_WAIT_MSECS   50   /* Select timeout (msecs)    */
 #define SHARED_COMPRESS_MINLEN    512   /* Min length for compression*/
 #define SHARED_MAX_SYS              8   /* Max number connections    */
 

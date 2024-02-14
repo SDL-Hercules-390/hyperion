@@ -2387,7 +2387,7 @@ DEVBLK         *dev=NULL;               /* -> Device block           */
 time_t          now;                    /* Current time              */
 fd_set          selset;                 /* Read bit map for select   */
 int             maxfd;                  /* Max fd for select         */
-struct timeval  wait;                   /* Wait time for select      */
+struct timeval  wait = {0};             /* Wait time for select      */
 BYTE            hdr[SHRD_HDR_SIZE + 65536];  /* Header + buffer      */
 BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 char           *ipaddr = NULL;          /* IP addr of connected peer */
@@ -2557,8 +2557,8 @@ static const bool server_req = true;
                 continue;       // (then exit our thread)
 
             /* Wait for a client to send us a request */
-            wait.tv_sec = SHARED_SELECT_WAIT;
-            wait.tv_usec = 0;
+            wait.tv_sec = 0;
+            wait.tv_usec = SHARED_SELECT_WAIT_MSECS * 1000;
 
             RELEASE_DEVLOCK( dev );
             {
@@ -2567,10 +2567,10 @@ static const bool server_req = true;
                     rc = select( maxfd, &selset, NULL, NULL, &wait );
                 }
                 dev->shrdwait = 0;
+
+                SHRDTRACE("serverConnect: select rc %d", rc );
             }
             OBTAIN_DEVLOCK( dev );
-
-            SHRDTRACE("select rc %d", rc );
 
             /* Timeout; no one has any requests for us at this time */
             if (rc == 0)
@@ -2987,7 +2987,7 @@ struct timeval          timeout = {0};
 
         /* Wait for a file descriptor to become ready */
         timeout.tv_sec  = 0;
-        timeout.tv_usec = 500000;  // 0.5 seconds
+        timeout.tv_usec = SHARED_SELECT_WAIT_MSECS * 1000;
         rc = select( hi, &selset, NULL, NULL, &timeout );
 
         SHRDGENTRACE("shared_server: select rc %d", rc );
