@@ -2734,6 +2734,53 @@ static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
         WRMSG( HHC00743, "I", tracemsg + 16 ); // (skip "HH:MM:SS.uuuuuu ")
 
     /* Copy the trace message into the trace table (if it exists) */
+    shrdtrclog_locked( tracemsg );
+
+    RELEASE_SHRDTRACE_LOCK();
+}
+
+/*-------------------------------------------------------------------
+ * General non-device-specific trace routine
+ *-------------------------------------------------------------------*/
+static void shrdgentrc( const char* fmt, ... )
+{
+    struct timeval  tv;
+    SHRD_TRACE      tracemsg;
+    va_list         vl;
+    char            buf[32];
+
+    OBTAIN_SHRDTRACE_LOCK();
+
+    if (!sysblk.shrdtrace)
+    {
+        RELEASE_SHRDTRACE_LOCK();
+        return;  // (nothing for us to do!)
+    }
+
+    ASSERT( sysblk.shrdtrace );
+
+    /* Build the timestamp portion of the trace message */
+    gettimeofday( &tv, NULL );
+    FormatTIMEVAL( &tv, buf, sizeof( buf ));
+    STRLCPY( tracemsg, buf + 11 ); // (skip "YYYY-MM-DD ")
+
+    /* Now format the rest of the trace message following that part */
+    va_start( vl, fmt );
+    vsnprintf( (char*) tracemsg + strlen( tracemsg ),
+        sizeof( tracemsg ) - strlen( tracemsg ), fmt, vl );
+
+    /* Copy the trace message into the trace table (if it exists) */
+    shrdtrclog_locked( tracemsg );
+
+    RELEASE_SHRDTRACE_LOCK();
+}
+
+/*-------------------------------------------------------------------
+ * Add the trace message to the trace table (lock held)
+ *-------------------------------------------------------------------*/
+static void shrdtrclog_locked( const char* tracemsg )
+{
+    /* Copy the trace message into the trace table (if it exists) */
     if (sysblk.shrdtrace)
     {
         /* Grab pointer to next available table entry and then
@@ -2747,8 +2794,6 @@ static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
         /* Copy message (WITH timestamp) into trace table */
         strlcpy( (char*) currmsg, (const char*) tracemsg, sizeof( SHRD_TRACE ));
     }
-
-    RELEASE_SHRDTRACE_LOCK();
 }
 
 /*-------------------------------------------------------------------
@@ -2944,6 +2989,8 @@ struct timeval          timeout = {0};
         timeout.tv_sec  = 0;
         timeout.tv_usec = 500000;  // 0.5 seconds
         rc = select( hi, &selset, NULL, NULL, &timeout );
+
+        SHRDGENTRACE("shared_server: select rc %d", rc );
 
         if (rc == 0)
             continue;

@@ -509,6 +509,8 @@ static void   *serverConnect (void *psock);
 static void    shrdhdrtrc( DEVBLK* dev, const char* msg, const BYTE* hdr,
                           const char* msg2 );
 static void    shrdtrc( DEVBLK* dev, const char* fmt, ... ) ATTR_PRINTF(2,3);
+static void    shrdgentrc(           const char* fmt, ... ) ATTR_PRINTF(1,2);
+static void    shrdtrclog_locked( const char* tracemsg );
 static const char* shrdcmd2str( const BYTE cmd );
 static void    shared_print_trace_table_locked();
 #endif /* _SHARED_C_ */
@@ -518,8 +520,10 @@ static void    shared_print_trace_table_locked();
 #define OBTAIN_SHRDLOCK()               obtain_lock(  &sysblk.shrdlock )
 #define RELEASE_SHRDLOCK()              release_lock( &sysblk.shrdlock )
 
-#define SHRDTRACE( fmt, ... )           shrdtrc( dev, fmt, ## __VA_ARGS__ )
-#define SHRDHDRTRACE( msg, hdr )        shrdhdrtrc( dev, msg, hdr, 0    )
+#define SHRDTRACE(    fmt, ... )        shrdtrc( dev, fmt, ## __VA_ARGS__ )
+#define SHRDGENTRACE( fmt, ... )        shrdgentrc(   fmt, ## __VA_ARGS__ )
+
+#define SHRDHDRTRACE(  msg, hdr )       shrdhdrtrc( dev, msg, hdr, 0    )
 #define SHRDHDRTRACE2( msg, hdr, msg2 ) shrdhdrtrc( dev, msg, hdr, msg2 )
 
 #define OBTAIN_SHRDTRACE_LOCK()         obtain_lock(  &sysblk.shrdtracelock )
