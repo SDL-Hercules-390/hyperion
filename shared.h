@@ -493,7 +493,7 @@ static int     clientRequest (DEVBLK *dev, BYTE *buf, int len, int cmd,
                       int flags, int *code, int *status);
 static int     clientSend (DEVBLK *dev, BYTE *hdr, BYTE *buf, int buflen);
 static int     clientRecv (DEVBLK *dev, BYTE *hdr, BYTE *buf, int buflen);
-static int     recvData(int sock, BYTE *hdr, BYTE *buf, int buflen, int server);
+static int     recvData(int sock, BYTE *hdr, BYTE *buf, int buflen, bool server_req);
 static void    serverRequest (DEVBLK *dev, int ix, BYTE *hdr, BYTE *buf);
 static int     serverLocate (DEVBLK *dev, int id, int *avail);
 static int     serverId (DEVBLK *dev);

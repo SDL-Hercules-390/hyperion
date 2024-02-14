@@ -1439,6 +1439,7 @@ BYTE     status;                        /* Response status           */
 U16      devnum;                        /* Response device number    */
 int      id;                            /* Response identifier       */
 int      len;                           /* Response length           */
+static const bool server_req = true;
 
     /* Clear the header to zeroes */
     memset( hdr, 0, SHRD_HDR_SIZE );
@@ -1452,7 +1453,7 @@ int      len;                           /* Response length           */
     }
 
     /* Receive the header */
-    rc = recvData (dev->fd, hdr, buf, buflen, 0);
+    rc = recvData (dev->fd, hdr, buf, buflen, !server_req );
     if (rc < 0)
     {
         if (rc != -ENOTCONN)
@@ -1486,9 +1487,23 @@ int      len;                           /* Response length           */
 } /* clientRecv */
 
 /*-------------------------------------------------------------------
- * Receive data (server or client)
+ *             Receive data (server or client)
+ *-------------------------------------------------------------------
+ *
+ * Returns:
+ *
+ *   > 0     number of bytes received
+ *
+ *     0     no data available
+ *
+ *    -1     data decompression error
+ *
+ *   < 1     a socket error has occurred; the return code is the
+ *           negative of the socket error code (e.g. -ECONNRESET),
+ *           so you should use "strerror( -rc )" to report it.
+ *
  *-------------------------------------------------------------------*/
-static int recvData(int sock, BYTE *hdr, BYTE *buf, int buflen, int server)
+static int recvData(int sock, BYTE *hdr, BYTE *buf, int buflen, bool server_req)
 {
 int                     rc;             /* Return code               */
 int                     rlen;           /* Data length to recv       */
@@ -1503,7 +1518,6 @@ int                     comp = 0;       /* Compression type          */
 int                     off = 0;        /* Offset to compressed data */
 DEVBLK                 *dev = NULL;     /* For 'SHRDTRACE'             */
 BYTE                    cbuf[65536];    /* Compressed buffer         */
-
 
     /* Receive the header */
     for (recvlen = 0; recvlen < (int)SHRD_HDR_SIZE; recvlen += rc)
@@ -1522,8 +1536,8 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
     if (len == 0) return 0;
 
     /* Check for compressed data */
-    if ((server && (cmd & SHRD_COMP))
-     || (!server && cmd == SHRD_COMP))
+    if ((server_req && (cmd & SHRD_COMP))
+     || (!server_req && cmd == SHRD_COMP))
     {
         comp = (flag & SHRD_COMP_MASK) >> 4;
         off = flag & SHRD_COMP_OFF;
@@ -2378,6 +2392,7 @@ BYTE            hdr[SHRD_HDR_SIZE + 65536];  /* Header + buffer      */
 BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 char           *ipaddr = NULL;          /* IP addr of connected peer */
 char            threadname[16] = {0};
+static const bool server_req = true;
 
     // We are (or will be) the "dev->shrdtid" thread...
 
@@ -2387,7 +2402,7 @@ char            threadname[16] = {0};
 
     SHRDTRACE( "server connect %s sock %d", ipaddr, csock );
 
-    rc = recvData( csock, hdr, buf, 65536, 1 );
+    rc = recvData( csock, hdr, buf, 65536, server_req );
     if (rc < 0)
     {
         // "Shared: connect to IP %s failed"
@@ -2481,6 +2496,7 @@ char            threadname[16] = {0};
         LOG_THREAD_BEGIN( threadname  );
 
     /* Keep looping while there are still clients connected to our device */
+    /* PROGRAMMING NOTE: the below loop runs with the device lock held! */
     while (dev->shrdconn)
     {
         FD_ZERO( &selset );
@@ -2598,34 +2614,34 @@ char            threadname[16] = {0};
 
         /* Found a pending request */
         RELEASE_DEVLOCK( dev );
-
-        SHRDTRACE("select ready %d id=%d",
-            dev->shrd[ix]->fd, dev->shrd[ix]->id );
-
-        if (dev->shrd[ix]->havehdr)
         {
-            /* Copy the saved start/resume packet */
-            memcpy( hdr, dev->shrd[ix]->hdr, SHRD_HDR_SIZE );
-            dev->shrd[ix]->havehdr = 0;
-            dev->shrd[ix]->waiting = 0;
-        }
-        else
-        {
-            /* Read the request packet */
-            if ((rc = recvData( dev->shrd[ix]->fd, hdr, buf, 65536, 1 )) < 0)
+            SHRDTRACE("select ready %d id=%d",
+                dev->shrd[ix]->fd, dev->shrd[ix]->id );
+
+            if (dev->shrd[ix]->havehdr)
             {
-                // "%1d:%04X Shared: error in receive from %s id %d"
-                WRMSG( HHC00734, "E", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id );
-                dev->shrd[ix]->disconnect = 1;
-                dev->shrd[ix]->pending = 0;
-                OBTAIN_DEVLOCK( dev );
-                continue;
+                /* Copy the saved start/resume packet */
+                memcpy( hdr, dev->shrd[ix]->hdr, SHRD_HDR_SIZE );
+                dev->shrd[ix]->havehdr = 0;
+                dev->shrd[ix]->waiting = 0;
             }
+            else
+            {
+                /* Read the request packet */
+                if ((rc = recvData( dev->shrd[ix]->fd, hdr, buf, 65536, 1 )) < 0)
+                {
+                    // "%1d:%04X Shared: error in receive from %s id %d"
+                    WRMSG( HHC00734, "E", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id );
+                    dev->shrd[ix]->disconnect = 1;
+                    dev->shrd[ix]->pending = 0;
+                    OBTAIN_DEVLOCK( dev );
+                    continue;
+                }
+            }
+
+            /* Process the request */
+            serverRequest( dev, ix, hdr, buf );
         }
-
-        /* Process the request */
-        serverRequest( dev, ix, hdr, buf );
-
         OBTAIN_DEVLOCK( dev );
 
         /* If the 'waiting' bit is on then the start/resume request
