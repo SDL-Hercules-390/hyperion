@@ -2416,8 +2416,8 @@ static bool valid_qualifier( const char* qualifier )
     if (0
         || len < 1
         || len > 8
-        || strspn( qualifier, g_valid_qual_chars     ) < len
-        || strspn( beg,       g_valid_beg_qual_chars ) < 1
+        || (int)strspn( qualifier, g_valid_qual_chars     ) < len
+        || (int)strspn( beg,       g_valid_beg_qual_chars ) < 1
     )
         return false;
     return true;
