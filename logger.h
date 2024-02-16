@@ -53,6 +53,7 @@ LOGR_DLL_IMPORT int    logger_isactive ();
 #define STAMPLOG       (TIMESTAMPLOG || DATESTAMPLOG)
 
 LOGR_DLL_IMPORT void   logger_timestamped_logfile_write( const void* pBuff, size_t nBytes );
+LOGR_DLL_IMPORT void   set_shutdown_with_logger_lock();
 
 #if !defined( _MSVC_ )
 LOGR_DLL_IMPORT void   logger_unredirect();

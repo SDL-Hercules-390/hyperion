@@ -1468,14 +1468,7 @@ static void do_shutdown_now()
     // "Begin Hercules shutdown"
     WRMSG( HHC01420, "I" );
 
-    // (hack to prevent minor message glitch during shutdown)
-    fflush( stdout );
-    fflush( stderr );
-    USLEEP( 10000 );
-
-    ASSERT( !sysblk.shutfini );   // (sanity check)
-    sysblk.shutfini = FALSE;      // (shutdown NOT finished yet)
-    sysblk.shutdown = TRUE;       // (system shutdown initiated)
+    set_shutdown_with_logger_lock();
 
     /* Wakeup I/O subsystem to start I/O subsystem shutdown */
     {
@@ -1494,10 +1487,6 @@ static void do_shutdown_now()
     fflush( stdout );
     fflush( stderr );
     USLEEP( 10000 );
-
-#if !defined( _MSVC_ )
-    logger_unredirect();
-#endif
 
     hdl_atexit();
 

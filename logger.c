@@ -730,3 +730,24 @@ DLL_EXPORT int logger_isactive()
 {
     return logger_active;
 }
+
+/* set global shutdown flag */
+DLL_EXPORT void set_shutdown_with_logger_lock()
+{
+    obtain_lock( &logger_lock );
+    {
+        // ensure flushed before possible log unredirect
+        fflush( stdout );
+        fflush( stderr );
+        USLEEP( 10000 );
+
+#if !defined( _MSVC_ )
+        logger_unredirect();
+#endif
+
+        ASSERT( !sysblk.shutfini );   // (sanity check)
+        sysblk.shutfini = FALSE;      // (shutdown NOT finished yet)
+        sysblk.shutdown = TRUE;       // (system shutdown initiated)
+    }
+    release_lock( &logger_lock );
+}
