@@ -3290,6 +3290,9 @@ int engines_cmd( int argc, char* argv[], char* cmdline )
         char*  strtok_str = NULL;       /* strtok_r work variable    */
         char*  arg1 = strdup( argv[1] );/* (save before modifying)   */
 
+        /* Default all engines to type "CP" */
+        memset( ptyp, short2ptyp( "CP" ), sizeof( ptyp ));
+
         /* Parse processor engine types operand, and save the results
            for eventual sysblk update if no errors are detected.
            Example: "ENGINES  4*CP,AP,2*IP"
