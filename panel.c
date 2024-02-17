@@ -1503,7 +1503,7 @@ static void NP_update(REGS *regs)
 
 /* ==============   End of the main NP block of code    =============*/
 
-static void panel_cleanup(void *unused);    // (forward reference)
+void panel_cleanup(void *unused);    // (forward reference)
 
 ///////////////////////////////////////////////////////////////////////
 // "maxrates" command support...
@@ -1763,7 +1763,14 @@ char    buf[1024];                      /* Buffer workarea           */
 size_t  loopcount;                      /* Number of iterations done */
 
     SET_THREAD_NAME( PANEL_THREAD_NAME );
-    hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
+
+    // pannel_cleanup is called as soon as this thread recognizs
+    // shutdown has been initiated. Handling pannel_cleanup as part
+    // of hdl_atexit() intoduces a timing delay between setting shutdown
+    // and pannel_cleanup execution which leads to missing messaages.
+
+    //hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
+
     history_init();
 
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
@@ -2952,6 +2959,7 @@ FinishShutdown:
         if ( sysblk.shutdown )
         {
             if ( sysblk.shutfini ) break;
+
             /* wait for system to finish shutting down */
             USLEEP(10000);
             lmsmax = INT_MAX;
@@ -3316,14 +3324,12 @@ FinishShutdown:
 
 } /* end function panel_display */
 
-static void panel_cleanup(void *unused)
+DLL_EXPORT void panel_cleanup(void *unused)
 {
 int i;
 PANMSG* p;
 
     UNREFERENCED(unused);
-
-    log_wakeup(NULL);
 
     if(topmsg)
     {

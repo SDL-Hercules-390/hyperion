@@ -734,12 +734,19 @@ DLL_EXPORT int logger_isactive()
 /* set global shutdown flag */
 DLL_EXPORT void set_shutdown_with_logger_lock()
 {
+    // ensure flushed before possible log unredirect
+    fflush( stdout );
+    fflush( stderr );
+
+    log_wakeup(NULL);
+    USLEEP( 50000 );
+
     obtain_lock( &logger_lock );
     {
-        // ensure flushed before possible log unredirect
-        fflush( stdout );
-        fflush( stderr );
-        USLEEP( 10000 );
+        // wait a bit longer with logger paused
+        USLEEP( 50000 );
+
+        panel_cleanup( NULL);
 
 #if !defined( _MSVC_ )
         logger_unredirect();
