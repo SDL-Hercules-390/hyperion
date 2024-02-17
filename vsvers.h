@@ -18,6 +18,7 @@
 /*    Don't forget to update the 'makefile.bat' file too!            */
 /*-------------------------------------------------------------------*/
 
+#define VS2022_9    1939                /* Visual Studio 2022 */
 #define VS2022_8    1938                /* Visual Studio 2022 */
 #define VS2022      1930                /* Visual Studio 2022 */
 #define VS2019      1920                /* Visual Studio 2019 */
