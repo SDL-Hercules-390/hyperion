@@ -1764,10 +1764,10 @@ size_t  loopcount;                      /* Number of iterations done */
 
     SET_THREAD_NAME( PANEL_THREAD_NAME );
 
-    // pannel_cleanup is called as soon as this thread recognizs
-    // shutdown has been initiated. Handling pannel_cleanup as part
-    // of hdl_atexit() intoduces a timing delay between setting shutdown
-    // and pannel_cleanup execution which leads to missing messaages.
+    // panel_cleanup is called in set_shutdown_with_logger_lock() before
+    // shutdown flag has been set. Handling panel_cleanup as part
+    // of hdl_atexit() introduces a timing delay between setting shutdown
+    // and panel_cleanup execution which leads to missing console messages.
 
     //hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
 

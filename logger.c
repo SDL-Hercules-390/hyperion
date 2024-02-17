@@ -731,7 +731,10 @@ DLL_EXPORT int logger_isactive()
     return logger_active;
 }
 
-/* set global shutdown flag */
+/* set global shutdown flag and                         */
+/*    attempt to synchronize logger and panel threads   */
+/*    - to avoid duplicate logger shutdown lines        */
+/*    - to capture additional lines to console          */
 DLL_EXPORT void set_shutdown_with_logger_lock()
 {
     // ensure flushed before possible log unredirect
