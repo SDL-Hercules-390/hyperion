@@ -2257,7 +2257,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Forward references to static helper functions                     */
 /*-------------------------------------------------------------------*/
-static void PerformSubsystemFunction
+static bool PerformSubsystemFunction
 (
     DEVBLK*  dev,
     BYTE     code,
@@ -2271,7 +2271,7 @@ static void PerformSubsystemFunction
     BYTE*    unitstat,
     U32*     residual
 );
-static void LocateRecordExtended
+static bool LocateRecordExtended
 (
     DEVBLK*  dev,
     BYTE     code,
@@ -2285,7 +2285,7 @@ static void LocateRecordExtended
     BYTE*    unitstat,
     U32*     residual
 );
-static void DefineExtent
+static bool DefineExtent
 (
     DEVBLK*  dev,
     BYTE     code,
@@ -3509,51 +3509,47 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
         case PFX_F_DE:
 
-            /* Process Define Extent field only if provided (valid) */
-            if (dev->ckdvalid & PFX_V_DE_VALID)
+            /* Process only the Define Extent fields */
+
+            if (DefineExtent( dev, code, flags, chained, count, prevcode,
+                              ccwseq, iobuf, more, unitstat, residual ))
             {
-                DefineExtent( dev, code, flags, chained, count, prevcode,
-                              ccwseq, iobuf, more, unitstat, residual );
                 prevcode = 0x63; // DEFINE EXTENT
-            }
-            else
-            {
-                /* Return normal status */
                 *unitstat = CSW_CE | CSW_DE;
             }
-            break; // Done!
+            break;
 
         case PFX_F_DE_LRE:
 
-            /* Process Define Extent field only if provided (valid) */
-            if (dev->ckdvalid & PFX_V_DE_VALID)
-            {
-                DefineExtent( dev, code, flags, chained, count, prevcode,
-                              ccwseq, iobuf, more, unitstat, residual );
-                if (*unitstat != (CSW_CE | CSW_DE))
-                    break; // (error!)
-                prevcode = 0x63; // DEFINE EXTENT
-            }
+            /* Process both Define Extent and Locate Record Extended fields */
 
-            LocateRecordExtended( dev, code, flags, chained, count, prevcode,
-                                  ccwseq, iobuf, more, unitstat, residual );
-            prevcode = 0x4B; // LOCATE RECORD EXTENDED
-            break; // Done!
+            if (DefineExtent( dev, code, flags, chained, count, prevcode,
+                              ccwseq, iobuf, more, unitstat, residual ))
+            {
+                prevcode = 0x63; // DEFINE EXTENT
+                if (LocateRecordExtended( dev, code, flags, chained, count, prevcode,
+                                          ccwseq, iobuf, more, unitstat, residual ))
+                {
+                    prevcode = 0x4B; // LOCATE RECORD EXTENDED
+                    *unitstat = CSW_CE | CSW_DE;
+                }
+            }
+            break;
 
         case PFX_F_DE_PSF:
 
-            /* Process Define Extent field only if provided (valid) */
-            if (dev->ckdvalid & PFX_V_DE_VALID)
-            {
-                DefineExtent( dev, code, flags, chained, count, prevcode,
-                              ccwseq, iobuf, more, unitstat, residual );
-                if (*unitstat != (CSW_CE | CSW_DE))
-                    break; // (error!)
-            }
+            /* Process both Define Extent and Perform Subsystem Function fields */
 
-            PerformSubsystemFunction( dev, code, flags, chained, count, prevcode,
-                                      ccwseq, iobuf, more, unitstat, residual );
-            break; // Done!
+            if (DefineExtent( dev, code, flags, chained, count, prevcode,
+                              ccwseq, iobuf, more, unitstat, residual ))
+            {
+                if (PerformSubsystemFunction( dev, code, flags, chained, count, prevcode,
+                                              ccwseq, iobuf, more, unitstat, residual ))
+                {
+                    *unitstat = CSW_CE | CSW_DE;
+                }
+            }
+            break;
 
         default:
             CRASH();  // LOGIC ERROR!
@@ -3571,8 +3567,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (dev->ckd3990 == 0)
             goto seek_0x27;
 
-        PerformSubsystemFunction( dev, code, flags, chained, count, prevcode,
-                                  ccwseq, iobuf, more, unitstat, residual );
+        if (PerformSubsystemFunction( dev, code, flags, chained, count, prevcode,
+                                      ccwseq, iobuf, more, unitstat, residual ))
+        {
+            *unitstat = CSW_CE | CSW_DE;
+        }
         break;
 
     seek_0x27: /* SEEK AND SET SECTOR (Itel 7330 controller only) */
@@ -5029,8 +5028,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* LOCATE RECORD EXTENDED                                        */
     /*---------------------------------------------------------------*/
 
-        LocateRecordExtended( dev, code, flags, chained, count, prevcode,
-                              ccwseq, iobuf, more, unitstat, residual );
+        if (LocateRecordExtended( dev, code, flags, chained, count, prevcode,
+                                  ccwseq, iobuf, more, unitstat, residual ))
+        {
+            *unitstat = CSW_CE | CSW_DE;
+        }
         break;
 
     case 0x63:
@@ -5038,8 +5040,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* DEFINE EXTENT                                                 */
     /*---------------------------------------------------------------*/
 
-        DefineExtent( dev, code, flags, chained, count, prevcode,
-                      ccwseq, iobuf, more, unitstat, residual );
+        if (DefineExtent( dev, code, flags, chained, count, prevcode,
+                          ccwseq, iobuf, more, unitstat, residual ))
+        {
+            *unitstat = CSW_CE | CSW_DE;
+        }
         break;
 
     case 0x64:
@@ -5614,7 +5619,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 /*-------------------------------------------------------------------*/
 /* PERFORM SUBSYSTEM FUNCTION    helper function                     */
 /*-------------------------------------------------------------------*/
-static void PerformSubsystemFunction
+static bool PerformSubsystemFunction
 (
     DEVBLK*  dev,
     BYTE     code,
@@ -5650,7 +5655,7 @@ static void PerformSubsystemFunction
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Use the order code to determine the required count */
@@ -5669,7 +5674,7 @@ static void PerformSubsystemFunction
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Set residual count */
@@ -5683,7 +5688,7 @@ static void PerformSubsystemFunction
         dev->ckdssi = 0;
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_F );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        break;
+        return false;
     }
 #endif
 
@@ -5743,7 +5748,7 @@ static void PerformSubsystemFunction
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
+            return false;
         }
 
         /* Process suborder code in byte 6 of data */
@@ -5875,6 +5880,7 @@ static void PerformSubsystemFunction
         default: /* Unknown suborder code */
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return false;
 
         } /* end switch(iobuf[6]) */
 
@@ -5895,7 +5901,7 @@ static void PerformSubsystemFunction
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
+            return false;
         }
 
         /* Command reject if flag byte is not zero */
@@ -5903,7 +5909,7 @@ static void PerformSubsystemFunction
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
+            return false;
         }
 
         /* Command reject if any command is chained from this command */
@@ -5911,7 +5917,7 @@ static void PerformSubsystemFunction
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
+            return false;
         }
 
         /* Mark Set Special Intercept inactive */
@@ -5926,7 +5932,7 @@ static void PerformSubsystemFunction
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
+            return false;
         }
 
         break;
@@ -5939,7 +5945,7 @@ static void PerformSubsystemFunction
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
+            return false;
         }
 
         /* Prepare subsystem data (node descriptor record) */
@@ -5972,12 +5978,13 @@ static void PerformSubsystemFunction
 
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return false;
 
     } /* end switch(iobuf[0]) */
 
     /* Exit if unit check has already been set */
     if (*unitstat & CSW_UC)
-        return;
+        return false;
 
     /* If Prefix CCW, move prepared subsystem data (if any)
        back to where the channel expects it.
@@ -5987,13 +5994,14 @@ static void PerformSubsystemFunction
 
     /* Return normal status */
     *unitstat = CSW_CE | CSW_DE;
+    return true;
 
 } /* end function PerformSubsystemFunction */
 
 /*-------------------------------------------------------------------*/
 /* LOCATE RECORD EXTENDED    helper function                         */
 /*-------------------------------------------------------------------*/
-static void LocateRecordExtended
+static bool LocateRecordExtended
 (
     DEVBLK*  dev,
     BYTE     code,
@@ -6045,7 +6053,7 @@ static void LocateRecordExtended
         /* Set command reject sense byte, and unit check status */
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6061,7 +6069,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6073,7 +6081,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6090,7 +6098,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Byte 0 contains the locate record operation byte */
@@ -6109,7 +6117,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Validate the locate record extended operation code (byte 17) */
@@ -6123,7 +6131,7 @@ static void LocateRecordExtended
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            return;
+            return false;
         }
 
         dev->ckdloper &= CKDOPER_ORIENTATION;
@@ -6133,7 +6141,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Check for write operation on a read only disk */
@@ -6152,7 +6160,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_EC, SENSE1_WRI, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6203,7 +6211,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6222,7 +6230,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6244,7 +6252,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     dev->ckdlaux = iobuf[1];
@@ -6254,7 +6262,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6280,7 +6288,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     dev->ckdlcount = iobuf[3];
@@ -6308,14 +6316,14 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     if (EXTENT_CHECK( dev, cyl, head ))
     {
         ckd_build_sense( dev, 0, SENSE1_FP, 0, 0, 0 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6348,7 +6356,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6394,7 +6402,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     if ((dev->ckdlaux & CKDLAUX_TLFVALID) == 0)
@@ -6437,7 +6445,7 @@ static void LocateRecordExtended
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6451,18 +6459,11 @@ static void LocateRecordExtended
         *residual = 0;
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     *residual -= num;
 
-    /*
-     * For `Read Any' (0x0A) or `Write Any' (0x09) the extended
-     * length must be one and the extended parameter value (set size)
-     * must be one.  Otherwise the Locate Record Extended command is
-     * terminated with status that includes unit check (Command Reject,
-     * format X'04', Invalid Parameter).
-     */
     if (num > 0)
         if (iobuf[20] & 0x01)
             dev->ckdlaux |= CKDLAUX_RDCNTSUF;
@@ -6474,14 +6475,21 @@ static void LocateRecordExtended
     /* Save the Extended Operation byte */
     dev->ckdextcd = iobuf[17];
 
+    /*
+     * For Read Any (0x0A) or Write Any (0x09) the extended length
+     * must be one and the extended parameter value (set size) must
+     * be one.  Otherwise the Locate Record Extended command is
+     * terminated with status that includes unit check (Command
+     * Reject, format X'04', Invalid Parameter).
+     */
     if (0
-        || (iobuf[17] == CKDOPER_WRTANY && iobuf[20] != 1)
-        || (iobuf[17] == CKDOPER_RDANY  && iobuf[20] != 1)
+        || (dev->ckdextcd == CKDOPER_WRTANY && iobuf[20] != 1)
+        || (dev->ckdextcd == CKDOPER_RDANY  && iobuf[20] != 1)
     )
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /*
@@ -6543,7 +6551,7 @@ static void LocateRecordExtended
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            return;
+            return false;
         }
 
         dev->ckdlmask = mask;
@@ -6566,7 +6574,7 @@ static void LocateRecordExtended
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            return;
+            return false;
         }
 
         /* Check extent of last track to be read */
@@ -6583,14 +6591,14 @@ static void LocateRecordExtended
         {
             ckd_build_sense( dev, 0, SENSE1_FP, 0, 0, 0 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            return;
+            return false;
         }
     }
 
     /* Seek to the required track */
     rc = ckd_seek( dev, cyl, head, &trkhdr, unitstat );
     if (rc < 0)
-        return;
+        return false;
 
     /* Set normal status */
     *unitstat = CSW_CE | CSW_DE;
@@ -6607,6 +6615,7 @@ static void LocateRecordExtended
             {
                 ckd_build_sense( dev, 0, SENSE1_NRF, 0, 0, 0 );
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                return false;
             }
             break;
 
@@ -6623,7 +6632,7 @@ static void LocateRecordExtended
                    with sense data indicating no record found */
                 rc = ckd_read_count( dev, code, &rechdr, unitstat );
                 if (rc < 0)
-                    break; // (end of track)
+                    return false; // (end of track)
 
                 /* Turn off track overflow flag */
                 if (dev->ckdcyls < 32768)
@@ -6648,7 +6657,7 @@ static void LocateRecordExtended
 
     /* Exit if search ended with error status */
     if (*unitstat != (CSW_CE | CSW_DE))
-        return;
+        return false;
 
     /* Reorient past data if data orientation is specified */
     if ((dev->ckdloper & CKDOPER_ORIENTATION) == CKDOPER_ORIENT_DATA)
@@ -6663,13 +6672,15 @@ static void LocateRecordExtended
 
     /* Set locate record flag and return normal status */
     dev->ckdlocat = 1;
+    *unitstat = CSW_CE | CSW_DE;
+    return true;
 
 } /* end function LocateRecordExtended */
 
 /*-------------------------------------------------------------------*/
 /* DEFINE EXTENT    helper function                                  */
 /*-------------------------------------------------------------------*/
-static void DefineExtent
+static bool DefineExtent
 (
     DEVBLK*  dev,
     BYTE     code,
@@ -6712,7 +6723,7 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Command reject if within the domain of a Locate Record, or
@@ -6729,7 +6740,7 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Bytes 0-1 contain the file mask and global attributes */
@@ -6742,7 +6753,7 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     dev->ckdfmask = fmask;
@@ -6753,7 +6764,7 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Validate the file mask */
@@ -6761,7 +6772,7 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Bytes 2-3 contain the extent block size */
@@ -6779,7 +6790,7 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     dev->ckdxblksz = xblksz;
@@ -6789,7 +6800,7 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Bytes 4-6 must contain zeroes */
@@ -6801,7 +6812,7 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Bytes 8-11 contain the extent begin cylinder and head */
@@ -6824,18 +6835,19 @@ static void DefineExtent
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, dev->ckdxtdef ? MESSAGE_2 : MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        return false;
     }
 
     /* Define the new extent */
-    dev->ckdxbcyl = bcyl;
+    dev->ckdxbcyl  = bcyl;
     dev->ckdxbhead = bhead;
-    dev->ckdxecyl = ecyl;
+    dev->ckdxecyl  = ecyl;
     dev->ckdxehead = ehead;
 
     /* Set extent defined flag and return normal status */
     dev->ckdxtdef = 1;
     *unitstat = CSW_CE | CSW_DE;
+    return true;
 
 } /* end function DefineExtent */
 
