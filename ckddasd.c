@@ -1825,7 +1825,13 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         if (1
             && IS_CCW_MTRACK( code )
             && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
-            &&  dev->ckdlcount == 1
+            && (0
+                || dev->ckdlcount == 1
+                || (0
+                    || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
+                    || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTANY
+                   )
+               )
             &&  dev->ckdfcoun
         )
         {
