@@ -1936,7 +1936,7 @@ struct DEVBLK {                         /* Device configuration block*/
 
 // Auxiliary byte
 #define PFX_A_SMR           0x80        /* Suspend Multipath Reconn. */
-#define PFX_A_CHKALL        0x08        /* Check all DE+LRE parms    */
+#define PFX_A_VALID         0x08        /* All DE+LRE parms valid    */
 
         BYTE    ccwops[256];            /* CCW opcodes to trace      */
 

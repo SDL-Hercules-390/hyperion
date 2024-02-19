@@ -6018,6 +6018,7 @@ static bool LocateRecordExtended
 {
     int         rc;                     /* Return code               */
     int         i, j;                   /* Loop index                */
+    bool        validate = true;        /* Validate all fields       */
     CKD_TRKHDR  trkhdr;                 /* CKD track header (HA)     */
     CKD_RECHDR  rechdr;                 /* CKD record header (count) */
     U32         num;                    /* Number of bytes to move   */
@@ -6033,6 +6034,11 @@ static bool LocateRecordExtended
         memmove( ccwdata, &iobuf[44], sizeof( ccwdata ) - 44 );
         count -= (count >= 44 ? 44 : count);
         iobuf = &ccwdata[0];
+
+        /* Don't bother validating any of the Locate Record Extended
+           fields if the PFX Auxiliary flag says it's valid. */
+        if (dev->ckdauxiliary & PFX_A_VALID)
+            validate = false;
     }
 
     UNREFERENCED( flags    );
@@ -6106,6 +6112,7 @@ static bool LocateRecordExtended
 
     /* Validate the locate record operation code (byte 0 bits 2-7) */
     if (1
+        && validate
         && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
         && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
         && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
@@ -6124,6 +6131,7 @@ static bool LocateRecordExtended
     if ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_EXTOP)
     {
         if (1
+            && validate
             && iobuf[17] != CKDOPER_WRTANY
             && iobuf[17] != CKDOPER_RDANY
             && iobuf[17] != CKDOPER_RDTSET
@@ -6137,7 +6145,7 @@ static bool LocateRecordExtended
         dev->ckdloper &= CKDOPER_ORIENTATION;
         dev->ckdloper |= iobuf[17];
     }
-    else if (iobuf[17] != 0)
+    else if (validate && iobuf[17] != 0)
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6186,6 +6194,7 @@ static bool LocateRecordExtended
      * Table: valid orientation + operation code values
      */
     if (1
+        &&  validate
         &&  dev->ckdloper != 0x01
         &&  dev->ckdloper != 0x03
         &&  dev->ckdloper != 0x0B
@@ -6226,7 +6235,7 @@ static bool LocateRecordExtended
      * bit 7 = 0 : No Read Count CCW is suffixed to the LR domain
      *         1 : A Read Count CCW is suffixed to the LR domain
      */
-    if ((iobuf[1] & CKDLAUX_RESV) != 0)
+    if (validate && (iobuf[1] & CKDLAUX_RESV) != 0)
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6242,6 +6251,7 @@ static bool LocateRecordExtended
      * X'04', Invalid Parameter).
      */
     if (1
+        && validate
         && (iobuf[1] & CKDLAUX_RDCNTSUF)
         && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
         && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
@@ -6258,7 +6268,7 @@ static bool LocateRecordExtended
     dev->ckdlaux = iobuf[1];
 
     /* Byte 2 must contain zeroes */
-    if (iobuf[2] != 0)
+    if (validate && iobuf[2] != 0)
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6278,17 +6288,20 @@ static bool LocateRecordExtended
      * status that includes unit check (Command Reject, format X'04',
      * Invalid Parameter).
      */
-    if (0
-        || iobuf[3] == 0
-        || (1
-            && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
-            && iobuf[3] < 2
-           )
-    )
+    if (validate)
     {
-        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return false;
+        if (0
+            || iobuf[3] == 0
+            || (1
+                && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
+                && iobuf[3] < 2
+               )
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return false;
+        }
     }
 
     dev->ckdlcount = iobuf[3];
@@ -6309,17 +6322,23 @@ static bool LocateRecordExtended
     cyl  = fetch_hw( &iobuf[4] );
     head = fetch_hw( &iobuf[6] );
 
-    if (0
-        || cyl  >= dev->ckdcyls
-        || head >= dev->ckdheads
-    )
+    if (validate)
     {
-        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return false;
+        if (0
+            || cyl  >= dev->ckdcyls
+            || head >= dev->ckdheads
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return false;
+        }
     }
 
-    if (EXTENT_CHECK( dev, cyl, head ))
+    if (1
+        && validate
+        && EXTENT_CHECK( dev, cyl, head )
+    )
     {
         ckd_build_sense( dev, 0, SENSE1_FP, 0, 0, 0 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6350,6 +6369,7 @@ static bool LocateRecordExtended
      * is not to be performed prior to establishing orientation.
      */
     if (1
+        && validate
         && iobuf[13] != 0xFF
         && iobuf[13] >= dev->ckdtab->sectors
     )
@@ -6394,15 +6414,18 @@ static bool LocateRecordExtended
      * Extent Blocksize parameter for any required data transfer length
      * calculation.
      */
-    if (0
-        || (!(dev->ckdlaux & CKDLAUX_TLFVALID) &&  fetch_hw( &iobuf[14] ))
-        || ( (dev->ckdlaux & CKDLAUX_TLFVALID) && !fetch_hw( &iobuf[14] ))
-        || fetch_hw( &iobuf[14] ) > dev->ckdxblksz
-    )
+    if (validate)
     {
-        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return false;
+        if (0
+            || (!(dev->ckdlaux & CKDLAUX_TLFVALID) &&  fetch_hw( &iobuf[14] ))
+            || ( (dev->ckdlaux & CKDLAUX_TLFVALID) && !fetch_hw( &iobuf[14] ))
+            || fetch_hw( &iobuf[14] ) > dev->ckdxblksz
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return false;
+        }
     }
 
     if ((dev->ckdlaux & CKDLAUX_TLFVALID) == 0)
@@ -6431,21 +6454,24 @@ static bool LocateRecordExtended
      */
     num = fetch_hw( &iobuf[18] );
 
-    if (0
-        || (1
-            && iobuf[17] != CKDOPER_WRTANY
-            && iobuf[17] != CKDOPER_RDANY
-            && iobuf[17] != CKDOPER_RDTSET
-            && num
-           )
-        || (iobuf[17] == CKDOPER_WRTANY && num != 1)
-        || (iobuf[17] == CKDOPER_RDANY  && num != 1)
-        || (iobuf[17] == CKDOPER_RDTSET && num != 1 && num != 2)
-    )
+    if (validate)
     {
-        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return false;
+        if (0
+            || (1
+                && iobuf[17] != CKDOPER_WRTANY
+                && iobuf[17] != CKDOPER_RDANY
+                && iobuf[17] != CKDOPER_RDTSET
+                && num
+               )
+            || (iobuf[17] == CKDOPER_WRTANY && num != 1)
+            || (iobuf[17] == CKDOPER_RDANY  && num != 1)
+            || (iobuf[17] == CKDOPER_RDTSET && num != 1 && num != 2)
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return false;
+        }
     }
 
     /*
@@ -6547,7 +6573,7 @@ static bool LocateRecordExtended
         if (num > 1)
             mask |= iobuf[21];
 
-        if (!(mask & 0x8000))
+        if (validate && !(mask & 0x8000))
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6570,7 +6596,7 @@ static bool LocateRecordExtended
         }
 
         /* Number of one bits must match count */
-        if (i != dev->ckdlcount)
+        if (validate && i != dev->ckdlcount)
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6587,7 +6613,7 @@ static bool LocateRecordExtended
             lasthead -= (U16) dev->ckdheads;
         }
 
-        if (EXTENT_CHECK( dev, lastcyl, lasthead ))
+        if (validate && EXTENT_CHECK( dev, lastcyl, lasthead ))
         {
             ckd_build_sense( dev, 0, SENSE1_FP, 0, 0, 0 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6695,6 +6721,7 @@ static bool DefineExtent
     U32*     residual
 )
 {
+    bool  validate = true;
     U32   num;
     U16   bcyl, bhead, ecyl, ehead, xblksz;
     BYTE  fmask, xgattr;
@@ -6706,6 +6733,11 @@ static bool DefineExtent
         memmove( ccwdata, &iobuf[12], sizeof( ccwdata ) - 12 );
         count -= (count >= 12 ? 12 : count);
         iobuf = &ccwdata[0];
+
+        /* Don't bother validating any of the Define Extent fields
+           if the Field Validity flag says it's valid. */
+        if (dev->ckdvalid & PFX_V_DE_VALID)
+            validate = false;
     }
 
     UNREFERENCED( flags    );
@@ -6747,8 +6779,10 @@ static bool DefineExtent
     fmask = iobuf[0];
     xgattr = iobuf[1];
 
-    if (dev->ckdxtdef &&
-       (dev->ckdfmask != fmask || dev->ckdxgattr != xgattr)
+    if (1
+        && validate
+        && dev->ckdxtdef
+        && (dev->ckdfmask != fmask || dev->ckdxgattr != xgattr)
     )
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
@@ -6760,7 +6794,7 @@ static bool DefineExtent
     dev->ckdxgattr = xgattr;
 
     /* Validate the global attributes byte bits 0-1 */
-    if ((dev->ckdxgattr & CKDGATR_ARCH) != CKDGATR_ARCH_ECKD)
+    if (validate && (dev->ckdxgattr & CKDGATR_ARCH) != CKDGATR_ARCH_ECKD)
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6768,7 +6802,7 @@ static bool DefineExtent
     }
 
     /* Validate the file mask */
-    if ((dev->ckdfmask & CKDMASK_RESV) != 0)
+    if (validate && (dev->ckdfmask & CKDMASK_RESV) != 0)
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6784,8 +6818,10 @@ static bool DefineExtent
     if (xblksz == 0)
         xblksz = dev->ckdtab->r0 + 8;
 
-    if (dev->ckdxtdef &&
-        dev->ckdxblksz != xblksz
+    if (1
+        && validate
+        && dev->ckdxtdef
+        && dev->ckdxblksz != xblksz
     )
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
@@ -6796,7 +6832,7 @@ static bool DefineExtent
     dev->ckdxblksz = xblksz;
 
     /* Validate the extent block */
-    if (dev->ckdxblksz > dev->ckdtab->r0 + 8)
+    if (validate && dev->ckdxblksz > dev->ckdtab->r0 + 8)
     {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -6804,15 +6840,18 @@ static bool DefineExtent
     }
 
     /* Bytes 4-6 must contain zeroes */
-    if (0
-        || iobuf[4] != 0
-        || iobuf[5] != 0
-        || iobuf[6] != 0
-    )
+    if (validate)
     {
-        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return false;
+        if (0
+            || iobuf[4] != 0
+            || iobuf[5] != 0
+            || iobuf[6] != 0
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return false;
+        }
     }
 
     /* Bytes 8-11 contain the extent begin cylinder and head */
@@ -6823,19 +6862,22 @@ static bool DefineExtent
     ecyl  = (iobuf[12] << 8) | iobuf[13];
     ehead = (iobuf[14] << 8) | iobuf[15];
 
-    /* Validate the extent description by checking that the
-       ending track is not less than the starting track and
-       that the extent does not exceed the already defined extent */
-    if (0
-        || bcyl > ecyl
-        || (bcyl == ecyl && bhead > ehead)
-        || EXTENT_CHECK( dev, bcyl, bhead )
-        || EXTENT_CHECK( dev, ecyl, ehead )
-    )
+    if (validate)
     {
-        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, dev->ckdxtdef ? MESSAGE_2 : MESSAGE_4 );
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return false;
+        /* Validate the extent description by checking that the
+           ending track is not less than the starting track and
+           the extent does not exceed the already defined extent */
+        if (0
+            || bcyl > ecyl
+            || (bcyl == ecyl && bhead > ehead)
+            || EXTENT_CHECK( dev, bcyl, bhead )
+            || EXTENT_CHECK( dev, ecyl, ehead )
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, dev->ckdxtdef ? MESSAGE_2 : MESSAGE_4 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return false;
+        }
     }
 
     /* Define the new extent */
