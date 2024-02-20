@@ -6741,10 +6741,17 @@ static bool DefineExtent
         count -= (count >= 12 ? 12 : count);
         iobuf = &ccwdata[0];
 
-        /* Don't bother validating any of the Define Extent fields
-           if the Field Validity flag says it's valid. */
-        if (dev->ckdvalid & PFX_V_DX_VALID)
-            validate = false;
+        /* Don't do ANYTHING if no Define Extent was provided */
+        if (!(dev->ckdvalid & PFX_V_DX_VALID))
+        {
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+            return true;
+        }
+
+        /* Don't validate ANY Define Extent fields if asked not to */
+        if (dev->ckdauxiliary & PFX_A_VALID)  // ("trust me"?)
+            validate = false;                 // (whatever you say!)
     }
 
     UNREFERENCED( flags    );
