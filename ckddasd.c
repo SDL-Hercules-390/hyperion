@@ -42,7 +42,7 @@
 #include "ccwarn.h"
 
 /*-------------------------------------------------------------------*/
-/* Bit definitions for File Mask                                     */
+/* Bit definitions for Define Extent File Mask                       */
 /*-------------------------------------------------------------------*/
 #define CKDMASK_WRCTL           0xC0    /* Write control bits...     */
 #define CKDMASK_WRCTL_INHWR0    0x00    /* ...inhibit write HA/R0    */
@@ -64,7 +64,7 @@
 #define CKDMASK_PCI_FETCH       0x01    /* PCI fetch mode            */
 
 /*-------------------------------------------------------------------*/
-/* Bit definitions for Define Extent global attributes byte          */
+/* Bit definitions for Define Extent Global Attributes               */
 /*-------------------------------------------------------------------*/
 #define CKDGATR_ARCH            0xC0    /* Architecture mode...      */
 #define CKDGATR_ARCH_ECKD       0xC0    /* ...extended CKD mode      */
@@ -3501,9 +3501,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         // Validate Format byte
         if (1
-            && dev->ckdformat != PFX_F_DE
-            && dev->ckdformat != PFX_F_DE_LRE
-            && dev->ckdformat != PFX_F_DE_PSF
+            && dev->ckdformat != PFX_F_DX
+            && dev->ckdformat != PFX_F_DX_LRE
+            && dev->ckdformat != PFX_F_DX_PSF
         )
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
@@ -3513,7 +3513,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         switch (dev->ckdformat)
         {
-        case PFX_F_DE:
+        case PFX_F_DX:
 
             /* Process only the Define Extent fields */
 
@@ -3525,7 +3525,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             }
             break;
 
-        case PFX_F_DE_LRE:
+        case PFX_F_DX_LRE:
 
             /* Process both Define Extent and Locate Record Extended fields */
 
@@ -3542,7 +3542,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             }
             break;
 
-        case PFX_F_DE_PSF:
+        case PFX_F_DX_PSF:
 
             /* Process both Define Extent and Perform Subsystem Function fields */
 
@@ -6042,7 +6042,7 @@ static bool LocateRecordExtended
         iobuf = &ccwdata[0];
 
         /* Don't bother validating any of the Locate Record Extended
-           fields if the PFX Auxiliary flag says it's valid. */
+           fields if the PFX Auxiliary Byte flag says they're valid. */
         if (dev->ckdauxiliary & PFX_A_VALID)
             validate = false;
     }
@@ -6640,7 +6640,6 @@ static bool LocateRecordExtended
     /* Perform search according to specified orientation */
     switch (dev->ckdloper & CKDOPER_ORIENTATION)
     {
-
         case CKDOPER_ORIENT_HOME:
 
             /* For home orientation, compare the search CCHH
@@ -6744,7 +6743,7 @@ static bool DefineExtent
 
         /* Don't bother validating any of the Define Extent fields
            if the Field Validity flag says it's valid. */
-        if (dev->ckdvalid & PFX_V_DE_VALID)
+        if (dev->ckdvalid & PFX_V_DX_VALID)
             validate = false;
     }
 
@@ -6896,6 +6895,7 @@ static bool DefineExtent
 
     /* Set extent defined flag and return normal status */
     dev->ckdxtdef = 1;
+
     *unitstat = CSW_CE | CSW_DE;
     return true;
 

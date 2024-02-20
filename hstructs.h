@@ -1926,17 +1926,17 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdauxiliary;           /* Prefix CCW auxiliary byte */
 
 // Format byte
-#define PFX_F_DE            0x00        /* Define Extent             */
-#define PFX_F_DE_LRE        0x01        /* DE+Locate Record Extended */
-#define PFX_F_DE_PSF        0x02        /* DE+Perform Subsys. Func.  */
+#define PFX_F_DX            0x00        /* Define Extent             */
+#define PFX_F_DX_LRE        0x01        /* DX+Locate Record Extended */
+#define PFX_F_DX_PSF        0x02        /* DX+Perform Subsys. Func.  */
 
 // Validity byte
-#define PFX_V_DE_VALID      0x80        /* Define Extent bytes valid */
-#define PFX_V_TS_VALID      0x40        /* DE Time Stamp field valid */
+#define PFX_V_DX_VALID      0x80        /* Define Extent bytes valid */
+#define PFX_V_TS_VALID      0x40        /* DX Time Stamp field valid */
 
 // Auxiliary byte
 #define PFX_A_SMR           0x80        /* Suspend Multipath Reconn. */
-#define PFX_A_VALID         0x08        /* All DE+LRE parms valid    */
+#define PFX_A_VALID         0x08        /* All DX+LRE parms valid    */
 
         BYTE    ccwops[256];            /* CCW opcodes to trace      */
 
