@@ -5221,10 +5221,10 @@ DEF_INST(convert_utf8_to_utf16)
                 /*make big endian*/
                 U32 upair = CSWAP32 ( ((U32)unicode1 << 16) | (U32)unicode2 );
 
-                *(d1 +0) = *( ((Byte*) &upair)    );
-                *(d1 +1) = *( ((Byte*) &upair)  +1);
-                *(d1 +2) = *( ((Byte*) &upair)  +2);
-                *(d1 +3) = *( ((Byte*) &upair)  +3);
+                *(d1 +0) = *( ((BYTE*) &upair)    );
+                *(d1 +1) = *( ((BYTE*) &upair)  +1);
+                *(d1 +2) = *( ((BYTE*) &upair)  +2);
+                *(d1 +3) = *( ((BYTE*) &upair)  +3);
             }
             else
             {
@@ -5255,8 +5255,8 @@ DEF_INST(convert_utf8_to_utf16)
             {
                 U16 uchar = CSWAP16 ( unicode1 );      /*make big endian*/
 
-                *(d1 +0) = *( ((Byte*) &uchar)   );
-                *(d1 +1) = *( ((Byte*) &uchar) +1);
+                *(d1 +0) = *( ((BYTE*) &uchar)   );
+                *(d1 +1) = *( ((BYTE*) &uchar) +1);
             }
             else
             {
