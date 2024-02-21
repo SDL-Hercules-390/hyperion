@@ -990,6 +990,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
                 insttrace:1,            /* 1 = Inst trace enabled    */
                 tfnostop:1,             /* 1 = tf continue tracing   */
                 instbreak:1,            /* 1 = Inst break enabled    */
+                shutbegin:1,            /* 1 = shutdown begin req    */
                 shutdown:1,             /* 1 = shutdown requested    */
                 shutfini:1,             /* 1 = shutdown complete     */
                 shutimmed:1,            /* 1 = shutdown req immed    */

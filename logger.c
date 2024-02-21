@@ -445,6 +445,27 @@ static void* logger_thread( void* arg )
         }
         release_lock( &logger_lock );
 
+        /* begin shutdown requested
+           - handle all logger pre-shutdown actions
+           - set system shutdown flag
+        */
+        if (sysblk.shutbegin)
+        {
+            obtain_lock( &logger_lock );
+            {
+                if ( !sysblk.shutdown )
+                {
+
+#if !defined( _MSVC_ )
+                    logger_unredirect();
+#endif
+
+                    sysblk.shutdown = TRUE;       // (system shutdown initiated)
+                }
+            }
+            release_lock( &logger_lock );
+        }
+
     } /* end while (...) */
 
     logger_active = 0;
