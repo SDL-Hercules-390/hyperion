@@ -29,6 +29,7 @@
 
 static COND  logger_cond;
 static LOCK  logger_lock;
+static LOCK  stamp_lock;
 
 static int   logger_init_flg = FALSE;   /* reset by logger_init()    */
 
@@ -299,8 +300,19 @@ DLL_EXPORT void logger_timestamped_logfile_write( const void* pBuff, size_t nByt
     if (logger_hrdcpy)
     {
         if (STAMPLOG)
-            logger_logfile_timestamp();
-        logger_logfile_write( pBuff, nBytes );
+        {
+            /* during shutdown ensure that timestamp and message are one line */
+            obtain_lock( &stamp_lock );
+            {
+                logger_logfile_timestamp();
+                logger_logfile_write( pBuff, nBytes );
+            }
+            release_lock( &stamp_lock );
+        }
+        else
+        {
+            logger_logfile_write( pBuff, nBytes );
+        }
     }
 }
 
@@ -503,6 +515,7 @@ DLL_EXPORT void logger_init( void )
 
     initialize_condition( &logger_cond );
     initialize_lock( &logger_lock );
+    initialize_lock( &stamp_lock );
     logger_init_flg = TRUE;
 
     obtain_lock( &logger_lock );
