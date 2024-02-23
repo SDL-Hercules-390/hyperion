@@ -896,13 +896,15 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 #define PANC_DARK   1                   /* Dark background scheme    */
 #define PANC_LIGHT  2                   /* Light/white background    */
 
-        int pan_color[5][2];            /* Panel message colors:     */
+        int pan_color[7][2];            /* Panel message colors:     */
 
 #define PANC_X_IDX      0               /*  (default)                */
 #define PANC_I_IDX      1               /*  'I'nformational          */
 #define PANC_E_IDX      2               /*  'E'rror                  */
 #define PANC_W_IDX      3               /*  'W'arning                */
 #define PANC_D_IDX      4               /*  'D'ebug                  */
+#define PANC_S_IDX      5               /*  'S'evere                 */
+#define PANC_A_IDX      6               /*  'A'ction                 */
 
 #define PANC_FG_IDX     0               /*  Foreground               */
 #define PANC_BG_IDX     1               /*  Background               */

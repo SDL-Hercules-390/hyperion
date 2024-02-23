@@ -1618,12 +1618,16 @@ DLL_EXPORT void set_panel_colors()
         sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
         sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
         sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
 
         sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
         sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
         sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
         sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
         sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
 
         break;
 
@@ -1644,6 +1648,12 @@ DLL_EXPORT void set_panel_colors()
         sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
         sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_BLUE;
 
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
         break;
 
     case PANC_LIGHT:  // Light scheme: dark text on light background
@@ -1663,6 +1673,12 @@ DLL_EXPORT void set_panel_colors()
         sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
         sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_BLUE;
 
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_FG_IDX ] = COLOR_DARK_GREY;
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
         break;
     }
 }
@@ -1676,7 +1692,9 @@ static int msgcolor( int sev, int fgbg )
     case 'I': return sysblk.pan_color[ PANC_I_IDX ][ fgbg ];
     case 'E': return sysblk.pan_color[ PANC_E_IDX ][ fgbg ];
     case 'W': return sysblk.pan_color[ PANC_W_IDX ][ fgbg ];
-    case 'D': return sysblk.pan_color[ PANC_D_IDX ][ fgbg ]; default: break; }
+    case 'D': return sysblk.pan_color[ PANC_D_IDX ][ fgbg ];
+    case 'S': return sysblk.pan_color[ PANC_S_IDX ][ fgbg ];
+    case 'A': return sysblk.pan_color[ PANC_A_IDX ][ fgbg ]; default: break; }
               return sysblk.pan_color[ PANC_X_IDX ][ fgbg ];
 }
 static int fg_msgcolor( int sev ) { return msgcolor( sev, PANC_FG_IDX ); }
