@@ -3,8 +3,6 @@
 *
 *                   Various CKD Dasd CCW tests...
 *
-*                   (mostly GitHub Issue #572)
-*
 *   This test program simply executes a few selected E7 Prefix CCW
 *   channel programs to verify Hercules's E7 Prefix CCW support is
 *   working properly. The current list of tests that this program
@@ -14,7 +12,7 @@
 *     02  Format 0 PFX with Define Extent Valid bit off (DX CCW
 *         chained) (Read 06 IDA)
 *     03  Format 0 PFX with Define Extent Valid bit on (DX CCW
-*         imbeded) (Read 06 1 IDA)
+*         embedded) (Read 06 1 IDA)
 *     04  Format 2 PFX to obtain control unit information (PFX
 *         E7 2 IDA, Read 06 1 IDA)
 *     05  Read 06 CCW should fail since LR operation is Read(16)
@@ -22,14 +20,15 @@
 *     06  Same as Test #5, but properly uses multi-track Read
 *         (86) (Read 86 1 IDA)
 *     07  Peter's z/VM SSI issue (PFX 01 CMDREJ)
-*     08  (NEW) Write Data erase remainder of track.
-*     09  (NEW) Read record 3 on track 0 (verify test #08 erase)
-*         (https://github.com/SDL-Hercules-390/hyperion/issues/601)
+*     08  Write Data erase remainder of track.
+*     09  Read record 3 on track 0 (verify test #08 erase)
+*     10  GH#608 FILE PROTECT: track with =12 recs
+*     11  GH#608 FILE PROTECT: track with <12 recs
 *
 *
 *   By default, all tests in the TESTTAB table are run one after
 *   the other. To run just one specific test, in your .tst script,
-*   set the TESTONLY byte at X'FFF' to the specific test number.
+*   set the TESTONLY byte at X'100' to the specific test number.
 *
 *   All channel programs (except for two of them) are expected to
 *   complete normally without error (SCSW = CE+DE = X'0C00').
@@ -52,7 +51,7 @@
 *   CCWs where the IDAL only has one entry in it to simply redirect
 *   the read to elsewhere.
 *
-*   Thank you to Aaron Finerman for devising most of these tests.
+*   Thank you to Aaron Finerman for devising tests 1-6.
 *
 ***********************************************************************
                                                                 EJECT
@@ -77,6 +76,9 @@ E7TEST   ASALOAD  REGION=CODE
 *                 L O W   C O R E
 ***********************************************************************
                                                                 SPACE
+         ORG   E7TEST+X'100'
+TESTONLY DC    AL1(0)             (only do this one test if non-zero)
+                                                                SPACE
          ORG   E7TEST+X'1A0'                    z/Arch Restart New PSW
          DC    0D'0',XL8'0000000180000000'
          DC    AD(BEGIN)
@@ -84,7 +86,9 @@ E7TEST   ASALOAD  REGION=CODE
          ORG   E7TEST+X'1D0'                    z/Arch Program New PSW
          DC    0D'0',XL8'0002000180000000'
          DC    AD(X'DEAD')
-                                                                SPACE 4
+                                                                SPACE
+         ORG   E7TEST+X'200'
+                                                                SPACE 3
 ***********************************************************************
 *                    ENTRY POINT CODE
 ***********************************************************************
@@ -108,9 +112,7 @@ E7TEST   ASALOAD  REGION=CODE
          USING SCSW,R5            ESA/390 Subchannel Status Word
          USING ORB,R8             ESA/390 Operation-Request Block
                                                                 SPACE
-         ORG   E7TEST+X'200'
-BEGIN    EQU   *
-         SLR   R0,R0              Start clean (SIGP status register)
+BEGIN    SLR   R0,R0              Start clean (SIGP status register)
          MVI   TESTNUM,0          Initialize Test number
          SLR   R1,R1              Start clean (SIGP parm   register)
          SLR   R2,R2              Start clean
@@ -328,26 +330,22 @@ IOCB_A80 IOCB  X'A80'     I/O Control Block for CCUU device X'A80'
 *                      WORKING STORAGE
 ***********************************************************************
                                                                 SPACE
-WKSTORG  EQU   *
-         ORG   E7TEST+X'FFF'
-TESTONLY DC    AL1(0)             Only do this one test if non-zero
-         ORG   WKSTORG
-                                                                SPACE
 CC       EQU   X'40'              Chain Command
 SLI      EQU   X'20'              Suppress Incorrect Length Indication
 IDA      EQU   X'04'              Indirect Data Addressing
                                                                 SPACE
-SNS      EQU   X'04'              Basic Sense CCW opcode
+SNS      EQU   X'04'              Basic Sense
 WD       EQU   X'05'              Write Data
-RD       EQU   X'06'              Read Data CCW opcode
+RD       EQU   X'06'              Read Data
 SEEK     EQU   X'07'              Seek to BBCCHH
 TIC      EQU   X'08'              Transfer in Channel
-RSD      EQU   X'3E'              Read Subsystem Data CCW opcode
-LR       EQU   X'47'              Locate Record CCW opcode
-DX       EQU   X'63'              Define Extent CCW opcode
+RSD      EQU   X'3E'              Read Subsystem Data
+LR       EQU   X'47'              Locate Record
+DX       EQU   X'63'              Define Extent
 SIDEQ    EQU   X'31'              Search ID Equal
-RDMT     EQU   X'86'              Read Data Multi-track CCW opcode
-PFX      EQU   X'E7'              Prefix CCW opcode
+RDMT     EQU   X'86'              Read Data Multi-track
+RCMT     EQU   X'92'              Read Count Multi-track
+PFX      EQU   X'E7'              Prefix
                                                                 SPACE
 ATESTTAB DC    A(TESTTAB,NUMTESTS) Address of testtab & Number of tests
                                                                 SPACE
@@ -362,17 +360,19 @@ TESTNUM  EQU   X'200'             Current test number (if failure,
                                                                 SPACE
 TESTTAB  DC    0A(0)
                                                                 SPACE
-         DC    A(1,T1_CHPGM,0,T1_MSGLN,T1_DESC)
+         DC    A(X'01',T1_CHPGM,0,T1_MSGLN,T1_DESC)
 TESTLEN  EQU   (*-TESTTAB)            Width of each test table entry
                                                                 SPACE 2
-         DC    A(2,T2_CHPGM,0,T2_MSGLN,T2_DESC)
-         DC    A(3,T3_CHPGM,0,T3_MSGLN,T3_DESC)
-         DC    A(4,T4_CHPGM,0,T4_MSGLN,T4_DESC)
-         DC    A(5,T5_CHPGM,1,T5_MSGLN,T5_DESC)  (1=Expect I/O ERROR)
-         DC    A(6,T6_CHPGM,0,T6_MSGLN,T6_DESC)
-         DC    A(7,T7_CHPGM,0,T7_MSGLN,T7_DESC)
-         DC    A(8,T8_CHPGM,0,T8_MSGLN,T8_DESC)
-         DC    A(9,T9_CHPGM,1,T9_MSGLN,T9_DESC)  (1=Expect I/O ERROR)
+         DC    A(X'02',T2_CHPGM,0,T2_MSGLN,T2_DESC)
+         DC    A(X'03',T3_CHPGM,0,T3_MSGLN,T3_DESC)
+         DC    A(X'04',T4_CHPGM,0,T4_MSGLN,T4_DESC)
+         DC    A(X'05',T5_CHPGM,1,T5_MSGLN,T5_DESC)    (1=Expect Error)
+         DC    A(X'06',T6_CHPGM,0,T6_MSGLN,T6_DESC)
+         DC    A(X'07',T7_CHPGM,0,T7_MSGLN,T7_DESC)
+         DC    A(X'08',T8_CHPGM,0,T8_MSGLN,T8_DESC)
+         DC    A(X'09',T9_CHPGM,1,T9_MSGLN,T9_DESC)    (1=Expect Error)
+         DC    A(X'10',T10_CHPGM,0,T10_MSGLN,T10_DESC)
+         DC    A(X'11',T11_CHPGM,0,T11_MSGLN,T11_DESC)
                                                                 SPACE
          PRINT NODATA
                                                                 SPACE 2
@@ -408,7 +408,7 @@ T2_06IDA DC    AD(T2_06BUF)
                                                                 SPACE 5
 ***********************************************************************
                                                                 SPACE
-T3_DESC  DC    C'TEST #3: Format 0 PFX with Define Extent Valid bit on (DX CCW imbeded) (Read 06 1 IDA)'
+T3_DESC  DC    C'TEST #3: Format 0 PFX with Define Extent Valid bit on (DX CCW embedded) (Read 06 1 IDA)'
 T3_MSGLN EQU   *-T3_DESC
          DC    0D'0'
 T3_CHPGM DC    AL1(PFX),AL1(CC+SLI),AL2(L'T3_E7DAT),AL4(T3_E7DAT)
@@ -462,7 +462,7 @@ T8_MSGLN EQU   *-T8_DESC
 T8_CHPGM DC    AL1(DX),AL1(CC),AL2(T8_DXLEN),AL4(T8_DXDAT)
          DC    AL1(LR),AL1(CC),AL2(T8_LRLEN),AL4(T8_LRDAT)
          DC    AL1(WD),AL1(0),AL2(T8_WDLEN),AL4(T8_WDDAT)
-                                                                SPACE 5
+                                                                SPACE 3
 ***********************************************************************
                                                                 SPACE
 T9_DESC  DC    C'TEST #9: Read track 0 rec 3 (verify test #08 erase)'
@@ -472,6 +472,78 @@ T9_CHPGM DC    AL1(SEEK),AL1(CC),AL2(T9_SKLEN),AL4(T9_SKDAT)
 T9_SICCW DC    AL1(SIDEQ),AL1(CC),AL2(T9_SILEN),AL4(T9_SIDAT)
          DC    AL1(TIC),AL1(0),AL2(0),AL4(T9_SICCW)
          DC    AL1(RD),AL1(SLI),AL2(T9_RDLEN),AL4(T9_RDDAT)
+                                                                SPACE 3
+***********************************************************************
+                                                                SPACE
+T10_DESC  DC    C'TEST #10: GH#608 FILE PROTECT: track with =12 recs'
+T10_MSGLN EQU   *-T10_DESC
+          DC    0D'0'
+T10_CHPGM DC    AL1(PFX),AL1(CC),AL2(L'T10_E7DAT),AL4(T10_E7DAT)
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #1
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #1
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #2
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #2
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #3
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #3
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #4
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #4
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #5
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #5
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #6
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #6
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #7
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #7
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #8
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #8
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #9
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #9
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #10
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #10
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #11
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #11
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #12
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #12
+          DC    AL1(RCMT),AL1(0),AL2(L'T10_COUNT),AL4(T10_COUNT)  #13
+                                                                EJECT
+***********************************************************************
+                                                                SPACE
+T11_DESC  DC    C'TEST #11: GH#608 FILE PROTECT: track with < 12 recs'
+T11_MSGLN EQU   *-T11_DESC
+          DC    0D'0'
+                                                                SPACE 2
+T11_CHPGM DC    AL1(PFX),AL1(CC),AL2(L'T11_E7DAT),AL4(T11_E7DAT)
+                                                                SPACE
+*----------------------------------------------------------------------
+* NOTE: only the CCHH in the above Prefix command's Define Extent and
+*       Locate Record Extended fields are different. The remainder of
+*       of the problematic channel program is identical to test #10's.
+*----------------------------------------------------------------------
+                                                                SPACE
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #1
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #1
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #2
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #2
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #3
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #3
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #4
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #4
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #5
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #5
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #6
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #6
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #7
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #7
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #8
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #8
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #9
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #9
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #10
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #10
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #11
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #11
+          DC    AL1(RCMT),AL1(CC),AL2(L'T10_COUNT),AL4(T10_COUNT) #12
+          DC    AL1(RDMT),AL1(CC),AL2(L'T10_DATA),AL4(T10_DATA)   #12
+          DC    AL1(RCMT),AL1(0),AL2(L'T10_COUNT),AL4(T10_COUNT)  #13
                                                                 EJECT
 ***********************************************************************
 *               I/O DATA AND I/O BUFFERS...
@@ -508,30 +580,44 @@ T3_E7DAT DS   0XL64
 T3_47DAT DC    XL16'06000001 00000000 00000000 03000000'
 T3_06BUF DC    XL10'00'
                                                                 EJECT
-                                                                SPACE 2
 ***********************************************************************
-                                                                SPACE
-T4_3EBUF            DC    XL256'00'
+                                                                SPACE 2
+T4_3EBUF            DC    XL256'00'   Read Subsystem Data buffer
+ASMA_ORIGINAL_ORG   EQU   *           ORG back to here after below crap
                     PRINT DATA
-T4_ORG              EQU   *
-T4_E7DAT_TOTAL_LEN  EQU   76
-T4_E7DAT_PART1_LEN  EQU   40
+                                                                SPACE 2
+*----------------------------------------------------------------------
+*  The E7 Prefix data will be split across 2 physical pages to test
+*  Hercules's IDA handling for this CCW. We place the first part of
+*  the data near the end of a page and the remainder at the beginning
+*  of the very next page.
+*----------------------------------------------------------------------
+                                                                SPACE 3
+T4_E7DAT_PART2_ORG  EQU   X'F000'     Where 2nd part of E7 data will go
+                                                                SPACE 2
+T4_E7DAT_TOTAL_LEN  EQU   76          Total length of all E7 data
+T4_E7DAT_PART1_LEN  EQU   40          Amt of it at end of 1st IDA page
 T4_E7DAT_PART2_LEN  EQU   (T4_E7DAT_TOTAL_LEN-T4_E7DAT_PART1_LEN)
-                    ORG   E7TEST+X'2000'-T4_E7DAT_PART1_LEN
+                                                                SPACE 3
+                    ORG   E7TEST+T4_E7DAT_PART2_ORG-T4_E7DAT_PART1_LEN
 T4_E7DAT            DS   0XL(T4_E7DAT_TOTAL_LEN)
+                                                                SPACE 3
 T4_E7DAT_PART1      DS   0XL(T4_E7DAT_PART1_LEN)
                     DC    XL16'02000000 00000000 00000000 00000000'
                     DC    XL16'00000000 00000000 00000000 00000000'
                     DC    XL8' 00000000 00000000'
+                                                                SPACE 3
 T4_E7DAT_PART2      DS   0XL(T4_E7DAT_PART2_LEN)
                     DC    XL8'                   00000000 00000000'
                     DC    XL16'00000000 00000000 00000000 00001800'
                     DC    XL12'00000000 41000000 00000000'
-                    ORG   T4_ORG
+                                                                SPACE 3
+                    ORG   ASMA_ORIGINAL_ORG
                     PRINT NODATA
-                                                                SPACE
-***********************************************************************
+                                                                EJECT
                                                                 SPACE 2
+***********************************************************************
+                                                                SPACE
 T5_E7DAT DS   0XL64
          DC    XL16'00800000 00000000 00000000 40C00000'
          DC    XL16'00000000 00000000 00000000 00000000'
@@ -549,7 +635,6 @@ T6_E7DAT DS   0XL64
          DC    XL16'00000000 00000000 00000000 00000000'
 T6_47DAT DC    XL16'16000001 00000000 00000000 03000000'
 T6_86BUF DC    XL10'00'
-                                                                EJECT
                                                                 SPACE 2
 ***********************************************************************
                                                                 SPACE 2
@@ -559,6 +644,7 @@ T7_E7DAT DC    X'01800000 00000000 00000000'           +00  PFX
          DC    X'06000001 00020000 00020000 01290000'  +44  LREC EXD
          DC    X'00000000'                             +60
 T7_E7LEN EQU   *-T7_E7DAT
+                                                                EJECT
                                                                 SPACE 2
 ***********************************************************************
                                                                 SPACE 2
@@ -570,7 +656,7 @@ T8_LRLEN EQU   *-T8_LRDAT
 
 T8_WDDAT DC    XL8'00'
 T8_WDLEN EQU   *-T8_WDDAT
-                                                                SPACE 2
+                                                                SPACE 5
 ***********************************************************************
                                                                 SPACE 2
 T9_SKDAT DC    X'000000000000'    BIN=0,CYL=0,HEAD=0
@@ -581,8 +667,99 @@ T9_SILEN EQU   *-T9_SIDAT
 
 T9_RDDAT DC    CL80' '            Volume Serial
 T9_RDLEN EQU   *-T9_RDDAT
-                                                                SPACE 2
+                                                                EJECT
+                                                                SPACE
 ***********************************************************************
+                                                                SPACE
+T10_E7DAT DC   0XL(12+32+20+1)'00'
+                                                                SPACE 2
+T10_CYL   EQU  3          Test Cylinder
+T10_HEAD  EQU  0          Track with 12 records on it
+                                                                SPACE 2
+*   Prefix: 12 bytes (0 - 11)
+                                                                SPACE
+          DC   XL1'01'                      Format
+          DC   XL1'80'                      Field Validity
+          DC   XL1'00'                      (reserved; must be zero)
+          DC   XL1'00'                      Auxiliary Byte
+          DC   XL8'00000000 00000000'       (reserved; must be zero)
+                                                                SPACE 2
+*   Define Extent: 32 bytes (12-43)
+                                                                SPACE
+          DC   XL1'40'                      Mask byte
+          DC   XL1'C0'                      Global Attributes
+          DC   AL2(0)                       Blocksize in bytes
+          DC   XL3'000000'                  (reserved; must be zero)
+          DC   XL1'00'                      Global Attributes Extended
+          DC   AL2(T10_CYL),AL2(T10_HEAD)   Beginning of Extent (CCHH)
+          DC   AL2(T10_CYL),AL2(0)          End of Extent       (CCHH)
+          DC   XL16'00'                     (reserved; must be zero)
+                                                                SPACE 2
+*   Locate Record Extended: 20 bytes (44-63)
+                                                                SPACE
+          DC   XL1'3F'                      Operation Byte
+          DC   XL1'00'                      Auxiliary Byte
+          DC   XL1'00'                      (reserved; must be zero)
+          DC   AL1(13)                      Count
+          DC   AL2(T10_CYL),AL2(T10_HEAD)   Seek Address (CCHH)
+          DC   XL5'0000000000'              Search Argument
+          DC   AL1(255)                     Sector Number
+          DC   AL2(0)                       Transfer Length Factor
+          DC   XL1'00'                      (reserved; must be zero)
+          DC   XL1'0A'                      Extended Operation Byte
+          DC   AL2(1)                       Extended Parameter Length
+                                                                SPACE 2
+*   Extended Parameter: 1 byte (64-64)
+                                                                SPACE
+          DC   AL1(1)                       Track Set Size
+                                                                SPACE 3
+T10_COUNT DC   XL8'00'                      (Read Count buffer)
+T10_DATA  DC   XL4096'00'                   (Read Data buffer)
+                                                                EJECT
+                                                                SPACE
+***********************************************************************
+                                                                SPACE
+T11_E7DAT DC   0XL(12+32+20+1)'00'
+                                                                SPACE 2
+T11_CYL   EQU  3          Test Cylinder
+T11_HEAD  EQU  1          Track with only 3 records on it
+                                                                SPACE 2
+*   Prefix: 12 bytes (0 - 11)
+                                                                SPACE
+          DC   XL1'01'                      Format
+          DC   XL1'80'                      Field Validity
+          DC   XL1'00'                      (reserved; must be zero)
+          DC   XL1'00'                      Auxiliary Byte
+          DC   XL8'00000000 00000000'       (reserved; must be zero)
+                                                                SPACE 2
+*   Define Extent: 32 bytes (12-43)
+                                                                SPACE
+          DC   XL1'40'                      Mask byte
+          DC   XL1'C0'                      Global Attributes
+          DC   AL2(0)                       Blocksize in bytes
+          DC   XL3'000000'                  (reserved; must be zero)
+          DC   XL1'00'                      Global Attributes Extended
+          DC   AL2(T11_CYL),AL2(T11_HEAD)   Beginning of Extent (CCHH)
+          DC   AL2(T11_CYL),AL2(0)          End of Extent       (CCHH)
+          DC   XL16'00'                     (reserved; must be zero)
+                                                                SPACE 2
+*   Locate Record Extended: 20 bytes (44-63)
+                                                                SPACE
+          DC   XL1'3F'                      Operation Byte
+          DC   XL1'00'                      Auxiliary Byte
+          DC   XL1'00'                      (reserved; must be zero)
+          DC   AL1(13)                      Count
+          DC   AL2(T11_CYL),AL2(T11_HEAD)   Seek Address (CCHH)
+          DC   XL5'0000000000'              Search Argument
+          DC   AL1(255)                     Sector Number
+          DC   AL2(0)                       Transfer Length Factor
+          DC   XL1'00'                      (reserved; must be zero)
+          DC   XL1'0A'                      Extended Operation Byte
+          DC   AL2(1)                       Extended Parameter Length
+                                                                SPACE 2
+*   Extended Parameter: 1 byte (64-64)
+                                                                SPACE
+          DC   AL1(1)                   Track Set Size
                                                                 EJECT
 ***********************************************************************
 *        IOCB DSECT
