@@ -183,3 +183,7 @@ allTests.*
 # Dynamically generated files
 /AutoBuildCount.h
 /_nmake_pjj.bat
+/3211.txt
+/tests/3330-shadow_1.cckd64
+/tests/3380-shadow_1.cckd64
+/tests/3390-shadow_1.cckd64
