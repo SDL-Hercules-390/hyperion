@@ -227,13 +227,16 @@ int             rc, i;                  /* Return code, Loop index   */
     }
     release_lock( &cckd->filelock );
 
+    /* If no more devices then perform global termination */
+    cckd_dasd_term_if_appropriate();
+
     /* Destroy the cckd extension's locks and conditions */
     destroy_lock( &cckd->cckdiolock );
     destroy_lock( &cckd->filelock );
     destroy_condition( &cckd->cckdiocond );
 
     /* free the cckd extension itself */
-    dev->cckd_ext= cckd_free (dev, "ext", cckd);
+    dev->cckd_ext = cckd_free (dev, "ext", cckd);
 
     if (dev->dasdsfn) free (dev->dasdsfn);
     dev->dasdsfn = NULL;
@@ -241,12 +244,10 @@ int             rc, i;                  /* Return code, Loop index   */
     close (dev->fd);
     dev->fd = -1;
 
-    /* If no more devices then perform global termination */
-    cckd_dasd_term_if_appropriate();
-
     dev->buf = NULL;
     dev->bufsize = 0;
 
+    /* return to caller */
     return 0;
 } /* end function cckd64_dasd_close_device */
 
