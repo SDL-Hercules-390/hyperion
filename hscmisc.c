@@ -1471,7 +1471,8 @@ static void cancel_wait_for_guest_quiesce()
 
 static void do_shutdown_now()
 {
-    bool    loggersetshutdown = TRUE;    //assume logger sets system shutdown
+    int     spincount = 16;           // spin-wait count for logger-thread
+    bool    loggersetshutdown = TRUE; // assume logger sets system shutdown
 
     ASSERT( !sysblk.shutfini );   // (sanity check)
     ASSERT( !sysblk.shutdown );   // (sanity check)
@@ -1487,7 +1488,6 @@ static void do_shutdown_now()
     fflush( stderr );
 
     // spin-wait for logger to initiate system shutdown
-    int     spincount = 16;
     while ( !sysblk.shutdown && spincount-- )
     {
         log_wakeup( NULL );
@@ -1498,10 +1498,8 @@ static void do_shutdown_now()
     // safety measure: ensure system shutdown requested
     if ( !sysblk.shutdown )
     {
-
         sysblk.shutdown = TRUE;       // (system shutdown initiated)
         loggersetshutdown = FALSE;    // logger didn't set system shutdown
-
     }
 
     /* Wakeup I/O subsystem to start I/O subsystem shutdown */
