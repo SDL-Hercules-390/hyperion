@@ -1262,7 +1262,7 @@ typedef enum
 {
    PF_NO_IDAW = 0,
    PF_IDAW1   = 1,      // Format-1 IDAW
-   PF_IDAW2   = 2,      // Format-1 IDAW
+   PF_IDAW2   = 2,      // Format-2 IDAW
    PF_MIDAW   = 3       // Modified-IDAW
 }
 PF_IDATYPE;
