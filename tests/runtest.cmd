@@ -153,6 +153,7 @@
   set "hlp="
 
   set "tool1=rexx.exe"
+  set "tool2=datetime.rexx"
 
   set "tdir="
   set "tname="
@@ -196,18 +197,14 @@
   set "%var_name%="
   set "@="
 
-  ::-------------------------------------------------------------------
-  :: PROGRAMMING NOTE: the 'delims=' clauses in the below 'for' loops
-  :: might need to be adjusted to support other non-English date/time
-  :: field separators. English uses "MM/DD/YY" and "HH:MM:SS.nn",
-  :: wheras German for example uses "DD.MM.YY" and "HH:MM:SS,nn".
-  ::-------------------------------------------------------------------
+  :: Use Rexx to prevent difficulties manually parsing date and time
+  :: strings for different countries where each use their own format
+  :: as well as field separators too. Using Rexx provides consistent
+  :: results for all countries and nationalities.
 
-  for /f "delims=/. tokens=1-3" %%a in ("%date:~4%") do (
-    for /f "delims=:., tokens=1-4" %%d in ("%time: =0%") do (
-      set "@=TMP%%c%%a%%b%%d%%e%%f%%g%random%%file_ext%"
-    )
-  )
+  pushd "%~dp0"
+  for /f "tokens=1" %%d in ('rexx datetime.rexx') do set @=TMP%%d%random%%file_ext%
+  popd
 
   endlocal && set "%var_name%=%@%"
   %return%
@@ -276,6 +273,12 @@
     set /a "rc=1"
   )
 
+  call :findtool "%tool2%"
+  if not defined # (
+    echo ERROR: required tool "%tool2%" not found. 1>&2
+    set /a "rc=1"
+  )
+
   %return%
 
 
@@ -285,7 +288,7 @@
 :findtool
 
   set "@=%path%"
-  set "path=.;%path%"
+  set "path=.;%path%;%~dp0"
   set "#=%~$PATH:1"
   set "path=%@%"
   %return%

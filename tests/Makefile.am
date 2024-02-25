@@ -154,6 +154,7 @@ EXTRA_DIST =                    \
      CCW-ILS.pdf                \
      CCW-ILS.tst                \
      CCWILS.3390-1.comp-z       \
+     datetime.rexx              \
      cdfr.txt                   \
      cdgr.txt                   \
      CDSG.asm                   \

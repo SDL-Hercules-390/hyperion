@@ -2960,6 +2960,9 @@
     <None Include="tests\CCWILS.3390-1.comp-z">
       <Filter>Other Files\tests</Filter>
     </None>
+    <None Include="tests\datetime.rexx">
+      <Filter>Other Files\tests</Filter>
+    </None>
     <None Include="tests\CCW-ILS.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>

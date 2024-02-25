@@ -888,6 +888,7 @@
     <None Include="tests\CBUC.tst" />
     <None Include="tests\CCW-ILS.asm" />
     <None Include="tests\CCWILS.3390-1.comp-z" />
+    <None Include="tests\datetime.rexx" />
     <None Include="tests\CCW-ILS.core" />
     <None Include="tests\CCW-ILS.list" />
     <None Include="tests\CCW-ILS.pdf" />
