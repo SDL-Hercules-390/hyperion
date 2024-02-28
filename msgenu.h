@@ -715,9 +715,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00825 "TIME'S UP! (or debugger has been detached!) - Forcing crash dump!"
 //efine HHC00826 (available)
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: %s"
-#define HHC00828 "Processor %s%02X: ipl failed: %s"
-//efine HHC00830 (available)
-//efine HHC00831 (available)
+#define HHC00828 "Processor %s%02X: ipl failed: %s" // (IPL I/O error)
+#define HHC00829 "Command cannot be issued once system has been IPLed"
+#define HHC00830 "System cannot be IPLed once shadow file commands have been issued"
+#define HHC00831 "Hercules needs to be restarted before proceeding"
 //efine HHC00832 (available)
 //efine HHC00833 (available)
 #define HHC00834 "Processor %s%02X: %s"
@@ -725,7 +726,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC00836 (available)
 //efine HHC00837 (available)
 //efine HHC00838 (available)
-#define HHC00839 "Processor %s%02X: ipl failed: %s"
+#define HHC00839 "Processor %s%02X: ipl failed: %s" // (bad IPL PSW)
 #define HHC00840 "Processor %s%02X: External interrupt: interrupt key"
 #define HHC00841 "Processor %s%02X: External interrupt: clock comparator"
 #define HHC00842 "Processor %s%02X: External interrupt: CPU timer=%16.16"PRIX64

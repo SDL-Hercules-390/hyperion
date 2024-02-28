@@ -580,6 +580,14 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
 int ipl_cmd( int argc, char* argv[], char* cmdline )
 {
     const bool clear = false;
+    if (sysblk.sfcmd)
+    {
+        // "System cannot be IPLed once shadow file commands have been issued"
+        // "Hercules needs to be restarted before proceeding"
+        WRMSG( HHC00830, "E" );
+        WRMSG( HHC00831, "W" );
+        return -1;
+    }
     return ipl_cmd2( argc, argv, cmdline, clear );
 }
 
@@ -590,6 +598,14 @@ int ipl_cmd( int argc, char* argv[], char* cmdline )
 int iplc_cmd( int argc, char* argv[], char* cmdline )
 {
     const bool clear = true;
+    if (sysblk.sfcmd)
+    {
+        // "System cannot be IPLed once shadow file commands have been issued"
+        // "Hercules needs to be restarted before proceeding"
+        WRMSG( HHC00830, "E" );
+        WRMSG( HHC00831, "W" );
+        return -1;
+    }
     return ipl_cmd2( argc, argv, cmdline, clear );
 }
 

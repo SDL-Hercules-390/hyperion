@@ -13,12 +13,16 @@ Hercules: Compressed Dasd Emulation
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#introduction">       Introduction       </a>
-<li><a href="#shadowfiles">        Shadow Files       </a>
-<li><a href="#filestructure">      File Structure     </a>
-<li><a href="#howitworks">         How It Works       </a>
-<li><a href="#cckdcommand">        Tuning options     </a>
-<li><a href="#utilities">          Utilities          </a>
+<li><a href="#introduction">  Introduction                      </a>
+<li><a href="#shadowfiles">   Shadow Files                      </a>
+<ul>
+<li><a href="#advantage">     The Advantage of Shadow Files     </a>
+<li><a href="#sfcommands">    Shadow File Commands              </a>
+</ul>
+<li><a href="#filestructure"> Compressed DASD File Structure    </a>
+<li><a href="#howitworks">    How It Works                      </a>
+<li><a href="#cckdcommand">   Runtime Tuning Options            </a>
+<li><a href="#utilities">     Offline Utilities                 </a>
 </ul>
 
 <a name="introduction">
@@ -146,6 +150,7 @@ this has been corrected to place the number immediately before the
 <i>last</i> period, as it was originally intended.
 <p>
 
+<a name="advantage">
 <p><h3>The Advantage of Shadow Files</h3>
 
 <p>
@@ -177,9 +182,37 @@ file, where all writes will occur.  Track reads start with the <em>current</em>
 file and proceeds downward until a file is found that actually contains the track
 image.
 <p>
+
+<a name="sfcommands">
+<p><h3>Shadow File Commands</h3>
+
+<p>
 Hercules console commands are provided to add a new shadow file, remove
 the current shadow file (with or without backward merge), compress the
-current shadow file, and display the shadow file status and statistics:
+current shadow file, and display the shadow file status and statistics.
+<p>
+
+<p class="note">
+<i>
+<b>Please Note</b> that, except for the <b>sfd</b> command, none
+of the below commands should ever be run immediately before, during,
+or after a guest has been IPLed without Hercules having been shutdown
+both before the commands are issued and then again afterwards!
+</i>
+
+<p class="note">
+<i>
+<b>Note:</b> It is not advisable to merge shadow files back into base images.
+When merging shadow files, it is only recommended to merge one set of shadow
+files back into the previous set of shadow files. When you merge a shadow
+file back into the base image, you might see some error/warning message being
+issued as a result, which should be considered an unpreventable side effect
+of such a merge, and are completely benign. No file damage has actually occurred.
+</i>
+
+<p>
+
+
 <blockquote>
 <table width=90%>
 <tr><td colspan="4"> &nbsp; </td></tr>
@@ -195,23 +228,29 @@ current shadow file, and display the shadow file status and statistics:
     <td align="left" colspan="2">unit</td>
     <td align="left">Create a new shadow file <b>(<a href="#autoshadow"><code>*</code></a>)</b></td>
 </tr>
-<tr><td colspan="4"> &nbsp; </td></tr>
 <tr><td align="left" valign="top"><b>sf-</b></td>
     <td align="left" valign="top">unit</td>
-    <td align="left" valign="top"<b>merge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b><br><em>nomerge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>force&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em></td>
-    <td align="left" valign="top">Remove a shadow file.<br>If <em>merge</em> is
+    <td align="left" valign="top"<b><u>merge</u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b><br>nomerge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>force&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td align="left" valign="top"><p>Remove a shadow file.<p>If <em>merge</em> is
                      specified or defaulted, then the contents of the current
                      file is merged into the previous file, the current file
                      is removed, and the previous file becomes the current file.
                      The previous file must be able to be opened read-write.
                      If <em>nomerge</em> is specified then the contents of the
                      current file is discarded and the previous file becomes the
-                     current file.  However, if the previous file is read-only,
+                     current file.
+                     <p>
+                     However, if the previous file is read-only,
                      then a new shadow file is created (re-added) and that becomes
                      the current file.
                      The <em>force</em> option is required when doing a merge to
                      the base file and the base file is read-only because the
-                     <em>ro</em> option was specified on the device config statement.
+                     'ro' option was specified on the configuration file device statement.
+                     Note that it is not advisable to merge shadow files into base images.
+                     Shadow files should only be merged into previous shadow file sets
+                     or discarded altogether. The whole purpose of shadow files is to
+                     avoid modifying base images. Refer to the <a href="#advantage">
+                     Advantage of Shadow Files</a> section further above.
                      </td>
 </tr>
 <tr><td colspan="4"> &nbsp; </td></tr>
@@ -219,7 +258,7 @@ current shadow file, and display the shadow file status and statistics:
     <td align="left" valign="top">unit</td>
     <td align="left" valign="top"<i>level</i></td>
     <td align="left" valign="top">Perform the <b>chkdsk</b> function on the current file.<br>
-                     Level is a number from -1 ... 4, with the default level being <b>2</b>:<br>
+                     Level is a number from -1 ... 4, with the default level being <b>2</b>:<p>
                      &nbsp; &nbsp;&nbsp; -1 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table. <br>
                      &nbsp; &nbsp; &nbsp; 0 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table, L2 tables. <br>
                      &nbsp; &nbsp; &nbsp; 1 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces. <br>
@@ -243,7 +282,8 @@ in any of the above commands to apply the command to <i>all</i> compressed dasd.
 sf=</code> option, it automatically looks for and opens whatever existing shadow files
 there may be, with the highest numbered shadow file being the one where all writes
 will occur. If the highest numbered shadow file is also marked as a read-only file too,
-then a new shadow file is automatically created and used instead.
+then a new shadow file will be automatically created and used as the current shadow file
+where all writes will occur.
 
 </blockquote>
 
@@ -1099,7 +1139,7 @@ defragmentation for.
 
 <a name=cckdcommand></a>
 <hr noshade>
-<p><h2>Runtime tuning options</h2>
+<p><h2>Runtime Tuning Options</h2>
 
 <p>
 The <b>cckd</b> command and initialization statement can be used to
@@ -1391,7 +1431,7 @@ the <b>cckd</b> command explained below.
 
 <a name="utilities">
 <hr noshade>
-<p><h2>Utilities</h2>
+<p><h2>Offline Utilities</h2>
 
 <p>
 

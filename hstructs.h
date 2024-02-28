@@ -981,6 +981,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         unsigned int                    /* Flags                     */
                 sys_reset:1,            /* 1 = system in reset state */
                 ipled:1,                /* 1 = guest has been IPL'ed */
+                sfcmd:1,                /* 1 = 'sf' command issued   */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
                 npquiet:1,              /* New Panel quiet indicator */

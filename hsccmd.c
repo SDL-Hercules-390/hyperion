@@ -7182,6 +7182,21 @@ int      rc;
             cckdblk.sflevel = level;
     }
 
+    /* Reject the command if the guest has been IPLed */
+    if (action != 'd')
+    {
+        if (sysblk.ipled)
+        {
+            // "Command cannot be issued once system has been IPLed"
+            // "Hercules needs to be restarted before proceeding"
+            WRMSG( HHC00829, "E" );
+            WRMSG( HHC00831, "W" );
+            return -1;
+        }
+
+        sysblk.sfcmd = TRUE;
+    }
+
     /* Process the command */
     switch (action)
     {
