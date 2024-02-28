@@ -3556,7 +3556,7 @@ BYTE            buf[64*1024];           /* Buffer                    */
     fix = cckd->cdevhdr[ to_sfx ].cdh_nullfmt;
 
     /* Harden the `from' file */
-    if (cckd_harden( dev ) < 0)
+    if (cckd64_harden( dev ) < 0)
     {
         // "%1d:%04X CCKD file[%d] %s: shadow file not merged: file[%d] %s%s"
         WRMSG( HHC00324, "E", LCSS_DEVNUM, from_sfx, cckd_sf_name( dev, cckd->sfx ),
