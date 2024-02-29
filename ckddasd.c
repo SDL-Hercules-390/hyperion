@@ -6750,6 +6750,11 @@ static bool LocateRecordExtended
 
 } /* end function LocateRecordExtended */
 
+#if defined( GCC_VERSION ) && GCC_VERSION >= 110000 /* gcc >= 11.0.0 */
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Wmaybe-uninitialized" )
+#endif
+
 /*-------------------------------------------------------------------*/
 /* DEFINE EXTENT    helper function                                  */
 /*-------------------------------------------------------------------*/
@@ -6989,6 +6994,10 @@ static bool DefineExtent
     return true;
 
 } /* end function DefineExtent */
+
+#if defined( GCC_VERSION ) && GCC_VERSION >= 110000 /* gcc >= 11.0.0 */
+POP_GCC_WARNINGS()
+#endif
 
 DLL_EXPORT  DEVHND  ckd_dasd_device_hndinfo =
 {

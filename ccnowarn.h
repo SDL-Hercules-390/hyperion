@@ -110,8 +110,8 @@
   DISABLE_GCC_WARNING( "-Wmissing-field-initializers" )
   DISABLE_GCC_WARNING( "-Wmissing-braces" )
 
-  #if defined( GCC_VERSION ) && GCC_VERSION >= 40800 /* gcc >= 4.8.0 */
   /* Silence warnings about CASSERT macro usage within functions too */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 40800 /* gcc >= 4.8.0 */
   DISABLE_GCC_WARNING( "-Wunused-local-typedefs" )
   #endif
 
@@ -122,22 +122,29 @@
   // "converts between pointers to integer types with different sign"
   DISABLE_GCC_WARNING( "-Wpointer-sign" )
 
-  #if defined( GCC_VERSION ) && GCC_VERSION >= 60000 /* gcc >= 6.0.0 */
   /* Mostly annoying bullshit */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 60000 /* gcc >= 6.0.0 */
   DISABLE_GCC_WARNING( "-Wmisleading-indentation" )
   #endif
+
+  /* "Output may be truncated writing up to x bytes into a region of size y" */
+  /* (this warning is usually issued for most all uses of our MSGBUF macro)  */
   #if defined( GCC_VERSION ) && GCC_VERSION >= 70100 /* gcc >= 7.1.0 */
-  // "output may be truncated writing up to x bytes into a region of size y"
-  // (this warning is usually issued for most all uses of our MSGBUF macro)
   DISABLE_GCC_WARNING( "-Wformat-truncation" )
   #endif
-  #if defined( GCC_VERSION ) && GCC_VERSION >= 80000 /* gcc >= 8.0.0 */
+
   /* Too many false positives on this one */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 80000 /* gcc >= 8.0.0 */
   DISABLE_GCC_WARNING( "-Wstringop-truncation" )
   #endif
 
-  #if defined( CLANG_VERSION ) && CLANG_VERSION >= 120000 /* clang >= 12.0.0 */
+  /* Almost always false positive bullshit */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 110000 /* gcc >= 11.0.0 */
+  DISABLE_GCC_WARNING( "-Warray-bounds" )
+  #endif
+
   /* Annoying and NOT a problem */
+  #if defined( CLANG_VERSION ) && CLANG_VERSION >= 120000 /* clang >= 12.0.0 */
   DISABLE_GCC_WARNING( "-Wundefined-inline" )
   #endif
 
