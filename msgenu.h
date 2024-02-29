@@ -713,7 +713,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00823 "You have %d seconds to attach a debugger before crash dump will be taken!"
 #define HHC00824 "Debugger attached! NOT crashing!"
 #define HHC00825 "TIME'S UP! (or debugger has been detached!) - Forcing crash dump!"
-//efine HHC00826 (available)
+#define HHC00826 "Processor %s%02X: processor already stopped due to disabled wait"
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: %s"
 #define HHC00828 "Processor %s%02X: ipl failed: %s" // (IPL I/O error)
 #define HHC00829 "Command cannot be issued once system has been IPLed"

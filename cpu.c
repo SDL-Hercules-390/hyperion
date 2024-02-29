@@ -1861,8 +1861,9 @@ cpustate_stopping:
                 || !(sysblk.started_mask ^ regs->cpubit)
             )
             {
-                char buf[40];
+                char buf[128];
                 STR_PSW( regs, buf );
+                STRLCAT( buf, "; processor stopped" );
 
                 if (regs->insttrace && sysblk.traceFILE)
                     tf_0809( regs, buf );

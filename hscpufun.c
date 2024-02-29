@@ -1087,36 +1087,54 @@ int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
 
     UPPER_ARGV_0( argv );
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
-    OBTAIN_INTLOCK(NULL);
-
-    if (IS_CPU_ONLINE(sysblk.pcpu))
+    OBTAIN_INTLOCK( NULL );
     {
-        REGS *regs = sysblk.regs[sysblk.pcpu];
-        if ( regs->cpustate != CPUSTATE_STARTED )
+        if (IS_CPU_ONLINE( sysblk.pcpu ))
         {
-            WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "started");
-            rc = 1;
+            REGS* regs = sysblk.regs[ sysblk.pcpu ];
+
+            if (regs->cpustate != CPUSTATE_STARTED)
+            {
+                if (1
+                    && regs->cpustate == CPUSTATE_STOPPED
+                    && WAITSTATE( &regs->psw )
+                    && IS_IC_DISABLED_WAIT_PSW( regs )
+                )
+                {
+                    // "Processor %s%02X: processor already stopped due to disabled wait"
+                    WRMSG( HHC00826, "W", PTYPSTR( sysblk.pcpu ));
+                }
+                else
+                {
+                    // "Processor %s%02X: processor is not %s"
+                    WRMSG( HHC00816, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "started" );
+                }
+                rc = 1;
+            }
+            else
+            {
+                regs->opinterv = 1;
+                regs->cpustate = CPUSTATE_STOPPING;
+
+                ON_IC_INTERRUPT( regs );
+                WAKEUP_CPU( regs );
+
+                // "Processor %s%02X: %s"
+                WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "manual state selected" );
+            }
         }
         else
         {
-            regs->opinterv = 1;
-            regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(regs);
-            WAKEUP_CPU (regs);
-            WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "manual state selected" );
+            // "Processor %s%02X: processor is not %s"
+            WRMSG( HHC00816, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online" );
+            rc = 1;
         }
     }
-    else
-    {
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        rc = 1;
-    }
-
-    RELEASE_INTLOCK(NULL);
+    RELEASE_INTLOCK( NULL );
 
     return rc;
 }
