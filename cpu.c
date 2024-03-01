@@ -1863,7 +1863,6 @@ cpustate_stopping:
             {
                 char buf[128];
                 STR_PSW( regs, buf );
-                STRLCAT( buf, "; processor stopped" );
 
                 if (regs->insttrace && sysblk.traceFILE)
                     tf_0809( regs, buf );
@@ -1871,6 +1870,10 @@ cpustate_stopping:
                 // "Processor %s%02X: disabled wait state %s"
                 WRMSG( HHC00809, "I", PTYPSTR( regs->cpuad ),
                     regs->cpuad, buf );
+
+                // "Processor %s%02X: processor %sstopped due to disabled wait"
+                WRMSG( HHC00826, "W", PTYPSTR( sysblk.pcpu ),
+                    "auto-" );
             }
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK( regs );
