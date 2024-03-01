@@ -7185,16 +7185,28 @@ int      rc;
     /* Reject the command if the guest has been IPLed */
     if (action != 'd')
     {
-        if (sysblk.ipled)
+        /* Unless test mode mode is active! Test scripts MUST be
+           allowed to e.g. discard shadow files after their tests
+           have completed to prevent them from failing the next
+           time the test is run due to the state of the test dasd
+           having been changed by the previous run! But if we're
+           NOT running in test mode (i.e. if this is normal user
+           execution), then don't allow them since doing to could
+           cause damage to their guest's running state.
+        */
+        if (!sysblk.scrtest)    // (normal user non-test mode?)
         {
-            // "Command cannot be issued once system has been IPLed"
-            // "Hercules needs to be restarted before proceeding"
-            WRMSG( HHC00829, "E" );
-            WRMSG( HHC00831, "W" );
-            return -1;
-        }
+            if (sysblk.ipled)
+            {
+                // "Command cannot be issued once system has been IPLed"
+                // "Hercules needs to be restarted before proceeding"
+                WRMSG( HHC00829, "E" );
+                WRMSG( HHC00831, "W" );
+                return -1;
+            }
 
-        sysblk.sfcmd = TRUE;
+            sysblk.sfcmd = TRUE;
+        }
     }
 
     /* Process the command */
