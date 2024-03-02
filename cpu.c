@@ -1873,7 +1873,7 @@ cpustate_stopping:
 
                 // "Processor %s%02X: processor %sstopped due to disabled wait"
                 WRMSG( HHC00826, "W", PTYPSTR( sysblk.pcpu ),
-                    "auto-" );
+                    regs->cpuad, "auto-" );
             }
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK( regs );
