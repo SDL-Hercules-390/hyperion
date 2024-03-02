@@ -3,9 +3,9 @@ mainsize    2
 numcpu      1
 sysclear
 archmode    S/370
-attach      0333 3330 "$(testpath)/3330.cckd64" ro sf="$(testpath)/3330-shadow_*.cckd64"
-attach      0338 3380 "$(testpath)/3380.cckd64" ro sf="$(testpath)/3380-shadow_*.cckd64"
-attach      0339 3390 "$(testpath)/3390.cckd64" ro sf="$(testpath)/3390-shadow_*.cckd64"
+attach      0333 3330 "$(testpath)/3330.cckd64" ro sf="./3330-shadow_*.cckd64"
+attach      0338 3380 "$(testpath)/3380.cckd64" ro sf="./3380-shadow_*.cckd64"
+attach      0339 3390 "$(testpath)/3390.cckd64" ro sf="./3390-shadow_*.cckd64"
 sf+333
 sf+338
 sf+339
