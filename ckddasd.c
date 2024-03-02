@@ -5638,6 +5638,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
 } /* end function ckd_dasd_execute_ccw */
 
+#if defined( GCC_VERSION ) && GCC_VERSION >= 110000 /* gcc >= 11.0.0 */
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Wmaybe-uninitialized" )
+#endif
+
 /*-------------------------------------------------------------------*/
 /* PERFORM SUBSYSTEM FUNCTION    helper function                     */
 /*-------------------------------------------------------------------*/
@@ -6020,6 +6025,10 @@ static bool PerformSubsystemFunction
     return true;
 
 } /* end function PerformSubsystemFunction */
+
+#if defined( GCC_VERSION ) && GCC_VERSION >= 110000 /* gcc >= 11.0.0 */
+POP_GCC_WARNINGS()
+#endif
 
 /*-------------------------------------------------------------------*/
 /* LOCATE RECORD EXTENDED    helper function                         */
