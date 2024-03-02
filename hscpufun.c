@@ -1106,7 +1106,7 @@ int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
                 )
                 {
                     // "Processor %s%02X: processor %sstopped due to disabled wait"
-                    WRMSG( HHC00826, "W", PTYPSTR( sysblk.pcpu ), "already " );
+                    WRMSG( HHC00826, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "already " );
                 }
                 else
                 {
