@@ -25,6 +25,7 @@ typedef struct HOST_INFO
         char    sysname[64];
         char    nodename[64];
         char    release[64];
+        char    curbuild[64];
         char    version[64];
         char    machine[64];
         char    cpu_brand[64];          /* x86/x64 cpu brand string  */

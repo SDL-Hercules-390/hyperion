@@ -267,12 +267,13 @@ DLL_EXPORT char* format_hostinfo ( HOST_INFO*  pHostInfo,
         }
 
 #if defined( OPTION_LONG_HOSTINFO )
+        // (long: show host version too)
         snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
-            "Running on %s %s-%s. %s, %s%s",
+            "Running on: %s %s-%s. %s, %s%s",
             pHostInfo->nodename,
             pHostInfo->sysname,
             pHostInfo->release,
-            pHostInfo->version,     // (show host version too)
+            pHostInfo->version,     // (host version)
             pHostInfo->machine,
             num_procs
         );

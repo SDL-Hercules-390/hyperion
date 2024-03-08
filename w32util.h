@@ -269,5 +269,13 @@ W32_DLL_IMPORT  void  DisableInvalidParameterHandling();
 W32_DLL_IMPORT  void  EnableInvalidParameterHandling();
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// w32_GetWinVersInfo -- replacement for GetVersionEx that works properly
+// for ANY version of Windows regardless of build target. (GetVersionEx
+// has been deprecated and returns INACCURATE information for any version
+// of Windows newer than Windows 8. It essentially LIES! Thanks Microsuck!)
+
+W32_DLL_IMPORT void w32_GetWinVersInfo( OSVERSIONINFOEX* pOSVersInfoEx );
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // _W32UTIL_H

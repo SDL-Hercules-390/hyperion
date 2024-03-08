@@ -477,6 +477,9 @@ int locate_hostinfo( int argc, char* argv[], char* cmdline )
     MSGBUF( msgbuf, "%-17s = %s", "release", pHostInfo->release );
     WRMSG( HHC90000, "D", msgbuf );
 
+    MSGBUF( msgbuf, "%-17s = %s", "curbuild", pHostInfo->curbuild );
+    WRMSG( HHC90000, "D", msgbuf );
+
     MSGBUF( msgbuf, "%-17s = %s", "version", pHostInfo->version );
     WRMSG( HHC90000, "D", msgbuf );
 
