@@ -2105,10 +2105,8 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
             if (hMod)
             {
-                typedef PWSTR (*BFSPROC)( PCWSTR );
-
-                BFSPROC pfnBrandingFormatString =
-                    (BFSPROC) GetProcAddress( hMod, "BrandingFormatString" );
+                FARPROC pfnBrandingFormatString =
+                    GetProcAddress( hMod, "BrandingFormatString" );
 
                 if (pfnBrandingFormatString)
                 {
@@ -2116,7 +2114,11 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     // only place I could find them anywhere was on this web page:
                     // https://dennisbabkin.com/blog/?t=how-to-tell-the-real-version-of-windows-your-app-is-running-on
 
-                    PWSTR pwstrOSName = pfnBrandingFormatString( L"%WINDOWS_LONG%" );
+                    // The "BrandingFormatString" function always takes a WIDE string
+                    // argument and always returns a WIDE string result too, for BOTH
+                    // the 32-bit and 64-bit versions of windbrand.dll.
+
+                    PWSTR pwstrOSName = (PWSTR) pfnBrandingFormatString( L"%WINDOWS_LONG%" );
 
                     if (pwstrOSName)
                     {
