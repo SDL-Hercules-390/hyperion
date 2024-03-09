@@ -257,8 +257,6 @@ W32_DLL_IMPORT char*  w32_dirname( const char* path );
 
 W32_DLL_IMPORT char*  w32_strcasestr( const char* haystack, const char* needle );
 
-#endif // defined(_MSVC_)
-
 //////////////////////////////////////////////////////////////////////////////////////////
 // Support for disabling of CRT Invalid Parameter Handler...
 
@@ -278,4 +276,5 @@ W32_DLL_IMPORT void w32_GetWinVersInfo( OSVERSIONINFOEX* pOSVersInfoEx );
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+#endif // defined(_MSVC_)
 #endif // _W32UTIL_H
