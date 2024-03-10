@@ -13,6 +13,63 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
+<h2>What's new in Version 4.7
+</h2>
+
+<p>Release date: 10 March 2024
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.7">Release_4.7</a>
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.7">Release Notes</a> for important information.</i>
+
+<ul>
+
+<li>Fix EX/EXRL instructions to not cause spurious PIC 3 (Tony Harminc, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/415">#415</a>
+<li>Fix E7 Prefix CCW support (Aaron Finerman, Fish)
+<li>Fix Read Count Suffix bug causing data corruption <a href="https://github.com/SDL-Hercules-390/hyperion/issues/575">#575</a>
+<li>Fix Locate Record Write Track Operation (Aaron Finerman, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/601">#601</a>
+<li>Fix Read Tracks CCW when chained from Prefix (Aaron Finerman, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/603">#603</a>
+<li>Fix various ICKDSF-related CCW handling bugs (Anders Edlund, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/615">#615</a>
+<li>Fix 3705 crash on attach/detach/attach (Jay Maynard)
+<li>Fix usleep/nanosleep excessive host CPU consumption (Peter Jansen, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/589">#589</a>
+<li>Fix '--version' and '--usage' switches (Bill Lewis)
+<li>Fix TDF file emulated tape open bug (Fish)
+<li>Fix maketape utility to not pad binary files (Fish)
+<li>Fix Date/time parsing issue in runtest/make-check (Peter Jansen)
+<li>Fix dasdseq utility Large/Extended dataset truncation (Gregory, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/602">#602</a>
+<li>Fix Multi-device statement failure handling (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/604">#604</a>
+<li>Fix Hang during device detach (Fish)
+<li>Fix Incorrect thread priority handling (Tyler Mitchell)
+<li>Fix Occasional crash on exit (Tyler Mitchell)
+<li>Fix Confusing/unclear shadow file messages (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/616">#616</a>
+<li>Fix cckdmap utility non-33xx dasd-type bug (Fish) 
+<li>Fix Shared devices 10-second-delay bug (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/624">#624</a>
+<li>Fix 'ENGINES' command bug (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/626">#626</a>
+<li>Fix Shutdown/exit logging (James Wekel) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/480">#480</a>, <a href="https://github.com/SDL-Hercules-390/hyperion/issues/634">#634</a>
+<li>Fix Possible crash at CCKD dasd termination (Fish)
+<li>Fix Inaccurate "Running on:" Windows name and version (Bill Lewis, Fish)
+<p>
+<li>New: Improved CU12, CU14 instruction performance (James Wekel) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/623">#623</a>
+<li>New: dasdls utility '-cchh' and '-nosort' options (Ian, Fish)
+<li>New: maketape utility meta-file 'BIN' keyword support (Fish)
+<li>New: dasdseq utility '-record' mode support (Gregory, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/614">#614</a>
+<li>New: Ability to trace only specific CCW opcodes (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/576">#576</a>
+<li>New: JSON support in HTTP server <a href="https://github.com/SDL-Hercules-390/hyperion/issues/578">#578</a>
+<li>New: README.DAEMON document
+<li>New: 'iconpfxs' command (Fish)
+<li>New: Support quoted strings in storage alteration commands (Fish)
+<li>New: Add timed statistics to instruction counting (Andrey) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/588">#588</a>
+<li>New: dyngui LCSS devnum support (Fish)
+<li>New: Use performance cores on Apple Silicon (Enrico Sorichetti)
+<li>New: Support 'clang' builds under Windows MSVC (Peter Jansen) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/629">#629</a>
+<li>New: Highlight 'S'evere and 'A'ction messages too (Fish)
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
 <h2>What's new in Version 4.6
 </h2>
 
@@ -20,6 +77,7 @@ Hercules: What's new
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.6">Release_4.6</a>
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.6">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -40,9 +98,9 @@ Hercules: What's new
 <li>Fix Program check detection if PER trace active (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/560">#560</a>)
 <p>
 <li>New: 'QUITMOUT' command/statement, per user request (Fish)
-<li>NEW: "Trace to File" support (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/33">#33</a>)
+<li>New: "Trace to File" support (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/33">#33</a>)
 <li>New "t+CPU [cpuad]" selective instruction tracing by CPU (Fish)
-<li>NEW: Sockdev socket punch support (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/553">#553</a>)
+<li>New: Sockdev socket punch support (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/553">#553</a>)
 <li>New 'txt2card' utility (Fish)
 <p>
 <li>Don't enable STHYI/ESSA by default (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/531">#531</a>)
@@ -125,9 +183,7 @@ Hercules: What's new
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.4.1">Release_4.4.1</a>
-
-<br>Refer to the <a href="hercrnot.html#4.4.1">Release notes for SDL Hyperion 4.4.1</a> web page
-for important and more detailed information regarding some of the changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.4.1">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -150,9 +206,7 @@ for important and more detailed information regarding some of the changes in thi
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.4">Release_4.4</a>
-
-<br>Refer to the <a href="hercrnot.html#4.4">Release notes for SDL Hyperion 4.4</a> web page
-for important and more detailed information regarding some of the changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.4">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -222,9 +276,7 @@ for important and more detailed information regarding some of the changes in thi
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.3">Release_4.3</a>
-
-<br>Refer to the <a href="hercrnot.html#4.3">Release notes for SDL Hyperion 4.3</a> web page
-for important and more detailed information regarding some of the changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.3">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -269,9 +321,7 @@ for important and more detailed information regarding some of the changes in thi
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.2.1">Release_4.2.1</a>
-
-<br>Refer to the <a href="hercrnot.html#4.2.1">Release notes for SDL Hyperion 4.2.1</a> web page
-for more detailed information regarding changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.2.1">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -301,9 +351,7 @@ for more detailed information regarding changes in this release.
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.2">Release_4.2</a>
-
-<br>Refer to the <a href="hercrnot.html#4.2">Release notes for SDL Hyperion 4.2</a> web page
-for more detailed information regarding changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.2">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -350,9 +398,7 @@ for more detailed information regarding changes in this release.
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.1">Release_4.1</a>
-
-<br>Refer to the <a href="hercrnot.html#4.1">Release notes for SDL Hyperion 4.1</a> web page
-for more detailed information regarding changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.1">Release Notes</a> for important information.</i>
 
 <ul>
 
