@@ -4916,7 +4916,7 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
         return to;
     }
 
-    /* Unable to uncompress */
+    // "%1d:%04X CCKD file[%d] %s: uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x"
     WRMSG (HHC00343, "E",
             LCSS_DEVNUM, cckd->sfn, cckd_sf_name(dev, cckd->sfn), trk,
             from[0], from[1], from[2], from[3], from[4]);
