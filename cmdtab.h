@@ -986,6 +986,7 @@
 #define msglvl_cmd_desc         "Alias for msglevel"
 #define msgnoh_cmd_desc         "Similar to \"message\" but no header"
 #define mt_cmd_desc             "Control magnetic tape operation"
+#define mtc_cmd_desc            "Alias for mt command"
 #define mt_cmd_help             \
                                 \
   "Format:     \"mt device operation [ 1-9999 ]\".\n"                           \
@@ -1956,6 +1957,7 @@ COMMAND( "loadparm",                loadparm_cmd,           SYSCMD,             
 COMMAND( "log",                     log_cmd,                SYSCMD,             log_cmd_desc,           log_cmd_help        )
 COMMAND( "logopt",                  logopt_cmd,             SYSCMD,             logopt_cmd_desc,        logopt_cmd_help     )
 COMMAND( "mt",                      mt_cmd,                 SYSCMD,             mt_cmd_desc,            mt_cmd_help         )
+COMMAND( "mtc",                     mt_cmd,                 SYSCMD,             mtc_cmd_desc,           NULL                )
 COMMAND( "panopt",                  panopt_cmd,             SYSCMD,             panopt_cmd_desc,        panopt_cmd_help     )
 COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             panrate_cmd_desc,       NULL                )
 COMMAND( "pantitle",                pantitle_cmd,           SYSCMD,             pantitle_cmd_desc,      NULL                )
