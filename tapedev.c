@@ -1411,7 +1411,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     for (i = 1; i < argc; i++)
     {
         optrc = 0;
-        switch (parser (&ptab[0], argv[i], &res))
+        switch (parser( &ptab[0], argv[i], &res ))
         {
         case TDPARM_NONE:
             // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
@@ -1496,14 +1496,14 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
+            if (res.num > 0 && (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE))
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 WRMSG(HHC00223, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "chunksize out of range");
                 optrc = -1;
                 break;
             }
-            dev->tdparms.chksize = res.num;
+            dev->tdparms.chksize = (res.num == 0 ? HETDFLT_CHKSIZE : res.num);
             break;
 
         case TDPARM_MAXSIZE:

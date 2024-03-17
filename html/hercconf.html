@@ -3156,27 +3156,27 @@ a real System/390.  The configuration file is an ASCII text file.
             the additional features provided by the HET format.
             <p>
 
-        <dt><code>COMPRESS=<em>n</em></code>
-        <dt><code>IDRC=<em>n</em></code>
+        <dt><code>COMPRESS=<em><u><b>1</b></u></em>&#124;<em>0</em></code>
+        <dt><code>IDRC=<em><u><b>1</b></u></em></code>&#124;<em>0</em></code>
         <dd><p>
             <code>COMPRESS</code> and <code>IDRC</code> control
             whether compression should be used when writing to HET
             files.  The value <code><em>n</em></code> &nbsp;can be <code>1</code>
-            to turn on compression (the default) or <code>0</code> to turn
+            to turn on compression <i>(the default)</i> or <code>0</code> to turn
             it off.  <code>IDRC</code> is currently a synonym for
             <code>COMPRESS</code>, but may be used in the future to
             control other emulated tape drive features.
             <p>
 
-        <dt><code>METHOD=<em>n</em></code>
+        <dt><code>METHOD=<em><u><b>1</b></u></em>&#124;<em>n</em></code>
         <dd><p>
             The <code>METHOD</code> option allows you to specify
             which compression method to use.  You may specify
             <code>1</code> for ZLIB compression or <code>2</code>
-            for BZIP2 compression.  The default is <code>1</code>.
+            for BZIP2 compression.  The default is <code>1</code> <i>(zlib)</i>.
             <p>
 
-        <dt><code>LEVEL=<em>n</em></code>
+        <dt><code>LEVEL=<em><u><b>4</b></u></em>&#124;<em>n</em></code>
         <dd><p>
             The <code>LEVEL</code> option controls the level of
             compression.  It ranges from <code>1</code> for fastest
@@ -3184,21 +3184,22 @@ a real System/390.  The configuration file is an ASCII text file.
             The default is <code>4</code>.
             <p>
 
-        <dt><code>CHUNKSIZE=<em>nnnnn</em></code>
+        <dt><code><u>CHUNKSIZE=<em><b>65535</b></em></u></code>
+            &nbsp;&#124;&nbsp; <code>CHUNKSIZE=<em>nnnnn</em></code>
         <dd><p>
             The <code>CHUNKSIZE</code> option allows you to create
             HET files that contain different chunk sizes.  The AWSTAPE
             (and therefore the HET) format allows each tape block to be
             logically broken up into smaller chunks.  For instance, if
             your S/3x0 application creates tapes with a block size of
-            27998, those blocks would be broken down into
+            e.g. 27998, those blocks would be broken down into
             <code><em>nnnnn</em></code> &nbsp;sized chunks.
-            The range is from <code>4096</code>
-            to <code>65535</code>, the latter being the default.
-            Decreasing the value from its default may reduce compression
-            performance.
-            For compatibility with AWSTAPE files created by the P/390,
-            specify <code>AWSTAPE</code> with <code>CHUNKSIZE=4096</code>.
+            <p>
+            The range is from <code>4096</code> to <code><u>65535</u></code>,
+            with 65535 being the default. If 0 is specified, the default is used.
+            Decreasing the value from its default may reduce compression performance.
+            For compatibility with AWSTAPE files created by the P/390, specify
+            the <code>AWSTAPE</code> option with <code>CHUNKSIZE=4096</code>.
             <p>
 
         </dl> <!-- end Additional HET arguments -->
@@ -3213,25 +3214,33 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <dl> <!-- begin Additional AWS/HET/FAKE parameters -->
 
-        <dt><code>MAXSIZE</code>=<i>n[s]</i> &nbsp;&#124;&nbsp; <code>MAXSIZEK</code>=<i>n</i>
-             &nbsp;&#124;&nbsp; <code>MAXSIZEM</code>=<i>n</i>
+        <dt><u><code>MAXSIZE=<b>0</b></code></u>
+            &nbsp;&#124;&nbsp; <code>MAXSIZE</code>=<i>nnn</i>
+            &nbsp;&#124;&nbsp; <code>MAXSIZE<b>K</b></code>=<i>nnn</i>
+            &nbsp;&#124;&nbsp; <code>MAXSIZE<b>M</b></code>=<i>nnn</i>
+            &nbsp;&#124;&nbsp; <code>MAXSIZE</code>=<i>nnn<b>S</b></i>
         <dd><p>
-            Specifies the maximum size (in bytes, Kilobytes or Megabytes)
+            Specifies the maximum size (in nnn bytes,
+            <i><b>K</b></i>ilobytes or
+            <i><b>M</b></i>egabytes)
             that the emulated file is allowed to grow to.
             <p>
-            Or, nnns where s is either K - KILO, M - MEGA, G - GIGA, or T - TERA - BYTES
+            Or, <i>nnn<b>S</b></i> where <i><b>S</b></i> is either K (kilo),
+            M (mega), G (giga), or T (tera) bytes.&nbsp;T may not be available on all platforms.
             <p>
-            Specifying zero for this parameter means "unlimited" (i.e. there is no limit).
-            Note: "T" is not available on all platforms.
+            The default is 0 (zero), meaning unlimited. When 0 is specified,
+            the <code>EOTMARGIN</code> parameter is ignored.
             <p>
 
-        <dt><code>EOTMARGIN</code>=<em>n[s]</em>
+        <dt><u><code>EOTMARGIN=<b>128K</b></code></u>
+            &nbsp;&#124;&nbsp; <code>EOTMARGIN</code>=<i>nnn<b>S</b></i>
         <dd><p>
-            Specifies the number of bytes remaining before reaching <em>maxsize</em>
+            Specifies the number of bytes remaining before reaching <code>MAXSIZE</code>
             at which point the tape device will signal the presence of the "End of Tape"
             marker (reflector), thus allowing the program to switch to the next tape.
-            <p>
-            Value is either n = bytes, or ns where s is either a K, M, G, or T multiplier.
+            The value is either <i>nnn</i> (bytes), or <i>nnn<b>S</b></i> where <i><b>S</b></i>
+            is either K, M, G, or T. The <code>EOTMARGIN</code> parameter ignored
+            when <code>MAXSIZE=0</code> is specified.
             <p>
 
         <dt><code>READONLY</code>=<em>n</em>
