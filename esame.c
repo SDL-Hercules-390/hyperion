@@ -3603,9 +3603,9 @@ bool    overflow;                       /* true if overflow          */
         numeric_bits = regs->GR_G(r3) & 0x7FFFFFFFFFFFFFFFULL;
 
         /* Check for overflow */
-        overflow = (!sign_bit &&  (numeric_bits & ashift64_bits[ shift_amt ])) ||
-                   ( sign_bit && !(numeric_bits & ashift64_bits[ shift_amt ]));
-
+        overflow = (!sign_bit && (numeric_bits & ashift64_bits[ shift_amt ])) ||
+                   ( sign_bit && (numeric_bits & ashift64_bits[ shift_amt ])
+                                              != ashift64_bits[ shift_amt ]);
         /* Do the shift */
         numeric_bits <<= shift_amt;
         numeric_bits &= 0x7FFFFFFFFFFFFFFFULL;

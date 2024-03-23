@@ -1,4 +1,4 @@
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     1
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -20,7 +20,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
                                                     17 *  still produce correct results.
                                                     18 *
                                                     19 ***********************************************************************
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     2
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -28,7 +28,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
                                                     22 *                           LOW CORE
                                                     23 ***********************************************************************
 
-                              00000000  0000053B    25 SHIFTEST START 0
+                              00000000  0000058B    25 SHIFTEST START 0
 
 00000000                      00000000              27          USING *,R0               Use absolute addressing
 
@@ -50,7 +50,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
 000001D4  80000000                                  39          DC    XL4'80000000'
 000001D8  00000000                                  40          DC    XL4'00000000'
 000001DC  0000DEAD                                  41          DC    A(X'DEAD')
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     3
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -90,7 +90,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
 00000210  00020001                                  65          DC    XL4'00020001'
 00000214  80000000                                  66          DC    XL4'80000000'
 00000218  00000000 00000BAD                         67          DC    AD(X'BAD')
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     4
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -143,7 +143,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
                                                    115 *    interruption would have occurred.
                                                    116 *
                                                    117 ***********************************************************************
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     5
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -170,7 +170,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
 00000252  4700 0238                     00000238   139 SLACC    BC    0,SLA2               Expected condition code?
 
 00000256                                           141          DROP  R1
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     6
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -224,7 +224,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
                                                    190 *    interruption occurs.
                                                    191 *
                                                    192 ***********************************************************************
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     7
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -255,7 +255,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
 00000292  4700 026E                     0000026E   218 SLDACC   BC    0,SLDA2              Expected condition code?
 
 00000296                                           220          DROP  R1
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     8
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -308,7 +308,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
 000002DA  4700 02B4                     000002B4   266 SLAKCC   BC    0,SLAK2              Expected condition code?
 
 000002DE                                           268          DROP  R1
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page     9
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page     9
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -363,7 +363,7 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
 00000336  4700 030C                     0000030C   317 SLAGCC   BC    0,SLAG2              Expected condition code?
 
 0000033A                                           319          DROP  R1
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    10
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    10
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -376,260 +376,284 @@ ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions 
 00000340                                           327          LTORG ,        Literals Pool
 00000340  00000350                                 328                =A(TST32TAB)
 00000344  C5D5C45A                                 329                =CL4'END!'
-00000348  00000418                                 330                =A(TST64TAB)
+00000348  00000438                                 330                =A(TST64TAB)
 0000034C  0004                                     331                =H'4'
 
 00000350                                           333 TST32TAB DC    0D'0'
                                                    334 **********************************************
-                                                   335 *        old way slowest possible positive
+                                                   335 *   mixed significant bits positive OVERFLOW
                                                    336 *                             shift CC
-00000350  00000001 0000001E                        337          DC    A(X'00000001'),A(30),A(2)
-0000035C  40000000                                 338          DC    A(X'40000000')
+00000350  22000000 00000008                        337          DC    A(X'22000000'),A(8),A(3)
+0000035C  00000000                                 338          DC    A(X'00000000')
                                                    339 *
                                                    340 **********************************************
-                                                   341 *        old way slowest possible negative
+                                                   341 *   mixed significant bits negative OVERFLOW
                                                    342 *                             shift CC
-00000360  FFFFFFFF 0000001F                        343          DC    A(X'FFFFFFFF'),A(31),A(1)
+00000360  A2000000 00000008                        343          DC    A(X'A2000000'),A(8),A(3)
 0000036C  80000000                                 344          DC    A(X'80000000')
                                                    345 *
                                                    346 **********************************************
-                                                   347 *        positive, 0 bits
+                                                   347 *        old way slowest possible positive
                                                    348 *                             shift CC
-00000370  00000123 00000000                        349          DC    A(X'00000123'),A(0),A(2)
-0000037C  00000123                                 350          DC    A(X'00000123')
+00000370  00000001 0000001E                        349          DC    A(X'00000001'),A(30),A(2)
+0000037C  40000000                                 350          DC    A(X'40000000')
                                                    351 *
                                                    352 **********************************************
-                                                   353 *        negative, 0 bits
+                                                   353 *        old way slowest possible negative
                                                    354 *                             shift CC
-00000380  80000123 00000000                        355          DC    A(X'80000123'),A(0),A(1)
-0000038C  80000123                                 356          DC    A(X'80000123')
+00000380  FFFFFFFF 0000001F                        355          DC    A(X'FFFFFFFF'),A(31),A(1)
+0000038C  80000000                                 356          DC    A(X'80000000')
                                                    357 *
                                                    358 **********************************************
-                                                   359 *        max positive, 1 bit
+                                                   359 *        positive, 0 bits
                                                    360 *                             shift CC
-00000390  7FFFFFFF 00000001                        361          DC    A(X'7FFFFFFF'),A(1),A(3)
-0000039C  7FFFFFFE                                 362          DC    A(X'7FFFFFFE')
+00000390  00000123 00000000                        361          DC    A(X'00000123'),A(0),A(2)
+0000039C  00000123                                 362          DC    A(X'00000123')
                                                    363 *
                                                    364 **********************************************
-                                                   365 *        max negative, 1 bit
+                                                   365 *        negative, 0 bits
                                                    366 *                             shift CC
-000003A0  80000000 00000001                        367          DC    A(X'80000000'),A(1),A(3)
-000003AC  80000000                                 368          DC    A(X'80000000')
+000003A0  80000123 00000000                        367          DC    A(X'80000123'),A(0),A(1)
+000003AC  80000123                                 368          DC    A(X'80000123')
                                                    369 *
                                                    370 **********************************************
-                                                   371 *        positive, 1 bit
+                                                   371 *        max positive, 1 bit
                                                    372 *                             shift CC
-000003B0  22222222 00000001                        373          DC    A(X'22222222'),A(1),A(2)
-000003BC  44444444                                 374          DC    A(X'44444444')
+000003B0  7FFFFFFF 00000001                        373          DC    A(X'7FFFFFFF'),A(1),A(3)
+000003BC  7FFFFFFE                                 374          DC    A(X'7FFFFFFE')
                                                    375 *
-                                                   376 **********************************************
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    11
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    11
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                                                   377 *        negative, 1 bit
-                                                   378 *                             shift CC
-000003C0  CAAAAAAA 00000001                        379          DC    A(X'CAAAAAAA'),A(1),A(1)
-000003CC  95555554                                 380          DC    A(X'95555554')
-                                                   381 *
-                                                   382 **********************************************
-                                                   383 *        positive, 1 bit, OVERFLOW
-                                                   384 *                             shift CC
-000003D0  77777777 00000001                        385          DC    A(X'77777777'),A(1),A(3)
-000003DC  6EEEEEEE                                 386          DC    A(X'6EEEEEEE')
-                                                   387 *
-                                                   388 **********************************************
-                                                   389 *        negative, 1 bit, OVERFLOW
-                                                   390 *                             shift CC
-000003E0  88888888 00000001                        391          DC    A(X'88888888'),A(1),A(3)
-000003EC  91111110                                 392          DC    A(X'91111110')
-                                                   393 *
-                                                   394 **********************************************
-                                                   395 *        (original POPS test 1)
-                                                   396 *                             shift CC
-000003F0  007F0A72 00000008                        397          DC    A(X'007F0A72'),A(8),A(2)
-000003FC  7F0A7200                                 398          DC    A(X'7F0A7200')
-                                                   399 *
-                                                   400 **********************************************
-                                                   401 *        (original POPS test 2)
-                                                   402 *                             shift CC
-00000400  007F0A72 00000009                        403          DC    A(X'007F0A72'),A(9),A(3)
-0000040C  7E14E400                                 404          DC    A(X'7E14E400')
-                                                   405 *
-                                                   406 **********************************************
-00000410  C5D5C45A                                 407          DC    CL4'END!'
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    12
+                                                   377 **********************************************
+                                                   378 *        max negative, 1 bit
+                                                   379 *                             shift CC
+000003C0  80000000 00000001                        380          DC    A(X'80000000'),A(1),A(3)
+000003CC  80000000                                 381          DC    A(X'80000000')
+                                                   382 *
+                                                   383 **********************************************
+                                                   384 *        positive, 1 bit
+                                                   385 *                             shift CC
+000003D0  22222222 00000001                        386          DC    A(X'22222222'),A(1),A(2)
+000003DC  44444444                                 387          DC    A(X'44444444')
+                                                   388 *
+                                                   389 **********************************************
+                                                   390 *        negative, 1 bit
+                                                   391 *                             shift CC
+000003E0  CAAAAAAA 00000001                        392          DC    A(X'CAAAAAAA'),A(1),A(1)
+000003EC  95555554                                 393          DC    A(X'95555554')
+                                                   394 *
+                                                   395 **********************************************
+                                                   396 *        positive, 1 bit, OVERFLOW
+                                                   397 *                             shift CC
+000003F0  77777777 00000001                        398          DC    A(X'77777777'),A(1),A(3)
+000003FC  6EEEEEEE                                 399          DC    A(X'6EEEEEEE')
+                                                   400 *
+                                                   401 **********************************************
+                                                   402 *        negative, 1 bit, OVERFLOW
+                                                   403 *                             shift CC
+00000400  88888888 00000001                        404          DC    A(X'88888888'),A(1),A(3)
+0000040C  91111110                                 405          DC    A(X'91111110')
+                                                   406 *
+                                                   407 **********************************************
+                                                   408 *        (original POPS test 1)
+                                                   409 *                             shift CC
+00000410  007F0A72 00000008                        410          DC    A(X'007F0A72'),A(8),A(2)
+0000041C  7F0A7200                                 411          DC    A(X'7F0A7200')
+                                                   412 *
+                                                   413 **********************************************
+                                                   414 *        (original POPS test 2)
+                                                   415 *                             shift CC
+00000420  007F0A72 00000009                        416          DC    A(X'007F0A72'),A(9),A(3)
+0000042C  7E14E400                                 417          DC    A(X'7E14E400')
+                                                   418 *
+                                                   419 **********************************************
+00000430  C5D5C45A                                 420          DC    CL4'END!'
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    12
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-00000418                                           409 TST64TAB DC    0D'0'
-                                                   410 **********************************************
-                                                   411 *        old way slowest possible positive
-                                                   412 *                                            shift CC
-00000418  00000000 00000001                        413          DC    A(X'00000000'),A(X'00000001'),A(62),A(2)
-00000428  40000000 00000000                        414          DC    A(X'40000000'),A(X'00000000')
-                                                   415 *
-                                                   416 **********************************************
-                                                   417 *        old way slowest possible negative
-                                                   418 *                                            shift CC
-00000430  FFFFFFFF FFFFFFFF                        419          DC    A(X'FFFFFFFF'),A(X'FFFFFFFF'),A(63),A(1)
-00000440  80000000 00000000                        420          DC    A(X'80000000'),A(X'00000000')
-                                                   421 *
-                                                   422 **********************************************
-                                                   423 *        positive, 0 bits
-                                                   424 *                                            shift CC
-00000448  00000000 00000123                        425          DC    A(X'00000000'),A(X'00000123'),A(0),A(2)
-00000458  00000000 00000123                        426          DC    A(X'00000000'),A(X'00000123')
-                                                   427 *
-                                                   428 **********************************************
-                                                   429 *        negative, 0 bits
-                                                   430 *                                            shift CC
-00000460  80000000 00000123                        431          DC    A(X'80000000'),A(X'00000123'),A(0),A(1)
-00000470  80000000 00000123                        432          DC    A(X'80000000'),A(X'00000123')
-                                                   433 *
-                                                   434 **********************************************
-                                                   435 *        max positive, 1 bit
-                                                   436 *                                            shift CC
-00000478  7FFFFFFF FFFFFFFF                        437          DC    A(X'7FFFFFFF'),A(X'FFFFFFFF'),A(1),A(3)
-00000488  7FFFFFFF FFFFFFFE                        438          DC    A(X'7FFFFFFF'),A(X'FFFFFFFE')
-                                                   439 *
-                                                   440 **********************************************
-                                                   441 *        max negative, 1 bit
-                                                   442 *                                            shift CC
-00000490  80000000 00000000                        443          DC    A(X'80000000'),A(X'00000000'),A(1),A(3)
-000004A0  80000000 00000000                        444          DC    A(X'80000000'),A(X'00000000')
-                                                   445 *
-                                                   446 **********************************************
-                                                   447 *        positive, 1 bit
-                                                   448 *                                            shift CC
-000004A8  22222222 22222222                        449          DC    A(X'22222222'),A(X'22222222'),A(1),A(2)
-000004B8  44444444 44444444                        450          DC    A(X'44444444'),A(X'44444444')
-                                                   451 *
-                                                   452 **********************************************
-                                                   453 *        negative, 1 bit
-                                                   454 *                                            shift CC
-000004C0  CAAAAAAA AAAAAAAA                        455          DC    A(X'CAAAAAAA'),A(X'AAAAAAAA'),A(1),A(1)
-000004D0  95555555 55555554                        456          DC    A(X'95555555'),A(X'55555554')
-                                                   457 *
-                                                   458 **********************************************
-                                                   459 *        positive, 1 bit, OVERFLOW
-                                                   460 *                                            shift CC
-000004D8  77777777 77777777                        461          DC    A(X'77777777'),A(X'77777777'),A(1),A(3)
-000004E8  6EEEEEEE EEEEEEEE                        462          DC    A(X'6EEEEEEE'),A(X'EEEEEEEE')
-                                                   463 *
-                                                   464 **********************************************
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    13
+00000438                                           422 TST64TAB DC    0D'0'
+                                                   423 **********************************************
+                                                   424 *   mixed significant bits positive OVERFLOW
+                                                   425 *                                            shift CC
+00000438  22000000 00000000                        426          DC    A(X'22000000'),A(X'00000000'),A(8),A(3)
+00000448  00000000 00000000                        427          DC    A(X'00000000'),A(X'00000000')
+                                                   428 *
+                                                   429 **********************************************
+                                                   430 *   mixed significant bits negative OVERFLOW
+                                                   431 *                                            shift CC
+00000450  A2000000 00000000                        432          DC    A(X'A2000000'),A(X'00000000'),A(8),A(3)
+00000460  80000000 00000000                        433          DC    A(X'80000000'),A(X'00000000')
+                                                   434 *
+                                                   435 **********************************************
+                                                   436 *        old way slowest possible positive
+                                                   437 *                                            shift CC
+00000468  00000000 00000001                        438          DC    A(X'00000000'),A(X'00000001'),A(62),A(2)
+00000478  40000000 00000000                        439          DC    A(X'40000000'),A(X'00000000')
+                                                   440 *
+                                                   441 **********************************************
+                                                   442 *        old way slowest possible negative
+                                                   443 *                                            shift CC
+00000480  FFFFFFFF FFFFFFFF                        444          DC    A(X'FFFFFFFF'),A(X'FFFFFFFF'),A(63),A(1)
+00000490  80000000 00000000                        445          DC    A(X'80000000'),A(X'00000000')
+                                                   446 *
+                                                   447 **********************************************
+                                                   448 *        positive, 0 bits
+                                                   449 *                                            shift CC
+00000498  00000000 00000123                        450          DC    A(X'00000000'),A(X'00000123'),A(0),A(2)
+000004A8  00000000 00000123                        451          DC    A(X'00000000'),A(X'00000123')
+                                                   452 *
+                                                   453 **********************************************
+                                                   454 *        negative, 0 bits
+                                                   455 *                                            shift CC
+000004B0  80000000 00000123                        456          DC    A(X'80000000'),A(X'00000123'),A(0),A(1)
+000004C0  80000000 00000123                        457          DC    A(X'80000000'),A(X'00000123')
+                                                   458 *
+                                                   459 **********************************************
+                                                   460 *        max positive, 1 bit
+                                                   461 *                                            shift CC
+000004C8  7FFFFFFF FFFFFFFF                        462          DC    A(X'7FFFFFFF'),A(X'FFFFFFFF'),A(1),A(3)
+000004D8  7FFFFFFF FFFFFFFE                        463          DC    A(X'7FFFFFFF'),A(X'FFFFFFFE')
+                                                   464 *
+                                                   465 **********************************************
+                                                   466 *        max negative, 1 bit
+                                                   467 *                                            shift CC
+000004E0  80000000 00000000                        468          DC    A(X'80000000'),A(X'00000000'),A(1),A(3)
+000004F0  80000000 00000000                        469          DC    A(X'80000000'),A(X'00000000')
+                                                   470 *
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    13
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                                                   465 *        negative, 1 bit, OVERFLOW
-                                                   466 *                                            shift CC
-000004F0  88888888 88888888                        467          DC    A(X'88888888'),A(X'88888888'),A(1),A(3)
-00000500  91111111 11111110                        468          DC    A(X'91111111'),A(X'11111110')
-                                                   469 *
-                                                   470 **********************************************
-                                                   471 *        (original POPS test 1)
-                                                   472 *                                            shift CC
-00000508  007F0A72 FEDCBA98                        473          DC    A(X'007F0A72'),A(X'FEDCBA98'),A(31),A(3)
-00000518  7F6E5D4C 00000000                        474          DC    A(X'7F6E5D4C'),A(X'00000000')
-                                                   475 *
-                                                   476 **********************************************
-                                                   477 *        (original POPS test 2)
-                                                   478 *                                            shift CC
-00000520  007F0A72 FEDCBA98                        479          DC    A(X'007F0A72'),A(X'FEDCBA98'),A(8),A(2)
-00000530  7F0A72FE DCBA9800                        480          DC    A(X'7F0A72FE'),A(X'DCBA9800')
-                                                   481 *
-                                                   482 **********************************************
-00000538  C5D5C45A                                 483          DC    CL4'END!'
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    14
+                                                   472 **********************************************
+                                                   473 *        positive, 1 bit
+                                                   474 *                                            shift CC
+000004F8  22222222 22222222                        475          DC    A(X'22222222'),A(X'22222222'),A(1),A(2)
+00000508  44444444 44444444                        476          DC    A(X'44444444'),A(X'44444444')
+                                                   477 *
+                                                   478 **********************************************
+                                                   479 *        negative, 1 bit
+                                                   480 *                                            shift CC
+00000510  CAAAAAAA AAAAAAAA                        481          DC    A(X'CAAAAAAA'),A(X'AAAAAAAA'),A(1),A(1)
+00000520  95555555 55555554                        482          DC    A(X'95555555'),A(X'55555554')
+                                                   483 *
+                                                   484 **********************************************
+                                                   485 *        positive, 1 bit, OVERFLOW
+                                                   486 *                                            shift CC
+00000528  77777777 77777777                        487          DC    A(X'77777777'),A(X'77777777'),A(1),A(3)
+00000538  6EEEEEEE EEEEEEEE                        488          DC    A(X'6EEEEEEE'),A(X'EEEEEEEE')
+                                                   489 *
+                                                   490 **********************************************
+                                                   491 *        negative, 1 bit, OVERFLOW
+                                                   492 *                                            shift CC
+00000540  88888888 88888888                        493          DC    A(X'88888888'),A(X'88888888'),A(1),A(3)
+00000550  91111111 11111110                        494          DC    A(X'91111111'),A(X'11111110')
+                                                   495 *
+                                                   496 **********************************************
+                                                   497 *        (original POPS test 1)
+                                                   498 *                                            shift CC
+00000558  007F0A72 FEDCBA98                        499          DC    A(X'007F0A72'),A(X'FEDCBA98'),A(31),A(3)
+00000568  7F6E5D4C 00000000                        500          DC    A(X'7F6E5D4C'),A(X'00000000')
+                                                   501 *
+                                                   502 **********************************************
+                                                   503 *        (original POPS test 2)
+                                                   504 *                                            shift CC
+00000570  007F0A72 FEDCBA98                        505          DC    A(X'007F0A72'),A(X'FEDCBA98'),A(8),A(2)
+00000580  7F0A72FE DCBA9800                        506          DC    A(X'7F0A72FE'),A(X'DCBA9800')
+                                                   507 *
+                                                   508 **********************************************
+00000588  C5D5C45A                                 509          DC    CL4'END!'
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    14
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                                                   485 ***********************************************************************
-                                                   486 *                      Test tables DSECTs
-                                                   487 ***********************************************************************
+                                                   511 ***********************************************************************
+                                                   512 *                      Test tables DSECTs
+                                                   513 ***********************************************************************
 
 
-                                                   489 TTAB32   DSECT
-00000000  00000000                                 490 BEGVAL32 DS    A            Starting value
-00000004  00000000                                 491 SHIFT32  DS    A            shift amount (#of bits to shift)
-00000008  00000000                                 492 CC32     DS    A            Expected condition code
-0000000C  00000000                                 493 ENDVAL32 DS    A            Expected ending value
-                              00000010  00000001   494 TT32NEXT EQU   *
-
-
-
-                                                   496 TTAB64   DSECT
-00000000  00000000                                 497 BEGVAL64 DS    A            Starting value (hi 32)
-00000004  00000000                                 498          DS    A            Starting value (lo 32)
-00000008  00000000                                 499 SHIFT64  DS    A            shift amount (#of bits to shift)
-0000000C  00000000                                 500 CC64     DS    A            Expected condition code
-00000010  00000000                                 501 ENDVAL64 DS    A            Expected ending value (hi 32)
-00000014  00000000                                 502          DS    A            Expected ending value (lo 32)
-                              00000018  00000001   503 TT64NEXT EQU   *
+                                                   515 TTAB32   DSECT
+00000000  00000000                                 516 BEGVAL32 DS    A            Starting value
+00000004  00000000                                 517 SHIFT32  DS    A            shift amount (#of bits to shift)
+00000008  00000000                                 518 CC32     DS    A            Expected condition code
+0000000C  00000000                                 519 ENDVAL32 DS    A            Expected ending value
+                              00000010  00000001   520 TT32NEXT EQU   *
 
 
 
-
-                                                   505 ***********************************************************************
-                                                   506 *                      Register Equates
-                                                   507 ***********************************************************************
-
-                              00000000  00000001   509 R0       EQU   0
-                              00000001  00000001   510 R1       EQU   1
-                              00000002  00000001   511 R2       EQU   2
-                              00000003  00000001   512 R3       EQU   3
-                              00000004  00000001   513 R4       EQU   4
-                              00000005  00000001   514 R5       EQU   5
-                              00000006  00000001   515 R6       EQU   6
-                              00000007  00000001   516 R7       EQU   7
-                              00000008  00000001   517 R8       EQU   8
-                              00000009  00000001   518 R9       EQU   9
-                              0000000A  00000001   519 R10      EQU   10
-                              0000000B  00000001   520 R11      EQU   11
-                              0000000C  00000001   521 R12      EQU   12
-                              0000000D  00000001   522 R13      EQU   13
-                              0000000E  00000001   523 R14      EQU   14
-                              0000000F  00000001   524 R15      EQU   15
+                                                   522 TTAB64   DSECT
+00000000  00000000                                 523 BEGVAL64 DS    A            Starting value (hi 32)
+00000004  00000000                                 524          DS    A            Starting value (lo 32)
+00000008  00000000                                 525 SHIFT64  DS    A            shift amount (#of bits to shift)
+0000000C  00000000                                 526 CC64     DS    A            Expected condition code
+00000010  00000000                                 527 ENDVAL64 DS    A            Expected ending value (hi 32)
+00000014  00000000                                 528          DS    A            Expected ending value (lo 32)
+                              00000018  00000001   529 TT64NEXT EQU   *
 
 
-                                                   526          END
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    15
+
+
+                                                   531 ***********************************************************************
+                                                   532 *                      Register Equates
+                                                   533 ***********************************************************************
+
+                              00000000  00000001   535 R0       EQU   0
+                              00000001  00000001   536 R1       EQU   1
+                              00000002  00000001   537 R2       EQU   2
+                              00000003  00000001   538 R3       EQU   3
+                              00000004  00000001   539 R4       EQU   4
+                              00000005  00000001   540 R5       EQU   5
+                              00000006  00000001   541 R6       EQU   6
+                              00000007  00000001   542 R7       EQU   7
+                              00000008  00000001   543 R8       EQU   8
+                              00000009  00000001   544 R9       EQU   9
+                              0000000A  00000001   545 R10      EQU   10
+                              0000000B  00000001   546 R11      EQU   11
+                              0000000C  00000001   547 R12      EQU   12
+                              0000000D  00000001   548 R13      EQU   13
+                              0000000E  00000001   549 R14      EQU   14
+                              0000000F  00000001   550 R15      EQU   15
+
+
+                                                   552          END
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    15
 
      SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
 
 BCMASKS             X    00033A       1   325  124  199  247  297
 BEGIN               H    0001E0       2    47   34
-BEGVAL32            A    000000       4   490  257
-BEGVAL64            A    000000       4   497  294  308
-CC32                A    000008       4   492
-CC64                A    00000C       4   500  296
-ENDVAL32            A    00000C       4   493
-ENDVAL64            A    000010       4   501  298
+BEGVAL32            A    000000       4   516  257
+BEGVAL64            A    000000       4   523  294  308
+CC32                A    000008       4   518
+CC64                A    00000C       4   526  296
+ENDVAL32            A    00000C       4   519
+ENDVAL64            A    000010       4   527  298
 FAILPSW             D    000210       8    64   57
 FAILTEST            I    0001F4       4    56  128  132  203  207  211  251  255  259  302  306  310
 GOODPSW             D    000200       8    59   54
-IMAGE               1    000000    1340     0
-R0                  U    000000       1   509   27
-R1                  U    000001       1   510  119  121  123  134  135  141  194  196  198  213  214  220  240  242  244  261  262
+IMAGE               1    000000    1420     0
+R0                  U    000000       1   535   27
+R1                  U    000001       1   536  119  121  123  134  135  141  194  196  198  213  214  220  240  242  244  261  262
                                                268  289  291  312  313  319
-R10                 U    00000A       1   519
-R11                 U    00000B       1   520
-R12                 U    00000C       1   521
-R13                 U    00000D       1   522   56  128  132  203  207  211  251  255  259  302  306  310
-R14                 U    00000E       1   523   49   50   51   52  137  216  264  315
-R15                 U    00000F       1   524
-R2                  U    000002       1   511  123  126  130  198  201  205  244  245  246  249  253  293  300  304
-R3                  U    000003       1   512  126  209  249  294  300  308
-R4                  U    000004       1   513  124  127  201  247  250  295  300
-R5                  U    000005       1   514  123  130  199  202  244  253  296  297  301
-R6                  U    000006       1   515  205  245  249  257  298  304
-R7                  U    000007       1   516  198  209
-R8                  U    000008       1   517
-R9                  U    000009       1   518
-SHIFT32             A    000004       4   491
-SHIFT64             A    000008       4   499  295
-SHIFTEST            J    000000    1340    25   29   36
+R10                 U    00000A       1   545
+R11                 U    00000B       1   546
+R12                 U    00000C       1   547
+R13                 U    00000D       1   548   56  128  132  203  207  211  251  255  259  302  306  310
+R14                 U    00000E       1   549   49   50   51   52  137  216  264  315
+R15                 U    00000F       1   550
+R2                  U    000002       1   537  123  126  130  198  201  205  244  245  246  249  253  293  300  304
+R3                  U    000003       1   538  126  209  249  294  300  308
+R4                  U    000004       1   539  124  127  201  247  250  295  300
+R5                  U    000005       1   540  123  130  199  202  244  253  296  297  301
+R6                  U    000006       1   541  205  245  249  257  298  304
+R7                  U    000007       1   542  198  209
+R8                  U    000008       1   543
+R9                  U    000009       1   544
+SHIFT32             A    000004       4   517
+SHIFT64             A    000008       4   525  295
+SHIFTEST            J    000000    1420    25   29   36
 SLA                 I    000220       4   121   49
 SLA1                I    000224       4   123  136
 SLA2                I    000238       2   130  139
@@ -654,34 +678,34 @@ SLDA3               I    000278       2   209  206
 SLDA4               I    000282       4   213  210
 SLDACC              I    000292       4   218  202
 TST32TAB            D    000350       8   333  121
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    16
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    16
 
      SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
 
-TST64TAB            D    000418       8   409  196
-TT32NEXT            U    000010       1   494  134  261
-TT64NEXT            U    000018       1   503  213  312
-TTAB32              4    000000      16   489  119  240
-TTAB64              4    000000      24   496  194  289
+TST64TAB            D    000438       8   422  196
+TT32NEXT            U    000010       1   520  134  261
+TT64NEXT            U    000018       1   529  213  312
+TTAB32              4    000000      16   515  119  240
+TTAB64              4    000000      24   522  194  289
 =A(TST32TAB)        A    000340       4   328  121  242
 =A(TST64TAB)        A    000348       4   330  196  291
 =CL4'END!'          C    000344       4   329  135  214  262  313
 =H'4'               H    00034C       2   331   56
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    17
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    17
 
 MACRO  DEFN  REFERENCES
 
 No defined macros
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    18
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    18
 
    DESC     SYMBOL   SIZE    POS      ADDR
 
 Entry: 0
 
-Image      IMAGE     1340  000-53B  000-53B
-  Region             1340  000-53B  000-53B
-    CSECT  SHIFTEST  1340  000-53B  000-53B
-ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 00:30:50  Page    19
+Image      IMAGE     1420  000-58B  000-58B
+  Region             1420  000-58B  000-58B
+    CSECT  SHIFTEST  1420  000-58B  000-58B
+ASMA Ver. 0.7.0       ShiftLeft   --   Test Algebraic "Shift Left" Instructions                     23 Mar 2024 08:17:06  Page    19
 
    STMT                                            FILE NAME
 

@@ -328,6 +328,18 @@ BCMASKS  DC    X'80',X'40',X'20',X'10'    CC 0, 1, 2, 3
                                                                 SPACE
 TST32TAB DC    0D'0'
 **********************************************
+*   mixed significant bits positive OVERFLOW
+*                             shift CC
+         DC    A(X'22000000'),A(8),A(3)
+         DC    A(X'00000000')
+*
+**********************************************
+*   mixed significant bits negative OVERFLOW
+*                             shift CC
+         DC    A(X'A2000000'),A(8),A(3)
+         DC    A(X'80000000')
+*
+**********************************************
 *        old way slowest possible positive
 *                             shift CC
          DC    A(X'00000001'),A(30),A(2)
@@ -357,6 +369,7 @@ TST32TAB DC    0D'0'
          DC    A(X'7FFFFFFF'),A(1),A(3)
          DC    A(X'7FFFFFFE')
 *
+                                                                EJECT
 **********************************************
 *        max negative, 1 bit
 *                             shift CC
@@ -404,6 +417,18 @@ TST32TAB DC    0D'0'
                                                                 EJECT
 TST64TAB DC    0D'0'
 **********************************************
+*   mixed significant bits positive OVERFLOW
+*                                            shift CC
+         DC    A(X'22000000'),A(X'00000000'),A(8),A(3)
+         DC    A(X'00000000'),A(X'00000000')
+*
+**********************************************
+*   mixed significant bits negative OVERFLOW
+*                                            shift CC
+         DC    A(X'A2000000'),A(X'00000000'),A(8),A(3)
+         DC    A(X'80000000'),A(X'00000000')
+*
+**********************************************
 *        old way slowest possible positive
 *                                            shift CC
          DC    A(X'00000000'),A(X'00000001'),A(62),A(2)
@@ -439,6 +464,7 @@ TST64TAB DC    0D'0'
          DC    A(X'80000000'),A(X'00000000'),A(1),A(3)
          DC    A(X'80000000'),A(X'00000000')
 *
+                                                                EJECT
 **********************************************
 *        positive, 1 bit
 *                                            shift CC

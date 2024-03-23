@@ -912,9 +912,9 @@ bool    overflow;                       /* true if overflow          */
         numeric_bits = numeric_bits & 0x7FFFFFFFFFFFFFFFULL;
 
         /* Check for overflow */
-        overflow = (!sign_bit &&  (numeric_bits & ashift64_bits[ shift_amt ])) ||
-                   ( sign_bit && !(numeric_bits & ashift64_bits[ shift_amt ]));
-
+        overflow = (!sign_bit && (numeric_bits & ashift64_bits[ shift_amt ])) ||
+                   ( sign_bit && (numeric_bits & ashift64_bits[ shift_amt ])
+                                              != ashift64_bits[ shift_amt ]);
         /* Do the shift */
         numeric_bits <<= shift_amt;
         numeric_bits &= 0x7FFFFFFFFFFFFFFFULL;
@@ -996,9 +996,9 @@ bool    overflow;                       /* true if overflow          */
         numeric_bits = regs->GR_L(r1) & 0x7FFFFFFF;
 
         /* Check for overflow */
-        overflow = (!sign_bit &&  (numeric_bits & ashift32_bits[ shift_amt ])) ||
-                   ( sign_bit && !(numeric_bits & ashift32_bits[ shift_amt ]));
-
+        overflow = (!sign_bit && (numeric_bits & ashift32_bits[ shift_amt ])) ||
+                   ( sign_bit && (numeric_bits & ashift32_bits[ shift_amt ])
+                                              != ashift32_bits[ shift_amt ]);
         /* Do the shift */
         numeric_bits <<= shift_amt;
         numeric_bits &= 0x7FFFFFFF;
