@@ -305,7 +305,11 @@ SLAG2    CLGR  R2,R6                Expected results?
          BE    SLAG3                Yes, continue
          BAL   R13,FAILTEST         No! Unexpected results! FAIL!
                                                                 SPACE
-SLAG3    LA    R1,TT64NEXT          Next test table entry
+SLAG3    CLG   R3,BEGVAL64          Input register unchanged?
+         BE    SLAG4                Yes, continue
+         BAL   R13,FAILTEST         No! Unexpected results! FAIL!
+                                                                SPACE
+SLAG4    LA    R1,TT64NEXT          Next test table entry
          CLC   =CL4'END!',0(R1)     End of test table?
          BNE   SLAG1                No, loop...
          BR    R14                  Yes, return to caller
