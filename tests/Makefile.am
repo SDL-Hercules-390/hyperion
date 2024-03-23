@@ -490,6 +490,11 @@ EXTRA_DIST =                    \
      semipriv.core              \
      semipriv.list              \
      semipriv.tst               \
+     ShiftLeft.asm              \
+     ShiftLeft.core             \
+     ShiftLeft.list             \
+     ShiftLeft.pdf              \
+     ShiftLeft.tst              \
      sigp.assemble              \
      sigp.listing               \
      sigp.tst                   \
