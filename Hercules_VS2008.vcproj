@@ -3575,6 +3575,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\ShiftLeft.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\skey370.core"
 						>
 					</File>
@@ -4742,6 +4746,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\ShiftLeft.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\sigp.tst"
 							>
 						</File>
@@ -5139,6 +5147,10 @@
 						</File>
 						<File
 							RelativePath=".\tests\semipriv.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ShiftLeft.asm"
 							>
 						</File>
 						<File
@@ -5638,6 +5650,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\semipriv.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ShiftLeft.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ShiftLeft.pdf"
 								>
 							</File>
 							<File

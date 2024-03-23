@@ -3577,6 +3577,9 @@ U64     n;                              /* Integer work areas        */
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
+
+extern U64 ashift64_bits[];
+
 /*-------------------------------------------------------------------*/
 /* EB0B SLAG  - Shift Left Single Long                       [RSY-a] */
 /*-------------------------------------------------------------------*/
@@ -3585,44 +3588,47 @@ DEF_INST(shift_left_single_long)
 U32     r1, r3;                         /* Register numbers          */
 U32     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-U64     n, n1, n2;                      /* 64-bit operand values     */
-U32     i, j;                           /* Integer work areas        */
+BYTE    shift_amt;                      /* Shift count               */
+U64     sign_bit;                       /* Sign bit of op1           */
+U64     numeric_bits;                   /* Numeric part of op1       */
+bool    overflow;                       /* true if overflow          */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY( inst, regs, r1, r3, b2, effective_addr2 );
 
     /* Use rightmost six bits of operand address as shift count */
-    n = effective_addr2 & 0x3F;
-
-    /* Load the numeric and sign portions from the R3 register */
-    n1 = regs->GR_G(r3) & 0x7FFFFFFFFFFFFFFFULL;
-    n2 = regs->GR_G(r3) & 0x8000000000000000ULL;
-
-    /* Shift the numeric portion left n positions */
-    for (i = 0, j = 0; i < n; i++)
+    if ((shift_amt = effective_addr2 & 0x3F) != 0)
     {
-        /* Shift bits 1-63 left one bit position */
-        n1 <<= 1;
+        /* Load the numeric and sign portions from the R3 register */
+        sign_bit     = regs->GR_G(r3) & 0x8000000000000000ULL;
+        numeric_bits = regs->GR_G(r3) & 0x7FFFFFFFFFFFFFFFULL;
 
-        /* Overflow if bit shifted out is unlike the sign bit */
-        if ((n1 & 0x8000000000000000ULL) != n2)
-            j = 1;
+        /* Check for overflow */
+        overflow = (!sign_bit &&  (numeric_bits & ashift64_bits[ shift_amt ])) ||
+                   ( sign_bit && !(numeric_bits & ashift64_bits[ shift_amt ]));
+
+        /* Do the shift */
+        numeric_bits <<= shift_amt;
+        numeric_bits &= 0x7FFFFFFFFFFFFFFFULL;
+
+        /* Load the updated value into the R1 register */
+        regs->GR_G(r1) = sign_bit | numeric_bits;
+
+        /* Condition code 3 and program check if overflow occurred */
+        if (overflow)
+        {
+            regs->psw.cc = 3;
+            if (FOMASK( &regs->psw ))
+                regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+            return;
+        }
     }
-
-    /* Load the updated value into the R1 register */
-    regs->GR_G(r1) = (n1 & 0x7FFFFFFFFFFFFFFFULL) | n2;
-
-    /* Condition code 3 and program check if overflow occurred */
-    if (j)
-    {
-        regs->psw.cc = 3;
-        if ( FOMASK(&regs->psw) )
-            regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-        return;
-    }
+    else
+        regs->GR_G(r1) = regs->GR_G(r3);
 
     /* Set the condition code */
-    regs->psw.cc = (S64)regs->GR_G(r1) > 0 ? 2 :
-                   (S64)regs->GR_G(r1) < 0 ? 1 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) > 0 ? 2
+                 : (S64)regs->GR_G(r1) < 0 ? 1
+                 :                           0;
 
 } /* end DEF_INST(shift_left_single_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */

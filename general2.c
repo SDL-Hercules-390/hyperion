@@ -742,6 +742,148 @@ int     r1, r2;                         /* Values of R fields        */
 }
 
 
+#ifndef ASHIFT_TABS_DEFINED
+#define ASHIFT_TABS_DEFINED
+/*-------------------------------------------------------------------*/
+/* Table of Arithmetic Left Shift masks to isolate significant bits  */
+/*-------------------------------------------------------------------*/
+U32 ashift32_bits[64] =
+{
+    0x00000000,  //  0
+    0x40000000,  //  1
+    0x60000000,  //  2
+    0x70000000,  //  3
+    0x78000000,  //  4
+    0x7C000000,  //  5
+    0x7E000000,  //  6
+    0x7F000000,  //  7
+    0x7F800000,  //  8
+    0x7FC00000,  //  9
+    0x7FE00000,  // 10
+    0x7FF00000,  // 11
+    0x7F080000,  // 12
+    0x7F0C0000,  // 13
+    0x7F0E0000,  // 14
+    0x7F0F0000,  // 15
+    0x7F008000,  // 16
+    0x7F00C000,  // 17
+    0x7F00E000,  // 18
+    0x7F00F000,  // 19
+    0x7FFFF800,  // 20
+    0x7FFFFC00,  // 21
+    0x7FFFFE00,  // 22
+    0x7FFFFF00,  // 23
+    0x7FFFFF80,  // 24
+    0x7FFFFFC0,  // 25
+    0x7FFFFFE0,  // 26
+    0x7FFFFFF0,  // 27
+    0x7FFFFF08,  // 28
+    0x7FFFFFFC,  // 29
+    0x7FFFFFFE,  // 30
+    0x7FFFFFFF,  // 31
+    0x7FFFFFFF,  // 32
+    0x7FFFFFFF,  // 33
+    0x7FFFFFFF,  // 34
+    0x7FFFFFFF,  // 35
+    0x7FFFFFFF,  // 36
+    0x7FFFFFFF,  // 37
+    0x7FFFFFFF,  // 38
+    0x7FFFFFFF,  // 39
+    0x7FFFFFFF,  // 40
+    0x7FFFFFFF,  // 41
+    0x7FFFFFFF,  // 42
+    0x7FFFFFFF,  // 43
+    0x7FFFFFFF,  // 44
+    0x7FFFFFFF,  // 45
+    0x7FFFFFFF,  // 46
+    0x7FFFFFFF,  // 47
+    0x7FFFFFFF,  // 48
+    0x7FFFFFFF,  // 49
+    0x7FFFFFFF,  // 50
+    0x7FFFFFFF,  // 51
+    0x7FFFFFFF,  // 52
+    0x7FFFFFFF,  // 53
+    0x7FFFFFFF,  // 54
+    0x7FFFFFFF,  // 55
+    0x7FFFFFFF,  // 56
+    0x7FFFFFFF,  // 57
+    0x7FFFFFFF,  // 58
+    0x7FFFFFFF,  // 59
+    0x7FFFFFFF,  // 60
+    0x7FFFFFFF,  // 61
+    0x7FFFFFFF,  // 62
+    0x7FFFFFFF,  // 63
+};
+U64 ashift64_bits[64] =
+{
+    0x0000000000000000ULL,  //  0
+    0x4000000000000000ULL,  //  1
+    0x6000000000000000ULL,  //  2
+    0x7000000000000000ULL,  //  3
+    0x7800000000000000ULL,  //  4
+    0x7C00000000000000ULL,  //  5
+    0x7E00000000000000ULL,  //  6
+    0x7F00000000000000ULL,  //  7
+    0x7F80000000000000ULL,  //  8
+    0x7FC0000000000000ULL,  //  9
+    0x7FE0000000000000ULL,  // 10
+    0x7FF0000000000000ULL,  // 11
+    0x7F08000000000000ULL,  // 12
+    0x7F0C000000000000ULL,  // 13
+    0x7F0E000000000000ULL,  // 14
+    0x7F0F000000000000ULL,  // 15
+    0x7F00800000000000ULL,  // 16
+    0x7F00C00000000000ULL,  // 17
+    0x7F00E00000000000ULL,  // 18
+    0x7F00F00000000000ULL,  // 19
+    0x7FFFF80000000000ULL,  // 20
+    0x7FFFFC0000000000ULL,  // 21
+    0x7FFFFE0000000000ULL,  // 22
+    0x7FFFFF0000000000ULL,  // 23
+    0x7FFFFF8000000000ULL,  // 24
+    0x7FFFFFC000000000ULL,  // 25
+    0x7FFFFFE000000000ULL,  // 26
+    0x7FFFFFF000000000ULL,  // 27
+    0x7FFFFF0800000000ULL,  // 28
+    0x7FFFFFFC00000000ULL,  // 29
+    0x7FFFFFFE00000000ULL,  // 30
+    0x7FFFFFFF00000000ULL,  // 31
+    0x7FFFFFFF80000000ULL,  // 32
+    0x7FFFFFFFC0000000ULL,  // 33
+    0x7FFFFFFFE0000000ULL,  // 34
+    0x7FFFFFFFF0000000ULL,  // 35
+    0x7FFFFFFFF8000000ULL,  // 36
+    0x7FFFFFFFFC000000ULL,  // 37
+    0x7FFFFFFFFE000000ULL,  // 38
+    0x7FFFFFFFFF000000ULL,  // 39
+    0x7FFFFFFFFF800000ULL,  // 40
+    0x7FFFFFFFFFC00000ULL,  // 41
+    0x7FFFFFFFFFE00000ULL,  // 42
+    0x7FFFFFFFFFF00000ULL,  // 43
+    0x7FFFFFFFFFF80000ULL,  // 44
+    0x7FFFFFFFFFFC0000ULL,  // 45
+    0x7FFFFFFFFFFE0000ULL,  // 46
+    0x7FFFFFFFFFFF0000ULL,  // 47
+    0x7FFFFFFFFFFF8000ULL,  // 48
+    0x7FFFFFFFFFFFC000ULL,  // 49
+    0x7FFFFFFFFFFFE000ULL,  // 50
+    0x7FFFFFFFFFFFF000ULL,  // 51
+    0x7FFFFFFFFFFFF800ULL,  // 52
+    0x7FFFFFFFFFFFFC00ULL,  // 53
+    0x7FFFFFFFFFFFFE00ULL,  // 54
+    0x7FFFFFFFFFFFFF00ULL,  // 55
+    0x7FFFFFFFFFFFFF80ULL,  // 56
+    0x7FFFFFFFFFFFFFC0ULL,  // 57
+    0x7FFFFFFFFFFFFFE0ULL,  // 58
+    0x7FFFFFFFFFFFFFF0ULL,  // 59
+    0x7FFFFFFFFFFFFFF8ULL,  // 60
+    0x7FFFFFFFFFFFFFFCULL,  // 61
+    0x7FFFFFFFFFFFFFFEULL,  // 62
+    0x7FFFFFFFFFFFFFFFULL,  // 63
+};
+#endif // ASHIFT_TABS_DEFINED
+
+
 /*-------------------------------------------------------------------*/
 /* 8F   SLDA  - Shift Left Double                             [RS-a] */
 /*-------------------------------------------------------------------*/
@@ -750,50 +892,52 @@ DEF_INST(shift_left_double)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-U32     n;                              /* 32-bit operand values     */
-U64     dreg;                           /* Double register work area */
-U32     h, i, j, m;                     /* Integer work areas        */
+BYTE    shift_amt;                      /* Shift count               */
+U64     sign_bit;                       /* Sign bit of op1           */
+U64     numeric_bits;                   /* Numeric part of op1       */
+bool    overflow;                       /* true if overflow          */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS( inst, regs, r1, r3, b2, effective_addr2 );
 
-    ODD_CHECK(r1, regs);
+    ODD_CHECK( r1, regs );
 
     /* Use rightmost six bits of operand address as shift count */
-    n = effective_addr2 & 0x3F;
-
-    /* Load the signed value from the R1 and R1+1 registers */
-    dreg = (U64)regs->GR_L(r1) << 32 | regs->GR_L(r1+1);
-    m = ((S64)dreg < 0) ? 1 : 0;
-
-    /* Shift the numeric portion of the value */
-    for (i = 0, j = 0; i < n; i++)
+    if ((shift_amt = effective_addr2 & 0x3F) != 0)
     {
-        /* Shift bits 1-63 left one bit position */
-        dreg <<= 1;
+        /* Consolidate all bits into one variable */
+        numeric_bits = (U64)regs->GR_L(r1) << 32 | regs->GR_L(r1+1);
 
-        /* Overflow if bit shifted out is unlike the sign bit */
-        h = ((S64)dreg < 0) ? 1 : 0;
-        if (h != m)
-            j = 1;
-    }
+        /* Isolate the numeric and sign portions */
+        sign_bit     = numeric_bits & 0x8000000000000000ULL;
+        numeric_bits = numeric_bits & 0x7FFFFFFFFFFFFFFFULL;
 
-    /* Load updated value into the R1 and R1+1 registers */
-    regs->GR_L(r1) = (dreg >> 32) & 0x7FFFFFFF;
-    if (m)
-        regs->GR_L(r1) |= 0x80000000;
-    regs->GR_L(r1+1) = dreg & 0xFFFFFFFF;
+        /* Check for overflow */
+        overflow = (!sign_bit &&  (numeric_bits & ashift64_bits[ shift_amt ])) ||
+                   ( sign_bit && !(numeric_bits & ashift64_bits[ shift_amt ]));
 
-    /* Condition code 3 and program check if overflow occurred */
-    if (j)
-    {
-        regs->psw.cc = 3;
-        if ( FOMASK(&regs->psw) )
-            regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-        return;
+        /* Do the shift */
+        numeric_bits <<= shift_amt;
+        numeric_bits &= 0x7FFFFFFFFFFFFFFFULL;
+
+        /* Load the updated value into the R1 and R1+1 registers */
+        regs->GR_L(r1)   = ((sign_bit | numeric_bits) >> 32) & 0xFFFFFFFF;
+        regs->GR_L(r1+1) = ((sign_bit | numeric_bits) >>  0) & 0xFFFFFFFF;
+
+        /* Condition code 3 and program check if overflow occurred */
+        if (overflow)
+        {
+            regs->psw.cc = 3;
+            if (FOMASK( &regs->psw ))
+                regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+            return;
+        }
     }
 
     /* Set the condition code */
-    regs->psw.cc = (S64)dreg > 0 ? 2 : (S64)dreg < 0 ? 1 : 0;
+    regs->psw.cc = (S32)regs->GR_L(r1)   >  0 ? 2
+                 : (S32)regs->GR_L(r1)   <  0 ? 1
+                 :      regs->GR_L(r1+1) == 0 ? 0
+                 :                              2;
 
     /* Check for PER 1 GRA event */
     PER_GRA_CHECK( regs, PER_GRA_MASK2( r1, r1+1 ));
@@ -837,52 +981,45 @@ DEF_INST(shift_left_single)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-U32     n, n1, n2;                      /* 32-bit operand values     */
-U32     i, j;                           /* Integer work areas        */
+BYTE    shift_amt;                      /* Shift count               */
+U32     sign_bit;                       /* Sign bit of op1           */
+U32     numeric_bits;                   /* Numeric part of op1       */
+bool    overflow;                       /* true if overflow          */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS( inst, regs, r1, r3, b2, effective_addr2 );
 
     /* Use rightmost six bits of operand address as shift count */
-    n = effective_addr2 & 0x3F;
-
-    /* Fast path if no possible overflow */
-    if (regs->GR_L(r1) < 0x10000 && n < 16)
+    if ((shift_amt = effective_addr2 & 0x3F) != 0)
     {
-        regs->GR_L(r1) <<= n;
-        regs->psw.cc = regs->GR_L(r1) ? 2 : 0;
-        return;
-    }
+        /* Load the numeric and sign portions from the R1 register */
+        sign_bit     = regs->GR_L(r1) & 0x80000000;
+        numeric_bits = regs->GR_L(r1) & 0x7FFFFFFF;
 
-    /* Load the numeric and sign portions from the R1 register */
-    n1 = regs->GR_L(r1) & 0x7FFFFFFF;
-    n2 = regs->GR_L(r1) & 0x80000000;
+        /* Check for overflow */
+        overflow = (!sign_bit &&  (numeric_bits & ashift32_bits[ shift_amt ])) ||
+                   ( sign_bit && !(numeric_bits & ashift32_bits[ shift_amt ]));
 
-    /* Shift the numeric portion left n positions */
-    for (i = 0, j = 0; i < n; i++)
-    {
-        /* Shift bits 1-31 left one bit position */
-        n1 <<= 1;
+        /* Do the shift */
+        numeric_bits <<= shift_amt;
+        numeric_bits &= 0x7FFFFFFF;
 
-        /* Overflow if bit shifted out is unlike the sign bit */
-        if ((n1 & 0x80000000) != n2)
-            j = 1;
-    }
+        /* Load the updated value into the R1 register */
+        regs->GR_L(r1) = sign_bit | numeric_bits;
 
-    /* Load the updated value into the R1 register */
-    regs->GR_L(r1) = (n1 & 0x7FFFFFFF) | n2;
-
-    /* Condition code 3 and program check if overflow occurred */
-    if (j)
-    {
-        regs->psw.cc = 3;
-        if ( FOMASK(&regs->psw) )
-            regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-        return;
+        /* Condition code 3 and program check if overflow occurred */
+        if (overflow)
+        {
+            regs->psw.cc = 3;
+            if (FOMASK( &regs->psw ))
+                regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+            return;
+        }
     }
 
     /* Set the condition code */
-    regs->psw.cc = (S32)regs->GR_L(r1) > 0 ? 2 :
-                   (S32)regs->GR_L(r1) < 0 ? 1 : 0;
+    regs->psw.cc = (S32)regs->GR_L(r1) > 0 ? 2
+                 : (S32)regs->GR_L(r1) < 0 ? 1
+                 :                           0;
 
     /* Check for PER 1 GRA event */
     PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));

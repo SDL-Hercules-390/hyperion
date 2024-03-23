@@ -1094,6 +1094,11 @@
     <None Include="tests\semipriv.core" />
     <None Include="tests\semipriv.list" />
     <None Include="tests\semipriv.tst" />
+    <None Include="tests\ShiftLeft.asm" />
+    <None Include="tests\ShiftLeft.core" />
+    <None Include="tests\ShiftLeft.list" />
+    <None Include="tests\ShiftLeft.pdf" />
+    <None Include="tests\ShiftLeft.tst" />
     <None Include="tests\sigp.assemble" />
     <None Include="tests\sigp.listing" />
     <None Include="tests\sigp.tst" />

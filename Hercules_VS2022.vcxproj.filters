@@ -2783,6 +2783,9 @@
     <None Include="tests\semipriv.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\ShiftLeft.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\kimd-hw.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2816,6 +2819,9 @@
     <None Include="tests\semipriv.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\ShiftLeft.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\wild.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2846,6 +2852,9 @@
     <None Include="tests\semipriv.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\ShiftLeft.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\stfl.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2871,6 +2880,12 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\semipriv.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\ShiftLeft.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\ShiftLeft.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\stfl.list">
