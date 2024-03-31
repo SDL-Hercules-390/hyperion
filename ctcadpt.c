@@ -1718,8 +1718,11 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         if( !IS_CCW_SENSE( bCode ) &&
             !IS_CCW_CONTROL( bCode ) )
         {
-            pDEVBLK->sense[0] = SENSE_IR;
+            pDEVBLK->sense[0] = ( SENSE_IR | SENSE_OC );
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
+
+            // A state mismatch tracing does not apply in this case.         
+            CTCE_Info.state_new = pDEVBLK->ctcexState;
 
             // Produce a CTCE Trace logging if requested.
             CTCE_RESTART_CCWTRACE( pDEVBLK ) ;
@@ -1874,12 +1877,13 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
     // We merge a Unit Check in case the Y state is Not Ready.
     // But only when pUnitStat is still 0 or Unit Check or Busy (no Attn).
-    // SENSE bit 1 for Intervention Required will be set as well.
+    // sense byte 0 bit 1 (Intervention Required) will be set,
+    // and also bit 7 (Interface Discconect / Operation Check).    
     if( IS_CTCE_YNR( pDEVBLK -> ctceyState ) &&
         ( ( *pUnitStat & (~ ( CSW_BUSY | CSW_UC ) ) ) == 0 ) )
     {
         *pUnitStat |= CSW_UC;
-        pDEVBLK->sense[0] = SENSE_IR;
+        pDEVBLK->sense[0] = ( SENSE_IR | SENSE_OC );
     }
 
     // Produce a CTCE Trace logging if requested, noting that for the
@@ -1956,7 +1960,9 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
 //  SetSIDInfo( dev, 0x3088, 0x61, ...          ); CISCO 7206 CLAW protocol ESCON connected
 //  SetSIDInfo( dev, 0x3088, 0x62, ...          ); OSA/D device
 //  But the orignal CTCX_init had this :
-    SetSIDInfo( dev, 0x3088, 0x08, 0x3088, 0x01 );
+//  SetSIDInfo( dev, 0x3088, 0x08, 0x3088, 0x01 );
+//  Which is what we used until we made the VM TSAF connection work as well which needed :
+    SetSIDInfo( dev, 0x3088, 0x08, 0x0000, 0x01 );    
 
     dev->numsense = 2;
     // A version 4 only feature ...
@@ -2562,7 +2568,7 @@ static void     CTCE_Send(        DEVBLK*             pDEVBLK,
         // This looks like a 'broken connection' situation so we
         // set intervention required.  (An equipment check and
         // returning to the not ready state was found to not work.)
-        pDEVBLK->sense[0] = SENSE_IR;
+        pDEVBLK->sense[0] = ( SENSE_IR | SENSE_OC );
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
         return;
     }
@@ -2763,15 +2769,11 @@ static void*  CTCE_RecvThread( void* argp )
         } // if( iLength <= 0 )
 
         // As CTCE Reset received from the other (y-)side will cause our (x-)side
-        // Sense bit 1 (Intervention Required) to be set, and for a selective
-        // reset also bit 7 (Interface Discconect / Operation Check).
+        // sense byte 0 bit 1 (Intervention Required) to be set,
+        // and also bit 7 (Interface Discconect / Operation Check).
         if( IS_CTCE_RST( pSokBuf->CmdReg ) )
         {
-            pDEVBLK->sense[0] |= SENSE_IR;
-            if( !sysblk.shutdown )
-            {
-                pDEVBLK->sense[0] |= SENSE_OC;
-            }
+            pDEVBLK->sense[0] |= ( SENSE_IR | SENSE_OC );
 
             // Any WRITE data in the reception buffer won't be used anymore.
             pDEVBLK->ctce_buf_next_read = pDEVBLK->ctce_buf_next_write;
@@ -3082,10 +3084,11 @@ static void CTCE_Reset( DEVBLK* pDEVBLK )
     CTCE_Info.state_y_prev       = pDEVBLK->ctceyState;
 
     // A system reset at power up initialisation must result in
-    // sense byte 0 bit 4 set showing Intervention Required.
+    // sense byte 0 bit 1 (Intervention Required) to be set,
+    // and also bit 7 (Interface Discconect / Operation Check).    
     if( pDEVBLK->ctce_system_reset )
     {
-        pDEVBLK->sense[0] = SENSE_IR;
+        pDEVBLK->sense[0] = ( SENSE_IR | SENSE_OC );
     }
 
     // Reset the y-command register to 0, clear any WEOF state,
@@ -3535,7 +3538,7 @@ static int  CTCE_Start_ConnectThread( DEVBLK *dev )
         // sense bytes, hence that we set dev->ctce_system_reset here
         // which we use in CTCE_Reset afterwards to correct that.
         dev->ctce_system_reset = 1;
-        dev->sense[0] = SENSE_IR;
+        dev->sense[0] = ( SENSE_IR | SENSE_OC );
 
         // Initialize the CTC lock and condition used to signal
         // reception of a command matching the dependent one.
