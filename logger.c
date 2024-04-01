@@ -461,7 +461,7 @@ static void* logger_thread( void* arg )
            - handle all logger pre-shutdown actions
            - set system shutdown flag
         */
-        if (sysblk.shutbegin)
+        if (sysblk.shutbegin & !sysblk.panel_init)
         {
             obtain_lock( &logger_lock );
             {

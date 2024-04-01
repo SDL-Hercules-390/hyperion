@@ -1781,7 +1781,11 @@ char    buf[1024];                      /* Buffer workarea           */
 size_t  loopcount;                      /* Number of iterations done */
 
     SET_THREAD_NAME( PANEL_THREAD_NAME );
-    hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
+
+    // In order to synchronize shutdown across panel and logger,
+    // panel cleanup is now handled directly in the panel thread.
+    //hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
+
     history_init();
 
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
@@ -2967,8 +2971,9 @@ FinishShutdown:
         /* Don't read or otherwise process any input
            once system shutdown has been initiated
         */
-        if ( sysblk.shutdown )
+        if ( sysblk.shutbegin )
         {
+            if ( sysblk.panel_init ) panel_cleanup ( NULL );
             if ( sysblk.shutfini ) break;
             /* wait for system to finish shutting down */
             USLEEP(10000);
@@ -3334,6 +3339,21 @@ FinishShutdown:
 
 } /* end function panel_display */
 
+/* write spaces over the whole pane and set position to top left */
+static void blank_panel()
+{
+    char blanks[MSG_SIZE];
+    int i = 0;
+
+    memset(blanks, ' ' , MSG_SIZE);
+    for (i=1; i <= cons_rows; i++)
+    {
+        set_pos(i,1);
+        write_text(blanks, MSG_SIZE);
+    }
+    set_pos(1,1);
+}
+
 static void panel_cleanup(void *unused)
 {
 int i;
@@ -3346,7 +3366,10 @@ PANMSG* p;
     if(topmsg)
     {
         set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
-        clear_screen( stderr );
+        //clear_screen( stderr );
+        // progremmers note: clear_screen appears to have side-efect of flushing the screen.
+        // So use, blank_panel which directly clears the screen with spaces.
+        blank_panel();
 
         /* Scroll to last full screen's worth of messages */
         scroll_to_bottom_screen();

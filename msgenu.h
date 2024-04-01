@@ -1100,7 +1100,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01418 "Symbol expansion will result in buffer overflow; ignored"
 #define HHC01419 "Symbol and/or Value is invalid; ignored"
 #define HHC01420 "Begin Hercules shutdown"
-//efine HHC01421 (available)
+#define HHC01421 "Shutdown: %s"
 #define HHC01422 "Configuration released"
 #define HHC01423 "Calling termination routines"
 #define HHC01424 "All termination routines complete"
