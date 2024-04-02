@@ -1479,13 +1479,16 @@ static void do_shutdown_now()
     ASSERT( !sysblk.shutdown );   // (sanity check)
     sysblk.shutfini = FALSE;      // (shutdown NOT finished yet)
     sysblk.shutdown = FALSE;      // (system shutdown NOT initiated yet)
-    sysblk.shutbegin = TRUE;      // (begin system shutdown)
+
+    // save panel state and start shutdown
+    wasPanelActive = (bool) sysblk.panel_init;
+    sysblk.shutbegin = TRUE;
 
     // "Begin Hercules shutdown"
     WRMSG( HHC01420, "I" );
 
     // spin-wait for panel to do its cleanup
-    wasPanelActive = (bool) sysblk.panel_init;
+
     spincount = 32;
     while ( sysblk.panel_init && spincount-- )
     {
