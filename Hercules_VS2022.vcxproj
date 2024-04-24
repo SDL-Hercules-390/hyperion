@@ -277,6 +277,7 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="zvector.c" />
     <ClCompile Include="_archdep_templ.c" />
     <ClCompile Include="archlvl.c" />
     <ClCompile Include="assist.c" />
