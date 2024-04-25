@@ -277,7 +277,6 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="zvector.c" />
     <ClCompile Include="_archdep_templ.c" />
     <ClCompile Include="archlvl.c" />
     <ClCompile Include="assist.c" />
@@ -471,6 +470,7 @@
     <ClCompile Include="x75.c" />
     <ClCompile Include="xstore.c" />
     <ClCompile Include="zfcp.c" />
+    <ClCompile Include="zvector.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".travis.yml" />

@@ -512,6 +512,18 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _ZVECTOR_C_
+  #ifndef  _HENGINE_DLL_
+    #define ZVECT_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define ZVECT_DLL_IMPORT        extern
+  #endif
+#else
+  #define   ZVECT_DLL_IMPORT        DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _VSTORE_C_
   #ifndef  _HENGINE_DLL_
     #define VSTORE_DLL_IMPORT       DLL_IMPORT

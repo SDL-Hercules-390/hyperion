@@ -3135,7 +3135,7 @@ static INSTR_FUNC gen_opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*E4*/   GENx370x390x900 ( ""          , e4xx , ASMFMT_e4xx     , execute_opcode_e4xx                                 ),
  /*E5*/   GENx370x390x900 ( ""          , e5xx , ASMFMT_e5xx     , execute_opcode_e5xx                                 ),
  /*E6*/   GENx370x390x900 ( ""          , e6xx , ASMFMT_e6xx     , execute_opcode_e6xx                                 ),
- /*E7*/   GENx370x390x900( ""           , e7xx , ASMFMT_e7xx     , execute_opcode_e7________xx                         ),
+ /*E7*/   GENx___x___x900 ( ""          , e7xx , ASMFMT_e7xx     , execute_opcode_e7________xx                         ),
  /*E8*/   GENx370x390x900 ( "MVCIN"     , SS_a , ASMFMT_SS_L     , move_inverse                                        ),
  /*E9*/   GENx37Xx390x900 ( "PKA"       , SS_f , ASMFMT_SS_L2    , pack_ascii                                          ),
  /*EA*/   GENx37Xx390x900 ( "UNPKA"     , SS_a , ASMFMT_SS_L     , unpack_ascii                                        ),

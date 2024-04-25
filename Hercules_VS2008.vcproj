@@ -1223,6 +1223,10 @@
 							RelativePath=".\xstore.c"
 							>
 						</File>
+						<File
+							RelativePath=".\zvector.c"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Header Files"

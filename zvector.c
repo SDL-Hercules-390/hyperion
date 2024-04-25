@@ -8,12 +8,15 @@
 
 /* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
+
 #include "hstdinc.h"
+#define _ZVECTOR_C_
 #define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+
 #if defined(FEATURE_129_ZVECTOR_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E700 VLEB   - Vector Load Element (8)                       [VRX] */
@@ -2151,17 +2154,17 @@ DEF_INST(vector_maximum)
 
 #endif /* defined(FEATURE_129_ZVECTOR_FACILITY) */
 
-#if !defined(_GEN_ARCH)
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_1)
-#define  _GEN_ARCH _ARCH_NUM_1
-#include "zvector.c"
-#endif
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "zvector.c"
+  #endif
 
-#if defined(_ARCH_NUM_2)
-#undef   _GEN_ARCH
-#define  _GEN_ARCH _ARCH_NUM_2
-#include "zvector.c"
-#endif
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "zvector.c"
+  #endif
 
 #endif /*!defined(_GEN_ARCH)*/

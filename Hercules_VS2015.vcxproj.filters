@@ -813,6 +813,9 @@
     <ClCompile Include="dasdload2.h">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
+    <ClCompile Include="zvector.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="crypto\lib\crypto32.pdb">
