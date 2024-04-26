@@ -2166,7 +2166,7 @@ do {                                                                  \
     do {                                                              \
         if ((_vr) < 16)                                               \
         {                                                             \
-            regs->fpr[FPR2I((_vr))] = regs->VR_F((_vr),0);            \
+            regs->fpr[FPR2I((_vr))  ] = regs->VR_F((_vr),0);          \
             regs->fpr[FPR2I((_vr))+1] = regs->VR_F((_vr),1);          \
         }                                                             \
     } while(0)

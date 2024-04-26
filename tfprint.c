@@ -1417,23 +1417,25 @@ static inline void print_fpc_reg( TF02276* rec )
 /*-------------------------------------------------------------------*/
 /*                Print Vector Registers                             */
 /*-------------------------------------------------------------------*/
-static inline void print_vr_regs(TF02266* rec)
+static inline void print_vr_regs( TF02266* rec )
 {
-    char tim[64] = { 0 };     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
-    char pfx[64] = { 0 };     // "16:22:47.745999 HHC02269I CP00:"
+    char tim[64] = {0};         // "YYYY-MM-DD HH:MM:SS.uuuuuu"
+    char pfx[64] = {0};         // "16:22:47.745999 HHC02269I CP00:"
 
-    int  i;                   // (work for iterating)
+    int  i;                     // (work for iterating)
 
-    FormatTIMEVAL(&rec->rhdr.tod, tim, sizeof(tim));
-    MSGBUF(pfx, "%s HHC02266I %s:", &tim[11], ptyp_str(rec->rhdr.cpuad));
+    FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
+    MSGBUF( pfx, "%s HHC02266I %s:", &tim[11], ptyp_str( rec->rhdr.cpuad ));
 
     for (i = 0; i < 32; i += 2)
     {
-        FLOGMSG(stdout, "%s VR%02d=%016" PRIx64 ".%016" PRIx64 " VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
-            pfx, i, rec->VR_D(i, 0), rec->VR_D(i, 1),
-            i + 1, rec->VR_D(i+1, 0), rec->VR_D(i+1, 1)
+        FLOGMSG( stdout, "%s VR%02d=%016" PRIx64 ".%016" PRIx64 " VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
+            pfx,
+            i,     rec->VR_D( i,   0), rec->VR_D( i,   1),
+            i + 1, rec->VR_D( i+1, 0), rec->VR_D( i+1, 1)
         );
     }
+
 }
 
 /*-------------------------------------------------------------------*/
@@ -1442,28 +1444,28 @@ static inline void print_vr_regs(TF02266* rec)
 static inline void print_all_available_regs( BYTE cpuad )
 {
     // General Purpose Registers
-    if (all_recs[ cpuad ].gotmask  &  GOT_TF02269)
-        print_gr_regs( &all_recs[ cpuad ].tf02269 );
+    if (all_recs[ cpuad ].gotmask  &   GOT_TF02269)
+        print_gr_regs(  &all_recs[ cpuad ].tf02269 );
 
     // Control Registers
-    if (all_recs[ cpuad ].gotmask  &  GOT_TF02271)
-        print_cr_regs( &all_recs[ cpuad ].tf02271 );
+    if (all_recs[ cpuad ].gotmask  &   GOT_TF02271)
+        print_cr_regs(  &all_recs[ cpuad ].tf02271 );
 
     // Access Registers
-    if (all_recs[ cpuad ].gotmask  &  GOT_TF02272)
-        print_ar_regs( &all_recs[ cpuad ].tf02272 );
+    if (all_recs[ cpuad ].gotmask  &   GOT_TF02272)
+        print_ar_regs(  &all_recs[ cpuad ].tf02272 );
 
     // Floating Point Control Register
-    if (all_recs[ cpuad ].gotmask  &  GOT_TF02276)
-        print_fpc_reg( &all_recs[ cpuad ].tf02276 );
+    if (all_recs[ cpuad ].gotmask  &   GOT_TF02276)
+        print_fpc_reg(  &all_recs[ cpuad ].tf02276 );
 
     // Floating Point Registers
     if (all_recs[ cpuad ].gotmask  &   GOT_TF02270)
         print_fpr_regs( &all_recs[ cpuad ].tf02270 );
 
     // Vector Registers
-    if (all_recs[cpuad].gotmask & GOT_TF02266)
-        print_vr_regs(&all_recs[cpuad].tf02266);
+    if (all_recs[ cpuad ].gotmask  &   GOT_TF02266)
+        print_vr_regs(  &all_recs[ cpuad ].tf02266 );
 }
 
 /*-------------------------------------------------------------------*/
@@ -2604,9 +2606,9 @@ static void process_TF02270( TF02270* rec )
 /*-------------------------------------------------------------------*/
 /*             Process Vector Registers Record                       */
 /*-------------------------------------------------------------------*/
-static void process_TF02266(TF02266* rec)
+static void process_TF02266( TF02266* rec )
 {
-    UNREFERENCED(rec);
+    UNREFERENCED( rec );
     // Do nothing. Regs are printed by process_TF02324.
 }
 
