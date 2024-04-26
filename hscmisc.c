@@ -1832,9 +1832,9 @@ int display_inst_regs( bool trace2file, REGS *regs, BYTE *inst, BYTE opcode, cha
     if (opcode == 0xE7)
     {
         if (trace2file)
-            tf_2266(regs);
+            tf_2266( regs );
         else
-            len += display_vregs(regs, buf + len, buflen - len - 1, "HHC02266I ");
+            len += display_vregs( regs, buf + len, buflen - len - 1, "HHC02266I ");
     }
 
     if (len && sysblk.showregsfirst)
@@ -1959,29 +1959,30 @@ int display_fregs( REGS* regs, char* buf, int buflen, char* hdr )
 /*-------------------------------------------------------------------*/
 /*               Display vector registers                            */
 /*-------------------------------------------------------------------*/
-int display_vregs (REGS* regs, char* buf, int buflen, char* hdr)
+int display_vregs( REGS* regs, char* buf, int buflen, char* hdr )
 {
     char cpustr[32] = "";
-    int bufl = 0;
+    int i, bufl = 0;
 
     if (sysblk.cpus > 1)
-        MSGBUF(cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
+        MSGBUF( cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad );
     else
-        MSGBUF(cpustr, "%s", hdr);
-
-    for (int i = 0; i < 32; i += 2) {
-        REFRESH_READ_VR(i);
-        REFRESH_READ_VR(i + 1);
+        MSGBUF( cpustr, "%s", hdr );
+   
+    for (i = 0; i < 32; i += 2) {
+        REFRESH_READ_VR(i  );
+        REFRESH_READ_VR(i+1);
         bufl += idx_snprintf(bufl, buf, buflen,
             "%sVR%02d=%016" PRIx64 ".%016" PRIx64" VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
             cpustr,
-            i, regs->VR_D(i, 0), regs->VR_D(i, 1),
-            i + 1, regs->VR_D(i+1, 0), regs->VR_D(i+1, 1)
-        );
+            i,   regs->VR_D( i,   0), 
+                 regs->VR_D( i,   1),
+            i+1, regs->VR_D( i+1, 0),
+                 regs->VR_D( i+1, 1)
+            );
     }
     return bufl;
-} /* end function display_vregs */
-
+}
 /*-------------------------------------------------------------------*/
 /*                     Display subchannel                            */
 /*-------------------------------------------------------------------*/
@@ -2356,7 +2357,7 @@ DLL_EXPORT REGS* copy_regs( REGS* regs )
 
     size = (SIE_MODE( regs ) || SIE_ACTIVE( regs )) ? 2 * sizeof( REGS )
                                                     :     sizeof( REGS );
-    if (!(newregs = (REGS *) malloc_aligned( size, 4096 )))
+    if (!(newregs = (REGS*) malloc_aligned( size, 4096 )))
     {
         char buf[64];
         MSGBUF( buf, "malloc(%d)", (int)size );
@@ -3230,7 +3231,7 @@ int herc_system (char* command)
   #define  SHELL_CMD_SHIM_PGM   "conspawn "
 
     int rc = (int)(strlen(SHELL_CMD_SHIM_PGM) + strlen(command) + 1);
-    char* pszNewCommandLine = (char *) malloc( rc );
+    char* pszNewCommandLine = (char*) malloc( rc );
     strlcpy( pszNewCommandLine, SHELL_CMD_SHIM_PGM, rc );
     strlcat( pszNewCommandLine, command,            rc );
     rc = w32_poor_mans_fork( pszNewCommandLine, NULL );

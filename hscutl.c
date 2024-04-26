@@ -3855,11 +3855,11 @@ DLL_EXPORT bool tf_2276( REGS* regs )
 //---------------------------------------------------------------------
 //               Vector Registers
 //---------------------------------------------------------------------
-DLL_EXPORT bool tf_2266(REGS* regs)
+DLL_EXPORT bool tf_2266( REGS* regs )
 {
     TF02266 rec;
-    memcpy(rec.vfp, regs->vfp, sizeof(rec.vfp));
-    return tf_write(regs, &rec, sizeof(TF02266), 2266);
+    memcpy( rec.vfp, regs->vfp, sizeof( rec.vfp ));
+    return tf_write( regs, &rec, sizeof( TF02266 ), 2266 );
 }
 
 //---------------------------------------------------------------------
