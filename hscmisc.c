@@ -1969,16 +1969,16 @@ int display_vregs (REGS* regs, char* buf, int buflen, char* hdr)
     else
         MSGBUF(cpustr, "%s", hdr);
 
-	for (int i = 0; i < 32; i += 2) {
+    for (int i = 0; i < 32; i += 2) {
         REFRESH_READ_VR(i);
         REFRESH_READ_VR(i + 1);
-		bufl += idx_snprintf(bufl, buf, buflen,
-			"%sVR%02d=%016" PRIx64 ".%016" PRIx64" VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
-			cpustr,
-			i, regs->VR_D(i, 0), regs->VR_D(i, 1),
-			i + 1, regs->VR_D(i+1, 0), regs->VR_D(i+1, 1)
-		);
-	}
+        bufl += idx_snprintf(bufl, buf, buflen,
+            "%sVR%02d=%016" PRIx64 ".%016" PRIx64" VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
+            cpustr,
+            i, regs->VR_D(i, 0), regs->VR_D(i, 1),
+            i + 1, regs->VR_D(i+1, 0), regs->VR_D(i+1, 1)
+        );
+    }
     return bufl;
 } /* end function display_vregs */
 

@@ -1427,13 +1427,13 @@ static inline void print_vr_regs(TF02266* rec)
     FormatTIMEVAL(&rec->rhdr.tod, tim, sizeof(tim));
     MSGBUF(pfx, "%s HHC02266I %s:", &tim[11], ptyp_str(rec->rhdr.cpuad));
 
-	for (i = 0; i < 32; i += 2)
-	{
-		FLOGMSG(stdout, "%s VR%02d=%016" PRIx64 ".%016" PRIx64 " VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
-			pfx, i, rec->VR_D(i, 0), rec->VR_D(i, 1),
-			i + 1, rec->VR_D(i+1, 0), rec->VR_D(i+1, 1)
-		);
-	}
+    for (i = 0; i < 32; i += 2)
+    {
+        FLOGMSG(stdout, "%s VR%02d=%016" PRIx64 ".%016" PRIx64 " VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
+            pfx, i, rec->VR_D(i, 0), rec->VR_D(i, 1),
+            i + 1, rec->VR_D(i+1, 0), rec->VR_D(i+1, 1)
+        );
+    }
 }
 
 /*-------------------------------------------------------------------*/
