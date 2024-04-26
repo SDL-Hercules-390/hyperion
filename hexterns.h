@@ -364,6 +364,7 @@ bool insttrace_all();
 
 int display_gregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_fregs (REGS *regs, char *buf, int buflen,char *hdr);
+int display_vregs(REGS* regs, char* buf, int buflen, char* hdr);
 int display_cregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_aregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr);

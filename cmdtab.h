@@ -630,6 +630,14 @@
   "digits for 64-bit registers). Enter \"gpr\" by itself to display the\n"      \
   "register values without altering them.\n"
 
+#define vr_cmd_desc            "Display or alter vector registers"
+#define vr_cmd_help            \
+                               \
+  "Format: \"vr [nn=xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx]\" where 'nn' is the vector\n" \
+  "number (0 to 31) and 'xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx' is the register value\n" \
+  "in hexadecimal (1-32 hex digits for 128-bit). Enter \"vr\" by itself to display\n" \
+  "the register values without altering them.\n"
+
 #define hao_cmd_desc            "Hercules Automatic Operator"
 #define hao_cmd_help            \
                                 \
@@ -2045,6 +2053,7 @@ COMMAND( "toddrag",                 toddrag_cmd,            SYSCMDNOPER,        
 COMMAND( "traceopt",                traceopt_cmd,           SYSCMDNOPER,        traceopt_cmd_desc,      traceopt_cmd_help   )
 COMMAND( "u",                       u_cmd,                  SYSCMDNOPER,        u_cmd_desc,             u_cmd_help          )
 COMMAND( "v",                       v_cmd,                  SYSCMDNOPER,        v_cmd_desc,             v_cmd_help          )
+COMMAND( "vr",                      vr_cmd,                 SYSCMDNOPER,        vr_cmd_desc,            vr_cmd_help         )
 
 COMMAND( "i",                       i_cmd,                  SYSCMDNDIAG8,       i_cmd_desc,             NULL                )
 COMMAND( "ipl",                     ipl_cmd,                SYSCMDNDIAG8,       ipl_cmd_desc,           ipl_cmd_help        )

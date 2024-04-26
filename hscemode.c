@@ -2622,7 +2622,70 @@ char buf[512];
 
     return 0;
 }
+/*-------------------------------------------------------------------*/
+/* vr command - display vector registers                             */
+/*-------------------------------------------------------------------*/
+int vr_cmd(int argc, char* argv[], char* cmdline)
+{
+    REGS* regs;
+    char buf[ 1536 ];
 
+    UNREFERENCED(cmdline);
+
+    obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
+
+    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    {
+        release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        // "Processor %s%02X: processor is not %s"
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+        return 0;
+    }
+    regs = sysblk.regs[sysblk.pcpu];
+
+    if (argc > 1)
+    {
+        struct REC
+        {
+            QW      vfp[1];        // Vector registers
+        } rec;
+
+
+        int   reg_num;
+        BYTE  equal_sign, c;
+
+        if (argc > 2)
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            // "Invalid argument '%s'%s"
+            WRMSG(HHC02205, "E", argv[1], "");
+            return 0;
+        }
+        if (0
+            || sscanf(argv[1], "%d%c%"SCNx64".%"SCNx64"%c", &reg_num, &equal_sign,
+                &rec.VR_D(0, 0), &rec.VR_D(0, 1), &c) != 4
+            || reg_num < 0
+            || reg_num > 31
+            || '=' != equal_sign
+            )
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            // "Invalid argument '%s'%s"
+            WRMSG(HHC02205, "E", argv[1], "");
+            return 0;
+        }
+        regs->VR_Q(reg_num) = rec.VR_Q(0);
+        REFRESH_UPDATE_VR(reg_num);
+    }
+
+    display_vregs(regs, buf, sizeof(buf), "HHC02266I ");
+    WRMSG(HHC02266, "I", "Vector registers");
+    LOGMSG("%s", buf);
+
+    release_lock(&sysblk.cpulock[sysblk.pcpu]);
+
+    return 0;
+}
 
 /*-------------------------------------------------------------------*/
 /* i command - generate I/O attention interrupt for device           */

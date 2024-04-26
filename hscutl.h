@@ -1338,6 +1338,17 @@ ATTRIBUTE_PACKED; typedef struct TF01336 TF01336;
 CASSERT( sizeof( TF01336 ) % 8 == 0, hscutl_h );
 
 //---------------------------------------------------------------------
+//   TraceFile TF02266 Vector Register Record
+//---------------------------------------------------------------------
+struct TF02266
+{
+    TFHDR   rhdr;           // Record Header
+    QW      vfp[32];        // Vector registers
+}
+ATTRIBUTE_PACKED; typedef struct TF02266 TF02266;
+CASSERT(sizeof(TF02266) % 8 == 0, hscutl_h);
+
+//---------------------------------------------------------------------
 //       TraceFile TF02269 General Purpose Registers Record
 //---------------------------------------------------------------------
 struct TF02269
@@ -1670,6 +1681,8 @@ HUT_DLL_IMPORT bool tf_1334( DEVBLK* dev,              // ORB
 HUT_DLL_IMPORT bool tf_1336( DEVBLK* dev );            // Startio cc=2
 
 // Instruction tracing ------------------------------------------------------------------------
+
+HUT_DLL_IMPORT bool tf_2266( REGS* regs );             // Vector Registers
 
 HUT_DLL_IMPORT bool tf_2269( REGS* regs,               // General Registers
                              BYTE* inst );

@@ -2155,12 +2155,20 @@ do {                                                                  \
 /*-------------------------------------------------------------------*/
 #define REFRESH_READ_VR(_vr)                                          \
     do {                                                              \
-        if ((_vr) < 16) regs->VR_D[(_vr)] = regs->FPR_L[(_vr)];       \
+        if ((_vr) < 16)                                               \
+        {                                                             \
+            regs->VR_F((_vr),0) = regs->fpr[FPR2I((_vr))];            \
+            regs->VR_F((_vr),1) = regs->fpr[FPR2I((_vr))+1];          \
+        }                                                             \
     } while(0)
 
 #define REFRESH_UPDATE_VR(_vr)                                        \
     do {                                                              \
-        if ((_vr) < 16) regs->FPR_L[(_vr)] = regs->VR_D[(_vr)];       \
+        if ((_vr) < 16)                                               \
+        {                                                             \
+            regs->fpr[FPR2I((_vr))] = regs->VR_F((_vr),0);            \
+            regs->fpr[FPR2I((_vr))+1] = regs->VR_F((_vr),1);          \
+        }                                                             \
     } while(0)
 
 #endif /*defined( _FEATURE_129_ZVECTOR_FACILITY )*/

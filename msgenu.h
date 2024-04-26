@@ -1440,7 +1440,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02263 "Script %d: processing resumed..."
 #define HHC02264 "Script %d: file %s processing ended"
 #define HHC02265 "Script %d: file %s aborted due to previous conditions"
-//efine HHC02266 (available)
+#define HHC02266 "%s" // Vector registers
 #define HHC02267 "%s" // (trace instr: Real address is not valid)
 #define HHC02268 "%s" // maxrates command
 #define HHC02269 "%s" // General purpose registers
