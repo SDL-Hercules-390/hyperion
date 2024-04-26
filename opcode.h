@@ -2130,6 +2130,40 @@ do {                                                                  \
 
 #define MAIN_TO_ABS(_main)  ((U64)((BYTE*)(_main) - sysblk.mainstor))
 
+/*-------------------------------------------------------------------*/
+/*              zVector Facility                                     */
+/*-------------------------------------------------------------------*/
+#if defined( _FEATURE_129_ZVECTOR_FACILITY )
+
+    /* Program check if vector instructions is executed when         */
+    /* TXF constraint mode or VOP control is zero                    */
+
+#define ZVECTOR_CHECK(_regs) \
+        TXF_INSTR_CHECK(_regs); \
+        if( !((_regs)->CR(0) & CR0_VOP) ) { \
+            (_regs)->dxc = DXC_VECTOR_INSTRUCTION; \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
+        }
+    /* Debug end of vector instruction execution                     */
+#define ZVECTOR_END(_regs) \
+        if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
+            ARCH_DEP(display_inst) (_regs, inst); 
+/*-------------------------------------------------------------------*/
+/* TODO: As the internal memory for the FPR and VR registers overlap,*/
+/* for the first 64 bits of the first 16 VR registers.               */
+/* While vfp & fpr are not shared, we must to refrsh thier values    */
+/*-------------------------------------------------------------------*/
+#define REFRESH_READ_VR(_vr)                                          \
+    do {                                                              \
+        if ((_vr) < 16) regs->VR_D[(_vr)] = regs->FPR_L[(_vr)];       \
+    } while(0)
+
+#define REFRESH_UPDATE_VR(_vr)                                        \
+    do {                                                              \
+        if ((_vr) < 16) regs->FPR_L[(_vr)] = regs->VR_D[(_vr)];       \
+    } while(0)
+
+#endif /*defined( _FEATURE_129_ZVECTOR_FACILITY )*/
 
 /*-------------------------------------------------------------------*/
 /*        Perform invalidation after storage key update...           */
@@ -2143,6 +2177,7 @@ do {                                                                  \
 /*  tighter than what is provided here.                              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+
 #define STORKEY_INVALIDATE_LOCKED( _regs, _n )                          \
                                                                         \
  do                                                                     \
@@ -3550,6 +3585,148 @@ DEF_INST(convert_packed_to_dfp_ext);
 DEF_INST(convert_packed_to_dfp_long);
 DEF_INST(convert_dfp_ext_to_packed);
 DEF_INST(convert_dfp_long_to_packed);
+#endif
+
+#if defined( FEATURE_129_ZVECTOR_FACILITY )
+DEF_INST(vector_load_element_8);
+DEF_INST(vector_load_element_16);
+DEF_INST(vector_load_element_64);
+DEF_INST(vector_load_element_32);
+DEF_INST(vector_load_logical_element_and_zero);
+DEF_INST(vector_load_and_replicate);
+DEF_INST(vector_load);
+DEF_INST(vector_load_to_block_boundary);
+DEF_INST(vector_store_element_8);
+DEF_INST(vector_store_element_16);
+DEF_INST(vector_store_element_64);
+DEF_INST(vector_store_element_32);
+DEF_INST(vector_store);
+DEF_INST(vector_gather_element_64);
+DEF_INST(vector_gather_element_32);
+DEF_INST(vector_scatter_element_64);
+DEF_INST(vector_scatter_element_32);
+DEF_INST(vector_load_gr_from_vr_element);
+DEF_INST(vector_load_vr_element_from_gr);
+DEF_INST(load_count_to_block_boundary);
+DEF_INST(vector_element_shift_left);
+DEF_INST(vector_element_rotate_left_logical);
+DEF_INST(vector_load_multiple);
+DEF_INST(vector_load_with_length);
+DEF_INST(vector_element_shift_right_logical);
+DEF_INST(vector_element_shift_right_arithmetic);
+DEF_INST(vector_store_multiple);
+DEF_INST(vector_store_with_length);
+DEF_INST(vector_load_element_immediate_8);
+DEF_INST(vector_load_element_immediate_16);
+DEF_INST(vector_load_element_immediate_64);
+DEF_INST(vector_load_element_immediate_32);
+DEF_INST(vector_generate_byte_mask);
+DEF_INST(vector_replicate_immediate);
+DEF_INST(vector_generate_mask);
+DEF_INST(vector_fp_test_data_class_immediate);
+DEF_INST(vector_replicate);
+DEF_INST(vector_population_count);
+DEF_INST(vector_count_trailing_zeros);
+DEF_INST(vector_count_leading_zeros);
+DEF_INST(vector_load_vector);
+DEF_INST(vector_isolate_string);
+DEF_INST(vector_sign_extend_to_doubleword);
+DEF_INST(vector_merge_low);
+DEF_INST(vector_merge_high);
+DEF_INST(vector_load_vr_from_grs_disjoint);
+DEF_INST(vector_sum_across_word);
+DEF_INST(vector_sum_across_doubleword);
+DEF_INST(vector_checksum);
+DEF_INST(vector_sum_across_quadword);
+DEF_INST(vector_and);
+DEF_INST(vector_and_with_complement);
+DEF_INST(vector_or);
+DEF_INST(vector_nor);
+DEF_INST(vector_exclusive_or);
+DEF_INST(vector_element_shift_left_vector);
+DEF_INST(vector_element_rotate_and_insert_under_mask);
+DEF_INST(vector_element_rotate_left_logical_vector);
+DEF_INST(vector_shift_left);
+DEF_INST(vector_shift_left_by_byte);
+DEF_INST(vector_shift_left_double_by_byte);
+DEF_INST(vector_element_shift_right_logical_vector);
+DEF_INST(vector_element_shift_right_arithmetic_vector);
+DEF_INST(vector_shift_right_logical);
+DEF_INST(vector_shift_right_logical_by_byte);
+DEF_INST(vector_shift_right_arithmetic);
+DEF_INST(vector_shift_right_arithmetic_by_byte);
+DEF_INST(vector_find_element_equal);
+DEF_INST(vector_find_element_not_equal);
+DEF_INST(vector_find_any_element_equal);
+DEF_INST(vector_permute_doubleword_immediate);
+DEF_INST(vector_string_range_compare);
+DEF_INST(vector_permute);
+DEF_INST(vector_select);
+DEF_INST(vector_fp_multiply_and_subtract);
+DEF_INST(vector_fp_multiply_and_add);
+DEF_INST(vector_pack);
+DEF_INST(vector_pack_logical_saturate);
+DEF_INST(vector_pack_saturate);
+DEF_INST(vector_multiply_logical_high);
+DEF_INST(vector_multiply_low);
+DEF_INST(vector_multiply_high);
+DEF_INST(vector_multiply_logical_even);
+DEF_INST(vector_multiply_logical_odd);
+DEF_INST(vector_multiply_even);
+DEF_INST(vector_multiply_odd);
+DEF_INST(vector_multiply_and_add_logical_high);
+DEF_INST(vector_multiply_and_add_low);
+DEF_INST(vector_multiply_and_add_high);
+DEF_INST(vector_multiply_and_add_logical_even);
+DEF_INST(vector_multiply_and_add_logical_odd);
+DEF_INST(vector_multiply_and_add_even);
+DEF_INST(vector_multiply_and_add_odd);
+DEF_INST(vector_galois_field_multiply_sum);
+DEF_INST(vector_add_with_carry_compute_carry);
+DEF_INST(vector_add_with_carry);
+DEF_INST(vector_galois_field_multiply_sum_and_accumulate);
+DEF_INST(vector_subtract_with_borrow_compute_borrow_indication);
+DEF_INST(vector_subtract_with_borrow_indication);
+DEF_INST(vector_fp_convert_to_logical_64_bit);
+DEF_INST(vector_fp_convert_from_logical_64_bit);
+DEF_INST(vector_fp_convert_to_fixed_64_bit);
+DEF_INST(vector_fp_convert_from_fixed_64_bit);
+DEF_INST(vector_fp_load_lengthened);
+DEF_INST(vector_fp_load_rounded);
+DEF_INST(vector_load_fp_integer);
+DEF_INST(vector_fp_compare_and_signal_scalar);
+DEF_INST(vector_fp_compare_scalar);
+DEF_INST(vector_fp_perform_sign_operation);
+DEF_INST(vector_fp_square_root);
+DEF_INST(vector_unpack_logical_low);
+DEF_INST(vector_unpack_logical_high);
+DEF_INST(vector_unpack_low);
+DEF_INST(vector_unpack_high);
+DEF_INST(vector_test_under_mask);
+DEF_INST(vector_element_compare_logical);
+DEF_INST(vector_element_compare);
+DEF_INST(vector_load_complement);
+DEF_INST(vector_load_positive);
+DEF_INST(vector_fp_subtract);
+DEF_INST(vector_fp_add);
+DEF_INST(vector_fp_divide);
+DEF_INST(vector_fp_multiply);
+DEF_INST(vector_fp_compare_equal);
+DEF_INST(vector_fp_compare_high_or_equal);
+DEF_INST(vector_fp_compare_high);
+DEF_INST(vector_average_logical);
+DEF_INST(vector_add_compute_carry);
+DEF_INST(vector_average);
+DEF_INST(vector_add);
+DEF_INST(vector_subtract_compute_borrow_indication);
+DEF_INST(vector_subtract);
+DEF_INST(vector_compare_equal);
+DEF_INST(vector_compare_high_logical);
+DEF_INST(vector_compare_high);
+DEF_INST(vector_minimum_logical);
+DEF_INST(vector_maximum_logical);
+DEF_INST(vector_minimum);
+DEF_INST(vector_maximum);
 #endif
 
 #if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
