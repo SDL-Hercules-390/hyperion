@@ -1,4 +1,5 @@
 /* TFPRINT.C    (C) Copyright "Fish" (David B. Trout), 2023          */
+/*              (C) and others 2024                                  */
 /*              Print Trace File Utility                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -1376,26 +1377,19 @@ static inline void print_fpr_regs( TF02270* rec )
 
     if (rec->afp)
     {
-        for (i=0, r=0; i < 4; r += 4, i++)
+        for (i = 0; i < 16; i = i+2)
         {
-            FLOGMSG( stdout, "%s FP%u=%8.8X%8.8X FPR%u=%8.8X%8.8X",
-                pfx, r+0, rec->fpr[ r+0 ], rec->fpr[ r+1 ],
-                     r+2, rec->fpr[ r+4 ], rec->fpr[ r+5 ]
-            );
-
-            FLOGMSG( stdout, "%s FP%u=%8.8X%8.8X FPR%u=%8.8X%8.8X",
-                pfx, r+1, rec->fpr[ r+2 ], rec->fpr[ r+3 ],
-                     r+3, rec->fpr[ r+6 ], rec->fpr[ r+7 ]
-            );
+            FLOGMSG( stdout, "%s FP%02u=%16.16lX FP%02u=%16.16lX",
+                pfx, i, rec->FPR_L(i), i+1, rec->FPR_L(i+1) );
         }
     }
     else
     {
-        FLOGMSG( stdout, "%s FPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n",
-            pfx, rec->fpr[0], rec->fpr[1], rec->fpr[2], rec->fpr[3] );
+        FLOGMSG( stdout, "%s FPR0=%16.16lX FPR2=%16.16lX\n",
+            pfx, rec->FPR_L(0), rec->FPR_L(2) );
 
-        FLOGMSG( stdout, "%s FPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n",
-            pfx, rec->fpr[4], rec->fpr[5], rec->fpr[6], rec->fpr[7] );
+        FLOGMSG( stdout, "%s FPR4=%16.16lX FPR6=%16.16lX\n",
+            pfx, rec->FPR_L(4), rec->FPR_L(6) );
     }
 }
 

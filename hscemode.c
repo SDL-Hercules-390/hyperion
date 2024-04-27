@@ -2,7 +2,7 @@
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              (C) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
-/*              (C) and others 2011-2023                             */
+/*              (C) and others 2011-2024                             */
 /*              CE mode functions                                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -2504,9 +2504,7 @@ char buf[512];
             return 0;
         }
 
-        if (afp) reg_num <<= 1; /* (double) */
-        regs->fpr[reg_num]   = (U32) (reg_value >> 32);
-        regs->fpr[reg_num+1] = (U32) (reg_value & 0xFFFFFFFFULL);
+        regs->FPR_L(reg_num) = reg_value;
     }
 
     display_fregs( regs, buf, sizeof(buf), "HHC02270I " );
