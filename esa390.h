@@ -72,6 +72,7 @@
  typedef union {
                  struct { DW L; DW H; } D;
                  struct { FW LL; FW LH; FW HL; FW HH; } F;
+                 U128 q;
                  U64  d[2];            /* Note: Any code        */
                  U32  f[4];            /* that uses these       */
                  U16  h[8];            /* four variables must   */

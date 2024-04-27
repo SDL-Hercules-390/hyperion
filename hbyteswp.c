@@ -26,8 +26,9 @@
 
     #include "htypes.h"   // (need Hercules fixed-size data types)
 
-    extern inline uint16_t ( ATTR_REGPARM(1) bswap_16 )( uint16_t  x );
-    extern inline uint32_t ( ATTR_REGPARM(1) bswap_32 )( uint32_t  x );
-    extern inline uint64_t ( ATTR_REGPARM(1) bswap_64 )( uint64_t  x );
+    extern inline uint16_t ( ATTR_REGPARM(1) bswap_16  )( uint16_t  x );
+    extern inline uint32_t ( ATTR_REGPARM(1) bswap_32  )( uint32_t  x );
+    extern inline uint64_t ( ATTR_REGPARM(1) bswap_64  )( uint64_t  x );
+    extern inline U128     ( ATTR_REGPARM(1) bswap_128 )( U128      x );
 
 #endif // !defined( NO_ASM_BYTESWAP )

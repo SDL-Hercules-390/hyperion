@@ -209,7 +209,7 @@ struct REGS {                           /* Processor registers       */
 #define FPR_S(_r)    vfp[(_r)].F.HH.F     /* Short, bits 0-31        */
 // fine FPR_T(_r)    vfp[(_r)].F.HH.H.H.H /* Tiny,  bits 0-15         */
 
-#define VR_Q(_v)     vfp[(_v)]               /* Quadword             */
+#define VR_Q(_v)     vfp[(_v)].q             /* Quadword             */
 #if defined(WORDS_BIGENDIAN)
   #define VR_D(_v,_i)  vfp[(_v)].d[(_i)]     /* Doubleword           */
   #define VR_F(_v,_i)  vfp[(_v)].f[(_i)]     /* Fullword             */

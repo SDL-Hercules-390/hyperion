@@ -109,6 +109,7 @@ typedef  uint8_t    U8;         // unsigned 8-bits
 typedef  uint16_t   U16;        // unsigned 16-bits
 typedef  uint32_t   U32;        // unsigned 32-bits
 typedef  uint64_t   U64;        // unsigned 64-bits
+typedef union __m128i U128;
 
 #ifndef  _MSVC_                 // (MSVC typedef's it too)
 typedef  uint8_t    BYTE;       // unsigned byte       (1 byte)
