@@ -1460,14 +1460,10 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         F_MICBLOK=EVM_L(vmb+VMMCR6) & ADDRESS_MAXWRAP(regs);
 
         /* LOAD FPRS */
-        regs->fpr[0] = EVM_L(vmb+VMFPRS+0);
-        regs->fpr[1] = EVM_L(vmb+VMFPRS+4);
-        regs->fpr[4] = EVM_L(vmb+VMFPRS+8);
-        regs->fpr[5] = EVM_L(vmb+VMFPRS+12);
-        regs->fpr[8] = EVM_L(vmb+VMFPRS+16);
-        regs->fpr[9] = EVM_L(vmb+VMFPRS+20);
-        regs->fpr[12] = EVM_L(vmb+VMFPRS+24);
-        regs->fpr[13] = EVM_L(vmb+VMFPRS+28);
+        regs->FPR_L(0) = EVM_LD(vmb+VMFPRS+0);
+        regs->FPR_L(2) = EVM_LD(vmb+VMFPRS+8);
+        regs->FPR_L(4) = EVM_LD(vmb+VMFPRS+16);
+        regs->FPR_L(6) = EVM_LD(vmb+VMFPRS+24);
 
         INITPSEUDOREGS(wregs);
         work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
