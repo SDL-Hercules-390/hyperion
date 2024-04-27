@@ -205,9 +205,9 @@ struct REGS {                           /* Processor registers       */
 
 #define AR(_r)       ar[(_r)]
 
-#define FPR_L(_r)    vfp[(_r)].D.H.D      /* Long,  bits 0-63         */
+#define FPR_L(_r)    vfp[(_r)].D.H.D      /* Long, bits 0-63         */
 #define FPR_S(_r)    vfp[(_r)].F.HH.F     /* Short, bits 0-31        */
-// fine FPR_T(_r)    vfp[(_r)].F.HH.H.H.H /* Tiny,  bits 0-15         */
+// fine FPR_T(_r)    vfp[(_r)].F.HH.H.H.H /* Tiny, bits 0-15         */
 
 #define VR_Q(_v)     vfp[(_v)]               /* Quadword             */
 #if defined(WORDS_BIGENDIAN)
