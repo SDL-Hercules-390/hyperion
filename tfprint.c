@@ -1367,10 +1367,13 @@ static inline void print_ar_regs( TF02272* rec )
 /*-------------------------------------------------------------------*/
 static inline void print_fpr_regs( TF02270* rec )
 {
+
+#define REG64FMT  "%16.16"PRIX64
+
     char tim [ 64 ]  = {0};     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
     char pfx [ 64 ]  = {0};     // "16:22:47.745999 HHC02269I CP00:"
 
-    int  i, r;                  // (work for iterating)
+    int  i;                     // (work for iterating)
 
     FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
     MSGBUF( pfx, "%s HHC02270I %s:", &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ));
@@ -1379,16 +1382,16 @@ static inline void print_fpr_regs( TF02270* rec )
     {
         for (i = 0; i < 16; i = i+2)
         {
-            FLOGMSG( stdout, "%s FP%02u=%16.16lX FP%02u=%16.16lX",
+            FLOGMSG( stdout, "%s FP%02u="REG64FMT" FP%02u="REG64FMT"",
                 pfx, i, rec->FPR_L(i), i+1, rec->FPR_L(i+1) );
         }
     }
     else
     {
-        FLOGMSG( stdout, "%s FPR0=%16.16lX FPR2=%16.16lX\n",
+        FLOGMSG( stdout, "%s FPR0="REG64FMT" FPR2="REG64FMT"\n",
             pfx, rec->FPR_L(0), rec->FPR_L(2) );
 
-        FLOGMSG( stdout, "%s FPR4=%16.16lX FPR6=%16.16lX\n",
+        FLOGMSG( stdout, "%s FPR4="REG64FMT" FPR6="REG64FMT"\n",
             pfx, rec->FPR_L(4), rec->FPR_L(6) );
     }
 }

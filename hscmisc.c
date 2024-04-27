@@ -1265,6 +1265,8 @@ int ARCH_DEP( display_fregs )( REGS* regs, char* buf, int buflen, char* hdr )
 {
 char cpustr[32] = "";
 
+#define REG64FMT  "%16.16"PRIX64
+
     if (sysblk.cpus>1)
         MSGBUF( cpustr, "%s%s%02X: ", hdr, PTYPSTR( regs->cpuad ), regs->cpuad );
     else
@@ -1274,14 +1276,14 @@ char cpustr[32] = "";
     {
         return snprintf( buf, buflen,
 
-            "%sFP00=%16.16lX FP01=%16.16lX\n"
-            "%sFP02=%16.16lX FP03=%16.16lX\n"
-            "%sFP04=%16.16lX FP05=%16.16lX\n"
-            "%sFP06=%16.16lX FP07=%16.16lX\n"
-            "%sFP08=%16.16lX FP09=%16.16lX\n"
-            "%sFP10=%16.16lX FP11=%16.16lX\n"
-            "%sFP12=%16.16lX FP13=%16.16lX\n"
-            "%sFP14=%16.16lX FP15=%16.16lX\n"
+            "%sFP00="REG64FMT" FP01="REG64FMT"\n"
+            "%sFP02="REG64FMT" FP03="REG64FMT"\n"
+            "%sFP04="REG64FMT" FP05="REG64FMT"\n"
+            "%sFP06="REG64FMT" FP07="REG64FMT"\n"
+            "%sFP08="REG64FMT" FP09="REG64FMT"\n"
+            "%sFP10="REG64FMT" FP11="REG64FMT"\n"
+            "%sFP12="REG64FMT" FP13="REG64FMT"\n"
+            "%sFP14="REG64FMT" FP15="REG64FMT"\n"
 
             ,cpustr, regs->FPR_L(0),  regs->FPR_L(1)
             ,cpustr, regs->FPR_L(2),  regs->FPR_L(3)
@@ -1297,10 +1299,10 @@ char cpustr[32] = "";
     {
         return snprintf( buf, buflen,
 
-            "%sFP00=%16.16lX\n"
-            "%sFP02=%16.16lX\n"
-            "%sFP04=%16.16lX\n"
-            "%sFP06=%16.16lX\n"
+            "%sFP00="REG64FMT"\n"
+            "%sFP02="REG64FMT"\n"
+            "%sFP04="REG64FMT"\n"
+            "%sFP06="REG64FMT"\n"
 
             ,cpustr, regs->FPR_L(0)
             ,cpustr, regs->FPR_L(2)
