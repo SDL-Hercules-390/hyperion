@@ -945,7 +945,7 @@ struct PSA_3XX                          /* Prefixed storage area     */
 /*110*/ DBLWRD resv110;                 /* Reserved                  */
 /*118*/ DBLWRD resv118;                 /* Reserved                  */
 /*120*/ FWORD  storear[16];             /* Access register save area */
-/*160*/ FWORD  storefpr[8];             /* FP register save area     */
+/*160*/ DBLWRD storefpr[4];             /* FP register save area     */
 /*180*/ FWORD  storegpr[16];            /* General register save area*/
 /*1C0*/ FWORD  storecr[16];             /* Control register save area*/
 };
@@ -1015,7 +1015,7 @@ struct PSA_900
 /*01F0*/ QWORD  iopnew;                 /* I/O new PSW               */
 /*0200*/ BYTE   resv0200[4096];         /* Reserved                  */
 /*-------------------------------------------------------------------*/
-/*1200*/ FWORD  storefpr[32];           /* FP register save area     */
+/*1200*/ DBLWRD storefpr[16];           /* FP register save area     */
 /*1280*/ DBLWRD storegpr[16];           /* General register save area*/
 /*1300*/ QWORD  storepsw;               /* Store status PSW save area*/
 /*1310*/ DBLWRD resv1310;               /* Reserved                  */
