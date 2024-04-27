@@ -2240,20 +2240,17 @@ DEF_INST( perform_floating_point_operation )
 
     /* Get fpr array indexes to source and destination registers */
 
-    i0 = FPR2I(0);      // (op1 dst)
-    i2 = FPR2I(2);      // (op1 dst)
-    i4 = FPR2I(4);      // (op2 src)
-    i6 = FPR2I(6);      // (op2 src)
+    i0 = 0;             // (op1 dst)
+    i2 = 2;             // (op1 dst)
+    i4 = 4;             // (op2 src)
+    i6 = 6;             // (op2 src)
 
     fpc = regs->fpc;    // FPC value...
     fpc &= ~FPC_DXC;    // ... without DXC
 
-    /* Retrieve souce floating-point value to be converted */
-
-    ftab[0] = (unsigned int) (regs->fpr[ i4 + 0 ]);
-    ftab[1] = (unsigned int) (regs->fpr[ i4 + 1 ]);
-    ftab[2] = (unsigned int) (regs->fpr[ i6 + 0 ]);
-    ftab[3] = (unsigned int) (regs->fpr[ i6 + 1 ]);
+    /* Retrieve source floating-point value to be converted */
+    memcpy(&ftab[0], &regs->FPR_L( i4 ), sizeof(regs->FPR_L(0)));
+    memcpy(&ftab[2], &regs->FPR_L( i6 ), sizeof(regs->FPR_L(0)));
 
     /* Check for Reserved/Invalid Operation-Type Code */
     if (otc != 1)
@@ -2501,18 +2498,17 @@ DEF_INST( perform_floating_point_operation )
     /* If not Invalid Operation, update registers with the results */
     if (!(fpc & FPC_DXC_I))
     {
-        regs->fpr[ i0 + 0 ] = tabout[0];            // (short/long/extended)
-
-        if (numout == 1)                            // (short?)
-            regs->fpr[ i0 + 1 ] = 0;                // (short)
+        if (numout == 1)                                                       // (short?)
+        {
+            regs->FPR_L( i0 ) = 0;                                             // (short)
+            memcpy(&regs->FPR_S( i0 ), &tabout[0], sizeof(regs->FPR_S(0)));    // (short)
+        }
         else
         {
-            regs->fpr[ i0 + 1 ] = tabout[1];        // (long/extended)
-
-            if (numout > 2)                         // (extended?)
+            memcpy(&regs->FPR_L( i0 ), &tabout[0], sizeof(regs->FPR_L(0)));    // (long/extended)
+            if (numout > 2)                                                    // (extended?)
             {
-                regs->fpr[ i2 + 0 ] = tabout[2];    // (extended)
-                regs->fpr[ i2 + 1 ] = tabout[3];    // (extended)
+                memcpy(&regs->FPR_L( i2 ), &tabout[2], sizeof(regs->FPR_L(0)));  // (extended)
             }
         }
     }
