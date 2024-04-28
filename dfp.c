@@ -53,7 +53,7 @@ int     r1, r2;                         /* Values of R fields        */
     HFPREG2_CHECK(r1, r2, regs);
 
     /* Copy register contents, clear the sign bit */
-    regs->FPR_L(r1) = regs->FPR_L(r2) & 0x7FFFFFFFFFFFFFFFLL;
+    regs->FPR_L(r1) = regs->FPR_L(r2) & 0x7FFFFFFFFFFFFFFFULL;
 
 } /* end DEF_INST(load_positive_fpr_long_reg) */
 
@@ -71,7 +71,7 @@ int     r1, r2;                         /* Values of R fields        */
     HFPREG2_CHECK(r1, r2, regs);
 
     /* Copy register contents, set the sign bit */
-    regs->FPR_L(r1) = regs->FPR_L(r2) | 0x8000000000000000LL;
+    regs->FPR_L(r1) = regs->FPR_L(r2) | 0x8000000000000000ULL;
 
 } /* end DEF_INST(load_negative_fpr_long_reg) */
 
@@ -91,13 +91,13 @@ U64     sign;                           /* Work area for sign bit    */
     HFPREG_CHECK(r3, regs);
 
     /* Copy the sign bit from r3 register */
-    sign = regs->FPR_L(r3) & 0x8000000000000000LL;
+    sign = regs->FPR_L(r3) & 0x8000000000000000ULL;
 
     /* Copy r2 register contents to r1 register */
     regs->FPR_L(r1) = regs->FPR_L(r2);
 
     /* Insert the sign bit into r1 register */
-    regs->FPR_L(r1) &= 0x7FFFFFFFFFFFFFFFLL;
+    regs->FPR_L(r1) &= 0x7FFFFFFFFFFFFFFFULL;
     regs->FPR_L(r1) |= sign;
 
 } /* end DEF_INST(copy_sign_fpr_long_reg) */
@@ -116,7 +116,7 @@ int     r1, r2;                         /* Values of R fields        */
     HFPREG2_CHECK(r1, r2, regs);
 
     /* Copy register contents, invert sign bit */
-    regs->FPR_L(r1) = regs->FPR_L(r2) ^ 0x8000000000000000LL;
+    regs->FPR_L(r1) = regs->FPR_L(r2) ^ 0x8000000000000000ULL;
 
 } /* end DEF_INST(load_complement_fpr_long_reg) */
 #endif /* defined( FEATURE_041_FPS_SIGN_HANDLING_FACILITY ) */
