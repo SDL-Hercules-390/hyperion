@@ -2073,48 +2073,48 @@ do {                                                                  \
 /*               (end floating-point helper macros)                  */
 /*-------------------------------------------------------------------*/
 
-/*-------------------------------------------------------------------*/
-/*        Special FPR2I/FPREX handling for HERC_370_EXTENSION        */
-/*-------------------------------------------------------------------*/
-#undef FPR2I
-#undef FPREX
-#if defined( FEATURE_BASIC_FP_EXTENSIONS )
-
-  // 390 or zArch -OR- 370 with the "FEATURE_370_EXTENSION" BUILD
-  // option #defined, which causes the "FEATURE_BASIC_FP_EXTENSIONS"
-  // BUILD to necessarily ALSO be #defined, forcing us to check if
-  // the "HERC_370_EXTENSION" facility is enabled or not.
-  //
-  // PLEASE NOTE that enabling the "HERC_370_EXTENSION" facility
-  // causes nonconformant/incorrect S/370 floating point behavior!
-
-  #define FPR2I(_r)     /* Convert fpr to index */                    \
-  ((0                                                                 \
-      || ARCH_370_IDX != sysblk.arch_mode                             \
-      || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
-  )                                                                   \
-  ? ((_r) << 1) : (_r))
-
-  #define FPREX         /* Offset of extended register */             \
-  ((0                                                                 \
-      || ARCH_370_IDX != sysblk.arch_mode                             \
-      || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
-  )                                                                   \
-  ? 4 : 2 )
-
-#else // !defined( FEATURE_BASIC_FP_EXTENSIONS )
-
-  // S/370 without the "FEATURE_370_EXTENSION" BUILD option defined,
-  // which causes the "FEATURE_BASIC_FP_EXTENSIONS" BUILD option to
-  // NOT be #defined, which provides normal S/370 behavior.
-
-  #define FPR2I(_r)     (_r)        /* Convert fpr to index */
-  #define FPREX           2         /* Offset of extended register */
-
-#endif // defined( FEATURE_BASIC_FP_EXTENSIONS)
-/*-------------------------------------------------------------------*/
-/*     (end special fpr2i/fprex handling for herc_370_extension)     */
-/*-------------------------------------------------------------------*/
+//  /*-------------------------------------------------------------------*/
+//  /*        Special FPR2I/FPREX handling for HERC_370_EXTENSION        */
+//  /*-------------------------------------------------------------------*/
+//  #undef FPR2I
+//  #undef FPREX
+//  #if defined( FEATURE_BASIC_FP_EXTENSIONS )
+//
+//    // 390 or zArch -OR- 370 with the "FEATURE_370_EXTENSION" BUILD
+//    // option #defined, which causes the "FEATURE_BASIC_FP_EXTENSIONS"
+//    // BUILD to necessarily ALSO be #defined, forcing us to check if
+//    // the "HERC_370_EXTENSION" facility is enabled or not.
+//    //
+//    // PLEASE NOTE that enabling the "HERC_370_EXTENSION" facility
+//    // causes nonconformant/incorrect S/370 floating point behavior!
+//
+//    #define FPR2I(_r)     /* Convert fpr to index */                    \
+//    ((0                                                                 \
+//        || ARCH_370_IDX != sysblk.arch_mode                             \
+//        || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
+//    )                                                                   \
+//    ? ((_r) << 1) : (_r))
+//
+//    #define FPREX         /* Offset of extended register */             \
+//    ((0                                                                 \
+//        || ARCH_370_IDX != sysblk.arch_mode                             \
+//        || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
+//    )                                                                   \
+//    ? 4 : 2 )
+//
+//  #else // !defined( FEATURE_BASIC_FP_EXTENSIONS )
+//
+//    // S/370 without the "FEATURE_370_EXTENSION" BUILD option defined,
+//    // which causes the "FEATURE_BASIC_FP_EXTENSIONS" BUILD option to
+//    // NOT be #defined, which provides normal S/370 behavior.
+//
+//    #define FPR2I(_r)     (_r)        /* Convert fpr to index */
+//    #define FPREX           2         /* Offset of extended register */
+//
+//  #endif // defined( FEATURE_BASIC_FP_EXTENSIONS)
+//  /*-------------------------------------------------------------------*/
+//  /*     (end special fpr2i/fprex handling for herc_370_extension)     */
+//  /*-------------------------------------------------------------------*/
 
 
 
@@ -2147,29 +2147,30 @@ do {                                                                  \
     /* Debug end of vector instruction execution                     */
 #define ZVECTOR_END(_regs) \
         if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
-            ARCH_DEP(display_inst) (_regs, inst); 
-/*-------------------------------------------------------------------*/
-/* TODO: As the internal memory for the FPR and VR registers overlap,*/
-/* for the first 64 bits of the first 16 VR registers.               */
-/* While vfp & fpr are not shared, we must to refrsh thier values    */
-/*-------------------------------------------------------------------*/
-#define REFRESH_READ_VR(_vr)                                          \
-    do {                                                              \
-        if ((_vr) < 16)                                               \
-        {                                                             \
-            regs->VR_F((_vr),0) = regs->fpr[FPR2I((_vr))];            \
-            regs->VR_F((_vr),1) = regs->fpr[FPR2I((_vr))+1];          \
-        }                                                             \
-    } while(0)
+            ARCH_DEP(display_inst) (_regs, inst);
 
-#define REFRESH_UPDATE_VR(_vr)                                        \
-    do {                                                              \
-        if ((_vr) < 16)                                               \
-        {                                                             \
-            regs->fpr[FPR2I((_vr))  ] = regs->VR_F((_vr),0);          \
-            regs->fpr[FPR2I((_vr))+1] = regs->VR_F((_vr),1);          \
-        }                                                             \
-    } while(0)
+//  /*-------------------------------------------------------------------*/
+//  /* TODO: As the internal memory for the FPR and VR registers overlap,*/
+//  /* for the first 64 bits of the first 16 VR registers.               */
+//  /* While vfp & fpr are not shared, we must to refrsh thier values    */
+//  /*-------------------------------------------------------------------*/
+//  #define REFRESH_READ_VR(_vr)                                          \
+//      do {                                                              \
+//          if ((_vr) < 16)                                               \
+//          {                                                             \
+//              regs->VR_F((_vr),0) = regs->fpr[FPR2I((_vr))];            \
+//              regs->VR_F((_vr),1) = regs->fpr[FPR2I((_vr))+1];          \
+//          }                                                             \
+//      } while(0)
+//
+//  #define REFRESH_UPDATE_VR(_vr)                                        \
+//      do {                                                              \
+//          if ((_vr) < 16)                                               \
+//          {                                                             \
+//              regs->fpr[FPR2I((_vr))  ] = regs->VR_F((_vr),0);          \
+//              regs->fpr[FPR2I((_vr))+1] = regs->VR_F((_vr),1);          \
+//          }                                                             \
+//      } while(0)
 
 #endif /*defined( _FEATURE_129_ZVECTOR_FACILITY )*/
 

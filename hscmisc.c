@@ -1972,8 +1972,6 @@ int display_vregs( REGS* regs, char* buf, int buflen, char* hdr )
         MSGBUF( cpustr, "%s", hdr );
 
     for (i = 0; i < 32; i += 2) {
-        REFRESH_READ_VR(i  );
-        REFRESH_READ_VR(i+1);
         bufl += idx_snprintf(bufl, buf, buflen,
             "%sVR%02d=%016" PRIx64 ".%016" PRIx64" VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
             cpustr,

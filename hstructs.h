@@ -186,7 +186,6 @@ struct REGS {                           /* Processor registers       */
         DW      gr[16];                 /* General registers         */
         U32     ar[16];                 /* Access registers          */
         QW      vfp[32];                /* zVector/FP registers      */
-        U32     fpr[32];                /* FP registers              */
         U32     fpc;                    /* FP Control register       */
 
 #define GR_G(_r)     gr[(_r)].D

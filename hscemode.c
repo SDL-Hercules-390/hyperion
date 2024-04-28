@@ -2680,7 +2680,6 @@ int vr_cmd( int argc, char* argv[], char* cmdline )
             }
 
             regs->VR_Q( reg_num ) = rec.VR_Q(0);
-            REFRESH_UPDATE_VR( reg_num );
         }
 
         display_vregs( regs, buf, sizeof( buf ), "HHC02266I " );
