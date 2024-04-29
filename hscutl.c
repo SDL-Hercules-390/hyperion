@@ -3818,7 +3818,7 @@ DLL_EXPORT bool tf_2270( REGS* regs )
     TF02270 rec;
     int  i;
     for (i=0; i < 16; ++i)
-        rec.fpr[i] = regs->FPR_L(i);
+        memcpy( &rec.fpr[i], &regs->FPR_L(i), sizeof( rec.fpr[0] ));
     rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
     return tf_write( regs, &rec, sizeof( TF02270 ), 2270 );
 }
@@ -4766,7 +4766,7 @@ DLL_EXPORT void tf_swap_rec( TFHDR* hdr, U16 msgnum )
             TF02270* rec = (TF02270*) hdr;
             int  i;
             for (i=0; i < 16; ++i)
-                rec->fpr[i]   = SWAP64( rec->fpr[i] );
+                rec->fpr[i].D  = SWAP64( rec->fpr[i].D );
         }
         break;
 

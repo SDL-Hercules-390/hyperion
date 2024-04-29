@@ -1368,7 +1368,7 @@ CASSERT( sizeof( TF02269 ) % 8 == 0, hscutl_h );
 struct TF02270
 {
     TFHDR   rhdr;           // Record Header
-    U64     fpr[16];        // FP registers
+    DW      fpr[16];        // FP registers
     BYTE    afp;            // CR0 AFP enabled
     BYTE    pad [ 7 ];      // (padding/alignment/unused)
 }

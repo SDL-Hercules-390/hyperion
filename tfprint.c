@@ -1367,32 +1367,68 @@ static inline void print_ar_regs( TF02272* rec )
 /*-------------------------------------------------------------------*/
 static inline void print_fpr_regs( TF02270* rec )
 {
-
-#define REG64FMT  "%16.16"PRIX64
-
     char tim [ 64 ]  = {0};     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
     char pfx [ 64 ]  = {0};     // "16:22:47.745999 HHC02269I CP00:"
 
-    int  i;                     // (work for iterating)
+
+    char buf [ 128 ] = {0};     // " R0=0000000000000000 ..."
+
+    int  i, r;                  // (work for iterating)
+    DW*  gr;                    // (so GR_G/GR_L macros work right)
+
+    gr = rec->fpr;              // (so GR_G/GR_L macros work right)
 
     FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
     MSGBUF( pfx, "%s HHC02270I %s:", &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ));
 
     if (rec->afp)
     {
-        for (i = 0; i < 16; i = i+2)
+        for (i=0, r=0; i < 4; r += 4, i++)
         {
-            FLOGMSG( stdout, "%s FP%02u="REG64FMT" FP%02u="REG64FMT"",
-                pfx, i, rec->FPR_L(i), i+1, rec->FPR_L(i+1) );
+            MSGBUF
+            (
+                buf,
+
+                "%s"
+
+                " F%1.1X=%16.16"PRIX64
+                " F%1.1X=%16.16"PRIX64
+                " F%1.1X=%16.16"PRIX64
+                " F%1.1X=%16.16"PRIX64,
+
+                pfx,
+
+                r+0, GR_G( r+0 ),
+                r+1, GR_G( r+1 ),
+                r+2, GR_G( r+2 ),
+                r+3, GR_G( r+3 )
+            );
+
+            FLOGMSG( stdout, "%s\n", buf );
         }
     }
     else
     {
-        FLOGMSG( stdout, "%s FPR0="REG64FMT" FPR2="REG64FMT"\n",
-            pfx, rec->FPR_L(0), rec->FPR_L(2) );
+        MSGBUF
+        (
+            buf,
 
-        FLOGMSG( stdout, "%s FPR4="REG64FMT" FPR6="REG64FMT"\n",
-            pfx, rec->FPR_L(4), rec->FPR_L(6) );
+            "%s"
+
+            " F%1.1X=%16.16"PRIX64
+            " F%1.1X=%16.16"PRIX64
+            " F%1.1X=%16.16"PRIX64
+            " F%1.1X=%16.16"PRIX64,
+
+            pfx,
+
+            0, GR_G( 0 ),
+            2, GR_G( 2 ),
+            4, GR_G( 4 ),
+            6, GR_G( 6 )
+        );
+
+        FLOGMSG( stdout, "%s\n", buf );
     }
 }
 
