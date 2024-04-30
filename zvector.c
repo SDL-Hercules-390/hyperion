@@ -31,7 +31,7 @@ DEF_INST(vector_load_element_8)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -48,7 +48,7 @@ DEF_INST(vector_load_element_16)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -65,7 +65,7 @@ DEF_INST(vector_load_element_64)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -82,7 +82,7 @@ DEF_INST(vector_load_element_32)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -99,7 +99,7 @@ DEF_INST(vector_load_logical_element_and_zero)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -116,7 +116,7 @@ DEF_INST(vector_load_and_replicate)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -133,7 +133,7 @@ DEF_INST(vector_load)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -150,7 +150,7 @@ DEF_INST(vector_load_to_block_boundary)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -167,7 +167,7 @@ DEF_INST(vector_store_element_8)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -184,7 +184,7 @@ DEF_INST(vector_store_element_16)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -201,7 +201,7 @@ DEF_INST(vector_store_element_64)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -218,7 +218,7 @@ DEF_INST(vector_store_element_32)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -235,7 +235,7 @@ DEF_INST(vector_store)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -250,7 +250,7 @@ DEF_INST(vector_gather_element_64)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -265,7 +265,7 @@ DEF_INST(vector_gather_element_32)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -280,7 +280,7 @@ DEF_INST(vector_scatter_element_64)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -295,7 +295,7 @@ DEF_INST(vector_scatter_element_32)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -312,7 +312,7 @@ DEF_INST(vector_load_gr_from_vr_element)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -329,7 +329,7 @@ DEF_INST(vector_load_vr_element_from_gr)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -346,7 +346,7 @@ DEF_INST(load_count_to_block_boundary)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -363,7 +363,7 @@ DEF_INST(vector_element_shift_left)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -380,7 +380,7 @@ DEF_INST(vector_element_rotate_left_logical)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -397,7 +397,7 @@ DEF_INST(vector_load_multiple)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -414,7 +414,7 @@ DEF_INST(vector_load_with_length)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -431,7 +431,7 @@ DEF_INST(vector_element_shift_right_logical)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -448,7 +448,7 @@ DEF_INST(vector_element_shift_right_arithmetic)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -465,7 +465,7 @@ DEF_INST(vector_store_multiple)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -482,7 +482,7 @@ DEF_INST(vector_store_with_length)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -497,7 +497,7 @@ DEF_INST(vector_load_element_immediate_8)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -512,7 +512,7 @@ DEF_INST(vector_load_element_immediate_16)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -527,7 +527,7 @@ DEF_INST(vector_load_element_immediate_64)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -542,7 +542,7 @@ DEF_INST(vector_load_element_immediate_32)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -557,7 +557,7 @@ DEF_INST(vector_generate_byte_mask)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -572,7 +572,7 @@ DEF_INST(vector_replicate_immediate)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -587,7 +587,7 @@ DEF_INST(vector_generate_mask)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -602,7 +602,7 @@ DEF_INST(vector_fp_test_data_class_immediate)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -617,7 +617,7 @@ DEF_INST(vector_replicate)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -632,7 +632,7 @@ DEF_INST(vector_population_count)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -647,7 +647,7 @@ DEF_INST(vector_count_trailing_zeros)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -662,7 +662,7 @@ DEF_INST(vector_count_leading_zeros)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -677,7 +677,7 @@ DEF_INST(vector_load_vector)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -692,7 +692,7 @@ DEF_INST(vector_isolate_string)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -707,7 +707,7 @@ DEF_INST(vector_sign_extend_to_doubleword)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -722,7 +722,7 @@ DEF_INST(vector_merge_low)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -737,7 +737,7 @@ DEF_INST(vector_merge_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -752,7 +752,7 @@ DEF_INST(vector_load_vr_from_grs_disjoint)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -767,7 +767,7 @@ DEF_INST(vector_sum_across_word)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -782,7 +782,7 @@ DEF_INST(vector_sum_across_doubleword)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -797,7 +797,7 @@ DEF_INST(vector_checksum)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -812,7 +812,7 @@ DEF_INST(vector_sum_across_quadword)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -827,7 +827,7 @@ DEF_INST(vector_and)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -842,7 +842,7 @@ DEF_INST(vector_and_with_complement)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -857,7 +857,7 @@ DEF_INST(vector_or)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -872,7 +872,7 @@ DEF_INST(vector_nor)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -887,7 +887,7 @@ DEF_INST(vector_exclusive_or)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -902,7 +902,7 @@ DEF_INST(vector_element_shift_left_vector)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -917,7 +917,7 @@ DEF_INST(vector_element_rotate_and_insert_under_mask)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -932,7 +932,7 @@ DEF_INST(vector_element_rotate_left_logical_vector)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -947,7 +947,7 @@ DEF_INST(vector_shift_left)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -962,7 +962,7 @@ DEF_INST(vector_shift_left_by_byte)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -977,7 +977,7 @@ DEF_INST(vector_shift_left_double_by_byte)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -992,7 +992,7 @@ DEF_INST(vector_element_shift_right_logical_vector)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1007,7 +1007,7 @@ DEF_INST(vector_element_shift_right_arithmetic_vector)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1022,7 +1022,7 @@ DEF_INST(vector_shift_right_logical)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1037,7 +1037,7 @@ DEF_INST(vector_shift_right_logical_by_byte)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1052,7 +1052,7 @@ DEF_INST(vector_shift_right_arithmetic)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1067,7 +1067,7 @@ DEF_INST(vector_shift_right_arithmetic_by_byte)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1082,7 +1082,7 @@ DEF_INST(vector_find_element_equal)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1097,7 +1097,7 @@ DEF_INST(vector_find_element_not_equal)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1112,7 +1112,7 @@ DEF_INST(vector_find_any_element_equal)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1127,7 +1127,7 @@ DEF_INST(vector_permute_doubleword_immediate)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1142,7 +1142,7 @@ DEF_INST(vector_string_range_compare)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1157,7 +1157,7 @@ DEF_INST(vector_permute)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1172,7 +1172,7 @@ DEF_INST(vector_select)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1187,7 +1187,7 @@ DEF_INST(vector_fp_multiply_and_subtract)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1202,7 +1202,7 @@ DEF_INST(vector_fp_multiply_and_add)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1217,7 +1217,7 @@ DEF_INST(vector_pack)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1232,7 +1232,7 @@ DEF_INST(vector_pack_logical_saturate)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1247,7 +1247,7 @@ DEF_INST(vector_pack_saturate)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1262,7 +1262,7 @@ DEF_INST(vector_multiply_logical_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1277,7 +1277,7 @@ DEF_INST(vector_multiply_low)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1292,7 +1292,7 @@ DEF_INST(vector_multiply_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1307,7 +1307,7 @@ DEF_INST(vector_multiply_logical_even)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1322,7 +1322,7 @@ DEF_INST(vector_multiply_logical_odd)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1337,7 +1337,7 @@ DEF_INST(vector_multiply_even)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1352,7 +1352,7 @@ DEF_INST(vector_multiply_odd)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1367,7 +1367,7 @@ DEF_INST(vector_multiply_and_add_logical_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1382,7 +1382,7 @@ DEF_INST(vector_multiply_and_add_low)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1397,7 +1397,7 @@ DEF_INST(vector_multiply_and_add_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1412,7 +1412,7 @@ DEF_INST(vector_multiply_and_add_logical_even)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1427,7 +1427,7 @@ DEF_INST(vector_multiply_and_add_logical_odd)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1442,7 +1442,7 @@ DEF_INST(vector_multiply_and_add_even)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1457,7 +1457,7 @@ DEF_INST(vector_multiply_and_add_odd)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1472,7 +1472,7 @@ DEF_INST(vector_galois_field_multiply_sum)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1487,7 +1487,7 @@ DEF_INST(vector_add_with_carry_compute_carry)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1502,7 +1502,7 @@ DEF_INST(vector_add_with_carry)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1517,7 +1517,7 @@ DEF_INST(vector_galois_field_multiply_sum_and_accumulate)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1532,7 +1532,7 @@ DEF_INST(vector_subtract_with_borrow_compute_borrow_indication)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1547,7 +1547,7 @@ DEF_INST(vector_subtract_with_borrow_indication)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1562,7 +1562,7 @@ DEF_INST(vector_fp_convert_to_logical_64_bit)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1577,7 +1577,7 @@ DEF_INST(vector_fp_convert_from_logical_64_bit)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1592,7 +1592,7 @@ DEF_INST(vector_fp_convert_to_fixed_64_bit)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1607,7 +1607,7 @@ DEF_INST(vector_fp_convert_from_fixed_64_bit)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1622,7 +1622,7 @@ DEF_INST(vector_fp_load_lengthened)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1637,7 +1637,7 @@ DEF_INST(vector_fp_load_rounded)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1652,7 +1652,7 @@ DEF_INST(vector_load_fp_integer)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1667,7 +1667,7 @@ DEF_INST(vector_fp_compare_and_signal_scalar)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1682,7 +1682,7 @@ DEF_INST(vector_fp_compare_scalar)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1697,7 +1697,7 @@ DEF_INST(vector_fp_perform_sign_operation)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1712,7 +1712,7 @@ DEF_INST(vector_fp_square_root)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1727,7 +1727,7 @@ DEF_INST(vector_unpack_logical_low)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1742,7 +1742,7 @@ DEF_INST(vector_unpack_logical_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1757,7 +1757,7 @@ DEF_INST(vector_unpack_low)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1772,7 +1772,7 @@ DEF_INST(vector_unpack_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1787,7 +1787,7 @@ DEF_INST(vector_test_under_mask)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1802,7 +1802,7 @@ DEF_INST(vector_element_compare_logical)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1817,7 +1817,7 @@ DEF_INST(vector_element_compare)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1832,7 +1832,7 @@ DEF_INST(vector_load_complement)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1847,7 +1847,7 @@ DEF_INST(vector_load_positive)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1862,7 +1862,7 @@ DEF_INST(vector_fp_subtract)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1877,7 +1877,7 @@ DEF_INST(vector_fp_add)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1892,7 +1892,7 @@ DEF_INST(vector_fp_divide)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1907,7 +1907,7 @@ DEF_INST(vector_fp_multiply)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1922,7 +1922,7 @@ DEF_INST(vector_fp_compare_equal)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1937,7 +1937,7 @@ DEF_INST(vector_fp_compare_high_or_equal)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1952,7 +1952,7 @@ DEF_INST(vector_fp_compare_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1967,7 +1967,7 @@ DEF_INST(vector_average_logical)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1982,7 +1982,7 @@ DEF_INST(vector_add_compute_carry)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -1997,7 +1997,7 @@ DEF_INST(vector_average)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2012,7 +2012,7 @@ DEF_INST(vector_add)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2027,7 +2027,7 @@ DEF_INST(vector_subtract_compute_borrow_indication)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2042,7 +2042,7 @@ DEF_INST(vector_subtract)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2057,7 +2057,7 @@ DEF_INST(vector_compare_equal)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2072,7 +2072,7 @@ DEF_INST(vector_compare_high_logical)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2087,7 +2087,7 @@ DEF_INST(vector_compare_high)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2102,7 +2102,7 @@ DEF_INST(vector_minimum_logical)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2117,7 +2117,7 @@ DEF_INST(vector_maximum_logical)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2132,7 +2132,7 @@ DEF_INST(vector_minimum)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
@@ -2147,7 +2147,7 @@ DEF_INST(vector_maximum)
     //
     // TODO: insert code here
     //
-    ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+    if (1) ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     //
     ZVECTOR_END(regs);
 }
