@@ -1152,14 +1152,6 @@ static void NP_update(REGS *regs)
                         NPregs64[i] = regs->CR_G(i);
                     }
                     break;
-                case 3:
-                    if (!NPregs_valid || NPregs64[i] != regs->FPR_L(i))
-                    {
-                        set_pos (REGS_LINE + i/2, 3 + (i%2)*19);
-                        draw_dw (regs->FPR_L(i));
-                        NPregs64[i] = regs->FPR_L(i);
-                    }
-                    break;
                 }
             }
         }
@@ -1222,6 +1214,14 @@ static void NP_update(REGS *regs)
                         set_pos (REGS_LINE + (i/4)*2, 3 + (i%4)*9);
                         draw_fw (regs->AR(i));
                         NPregs[i] = regs->AR(i);
+                    }
+                    break;
+                case 3:
+                    if (!NPregs_valid || NPregs[i] != regs->FPR_S(i))
+                    {
+                        set_pos (REGS_LINE + (i/4)*2, 3 + (i%4)*9);
+                        draw_fw (regs->FPR_S(i));
+                        NPregs[i] = regs->FPR_S(i);
                     }
                     break;
                 case 4:
