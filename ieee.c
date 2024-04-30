@@ -709,7 +709,7 @@ static INLINE BYTE ARCH_DEP( float32_signaling_compare )( float32_t op1, float32
 #undef PUT_FLOAT64_NOCC
 #undef PUT_FLOAT32_NOCC
 
-#define PUT_FLOAT128_NOCC( op1, r1, regs )  ARCH_DEP( get_float128 )( &op1, &regs->FPR_L( r1 ), &regs->FPR_L( r1+2 ))
+#define PUT_FLOAT128_NOCC( op1, r1, regs )  ARCH_DEP( put_float128 )( &op1, &regs->FPR_L( r1 ), &regs->FPR_L( r1+2 ));
 #define PUT_FLOAT64_NOCC(  op1, r1, regs )  ARCH_DEP( put_float64  )( &op1, &regs->FPR_L( r1 ))
 #define PUT_FLOAT32_NOCC(  op1, r1, regs )  ARCH_DEP( put_float32  )( &op1, &regs->FPR_S( r1 ))
 
@@ -3861,6 +3861,13 @@ DEF_INST( load_rounded_bfp_ext_to_short_reg )
     BFPREGPAIR2_CHECK( r1, r2, regs );
 
     GET_FLOAT128_OP( op2, r2, regs );
+//  {
+//  char xx[128];
+//  snprintf(xx, sizeof(xx), "%16.16llX  %16.16llX  %16.16llX_%16.16llX  %d %d  %d %d",
+//      regs->FPR_L(r2), regs->FPR_L(r2+2), op2.v[FLOAT128_HI], op2.v[FLOAT128_LO], r2, r2+2, r1, r2);
+//  // HHC01390 "%s" // DUMP               (debugging)
+//  WRMSG(HHC01390, "D", xx );
+//  }
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
     if (FACILITY_ENABLED( 037_FP_EXTENSION, regs ))
@@ -3888,6 +3895,12 @@ DEF_INST( load_rounded_bfp_ext_to_short_reg )
     IEEE_EXCEPTION_TRAP_XI( regs );
 
     PUT_FLOAT32_NOCC( op1, r1, regs );
+//  {
+//  char xx[128];
+//  snprintf(xx, sizeof(xx), "LEXBR > %d  %8.8X  %16.16llX  %d", r1, regs->FPR_S(r1), regs->FPR_L(r1), r1);
+//  // HHC01390 "%s" // DUMP               (debugging)
+//  WRMSG(HHC01390, "D", xx );
+//  }
 
     if (softfloat_exceptionFlags)
     {
@@ -3900,6 +3913,13 @@ DEF_INST( load_rounded_bfp_ext_to_short_reg )
                 SCALE_FACTOR_LOADR_UFLOW_EXTD );
 
             PUT_FLOAT128_NOCC( op2, r1, regs );
+//          {
+//          char xx[128];
+//          snprintf(xx, sizeof(xx), "LEXBR > %d/%d  Scaled  %16.16llX %16.16llX",
+//              r1, r1+2, regs->FPR_L(r1), regs->FPR_L(r1+2));
+//          // HHC01390 "%s" // DUMP               (debugging)
+//          WRMSG(HHC01390, "D", xx );
+//          }
         }
 
         IEEE_EXCEPTION_TRAP( regs, ieee_trap_conds,

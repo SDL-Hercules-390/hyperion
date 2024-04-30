@@ -1743,8 +1743,10 @@ ARCH_DEP(dfp_reg_to_decimal128) (int rn, decimal128 *xp, REGS *regs)
 QW      *qwp;                           /* Quadword pointer          */
 
     qwp = (QW*)xp;                      /* Convert to QW pointer     */
-    qwp->D.H.D = regs->FPR_L(rn);       /* Copy FPR bits 0-63        */
-    qwp->D.L.D = regs->FPR_L(rn+2);     /* Copy FPR bits 64-127      */
+    qwp->F.HH.F = regs->FPR_L(rn) >> 32;    /* Copy FPR bits 0-31    */
+    qwp->F.HL.F = regs->FPR_L(rn);          /* Copy FPR bits 32-63   */
+    qwp->F.LH.F = regs->FPR_L(rn+2) >> 32;  /* Copy FPR bits 64-95   */
+    qwp->F.LL.F = regs->FPR_L(rn+2);        /* Copy FPR bits 96-127  */
 
 } /* end function dfp_reg_to_decimal128 */
 
@@ -1762,8 +1764,10 @@ ARCH_DEP(dfp_reg_from_decimal128) (int rn, decimal128 *xp, REGS *regs)
 QW      *qwp;                           /* Quadword pointer          */
 
     qwp = (QW*)xp;                      /* Convert to QW pointer     */
-    qwp->D.H.D = regs->FPR_L(rn);       /* Copy FPR bits 0-63        */
-    qwp->D.L.D = regs->FPR_L(rn+2);     /* Copy FPR bits 64-127      */
+    regs->FPR_L(rn) = (U64)qwp->F.HH.F << 32 | qwp->F.HL.F;
+                                        /* Copy FPR bits 0-63        */
+    regs->FPR_L(rn+2) = (U64)qwp->F.LH.F << 32 | qwp->F.LL.F;
+                                        /* Copy FPR bits 64-127      */
 
 } /* end function dfp_reg_from_decimal128 */
 

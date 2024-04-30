@@ -2249,8 +2249,10 @@ DEF_INST( perform_floating_point_operation )
     fpc &= ~FPC_DXC;    // ... without DXC
 
     /* Retrieve source floating-point value to be converted */
-    memcpy(&ftab[0], &regs->FPR_L( i4 ), sizeof(regs->FPR_L(0)));
-    memcpy(&ftab[2], &regs->FPR_L( i6 ), sizeof(regs->FPR_L(0)));
+    ftab[0] = (unsigned int) (regs->FPR_L( i4 ) >> 32);
+    ftab[1] = (unsigned int) (regs->FPR_L( i4 ));
+    ftab[2] = (unsigned int) (regs->FPR_L( i6 ) >> 32);
+    ftab[3] = (unsigned int) (regs->FPR_L( i6 ));
 
     /* Check for Reserved/Invalid Operation-Type Code */
     if (otc != 1)
@@ -2498,17 +2500,17 @@ DEF_INST( perform_floating_point_operation )
     /* If not Invalid Operation, update registers with the results */
     if (!(fpc & FPC_DXC_I))
     {
-        if (numout == 1)                                                       // (short?)
+        if (numout == 1)                                                  // (short?)
         {
-            regs->FPR_L( i0 ) = 0;                                             // (short)
-            memcpy(&regs->FPR_S( i0 ), &tabout[0], sizeof(regs->FPR_S(0)));    // (short)
+            regs->FPR_L( i0 ) = 0;                                        // (short)
+            regs->FPR_S( i0 ) = tabout[0];                                // (short)
         }
         else
         {
-            memcpy(&regs->FPR_L( i0 ), &tabout[0], sizeof(regs->FPR_L(0)));    // (long/extended)
-            if (numout > 2)                                                    // (extended?)
+            regs->FPR_L( i0 ) = (U64)tabout[0] << 32 | tabout[1];         // (long/extended)
+            if (numout > 2)                                               // (extended?)
             {
-                memcpy(&regs->FPR_L( i2 ), &tabout[2], sizeof(regs->FPR_L(0)));  // (extended)
+                regs->FPR_L( i2 ) = (U64)tabout[2] << 32 | tabout[3];     // (long/extended)
             }
         }
     }
