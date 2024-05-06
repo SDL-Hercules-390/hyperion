@@ -2,7 +2,7 @@
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              (C) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
-/*              (C) and others 2011-2023                             */
+/*              (C) and others 2011-2024                             */
 /*              CE mode functions                                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -2504,9 +2504,7 @@ char buf[512];
             return 0;
         }
 
-        if (afp) reg_num <<= 1; /* (double) */
-        regs->fpr[reg_num]   = (U32) (reg_value >> 32);
-        regs->fpr[reg_num+1] = (U32) (reg_value & 0xFFFFFFFFULL);
+        regs->FPR_L(reg_num) = reg_value;
     }
 
     display_fregs( regs, buf, sizeof(buf), "HHC02270I " );
@@ -2622,7 +2620,76 @@ char buf[512];
 
     return 0;
 }
+/*-------------------------------------------------------------------*/
+/* vr command - display vector registers                             */
+/*-------------------------------------------------------------------*/
+int vr_cmd( int argc, char* argv[], char* cmdline )
+{
+    REGS* regs;
+    char  buf[ 1536 ];
 
+    UNREFERENCED( cmdline );
+
+    obtain_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+    {
+        if (!IS_CPU_ONLINE( sysblk.pcpu ))
+        {
+            release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+            // "Processor %s%02X: processor is not %s"
+            WRMSG( HHC00816, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online" );
+            return 0;
+        }
+
+        regs = sysblk.regs[ sysblk.pcpu ];
+
+        if (argc > 1)
+        {
+            struct REC
+            {
+                QW      vfp[1];        // Vector registers
+            }
+            rec;
+
+
+            int   reg_num;
+            BYTE  equal_sign, c;
+
+            if (argc > 2)
+            {
+                release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+                // "Invalid argument '%s'%s"
+                WRMSG( HHC02205, "E", argv[1], "" );
+                return 0;
+            }
+
+            if (0
+                || sscanf( argv[1], "%d%c%"SCNx64".%"SCNx64"%c",
+                    &reg_num, &equal_sign,
+                    &rec.VR_D(0, 0),
+                    &rec.VR_D(0, 1),
+                    &c) != 4
+                || reg_num < 0
+                || reg_num > 31
+                || '=' != equal_sign
+            )
+            {
+                release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+                // "Invalid argument '%s'%s"
+                WRMSG( HHC02205, "E", argv[1], "" );
+                return 0;
+            }
+
+            regs->VR_Q( reg_num ) = rec.VR_Q(0);
+        }
+
+        display_vregs( regs, buf, sizeof( buf ), "HHC02266I " );
+        WRMSG( HHC02266, "I", "Vector registers" );
+        LOGMSG( "%s", buf );
+    }
+    release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+
+    return 0;
+}
 
 /*-------------------------------------------------------------------*/
 /* i command - generate I/O attention interrupt for device           */

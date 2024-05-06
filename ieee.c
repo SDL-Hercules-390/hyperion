@@ -549,30 +549,26 @@ static INLINE void ARCH_DEP( BFP_RM_check )( REGS* regs, BYTE mask )
 #undef  BFPRM_CHECK
 #define BFPRM_CHECK( _mask, _regs )   ARCH_DEP( BFP_RM_check )((_regs),(_mask))
 
-static INLINE void ARCH_DEP( get_float128 )( float128_t *op, U32 *fpr )
+static INLINE void ARCH_DEP( get_float128 )( float128_t *op, U64 *fpr1, U64 *fpr2 )
 {
-                                                      /* high order bits in v[1], low order in v[0]  */
-    op->v[FLOAT128_HI] = ((U64)fpr[0]     << 32) | fpr[1];               /* *****  Possible endian concern  ******* */
-    op->v[FLOAT128_LO] = ((U64)fpr[FPREX] << 32) | fpr[FPREX+1];
+    op->v[FLOAT128_HI] = *fpr1;
+    op->v[FLOAT128_LO] = *fpr2;
 }
 
-static INLINE void ARCH_DEP( put_float128 )( float128_t *op, U32 *fpr )
+static INLINE void ARCH_DEP( put_float128 )( float128_t *op, U64 *fpr1, U64 *fpr2 )
 {
-    fpr[0]       = (U32) (op->v[FLOAT128_HI] >> 32);
-    fpr[1]       = (U32) (op->v[FLOAT128_HI] & 0xFFFFFFFF);
-    fpr[FPREX]   = (U32) (op->v[FLOAT128_LO] >> 32);
-    fpr[FPREX+1] = (U32) (op->v[FLOAT128_LO] & 0xFFFFFFFF);
+    *fpr1 = op->v[FLOAT128_HI];
+    *fpr2 = op->v[FLOAT128_LO];
 }
 
-static INLINE void ARCH_DEP( get_float64 )( float64_t *op, U32 *fpr )
+static INLINE void ARCH_DEP( get_float64 )( float64_t *op, U64 *fpr )
 {
-    op->v = ((U64)fpr[0] << 32) | fpr[1];
+    op->v = *fpr;
 }
 
-static INLINE void ARCH_DEP( put_float64 )( float64_t *op, U32 *fpr )
+static INLINE void ARCH_DEP( put_float64 )( float64_t *op, U64 *fpr )
 {
-    fpr[0] = (U32) (op->v >> 32);
-    fpr[1] = (U32) (op->v & 0xFFFFFFFF);
+    *fpr = op->v;
 }
 
 static INLINE void ARCH_DEP( get_float32 )( float32_t *op, U32 *fpr )
@@ -595,9 +591,9 @@ static INLINE void ARCH_DEP( put_float32 )( float32_t *op, U32 *fpr )
 #undef GET_FLOAT64_OP
 #undef GET_FLOAT32_OP
 
-#define GET_FLOAT128_OP( op, r, regs )  ARCH_DEP( get_float128 )( &op, regs->fpr + FPR2I( r ))
-#define GET_FLOAT64_OP(  op, r, regs )  ARCH_DEP( get_float64  )( &op, regs->fpr + FPR2I( r ))
-#define GET_FLOAT32_OP(  op, r, regs )  ARCH_DEP( get_float32  )( &op, regs->fpr + FPR2I( r ))
+#define GET_FLOAT128_OP( op, r, regs )  ARCH_DEP( get_float128 )( &op, &regs->FPR_L( r ), &regs->FPR_L( r+2 ))
+#define GET_FLOAT64_OP(  op, r, regs )  ARCH_DEP( get_float64  )( &op, &regs->FPR_L( r ))
+#define GET_FLOAT32_OP(  op, r, regs )  ARCH_DEP( get_float32  )( &op, &regs->FPR_S( r ))
 
 #undef GET_FLOAT128_OPS
 #undef GET_FLOAT64_OPS
@@ -713,26 +709,26 @@ static INLINE BYTE ARCH_DEP( float32_signaling_compare )( float32_t op1, float32
 #undef PUT_FLOAT64_NOCC
 #undef PUT_FLOAT32_NOCC
 
-#define PUT_FLOAT128_NOCC( op1, r1, regs )  ARCH_DEP( put_float128 )( &op1, regs->fpr + FPR2I( r1 ))
-#define PUT_FLOAT64_NOCC(  op1, r1, regs )  ARCH_DEP( put_float64  )( &op1, regs->fpr + FPR2I( r1 ))
-#define PUT_FLOAT32_NOCC(  op1, r1, regs )  ARCH_DEP( put_float32  )( &op1, regs->fpr + FPR2I( r1 ))
+#define PUT_FLOAT128_NOCC( op1, r1, regs )  ARCH_DEP( put_float128 )( &op1, &regs->FPR_L( r1 ), &regs->FPR_L( r1+2 ));
+#define PUT_FLOAT64_NOCC(  op1, r1, regs )  ARCH_DEP( put_float64  )( &op1, &regs->FPR_L( r1 ))
+#define PUT_FLOAT32_NOCC(  op1, r1, regs )  ARCH_DEP( put_float32  )( &op1, &regs->FPR_S( r1 ))
 
 #undef PUT_FLOAT128_CC
 #undef PUT_FLOAT64_CC
 #undef PUT_FLOAT32_CC
 
-#define PUT_FLOAT128_CC( op1, r1, regs )                            \
-                                                                    \
-    do {                                                            \
-        ARCH_DEP(  put_float128 )( &op1, regs->fpr + FPR2I( r1 ));  \
-        regs->psw.cc = FLOAT128_CC( op1 );                          \
+#define PUT_FLOAT128_CC( op1, r1, regs )                                            \
+                                                                                    \
+    do {                                                                            \
+        ARCH_DEP( put_float128 )( &op1, &regs->FPR_L( r1 ), &regs->FPR_L( r1+2 ));  \
+        regs->psw.cc = FLOAT128_CC( op1 );                                          \
     } while (0)
 
 
 #define PUT_FLOAT64_CC( op1, r1, regs )                             \
                                                                     \
     do {                                                            \
-        ARCH_DEP(  put_float64 )( &op1, regs->fpr + FPR2I (r1 ));   \
+        ARCH_DEP( put_float64 )( &op1, &regs->FPR_L( r1 ));         \
         regs->psw.cc = FLOAT64_CC( op1 );                           \
     } while (0)
 
@@ -740,7 +736,7 @@ static INLINE BYTE ARCH_DEP( float32_signaling_compare )( float32_t op1, float32
 #define PUT_FLOAT32_CC( op1, r1, regs )                             \
                                                                     \
     do {                                                            \
-        ARCH_DEP(  put_float32 )( &op1, regs->fpr + FPR2I( r1 ));   \
+        ARCH_DEP( put_float32 )( &op1, &regs->FPR_S( r1 ));         \
         regs->psw.cc = FLOAT32_CC( op1 );                           \
     } while (0)
 
@@ -811,11 +807,11 @@ static int sbfpclassify( struct sbfp* op )
 /*
  * Get/fetch binary float from registers/memory
  */
-static void get_lbfp( struct lbfp* op, U32* fpr )
+static void get_lbfp( struct lbfp* op, U64* fpr )
 {
-    op->sign  = (fpr[0] & 0x80000000) != 0;
-    op->exp   = (fpr[0] & 0x7FF00000) >> 20;
-    op->fract = (((U64)fpr[0] & 0x000FFFFF) << 32) | fpr[1];
+    op->sign  = (*fpr & 0x8000000000000000ULL) != 0;
+    op->exp   = (*fpr & 0x7FF0000000000000ULL) >> 52;
+    op->fract = *fpr & 0x000FFFFFFFFFFFFFULL;
 
     //logmsg("lget r=%8.8x%8.8x exp=%d fract=%"PRIx64"\n", fpr[0], fpr[1], op->exp, op->fract);
 }
@@ -832,17 +828,20 @@ static void get_sbfp( struct sbfp* op, U32* fpr )
 /*
  * Put binary float in registers
  */
-static void put_lbfp( struct lbfp* op, U32* fpr )
+static void put_lbfp( struct lbfp* op, U64* fpr )
 {
-    fpr[0] = (op->sign ? 1 << 31 : 0) | (op->exp << 20) | (op->fract >> 32);
-    fpr[1] = op->fract & 0xFFFFFFFF;
+    *fpr = (op->sign ? (U64)1 << 63 : 0)
+         | ((U64)op->exp << 52)
+         | (op->fract);
 
     //logmsg("lput exp=%d fract=%"PRIx64" r=%8.8x%8.8x\n", op->exp, op->fract, fpr[0], fpr[1]);
 }
 
 static void put_sbfp( struct sbfp* op, U32* fpr )
 {
-    fpr[0] = (op->sign ? 1 << 31 : 0) | (op->exp << 23) | op->fract;
+    *fpr = ((U32)op->sign ? 1 << 31 : 0)
+         | ((U32)op->exp << 23)
+         | (op->fract);
 
     //logmsg("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
 }
@@ -860,7 +859,7 @@ static void put_sbfp( struct sbfp* op, U32* fpr )
  * save result into long register and return condition code
  * Roger Bowler, 19 July 2003
  */
-static int cnvt_bfp_to_hfp( struct lbfp* op, int fpclass, U32* fpr )
+static int cnvt_bfp_to_hfp( struct lbfp* op, int fpclass, U64* fpr )
 {
     int exp;
     U64 fract;
@@ -944,8 +943,7 @@ static int cnvt_bfp_to_hfp( struct lbfp* op, int fpclass, U32* fpr )
     }
     /* Store high and low halves of result into fp register array
        and return condition code */
-    fpr[0] = r0;
-    fpr[1] = r1;
+    *fpr = ((U64)r0 << 32) | (U64)r1;
     return cc;
 } /* end function cnvt_bfp_to_hfp */
 
@@ -965,7 +963,7 @@ static int cnvt_bfp_to_hfp( struct lbfp* op, int fpclass, U32* fpr )
 
 static int cnvt_hfp_to_bfp
 (
-    U32*  fpr,
+    U64*  fpr,
     int   rounding,
     int   bfp_fractbits,
     int   bfp_emax,
@@ -983,9 +981,9 @@ static int cnvt_hfp_to_bfp
     U64    b;
 
     /* Break the source operand into sign, characteristic, fraction */
-    sign  =        fpr[0] >> 31;
-    expo  =       (fpr[0] >> 24) & 0x007F;
-    fract = ((U64)(fpr[0] & 0x00FFFFFF) << 32) | fpr[1];
+    sign  = *fpr >> 63;
+    expo  = (*fpr >> 56) & 0x007F;
+    fract = *fpr & 0x00FFFFFFFFFFFFFFULL;
 
     /* Determine whether to round up or down */
     switch (rounding)
@@ -1101,13 +1099,13 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
     HFPREG2_CHECK(r1, r2, regs);
 
     /* Load lbfp operand from R2 register */
-    get_lbfp(&op2, regs->fpr + FPR2I(r2));
+    get_lbfp(&op2, &regs->FPR_L(r2));
 
     /* Convert to hfp register and set condition code */
     regs->psw.cc =
         cnvt_bfp_to_hfp (&op2,
                          lbfpclassify(&op2),
-                         regs->fpr + FPR2I(r1));
+                         &regs->FPR_L(r1));
 
 } /* end DEF_INST(convert_bfp_long_to_float_long_reg) */
 
@@ -1127,7 +1125,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
     HFPREG2_CHECK(r1, r2, regs);
 
     /* Load sbfp operand from R2 register */
-    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+    get_sbfp(&op2, &regs->FPR_S(r2));
 
     /* Lengthen sbfp operand to lbfp */
     lbfp_op2.sign = op2.sign;
@@ -1138,7 +1136,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
     regs->psw.cc =
         cnvt_bfp_to_hfp (&lbfp_op2,
                          sbfpclassify(&op2),
-                         regs->fpr + FPR2I(r1));
+                         &regs->FPR_L(r1));
 
 } /* end DEF_INST(convert_bfp_short_to_float_long_reg) */
 
@@ -1157,11 +1155,11 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
     BFPRM_CHECK(m3,regs);
 
     regs->psw.cc =
-        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r2), m3,
+        cnvt_hfp_to_bfp (&regs->FPR_L(r2), m3,
             /*fractbits*/52, /*emax*/1023, /*ebias*/1023,
             &(op1.sign), &(op1.exp), &(op1.fract));
 
-    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+    put_lbfp(&op1, &regs->FPR_L(r1));
 
 } /* end DEF_INST(convert_float_long_to_bfp_long_reg) */
 
@@ -1181,12 +1179,12 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
     BFPRM_CHECK(m3,regs);
 
     regs->psw.cc =
-        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r2), m3,
+        cnvt_hfp_to_bfp (&regs->FPR_L(r2), m3,
             /*fractbits*/23, /*emax*/127, /*ebias*/127,
             &(op1.sign), &(op1.exp), &fract);
     op1.fract = (U32)fract;
 
-    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+    put_sbfp(&op1, &regs->FPR_S(r1));
 
 } /* end DEF_INST(convert_float_long_to_bfp_short_reg) */
 #endif /*defined(FEATURE_FPS_EXTENSIONS)*/
@@ -3863,6 +3861,13 @@ DEF_INST( load_rounded_bfp_ext_to_short_reg )
     BFPREGPAIR2_CHECK( r1, r2, regs );
 
     GET_FLOAT128_OP( op2, r2, regs );
+//  {
+//  char xx[128];
+//  snprintf(xx, sizeof(xx), "%16.16llX  %16.16llX  %16.16llX_%16.16llX  %d %d  %d %d",
+//      regs->FPR_L(r2), regs->FPR_L(r2+2), op2.v[FLOAT128_HI], op2.v[FLOAT128_LO], r2, r2+2, r1, r2);
+//  // HHC01390 "%s" // DUMP               (debugging)
+//  WRMSG(HHC01390, "D", xx );
+//  }
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
     if (FACILITY_ENABLED( 037_FP_EXTENSION, regs ))
@@ -3890,6 +3895,12 @@ DEF_INST( load_rounded_bfp_ext_to_short_reg )
     IEEE_EXCEPTION_TRAP_XI( regs );
 
     PUT_FLOAT32_NOCC( op1, r1, regs );
+//  {
+//  char xx[128];
+//  snprintf(xx, sizeof(xx), "LEXBR > %d  %8.8X  %16.16llX  %d", r1, regs->FPR_S(r1), regs->FPR_L(r1), r1);
+//  // HHC01390 "%s" // DUMP               (debugging)
+//  WRMSG(HHC01390, "D", xx );
+//  }
 
     if (softfloat_exceptionFlags)
     {
@@ -3902,6 +3913,13 @@ DEF_INST( load_rounded_bfp_ext_to_short_reg )
                 SCALE_FACTOR_LOADR_UFLOW_EXTD );
 
             PUT_FLOAT128_NOCC( op2, r1, regs );
+//          {
+//          char xx[128];
+//          snprintf(xx, sizeof(xx), "LEXBR > %d/%d  Scaled  %16.16llX %16.16llX",
+//              r1, r1+2, regs->FPR_L(r1), regs->FPR_L(r1+2));
+//          // HHC01390 "%s" // DUMP               (debugging)
+//          WRMSG(HHC01390, "D", xx );
+//          }
         }
 
         IEEE_EXCEPTION_TRAP( regs, ieee_trap_conds,

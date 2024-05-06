@@ -1,6 +1,6 @@
 /* HSCMISC.C    (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
-/*              (C) and others 2013-2023                             */
+/*              (C) and others 2013-2024                             */
 /*              Miscellaneous System Command Routines                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -889,7 +889,7 @@ bool    trace2file;
 char    psw_inst_msg[160]   = {0};
 char    op1_stor_msg[128]   = {0};
 char    op2_stor_msg[128]   = {0};
-char    regs_msg_buf[4*512] = {0};
+char    regs_msg_buf[8*512] = {0};
 
     PTT_PGM( "dinst", inst, 0, pgmint );
 
@@ -1265,6 +1265,8 @@ int ARCH_DEP( display_fregs )( REGS* regs, char* buf, int buflen, char* hdr )
 {
 char cpustr[32] = "";
 
+#define REG64FMT  "%16.16"PRIX64
+
     if (sysblk.cpus>1)
         MSGBUF( cpustr, "%s%s%02X: ", hdr, PTYPSTR( regs->cpuad ), regs->cpuad );
     else
@@ -1274,38 +1276,38 @@ char cpustr[32] = "";
     {
         return snprintf( buf, buflen,
 
-            "%sFP00=%8.8X%8.8X FP08=%8.8X%8.8X\n"
-            "%sFP01=%8.8X%8.8X FP09=%8.8X%8.8X\n"
-            "%sFP02=%8.8X%8.8X FP10=%8.8X%8.8X\n"
-            "%sFP03=%8.8X%8.8X FP11=%8.8X%8.8X\n"
-            "%sFP04=%8.8X%8.8X FP12=%8.8X%8.8X\n"
-            "%sFP05=%8.8X%8.8X FP13=%8.8X%8.8X\n"
-            "%sFP06=%8.8X%8.8X FP14=%8.8X%8.8X\n"
-            "%sFP07=%8.8X%8.8X FP15=%8.8X%8.8X\n"
+            "%sFP00="REG64FMT" FP01="REG64FMT"\n"
+            "%sFP02="REG64FMT" FP03="REG64FMT"\n"
+            "%sFP04="REG64FMT" FP05="REG64FMT"\n"
+            "%sFP06="REG64FMT" FP07="REG64FMT"\n"
+            "%sFP08="REG64FMT" FP09="REG64FMT"\n"
+            "%sFP10="REG64FMT" FP11="REG64FMT"\n"
+            "%sFP12="REG64FMT" FP13="REG64FMT"\n"
+            "%sFP14="REG64FMT" FP15="REG64FMT"\n"
 
-            ,cpustr, regs->fpr[FPR2I(0)], regs->fpr[FPR2I(0)+1], regs->fpr[FPR2I( 8)], regs->fpr[FPR2I( 8)+1]
-            ,cpustr, regs->fpr[FPR2I(1)], regs->fpr[FPR2I(1)+1], regs->fpr[FPR2I( 9)], regs->fpr[FPR2I( 9)+1]
-            ,cpustr, regs->fpr[FPR2I(2)], regs->fpr[FPR2I(2)+1], regs->fpr[FPR2I(10)], regs->fpr[FPR2I(10)+1]
-            ,cpustr, regs->fpr[FPR2I(3)], regs->fpr[FPR2I(3)+1], regs->fpr[FPR2I(11)], regs->fpr[FPR2I(11)+1]
-            ,cpustr, regs->fpr[FPR2I(4)], regs->fpr[FPR2I(4)+1], regs->fpr[FPR2I(12)], regs->fpr[FPR2I(12)+1]
-            ,cpustr, regs->fpr[FPR2I(5)], regs->fpr[FPR2I(5)+1], regs->fpr[FPR2I(13)], regs->fpr[FPR2I(13)+1]
-            ,cpustr, regs->fpr[FPR2I(6)], regs->fpr[FPR2I(6)+1], regs->fpr[FPR2I(14)], regs->fpr[FPR2I(14)+1]
-            ,cpustr, regs->fpr[FPR2I(7)], regs->fpr[FPR2I(7)+1], regs->fpr[FPR2I(15)], regs->fpr[FPR2I(15)+1]
+            ,cpustr, regs->FPR_L(0),  regs->FPR_L(1)
+            ,cpustr, regs->FPR_L(2),  regs->FPR_L(3)
+            ,cpustr, regs->FPR_L(4),  regs->FPR_L(5)
+            ,cpustr, regs->FPR_L(6),  regs->FPR_L(7)
+            ,cpustr, regs->FPR_L(8),  regs->FPR_L(9)
+            ,cpustr, regs->FPR_L(10), regs->FPR_L(11)
+            ,cpustr, regs->FPR_L(12), regs->FPR_L(13)
+            ,cpustr, regs->FPR_L(14), regs->FPR_L(15)
         );
     }
     else
     {
         return snprintf( buf, buflen,
 
-            "%sFP00=%8.8X%8.8X\n"
-            "%sFP02=%8.8X%8.8X\n"
-            "%sFP04=%8.8X%8.8X\n"
-            "%sFP06=%8.8X%8.8X\n"
+            "%sFP00="REG64FMT"\n"
+            "%sFP02="REG64FMT"\n"
+            "%sFP04="REG64FMT"\n"
+            "%sFP06="REG64FMT"\n"
 
-            ,cpustr, regs->fpr[FPR2I(0)], regs->fpr[FPR2I(0)+1]
-            ,cpustr, regs->fpr[FPR2I(2)], regs->fpr[FPR2I(2)+1]
-            ,cpustr, regs->fpr[FPR2I(4)], regs->fpr[FPR2I(4)+1]
-            ,cpustr, regs->fpr[FPR2I(6)], regs->fpr[FPR2I(6)+1]
+            ,cpustr, regs->FPR_L(0)
+            ,cpustr, regs->FPR_L(2)
+            ,cpustr, regs->FPR_L(4)
+            ,cpustr, regs->FPR_L(6)
         );
     }
 
@@ -1828,6 +1830,15 @@ int display_inst_regs( bool trace2file, REGS *regs, BYTE *inst, BYTE opcode, cha
             len += display_fregs (regs, buf + len, buflen - len - 1, "HHC02270I ");
     }
 
+    /* Display vector registers if appropriate */
+    if (opcode == 0xE7)
+    {
+        if (trace2file)
+            tf_2266( regs );
+        else
+            len += display_vregs( regs, buf + len, buflen - len - 1, "HHC02266I ");
+    }
+
     if (len && sysblk.showregsfirst)
         len += idx_snprintf( len, buf, buflen, "\n" );
 
@@ -1947,7 +1958,31 @@ int display_fregs( REGS* regs, char* buf, int buflen, char* hdr )
     return rc;
 }
 
+/*-------------------------------------------------------------------*/
+/*               Display vector registers                            */
+/*-------------------------------------------------------------------*/
+int display_vregs( REGS* regs, char* buf, int buflen, char* hdr )
+{
+    char cpustr[32] = "";
+    int i, bufl = 0;
 
+    if (sysblk.cpus > 1)
+        MSGBUF( cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad );
+    else
+        MSGBUF( cpustr, "%s", hdr );
+
+    for (i = 0; i < 32; i += 2) {
+        bufl += idx_snprintf(bufl, buf, buflen,
+            "%sVR%02d=%016" PRIx64 ".%016" PRIx64" VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
+            cpustr,
+            i,   regs->VR_D( i,   0),
+                 regs->VR_D( i,   1),
+            i+1, regs->VR_D( i+1, 0),
+                 regs->VR_D( i+1, 1)
+            );
+    }
+    return bufl;
+}
 /*-------------------------------------------------------------------*/
 /*                     Display subchannel                            */
 /*-------------------------------------------------------------------*/
@@ -2322,7 +2357,7 @@ DLL_EXPORT REGS* copy_regs( REGS* regs )
 
     size = (SIE_MODE( regs ) || SIE_ACTIVE( regs )) ? 2 * sizeof( REGS )
                                                     :     sizeof( REGS );
-    if (!(newregs = malloc_aligned( size, 4096 )))
+    if (!(newregs = (REGS*) malloc_aligned( size, 4096 )))
     {
         char buf[64];
         MSGBUF( buf, "malloc(%d)", (int)size );
@@ -3196,7 +3231,7 @@ int herc_system (char* command)
   #define  SHELL_CMD_SHIM_PGM   "conspawn "
 
     int rc = (int)(strlen(SHELL_CMD_SHIM_PGM) + strlen(command) + 1);
-    char* pszNewCommandLine = malloc( rc );
+    char* pszNewCommandLine = (char*) malloc( rc );
     strlcpy( pszNewCommandLine, SHELL_CMD_SHIM_PGM, rc );
     strlcat( pszNewCommandLine, command,            rc );
     rc = w32_poor_mans_fork( pszNewCommandLine, NULL );

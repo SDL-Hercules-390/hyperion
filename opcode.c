@@ -674,6 +674,149 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST(convert_dfp_ext_to_packed)
 #endif
 
+#if !defined( FEATURE_129_ZVECTOR_FACILITY )
+     UNDEF_INST(vector_load_element_8)
+     UNDEF_INST(vector_load_element_16)
+     UNDEF_INST(vector_load_element_64)
+     UNDEF_INST(vector_load_element_32)
+     UNDEF_INST(vector_load_logical_element_and_zero)
+     UNDEF_INST(vector_load_and_replicate)
+     UNDEF_INST(vector_load)
+     UNDEF_INST(vector_load_to_block_boundary)
+     UNDEF_INST(vector_store_element_8)
+     UNDEF_INST(vector_store_element_16)
+     UNDEF_INST(vector_store_element_64)
+     UNDEF_INST(vector_store_element_32)
+     UNDEF_INST(vector_store)
+     UNDEF_INST(vector_gather_element_64)
+     UNDEF_INST(vector_gather_element_32)
+     UNDEF_INST(vector_scatter_element_64)
+     UNDEF_INST(vector_scatter_element_32)
+     UNDEF_INST(vector_load_gr_from_vr_element)
+     UNDEF_INST(vector_load_vr_element_from_gr)
+     UNDEF_INST(load_count_to_block_boundary)
+     UNDEF_INST(vector_element_shift_left)
+     UNDEF_INST(vector_element_rotate_left_logical)
+     UNDEF_INST(vector_load_multiple)
+     UNDEF_INST(vector_load_with_length)
+     UNDEF_INST(vector_element_shift_right_logical)
+     UNDEF_INST(vector_element_shift_right_arithmetic)
+     UNDEF_INST(vector_store_multiple)
+     UNDEF_INST(vector_store_with_length)
+     UNDEF_INST(vector_load_element_immediate_8)
+     UNDEF_INST(vector_load_element_immediate_16)
+     UNDEF_INST(vector_load_element_immediate_64)
+     UNDEF_INST(vector_load_element_immediate_32)
+     UNDEF_INST(vector_generate_byte_mask)
+     UNDEF_INST(vector_replicate_immediate)
+     UNDEF_INST(vector_generate_mask)
+     UNDEF_INST(vector_fp_test_data_class_immediate)
+     UNDEF_INST(vector_replicate)
+     UNDEF_INST(vector_population_count)
+     UNDEF_INST(vector_count_trailing_zeros)
+     UNDEF_INST(vector_count_leading_zeros)
+     UNDEF_INST(vector_load_vector)
+     UNDEF_INST(vector_isolate_string)
+     UNDEF_INST(vector_sign_extend_to_doubleword)
+     UNDEF_INST(vector_merge_low)
+     UNDEF_INST(vector_merge_high)
+     UNDEF_INST(vector_load_vr_from_grs_disjoint)
+     UNDEF_INST(vector_sum_across_word)
+     UNDEF_INST(vector_sum_across_doubleword)
+     UNDEF_INST(vector_checksum)
+     UNDEF_INST(vector_sum_across_quadword)
+     UNDEF_INST(vector_and)
+     UNDEF_INST(vector_and_with_complement)
+     UNDEF_INST(vector_or)
+     UNDEF_INST(vector_nor)
+     UNDEF_INST(vector_exclusive_or)
+     UNDEF_INST(vector_element_shift_left_vector)
+     UNDEF_INST(vector_element_rotate_and_insert_under_mask)
+     UNDEF_INST(vector_element_rotate_left_logical_vector)
+     UNDEF_INST(vector_shift_left)
+     UNDEF_INST(vector_shift_left_by_byte)
+     UNDEF_INST(vector_shift_left_double_by_byte)
+     UNDEF_INST(vector_element_shift_right_logical_vector)
+     UNDEF_INST(vector_element_shift_right_arithmetic_vector)
+     UNDEF_INST(vector_shift_right_logical)
+     UNDEF_INST(vector_shift_right_logical_by_byte)
+     UNDEF_INST(vector_shift_right_arithmetic)
+     UNDEF_INST(vector_shift_right_arithmetic_by_byte)
+     UNDEF_INST(vector_find_element_equal)
+     UNDEF_INST(vector_find_element_not_equal)
+     UNDEF_INST(vector_find_any_element_equal)
+     UNDEF_INST(vector_permute_doubleword_immediate)
+     UNDEF_INST(vector_string_range_compare)
+     UNDEF_INST(vector_permute)
+     UNDEF_INST(vector_select)
+     UNDEF_INST(vector_fp_multiply_and_subtract)
+     UNDEF_INST(vector_fp_multiply_and_add)
+     UNDEF_INST(vector_pack)
+     UNDEF_INST(vector_pack_logical_saturate)
+     UNDEF_INST(vector_pack_saturate)
+     UNDEF_INST(vector_multiply_logical_high)
+     UNDEF_INST(vector_multiply_low)
+     UNDEF_INST(vector_multiply_high)
+     UNDEF_INST(vector_multiply_logical_even)
+     UNDEF_INST(vector_multiply_logical_odd)
+     UNDEF_INST(vector_multiply_even)
+     UNDEF_INST(vector_multiply_odd)
+     UNDEF_INST(vector_multiply_and_add_logical_high)
+     UNDEF_INST(vector_multiply_and_add_low)
+     UNDEF_INST(vector_multiply_and_add_high)
+     UNDEF_INST(vector_multiply_and_add_logical_even)
+     UNDEF_INST(vector_multiply_and_add_logical_odd)
+     UNDEF_INST(vector_multiply_and_add_even)
+     UNDEF_INST(vector_multiply_and_add_odd)
+     UNDEF_INST(vector_galois_field_multiply_sum)
+     UNDEF_INST(vector_add_with_carry_compute_carry)
+     UNDEF_INST(vector_add_with_carry)
+     UNDEF_INST(vector_galois_field_multiply_sum_and_accumulate)
+     UNDEF_INST(vector_subtract_with_borrow_compute_borrow_indication)
+     UNDEF_INST(vector_subtract_with_borrow_indication)
+     UNDEF_INST(vector_fp_convert_to_logical_64_bit)
+     UNDEF_INST(vector_fp_convert_from_logical_64_bit)
+     UNDEF_INST(vector_fp_convert_to_fixed_64_bit)
+     UNDEF_INST(vector_fp_convert_from_fixed_64_bit)
+     UNDEF_INST(vector_fp_load_lengthened)
+     UNDEF_INST(vector_fp_load_rounded)
+     UNDEF_INST(vector_load_fp_integer)
+     UNDEF_INST(vector_fp_compare_and_signal_scalar)
+     UNDEF_INST(vector_fp_compare_scalar)
+     UNDEF_INST(vector_fp_perform_sign_operation)
+     UNDEF_INST(vector_fp_square_root)
+     UNDEF_INST(vector_unpack_logical_low)
+     UNDEF_INST(vector_unpack_logical_high)
+     UNDEF_INST(vector_unpack_low)
+     UNDEF_INST(vector_unpack_high)
+     UNDEF_INST(vector_test_under_mask)
+     UNDEF_INST(vector_element_compare_logical)
+     UNDEF_INST(vector_element_compare)
+     UNDEF_INST(vector_load_complement)
+     UNDEF_INST(vector_load_positive)
+     UNDEF_INST(vector_fp_subtract)
+     UNDEF_INST(vector_fp_add)
+     UNDEF_INST(vector_fp_divide)
+     UNDEF_INST(vector_fp_multiply)
+     UNDEF_INST(vector_fp_compare_equal)
+     UNDEF_INST(vector_fp_compare_high_or_equal)
+     UNDEF_INST(vector_fp_compare_high)
+     UNDEF_INST(vector_average_logical)
+     UNDEF_INST(vector_add_compute_carry)
+     UNDEF_INST(vector_average)
+     UNDEF_INST(vector_add)
+     UNDEF_INST(vector_subtract_compute_borrow_indication)
+     UNDEF_INST(vector_subtract)
+     UNDEF_INST(vector_compare_equal)
+     UNDEF_INST(vector_compare_high_logical)
+     UNDEF_INST(vector_compare_high)
+     UNDEF_INST(vector_minimum_logical)
+     UNDEF_INST(vector_maximum_logical)
+     UNDEF_INST(vector_minimum)
+     UNDEF_INST(vector_maximum)
+
+#endif
+
 #if !defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
  UNDEF_INST( insert_reference_bits_multiple )
 #endif
@@ -1383,6 +1526,14 @@ DEF_INST( E3_0 )
 #endif
 
 /*-------------------------------------------------------------------*/
+/* E7xx ???? - "instruction" to jump to actual instruction    [????] */
+/*-------------------------------------------------------------------*/
+DEF_INST(execute_opcode_e7________xx)
+{
+    regs->ARCH_DEP(runtime_opcode_e7________xx)[inst[5]](inst, regs);
+}
+
+/*-------------------------------------------------------------------*/
 /* EBxx ???? - "instruction" to jump to actual instruction    [????] */
 /*-------------------------------------------------------------------*/
 DEF_INST( execute_opcode_eb________xx )
@@ -1456,6 +1607,7 @@ FWD_REF_IPRINT_FUNC( ASMFMT_RRR );
 FWD_REF_IPRINT_FUNC( ASMFMT_RRF_A );
 FWD_REF_IPRINT_FUNC( ASMFMT_RX );
 FWD_REF_IPRINT_FUNC( ASMFMT_RXE );
+FWD_REF_IPRINT_FUNC( ASMFMT_RXE_M3 );
 FWD_REF_IPRINT_FUNC( ASMFMT_RXY );
 FWD_REF_IPRINT_FUNC( ASMFMT_RXF );
 FWD_REF_IPRINT_FUNC( ASMFMT_RS );
@@ -1494,6 +1646,22 @@ FWD_REF_IPRINT_FUNC( ASMFMT_SSE );
 FWD_REF_IPRINT_FUNC( ASMFMT_SSF );
 FWD_REF_IPRINT_FUNC( ASMFMT_SSF_RSS );
 FWD_REF_IPRINT_FUNC( ASMFMT_VS );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRI_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRI_B );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRI_C );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRI_D );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRI_E );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_B );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_D );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_E );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_F );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRS_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRS_B );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRS_C );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRV );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRX );
 
 #endif // COMPILE_THIS_ONLY_ONCE
 
@@ -1830,6 +1998,7 @@ static INSTR_FUNC gen_opcode_c6_x[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_c8_x[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_cc_x[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_e5xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_e6xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_ebxx[256][NUM_INSTR_TAB_PTRS];
@@ -2000,6 +2169,7 @@ IPRINT_ROUT2( c8_x, [1] & 0x0F )
 IPRINT_ROUT2( cc_x, [1] & 0x0F )
 IPRINT_ROUT2( e3xx, [5] )
 IPRINT_ROUT2( e5xx, [1] )
+IPRINT_ROUT2( e7xx, [5] )
 IPRINT_ROUT2( e6xx, [1] )
 IPRINT_ROUT2( ebxx, [5] )
 IPRINT_ROUT2( ecxx, [5] )
@@ -2208,6 +2378,16 @@ IPRINT_FUNC( ASMFMT_RXE );
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     IPRINT_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
+
+IPRINT_FUNC(ASMFMT_RXE_M3);
+    int r1, x2, b2, d2, m3;
+    UNREFERENCED(regs);
+    r1 = inst[1] >> 4;
+    x2 = inst[1] & 0x0F;
+    b2 = inst[2] >> 4;
+    d2 = (inst[2] & 0x0F) << 8 | inst[3];
+    m3 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d(%d,%d),%d", r1, d2, x2, b2, m3)
 
 IPRINT_FUNC( ASMFMT_RXY );
     int r1,x2,b2,d2;
@@ -2556,6 +2736,164 @@ IPRINT_FUNC( ASMFMT_VS );
     rs2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d",rs2)
 
+IPRINT_FUNC(ASMFMT_VRI_A);
+    int v1, i2, m3;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    i2 = inst[2] << 8 | inst[3];
+    m3 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d,%d", v1, i2, m3)
+
+IPRINT_FUNC(ASMFMT_VRI_B);
+    int v1, i2, i3, m4;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    i2 = inst[2];
+    i3 = inst[3];
+    m4 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d", v1, i2, i3, m4)
+
+IPRINT_FUNC(ASMFMT_VRI_C);
+    int v1, i2, v3, m4;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    i2 = inst[2] << 8 | inst[3];
+    v3 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    m4 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d", v1, v3, i2, m4)
+
+IPRINT_FUNC(ASMFMT_VRI_D);
+    int v1, v2, v3, i4, m5;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    i4 = inst[3];
+    m5 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, v3, i4, m5)
+
+IPRINT_FUNC(ASMFMT_VRI_E);
+    int v1, v2, i3, m4, m5;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    i3 = inst[2] << 4 | (inst[3] >> 4);
+    m4 = inst[4] >> 4;
+    m5 = inst[3] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, i3, m4, m5)
+
+IPRINT_FUNC(ASMFMT_VRR_A);
+    int v1, v2, m3, m4, m5;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    m3 = inst[4] >> 4;
+    m4 = inst[3] & 0x0f;
+    m5 = inst[3] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, m3, m4, m5)
+
+IPRINT_FUNC(ASMFMT_VRR_B);
+    int v1, v2, v3, m4, m5;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    m4 = inst[4] >> 4;
+    m5 = inst[3] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, v3, m4, m5)
+
+IPRINT_FUNC(ASMFMT_VRR_C);
+    int v1, v2, v3, m4, m5, m6;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    m4 = inst[4] >> 4;
+    m5 = inst[3] & 0x0f;
+    m6 = inst[3] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d,%d,%d", v1, v2, v3, m4, m5, m6)
+
+IPRINT_FUNC(ASMFMT_VRR_D);
+    int v1, v2, v3, v4, m5, m6;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    v4 = ((inst[4] >> 4) & 0x0F) | ((inst[4] & 0x01) << 4);
+    m5 = inst[2] & 0x0f;
+    m6 = inst[3] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d,%d,%d", v1, v2, v3, v4, m5, m6)
+
+IPRINT_FUNC(ASMFMT_VRR_E);
+    int v1, v2, v3, v4, m5, m6;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    v4 = ((inst[4] >> 4) & 0x0F) | ((inst[4] & 0x01) << 4);
+    m5 = inst[3] & 0x0f;
+    m6 = inst[2] & 0x0f;
+    IPRINT_PRINT("%d,%d,%d,%d,%d,%d", v1, v2, v3, v4, m5, m6)
+
+IPRINT_FUNC(ASMFMT_VRR_F);
+    int v1, r2, r3;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    r2 = inst[1] & 0x0f;
+    r3 = inst[2] >> 4;
+    IPRINT_PRINT("%d,%d,%d", v1, r2, r3)
+
+IPRINT_FUNC(ASMFMT_VRS_A);
+    int v1, v3, b2, d2, m4;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v3 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    b2 = inst[2] >> 4;
+    d2 = (inst[2] & 0x0F) << 8 | inst[3];
+    m4 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d,%d(%d),%d", v1, v3, d2, b2, m4)
+
+IPRINT_FUNC(ASMFMT_VRS_B);
+    int v1, r3, b2, d2, m4;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    r3 = ((inst[1] >> 0) & 0x0F);
+    b2 = inst[2] >> 4;
+    d2 = (inst[2] & 0x0F) << 8 | inst[3];
+    m4 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d,%d(%d),%d", v1, r3, d2, b2, m4)
+
+IPRINT_FUNC(ASMFMT_VRS_C);
+    int r1, v3, b2, d2, m4;
+    UNREFERENCED(regs);
+    r1 = ((inst[1] >> 4) & 0x0F);
+    v3 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    b2 = inst[2] >> 4;
+    d2 = (inst[2] & 0x0F) << 8 | inst[3];
+    m4 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d,%d(%d),%d", r1, v3, d2, b2, m4)
+
+IPRINT_FUNC(ASMFMT_VRV);
+    int v1, v2, d2, b2, m3;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    d2 = (inst[2] & 0x0F) << 8 | inst[3];
+    b2 = inst[2] >> 4;
+    m3 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d(%d,%d),%d", v1, d2, v2, b2, m3)
+
+
+IPRINT_FUNC(ASMFMT_VRX);
+    int v1, d2, x2, b2, m3;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    d2 = (inst[2] & 0x0F) << 8 | inst[3];
+    x2 = inst[1] & 0x0F;
+    b2 = inst[2] >> 4;
+    m3 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d(%d,%d),%d", v1, d2, x2, b2, m3)
+
 /*----------------------------------------------------------------------------*/
 /*          'GENx___x___x900' instruction opcode jump tables                  */
 /*----------------------------------------------------------------------------*/
@@ -2797,7 +3135,7 @@ static INSTR_FUNC gen_opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*E4*/   GENx370x390x900 ( ""          , e4xx , ASMFMT_e4xx     , execute_opcode_e4xx                                 ),
  /*E5*/   GENx370x390x900 ( ""          , e5xx , ASMFMT_e5xx     , execute_opcode_e5xx                                 ),
  /*E6*/   GENx370x390x900 ( ""          , e6xx , ASMFMT_e6xx     , execute_opcode_e6xx                                 ),
- /*E7*/   GENx___x___x___ ,
+ /*E7*/   GENx___x___x900 ( ""          , e7xx , ASMFMT_e7xx     , execute_opcode_e7________xx                         ),
  /*E8*/   GENx370x390x900 ( "MVCIN"     , SS_a , ASMFMT_SS_L     , move_inverse                                        ),
  /*E9*/   GENx37Xx390x900 ( "PKA"       , SS_f , ASMFMT_SS_L2    , pack_ascii                                          ),
  /*EA*/   GENx37Xx390x900 ( "UNPKA"     , SS_a , ASMFMT_SS_L     , unpack_ascii                                        ),
@@ -4570,6 +4908,265 @@ static INSTR_FUNC gen_opcode_e6xx[256][NUM_INSTR_TAB_PTRS] =
  /*E6FD*/ GENx___x___x___ ,
  /*E6FE*/ GENx___x___x___ ,
  /*E6FF*/ GENx___x___x___
+};
+static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
+{
+ /*E700*/ GENx___x___x900("VLEB"   , VRX    , ASMFMT_VRX    , vector_load_element_8),
+ /*E701*/ GENx___x___x900("VLEH"   , VRX    , ASMFMT_VRX    , vector_load_element_16),
+ /*E702*/ GENx___x___x900("VLEG"   , VRX    , ASMFMT_VRX    , vector_load_element_64),
+ /*E703*/ GENx___x___x900("VLEF"   , VRX    , ASMFMT_VRX    , vector_load_element_32),
+ /*E704*/ GENx___x___x900("VLLEZ"  , VRX    , ASMFMT_VRX    , vector_load_logical_element_and_zero),
+ /*E705*/ GENx___x___x900("VLREP"  , VRX    , ASMFMT_VRX    , vector_load_and_replicate),
+ /*E706*/ GENx___x___x900("VL"     , VRX    , ASMFMT_VRX    , vector_load),
+ /*E707*/ GENx___x___x900("VLBB"   , VRX    , ASMFMT_VRX    , vector_load_to_block_boundary),
+ /*E708*/ GENx___x___x900("VSTEB"  , VRX    , ASMFMT_VRX    , vector_store_element_8),
+ /*E709*/ GENx___x___x900("VSTEH"  , VRX    , ASMFMT_VRX    , vector_store_element_16),
+ /*E70A*/ GENx___x___x900("VSTEG"  , VRX    , ASMFMT_VRX    , vector_store_element_64),
+ /*E70B*/ GENx___x___x900("VSTEF"  , VRX    , ASMFMT_VRX    , vector_store_element_32),
+ /*E70C*/ GENx___x___x___ ,
+ /*E70D*/ GENx___x___x___ ,
+ /*E70E*/ GENx___x___x900("VST"    , VRX    , ASMFMT_VRX    , vector_store),
+ /*E70F*/ GENx___x___x___ ,
+ /*E710*/ GENx___x___x___ ,
+ /*E711*/ GENx___x___x___ ,
+ /*E712*/ GENx___x___x900("VGEG"   , VRV    , ASMFMT_VRV    , vector_gather_element_64),
+ /*E713*/ GENx___x___x900("VGEF"   , VRV    , ASMFMT_VRV    , vector_gather_element_32),
+ /*E714*/ GENx___x___x___ ,
+ /*E715*/ GENx___x___x___ ,
+ /*E716*/ GENx___x___x___ ,
+ /*E717*/ GENx___x___x___ ,
+ /*E718*/ GENx___x___x___ ,
+ /*E719*/ GENx___x___x___ ,
+ /*E71A*/ GENx___x___x900("VSCEG"  , VRV    , ASMFMT_VRV    , vector_scatter_element_64),
+ /*E71B*/ GENx___x___x900("VSCEF"  , VRV    , ASMFMT_VRV    , vector_scatter_element_32),
+ /*E71C*/ GENx___x___x___ ,
+ /*E71D*/ GENx___x___x___ ,
+ /*E71E*/ GENx___x___x___ ,
+ /*E71F*/ GENx___x___x___ ,
+ /*E720*/ GENx___x___x___ ,
+ /*E721*/ GENx___x___x900("VLGV"   , VRS_C  , ASMFMT_VRS_C  , vector_load_gr_from_vr_element),
+ /*E722*/ GENx___x___x900("VLVG"   , VRS_B  , ASMFMT_VRS_B  , vector_load_vr_element_from_gr),
+ /*E723*/ GENx___x___x___ ,
+ /*E724*/ GENx___x___x___ ,
+ /*E725*/ GENx___x___x___ ,
+ /*E726*/ GENx___x___x___ ,
+ /*E727*/ GENx___x___x900("LCBB"   , RXE    , ASMFMT_RXE    , load_count_to_block_boundary),
+ /*E728*/ GENx___x___x___ ,
+ /*E729*/ GENx___x___x___ ,
+ /*E72A*/ GENx___x___x___ ,
+ /*E72B*/ GENx___x___x___ ,
+ /*E72C*/ GENx___x___x___ ,
+ /*E72D*/ GENx___x___x___ ,
+ /*E72E*/ GENx___x___x___ ,
+ /*E72F*/ GENx___x___x___ ,
+ /*E730*/ GENx___x___x900("VESL"   , VRS_A  , ASMFMT_VRS_A  , vector_element_shift_left),
+ /*E731*/ GENx___x___x___ ,
+ /*E732*/ GENx___x___x___ ,
+ /*E733*/ GENx___x___x900("VERLL"  , VRS_A  , ASMFMT_VRS_A  , vector_element_rotate_left_logical),
+ /*E734*/ GENx___x___x___ ,
+ /*E735*/ GENx___x___x___ ,
+ /*E736*/ GENx___x___x900("VLM"    , VRS_A  , ASMFMT_VRS_A  , vector_load_multiple),
+ /*E737*/ GENx___x___x900("VLL"    , VRS_B  , ASMFMT_VRS_B  , vector_load_with_length),
+ /*E738*/ GENx___x___x900("VESRL"  , VRS_A  , ASMFMT_VRS_A  , vector_element_shift_right_logical),
+ /*E739*/ GENx___x___x___ ,
+ /*E73A*/ GENx___x___x900("VESRA"  , VRS_A  , ASMFMT_VRS_A  , vector_element_shift_right_arithmetic),
+ /*E73B*/ GENx___x___x___ ,
+ /*E73C*/ GENx___x___x___ ,
+ /*E73D*/ GENx___x___x___ ,
+ /*E73E*/ GENx___x___x900("VSTM"   , VRS_A  , ASMFMT_VRS_A  , vector_store_multiple),
+ /*E73F*/ GENx___x___x900("VSTL"   , VRS_B  , ASMFMT_VRS_B  , vector_store_with_length),
+ /*E740*/ GENx___x___x900("VLEIB"  , VRI_A  , ASMFMT_VRI_A  , vector_load_element_immediate_8),
+ /*E741*/ GENx___x___x900("VLEIH"  , VRI_A  , ASMFMT_VRI_A  , vector_load_element_immediate_16),
+ /*E742*/ GENx___x___x900("VLEIG"  , VRI_A  , ASMFMT_VRI_A  , vector_load_element_immediate_64),
+ /*E743*/ GENx___x___x900("VLEIF"  , VRI_A  , ASMFMT_VRI_A  , vector_load_element_immediate_32),
+ /*E744*/ GENx___x___x900("VGBM"   , VRI_A  , ASMFMT_VRI_A  , vector_generate_byte_mask),
+ /*E745*/ GENx___x___x900("VREPI"  , VRI_A  , ASMFMT_VRI_A  , vector_replicate_immediate),
+ /*E746*/ GENx___x___x900("VGM"    , VRI_B  , ASMFMT_VRI_B  , vector_generate_mask),
+ /*E747*/ GENx___x___x___ ,
+ /*E748*/ GENx___x___x___ ,
+ /*E749*/ GENx___x___x___ ,
+ /*E74A*/ GENx___x___x900("VFTCI"  , VRI_E  , ASMFMT_VRI_E  , vector_fp_test_data_class_immediate),
+ /*E74B*/ GENx___x___x___ ,
+ /*E74C*/ GENx___x___x___ ,
+ /*E74D*/ GENx___x___x900("VREP"   , VRI_C  , ASMFMT_VRI_C  , vector_replicate),
+ /*E74E*/ GENx___x___x___ ,
+ /*E74F*/ GENx___x___x___ ,
+ /*E750*/ GENx___x___x900("VPOPCT" , VRR_A  , ASMFMT_VRR_A  , vector_population_count),
+ /*E751*/ GENx___x___x___ ,
+ /*E752*/ GENx___x___x900("VCTZ"   , VRR_A  , ASMFMT_VRR_A  , vector_count_trailing_zeros),
+ /*E753*/ GENx___x___x900("VCLZ"   , VRR_A  , ASMFMT_VRR_A  , vector_count_leading_zeros),
+ /*E754*/ GENx___x___x___ ,
+ /*E755*/ GENx___x___x___ ,
+ /*E756*/ GENx___x___x900("VLR"    , VRR_A  , ASMFMT_VRR_A  , vector_load_vector),
+ /*E757*/ GENx___x___x___ ,
+ /*E758*/ GENx___x___x___ ,
+ /*E759*/ GENx___x___x___ ,
+ /*E75A*/ GENx___x___x___ ,
+ /*E75B*/ GENx___x___x___ ,
+ /*E75C*/ GENx___x___x900("VISTR"  , VRR_A  , ASMFMT_VRR_A  , vector_isolate_string),
+ /*E75D*/ GENx___x___x___ ,
+ /*E75E*/ GENx___x___x___ ,
+ /*E75F*/ GENx___x___x900("VSEG"   , VRR_A  , ASMFMT_VRR_A  , vector_sign_extend_to_doubleword),
+ /*E760*/ GENx___x___x900("VMRL"   , VRR_C  , ASMFMT_VRR_C  , vector_merge_low),
+ /*E761*/ GENx___x___x900("VMRH"   , VRR_C  , ASMFMT_VRR_C  , vector_merge_high),
+ /*E762*/ GENx___x___x900("VLVGP"  , VRR_F  , ASMFMT_VRR_F  , vector_load_vr_from_grs_disjoint),
+ /*E763*/ GENx___x___x___ ,
+ /*E764*/ GENx___x___x900("VSUM"   , VRR_C  , ASMFMT_VRR_C  , vector_sum_across_word),
+ /*E765*/ GENx___x___x900("VSUMG"  , VRR_C  , ASMFMT_VRR_C  , vector_sum_across_doubleword),
+ /*E766*/ GENx___x___x900("VCKSM"  , VRR_C  , ASMFMT_VRR_C  , vector_checksum),
+ /*E767*/ GENx___x___x900("VSUMQ"  , VRR_C  , ASMFMT_VRR_C  , vector_sum_across_quadword),
+ /*E768*/ GENx___x___x900("VN"     , VRR_C  , ASMFMT_VRR_C  , vector_and),
+ /*E769*/ GENx___x___x900("VNC"    , VRR_C  , ASMFMT_VRR_C  , vector_and_with_complement),
+ /*E76A*/ GENx___x___x900("VO"     , VRR_C  , ASMFMT_VRR_C  , vector_or),
+ /*E76B*/ GENx___x___x900("VNO"    , VRR_C  , ASMFMT_VRR_C  , vector_nor),
+ /*E76C*/ GENx___x___x___ ,
+ /*E76D*/ GENx___x___x900("VX"     , VRR_C  , ASMFMT_VRR_C  , vector_exclusive_or),
+ /*E76E*/ GENx___x___x___ ,
+ /*E76F*/ GENx___x___x___ ,
+ /*E770*/ GENx___x___x900("VESLV"  , VRR_C  , ASMFMT_VRR_C  , vector_element_shift_left_vector),
+ /*E771*/ GENx___x___x___ ,
+ /*E772*/ GENx___x___x900("VERIM"  , VRI_D  , ASMFMT_VRI_D  , vector_element_rotate_and_insert_under_mask),
+ /*E773*/ GENx___x___x900("VERLLV" , VRR_C  , ASMFMT_VRR_C  , vector_element_rotate_left_logical_vector),
+ /*E774*/ GENx___x___x900("VSL"    , VRR_C  , ASMFMT_VRR_C  , vector_shift_left),
+ /*E775*/ GENx___x___x900("VSLB"   , VRR_C  , ASMFMT_VRR_C  , vector_shift_left_by_byte),
+ /*E776*/ GENx___x___x___ ,
+ /*E777*/ GENx___x___x900("VSLDB"  , VRI_D  , ASMFMT_VRI_D  , vector_shift_left_double_by_byte),
+ /*E778*/ GENx___x___x900("VESRLV" , VRR_C  , ASMFMT_VRR_C  , vector_element_shift_right_logical_vector),
+ /*E779*/ GENx___x___x___ ,
+ /*E77A*/ GENx___x___x900("VESRAV" , VRR_C  , ASMFMT_VRR_C  , vector_element_shift_right_arithmetic_vector),
+ /*E77B*/ GENx___x___x___ ,
+ /*E77C*/ GENx___x___x900("VSRL"   , VRR_C  , ASMFMT_VRR_C  , vector_shift_right_logical),
+ /*E77D*/ GENx___x___x900("VSRLB"  , VRR_C  , ASMFMT_VRR_C  , vector_shift_right_logical_by_byte),
+ /*E77E*/ GENx___x___x900("VSRA"   , VRR_C  , ASMFMT_VRR_C  , vector_shift_right_arithmetic),
+ /*E77F*/ GENx___x___x900("VSRAB"  , VRR_C  , ASMFMT_VRR_C  , vector_shift_right_arithmetic_by_byte),
+ /*E780*/ GENx___x___x900("VFEE"   , VRR_B  , ASMFMT_VRR_B  , vector_find_element_equal),
+ /*E781*/ GENx___x___x900("VFENE"  , VRR_B  , ASMFMT_VRR_B  , vector_find_element_not_equal),
+ /*E782*/ GENx___x___x900("VFAE"   , VRR_B  , ASMFMT_VRR_B  , vector_find_any_element_equal),
+ /*E783*/ GENx___x___x___ ,
+ /*E784*/ GENx___x___x900("VPDI"   , VRR_C  , ASMFMT_VRR_C  , vector_permute_doubleword_immediate),
+ /*E785*/ GENx___x___x___ ,
+ /*E786*/ GENx___x___x___ ,
+ /*E787*/ GENx___x___x___ ,
+ /*E788*/ GENx___x___x___ ,
+ /*E789*/ GENx___x___x___ ,
+ /*E78A*/ GENx___x___x900("VSTRC"  , VRR_D  , ASMFMT_VRR_D  , vector_string_range_compare),
+ /*E78B*/ GENx___x___x___ ,
+ /*E78C*/ GENx___x___x900("VPERM"  , VRR_E  , ASMFMT_VRR_E  , vector_permute),
+ /*E78D*/ GENx___x___x900("VSEL"   , VRR_E  , ASMFMT_VRR_E  , vector_select),
+ /*E78E*/ GENx___x___x900("VFMS"   , VRR_E  , ASMFMT_VRR_E  , vector_fp_multiply_and_subtract),
+ /*E78F*/ GENx___x___x900("VFMA"   , VRR_E  , ASMFMT_VRR_E  , vector_fp_multiply_and_add),
+ /*E790*/ GENx___x___x___ ,
+ /*E791*/ GENx___x___x___ ,
+ /*E792*/ GENx___x___x___ ,
+ /*E793*/ GENx___x___x___ ,
+ /*E794*/ GENx___x___x900("VPK"    , VRR_C  , ASMFMT_VRR_C  , vector_pack),
+ /*E795*/ GENx___x___x900("VPKLS"  , VRR_B  , ASMFMT_VRR_B  , vector_pack_logical_saturate),
+ /*E796*/ GENx___x___x___ ,
+ /*E797*/ GENx___x___x900("VPKS"   , VRR_B  , ASMFMT_VRR_B  , vector_pack_saturate),
+ /*E798*/ GENx___x___x___ ,
+ /*E799*/ GENx___x___x___ ,
+ /*E79A*/ GENx___x___x___ ,
+ /*E79B*/ GENx___x___x___ ,
+ /*E79C*/ GENx___x___x___ ,
+ /*E79D*/ GENx___x___x___ ,
+ /*E79E*/ GENx___x___x___ ,
+ /*E79F*/ GENx___x___x___ ,
+ /*E7A0*/ GENx___x___x___ ,
+ /*E7A1*/ GENx___x___x900("VMLH"   , VRR_C  , ASMFMT_VRR_C  , vector_multiply_logical_high),
+ /*E7A2*/ GENx___x___x900("VML"    , VRR_C  , ASMFMT_VRR_C  , vector_multiply_low),
+ /*E7A3*/ GENx___x___x900("VMH"    , VRR_C  , ASMFMT_VRR_C  , vector_multiply_high),
+ /*E7A4*/ GENx___x___x900("VMLE"   , VRR_C  , ASMFMT_VRR_C  , vector_multiply_logical_even),
+ /*E7A5*/ GENx___x___x900("VMLO"   , VRR_C  , ASMFMT_VRR_C  , vector_multiply_logical_odd),
+ /*E7A6*/ GENx___x___x900("VME"    , VRR_C  , ASMFMT_VRR_C  , vector_multiply_even),
+ /*E7A7*/ GENx___x___x900("VMO"    , VRR_C  , ASMFMT_VRR_C  , vector_multiply_odd),
+ /*E7A8*/ GENx___x___x___ ,
+ /*E7A9*/ GENx___x___x900("VMALH"  , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_logical_high),
+ /*E7AA*/ GENx___x___x900("VMAL"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_low),
+ /*E7AB*/ GENx___x___x900("VMAH"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_high),
+ /*E7AC*/ GENx___x___x900("VMALE"  , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_logical_even),
+ /*E7AD*/ GENx___x___x900("VMALO"  , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_logical_odd),
+ /*E7AE*/ GENx___x___x900("VMAE"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_even),
+ /*E7AF*/ GENx___x___x900("VMAO"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_odd),
+ /*E7B0*/ GENx___x___x___ ,
+ /*E7B1*/ GENx___x___x___ ,
+ /*E7B2*/ GENx___x___x___ ,
+ /*E7B3*/ GENx___x___x___ ,
+ /*E7B4*/ GENx___x___x900("VGFM"   , VRR_C  , ASMFMT_VRR_C  , vector_galois_field_multiply_sum),
+ /*E7B5*/ GENx___x___x___ ,
+ /*E7B6*/ GENx___x___x___ ,
+ /*E7B7*/ GENx___x___x___ ,
+ /*E7B8*/ GENx___x___x___ ,
+ /*E7B9*/ GENx___x___x900("VACCC"  , VRR_D  , ASMFMT_VRR_D  , vector_add_with_carry_compute_carry),
+ /*E7BA*/ GENx___x___x___ ,
+ /*E7BB*/ GENx___x___x900("VAC"    , VRR_D  , ASMFMT_VRR_D  , vector_add_with_carry),
+ /*E7BC*/ GENx___x___x900("VGFMA"  , VRR_D  , ASMFMT_VRR_D  , vector_galois_field_multiply_sum_and_accumulate),
+ /*E7BD*/ GENx___x___x900("VSBCBI" , VRR_D  , ASMFMT_VRR_D  , vector_subtract_with_borrow_compute_borrow_indication),
+ /*E7BE*/ GENx___x___x___ ,
+ /*E7BF*/ GENx___x___x900("VSBI"   , VRR_D  , ASMFMT_VRR_D  , vector_subtract_with_borrow_indication),
+ /*E7C0*/ GENx___x___x900("VCLGD"  , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_to_logical_64_bit),
+ /*E7C1*/ GENx___x___x900("VCDLG"  , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_from_logical_64_bit),
+ /*E7C2*/ GENx___x___x900("VCGD"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_to_fixed_64_bit),
+ /*E7C3*/ GENx___x___x900("VCDG"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_from_fixed_64_bit),
+ /*E7C4*/ GENx___x___x900("VFLL"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_load_lengthened),
+ /*E7C5*/ GENx___x___x900("VFLR"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_load_rounded),
+ /*E7C6*/ GENx___x___x___ ,
+ /*E7C7*/ GENx___x___x900("VFI"    , VRR_A  , ASMFMT_VRR_A  , vector_load_fp_integer),
+ /*E7C8*/ GENx___x___x___ ,
+ /*E7C9*/ GENx___x___x___ ,
+ /*E7CA*/ GENx___x___x900("WFK"    , VRR_A  , ASMFMT_VRR_A  , vector_fp_compare_and_signal_scalar),
+ /*E7CB*/ GENx___x___x900("WFC"    , VRR_A  , ASMFMT_VRR_A  , vector_fp_compare_scalar),
+ /*E7CC*/ GENx___x___x900("VFPSO"  , VRR_A  , ASMFMT_VRR_A  , vector_fp_perform_sign_operation),
+ /*E7CD*/ GENx___x___x___ ,
+ /*E7CE*/ GENx___x___x900("VFSQ"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_square_root),
+ /*E7CF*/ GENx___x___x___ ,
+ /*E7D0*/ GENx___x___x___ ,
+ /*E7D1*/ GENx___x___x___ ,
+ /*E7D2*/ GENx___x___x___ ,
+ /*E7D3*/ GENx___x___x___ ,
+ /*E7D4*/ GENx___x___x900("VUPLL"  , VRR_A  , ASMFMT_VRR_A  , vector_unpack_logical_low),
+ /*E7D5*/ GENx___x___x900("VUPLH"  , VRR_A  , ASMFMT_VRR_A  , vector_unpack_logical_high),
+ /*E7D6*/ GENx___x___x900("VUPL"   , VRR_A  , ASMFMT_VRR_A  , vector_unpack_low),
+ /*E7D7*/ GENx___x___x900("VUPH"   , VRR_A  , ASMFMT_VRR_A  , vector_unpack_high),
+ /*E7D8*/ GENx___x___x900("VTM"    , VRR_A  , ASMFMT_VRR_A  , vector_test_under_mask),
+ /*E7D9*/ GENx___x___x900("VECL"   , VRR_A  , ASMFMT_VRR_A  , vector_element_compare_logical),
+ /*E7DA*/ GENx___x___x___ ,
+ /*E7DB*/ GENx___x___x900("VEC"    , VRR_A  , ASMFMT_VRR_A  , vector_element_compare),
+ /*E7DC*/ GENx___x___x___ ,
+ /*E7DD*/ GENx___x___x___ ,
+ /*E7DE*/ GENx___x___x900("VLC"    , VRR_A  , ASMFMT_VRR_A  , vector_load_complement),
+ /*E7DF*/ GENx___x___x900("VLP"    , VRR_A  , ASMFMT_VRR_A  , vector_load_positive),
+ /*E7E0*/ GENx___x___x___ ,
+ /*E7E1*/ GENx___x___x___ ,
+ /*E7E2*/ GENx___x___x900("VFS"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_subtract),
+ /*E7E3*/ GENx___x___x900("VFA"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_add),
+ /*E7E4*/ GENx___x___x___ ,
+ /*E7E5*/ GENx___x___x900("VFD"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_divide),
+ /*E7E6*/ GENx___x___x___ ,
+ /*E7E7*/ GENx___x___x900("VFM"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_multiply),
+ /*E7E8*/ GENx___x___x900("VFCE"   , VRR_C  , ASMFMT_VRR_C  , vector_fp_compare_equal),
+ /*E7E9*/ GENx___x___x___ ,
+ /*E7EA*/ GENx___x___x900("VFCHE"  , VRR_C  , ASMFMT_VRR_C  , vector_fp_compare_high_or_equal),
+ /*E7EB*/ GENx___x___x900("VFCH"   , VRR_C  , ASMFMT_VRR_C  , vector_fp_compare_high),
+ /*E7EC*/ GENx___x___x___ ,
+ /*E7ED*/ GENx___x___x___ ,
+ /*E7EE*/ GENx___x___x___ ,
+ /*E7EF*/ GENx___x___x___ ,
+ /*E7F0*/ GENx___x___x900("VAVGL"  , VRR_C  , ASMFMT_VRR_C  , vector_average_logical),
+ /*E7F1*/ GENx___x___x900("VACC"   , VRR_C  , ASMFMT_VRR_C  , vector_add_compute_carry),
+ /*E7F2*/ GENx___x___x900("VAVG"   , VRR_C  , ASMFMT_VRR_C  , vector_average),
+ /*E7F3*/ GENx___x___x900("VA"     , VRR_C  , ASMFMT_VRR_C  , vector_add),
+ /*E7F4*/ GENx___x___x___ ,
+ /*E7F5*/ GENx___x___x900("VSCBI"  , VRR_C  , ASMFMT_VRR_C  , vector_subtract_compute_borrow_indication),
+ /*E7F6*/ GENx___x___x___ ,
+ /*E7F7*/ GENx___x___x900("VS"     , VRR_C  , ASMFMT_VRR_C  , vector_subtract),
+ /*E7F8*/ GENx___x___x900("VCEQ"   , VRR_B  , ASMFMT_VRR_B  , vector_compare_equal),
+ /*E7F9*/ GENx___x___x900("VCHL"   , VRR_B  , ASMFMT_VRR_B  , vector_compare_high_logical),
+ /*E7FA*/ GENx___x___x___ ,
+ /*E7FB*/ GENx___x___x900("VCH"    , VRR_B  , ASMFMT_VRR_B  , vector_compare_high),
+ /*E7FC*/ GENx___x___x900("VMNL"   , VRR_C  , ASMFMT_VRR_C  , vector_minimum_logical),
+ /*E7FD*/ GENx___x___x900("VMXL"   , VRR_C  , ASMFMT_VRR_C  , vector_maximum_logical),
+ /*E7FE*/ GENx___x___x900("VMN"    , VRR_C  , ASMFMT_VRR_C  , vector_minimum),
+ /*E7FF*/ GENx___x___x900("VMX"    , VRR_C  , ASMFMT_VRR_C  , vector_maximum),
 };
 
 static INSTR_FUNC gen_opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
@@ -6754,6 +7351,7 @@ static INSTR_FUNC gen_opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
 static INSTR_FUNC runtime_opcode_xxxx[NUM_GEN_ARCHS][256 * 256];
 
 static INSTR_FUNC runtime_opcode_e3________xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_e7________xx[NUM_GEN_ARCHS][256];
 static INSTR_FUNC runtime_opcode_eb________xx[NUM_GEN_ARCHS][256];
 static INSTR_FUNC runtime_opcode_ec________xx[NUM_GEN_ARCHS][256];
 static INSTR_FUNC runtime_opcode_ed________xx[NUM_GEN_ARCHS][256];
@@ -6865,6 +7463,12 @@ static INSTR_FUNC replace_opcode_xx________xx( int arch, INSTR_FUNC inst, int op
                       runtime_opcode_e3________xx[arch][opcode2] = inst;
             break;
         }
+        case 0xe7:
+        {
+            oldinst = runtime_opcode_e7________xx[arch][opcode2];
+            runtime_opcode_e7________xx[arch][opcode2] = inst;
+            break;
+        }
         case 0xeb:
         {
             oldinst = runtime_opcode_eb________xx[arch][opcode2];
@@ -6941,6 +7545,7 @@ DLL_EXPORT void* the_real_replace_opcode( int arch, INSTR_FUNC inst, int opcode1
     }
 
     case 0xe3:
+    case 0xe7:
     case 0xeb:
     case 0xec:
     case 0xed:
@@ -7035,6 +7640,7 @@ void init_runtime_opcode_tables()
 
       replace_opcode_xxxx(arch, gen_opcode_e5xx[i][arch], 0xe5, i);
       replace_opcode_xxxx(arch, gen_opcode_e6xx[i][arch], 0xe6, i);
+      replace_opcode_xx________xx(arch, gen_opcode_e7xx[i][arch], 0xe7, i);
       replace_opcode_xx________xx(arch, gen_opcode_ebxx[i][arch], 0xeb, i);
       replace_opcode_xx________xx(arch, gen_opcode_ecxx[i][arch], 0xec, i);
       replace_opcode_xx________xx(arch, gen_opcode_edxx[i][arch], 0xed, i);
@@ -7146,18 +7752,21 @@ void init_regs_runtime_opcode_pointers( REGS* regs )
 
   regs->s370_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_370_IDX];
   regs->s370_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_370_IDX];
+  regs->s370_runtime_opcode_e7________xx = runtime_opcode_e7________xx[ARCH_370_IDX];
   regs->s370_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_370_IDX];
   regs->s370_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_370_IDX];
   regs->s370_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_370_IDX];
 
   regs->s390_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_390_IDX];
   regs->s390_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_390_IDX];
+  regs->s390_runtime_opcode_e7________xx = runtime_opcode_e7________xx[ARCH_390_IDX];
   regs->s390_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_390_IDX];
   regs->s390_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_390_IDX];
   regs->s390_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_390_IDX];
 
   regs->z900_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_900_IDX];
   regs->z900_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_900_IDX];
+  regs->z900_runtime_opcode_e7________xx = runtime_opcode_e7________xx[ARCH_900_IDX];
   regs->z900_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_900_IDX];
   regs->z900_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_900_IDX];
   regs->z900_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_900_IDX];

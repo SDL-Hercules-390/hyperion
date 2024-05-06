@@ -1,6 +1,6 @@
 /*  HSCUTL.C    (C) Copyright Ivan Warren & Others, 2003-2012        */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
-/*              (C) and others 2011-2023                             */
+/*              (C) and others 2011-2024                             */
 /*              Hercules Platform Port & Misc Functions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -3816,7 +3816,9 @@ DLL_EXPORT bool tf_2269( REGS* regs, BYTE* inst )
 DLL_EXPORT bool tf_2270( REGS* regs )
 {
     TF02270 rec;
-    memcpy( rec.fpr, regs->fpr, sizeof( rec.fpr ));
+    int  i;
+    for (i=0; i < 16; ++i)
+        memcpy( &rec.fpr[i], &regs->FPR_L(i), sizeof( rec.fpr[0] ));
     rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
     return tf_write( regs, &rec, sizeof( TF02270 ), 2270 );
 }
@@ -3850,6 +3852,16 @@ DLL_EXPORT bool tf_2276( REGS* regs )
     rec.fpc = regs->fpc;
     rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
     return tf_write( regs, &rec, sizeof( TF02276 ), 2276 );
+}
+
+//---------------------------------------------------------------------
+//               Vector Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2266( REGS* regs )
+{
+    TF02266 rec;
+    memcpy( rec.vfp, regs->vfp, sizeof( rec.vfp ));
+    return tf_write( regs, &rec, sizeof( TF02266 ), 2266 );
 }
 
 //---------------------------------------------------------------------
@@ -4188,6 +4200,9 @@ DLL_EXPORT size_t  tf_MAX_RECSIZE()
 
     if (max_recsize < sizeof( TF02276 ))
         max_recsize = sizeof( TF02276 );
+
+    if (max_recsize < sizeof( TF02266 ))
+        max_recsize = sizeof( TF02266 );
 
     if (max_recsize < sizeof( TF02324))
         max_recsize = sizeof( TF02324 );
@@ -4731,6 +4746,12 @@ DLL_EXPORT void tf_swap_rec( TFHDR* hdr, U16 msgnum )
         }
         break;
 
+        case 2266:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
         case 2269:
         {
             TF02269* rec = (TF02269*) hdr;
@@ -4744,8 +4765,8 @@ DLL_EXPORT void tf_swap_rec( TFHDR* hdr, U16 msgnum )
         {
             TF02270* rec = (TF02270*) hdr;
             int  i;
-            for (i=0; i < 32; ++i)
-                rec->fpr[i]   = SWAP32( rec->fpr[i] );
+            for (i=0; i < 16; ++i)
+                rec->fpr[i].D  = SWAP64( rec->fpr[i].D );
         }
         break;
 

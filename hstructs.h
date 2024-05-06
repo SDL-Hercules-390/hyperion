@@ -1,6 +1,6 @@
 /* HSTRUCTS.H   (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) Copyright TurboHercules, SAS 2011                */
-/*              (C) and others 2013-2023                             */
+/*              (C) and others 2013-2024                             */
 /*              Hercules Structure Definitions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -185,7 +185,7 @@ struct REGS {                           /* Processor registers       */
         ALIGN_128
         DW      gr[16];                 /* General registers         */
         U32     ar[16];                 /* Access registers          */
-        U32     fpr[32];                /* FP registers              */
+        QW      vfp[32];                /* zVector/FP registers      */
         U32     fpc;                    /* FP Control register       */
 
 #define GR_G(_r)     gr[(_r)].D
@@ -203,6 +203,23 @@ struct REGS {                           /* Processor registers       */
 #define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H /* Character, bits 48-55   */
 
 #define AR(_r)       ar[(_r)]
+
+#define FPR_L(_r)    vfp[(_r)].D.H.D      /* Long, bits 0-63         */
+#define FPR_S(_r)    vfp[(_r)].F.HH.F     /* Short, bits 0-31        */
+// fine FPR_T(_r)    vfp[(_r)].F.HH.H.H.H /* Tiny, bits 0-15         */
+
+#define VR_Q(_v)     vfp[(_v)]               /* Quadword             */
+#if defined(WORDS_BIGENDIAN)
+  #define VR_D(_v,_i)  vfp[(_v)].d[(_i)]     /* Doubleword           */
+  #define VR_F(_v,_i)  vfp[(_v)].f[(_i)]     /* Fullword             */
+  #define VR_H(_v,_i)  vfp[(_v)].h[(_i)]     /* Halfword             */
+  #define VR_B(_v,_i)  vfp[(_v)].b[(_i)]     /* Byte                 */
+#else
+  #define VR_D(_v,_i)  vfp[(_v)].d[1-(_i)]   /* Doubleword           */
+  #define VR_F(_v,_i)  vfp[(_v)].f[3-(_i)]   /* Fullword             */
+  #define VR_H(_v,_i)  vfp[(_v)].h[7-(_i)]   /* Halfword             */
+  #define VR_B(_v,_i)  vfp[(_v)].b[15-(_i)]  /* Byte                 */
+#endif
 
         ALIGN_128
         DW           cr_struct[1+16+16];  /* Control registers       */
@@ -532,18 +549,21 @@ struct REGS {                           /* Processor registers       */
 
         const INSTR_FUNC    *s370_runtime_opcode_xxxx,
                             *s370_runtime_opcode_e3________xx,
+                            *s370_runtime_opcode_e7________xx,
                             *s370_runtime_opcode_eb________xx,
                             *s370_runtime_opcode_ec________xx,
                             *s370_runtime_opcode_ed________xx;
 
         const INSTR_FUNC    *s390_runtime_opcode_xxxx,
                             *s390_runtime_opcode_e3________xx,
+                            *s390_runtime_opcode_e7________xx,
                             *s390_runtime_opcode_eb________xx,
                             *s390_runtime_opcode_ec________xx,
                             *s390_runtime_opcode_ed________xx;
 
         const INSTR_FUNC    *z900_runtime_opcode_xxxx,
                             *z900_runtime_opcode_e3________xx,
+                            *z900_runtime_opcode_e7________xx,
                             *z900_runtime_opcode_eb________xx,
                             *z900_runtime_opcode_ec________xx,
                             *z900_runtime_opcode_ed________xx;

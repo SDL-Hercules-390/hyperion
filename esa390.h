@@ -1,5 +1,5 @@
 /* ESA390.H     (C) Copyright Roger Bowler, 1994-2012                */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2024                             */
 /*              ESA/390 Data Areas                                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -47,6 +47,10 @@
  typedef union {
                  struct { DW H; DW L; } D;
                  struct { FW HH; FW HL; FW LH; FW LL; } F;
+                 U64  d[2];            /* Note: Any code        */
+                 U32  f[4];            /* that uses these       */
+                 U16  h[8];            /* four variables must   */
+                 BYTE b[16];           /* allow for endianness. */
                } QW;
 
 /*-------------------------------------------------------------------*/
@@ -68,6 +72,10 @@
  typedef union {
                  struct { DW L; DW H; } D;
                  struct { FW LL; FW LH; FW HL; FW HH; } F;
+                 U64  d[2];            /* Note: Any code        */
+                 U32  f[4];            /* that uses these       */
+                 U16  h[8];            /* four variables must   */
+                 BYTE b[16];           /* allow for endianness. */
                } QW;
 
 #endif
@@ -937,7 +945,7 @@ struct PSA_3XX                          /* Prefixed storage area     */
 /*110*/ DBLWRD resv110;                 /* Reserved                  */
 /*118*/ DBLWRD resv118;                 /* Reserved                  */
 /*120*/ FWORD  storear[16];             /* Access register save area */
-/*160*/ FWORD  storefpr[8];             /* FP register save area     */
+/*160*/ DBLWRD storefpr[4];             /* FP register save area     */
 /*180*/ FWORD  storegpr[16];            /* General register save area*/
 /*1C0*/ FWORD  storecr[16];             /* Control register save area*/
 };
@@ -1007,7 +1015,7 @@ struct PSA_900
 /*01F0*/ QWORD  iopnew;                 /* I/O new PSW               */
 /*0200*/ BYTE   resv0200[4096];         /* Reserved                  */
 /*-------------------------------------------------------------------*/
-/*1200*/ FWORD  storefpr[32];           /* FP register save area     */
+/*1200*/ DBLWRD storefpr[16];           /* FP register save area     */
 /*1280*/ DBLWRD storegpr[16];           /* General register save area*/
 /*1300*/ QWORD  storepsw;               /* Store status PSW save area*/
 /*1310*/ DBLWRD resv1310;               /* Reserved                  */

@@ -1,6 +1,6 @@
 /* CONTROL.C    (C) Copyright Roger Bowler, 1994-2012                */
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
-/*              (C) and others 2013-2023                             */
+/*              (C) and others 2013-2024                             */
 /*              ESA/390 CPU Emulator                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -6386,8 +6386,8 @@ char    log_buf[128];                   /* Log buffer                */
                         ARCH_DEP(store_status) (tregs, abs );
 
                         /* Store extended status at specified main storage address */
-                        for (i=0; i < 32; i++)
-                            STORE_FW( tregs->mainstor + absx + (i*4), tregs->fpr[i] );
+                        for (i=0; i < 16; i++)
+                            STORE_DW( tregs->mainstor + absx + (i*8), tregs->FPR_L(i) );
                         STORE_FW( tregs->mainstor + absx + 128, tregs->fpc );
                         STORE_FW( tregs->mainstor + absx + 132, 0 );
                         STORE_FW( tregs->mainstor + absx + 136, 0 );

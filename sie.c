@@ -715,7 +715,7 @@ int     i;                              /* (work)                    */
     /* Load the guest registers */
     memcpy( GUESTREGS->gr,  regs->gr,  14 * sizeof( regs->gr [0] ));
     memcpy( GUESTREGS->ar,  regs->ar,  16 * sizeof( regs->ar [0] ));
-    memcpy( GUESTREGS->fpr, regs->fpr, 32 * sizeof( regs->fpr[0] ));
+    memcpy( GUESTREGS->vfp, regs->vfp, 32 * sizeof( regs->vfp[0] ));
 #if defined( FEATURE_BINARY_FLOATING_POINT )
     GUESTREGS->fpc =  regs->fpc;
 #endif
@@ -1654,7 +1654,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     /* Update the approprate host registers */
     memcpy( regs->gr,  GUESTREGS->gr,  14 * sizeof( regs->gr [0] ));
     memcpy( regs->ar,  GUESTREGS->ar,  16 * sizeof( regs->ar [0] ));
-    memcpy( regs->fpr, GUESTREGS->fpr, 32 * sizeof( regs->fpr[0] ));
+    memcpy( regs->vfp, GUESTREGS->vfp, 32 * sizeof( regs->vfp[0] ));
 #if defined( FEATURE_BINARY_FLOATING_POINT )
     regs->fpc = GUESTREGS->fpc;
 #endif
