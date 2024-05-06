@@ -2088,6 +2088,7 @@ do {                                                                  \
 //    // PLEASE NOTE that enabling the "HERC_370_EXTENSION" facility
 //    // causes nonconformant/incorrect S/370 floating point behavior!
 //
+#if 0
 //    #define FPR2I(_r)     /* Convert fpr to index */                    \
 //    ((0                                                                 \
 //        || ARCH_370_IDX != sysblk.arch_mode                             \
@@ -2101,6 +2102,7 @@ do {                                                                  \
 //        || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
 //    )                                                                   \
 //    ? 4 : 2 )
+#endif
 //
 //  #else // !defined( FEATURE_BASIC_FP_EXTENSIONS )
 //
@@ -2154,6 +2156,7 @@ do {                                                                  \
 //  /* for the first 64 bits of the first 16 VR registers.               */
 //  /* While vfp & fpr are not shared, we must to refrsh thier values    */
 //  /*-------------------------------------------------------------------*/
+#if 0
 //  #define REFRESH_READ_VR(_vr)                                          \
 //      do {                                                              \
 //          if ((_vr) < 16)                                               \
@@ -2171,6 +2174,7 @@ do {                                                                  \
 //              regs->fpr[FPR2I((_vr))+1] = regs->VR_F((_vr),1);          \
 //          }                                                             \
 //      } while(0)
+#endif
 
 #endif /*defined( _FEATURE_129_ZVECTOR_FACILITY )*/
 
