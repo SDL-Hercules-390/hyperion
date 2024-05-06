@@ -99,6 +99,21 @@ static __inline  U128  __fastcall  bswap_128( U128 input )
   #endif
   }
 
+  static inline U128 (ATTR_REGPARM(1) bswap_128)( U128 x )
+    {
+        U128 ret;
+        union _128_as_64
+        {
+            unsigned __int128 qw;
+            U64 dw[2];
+        } u1, u2;
+        u1.qw = x._u128;
+        u2.dw[1] = bswap_64( u1.dw[0] );
+        u2.dw[0] = bswap_64( u1.dw[1] );
+        ret._u128 = u2.qw;
+        return ret;
+    }
+
 #else
 
   #define bswap_16(_x)                                      \

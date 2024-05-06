@@ -98,7 +98,9 @@ DEF_INST(vector_load_logical_element_and_zero)
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
    
-    regs->VR_Q(v1) = _mm_setzero_si128();
+    // regs->VR_Q(v1) = (U128) _mm_setzero_si128();
+    regs->VR_D( v1, 0) = 0x00;
+    regs->VR_D( v1, 1) = 0x00;
 
     switch (m3)
     {
