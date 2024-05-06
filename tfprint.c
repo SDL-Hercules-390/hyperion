@@ -1,4 +1,5 @@
 /* TFPRINT.C    (C) Copyright "Fish" (David B. Trout), 2023          */
+/*              (C) and others 2024                                  */
 /*              Print Trace File Utility                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -1369,7 +1370,13 @@ static inline void print_fpr_regs( TF02270* rec )
     char tim [ 64 ]  = {0};     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
     char pfx [ 64 ]  = {0};     // "16:22:47.745999 HHC02269I CP00:"
 
+
+    char buf [ 128 ] = {0};     // " R0=0000000000000000 ..."
+
     int  i, r;                  // (work for iterating)
+    DW*  gr;                    // (so GR_G/GR_L macros work right)
+
+    gr = rec->fpr;              // (so GR_G/GR_L macros work right)
 
     FormatTIMEVAL( &rec->rhdr.tod, tim, sizeof( tim ));
     MSGBUF( pfx, "%s HHC02270I %s:", &tim[ 11 ], ptyp_str( rec->rhdr.cpuad ));
@@ -1378,24 +1385,50 @@ static inline void print_fpr_regs( TF02270* rec )
     {
         for (i=0, r=0; i < 4; r += 4, i++)
         {
-            FLOGMSG( stdout, "%s FP%u=%8.8X%8.8X FPR%u=%8.8X%8.8X",
-                pfx, r+0, rec->fpr[ r+0 ], rec->fpr[ r+1 ],
-                     r+2, rec->fpr[ r+4 ], rec->fpr[ r+5 ]
+            MSGBUF
+            (
+                buf,
+
+                "%s"
+
+                " F%1.1X=%16.16"PRIX64
+                " F%1.1X=%16.16"PRIX64
+                " F%1.1X=%16.16"PRIX64
+                " F%1.1X=%16.16"PRIX64,
+
+                pfx,
+
+                r+0, GR_G( r+0 ),
+                r+1, GR_G( r+1 ),
+                r+2, GR_G( r+2 ),
+                r+3, GR_G( r+3 )
             );
 
-            FLOGMSG( stdout, "%s FP%u=%8.8X%8.8X FPR%u=%8.8X%8.8X",
-                pfx, r+1, rec->fpr[ r+2 ], rec->fpr[ r+3 ],
-                     r+3, rec->fpr[ r+6 ], rec->fpr[ r+7 ]
-            );
+            FLOGMSG( stdout, "%s\n", buf );
         }
     }
     else
     {
-        FLOGMSG( stdout, "%s FPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n",
-            pfx, rec->fpr[0], rec->fpr[1], rec->fpr[2], rec->fpr[3] );
+        MSGBUF
+        (
+            buf,
 
-        FLOGMSG( stdout, "%s FPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n",
-            pfx, rec->fpr[4], rec->fpr[5], rec->fpr[6], rec->fpr[7] );
+            "%s"
+
+            " F%1.1X=%16.16"PRIX64
+            " F%1.1X=%16.16"PRIX64
+            " F%1.1X=%16.16"PRIX64
+            " F%1.1X=%16.16"PRIX64,
+
+            pfx,
+
+            0, GR_G( 0 ),
+            2, GR_G( 2 ),
+            4, GR_G( 4 ),
+            6, GR_G( 6 )
+        );
+
+        FLOGMSG( stdout, "%s\n", buf );
     }
 }
 

@@ -1,4 +1,5 @@
 /* DFP.C        (C) Copyright Roger Bowler, 2007-2012                */
+/*              (C) and others 2024                                  */
 /*              Decimal Floating Point instructions                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -45,19 +46,14 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 DEF_INST(load_positive_fpr_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
-int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
 
     TXFC_INSTR_CHECK( regs );
     HFPREG2_CHECK(r1, r2, regs);
 
-    i1 = FPR2I(r1);
-    i2 = FPR2I(r2);
-
     /* Copy register contents, clear the sign bit */
-    regs->fpr[i1] = regs->fpr[i2] & 0x7FFFFFFF;
-    regs->fpr[i1+1] = regs->fpr[i2+1];
+    regs->FPR_L(r1) = regs->FPR_L(r2) & 0x7FFFFFFFFFFFFFFFULL;
 
 } /* end DEF_INST(load_positive_fpr_long_reg) */
 
@@ -68,19 +64,14 @@ int     i1, i2;                         /* FP register subscripts    */
 DEF_INST(load_negative_fpr_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
-int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
 
     TXFC_INSTR_CHECK( regs );
     HFPREG2_CHECK(r1, r2, regs);
 
-    i1 = FPR2I(r1);
-    i2 = FPR2I(r2);
-
     /* Copy register contents, set the sign bit */
-    regs->fpr[i1] = regs->fpr[i2] | 0x80000000;
-    regs->fpr[i1+1] = regs->fpr[i2+1];
+    regs->FPR_L(r1) = regs->FPR_L(r2) | 0x8000000000000000ULL;
 
 } /* end DEF_INST(load_negative_fpr_long_reg) */
 
@@ -91,8 +82,7 @@ int     i1, i2;                         /* FP register subscripts    */
 DEF_INST(copy_sign_fpr_long_reg)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
-int     i1, i2, i3;                     /* FP register subscripts    */
-U32     sign;                           /* Work area for sign bit    */
+U64     sign;                           /* Work area for sign bit    */
 
     RRF_M(inst, regs, r1, r2, r3);
 
@@ -100,20 +90,15 @@ U32     sign;                           /* Work area for sign bit    */
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
 
-    i1 = FPR2I(r1);
-    i2 = FPR2I(r2);
-    i3 = FPR2I(r3);
-
     /* Copy the sign bit from r3 register */
-    sign = regs->fpr[i3] & 0x80000000;
+    sign = regs->FPR_L(r3) & 0x8000000000000000ULL;
 
     /* Copy r2 register contents to r1 register */
-    regs->fpr[i1] = regs->fpr[i2];
-    regs->fpr[i1+1] = regs->fpr[i2+1];
+    regs->FPR_L(r1) = regs->FPR_L(r2);
 
     /* Insert the sign bit into r1 register */
-    regs->fpr[i1] &= 0x7FFFFFFF;
-    regs->fpr[i1] |= sign;
+    regs->FPR_L(r1) &= 0x7FFFFFFFFFFFFFFFULL;
+    regs->FPR_L(r1) |= sign;
 
 } /* end DEF_INST(copy_sign_fpr_long_reg) */
 
@@ -124,19 +109,14 @@ U32     sign;                           /* Work area for sign bit    */
 DEF_INST(load_complement_fpr_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
-int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
 
     TXFC_INSTR_CHECK( regs );
     HFPREG2_CHECK(r1, r2, regs);
 
-    i1 = FPR2I(r1);
-    i2 = FPR2I(r2);
-
     /* Copy register contents, invert sign bit */
-    regs->fpr[i1] = regs->fpr[i2] ^ 0x80000000;
-    regs->fpr[i1+1] = regs->fpr[i2+1];
+    regs->FPR_L(r1) = regs->FPR_L(r2) ^ 0x8000000000000000ULL;
 
 } /* end DEF_INST(load_complement_fpr_long_reg) */
 #endif /* defined( FEATURE_041_FPS_SIGN_HANDLING_FACILITY ) */
@@ -149,18 +129,14 @@ int     i1, i2;                         /* FP register subscripts    */
 DEF_INST(load_fpr_from_gr_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
-int     i1;                             /* FP register subscript     */
 
     RRE(inst, regs, r1, r2);
 
     TXFC_INSTR_CHECK( regs );
     HFPREG_CHECK(r1, regs);
 
-    i1 = FPR2I(r1);
-
     /* Load FP register contents from general register */
-    regs->fpr[i1] = regs->GR_H(r2);
-    regs->fpr[i1+1] = regs->GR_L(r2);
+    regs->FPR_L(r1) = regs->GR_G(r2);
 
 } /* end DEF_INST(load_fpr_from_gr_long_reg) */
 
@@ -171,18 +147,14 @@ int     i1;                             /* FP register subscript     */
 DEF_INST(load_gr_from_fpr_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
-int     i2;                             /* FP register subscript     */
 
     RRE(inst, regs, r1, r2);
 
     TXFC_INSTR_CHECK( regs );
     HFPREG_CHECK(r2, regs);
 
-    i2 = FPR2I(r2);
-
     /* Load general register contents from FP register */
-    regs->GR_H(r1) = regs->fpr[i2];
-    regs->GR_L(r1) = regs->fpr[i2+1];
+    regs->GR_G(r1) = regs->FPR_L(r2);
 
 } /* end DEF_INST(load_gr_from_fpr_long_reg) */
 #endif /* defined( FEATURE_041_FPR_GR_TRANSFER_FACILITY ) */
@@ -1696,12 +1668,10 @@ BYTE    drm;                            /* Decimal rounding mode     */
 static inline void
 ARCH_DEP(dfp_reg_to_decimal32) (int rn, decimal32 *xp, REGS *regs)
 {
-int     i;                              /* FP register subscript     */
 FW      *fwp;                           /* Fullword pointer          */
 
-    i = FPR2I(rn);                      /* Register index            */
     fwp = (FW*)xp;                      /* Convert to FW pointer     */
-    fwp->F = regs->fpr[i];              /* Copy FPR bits 0-31        */
+    fwp->F = regs->FPR_S(rn);           /* Copy FPR bits 0-31        */
 
 } /* end function dfp_reg_to_decimal32 */
 
@@ -1716,12 +1686,10 @@ FW      *fwp;                           /* Fullword pointer          */
 static inline void
 ARCH_DEP(dfp_reg_from_decimal32) (int rn, decimal32 *xp, REGS *regs)
 {
-int     i;                              /* FP register subscript     */
 FW      *fwp;                           /* Fullword pointer          */
 
-    i = FPR2I(rn);                      /* Register index            */
     fwp = (FW*)xp;                      /* Convert to FW pointer     */
-    regs->fpr[i] = fwp->F;              /* Load FPR bits 0-31        */
+    regs->FPR_S(rn) = fwp->F;           /* Load FPR bits 0-31        */
 
 } /* end function dfp_reg_from_decimal32 */
 
@@ -1736,13 +1704,10 @@ FW      *fwp;                           /* Fullword pointer          */
 static inline void
 ARCH_DEP(dfp_reg_to_decimal64) (int rn, decimal64 *xp, REGS *regs)
 {
-int     i;                              /* FP register subscript     */
 DW      *dwp;                           /* Doubleword pointer        */
 
-    i = FPR2I(rn);                      /* Register index            */
     dwp = (DW*)xp;                      /* Convert to DW pointer     */
-    dwp->F.H.F = regs->fpr[i];          /* Copy FPR bits 0-31        */
-    dwp->F.L.F = regs->fpr[i+1];        /* Copy FPR bits 32-63       */
+    dwp->D = regs->FPR_L(rn);           /* Copy FPR bits 0-63        */
 
 } /* end function dfp_reg_to_decimal64 */
 
@@ -1757,13 +1722,10 @@ DW      *dwp;                           /* Doubleword pointer        */
 static inline void
 ARCH_DEP(dfp_reg_from_decimal64) (int rn, decimal64 *xp, REGS *regs)
 {
-int     i;                              /* FP register subscript     */
 DW      *dwp;                           /* Doubleword pointer        */
 
-    i = FPR2I(rn);                      /* Register index            */
     dwp = (DW*)xp;                      /* Convert to DW pointer     */
-    regs->fpr[i]   = dwp->F.H.F;        /* Load FPR bits 0-31        */
-    regs->fpr[i+1] = dwp->F.L.F;        /* Load FPR bits 32-63       */
+    regs->FPR_L(rn) = dwp->D;           /* Load FPR bits 0-63        */
 
 } /* end function dfp_reg_from_decimal64 */
 
@@ -1778,16 +1740,13 @@ DW      *dwp;                           /* Doubleword pointer        */
 static inline void
 ARCH_DEP(dfp_reg_to_decimal128) (int rn, decimal128 *xp, REGS *regs)
 {
-int     i, j;                           /* FP register subscripts    */
 QW      *qwp;                           /* Quadword pointer          */
 
-    i = FPR2I(rn);                      /* Left register index       */
-    j = i + FPREX;                      /* Right register index      */
     qwp = (QW*)xp;                      /* Convert to QW pointer     */
-    qwp->F.HH.F = regs->fpr[i];         /* Copy FPR bits 0-31        */
-    qwp->F.HL.F = regs->fpr[i+1];       /* Copy FPR bits 32-63       */
-    qwp->F.LH.F = regs->fpr[j];         /* Copy FPR bits 64-95       */
-    qwp->F.LL.F = regs->fpr[j+1];       /* Copy FPR bits 96-127      */
+    qwp->F.HH.F = regs->FPR_L(rn) >> 32;    /* Copy FPR bits 0-31    */
+    qwp->F.HL.F = regs->FPR_L(rn);          /* Copy FPR bits 32-63   */
+    qwp->F.LH.F = regs->FPR_L(rn+2) >> 32;  /* Copy FPR bits 64-95   */
+    qwp->F.LL.F = regs->FPR_L(rn+2);        /* Copy FPR bits 96-127  */
 
 } /* end function dfp_reg_to_decimal128 */
 
@@ -1802,16 +1761,13 @@ QW      *qwp;                           /* Quadword pointer          */
 static inline void
 ARCH_DEP(dfp_reg_from_decimal128) (int rn, decimal128 *xp, REGS *regs)
 {
-int     i, j;                           /* FP register subscripts    */
 QW      *qwp;                           /* Quadword pointer          */
 
-    i = FPR2I(rn);                      /* Left register index       */
-    j = i + FPREX;                      /* Right register index      */
     qwp = (QW*)xp;                      /* Convert to QW pointer     */
-    regs->fpr[i]   = qwp->F.HH.F;       /* Load FPR bits 0-31        */
-    regs->fpr[i+1] = qwp->F.HL.F;       /* Load FPR bits 32-63       */
-    regs->fpr[j]   = qwp->F.LH.F;       /* Load FPR bits 64-95       */
-    regs->fpr[j+1] = qwp->F.LL.F;       /* Load FPR bits 96-127      */
+    regs->FPR_L(rn) = (U64)qwp->F.HH.F << 32 | qwp->F.HL.F;
+                                        /* Copy FPR bits 0-63        */
+    regs->FPR_L(rn+2) = (U64)qwp->F.LH.F << 32 | qwp->F.LL.F;
+                                        /* Copy FPR bits 64-127      */
 
 } /* end function dfp_reg_from_decimal128 */
 

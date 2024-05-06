@@ -1,6 +1,6 @@
 /* HSTRUCTS.H   (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) Copyright TurboHercules, SAS 2011                */
-/*              (C) and others 2013-2023                             */
+/*              (C) and others 2013-2024                             */
 /*              Hercules Structure Definitions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -186,7 +186,6 @@ struct REGS {                           /* Processor registers       */
         DW      gr[16];                 /* General registers         */
         U32     ar[16];                 /* Access registers          */
         QW      vfp[32];                /* zVector/FP registers      */
-        U32     fpr[32];                /* FP registers              */
         U32     fpc;                    /* FP Control register       */
 
 #define GR_G(_r)     gr[(_r)].D
@@ -205,9 +204,9 @@ struct REGS {                           /* Processor registers       */
 
 #define AR(_r)       ar[(_r)]
 
-#define FPR_L(_r)    vfp[(_r)].D.H.D      /* Long,  bits 0-63         */
+#define FPR_L(_r)    vfp[(_r)].D.H.D      /* Long, bits 0-63         */
 #define FPR_S(_r)    vfp[(_r)].F.HH.F     /* Short, bits 0-31        */
-// fine FPR_T(_r)    vfp[(_r)].F.HH.H.H.H /* Tiny,  bits 0-15         */
+// fine FPR_T(_r)    vfp[(_r)].F.HH.H.H.H /* Tiny, bits 0-15         */
 
 #define VR_Q(_v)     vfp[(_v)].q             /* Quadword             */
 #if defined(WORDS_BIGENDIAN)

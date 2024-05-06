@@ -77,9 +77,6 @@ static int    NPasgn;                  /* Index to dev being init'ed*/
 static int    NPlastdev;               /* Number of devices         */
 static int    NPcpugraph_ncpu;         /* Number of CPUs to display */
 
-static char  *NPregnum[]   = {" 0"," 1"," 2"," 3"," 4"," 5"," 6"," 7",
-                              " 8"," 9","10","11","12","13","14","15"
-                             };
 static char  *NPregnum64[] = {"0", "1", "2", "3", "4", "5", "6", "7",
                               "8", "9", "A", "B", "C", "D", "E", "F"
                              };
@@ -736,38 +733,21 @@ static void NP_screen_redraw (REGS *regs)
 
         /* Register area */
         set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
-        NPregmode = (regs->arch_mode == ARCH_900_IDX && (NPregdisp == 0 || NPregdisp == 1));
+        NPregmode = (regs->arch_mode == ARCH_900_IDX && (NPregdisp == 0 || NPregdisp ==1 || NPregdisp == 3));
         NPregzhost =
 #if defined(_FEATURE_SIE)
                      (regs->arch_mode != ARCH_900_IDX
                    && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX
-                   && (NPregdisp == 0 || NPregdisp == 1));
+                   && (NPregdisp == 0 || NPregdisp ==1 || NPregdisp == 3));
 #else
                      0;
 #endif /*defined(_FEATURE_SIE)*/
-        if (NPregmode == 1 || NPregzhost)
+        for (i = 0; i < 8; i++)
         {
-            for (i = 0; i < 8; i++)
-            {
-                set_pos (REGS_LINE+i, 1);
-                draw_text (NPregnum64[i*2]);
-                set_pos (REGS_LINE+i, 20);
-                draw_text (NPregnum64[i*2+1]);
-            }
-        }
-        else
-        {
-            for (i = 0; i < 4; i++)
-            {
-                set_pos (i*2+(REGS_LINE+1),9);
-                draw_text (NPregnum[i*4]);
-                set_pos (i*2+(REGS_LINE+1),18);
-                draw_text (NPregnum[i*4+1]);
-                set_pos (i*2+(REGS_LINE+1),27);
-                draw_text (NPregnum[i*4+2]);
-                set_pos (i*2+(REGS_LINE+1),36);
-                draw_text (NPregnum[i*4+3]);
-            }
+            set_pos (REGS_LINE+i, 1);
+            draw_text (NPregnum64[i*2]);
+            set_pos (REGS_LINE+i, 20);
+            draw_text (NPregnum64[i*2+1]);
         }
 
         /* Register selection */
@@ -1079,12 +1059,12 @@ static void NP_update(REGS *regs)
         }
 
         /* Redraw the register template if the regmode switched */
-        mode = (regs->arch_mode == ARCH_900_IDX && (NPregdisp == 0 || NPregdisp == 1));
+        mode = (regs->arch_mode == ARCH_900_IDX && (NPregdisp == 0 || NPregdisp ==1 || NPregdisp == 3));
         zhost =
 #if defined(_FEATURE_SIE)
                 (regs->arch_mode != ARCH_900_IDX
               && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX
-              && (NPregdisp == 0 || NPregdisp == 1));
+              && (NPregdisp == 0 || NPregdisp ==1 || NPregdisp == 3));
 #else // !defined(_FEATURE_SIE)
                      0;
 #endif /*defined(_FEATURE_SIE)*/
@@ -1094,149 +1074,124 @@ static void NP_update(REGS *regs)
             NPregzhost = zhost;
             NPregs_valid = 0;
             set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
-            if (NPregmode || NPregzhost)
-            {
-                /* 64 bit registers */
-                for (i = 0; i < 8; i++)
-                {
-                    set_pos (REGS_LINE+i, 1);
-                    fill_text (' ', 38);
-                    set_pos (REGS_LINE+i, 1);
-                    draw_text (NPregnum64[i*2]);
-                    set_pos (REGS_LINE+i, 20);
-                    draw_text (NPregnum64[i*2+1]);
-                }
-            }
-            else
-            {
-                /* 32 bit registers */
-                for (i = 0; i < 4; i++)
-                {
-                    set_pos (i*2+REGS_LINE,1);
-                    fill_text (' ', 38);
-                    set_pos (i*2+(REGS_LINE+1),1);
-                    fill_text (' ', 38);
-                    set_pos (i*2+(REGS_LINE+1),9);
-                    draw_text (NPregnum[i*4]);
-                    set_pos (i*2+(REGS_LINE+1),18);
-                    draw_text (NPregnum[i*4+1]);
-                    set_pos (i*2+(REGS_LINE+1),27);
-                    draw_text (NPregnum[i*4+2]);
-                    set_pos (i*2+(REGS_LINE+1),36);
-                    draw_text (NPregnum[i*4+3]);
-                }
-            }
         }
 
-        /* Display register values */
+        /* Display register values (or storage) i*/
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK );
-        if (NPregmode)
+        addr = NPaddress;
+        for (i = 0; i < 16; i++)
         {
-            /* 64 bit registers */
-            for (i = 0; i < 16; i++)
-            {
-                switch (NPregdisp) {
-                case 0:
+            set_pos (REGS_LINE + i/2, 3 + (i%2)*19);
+            switch (NPregdisp) {
+            default:
+            case 0:  /* General Purpose Registers */
+                if (NPregmode)
+                {
+                    /* 64 bit register */
                     if (!NPregs_valid || NPregs64[i] != regs->GR_G(i))
                     {
-                        set_pos (REGS_LINE + i/2, 3 + (i%2)*19);
                         draw_dw (regs->GR_G(i));
                         NPregs64[i] = regs->GR_G(i);
                     }
-                    break;
-                case 1:
+                }
+                else if (NPregzhost)
+                {
+                    /* 32 bit register on 64 bit template */
+                    if (!NPregs_valid || NPregs[i] != regs->GR_L(i))
+                    {
+                        draw_text("--------");
+                        draw_fw (regs->GR_L(i));
+                        NPregs[i] = regs->GR_L(i);
+                    }
+                }
+                else
+                {
+                    /* 32 bit register */
+                    if (!NPregs_valid || NPregs[i] != regs->GR_L(i))
+                    {
+                        draw_fw (regs->GR_L(i));
+                        draw_text("        ");
+                        NPregs[i] = regs->GR_L(i);
+                    }
+                }
+                break;
+            case 1:  /* Control Registers */
+                if (NPregmode)
+                {
+                    /* 64 bit register */
                     if (!NPregs_valid || NPregs64[i] != regs->CR_G(i))
                     {
-                        set_pos (REGS_LINE + i/2, 3 + (i%2)*19);
                         draw_dw (regs->CR_G(i));
                         NPregs64[i] = regs->CR_G(i);
                     }
-                    break;
                 }
-            }
-        }
-        else if (NPregzhost)
-        {
-            /* 32 bit registers on 64 bit template */
-            for (i = 0; i < 16; i++)
-            {
-                switch (NPregdisp) {
-                case 0:
-                    if (!NPregs_valid || NPregs[i] != regs->GR_L(i))
-                    {
-                        set_pos (REGS_LINE + i/2, 3 + (i%2)*19);
-//                      draw_fw (0);
-                        draw_text("--------");
-                        draw_fw (regs->GR_L(i));
-                        NPregs[i] = regs->GR_L(i);
-                    }
-                    break;
-                case 1:
+                else if (NPregzhost)
+                {
+                    /* 32 bit register on 64 bit template */
                     if (!NPregs_valid || NPregs[i] != regs->CR_L(i))
                     {
-                        set_pos (REGS_LINE + i/2, 3 + (i%2)*19);
-//                      draw_fw (0);
                         draw_text("--------");
                         draw_fw (regs->CR_L(i));
                         NPregs[i] = regs->CR_L(i);
                     }
-                    break;
                 }
-            }
-        }
-        else
-        {
-            /* 32 bit registers */
-            addr = NPaddress;
-            for (i = 0; i < 16; i++)
-            {
-                switch (NPregdisp) {
-                default:
-                case 0:
-                    if (!NPregs_valid || NPregs[i] != regs->GR_L(i))
-                    {
-                        set_pos (REGS_LINE + (i/4)*2, 3 + (i%4)*9);
-                        draw_fw (regs->GR_L(i));
-                        NPregs[i] = regs->GR_L(i);
-                    }
-                    break;
-                case 1:
+                else
+                {
+                    /* 32 bit register */
                     if (!NPregs_valid || NPregs[i] != regs->CR_L(i))
                     {
-                        set_pos (REGS_LINE + (i/4)*2, 3 + (i%4)*9);
                         draw_fw (regs->CR_L(i));
+                        draw_text("        ");
                         NPregs[i] = regs->CR_L(i);
                     }
-                    break;
-                case 2:
-                    if (!NPregs_valid || NPregs[i] != regs->AR(i))
+                }
+                break;
+            case 2:  /* Access Registers */
+                /* 32 bit register */
+                if (!NPregs_valid || NPregs[i] != regs->AR(i))
+                {
+                    draw_fw (regs->AR(i));
+                    draw_text("        ");
+                    NPregs[i] = regs->AR(i);
+                }
+                break;
+            case 3:  /* Floating Point Registers */
+                /* 64 bit register */
+                if (!NPregs_valid || NPregs64[i] != regs->FPR_L(i))
+                {
+                    if (NPregmode || NPregzhost)
                     {
-                        set_pos (REGS_LINE + (i/4)*2, 3 + (i%4)*9);
-                        draw_fw (regs->AR(i));
-                        NPregs[i] = regs->AR(i);
+                        draw_dw (regs->FPR_L(i));
                     }
-                    break;
-                case 3:
-                    if (!NPregs_valid || NPregs[i] != regs->fpr[i])
+                    else
                     {
-                        set_pos (REGS_LINE + (i/4)*2, 3 + (i%4)*9);
-                        draw_fw (regs->fpr[i]);
-                        NPregs[i] = regs->fpr[i];
+                        if (i < 8 && !(i & 1))
+                        {
+                            draw_dw (regs->FPR_L(i));
+                        }
+                        else
+                        {
+                            draw_text("                ");
+                        }
                     }
-                    break;
-                case 4:
-                    aaddr = APPLY_PREFIXING (addr, regs->PX);
-                    addr += 4;
-                    if (aaddr + 3 > regs->mainlim)
-                        break;
-                    if (!NPregs_valid || NPregs[i] != fetch_fw(regs->mainstor + aaddr))
-                    {
-                        set_pos (REGS_LINE + (i/4)*2, 3 + (i%4)*9);
-                        draw_fw (fetch_fw(regs->mainstor + aaddr));
-                        NPregs[i] = fetch_fw(regs->mainstor + aaddr);
-                    }
+                    NPregs64[i] = regs->FPR_L(i);
+                }
+
+                break;
+            case 4:  /* Storage */
+                aaddr = APPLY_PREFIXING (addr, regs->PX);
+                addr += 8;
+                if (aaddr + 7 > regs->mainlim)
+                {
+                    draw_text("                ");
                     break;
                 }
+                if (!NPregs_valid || NPregs64[i] != fetch_dw(regs->mainstor + aaddr))
+                {
+                    draw_dw (fetch_dw(regs->mainstor + aaddr));
+                    NPregs64[i] = fetch_dw(regs->mainstor + aaddr);
+                }
+                break;
             }
         }
 

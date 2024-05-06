@@ -311,7 +311,8 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	panel.lo pfpo.lo plo.lo qdio.lo scedasd.lo scescsi.lo \
 	script.lo service.lo sie.lo skey.lo sr.lo stack.lo \
 	strsignal.lo tcpip.lo timer.lo trace.lo transact.lo vector.lo \
-	vm.lo vmd250.lo vstore.lo x75.lo xstore.lo $(am__objects_1)
+	vm.lo vmd250.lo vstore.lo x75.lo xstore.lo zvector.lo \
+	$(am__objects_1)
 libherc_la_OBJECTS = $(am_libherc_la_OBJECTS)
 libherc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -701,7 +702,8 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/version.Plo ./$(DEPDIR)/vm.Plo \
 	./$(DEPDIR)/vmd250.Plo ./$(DEPDIR)/vmfplc2.Po \
 	./$(DEPDIR)/vstore.Plo ./$(DEPDIR)/x75.Plo \
-	./$(DEPDIR)/xstore.Plo ./$(DEPDIR)/zfcp.Plo
+	./$(DEPDIR)/xstore.Plo ./$(DEPDIR)/zfcp.Plo \
+	./$(DEPDIR)/zvector.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -1442,6 +1444,7 @@ libherc_la_SOURCES = \
   vstore.c           \
   x75.c              \
   xstore.c           \
+  zvector.c          \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
@@ -2606,6 +2609,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x75.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xstore.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zfcp.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zvector.Plo@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -3207,6 +3211,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/x75.Plo
 	-rm -f ./$(DEPDIR)/xstore.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
+	-rm -f ./$(DEPDIR)/zvector.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -3442,6 +3447,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/x75.Plo
 	-rm -f ./$(DEPDIR)/xstore.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
+	-rm -f ./$(DEPDIR)/zvector.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

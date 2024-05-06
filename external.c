@@ -1,5 +1,5 @@
 /* EXTERNAL.C   (C) Copyright Roger Bowler, 1999-2012                */
-/*              (C) and others 2013-2023                             */
+/*              (C) and others 2013-2024                             */
 /*              ESA/390 External Interrupt and Timer                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -617,11 +617,12 @@ PSA     *sspsa;                         /* -> Store status area      */
 
     /* Store floating-point registers in bytes 352-383 */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    for (i = 0; i < 32; i++)
+    for (i = 0; i < 16; i++)
+        STORE_DW(sspsa->storefpr[i],ssreg->FPR_L(i));
 #else
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 4; i++)
+        STORE_DW(sspsa->storefpr[i],ssreg->FPR_L(i*2));
 #endif
-        STORE_FW(sspsa->storefpr[i],ssreg->fpr[i]);
 
     /* Store general-purpose registers in bytes 384-447 */
     for (i = 0; i < 16; i++)

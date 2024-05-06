@@ -28,11 +28,11 @@ DEF_INST(vector_load_element_8)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -45,11 +45,11 @@ DEF_INST(vector_load_element_16)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -62,11 +62,11 @@ DEF_INST(vector_load_element_64)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -79,11 +79,11 @@ DEF_INST(vector_load_element_32)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -96,11 +96,11 @@ DEF_INST(vector_load_logical_element_and_zero)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -113,11 +113,11 @@ DEF_INST(vector_load_and_replicate)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -130,10 +130,8 @@ DEF_INST(vector_load)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-
     regs->VR_Q( v1 ) = ARCH_DEP( vfetch16 ) ( effective_addr2, b2, regs );
-    REFRESH_UPDATE_VR( v1 );
-
+    // REFRESH_UPDATE_VR( v1 );
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -146,11 +144,11 @@ DEF_INST(vector_load_to_block_boundary)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -163,11 +161,11 @@ DEF_INST(vector_store_element_8)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -180,11 +178,11 @@ DEF_INST(vector_store_element_16)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -197,11 +195,11 @@ DEF_INST(vector_store_element_64)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -214,11 +212,11 @@ DEF_INST(vector_store_element_32)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -231,11 +229,11 @@ DEF_INST(vector_store)
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -246,11 +244,11 @@ DEF_INST(vector_gather_element_64)
     int      v1, v2, b2, d2, m3;
     VRV( inst, regs, v1, v2, b2, d2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -261,11 +259,11 @@ DEF_INST(vector_gather_element_32)
     int      v1, v2, b2, d2, m3;
     VRV( inst, regs, v1, v2, b2, d2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -276,11 +274,11 @@ DEF_INST(vector_scatter_element_64)
     int      v1, v2, b2, d2, m3;
     VRV( inst, regs, v1, v2, b2, d2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -291,11 +289,11 @@ DEF_INST(vector_scatter_element_32)
     int      v1, v2, b2, d2, m3;
     VRV( inst, regs, v1, v2, b2, d2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -308,11 +306,11 @@ DEF_INST(vector_load_gr_from_vr_element)
     VRS_C( inst, regs, r1, v3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -325,11 +323,11 @@ DEF_INST(vector_load_vr_element_from_gr)
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -342,11 +340,11 @@ DEF_INST(load_count_to_block_boundary)
     RXE_M3( inst, regs, r1, x2, b2, effective_addr2, m3 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -359,11 +357,11 @@ DEF_INST(vector_element_shift_left)
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -376,11 +374,11 @@ DEF_INST(vector_element_rotate_left_logical)
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -393,11 +391,11 @@ DEF_INST(vector_load_multiple)
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -410,11 +408,11 @@ DEF_INST(vector_load_with_length)
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -427,11 +425,11 @@ DEF_INST(vector_element_shift_right_logical)
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -444,11 +442,11 @@ DEF_INST(vector_element_shift_right_arithmetic)
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -461,11 +459,11 @@ DEF_INST(vector_store_multiple)
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -478,11 +476,11 @@ DEF_INST(vector_store_with_length)
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -493,11 +491,11 @@ DEF_INST(vector_load_element_immediate_8)
     int     v1, i2, m3;
     VRI_A( inst, regs, v1, i2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -508,11 +506,11 @@ DEF_INST(vector_load_element_immediate_16)
     int     v1, i2, m3;
     VRI_A( inst, regs, v1, i2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -523,11 +521,11 @@ DEF_INST(vector_load_element_immediate_64)
     int     v1, i2, m3;
     VRI_A( inst, regs, v1, i2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -538,11 +536,11 @@ DEF_INST(vector_load_element_immediate_32)
     int     v1, i2, m3;
     VRI_A( inst, regs, v1, i2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -553,11 +551,11 @@ DEF_INST(vector_generate_byte_mask)
     int     v1, i2, m3;
     VRI_A( inst, regs, v1, i2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -568,11 +566,11 @@ DEF_INST(vector_replicate_immediate)
     int     v1, i2, m3;
     VRI_A( inst, regs, v1, i2, m3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -583,11 +581,11 @@ DEF_INST(vector_generate_mask)
     int     v1, i2, i3, m4;
     VRI_B( inst, regs, v1, i2, i3, m4 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -598,11 +596,11 @@ DEF_INST(vector_fp_test_data_class_immediate)
     int     v1, v2, i3, m4, m5;
     VRI_E( inst, regs, v1, v2, i3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -613,11 +611,11 @@ DEF_INST(vector_replicate)
     int     v1, v3, i2, m4;
     VRI_C( inst, regs, v1, v3, i2, m4 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -628,11 +626,11 @@ DEF_INST(vector_population_count)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -643,11 +641,11 @@ DEF_INST(vector_count_trailing_zeros)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -658,11 +656,11 @@ DEF_INST(vector_count_leading_zeros)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -673,11 +671,11 @@ DEF_INST(vector_load_vector)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -688,11 +686,11 @@ DEF_INST(vector_isolate_string)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -703,11 +701,11 @@ DEF_INST(vector_sign_extend_to_doubleword)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -718,11 +716,11 @@ DEF_INST(vector_merge_low)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -733,11 +731,11 @@ DEF_INST(vector_merge_high)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -748,11 +746,11 @@ DEF_INST(vector_load_vr_from_grs_disjoint)
     int     v1, r2, r3;
     VRR_F( inst, regs, v1, r2, r3 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -763,11 +761,11 @@ DEF_INST(vector_sum_across_word)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -778,11 +776,11 @@ DEF_INST(vector_sum_across_doubleword)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -793,11 +791,11 @@ DEF_INST(vector_checksum)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -808,11 +806,11 @@ DEF_INST(vector_sum_across_quadword)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -823,11 +821,11 @@ DEF_INST(vector_and)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -838,11 +836,11 @@ DEF_INST(vector_and_with_complement)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -853,11 +851,11 @@ DEF_INST(vector_or)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -868,11 +866,11 @@ DEF_INST(vector_nor)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -883,11 +881,11 @@ DEF_INST(vector_exclusive_or)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -898,11 +896,11 @@ DEF_INST(vector_element_shift_left_vector)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -913,11 +911,11 @@ DEF_INST(vector_element_rotate_and_insert_under_mask)
     int     v1, v2, v3, i4, m5;
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -928,11 +926,11 @@ DEF_INST(vector_element_rotate_left_logical_vector)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -943,11 +941,11 @@ DEF_INST(vector_shift_left)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -958,11 +956,11 @@ DEF_INST(vector_shift_left_by_byte)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -973,11 +971,11 @@ DEF_INST(vector_shift_left_double_by_byte)
     int     v1, v2, v3, i4, m5;
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -988,11 +986,11 @@ DEF_INST(vector_element_shift_right_logical_vector)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1003,11 +1001,11 @@ DEF_INST(vector_element_shift_right_arithmetic_vector)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1018,11 +1016,11 @@ DEF_INST(vector_shift_right_logical)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1033,11 +1031,11 @@ DEF_INST(vector_shift_right_logical_by_byte)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1048,11 +1046,11 @@ DEF_INST(vector_shift_right_arithmetic)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1063,11 +1061,11 @@ DEF_INST(vector_shift_right_arithmetic_by_byte)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1078,11 +1076,11 @@ DEF_INST(vector_find_element_equal)
     int     v1, v2, v3, m4, m5;
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1093,11 +1091,11 @@ DEF_INST(vector_find_element_not_equal)
     int     v1, v2, v3, m4, m5;
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1108,11 +1106,11 @@ DEF_INST(vector_find_any_element_equal)
     int     v1, v2, v3, m4, m5;
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1123,11 +1121,11 @@ DEF_INST(vector_permute_doubleword_immediate)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1138,11 +1136,11 @@ DEF_INST(vector_string_range_compare)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1153,11 +1151,11 @@ DEF_INST(vector_permute)
     int     v1, v2, v3, v4, m5, m6;
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1168,11 +1166,11 @@ DEF_INST(vector_select)
     int     v1, v2, v3, v4, m5, m6;
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1183,11 +1181,11 @@ DEF_INST(vector_fp_multiply_and_subtract)
     int     v1, v2, v3, v4, m5, m6;
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1198,11 +1196,11 @@ DEF_INST(vector_fp_multiply_and_add)
     int     v1, v2, v3, v4, m5, m6;
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1213,11 +1211,11 @@ DEF_INST(vector_pack)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1228,11 +1226,11 @@ DEF_INST(vector_pack_logical_saturate)
     int     v1, v2, v3, m4, m5;
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1243,11 +1241,11 @@ DEF_INST(vector_pack_saturate)
     int     v1, v2, v3, m4, m5;
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1258,11 +1256,11 @@ DEF_INST(vector_multiply_logical_high)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1273,11 +1271,11 @@ DEF_INST(vector_multiply_low)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1288,11 +1286,11 @@ DEF_INST(vector_multiply_high)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1303,11 +1301,11 @@ DEF_INST(vector_multiply_logical_even)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1318,11 +1316,11 @@ DEF_INST(vector_multiply_logical_odd)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1333,11 +1331,11 @@ DEF_INST(vector_multiply_even)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1348,11 +1346,11 @@ DEF_INST(vector_multiply_odd)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1363,11 +1361,11 @@ DEF_INST(vector_multiply_and_add_logical_high)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1378,11 +1376,11 @@ DEF_INST(vector_multiply_and_add_low)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1393,11 +1391,11 @@ DEF_INST(vector_multiply_and_add_high)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1408,11 +1406,11 @@ DEF_INST(vector_multiply_and_add_logical_even)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1423,11 +1421,11 @@ DEF_INST(vector_multiply_and_add_logical_odd)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1438,11 +1436,11 @@ DEF_INST(vector_multiply_and_add_even)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1453,11 +1451,11 @@ DEF_INST(vector_multiply_and_add_odd)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1468,11 +1466,11 @@ DEF_INST(vector_galois_field_multiply_sum)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1483,11 +1481,11 @@ DEF_INST(vector_add_with_carry_compute_carry)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1498,11 +1496,11 @@ DEF_INST(vector_add_with_carry)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1513,11 +1511,11 @@ DEF_INST(vector_galois_field_multiply_sum_and_accumulate)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1528,11 +1526,11 @@ DEF_INST(vector_subtract_with_borrow_compute_borrow_indication)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1543,11 +1541,11 @@ DEF_INST(vector_subtract_with_borrow_indication)
     int     v1, v2, v3, v4, m5, m6;
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1558,11 +1556,11 @@ DEF_INST(vector_fp_convert_to_logical_64_bit)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1573,11 +1571,11 @@ DEF_INST(vector_fp_convert_from_logical_64_bit)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1588,11 +1586,11 @@ DEF_INST(vector_fp_convert_to_fixed_64_bit)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1603,11 +1601,11 @@ DEF_INST(vector_fp_convert_from_fixed_64_bit)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1618,11 +1616,11 @@ DEF_INST(vector_fp_load_lengthened)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1633,11 +1631,11 @@ DEF_INST(vector_fp_load_rounded)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1648,11 +1646,11 @@ DEF_INST(vector_load_fp_integer)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1663,11 +1661,11 @@ DEF_INST(vector_fp_compare_and_signal_scalar)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1678,11 +1676,11 @@ DEF_INST(vector_fp_compare_scalar)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1693,11 +1691,11 @@ DEF_INST(vector_fp_perform_sign_operation)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1708,11 +1706,11 @@ DEF_INST(vector_fp_square_root)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1723,11 +1721,11 @@ DEF_INST(vector_unpack_logical_low)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1738,11 +1736,11 @@ DEF_INST(vector_unpack_logical_high)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1753,11 +1751,11 @@ DEF_INST(vector_unpack_low)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1768,11 +1766,11 @@ DEF_INST(vector_unpack_high)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1783,11 +1781,11 @@ DEF_INST(vector_test_under_mask)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1798,11 +1796,11 @@ DEF_INST(vector_element_compare_logical)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1813,11 +1811,11 @@ DEF_INST(vector_element_compare)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1828,11 +1826,11 @@ DEF_INST(vector_load_complement)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1843,11 +1841,11 @@ DEF_INST(vector_load_positive)
     int     v1, v2, m3, m4, m5;
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1858,11 +1856,11 @@ DEF_INST(vector_fp_subtract)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1873,11 +1871,11 @@ DEF_INST(vector_fp_add)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1888,11 +1886,11 @@ DEF_INST(vector_fp_divide)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1903,11 +1901,11 @@ DEF_INST(vector_fp_multiply)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1918,11 +1916,11 @@ DEF_INST(vector_fp_compare_equal)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1933,11 +1931,11 @@ DEF_INST(vector_fp_compare_high_or_equal)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1948,11 +1946,11 @@ DEF_INST(vector_fp_compare_high)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1963,11 +1961,11 @@ DEF_INST(vector_average_logical)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1978,11 +1976,11 @@ DEF_INST(vector_add_compute_carry)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -1993,11 +1991,11 @@ DEF_INST(vector_average)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2008,11 +2006,11 @@ DEF_INST(vector_add)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2023,11 +2021,11 @@ DEF_INST(vector_subtract_compute_borrow_indication)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2038,11 +2036,11 @@ DEF_INST(vector_subtract)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2053,11 +2051,11 @@ DEF_INST(vector_compare_equal)
     int     v1, v2, v3, m4, m5;
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2068,11 +2066,11 @@ DEF_INST(vector_compare_high_logical)
     int     v1, v2, v3, m4, m5;
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2083,11 +2081,11 @@ DEF_INST(vector_compare_high)
     int     v1, v2, v3, m4, m5;
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2098,11 +2096,11 @@ DEF_INST(vector_minimum_logical)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2113,11 +2111,11 @@ DEF_INST(vector_maximum_logical)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2128,11 +2126,11 @@ DEF_INST(vector_minimum)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 /*-------------------------------------------------------------------*/
@@ -2143,11 +2141,11 @@ DEF_INST(vector_maximum)
     int     v1, v2, v3, m4, m5, m6;
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
     ZVECTOR_CHECK( regs );
-//
-// TODO: insert code here
-//
-    ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
-//
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt ) ( regs, PGM_OPERATION_EXCEPTION );
+    //
     ZVECTOR_END( regs );
 }
 

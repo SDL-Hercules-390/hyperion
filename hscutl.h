@@ -1,5 +1,5 @@
 /* HSCUTL.H     (C) Copyright Roger Bowler, 1999-2012                */
-/*              (C) and others 2013-2023                             */
+/*              (C) and others 2013-2024                             */
 /*              Host-specific functions for Hercules                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -1368,7 +1368,7 @@ CASSERT( sizeof( TF02269 ) % 8 == 0, hscutl_h );
 struct TF02270
 {
     TFHDR   rhdr;           // Record Header
-    U32     fpr[32];        // FP registers
+    DW      fpr[16];        // FP registers
     BYTE    afp;            // CR0 AFP enabled
     BYTE    pad [ 7 ];      // (padding/alignment/unused)
 }

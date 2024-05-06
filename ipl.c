@@ -1,5 +1,5 @@
 /* IPL.C        (C) Copyright Roger Bowler, 1999-2012                */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2024                             */
 /*              ESA/390 Initial Program Loader                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -291,15 +291,12 @@ int ARCH_DEP( system_reset )( const int target_mode, const bool clear,
                  */
                 memset( regs->ar,  0, sizeof( regs->ar  ));
                 memset( regs->gr,  0, sizeof( regs->gr  ));
-                memset( regs->fpr, 0, sizeof( regs->fpr ));
-#if defined(FEATURE_129_ZVECTOR_FACILITY)
                 memset( regs->vfp, 0, sizeof( regs->vfp ));
-#endif
-
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
                 memset( regs->vf->vr, 0, sizeof( regs->vf->vr ));
 #endif
+
                 /* Clear the instruction counter and CPU time used */
                 cpu_reset_instcount_and_cputime( regs );
             }
