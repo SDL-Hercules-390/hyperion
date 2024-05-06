@@ -35,20 +35,12 @@
     #define bswap_16(x)     _byteswap_ushort((x))
     #define bswap_32(x)     _byteswap_ulong((x))
     #define bswap_64(x)     _byteswap_uint64((x))
-static __inline  U128  __fastcall  bswap_128( U128 input )
-  {
-    __m128i swapmask = _mm_set_epi8( 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 );
-    __m128i swapped, work = input;
-    _mm_storeu_si128( &swapped, _mm_shuffle_epi8( _mm_loadu_si128( &work ), swapmask ));
-    return swapped;
-  }
 
   #else // !defined( _MSVC_ )
 
     #define bswap_16(x)    __builtin_bswap16((x))
     #define bswap_32(x)    __builtin_bswap32((x))
     #define bswap_64(x)    __builtin_bswap64((x))
-    #define bswap_128(x)   __builtin_bswap128((x))
 
   #endif
 
@@ -99,21 +91,6 @@ static __inline  U128  __fastcall  bswap_128( U128 input )
   #endif
   }
 
-  static inline U128 (ATTR_REGPARM(1) bswap_128)( U128 x )
-    {
-        U128 ret;
-        union _128_as_64
-        {
-            unsigned __int128 qw;
-            U64 dw[2];
-        } u1, u2;
-        u1.qw = x._u128;
-        u2.dw[1] = bswap_64( u1.dw[0] );
-        u2.dw[0] = bswap_64( u1.dw[1] );
-        ret._u128 = u2.qw;
-        return ret;
-    }
-
 #else
 
   #define bswap_16(_x)                                      \
@@ -139,3 +116,11 @@ static __inline  U128  __fastcall  bswap_128( U128 input )
 #endif
 
 #endif // _BYTESWAP_H
+
+static __inline  U128  __fastcall  bswap_128( U128 input )
+  {
+    __m128i swapmask = _mm_set_epi8( 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 );
+    __m128i swapped, work = input;
+    _mm_storeu_si128( &swapped, _mm_shuffle_epi8( _mm_loadu_si128( &work ), swapmask ));
+    return swapped;
+  }
