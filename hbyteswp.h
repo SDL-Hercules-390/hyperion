@@ -116,11 +116,3 @@
 #endif
 
 #endif // _BYTESWAP_H
-
-static __inline  U128  __fastcall  bswap_128( U128 input )
-  {
-    __m128i swapmask = _mm_set_epi8( 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 );
-    __m128i swapped, work = input;
-    _mm_storeu_si128( &swapped, _mm_shuffle_epi8( _mm_loadu_si128( &work ), swapmask ));
-    return swapped;
-  }
