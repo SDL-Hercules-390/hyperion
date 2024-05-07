@@ -793,6 +793,7 @@ do { \
 /* the value that was read from disk, REGARDLESS of the endianness   */
 /* of the Hercules build or the host it is currently running on.     */
 /*-------------------------------------------------------------------*/
+
 #ifdef WORDS_BIGENDIAN
  #define CSWAP16(_x)    (_x)            // (result ALWAYS big endian)
  #define CSWAP32(_x)    (_x)            // (result ALWAYS big endian)

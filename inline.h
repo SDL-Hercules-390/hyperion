@@ -294,7 +294,7 @@ inline int mult_logical_long( U64* high, U64* lo, U64 md, U64 mr )
     return 0;
 }
 /*-------------------------------------------------------------------*/
-/* Multiply two unsigned doublewords giving unsigned 128-bit result  */
+/* Change endianness of a 128bits/16bytes integer                    */
 /*-------------------------------------------------------------------*/
 inline U128 bswap_128( U128 input )
 {
