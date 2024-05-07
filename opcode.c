@@ -7466,7 +7466,7 @@ static INSTR_FUNC replace_opcode_xx________xx( int arch, INSTR_FUNC inst, int op
         case 0xe7:
         {
             oldinst = runtime_opcode_e7________xx[arch][opcode2];
-            runtime_opcode_e7________xx[arch][opcode2] = inst;
+                      runtime_opcode_e7________xx[arch][opcode2] = inst;
             break;
         }
         case 0xeb:
