@@ -798,15 +798,18 @@ do { \
  #define CSWAP16(_x)    (_x)            // (result ALWAYS big endian)
  #define CSWAP32(_x)    (_x)            // (result ALWAYS big endian)
  #define CSWAP64(_x)    (_x)            // (result ALWAYS big endian)
+ #define CSWAP128(_x)   (_x)            // (result ALWAYS big endian)
 #else
  #define CSWAP16(_x)    bswap_16(_x)    // (result ALWAYS big endian)
  #define CSWAP32(_x)    bswap_32(_x)    // (result ALWAYS big endian)
  #define CSWAP64(_x)    bswap_64(_x)    // (result ALWAYS big endian)
+ #define CSWAP128(_x)   bswap_128(_x)   // (result ALWAYS big endian)
 #endif
 
  #define SWAP16(_x)     bswap_16(_x)    // (result OPPOSITE of input)
  #define SWAP32(_x)     bswap_32(_x)    // (result OPPOSITE of input)
  #define SWAP64(_x)     bswap_64(_x)    // (result OPPOSITE of input)
+ #define SWAP128(_x)    bswap_128(_x)   // (result OPPOSITE of input)
 
  #define SWAP_OFF_T(o)  (sizeof(o) <= 4 ? SWAP32((U32)o) : SWAP64(o))
 
@@ -826,11 +829,13 @@ do { \
 #define FETCH_FW( _val, _stor )     (_val) = fetch_fw( _stor )
 #define FETCH_F3( _val, _stor )     (_val) = fetch_f3( _stor )
 #define FETCH_DW( _val, _stor )     (_val) = fetch_dw( _stor )
+#define FETCH_QW( _val, _stor )     (_val) = fetch_qw( _stor )
 
 #define STORE_HW( _stor, _val )     store_hw( _stor, _val )
 #define STORE_FW( _stor, _val )     store_fw( _stor, _val )
 #define STORE_F3( _stor, _val )     store_f3( _stor, _val )
 #define STORE_DW( _stor, _val )     store_dw( _stor, _val )
+#define STORE_QW( _stor, _val )     store_qw( _stor, _val )
 
 /*-------------------------------------------------------------------*/
 /*            CKD/CCKD header field FETCH/STORE macros               */
