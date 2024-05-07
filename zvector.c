@@ -191,9 +191,10 @@ DEF_INST(vector_load)
 /*-------------------------------------------------------------------*/
 DEF_INST(vector_load_to_block_boundary)
 {
-    int     v1, m3, x2, b2;
-    VADR    effective_addr2;
+    int     v1, m3, x2, b2, length, i;
+    VADR    effective_addr2, nextbound;
     U8      bytes[16];
+    U64     boundary;
     
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
     
@@ -203,13 +204,13 @@ DEF_INST(vector_load_to_block_boundary)
     if (m3 > 6)                    /* M3 > 6 => Specficitcation excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    U64 boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
+    boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
                                 4: 1K - byte, 5: 2K - Byte, 6: 4K - Byte */
-    VADR nextbound = (effective_addr2 + boundary) & ~(boundary-1);
-    int length = min(16, nextbound - effective_addr2);
+    nextbound = (effective_addr2 + boundary) & ~(boundary-1);
+    length = min(16, nextbound - effective_addr2);
     ARCH_DEP( vfetchc )( &bytes, length - 1, effective_addr2, b2, regs );
 
-    for (int i = 0; i < length; i++) regs->VR_B( v1, i) = bytes[i];
+    for (i=0; i < length; i++) regs->VR_B( v1, i) = bytes[i];
     
     ZVECTOR_END( regs );
 }
@@ -478,8 +479,9 @@ DEF_INST(vector_load_vr_element_from_gr)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_count_to_block_boundary)
 {
-    int     r1, x2, b2, m3;
-    VADR    effective_addr2;
+    int     r1, x2, b2, m3, length;
+    VADR    effective_addr2, nextbound;
+    U64     boundary;
     
     RXE_M3( inst, regs, r1, x2, b2, effective_addr2, m3 );
     
@@ -488,10 +490,11 @@ DEF_INST(load_count_to_block_boundary)
     if (m3 > 6)                    /* M3 > 6 => Specficitcation excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    U64 boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
-                                4: 1K - byte, 5: 2K - Byte, 6: 4K - Byte */
-    VADR nextbound = (effective_addr2 + boundary) & ~(boundary - 1);
-    int length = min(16, nextbound - effective_addr2);
+    boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
+                            4: 1K - byte, 5: 2K - Byte, 6: 4K - Byte */
+
+    nextbound = (effective_addr2 + boundary) & ~(boundary - 1);
+    length = min( 16, nextbound - effective_addr2 );
 
     regs->GR_L(r1) = length;
     regs->psw.cc = (length == 16) ? 0 : 3;
@@ -503,34 +506,33 @@ DEF_INST(load_count_to_block_boundary)
 /*-------------------------------------------------------------------*/
 DEF_INST(vector_element_shift_left)
 {
-    int     v1, v3, b2, m4;
+    int     v1, v3, b2, m4, shift, i;
     VADR    effective_addr2;
     
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     
     ZVECTOR_CHECK( regs );
     
-    int shift;
     switch (m4)
     {
     case 0:
         shift = b2 % 8;
-        for(int i=0; i < 16; i++)
+        for(i=0; i < 16; i++)
             regs->VR_B( v1, i ) = regs->VR_B( v3, i ) << shift;
         break;
     case 1:
         shift = b2 % 16;
-        for (int i = 0; i < 8; i++)
+        for (i=0; i < 8; i++)
             regs->VR_H( v1, i ) = regs->VR_B( v3, i ) << shift;
         break;
     case 2:
         shift = b2 % 32;
-        for (int i = 0; i < 4; i++)
+        for (i=0; i < 4; i++)
             regs->VR_F( v1, i ) = regs->VR_F( v3, i ) << shift;
         break; 
     case 3:
         shift = b2 % 64;
-        for (int i = 0; i < 2; i++)
+        for (i=0; i < 2; i++)
             regs->VR_D( v1, i ) = regs->VR_D( v3, i ) << shift;
         break; 
     default:
@@ -545,38 +547,37 @@ DEF_INST(vector_element_shift_left)
 /*-------------------------------------------------------------------*/
 DEF_INST(vector_element_rotate_left_logical)
 {
-    int     v1, v3, b2, m4;
+    int     v1, v3, b2, m4, i, rotl, rotr;
     VADR    effective_addr2;
     
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     
     ZVECTOR_CHECK( regs );
 
-    int rotl, rotr;
     switch (m4)
     {
     case 0:
         rotl = b2 % 8;
         rotr = -rotl & 7;
-        for (int i = 0; i < 16; i++)
+        for (i=0; i < 16; i++)
             regs->VR_B( v1, i ) = (regs->VR_B( v3, i ) << rotl) | (regs->VR_B( v3, i ) >> rotr);
         break;
     case 1:
         rotl = b2 % 16;
         rotr = -rotl & 15;
-        for (int i = 0; i < 8; i++)
+        for (i=0; i < 8; i++)
             regs->VR_H( v1, i ) = (regs->VR_H( v3, i ) << rotl) | (regs->VR_H( v3, i ) >> rotr);
         break;
     case 2:
         rotl = b2 % 32;
         rotr = -rotl & 31;
-        for (int i = 0; i < 4; i++)
+        for (i=0; i < 4; i++)
             regs->VR_F( v1, i ) = (regs->VR_F( v3, i ) << rotl) | (regs->VR_F( v3, i ) >> rotr);
         break;
     case 3:
         rotl = b2 % 64;
         rotr = -rotl & 63;
-        for (int i = 0; i < 2; i++)
+        for (i=0; i < 2; i++)
             regs->VR_D( v1, i ) = (regs->VR_D( v3, i ) << rotl) | (regs->VR_D( v3, i ) >> rotr);
         break;
     default:
@@ -591,7 +592,7 @@ DEF_INST(vector_element_rotate_left_logical)
 /*-------------------------------------------------------------------*/
 DEF_INST(vector_load_multiple)
 {
-    int     v1, v3, b2, m4;
+    int     v1, v3, b2, m4, i;
     VADR    effective_addr2;
     
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
@@ -602,7 +603,7 @@ DEF_INST(vector_load_multiple)
     if (v3 < v1 || (v3 - v1 + 1) > 16)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    for (int i = v1; i <= v3; i++)
+    for (i = v1; i <= v3; i++)
     {
         regs->VR_Q(i) = ARCH_DEP( vfetch16 )( effective_addr2, b2, regs );
         effective_addr2 += 16;
@@ -669,7 +670,7 @@ DEF_INST(vector_element_shift_right_arithmetic)
 /*-------------------------------------------------------------------*/
 DEF_INST(vector_store_multiple)
 {
-    int     v1, v3, b2, m4;
+    int     v1, v3, b2, m4, i;
     VADR    effective_addr2;
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
     ZVECTOR_CHECK( regs );
@@ -678,7 +679,7 @@ DEF_INST(vector_store_multiple)
     if (v3 < v1 || (v3 - v1 + 1) > 16)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    for (int i = v1; i <= v3; i++)
+    for (i = v1; i <= v3; i++)
     {
         ARCH_DEP( vstore16 )( regs->VR_Q( i ), effective_addr2, b2, regs );
         effective_addr2 += 16;
