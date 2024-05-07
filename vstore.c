@@ -22,7 +22,7 @@
 /*  vstore2      Store a two-byte integer into virtual storage       */
 /*  vstore4      Store a four-byte integer into virtual storage      */
 /*  vstore8      Store an eight-byte integer into virtual storage    */
-/*  vstore16     Store an eighteen-byte integer into virtual storage */
+/*  vstore16     Store a sixteen-byte integer into virtual storage   */
 /*  vstorec      Store 1 to 256 characters into virtual storage      */
 /*                                                                   */
 /*  wstoreX      Address-wrapping version of the above               */
@@ -31,7 +31,7 @@
 /*  vfetch2      Fetch a two-byte integer from virtual storage       */
 /*  vfetch4      Fetch a four-byte integer from virtual storage      */
 /*  vfetch8      Fetch an eight-byte integer from virtual storage    */
-/*  vfetch16     Fetch an eighteen-byte integer from virtual storage */
+/*  vfetch16     Fetch a sixteen-byte integer from virtual storage   */
 /*  vfetchc      Fetch 1 to 256 characters from virtual storage      */
 /*                                                                   */
 /*  wfetchX      Address-wrapping version of the above               */
