@@ -133,6 +133,6 @@ extern inline int   sub_signed_long   ( U64* result, U64 op1, U64 op2 );
 extern inline int   mult_logical_long ( U64* high, U64* lo, U64 md, U64 mr );
 extern inline int   div_signed        ( U32* rem, U32* quot, U32 high, U32 lo, U32 d );
 extern inline int   div_logical_long  ( U64* rem, U64* quot, U64 high, U64 lo, U64 d );
-extern inline U128  bswap_128         ( U128 input );
+extern inline QW    bswap_128         ( QW input );
 
 #endif /*!defined( _GEN_ARCH )*/

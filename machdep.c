@@ -545,7 +545,7 @@ extern inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr);
   #if defined(fetch_qw)
     #define fetch_qw_noswap(_p) CSWAP128(fetch_qw((_p)))
   #else
-    extern inline U128 fetch_qw_noswap(const void *ptr);
+    extern inline QW fetch_qw_noswap(const void *ptr);
   #endif
 #endif
 #if !defined(fetch_qw)
@@ -559,7 +559,7 @@ extern inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr);
   #if defined(store_qw)
     #define store_qw_noswap(_p, _v) store_qw((_p), CSWAP128(_v))
   #else
-    extern inline void store_qw_noswap(void *ptr, U128 value);
+    extern inline void store_qw_noswap(void *ptr, QW value);
   #endif
 #endif
 #if !defined(store_qw)
