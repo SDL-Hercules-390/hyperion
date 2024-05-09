@@ -80,13 +80,13 @@ typedef struct MEMBLK MEMBLK;
   #define   store_dw( p, v )            store_dw_noswap((p),CSWAP64((v)))
 
   // ----------------------------------------------------------------------------
-  static INLINE U128 fetch_qw_noswap(void* ptr)
+  static INLINE QW fetch_qw_noswap(void* ptr)
   {
-      U128 value;
+      QW value;
       memcpy(&value, (U8*)ptr, 16);
       return value;
   }
-  static INLINE void store_qw_noswap(void* ptr, U128 value)
+  static INLINE void store_qw_noswap(void* ptr, QW value)
   {
       memcpy((U8*)ptr, (U8*)&value, 16);
   }
@@ -190,13 +190,13 @@ extern U8   (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetchb  ))(                    VADR
 extern U16  (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch2  ))(                    VADR addr, MEMBLK* pMEMBLK );
 extern U32  (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch4  ))(                    VADR addr, MEMBLK* pMEMBLK );
 extern U64  (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch8  ))(                    VADR addr, MEMBLK* pMEMBLK );
-extern U128 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch16 ))(                    VADR addr, MEMBLK* pMEMBLK );
+extern QW   (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch16 ))(                    VADR addr, MEMBLK* pMEMBLK );
 extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetchc  ))( U8*  dst, U16 len, VADR addr, MEMBLK* pMEMBLK );
 extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstoreb  ))( U8   byt,          VADR addr, MEMBLK* pMEMBLK );
 extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore2  ))( U16  val,          VADR addr, MEMBLK* pMEMBLK );
 extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore4  ))( U32  val,          VADR addr, MEMBLK* pMEMBLK );
 extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore8  ))( U64  val,          VADR addr, MEMBLK* pMEMBLK );
-extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore16 ))( U128 val,          VADR addr, MEMBLK* pMEMBLK );
+extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore16 ))( QW   val,          VADR addr, MEMBLK* pMEMBLK );
 extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstorec  ))( U8*  src, U16 len, VADR addr, MEMBLK* pMEMBLK );
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -849,8 +849,8 @@ inline void store_dw_e2k_noswap ( volatile void* ptr, U64 value )
   #if defined(fetch_qw)
     #define fetch_qw_noswap(_p) CSWAP128(fetch_qw((_p)))
   #else
-    inline U128 fetch_qw_noswap(const void *ptr) {
-      U128 value;
+    inline QW fetch_qw_noswap(const void *ptr) {
+      QW value;
       memcpy(&value, (BYTE *)ptr, 16);
       return value;
     }
@@ -867,7 +867,7 @@ inline void store_dw_e2k_noswap ( volatile void* ptr, U64 value )
   #if defined(store_qw)
     #define store_qw_noswap(_p, _v) store_qw((_p), CSWAP128(_v))
   #else
-    inline void store_qw_noswap(void *ptr, U128 value) {
+    inline void store_qw_noswap(void *ptr, QW value) {
       memcpy((BYTE *)ptr, (BYTE *)&value, 16);
     }
   #endif
