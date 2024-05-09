@@ -412,7 +412,7 @@ BYTE    temp[8];                        /* Copied value              */
 /*      NOTE that vstore16_full should only be invoked when a page   */
 /*           boundary IS going to be crossed.                        */
 /*-------------------------------------------------------------------*/
-inline void ARCH_DEP( vstore16_full )( U128 value, VADR addr, int arn, REGS* regs )
+inline void ARCH_DEP( vstore16_full )( QW value, VADR addr, int arn, REGS* regs )
 {
 BYTE   *main1, * main2;                  /* Mainstor addresses        */
 BYTE   *sk;                             /* Storage key addresses     */
@@ -529,7 +529,7 @@ BYTE    temp[16];                       /* Copy destination          */
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-inline U128 ARCH_DEP( vfetch16_full )( VADR addr, int arn, REGS* regs )
+inline QW ARCH_DEP( vfetch16_full )( VADR addr, int arn, REGS* regs )
 {
 BYTE   *mn;                             /* Main storage addresses    */
 int     len;                            /* Length to end of page     */
@@ -689,7 +689,7 @@ inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
 /*-------------------------------------------------------------------*/
 /* vstore16 accelerator - Simple case only (better inline candidate) */
 /*-------------------------------------------------------------------*/
-inline void ARCH_DEP( vstore16 )( U128 value, VADR addr, int arn, REGS* regs )
+inline void ARCH_DEP( vstore16 )( QW value, VADR addr, int arn, REGS* regs )
 {
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
     /* Check alignement. If aligned then we are guaranteed
@@ -697,8 +697,8 @@ inline void ARCH_DEP( vstore16 )( U128 value, VADR addr, int arn, REGS* regs )
     if (likely(!((VADR_L)addr & 0x0F)))
     {
         /* Most common case : Aligned */
-        U128 *mn;
-        mn = (U128*)MADDRL( addr, 16, arn, regs, ACCTYPE_WRITE, regs->psw.pkey );
+        QW *mn;
+        mn = (QW*)MADDRL( addr, 16, arn, regs, ACCTYPE_WRITE, regs->psw.pkey );
         if (regs->cpubit == regs->sysblk->started_mask)
             *mn = CSWAP128( value );
         else
@@ -853,15 +853,15 @@ inline U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
 /*-------------------------------------------------------------------*/
 /* vfetch16 accelerator - Simple case only (better inline candidate) */
 /*-------------------------------------------------------------------*/
-inline U128 ARCH_DEP( vfetch16 )( VADR addr, int arn, REGS* regs )
+inline QW ARCH_DEP( vfetch16 )( VADR addr, int arn, REGS* regs )
 {
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
     if(likely(!((VADR_L)addr & 0x0F)))
     {
         /* quadword aligned fetch */
-        U128 *mn;
+        QW *mn;
         ITIMER_SYNC( addr, 16-1, regs );
-        mn = (U128*)MADDRL( addr, 16, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+        mn = (QW*)MADDRL( addr, 16, arn, regs, ACCTYPE_READ, regs->psw.pkey );
         if (regs->cpubit == regs->sysblk->started_mask)
             return CSWAP128( *mn );
         return fetch_qw( mn );

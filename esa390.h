@@ -47,11 +47,13 @@
  typedef union {
                  struct { DW H; DW L; } D;
                  struct { FW HH; FW HL; FW LH; FW LL; } F;
-                 U128 q;
-                 U64  d[2];            /* Note: Any code        */
-                 U32  f[4];            /* that uses these       */
-                 U16  h[8];            /* four variables must   */
-                 BYTE b[16];           /* allow for endianness. */
+#if defined(_M_X64) || defined( __SSE2__ )
+                 __m128i v;            /* SIMD 128 bit vector   */
+#endif
+                 U64     d[2];           /* Unsigned double words (2x64b) */
+                 U32     f[4];           /* Unsigned words        (4x32b) */
+                 U16     h[8];           /* Unsigned halfwords    (8x16b) */
+                 U8      b[16];          /* Unsigned bytes        (16x8b) */
                } QW;
 
 /*-------------------------------------------------------------------*/
@@ -73,11 +75,13 @@
  typedef union {
                  struct { DW L; DW H; } D;
                  struct { FW LL; FW LH; FW HL; FW HH; } F;
-                 U128 q;
-                 U64  d[2];            /* Note: Any code        */
-                 U32  f[4];            /* that uses these       */
-                 U16  h[8];            /* four variables must   */
-                 BYTE b[16];           /* allow for endianness. */
+#if defined(_M_X64) || defined( __SSE2__ )
+                 __m128i v;              /* SIMD 128 bit vector   */
+#endif
+                 U64     d[2];           /* Unsigned double words (2x64b) */
+                 U32     f[4];           /* Unsigned words        (4x32b) */
+                 U16     h[8];           /* Unsigned halfwords    (8x16b) */
+                 U8      b[16];          /* Unsigned bytes        (16x8b) */
                } QW;
 
 #endif

@@ -297,11 +297,18 @@ inline int mult_logical_long( U64* high, U64* lo, U64 md, U64 mr )
 /*-------------------------------------------------------------------*/
 /* Change endianness of a 128bits/16bytes integer                    */
 /*-------------------------------------------------------------------*/
-inline U128 bswap_128( U128 input )
+inline QW bswap_128( QW input )
 {
+    QW swapped;
+#if defined(_M_X64) || defined( __SSE2__ )
     __m128i swapmask = _mm_set_epi8( 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 );
-    __m128i swapped, work = input;
-    _mm_storeu_si128( &swapped, _mm_shuffle_epi8( _mm_loadu_si128( &work ), swapmask ));
+    __m128i work = input.v;
+
+    _mm_storeu_si128( &swapped.v, _mm_shuffle_epi8( _mm_loadu_si128( &work ), swapmask ));
+#else
+    swapped.d[0] = bswap_64(input.d[1]);
+    swapped.d[1] = bswap_64(input.d[0]);
+#endif
     return swapped;
 }
 

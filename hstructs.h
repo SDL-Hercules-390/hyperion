@@ -208,12 +208,12 @@ struct REGS {                           /* Processor registers       */
 #define FPR_S(_r)    vfp[(_r)].F.HH.F     /* Short, bits 0-31        */
 // fine FPR_T(_r)    vfp[(_r)].F.HH.H.H.H /* Tiny, bits 0-15         */
 
-#define VR_Q(_v)     vfp[(_v)].q             /* Quadword             */
+#define VR_Q(_v)     vfp[(_v)]               /* Quadword             */
 #if defined(WORDS_BIGENDIAN)
-  #define VR_D(_v,_i)  vfp[(_v)].d[(_i)]     /* Doubleword           */
-  #define VR_F(_v,_i)  vfp[(_v)].f[(_i)]     /* Fullword             */
-  #define VR_H(_v,_i)  vfp[(_v)].h[(_i)]     /* Halfword             */
-  #define VR_B(_v,_i)  vfp[(_v)].b[(_i)]     /* Byte                 */
+  #define VR_D(_v,_i)  vfp[(_v)].d[(_i)]   /* Doubleword           */
+  #define VR_F(_v,_i)  vfp[(_v)].f[(_i)]   /* Fullword             */
+  #define VR_H(_v,_i)  vfp[(_v)].h[(_i)]   /* Halfword             */
+  #define VR_B(_v,_i)  vfp[(_v)].b[(_i)]   /* Byte                 */
 #else
   #define VR_D(_v,_i)  vfp[(_v)].d[1-(_i)]   /* Doubleword           */
   #define VR_F(_v,_i)  vfp[(_v)].f[3-(_i)]   /* Fullword             */
