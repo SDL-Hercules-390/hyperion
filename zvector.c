@@ -1241,6 +1241,7 @@ DEF_INST( vector_checksum )
 DEF_INST( vector_sum_across_quadword )
 {
     int     v1, v2, v3, m4, m5, m6;
+    U64     high, low, add;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -1254,9 +1255,9 @@ DEF_INST( vector_sum_across_quadword )
             + regs->VR_F(v3, 3);
         break;
     case 3:
-        U64 high = 0x00;
-        U64 low = regs->VR_D(v2, 0);
-        U64 add = low + regs->VR_D(v2, 1);
+        high = 0x00;
+        low = regs->VR_D(v2, 0);
+        add = low + regs->VR_D(v2, 1);
         if (add < low) high++;
         low = add;
         add = low + regs->VR_D(v3, 1);
@@ -3188,6 +3189,7 @@ DEF_INST( vector_average )
 DEF_INST(vector_add)
 {
     int     v1, v2, v3, m4, m5, m6, i;
+    U64     high, low;
      
     VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
     
@@ -3216,8 +3218,8 @@ DEF_INST(vector_add)
         }
         break;
     case 4:
-        U64 high = regs->VR_D(v2, 0) + regs->VR_D(v3, 0);
-        U64 low  = regs->VR_D(v2, 1) + regs->VR_D(v3, 1);
+        high = regs->VR_D(v2, 0) + regs->VR_D(v3, 0);
+        low  = regs->VR_D(v2, 1) + regs->VR_D(v3, 1);
         if (low < regs->VR_D(v2, 1))
             high++;
         regs->VR_D(v1, 0) = high;
@@ -3255,6 +3257,7 @@ DEF_INST( vector_subtract_compute_borrow_indication )
 DEF_INST(vector_subtract)
 {
     int     v1, v2, v3, m4, m5, m6, i;
+    U64     high, low;
     
      VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
     
@@ -3283,8 +3286,8 @@ DEF_INST(vector_subtract)
         }
         break;
     case 4:
-        U64 high = regs->VR_D(v2, 0) - regs->VR_D(v3, 0);
-        U64 low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 2);
+        high = regs->VR_D(v2, 0) - regs->VR_D(v3, 0);
+        low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 2);
         if (low > regs->VR_D(v2, 1))
             high--;
         regs->VR_D(v1, 0) = high;
