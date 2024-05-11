@@ -5006,7 +5006,7 @@ int     r1, r2;                         /* Values of R fields        */
     TXF_FLOAT_INSTR_CHECK( regs );
     HFPREG2_CHECK(r1, r2, regs);
 
-    /* Copy register content */
+    /* Copy bits 0-31 of register and zero bits 32-63 */
     regs->FPR_L(r1) = ((U64)regs->FPR_S(r2) << 32);
 }
 
@@ -5053,7 +5053,7 @@ int     r1, r2;                         /* Values of R fields        */
     HFPREG_CHECK(r2, regs);
 
     if (regs->FPR_S(r2) & 0x00FFFFFF) {
-        /* Copy register content */
+        /* Copy bits 0-31 of register and zero bits 32-63 */
         regs->FPR_L(r1) = ((U64)regs->FPR_S(r2) << 32);
 
         /* Low order register */
@@ -6806,6 +6806,7 @@ int     r1;                             /* Value of R field          */
 int     x2;                             /* Index register            */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+U32     wk;
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
@@ -6813,8 +6814,11 @@ VADR    effective_addr2;                /* Effective address         */
     TXF_FLOAT_INSTR_CHECK( regs );
     HFPREG_CHECK(r1, regs);
 
-    /* Update first 32 bits of register from operand address */
-    regs->FPR_S(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+    /* Get the 2nd operand */
+    wk = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+
+    /* Operand to bits 0-31 of register and zero bits 32-63 */
+    regs->FPR_L(r1) = ((U64)wk << 32);
 }
 
 
@@ -6874,7 +6878,7 @@ U32     wk;
     wk = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
 
     if (wk & 0x00FFFFFF) {
-        /* Back to register */
+        /* Operand to bits 0-31 of register and zero bits 32-63 */
         regs->FPR_L(r1) = ((U64)wk << 32);
 
         /* Low order register */
