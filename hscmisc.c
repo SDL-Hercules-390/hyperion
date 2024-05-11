@@ -1475,25 +1475,45 @@ static void do_shutdown_now()
 {
     int     spincount = 16;           // spin-wait count for logger-thread
     bool    loggersetshutdown = TRUE; // assume logger sets system shutdown
+    bool    wasPanelActive = TRUE;    // panel state
 
     ASSERT( !sysblk.shutfini );   // (sanity check)
     ASSERT( !sysblk.shutdown );   // (sanity check)
     sysblk.shutfini = FALSE;      // (shutdown NOT finished yet)
     sysblk.shutdown = FALSE;      // (system shutdown NOT initiated yet)
-    sysblk.shutbegin = TRUE;      // (begin system shutdown)
+
+    // save panel state and start shutdown
+    wasPanelActive = (bool) sysblk.panel_init;
+    sysblk.shutbegin = TRUE;
 
     // "Begin Hercules shutdown"
     WRMSG( HHC01420, "I" );
 
-    // (hack to prevent minor message glitch during shutdown)
-    fflush( stdout );
-    fflush( stderr );
+    // spin-wait for panel to do its cleanup
+
+    spincount = 32;
+    while ( sysblk.panel_init && spincount-- )
+    {
+        log_wakeup( NULL );
+        USLEEP( (sysblk.panrate * 1000)  / 8);
+        //LOGMSG("hsmisc.c: shutdown spin-wait on panel count: %d, sysblk.panel_init: %d\n", spincount, (int) sysblk.panel_init);
+    }
+
+    // was panel thread active and has complete cleanup
+    if ( wasPanelActive && !sysblk.panel_init )
+    {
+        // Programmer note: If the panel was active and has completed cleanup,
+        // a message needs to be issued in order to pump a logger processing cycle
+        // to recognize shutdown has started.
+        WRMSG( HHC01421, "I" , "Panel cleanup complete");
+    }
 
     // spin-wait for logger to initiate system shutdown
+    spincount = 16;
     while ( !sysblk.shutdown && spincount-- )
     {
         log_wakeup( NULL );
-        USLEEP( 5000 );
+        USLEEP( (5000) );
         //LOGMSG("hsmisc.c: shutdown spin-wait on logger: count: %d, shutdown: %d\n", spincount, (int) sysblk.shutdown);
     }
 
@@ -1502,6 +1522,7 @@ static void do_shutdown_now()
     {
         sysblk.shutdown = TRUE;       // (system shutdown initiated)
         loggersetshutdown = FALSE;    // logger didn't set system shutdown
+        WRMSG( HHC01421, "E" , "Failsafe shutdown actioned");
     }
 
     /* Wakeup I/O subsystem to start I/O subsystem shutdown */
@@ -1516,11 +1537,6 @@ static void do_shutdown_now()
 
     // "Calling termination routines"
     WRMSG( HHC01423, "I" );
-
-    // (hack to prevent minor message glitch during shutdown)
-    fflush( stdout );
-    fflush( stderr );
-    USLEEP( 10000 );
 
     // if logger didn't set shutdown, handle unredirect
     if ( !loggersetshutdown )
