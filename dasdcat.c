@@ -145,6 +145,7 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
                     char* dsname, char* memname)
 {
  int   rc;
+ bool  memtitle;
  u_int trk;
  U16   len;
  U32   cyl;
@@ -159,6 +160,9 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
 
     trk = (ttr[0] << 8) | ttr[1];
     rec = ttr[2];
+
+    if (optflags & OPT_CARDS)
+        memtitle = false;
 
     while (1)
     {
@@ -192,6 +196,21 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
         }
         else if (optflags & OPT_CARDS)
         {
+            if (!memtitle)
+            {
+                memtitle = true;
+
+                if (isatty( fileno( stdout )))
+                {
+                    char title[80];
+                    MSGBUF( title, "                %s(%s):", dsname, memname );
+
+                    puts("");
+                    puts( title );
+                    puts("");
+                }
+            }
+
             /* Formatted 72 or 80 column ASCII card images */
             if ((rc = do_cat_cards(buf, len, optflags)) != 0)
                 return -1; // (len not multiple of 80 bytes)
