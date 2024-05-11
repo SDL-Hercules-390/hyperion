@@ -200,7 +200,7 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
             {
                 memtitle = true;
 
-                if (isatty( fileno( stdout )))
+                if (extgui || isatty( fileno( stdout )))
                 {
                     char title[80];
                     MSGBUF( title, "                %s(%s):", dsname, memname );
