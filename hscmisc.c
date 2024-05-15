@@ -1831,7 +1831,7 @@ int display_inst_regs( bool trace2file, REGS *regs, BYTE *inst, BYTE opcode, cha
     }
 
     /* Display vector registers if appropriate */
-    if (opcode == 0xE7)
+    if (opcode == 0xE7 || ( opcode == 0xE6 && (regs->arch_mode == ARCH_900_IDX) ) )
     {
         if (trace2file)
             tf_2266( regs );

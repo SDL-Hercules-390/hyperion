@@ -471,6 +471,7 @@
     <ClCompile Include="xstore.c" />
     <ClCompile Include="zfcp.c" />
     <ClCompile Include="zvector.c" />
+    <ClCompile Include="zvector2.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".travis.yml" />

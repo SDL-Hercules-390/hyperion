@@ -816,6 +816,9 @@
     <ClCompile Include="zvector.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="zvector2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="crypto\lib\crypto32.pdb">

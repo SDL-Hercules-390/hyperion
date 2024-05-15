@@ -275,7 +275,7 @@ int     d;                              /* Decimal digit or sign     */
 /*              This field is set to zero if the result is all zero, */
 /*              or to MAX_DECIMAL_DIGITS+1 if overflow occurred.     */
 /*-------------------------------------------------------------------*/
-static void add_decimal (BYTE *dec1, BYTE *dec2,
+void add_decimal (BYTE *dec1, BYTE *dec2,
                         BYTE *result, int *count)
 {
 int     d;                              /* Decimal digit             */
@@ -335,7 +335,7 @@ int     carry = 0;                      /* Carry indicator           */
 /*      sign    -1 if the result is negative (operand2 > operand1)   */
 /*              +1 if the result is positive (operand2 <= operand1)  */
 /*-------------------------------------------------------------------*/
-static void subtract_decimal (BYTE *dec1, BYTE *dec2,
+void subtract_decimal (BYTE *dec1, BYTE *dec2,
                         BYTE *result, int *count, int *sign)
 {
 int     d;                              /* Decimal digit             */
@@ -420,7 +420,7 @@ BYTE   *lower;                          /* -> Lower value operand    */
 /*      divide overflow cannot occur, that the divisor is not zero,  */
 /*      and that the dividend has at least one high order zero.      */
 /*-------------------------------------------------------------------*/
-static void divide_decimal (BYTE *dec1, int count1, BYTE *dec2,
+void divide_decimal (BYTE *dec1, int count1, BYTE *dec2,
                         int count2, BYTE *quot, BYTE *rem)
 {
 BYTE   *num1;                           /* -> dividend digits        */
