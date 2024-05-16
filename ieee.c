@@ -2333,7 +2333,7 @@ DEF_INST( vector_fp_minimum )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
-    if ((m6 >= 5 && m6 <= 7) || (m6 >= 13 || m6 <= 15))  /* Valid performed? */
+    if ((m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15))  /* Valid performed? */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     if (m5 & 0x7)  /* Reserved bits zero? */
