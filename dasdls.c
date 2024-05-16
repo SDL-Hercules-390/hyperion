@@ -41,7 +41,7 @@ int  chainf3             (int *size, BYTE *ptr, int *count );
 int  ordday_to_calday    (int year, int ordinalday, int *month, int *day);
 
 int  end_of_track        (BYTE *p);
-int  list_contents       (CIFBLK *cif, char *sfile, char *volser, DSXTENT *extent );
+int  list_contents       (CIFBLK *cif, DSXTENT *extent );
 int  do_ls_cif           (CIFBLK *cif, char *sfile);
 int  do_ls               (char *file,  char *sfile);
 
@@ -391,7 +391,7 @@ int chainf3( int *size, BYTE *ptr, int *count )
 /*********************************************************************/
 /* list_contents partly based on dasdutil.c:search_key_equal         */
 
-int list_contents( CIFBLK *cif, char *sfile, char *volser, DSXTENT *extent )
+int list_contents( CIFBLK *cif, DSXTENT *extent )
 {
     u_int cext  = 0;
     u_int ccyl  = (extent[cext].xtbcyl[0] << 8) | extent[cext].xtbcyl[1];
@@ -700,7 +700,7 @@ int do_ls_cif( CIFBLK *cif, char *sfile )
         return -1;
     }
 
-    return list_contents( cif, sfile, volser, &f4dscb->ds4vtoce );
+    return list_contents( cif, &f4dscb->ds4vtoce );
 }
 
 /*********************************************************************/
