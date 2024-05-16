@@ -2736,6 +2736,24 @@ typedef struct PTFFQSI PTFFQSI;
 /*       (*) "IISE" = "IEEE-interruption-simulation event"           */
 
 /*-------------------------------------------------------------------*/
+/* Shift counts to allow alignment of each field in the              */
+/* Vector-Exception Code (VXC).                                      */
+/* Bits 0-3 of the VXC are the vector index (VIX).                   */
+/* Bits 4-7 of the VXC are the vector interrupt code (VIC).          */
+
+#define VXC_VIX_SHIFT        4
+#define VXC_VIC_SHIFT        0
+
+/*-------------------------------------------------------------------*/
+/* Vector interrupt codes                                            */
+
+#define VXC_IEEE_INVALID_OP     0x01    /* IEEE invalid operation    */
+#define VXC_IEEE_DIV_ZERO       0x02    /* IEEE division by zero     */
+#define VXC_IEEE_OVERFLOW       0x03    /* IEEE overflow             */
+#define VXC_IEEE_UNDERFLOW      0x04    /* IEEE underflow            */
+#define VXC_IEEE_INEXACT        0x05    /* IEEE inexact              */
+
+/*-------------------------------------------------------------------*/
 /* Decimal rounding modes */
 
 #define DRM_RNE                 0       /* Round to nearest tie even */
