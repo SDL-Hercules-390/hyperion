@@ -153,4 +153,5 @@ hengine_OBJ = \
     $(O)vstore.obj   \
     $(O)x75.obj      \
     $(O)xstore.obj   \
-    $(O)zvector.obj
+    $(O)zvector.obj  \
+    $(O)zvector2.obj
