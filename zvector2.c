@@ -169,7 +169,8 @@ typedef union {
 
 static inline void SetZero_128 (void* addr)
 {
-    (*__m128i) addr = _mm_setzero_si128();
+    __m128i v = _mm_setzero_si128();
+    memcpy( addr, &v, sizeof( __m128i ));
 }
 
 #else
