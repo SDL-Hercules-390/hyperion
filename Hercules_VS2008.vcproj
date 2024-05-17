@@ -1227,6 +1227,10 @@
 							RelativePath=".\zvector.c"
 							>
 						</File>
+						<File
+							RelativePath=".\zvector2.c"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Header Files"

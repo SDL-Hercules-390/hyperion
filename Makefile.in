@@ -177,7 +177,7 @@ dyncrypt_la_OBJECTS = $(am_dyncrypt_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
-am__v_lt_1 = 
+am__v_lt_1 =
 dyncrypt_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(dyncrypt_la_LDFLAGS) $(LDFLAGS) -o $@
@@ -311,7 +311,7 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	panel.lo pfpo.lo plo.lo qdio.lo scedasd.lo scescsi.lo \
 	script.lo service.lo sie.lo skey.lo sr.lo stack.lo \
 	strsignal.lo tcpip.lo timer.lo trace.lo transact.lo vector.lo \
-	vm.lo vmd250.lo vstore.lo x75.lo xstore.lo zvector.lo \
+	vm.lo vmd250.lo vstore.lo x75.lo xstore.lo zvector.lo zvector2.lo \
 	$(am__objects_1)
 libherc_la_OBJECTS = $(am_libherc_la_OBJECTS)
 libherc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -602,11 +602,11 @@ am__v_P_1 = :
 AM_V_GEN = $(am__v_GEN_@AM_V@)
 am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
 am__v_GEN_0 = @echo "  GEN     " $@;
-am__v_GEN_1 = 
+am__v_GEN_1 =
 AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
-am__v_at_1 = 
+am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/autoconf/depcomp
 am__maybe_remake_depfiles = depfiles
@@ -703,7 +703,7 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/vmd250.Plo ./$(DEPDIR)/vmfplc2.Po \
 	./$(DEPDIR)/vstore.Plo ./$(DEPDIR)/x75.Plo \
 	./$(DEPDIR)/xstore.Plo ./$(DEPDIR)/zfcp.Plo \
-	./$(DEPDIR)/zvector.Plo
+	./$(DEPDIR)/zvector.Plo ./$(DEPDIR)/zvector2.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -714,7 +714,7 @@ LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
-am__v_CC_1 = 
+am__v_CC_1 =
 CCLD = $(CC)
 LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -722,7 +722,7 @@ LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
-am__v_CCLD_1 = 
+am__v_CCLD_1 =
 SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt1052c_la_SOURCES) $(hdt1403_la_SOURCES) \
 	$(hdt2703_la_SOURCES) $(hdt2880_la_SOURCES) \
@@ -1069,13 +1069,13 @@ VERS_INT := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_INT)
 VERS_MIN := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_MIN)
 VERS_BLD := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_BLD)
 DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERSION )
-@BUILD_HERCIFC_FALSE@HERCIFC = 
+@BUILD_HERCIFC_FALSE@HERCIFC =
 
 #------------------------------------------------------------------------------
 @BUILD_HERCIFC_TRUE@HERCIFC = hercifc
 HERCLIN = herclin
 fthreads_SRC = fthreads.c
-@BUILD_FTHREADS_FALSE@FTHREADS = 
+@BUILD_FTHREADS_FALSE@FTHREADS =
 @BUILD_FTHREADS_TRUE@FTHREADS = $(fthreads_SRC)
 
 #------------------------------------------------------------------------------
@@ -1141,8 +1141,8 @@ dyndev_SRC = \
 # -avoid-version  :  needed.. Otherwise libtool gives crazy names
 #                    to Windows DLLs
 #-----------------------------------------------------------------
-XSTATIC = 
-DYNSRC = 
+XSTATIC =
+DYNSRC =
 DYNMOD_LD_FLAGS = \
   -module           \
   -no-undefined     \
@@ -1169,7 +1169,7 @@ LIB_LD_FLAGS = \
 #------------------------------------------------------------------------------
 # List of Libtool shared libraries & loadable modules
 #------------------------------------------------------------------------------
-HERCLIBS = 
+HERCLIBS =
 HERCLIBS2 = \
   libhercs.la   \
   libhercu.la   \
@@ -1445,6 +1445,7 @@ libherc_la_SOURCES = \
   x75.c              \
   xstore.c           \
   zvector.c          \
+  zvector2.c         \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
@@ -1503,7 +1504,7 @@ herclin_DEPENDENCIES = \
 #------------------------------------------------------------------------------
 # Side binaries...  (i.e. our hercules utilities)
 #------------------------------------------------------------------------------
-tools_LD_FLAGS = 
+tools_LD_FLAGS =
 tools_ADDLIBS = $(HERCLIBS2) $(ldadd)
 @BUILD_HERCIFC_TRUE@hercifc_SOURCES = hercifc.c
 @BUILD_HERCIFC_TRUE@hercifc_LDADD = $(tools_ADDLIBS)
@@ -2047,7 +2048,7 @@ config.h: stamp-h1
 stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status config.h
-$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
+$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
 	rm -f stamp-h1
 	touch $@
@@ -2185,235 +2186,235 @@ clean-noinstLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 
-dyncrypt.la: $(dyncrypt_la_OBJECTS) $(dyncrypt_la_DEPENDENCIES) $(EXTRA_dyncrypt_la_DEPENDENCIES) 
+dyncrypt.la: $(dyncrypt_la_OBJECTS) $(dyncrypt_la_DEPENDENCIES) $(EXTRA_dyncrypt_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(dyncrypt_la_LINK) -rpath $(modexecdir) $(dyncrypt_la_OBJECTS) $(dyncrypt_la_LIBADD) $(LIBS)
 
-dyngui.la: $(dyngui_la_OBJECTS) $(dyngui_la_DEPENDENCIES) $(EXTRA_dyngui_la_DEPENDENCIES) 
+dyngui.la: $(dyngui_la_OBJECTS) $(dyngui_la_DEPENDENCIES) $(EXTRA_dyngui_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(dyngui_la_LINK) -rpath $(modexecdir) $(dyngui_la_OBJECTS) $(dyngui_la_LIBADD) $(LIBS)
 
-hdt1052c.la: $(hdt1052c_la_OBJECTS) $(hdt1052c_la_DEPENDENCIES) $(EXTRA_hdt1052c_la_DEPENDENCIES) 
+hdt1052c.la: $(hdt1052c_la_OBJECTS) $(hdt1052c_la_DEPENDENCIES) $(EXTRA_hdt1052c_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt1052c_la_LINK) -rpath $(modexecdir) $(hdt1052c_la_OBJECTS) $(hdt1052c_la_LIBADD) $(LIBS)
 
-hdt1403.la: $(hdt1403_la_OBJECTS) $(hdt1403_la_DEPENDENCIES) $(EXTRA_hdt1403_la_DEPENDENCIES) 
+hdt1403.la: $(hdt1403_la_OBJECTS) $(hdt1403_la_DEPENDENCIES) $(EXTRA_hdt1403_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt1403_la_LINK) -rpath $(modexecdir) $(hdt1403_la_OBJECTS) $(hdt1403_la_LIBADD) $(LIBS)
 
-hdt2703.la: $(hdt2703_la_OBJECTS) $(hdt2703_la_DEPENDENCIES) $(EXTRA_hdt2703_la_DEPENDENCIES) 
+hdt2703.la: $(hdt2703_la_OBJECTS) $(hdt2703_la_DEPENDENCIES) $(EXTRA_hdt2703_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt2703_la_LINK) -rpath $(modexecdir) $(hdt2703_la_OBJECTS) $(hdt2703_la_LIBADD) $(LIBS)
 
-hdt2880.la: $(hdt2880_la_OBJECTS) $(hdt2880_la_DEPENDENCIES) $(EXTRA_hdt2880_la_DEPENDENCIES) 
+hdt2880.la: $(hdt2880_la_OBJECTS) $(hdt2880_la_DEPENDENCIES) $(EXTRA_hdt2880_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt2880_la_LINK) -rpath $(modexecdir) $(hdt2880_la_OBJECTS) $(hdt2880_la_LIBADD) $(LIBS)
 
-hdt3088.la: $(hdt3088_la_OBJECTS) $(hdt3088_la_DEPENDENCIES) $(EXTRA_hdt3088_la_DEPENDENCIES) 
+hdt3088.la: $(hdt3088_la_OBJECTS) $(hdt3088_la_DEPENDENCIES) $(EXTRA_hdt3088_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt3088_la_LINK) -rpath $(modexecdir) $(hdt3088_la_OBJECTS) $(hdt3088_la_LIBADD) $(LIBS)
 
-hdt3270.la: $(hdt3270_la_OBJECTS) $(hdt3270_la_DEPENDENCIES) $(EXTRA_hdt3270_la_DEPENDENCIES) 
+hdt3270.la: $(hdt3270_la_OBJECTS) $(hdt3270_la_DEPENDENCIES) $(EXTRA_hdt3270_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt3270_la_LINK) -rpath $(modexecdir) $(hdt3270_la_OBJECTS) $(hdt3270_la_LIBADD) $(LIBS)
 
-hdt3420.la: $(hdt3420_la_OBJECTS) $(hdt3420_la_DEPENDENCIES) $(EXTRA_hdt3420_la_DEPENDENCIES) 
+hdt3420.la: $(hdt3420_la_OBJECTS) $(hdt3420_la_DEPENDENCIES) $(EXTRA_hdt3420_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt3420_la_LINK) -rpath $(modexecdir) $(hdt3420_la_OBJECTS) $(hdt3420_la_LIBADD) $(LIBS)
 
-hdt3505.la: $(hdt3505_la_OBJECTS) $(hdt3505_la_DEPENDENCIES) $(EXTRA_hdt3505_la_DEPENDENCIES) 
+hdt3505.la: $(hdt3505_la_OBJECTS) $(hdt3505_la_DEPENDENCIES) $(EXTRA_hdt3505_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt3505_la_LINK) -rpath $(modexecdir) $(hdt3505_la_OBJECTS) $(hdt3505_la_LIBADD) $(LIBS)
 
-hdt3525.la: $(hdt3525_la_OBJECTS) $(hdt3525_la_DEPENDENCIES) $(EXTRA_hdt3525_la_DEPENDENCIES) 
+hdt3525.la: $(hdt3525_la_OBJECTS) $(hdt3525_la_DEPENDENCIES) $(EXTRA_hdt3525_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt3525_la_LINK) -rpath $(modexecdir) $(hdt3525_la_OBJECTS) $(hdt3525_la_LIBADD) $(LIBS)
 
-hdt3705.la: $(hdt3705_la_OBJECTS) $(hdt3705_la_DEPENDENCIES) $(EXTRA_hdt3705_la_DEPENDENCIES) 
+hdt3705.la: $(hdt3705_la_OBJECTS) $(hdt3705_la_DEPENDENCIES) $(EXTRA_hdt3705_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdt3705_la_LINK) -rpath $(modexecdir) $(hdt3705_la_OBJECTS) $(hdt3705_la_LIBADD) $(LIBS)
 
-hdtdummy.la: $(hdtdummy_la_OBJECTS) $(hdtdummy_la_DEPENDENCIES) $(EXTRA_hdtdummy_la_DEPENDENCIES) 
+hdtdummy.la: $(hdtdummy_la_OBJECTS) $(hdtdummy_la_DEPENDENCIES) $(EXTRA_hdtdummy_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdtdummy_la_LINK) -rpath $(modexecdir) $(hdtdummy_la_OBJECTS) $(hdtdummy_la_LIBADD) $(LIBS)
 
-hdteq.la: $(hdteq_la_OBJECTS) $(hdteq_la_DEPENDENCIES) $(EXTRA_hdteq_la_DEPENDENCIES) 
+hdteq.la: $(hdteq_la_OBJECTS) $(hdteq_la_DEPENDENCIES) $(EXTRA_hdteq_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdteq_la_LINK) -rpath $(modexecdir) $(hdteq_la_OBJECTS) $(hdteq_la_LIBADD) $(LIBS)
 
-hdtptp.la: $(hdtptp_la_OBJECTS) $(hdtptp_la_DEPENDENCIES) $(EXTRA_hdtptp_la_DEPENDENCIES) 
+hdtptp.la: $(hdtptp_la_OBJECTS) $(hdtptp_la_DEPENDENCIES) $(EXTRA_hdtptp_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdtptp_la_LINK) -rpath $(modexecdir) $(hdtptp_la_OBJECTS) $(hdtptp_la_LIBADD) $(LIBS)
 
-hdtqeth.la: $(hdtqeth_la_OBJECTS) $(hdtqeth_la_DEPENDENCIES) $(EXTRA_hdtqeth_la_DEPENDENCIES) 
+hdtqeth.la: $(hdtqeth_la_OBJECTS) $(hdtqeth_la_DEPENDENCIES) $(EXTRA_hdtqeth_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdtqeth_la_LINK) -rpath $(modexecdir) $(hdtqeth_la_OBJECTS) $(hdtqeth_la_LIBADD) $(LIBS)
 
-hdttcpnje.la: $(hdttcpnje_la_OBJECTS) $(hdttcpnje_la_DEPENDENCIES) $(EXTRA_hdttcpnje_la_DEPENDENCIES) 
+hdttcpnje.la: $(hdttcpnje_la_OBJECTS) $(hdttcpnje_la_DEPENDENCIES) $(EXTRA_hdttcpnje_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdttcpnje_la_LINK) -rpath $(modexecdir) $(hdttcpnje_la_OBJECTS) $(hdttcpnje_la_LIBADD) $(LIBS)
 
-hdtzfcp.la: $(hdtzfcp_la_OBJECTS) $(hdtzfcp_la_DEPENDENCIES) $(EXTRA_hdtzfcp_la_DEPENDENCIES) 
+hdtzfcp.la: $(hdtzfcp_la_OBJECTS) $(hdtzfcp_la_DEPENDENCIES) $(EXTRA_hdtzfcp_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdtzfcp_la_LINK) -rpath $(modexecdir) $(hdtzfcp_la_OBJECTS) $(hdtzfcp_la_LIBADD) $(LIBS)
 
-libhdt3420_not_mod.la: $(libhdt3420_not_mod_la_OBJECTS) $(libhdt3420_not_mod_la_DEPENDENCIES) $(EXTRA_libhdt3420_not_mod_la_DEPENDENCIES) 
+libhdt3420_not_mod.la: $(libhdt3420_not_mod_la_OBJECTS) $(libhdt3420_not_mod_la_DEPENDENCIES) $(EXTRA_libhdt3420_not_mod_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(libhdt3420_not_mod_la_LINK) -rpath $(libdir) $(libhdt3420_not_mod_la_OBJECTS) $(libhdt3420_not_mod_la_LIBADD) $(LIBS)
 
-libherc.la: $(libherc_la_OBJECTS) $(libherc_la_DEPENDENCIES) $(EXTRA_libherc_la_DEPENDENCIES) 
+libherc.la: $(libherc_la_OBJECTS) $(libherc_la_DEPENDENCIES) $(EXTRA_libherc_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(libherc_la_LINK) -rpath $(libdir) $(libherc_la_OBJECTS) $(libherc_la_LIBADD) $(LIBS)
 
-libhercd.la: $(libhercd_la_OBJECTS) $(libhercd_la_DEPENDENCIES) $(EXTRA_libhercd_la_DEPENDENCIES) 
+libhercd.la: $(libhercd_la_OBJECTS) $(libhercd_la_DEPENDENCIES) $(EXTRA_libhercd_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(libhercd_la_LINK) -rpath $(libdir) $(libhercd_la_OBJECTS) $(libhercd_la_LIBADD) $(LIBS)
 
-libhercs.la: $(libhercs_la_OBJECTS) $(libhercs_la_DEPENDENCIES) $(EXTRA_libhercs_la_DEPENDENCIES) 
+libhercs.la: $(libhercs_la_OBJECTS) $(libhercs_la_DEPENDENCIES) $(EXTRA_libhercs_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(libhercs_la_LINK) -rpath $(libdir) $(libhercs_la_OBJECTS) $(libhercs_la_LIBADD) $(LIBS)
 
-libherct.la: $(libherct_la_OBJECTS) $(libherct_la_DEPENDENCIES) $(EXTRA_libherct_la_DEPENDENCIES) 
+libherct.la: $(libherct_la_OBJECTS) $(libherct_la_DEPENDENCIES) $(EXTRA_libherct_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(libherct_la_LINK) -rpath $(libdir) $(libherct_la_OBJECTS) $(libherct_la_LIBADD) $(LIBS)
 
-libhercu.la: $(libhercu_la_OBJECTS) $(libhercu_la_DEPENDENCIES) $(EXTRA_libhercu_la_DEPENDENCIES) 
+libhercu.la: $(libhercu_la_OBJECTS) $(libhercu_la_DEPENDENCIES) $(EXTRA_libhercu_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(libhercu_la_LINK) -rpath $(libdir) $(libhercu_la_OBJECTS) $(libhercu_la_LIBADD) $(LIBS)
 
-cckdcdsk$(EXEEXT): $(cckdcdsk_OBJECTS) $(cckdcdsk_DEPENDENCIES) $(EXTRA_cckdcdsk_DEPENDENCIES) 
+cckdcdsk$(EXEEXT): $(cckdcdsk_OBJECTS) $(cckdcdsk_DEPENDENCIES) $(EXTRA_cckdcdsk_DEPENDENCIES)
 	@rm -f cckdcdsk$(EXEEXT)
 	$(AM_V_CCLD)$(cckdcdsk_LINK) $(cckdcdsk_OBJECTS) $(cckdcdsk_LDADD) $(LIBS)
 
-cckdcdsk64$(EXEEXT): $(cckdcdsk64_OBJECTS) $(cckdcdsk64_DEPENDENCIES) $(EXTRA_cckdcdsk64_DEPENDENCIES) 
+cckdcdsk64$(EXEEXT): $(cckdcdsk64_OBJECTS) $(cckdcdsk64_DEPENDENCIES) $(EXTRA_cckdcdsk64_DEPENDENCIES)
 	@rm -f cckdcdsk64$(EXEEXT)
 	$(AM_V_CCLD)$(cckdcdsk64_LINK) $(cckdcdsk64_OBJECTS) $(cckdcdsk64_LDADD) $(LIBS)
 
-cckdcomp$(EXEEXT): $(cckdcomp_OBJECTS) $(cckdcomp_DEPENDENCIES) $(EXTRA_cckdcomp_DEPENDENCIES) 
+cckdcomp$(EXEEXT): $(cckdcomp_OBJECTS) $(cckdcomp_DEPENDENCIES) $(EXTRA_cckdcomp_DEPENDENCIES)
 	@rm -f cckdcomp$(EXEEXT)
 	$(AM_V_CCLD)$(cckdcomp_LINK) $(cckdcomp_OBJECTS) $(cckdcomp_LDADD) $(LIBS)
 
-cckdcomp64$(EXEEXT): $(cckdcomp64_OBJECTS) $(cckdcomp64_DEPENDENCIES) $(EXTRA_cckdcomp64_DEPENDENCIES) 
+cckdcomp64$(EXEEXT): $(cckdcomp64_OBJECTS) $(cckdcomp64_DEPENDENCIES) $(EXTRA_cckdcomp64_DEPENDENCIES)
 	@rm -f cckdcomp64$(EXEEXT)
 	$(AM_V_CCLD)$(cckdcomp64_LINK) $(cckdcomp64_OBJECTS) $(cckdcomp64_LDADD) $(LIBS)
 
-cckddiag$(EXEEXT): $(cckddiag_OBJECTS) $(cckddiag_DEPENDENCIES) $(EXTRA_cckddiag_DEPENDENCIES) 
+cckddiag$(EXEEXT): $(cckddiag_OBJECTS) $(cckddiag_DEPENDENCIES) $(EXTRA_cckddiag_DEPENDENCIES)
 	@rm -f cckddiag$(EXEEXT)
 	$(AM_V_CCLD)$(cckddiag_LINK) $(cckddiag_OBJECTS) $(cckddiag_LDADD) $(LIBS)
 
-cckddiag64$(EXEEXT): $(cckddiag64_OBJECTS) $(cckddiag64_DEPENDENCIES) $(EXTRA_cckddiag64_DEPENDENCIES) 
+cckddiag64$(EXEEXT): $(cckddiag64_OBJECTS) $(cckddiag64_DEPENDENCIES) $(EXTRA_cckddiag64_DEPENDENCIES)
 	@rm -f cckddiag64$(EXEEXT)
 	$(AM_V_CCLD)$(cckddiag64_LINK) $(cckddiag64_OBJECTS) $(cckddiag64_LDADD) $(LIBS)
 
-cckdmap$(EXEEXT): $(cckdmap_OBJECTS) $(cckdmap_DEPENDENCIES) $(EXTRA_cckdmap_DEPENDENCIES) 
+cckdmap$(EXEEXT): $(cckdmap_OBJECTS) $(cckdmap_DEPENDENCIES) $(EXTRA_cckdmap_DEPENDENCIES)
 	@rm -f cckdmap$(EXEEXT)
 	$(AM_V_CCLD)$(cckdmap_LINK) $(cckdmap_OBJECTS) $(cckdmap_LDADD) $(LIBS)
 
-cckdswap$(EXEEXT): $(cckdswap_OBJECTS) $(cckdswap_DEPENDENCIES) $(EXTRA_cckdswap_DEPENDENCIES) 
+cckdswap$(EXEEXT): $(cckdswap_OBJECTS) $(cckdswap_DEPENDENCIES) $(EXTRA_cckdswap_DEPENDENCIES)
 	@rm -f cckdswap$(EXEEXT)
 	$(AM_V_CCLD)$(cckdswap_LINK) $(cckdswap_OBJECTS) $(cckdswap_LDADD) $(LIBS)
 
-cckdswap64$(EXEEXT): $(cckdswap64_OBJECTS) $(cckdswap64_DEPENDENCIES) $(EXTRA_cckdswap64_DEPENDENCIES) 
+cckdswap64$(EXEEXT): $(cckdswap64_OBJECTS) $(cckdswap64_DEPENDENCIES) $(EXTRA_cckdswap64_DEPENDENCIES)
 	@rm -f cckdswap64$(EXEEXT)
 	$(AM_V_CCLD)$(cckdswap64_LINK) $(cckdswap64_OBJECTS) $(cckdswap64_LDADD) $(LIBS)
 
-convto64$(EXEEXT): $(convto64_OBJECTS) $(convto64_DEPENDENCIES) $(EXTRA_convto64_DEPENDENCIES) 
+convto64$(EXEEXT): $(convto64_OBJECTS) $(convto64_DEPENDENCIES) $(EXTRA_convto64_DEPENDENCIES)
 	@rm -f convto64$(EXEEXT)
 	$(AM_V_CCLD)$(convto64_LINK) $(convto64_OBJECTS) $(convto64_LDADD) $(LIBS)
 
-dasdcat$(EXEEXT): $(dasdcat_OBJECTS) $(dasdcat_DEPENDENCIES) $(EXTRA_dasdcat_DEPENDENCIES) 
+dasdcat$(EXEEXT): $(dasdcat_OBJECTS) $(dasdcat_DEPENDENCIES) $(EXTRA_dasdcat_DEPENDENCIES)
 	@rm -f dasdcat$(EXEEXT)
 	$(AM_V_CCLD)$(dasdcat_LINK) $(dasdcat_OBJECTS) $(dasdcat_LDADD) $(LIBS)
 
-dasdconv$(EXEEXT): $(dasdconv_OBJECTS) $(dasdconv_DEPENDENCIES) $(EXTRA_dasdconv_DEPENDENCIES) 
+dasdconv$(EXEEXT): $(dasdconv_OBJECTS) $(dasdconv_DEPENDENCIES) $(EXTRA_dasdconv_DEPENDENCIES)
 	@rm -f dasdconv$(EXEEXT)
 	$(AM_V_CCLD)$(dasdconv_LINK) $(dasdconv_OBJECTS) $(dasdconv_LDADD) $(LIBS)
 
-dasdconv64$(EXEEXT): $(dasdconv64_OBJECTS) $(dasdconv64_DEPENDENCIES) $(EXTRA_dasdconv64_DEPENDENCIES) 
+dasdconv64$(EXEEXT): $(dasdconv64_OBJECTS) $(dasdconv64_DEPENDENCIES) $(EXTRA_dasdconv64_DEPENDENCIES)
 	@rm -f dasdconv64$(EXEEXT)
 	$(AM_V_CCLD)$(dasdconv64_LINK) $(dasdconv64_OBJECTS) $(dasdconv64_LDADD) $(LIBS)
 
-dasdcopy$(EXEEXT): $(dasdcopy_OBJECTS) $(dasdcopy_DEPENDENCIES) $(EXTRA_dasdcopy_DEPENDENCIES) 
+dasdcopy$(EXEEXT): $(dasdcopy_OBJECTS) $(dasdcopy_DEPENDENCIES) $(EXTRA_dasdcopy_DEPENDENCIES)
 	@rm -f dasdcopy$(EXEEXT)
 	$(AM_V_CCLD)$(dasdcopy_LINK) $(dasdcopy_OBJECTS) $(dasdcopy_LDADD) $(LIBS)
 
-dasdcopy64$(EXEEXT): $(dasdcopy64_OBJECTS) $(dasdcopy64_DEPENDENCIES) $(EXTRA_dasdcopy64_DEPENDENCIES) 
+dasdcopy64$(EXEEXT): $(dasdcopy64_OBJECTS) $(dasdcopy64_DEPENDENCIES) $(EXTRA_dasdcopy64_DEPENDENCIES)
 	@rm -f dasdcopy64$(EXEEXT)
 	$(AM_V_CCLD)$(dasdcopy64_LINK) $(dasdcopy64_OBJECTS) $(dasdcopy64_LDADD) $(LIBS)
 
-dasdinit$(EXEEXT): $(dasdinit_OBJECTS) $(dasdinit_DEPENDENCIES) $(EXTRA_dasdinit_DEPENDENCIES) 
+dasdinit$(EXEEXT): $(dasdinit_OBJECTS) $(dasdinit_DEPENDENCIES) $(EXTRA_dasdinit_DEPENDENCIES)
 	@rm -f dasdinit$(EXEEXT)
 	$(AM_V_CCLD)$(dasdinit_LINK) $(dasdinit_OBJECTS) $(dasdinit_LDADD) $(LIBS)
 
-dasdinit64$(EXEEXT): $(dasdinit64_OBJECTS) $(dasdinit64_DEPENDENCIES) $(EXTRA_dasdinit64_DEPENDENCIES) 
+dasdinit64$(EXEEXT): $(dasdinit64_OBJECTS) $(dasdinit64_DEPENDENCIES) $(EXTRA_dasdinit64_DEPENDENCIES)
 	@rm -f dasdinit64$(EXEEXT)
 	$(AM_V_CCLD)$(dasdinit64_LINK) $(dasdinit64_OBJECTS) $(dasdinit64_LDADD) $(LIBS)
 
-dasdisup$(EXEEXT): $(dasdisup_OBJECTS) $(dasdisup_DEPENDENCIES) $(EXTRA_dasdisup_DEPENDENCIES) 
+dasdisup$(EXEEXT): $(dasdisup_OBJECTS) $(dasdisup_DEPENDENCIES) $(EXTRA_dasdisup_DEPENDENCIES)
 	@rm -f dasdisup$(EXEEXT)
 	$(AM_V_CCLD)$(dasdisup_LINK) $(dasdisup_OBJECTS) $(dasdisup_LDADD) $(LIBS)
 
-dasdload$(EXEEXT): $(dasdload_OBJECTS) $(dasdload_DEPENDENCIES) $(EXTRA_dasdload_DEPENDENCIES) 
+dasdload$(EXEEXT): $(dasdload_OBJECTS) $(dasdload_DEPENDENCIES) $(EXTRA_dasdload_DEPENDENCIES)
 	@rm -f dasdload$(EXEEXT)
 	$(AM_V_CCLD)$(dasdload_LINK) $(dasdload_OBJECTS) $(dasdload_LDADD) $(LIBS)
 
-dasdload64$(EXEEXT): $(dasdload64_OBJECTS) $(dasdload64_DEPENDENCIES) $(EXTRA_dasdload64_DEPENDENCIES) 
+dasdload64$(EXEEXT): $(dasdload64_OBJECTS) $(dasdload64_DEPENDENCIES) $(EXTRA_dasdload64_DEPENDENCIES)
 	@rm -f dasdload64$(EXEEXT)
 	$(AM_V_CCLD)$(dasdload64_LINK) $(dasdload64_OBJECTS) $(dasdload64_LDADD) $(LIBS)
 
-dasdls$(EXEEXT): $(dasdls_OBJECTS) $(dasdls_DEPENDENCIES) $(EXTRA_dasdls_DEPENDENCIES) 
+dasdls$(EXEEXT): $(dasdls_OBJECTS) $(dasdls_DEPENDENCIES) $(EXTRA_dasdls_DEPENDENCIES)
 	@rm -f dasdls$(EXEEXT)
 	$(AM_V_CCLD)$(dasdls_LINK) $(dasdls_OBJECTS) $(dasdls_LDADD) $(LIBS)
 
-dasdpdsu$(EXEEXT): $(dasdpdsu_OBJECTS) $(dasdpdsu_DEPENDENCIES) $(EXTRA_dasdpdsu_DEPENDENCIES) 
+dasdpdsu$(EXEEXT): $(dasdpdsu_OBJECTS) $(dasdpdsu_DEPENDENCIES) $(EXTRA_dasdpdsu_DEPENDENCIES)
 	@rm -f dasdpdsu$(EXEEXT)
 	$(AM_V_CCLD)$(dasdpdsu_LINK) $(dasdpdsu_OBJECTS) $(dasdpdsu_LDADD) $(LIBS)
 
-dasdseq$(EXEEXT): $(dasdseq_OBJECTS) $(dasdseq_DEPENDENCIES) $(EXTRA_dasdseq_DEPENDENCIES) 
+dasdseq$(EXEEXT): $(dasdseq_OBJECTS) $(dasdseq_DEPENDENCIES) $(EXTRA_dasdseq_DEPENDENCIES)
 	@rm -f dasdseq$(EXEEXT)
 	$(AM_V_CCLD)$(dasdseq_LINK) $(dasdseq_OBJECTS) $(dasdseq_LDADD) $(LIBS)
 
-dasdser$(EXEEXT): $(dasdser_OBJECTS) $(dasdser_DEPENDENCIES) $(EXTRA_dasdser_DEPENDENCIES) 
+dasdser$(EXEEXT): $(dasdser_OBJECTS) $(dasdser_DEPENDENCIES) $(EXTRA_dasdser_DEPENDENCIES)
 	@rm -f dasdser$(EXEEXT)
 	$(AM_V_CCLD)$(dasdser_LINK) $(dasdser_OBJECTS) $(dasdser_LDADD) $(LIBS)
 
-dmap2hrc$(EXEEXT): $(dmap2hrc_OBJECTS) $(dmap2hrc_DEPENDENCIES) $(EXTRA_dmap2hrc_DEPENDENCIES) 
+dmap2hrc$(EXEEXT): $(dmap2hrc_OBJECTS) $(dmap2hrc_DEPENDENCIES) $(EXTRA_dmap2hrc_DEPENDENCIES)
 	@rm -f dmap2hrc$(EXEEXT)
 	$(AM_V_CCLD)$(dmap2hrc_LINK) $(dmap2hrc_OBJECTS) $(dmap2hrc_LDADD) $(LIBS)
 
-hercifc$(EXEEXT): $(hercifc_OBJECTS) $(hercifc_DEPENDENCIES) $(EXTRA_hercifc_DEPENDENCIES) 
+hercifc$(EXEEXT): $(hercifc_OBJECTS) $(hercifc_DEPENDENCIES) $(EXTRA_hercifc_DEPENDENCIES)
 	@rm -f hercifc$(EXEEXT)
 	$(AM_V_CCLD)$(hercifc_LINK) $(hercifc_OBJECTS) $(hercifc_LDADD) $(LIBS)
 
-herclin$(EXEEXT): $(herclin_OBJECTS) $(herclin_DEPENDENCIES) $(EXTRA_herclin_DEPENDENCIES) 
+herclin$(EXEEXT): $(herclin_OBJECTS) $(herclin_DEPENDENCIES) $(EXTRA_herclin_DEPENDENCIES)
 	@rm -f herclin$(EXEEXT)
 	$(AM_V_CCLD)$(herclin_LINK) $(herclin_OBJECTS) $(herclin_LDADD) $(LIBS)
 
-hercules$(EXEEXT): $(hercules_OBJECTS) $(hercules_DEPENDENCIES) $(EXTRA_hercules_DEPENDENCIES) 
+hercules$(EXEEXT): $(hercules_OBJECTS) $(hercules_DEPENDENCIES) $(EXTRA_hercules_DEPENDENCIES)
 	@rm -f hercules$(EXEEXT)
 	$(AM_V_CCLD)$(hercules_LINK) $(hercules_OBJECTS) $(hercules_LDADD) $(LIBS)
 
-hetget$(EXEEXT): $(hetget_OBJECTS) $(hetget_DEPENDENCIES) $(EXTRA_hetget_DEPENDENCIES) 
+hetget$(EXEEXT): $(hetget_OBJECTS) $(hetget_DEPENDENCIES) $(EXTRA_hetget_DEPENDENCIES)
 	@rm -f hetget$(EXEEXT)
 	$(AM_V_CCLD)$(hetget_LINK) $(hetget_OBJECTS) $(hetget_LDADD) $(LIBS)
 
-hetinit$(EXEEXT): $(hetinit_OBJECTS) $(hetinit_DEPENDENCIES) $(EXTRA_hetinit_DEPENDENCIES) 
+hetinit$(EXEEXT): $(hetinit_OBJECTS) $(hetinit_DEPENDENCIES) $(EXTRA_hetinit_DEPENDENCIES)
 	@rm -f hetinit$(EXEEXT)
 	$(AM_V_CCLD)$(hetinit_LINK) $(hetinit_OBJECTS) $(hetinit_LDADD) $(LIBS)
 
-hetmap$(EXEEXT): $(hetmap_OBJECTS) $(hetmap_DEPENDENCIES) $(EXTRA_hetmap_DEPENDENCIES) 
+hetmap$(EXEEXT): $(hetmap_OBJECTS) $(hetmap_DEPENDENCIES) $(EXTRA_hetmap_DEPENDENCIES)
 	@rm -f hetmap$(EXEEXT)
 	$(AM_V_CCLD)$(hetmap_LINK) $(hetmap_OBJECTS) $(hetmap_LDADD) $(LIBS)
 
-hetupd$(EXEEXT): $(hetupd_OBJECTS) $(hetupd_DEPENDENCIES) $(EXTRA_hetupd_DEPENDENCIES) 
+hetupd$(EXEEXT): $(hetupd_OBJECTS) $(hetupd_DEPENDENCIES) $(EXTRA_hetupd_DEPENDENCIES)
 	@rm -f hetupd$(EXEEXT)
 	$(AM_V_CCLD)$(hetupd_LINK) $(hetupd_OBJECTS) $(hetupd_LDADD) $(LIBS)
 
-maketape$(EXEEXT): $(maketape_OBJECTS) $(maketape_DEPENDENCIES) $(EXTRA_maketape_DEPENDENCIES) 
+maketape$(EXEEXT): $(maketape_OBJECTS) $(maketape_DEPENDENCIES) $(EXTRA_maketape_DEPENDENCIES)
 	@rm -f maketape$(EXEEXT)
 	$(AM_V_CCLD)$(maketape_LINK) $(maketape_OBJECTS) $(maketape_LDADD) $(LIBS)
 
-tapecopy$(EXEEXT): $(tapecopy_OBJECTS) $(tapecopy_DEPENDENCIES) $(EXTRA_tapecopy_DEPENDENCIES) 
+tapecopy$(EXEEXT): $(tapecopy_OBJECTS) $(tapecopy_DEPENDENCIES) $(EXTRA_tapecopy_DEPENDENCIES)
 	@rm -f tapecopy$(EXEEXT)
 	$(AM_V_CCLD)$(tapecopy_LINK) $(tapecopy_OBJECTS) $(tapecopy_LDADD) $(LIBS)
 
-tapemap$(EXEEXT): $(tapemap_OBJECTS) $(tapemap_DEPENDENCIES) $(EXTRA_tapemap_DEPENDENCIES) 
+tapemap$(EXEEXT): $(tapemap_OBJECTS) $(tapemap_DEPENDENCIES) $(EXTRA_tapemap_DEPENDENCIES)
 	@rm -f tapemap$(EXEEXT)
 	$(AM_V_CCLD)$(tapemap_LINK) $(tapemap_OBJECTS) $(tapemap_LDADD) $(LIBS)
 
-tapesplt$(EXEEXT): $(tapesplt_OBJECTS) $(tapesplt_DEPENDENCIES) $(EXTRA_tapesplt_DEPENDENCIES) 
+tapesplt$(EXEEXT): $(tapesplt_OBJECTS) $(tapesplt_DEPENDENCIES) $(EXTRA_tapesplt_DEPENDENCIES)
 	@rm -f tapesplt$(EXEEXT)
 	$(AM_V_CCLD)$(tapesplt_LINK) $(tapesplt_OBJECTS) $(tapesplt_LDADD) $(LIBS)
 
-tfprint$(EXEEXT): $(tfprint_OBJECTS) $(tfprint_DEPENDENCIES) $(EXTRA_tfprint_DEPENDENCIES) 
+tfprint$(EXEEXT): $(tfprint_OBJECTS) $(tfprint_DEPENDENCIES) $(EXTRA_tfprint_DEPENDENCIES)
 	@rm -f tfprint$(EXEEXT)
 	$(AM_V_CCLD)$(tfprint_LINK) $(tfprint_OBJECTS) $(tfprint_LDADD) $(LIBS)
 
-tfswap$(EXEEXT): $(tfswap_OBJECTS) $(tfswap_DEPENDENCIES) $(EXTRA_tfswap_DEPENDENCIES) 
+tfswap$(EXEEXT): $(tfswap_OBJECTS) $(tfswap_DEPENDENCIES) $(EXTRA_tfswap_DEPENDENCIES)
 	@rm -f tfswap$(EXEEXT)
 	$(AM_V_CCLD)$(tfswap_LINK) $(tfswap_OBJECTS) $(tfswap_LDADD) $(LIBS)
 
-txt2card$(EXEEXT): $(txt2card_OBJECTS) $(txt2card_DEPENDENCIES) $(EXTRA_txt2card_DEPENDENCIES) 
+txt2card$(EXEEXT): $(txt2card_OBJECTS) $(txt2card_DEPENDENCIES) $(EXTRA_txt2card_DEPENDENCIES)
 	@rm -f txt2card$(EXEEXT)
 	$(AM_V_CCLD)$(txt2card_LINK) $(txt2card_OBJECTS) $(txt2card_LDADD) $(LIBS)
 
-vmfplc2$(EXEEXT): $(vmfplc2_OBJECTS) $(vmfplc2_DEPENDENCIES) $(EXTRA_vmfplc2_DEPENDENCIES) 
+vmfplc2$(EXEEXT): $(vmfplc2_OBJECTS) $(vmfplc2_DEPENDENCIES) $(EXTRA_vmfplc2_DEPENDENCIES)
 	@rm -f vmfplc2$(EXEEXT)
 	$(AM_V_CCLD)$(vmfplc2_LINK) $(vmfplc2_OBJECTS) $(vmfplc2_LDADD) $(LIBS)
 
@@ -2610,6 +2611,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xstore.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zfcp.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zvector.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zvector2.Plo@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -3212,6 +3214,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/xstore.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
 	-rm -f ./$(DEPDIR)/zvector.Plo
+	-rm -f ./$(DEPDIR)/zvector2.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -3448,6 +3451,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/xstore.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
 	-rm -f ./$(DEPDIR)/zvector.Plo
+	-rm -f ./$(DEPDIR)/zvector2.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

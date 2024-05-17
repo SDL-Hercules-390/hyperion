@@ -549,6 +549,7 @@ struct REGS {                           /* Processor registers       */
 
         const INSTR_FUNC    *s370_runtime_opcode_xxxx,
                             *s370_runtime_opcode_e3________xx,
+                            *s370_runtime_opcode_e6xx______xx,
                             *s370_runtime_opcode_e7________xx,
                             *s370_runtime_opcode_eb________xx,
                             *s370_runtime_opcode_ec________xx,
@@ -556,6 +557,7 @@ struct REGS {                           /* Processor registers       */
 
         const INSTR_FUNC    *s390_runtime_opcode_xxxx,
                             *s390_runtime_opcode_e3________xx,
+                            *s390_runtime_opcode_e6xx______xx,
                             *s390_runtime_opcode_e7________xx,
                             *s390_runtime_opcode_eb________xx,
                             *s390_runtime_opcode_ec________xx,
@@ -563,6 +565,7 @@ struct REGS {                           /* Processor registers       */
 
         const INSTR_FUNC    *z900_runtime_opcode_xxxx,
                             *z900_runtime_opcode_e3________xx,
+                            *z900_runtime_opcode_e6xx______xx,
                             *z900_runtime_opcode_e7________xx,
                             *z900_runtime_opcode_eb________xx,
                             *z900_runtime_opcode_ec________xx,
