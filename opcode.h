@@ -2707,6 +2707,12 @@ void ARCH_DEP( load_real_address_proc ) (REGS *regs,
 void packed_to_binary (BYTE *dec, int len, U64 *result,
     int *ovf, int *dxf);
 void binary_to_packed (S64 bin, BYTE *result);
+void add_decimal (BYTE *dec1, BYTE *dec2,
+                        BYTE *result, int *count);
+void subtract_decimal (BYTE *dec1, BYTE *dec2,
+                        BYTE *result, int *count, int *sign);
+void divide_decimal (BYTE *dec1, int count1, BYTE *dec2,
+                        int count2, BYTE *quot, BYTE *rem);
 
 
 /* Functions in module diagnose.c */
@@ -3677,8 +3683,70 @@ DEF_INST(vector_minimum);
 DEF_INST(vector_maximum);
 #endif
 
+#if defined(FEATURE_134_ZVECTOR_PACK_DEC_FACILITY)
+DEF_INST(vector_packed_zoned);
+DEF_INST(vector_load_rightmost_with_length);
+DEF_INST(vector_unpack_zoned);
+DEF_INST(vector_store_rightmost_with_length);
+DEF_INST(vector_load_immediate_decimal);
+DEF_INST(vector_convert_to_binary_32);
+DEF_INST(vector_convert_to_binary_64);
+DEF_INST(vector_convert_to_decimal_32);
+DEF_INST(vector_convert_to_decimal_64);
+DEF_INST(vector_perform_sign_operation_decimal);
+DEF_INST(vector_test_decimal);
+DEF_INST(vector_add_decimal);
+DEF_INST(vector_shift_and_round_decimal);
+DEF_INST(vector_shift_and_round_decimal_register);
+DEF_INST(vector_subtract_decimal);
+DEF_INST(vector_compare_decimal);
+DEF_INST(vector_multiply_decimal);
+DEF_INST(vector_multiply_and_shift_decimal);
+DEF_INST(vector_divide_decimal);
+DEF_INST(vector_remainder_decimal);
+DEF_INST(vector_shift_and_divide_decimal);
+#endif
+
 #if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
 DEF_INST( insert_reference_bits_multiple );
+#endif
+
+#if defined( FEATURE_148_VECTOR_ENH_FACILITY_2 )
+DEF_INST(vector_load_byte_reversed_element_16);
+DEF_INST(vector_load_byte_reversed_element_64);
+DEF_INST(vector_load_byte_reversed_element_32);
+DEF_INST(vector_load_byte_reversed_and_zero);
+DEF_INST(vector_load_byte_reversed_and_replicate);
+DEF_INST(vector_load_byte_reversed_elements);
+DEF_INST(vector_load_elements_reversed);
+DEF_INST(vector_store_byte_reversed_element_16);
+DEF_INST(vector_store_byte_reversed_element_64);
+DEF_INST(vector_store_byte_reversed_element_32);
+DEF_INST(vector_store_byte_reversed_elements);
+DEF_INST(vector_store_reversed_elements);
+#endif
+
+#if defined(FEATURE_152_VECT_PACKDEC_ENH_FACILITY)
+DEF_INST(vector_load_rightmost_with_length_reg);
+DEF_INST(vector_store_rightmost_with_length_reg);
+#endif
+
+#if defined(FEATURE_165_NNET_ASSIST_FACILITY)
+DEF_INST(vector_fp_convert_nnp);
+DEF_INST(vector_fp_convert_and_lengthen_from_nnp_high);
+DEF_INST(vector_fp_convert_from_nnp);
+DEF_INST(vector_fp_convert_and_lengthen_from_nnp_low);
+DEF_INST(vector_fp_convert_and_round_to_nnp);
+#endif
+
+#if defined(FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY)
+DEF_INST(vector_count_leading_zero_digits);
+DEF_INST(vector_unpack_zoned_high);
+DEF_INST(vector_unpack_zoned_low);
+DEF_INST(vector_pack_zoned_register);
+DEF_INST(decimal_scale_and_convert_to_hfp);
+DEF_INST(decimal_scale_and_convert_and_split_to_hfp);
+DEF_INST(vector_convert_hfp_to_scaled_decimal);
 #endif
 
 #if defined( FEATURE_193_BEAR_ENH_FACILITY )

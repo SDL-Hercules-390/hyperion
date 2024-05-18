@@ -401,11 +401,6 @@ int list_contents( CIFBLK *cif, char *sfile, char *volser, DSXTENT *extent )
 
     EXTGUIMSG( "ETRK=%d\n", (ecyl * cif->heads) + ehead );
 
-    if (sfile)
-        LOGMSG( "\nVOLSER:  %-6s    \"%s\" sf=\"%s\"\n\n", volser, cif->fname, &sfile[3] );
-    else
-        LOGMSG( "\nVOLSER:  %-6s    \"%s\"\n\n", volser, cif->fname );
-
     if (runflgs & rf_header)
     {
         /* display column headers allowing for optional columns */
@@ -683,6 +678,11 @@ int do_ls_cif( CIFBLK *cif, char *sfile )
     }
 
     make_asciiz( volser, sizeof( volser ), vol1data + 4, 6 );
+
+    if (sfile)
+        LOGMSG( "\nVOLSER:  %-6s    \"%s\" sf=\"%s\"\n\n", volser, cif->fname, &sfile[3] );
+    else
+        LOGMSG( "\nVOLSER:  %-6s    \"%s\"\n\n", volser, cif->fname );
 
     cyl  = (vol1data[11] << 8) | vol1data[12];
     head = (vol1data[13] << 8) | vol1data[14];
