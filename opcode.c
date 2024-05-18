@@ -2565,9 +2565,15 @@ int iprint_ASMFMT_e6xx( int arch_mode, BYTE inst[], char unused[], char* prtbuf 
 
     UNREFERENCED( unused );
 
-    /* Extract our parameters directly from the instruction opcode table */
-    /* NOTE - we use hard coded 'inst[1]' since this is the 'b2xx' table */
-    /* NOTE - we use a hard coded opcode table name for the same reason  */
+    /* Extract our parameters directly from the instruction opcode table   */
+
+    /* NOTE - we use hard coded 'inst[1]' since this is the 'e6xx' table   */
+    /* for the  S370 ecpsvm instruction                                    */
+
+    /* NOTE - we use hard coded 'inst[5]' since this is the 'e6xx' table   */
+    /* for the z/arch 900 vector instruction (xx in byte 5 of instruction) */
+
+    /* NOTE - we use a hard coded opcode table name for the same reason    */
 
     if (ARCH_370_IDX == arch_mode)
     {
@@ -7925,8 +7931,8 @@ void init_runtime_opcode_tables()
       //replace_opcode_xxxx(arch, gen_opcode_e6xx[i][arch], 0xe6, i);
       // e6xx opcode table is ARCH_DEP!
 
-           if (ARCH_370_IDX == arch) replace_opcode_xx________xx(arch, s370_gen_opcode_e6xx[i][arch], 0xe6, i );
-      else if (ARCH_390_IDX == arch) replace_opcode_xx________xx(arch, s390_gen_opcode_e6xx[i][arch], 0xe6, i );
+           if (ARCH_370_IDX == arch) replace_opcode_xx________xx( arch, s370_gen_opcode_e6xx[i][arch], 0xe6, i );
+      else if (ARCH_390_IDX == arch) replace_opcode_xx________xx( arch, s390_gen_opcode_e6xx[i][arch], 0xe6, i );
       else if (ARCH_900_IDX == arch) replace_opcode_xx________xx( arch, z900_gen_opcode_e6xx[i][arch], 0xe6, i );
       else
           CRASH();
