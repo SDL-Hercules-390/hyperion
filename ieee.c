@@ -947,6 +947,12 @@ static void vector_ieee_cond_trap( int vix, REGS *regs, U32 ieee_traps )
 #define VECTOR_PUT_FLOAT64_NOCC(  op, v, i, regs )  ARCH_DEP( put_float64  )( &op, &regs->VR_D( v, i ))
 #define VECTOR_PUT_FLOAT32_NOCC(  op, v, i, regs )  ARCH_DEP( put_float32  )( &op, &regs->VR_F( v, i ))
 
+#define VECTOR_RESERVED_BITS( _bits, _reserved )                             \
+                                                                             \
+    if ( _bits & _reserved )                                                 \
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+
 /*-------------------------------------------------------------------*/
 /* E74A VFTCI  - Vector FP Test Data Class Immediate         [VRI-e] */
 /*-------------------------------------------------------------------*/
@@ -962,8 +968,7 @@ DEF_INST( vector_fp_test_data_class_immediate )
 
     ZVECTOR_CHECK( regs );
 
-    if (m5 & 0x7)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x07 );
 
     single_element = (m5 & 0x8);
 
@@ -1142,8 +1147,7 @@ DEF_INST( vector_fp_convert_to_logical )
 
     BFPRM_CHECK( m5 ,regs );
 
-    if (m4 & 0x3)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m4, 0x03 );
 
     single_element = (m4 & 0x8);
 
@@ -1262,8 +1266,7 @@ DEF_INST( vector_fp_convert_from_logical )
 
     BFPRM_CHECK( m5 ,regs );
 
-    if (m4 & 0x3)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m4, 0x03 );
 
     single_element = (m4 & 0x8);
 
@@ -1346,8 +1349,7 @@ DEF_INST( vector_fp_convert_to_fixed )
 
     BFPRM_CHECK( m5 ,regs );
 
-    if (m4 & 0x3)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m4, 0x03 );
 
     single_element = (m4 & 0x8);
 
@@ -1495,8 +1497,7 @@ DEF_INST( vector_fp_convert_from_fixed )
 
     BFPRM_CHECK( m5 ,regs );
 
-    if (m4 & 0x3)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m4, 0x03 );
 
     single_element = (m4 & 0x8);
 
@@ -1582,8 +1583,7 @@ DEF_INST( vector_fp_load_lengthened )
 
     ZVECTOR_CHECK( regs );
 
-    if (m4 & 0x7)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m4, 0x07 );
 
     single_element = (m4 & 0x8);
 
@@ -1765,9 +1765,7 @@ DEF_INST( vector_fp_subtract )
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-    if (m5 & 0x7)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x07 );
 
     single_element = (m5 & 0x8);
 
@@ -1897,9 +1895,7 @@ DEF_INST( vector_fp_add )
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-    if (m5 & 0x7)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x07 );
 
     single_element = (m5 & 0x8);
 
@@ -1969,9 +1965,7 @@ DEF_INST( vector_fp_divide )
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-    if (m5 & 0x7)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x07 );
 
     single_element = (m5 & 0x8);
 
@@ -2041,9 +2035,7 @@ DEF_INST( vector_fp_multiply )
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-    if (m5 & 0x7)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x07 );
 
     single_element = (m5 & 0x8);
 
@@ -2113,9 +2105,8 @@ DEF_INST( vector_fp_compare_equal )
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-    if (m5 & 0x3 || m6 & 0xE)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x03 );
+    VECTOR_RESERVED_BITS( m6, 0x0E );
 
     single_element = (m5 & 0x8);
 
@@ -2185,9 +2176,8 @@ DEF_INST( vector_fp_compare_high_or_equal )
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-    if (m5 & 0x3 || m6 & 0xE)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x03 );
+    VECTOR_RESERVED_BITS( m6, 0x0E );
 
     single_element = (m5 & 0x8);
 
@@ -2257,9 +2247,8 @@ DEF_INST( vector_fp_compare_high )
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-    if (m5 & 0x3 || m6 & 0xE)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x03 );
+    VECTOR_RESERVED_BITS( m6, 0x0E );
 
     single_element = (m5 & 0x8);
 
@@ -2336,8 +2325,7 @@ DEF_INST( vector_fp_minimum )
     if ((m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15))  /* Valid performed? */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if (m5 & 0x7)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x07 );
 
     single_element = (m5 & 0x8);
 
@@ -2407,11 +2395,10 @@ DEF_INST( vector_fp_maximum )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
-    if ((m6 >= 5 && m6 <= 7) || (m6 >= 13 || m6 <= 15))  /* Valid performed? */
+    if ((m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15))  /* Valid performed? */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if (m5 & 0x7)  /* Reserved bits zero? */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    VECTOR_RESERVED_BITS( m5, 0x07 );
 
     single_element = (m5 & 0x8);
 
