@@ -1708,11 +1708,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC02439I operation, have their data automatically merged into\n" \
        "HHC02439I the resulting output file."
 
-// dasdinit.c
+// dasd utilities
 //efine HHC02440 (available)
 //efine HHC02441 (available)
 //efine HHC02442 (available)
-//efine HHC02443 (available)
+#define HHC02443 "filename extension does not reflect compression option"
 #define HHC02444 "Member %s is not a single text record"
 #define HHC02445 "Invalid, unsupported or missing %s: %s"
 #define HHC02446 "Invalid number of arguments"

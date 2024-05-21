@@ -214,6 +214,64 @@ int     rc;                             /* Return code               */
     if (altcylflag)
         size += altsize;
 
+    /* Warn if filename extension doesn't jive with compress option */
+    {
+        const char* dot = strrchr( fname, '.' );
+
+        if (dot && dot != fname)
+        {
+            char ext[8];
+            bool bWarn = false;
+
+            STRLCPY( ext, dot+1 );
+
+            if (comp != 0xff) // Compression?
+            {
+                if (type == 'C') // CCKD?
+                {
+                    if (1
+                        && str_caseless_ne_n( "cckd",   ext, 4 )
+                        && str_caseless_ne_n( "cckd64", ext, 6 )
+                    )
+                        bWarn = true;
+                }
+                else // Compressed FBA
+                {
+                    if (1
+                        && str_caseless_ne_n( "cfba",   ext, 4 )
+                        && str_caseless_ne_n( "cfba64", ext, 6 )
+                    )
+                        bWarn = true;
+                }
+            }
+            else // Normal uncompressed
+            {
+                if (type == 'C') // CKD?
+                {
+                    if (1
+                        && str_caseless_ne_n( "ckd",   ext, 3 )
+                        && str_caseless_ne_n( "ckd64", ext, 5 )
+                    )
+                        bWarn = true;
+                }
+                else // FBA
+                {
+                    if (1
+                        && str_caseless_ne_n( "fba",   ext, 3 )
+                        && str_caseless_ne_n( "fba64", ext, 5 )
+                    )
+                        bWarn = true;
+                }
+            }
+
+            if (bWarn)
+            {
+                // "filename extension does not reflect compression option"
+                FWRMSG( stderr, HHC02443, "W" );
+            }
+        }
+    }
+
     /* Create the device */
     if (type == 'C')
         rc = create_ckd64( fname, devtype, heads, maxdlen, size, volser,
