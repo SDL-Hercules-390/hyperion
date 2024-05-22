@@ -268,20 +268,36 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
             dev->fbanumblk = (int)(statbuf.st_size / dev->fbablksiz);
         }
 
-        /* The second argument is the device origin block number */
+        /* The second argument SHOULD be the device origin block number */
         if (argc >= 2)
         {
-            if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
-             || startblk >= dev->fbanumblk)
+            if (1
+                && str_ne_n( argv[1], "sf=", 3 )
+                && sscanf( argv[1], "%u%c", &startblk, &c ) == 1
+                && startblk < dev->fbanumblk
+            )
             {
-                // "%1d:%04X %s file %s: invalid device origin block number %s"
-                WRMSG( HHC00505, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), dev->filename, argv[1] );
-                close (dev->fd);
+                dev->fbaorigin = (off_t)startblk;
+                dev->fbanumblk -= startblk;
+            }
+            else // (error)
+            {
+                if (str_ne_n( argv[1], "sf=", 3 ))
+                {
+                    // "%1d:%04X %s file %s: invalid device origin block number %s"
+                    WRMSG( HHC00505, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), dev->filename, argv[1] );
+                }
+                else
+                {
+                    // "%1d:%04X %s file %s: shadow files not supported for %s dasd"
+                    WRMSG( HHC00469, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ),
+                        dev->filename, FBATYP( cfba, 0 ) );
+                }
+
+                close( dev->fd );
                 dev->fd = -1;
                 return -1;
             }
-            dev->fbaorigin = (off_t)startblk;
-            dev->fbanumblk -= startblk;
         }
 
         /* The third argument is the device block count */
