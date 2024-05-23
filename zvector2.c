@@ -25,7 +25,7 @@
     /*-------------------------------------------------------------------*/
     /* decNumber required for Z/Vector Packed Decimal                    */
     /*-------------------------------------------------------------------*/
-    #define DECNUMDIGITS 64
+    #define DECNUMDIGITS 66
     #include "decNumber.h"
     #include "decPacked.h"
 #endif
@@ -75,12 +75,6 @@
 #define LV_HAS_PLUS_SIGN(p)     (IS_PLUS_SIGN( GET_VR_SIGN(p) ) )
 #define LV_HAS_MINUS_SIGN(p)    (IS_MINUS_SIGN( GET_VR_SIGN(p) ) )
 #define LV_HAS_VALID_SIGN(p)    (IS_VALID_SIGN( GET_VR_SIGN(p) ) )
-
-/*-------------------------------------------------------------------*/
-/* ZNumber - Z/Vector intermediate decNumber                         */
-/*-------------------------------------------------------------------*/
-
-#define ZN_DECIMAL_DIGITS       66
 
 /*-------------------------------------------------------------------*/
 /* Use Intrinsics                                                    */
@@ -815,7 +809,7 @@ static inline void vr_to_decNumber( REGS* regs, int v1, decNumber* pdn, bool for
 static inline bool vr_from_decNumber( REGS* regs, int v1, decNumber* pdn, bool forcePositive, int rdc )
 {
     int     overflow = false;          /* overflow recognized        */
-    U8      bcd_zn[ZN_DECIMAL_DIGITS]; /* decimal digits             */
+    U8      bcd_zn[DECNUMDIGITS];      /* decimal digits             */
     int     toCopy;                    /* number of digits to pack   */
     int     i, j;                      /* indexes                    */
     BYTE    ps;                        /* packed sign                */
@@ -877,7 +871,7 @@ static inline void zn_ContextDefault( decContext* set )
 {
     decContextDefault( set, DEC_INIT_BASE);  // initialize
     set->traps = 0;                          // no traps, thank you
-    set->digits= ZN_DECIMAL_DIGITS;
+    set->digits= DECNUMDIGITS;
 }
 
 
@@ -3516,6 +3510,7 @@ DEF_INST( vector_shift_and_divide_decimal )
     #pragma GCC diagnostic ignored "-Wunused-variable"
     #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
     #pragma GCC diagnostic ignored "-Wcomment"
+    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 /* ============================================= */
 
