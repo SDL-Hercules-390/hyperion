@@ -1047,7 +1047,7 @@ DEF_INST( vector_load_byte_reversed_elements )
 
     case 3:     /* doubleword */
         for (i=0; i < 2; i++)
-            regs->VR_F( v1, i ) = bswap_64( ARCH_DEP( vfetch8 )( effective_addr2 + i*8, b2, regs ) );
+            regs->VR_D( v1, i ) = bswap_64( ARCH_DEP( vfetch8 )( effective_addr2 + i*8, b2, regs ) );
         break;
 
     case 4:     /* quadword */
@@ -1094,7 +1094,7 @@ DEF_INST( vector_load_elements_reversed )
 
     case 3:     /* doubleword */
         for (i=0; i < 2; i++)
-            regs->VR_F( v1, (1 - i) ) = ARCH_DEP( vfetch8 )( effective_addr2 + i*8, b2, regs );
+            regs->VR_D( v1, (1 - i) ) = ARCH_DEP( vfetch8 )( effective_addr2 + i*8, b2, regs );
         break;
 
     default:    /* M3= 0, 4-15 => Specficitcation excp */
