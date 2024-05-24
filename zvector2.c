@@ -48,7 +48,7 @@
 /* Decimal handling helpers */
 #define IS_VALID_SIGN(s)    ( ((s) & 0x0F) > 9 )
 #define IS_VALID_DECIMAL(s) ( ((s) & 0x0F) < 10 )
-#define IS_PLUS_SIGN(s)     ( (((s) & 0x0F) == 0x0A) || (((s) & 0x0F) == 0x0C) || (((s) & 0x0F) == 0x0E) || (((s) & 0x0F) == 0x0F) )
+#define IS_PLUS_SIGN(s)     ( (((s) & 0x0F) == 0x0A) || (((s) & 0x0F) == 0x0C) || (((s) & 0x0F) >= 0x0E) )
 #define IS_MINUS_SIGN(s)    ( (((s) & 0x0F) == 0x0B) || (((s) & 0x0F) == 0x0D) )
 #define PREFERRED_PLUS      0x0C
 #define PREFERRED_MINUS     0x0D
@@ -78,12 +78,12 @@
 
 /*-------------------------------------------------------------------*/
 /* Use Intrinsics                                                    */
-/* - for MSVS                                                        */
+/* - for MSVC                                                        */
 /* - for Clang version less than 12 or GCC version less than 8 when  */
 /*   when SSE 4.2 intrinsics are available                           */
 /*-------------------------------------------------------------------*/
 //Programmers note:
-//  intrinsics are defined to X64.
+//  intrinsics are defined for X64.
 
 //  future option for aarch64:
 //  sse2neon.h adds aarch64 Neon impelementations of X64 intrisics
@@ -109,9 +109,10 @@
 */
 
 #elif defined( __x86_64__ ) &&  defined( __SSE4_2__ ) &&           \
-      ( (defined( __clang_major__ ) && __clang_major__< 12  ) || \
-        (defined( __GNUC__ ) && __GNUC__< 8  )                   \
+      ( (defined( __clang_major__ ) && __clang_major__ < 12  ) ||  \
+        (defined( __GNUC__ ) && __GNUC__ < 8  )                    \
       )
+
     #define __V128_SSE__ 1
 
 #endif
@@ -305,7 +306,7 @@ static inline U128 U128_U32_mul( U128 a, U32 b)
 /*-------------------------------------------------------------------*/
 static inline void u128_logmsg(const char * msg, U128 u)
 {
-    logmsg("%s: u128=%16.16lX.%16.16lX \n", msg, u.Q.D.H.D, u.Q.D.L.D);
+    logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", msg, u.Q.D.H.D, u.Q.D.L.D);
 }
 
 
