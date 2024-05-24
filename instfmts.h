@@ -2017,9 +2017,9 @@
     U32 _rxb = (temp >> 0) & 0xf;                                   \
     (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
     (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
-    (_i4) = (temp >> 20) & 0x0fff;                                  \
+    (_i4) = (temp >> 16) & 0x0ff;                                   \
     (_m5) = (temp >> 12) & 0xf;                                     \
-    (_i3) = (temp >>  4) & 0x0fff;                                  \
+    (_i3) = (temp >>  4) & 0x0ff;                                   \
                                                                     \
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }
