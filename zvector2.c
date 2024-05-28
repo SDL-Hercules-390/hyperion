@@ -739,10 +739,10 @@ static inline bool vr_is_zero(REGS* regs, int v1)
 /*-------------------------------------------------------------------*/
 static inline bool vr_is_minus_zero(REGS* regs, int v1)
 {
-    if ( !vr_is_zero( regs, v1 ) ) return false;
+    if ( VR_HAS_MINUS_SIGN( v1 ) && vr_is_zero( regs, v1 ) )
+        return true;
 
-    /* have 0; is minus? */
-    return VR_HAS_MINUS_SIGN( v1 );
+    return false;
 }
 
 /*-------------------------------------------------------------------*/
