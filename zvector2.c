@@ -2693,7 +2693,7 @@ DEF_INST( vector_add_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
@@ -2920,7 +2920,7 @@ DEF_INST( vector_subtract_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
@@ -3074,7 +3074,7 @@ DEF_INST( vector_multiply_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
@@ -3279,7 +3279,7 @@ DEF_INST( vector_divide_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
@@ -3380,7 +3380,7 @@ DEF_INST( vector_remainder_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
