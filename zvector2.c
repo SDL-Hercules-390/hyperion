@@ -2822,6 +2822,10 @@ DEF_INST( vector_shift_and_round_decimal_register )
     // dn_logmsg("dnshift: ", &dnshift);
     // dn_logmsg("dnv1: ", &dnv1);
 
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( decNumberIsZero( &dnv1 ) && decNumberIsNegative( &dnv1 ) )
+        decNumberMinus( &dnv1, &dnv1, &set );
+
     /* store shifted result in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
