@@ -728,6 +728,24 @@ static inline bool vr_is_zero(REGS* regs, int v1)
 }
 
 /*-------------------------------------------------------------------*/
+/* Is a packed decimal vector register minus zero                    */
+/*                                                                   */
+/* Input:                                                            */
+/*      regs    CPU register context for VR access                   */
+/*      v1      vector register - copied to                          */
+/* Returns:                                                          */
+/*      true    all vr decimal packed digits are zero and sign       */
+/*              is negative                                          */
+/*-------------------------------------------------------------------*/
+static inline bool vr_is_minus_zero(REGS* regs, int v1)
+{
+    if ( !vr_is_zero( regs, v1 ) ) return false;
+
+    /* have 0; is minus? */
+    return VR_HAS_MINUS_SIGN( v1 );
+}
+
+/*-------------------------------------------------------------------*/
 /* leading zeros of a packed decimal vector register                 */
 /*                                                                   */
 /* Input:                                                            */
@@ -2763,7 +2781,7 @@ DEF_INST( vector_shift_and_round_decimal_register )
     p1 = (m5 & 0x02) ? true : false;
     cs = (m5 & 0x01) ? true : false;
 
-    /* get shamt from v3, bytes 7. note: shamt is signed */
+    /* get shamt from v3, byte 7. note: shamt is signed */
     shamt = (S8) regs->VR_B( v3, 7);
     if (shamt < -32 ) shamt = -32;
     if (shamt > +31 ) shamt = +31;
@@ -2822,12 +2840,12 @@ DEF_INST( vector_shift_and_round_decimal_register )
     // dn_logmsg("dnshift: ", &dnshift);
     // dn_logmsg("dnv1: ", &dnv1);
 
-    /* if the result is 0 & the sign is negative; change to positive */
-    if ( decNumberIsZero( &dnv1 ) && decNumberIsNegative( &dnv1 ) )
-        decNumberMinus( &dnv1, &dnv1, &set );
-
     /* store shifted result in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
+
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
 
     /* set condition code */
     if (cs)
