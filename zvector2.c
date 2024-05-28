@@ -2051,7 +2051,7 @@ DEF_INST( vector_shift_and_round_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -2698,7 +2698,7 @@ DEF_INST( vector_add_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -2828,7 +2828,7 @@ DEF_INST( vector_shift_and_round_decimal_register )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -2925,7 +2925,7 @@ DEF_INST( vector_subtract_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3079,7 +3079,7 @@ DEF_INST( vector_multiply_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3182,7 +3182,7 @@ DEF_INST( vector_multiply_and_shift_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3284,7 +3284,7 @@ DEF_INST( vector_divide_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3385,7 +3385,7 @@ DEF_INST( vector_remainder_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3489,7 +3489,7 @@ DEF_INST( vector_shift_and_divide_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
