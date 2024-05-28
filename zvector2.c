@@ -812,7 +812,7 @@ static inline bool vr_from_decNumber( REGS* regs, int v1, decNumber* pdn, bool f
     int     overflow = false;          /* overflow recognized        */
     U8      bcd_zn[DECNUMDIGITS];      /* decimal digits             */
     int     toCopy;                    /* number of digits to pack   */
-    int     i, j;                      /* indexes                    */
+    int     i, j, k;                   /* indexes                    */
     BYTE    ps;                        /* packed sign                */
     int     startZn;                   /* Zn index                   */
     int     startVr;                   /* vector index               */
@@ -833,12 +833,14 @@ static inline bool vr_from_decNumber( REGS* regs, int v1, decNumber* pdn, bool f
     startZn = pdn->digits - toCopy;
     startVr = (MAX_DECIMAL_DIGITS - toCopy) / 2;
 
-    // logmsg("packing: startVr=%d, startZn=%d, toCopy=%d, rdc=%d, digits=%d\n",startVr, startZn, toCopy, rdc, pdn->digits);
+    //logmsg("packing: startVr=%d, startZn=%d, toCopy=%d, rdc=%d, digits=%d\n",startVr, startZn, toCopy, rdc, pdn->digits);
 
     /* Pack digits into vector register */
-    for (i=startZn, j=startVr; i < startZn + toCopy; i++)
+    for (i=startZn, j=startVr, k=0; k < toCopy; i++, k++)
     {
-        if ( (MAX_DECIMAL_DIGITS - toCopy + i) & 1)
+        //logmsg("packing: k=%d, j (startVr)=%d, i (startZn)=%d, bcd_zn=%d, odd=%d\n", k, j, i, bcd_zn[i], ( (MAX_DECIMAL_DIGITS - toCopy + k) & 1) );
+
+        if ( (MAX_DECIMAL_DIGITS - toCopy + k) & 1)
             regs->VR_B( v1, j++) |= bcd_zn[i];
         else
             regs->VR_B( v1, j) |= bcd_zn[i] << 4;
