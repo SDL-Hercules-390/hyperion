@@ -1869,14 +1869,16 @@ DEF_INST( vector_convert_to_decimal_32 )
     bool    p1;                  /* Force Operand 1 Positive (P1)    */
     bool    lb;                  /* Logical Binary (LB)              */
     bool    cs;                  /* Condition Code Set (CS)          */
-
     bool    possign;             /* result has positive sign         */
     U64     convert;             /* value to convert                 */
-    U32     reg32;               /* register to convert              */
     int     i;                   /* Loop variable                    */
     U8      digit;               /* digit of packed byte             */
     int     temp;                /* temp                             */
-    bool    overflow;            /* did an overfor occur             */
+    bool    overflow;            /* did an overflow occur            */
+    union {                      /* register to convert              */
+        S32 sreg;
+        U32 ureg;
+    } reg32;
 
 
     VRI_I( inst, regs, v1, r2, m4, i3 );
@@ -1905,32 +1907,37 @@ DEF_INST( vector_convert_to_decimal_32 )
     p1 = (m4 & 0x02) ? true : false;
     cs = (m4 & 0x01) ? true : false;
 
-    /* start with zero vector */
-    SET_VR_ZERO( v1 );
-
     /* get sign and value to convert */
-    reg32 = regs->GR_L( r2 );  /* 32-bits to convert */
+    reg32.ureg = regs->GR_L( r2 );  /* 32-bits to convert */
+
     if (lb)
     {
-        convert = (U64) reg32;    /* unsigned */
+        /* unsigned */
+        convert = reg32.ureg;
         possign = true;
     }
     else
     {
-        convert = (S32) reg32;  /* signed */
-        if (convert >0 )
+        /* signed */
+        if ( reg32.sreg >= 0 )
+        {
             possign = true;
+            convert = reg32.sreg;
+        }
         else
         {
             possign = false;
-            convert = -convert;
+            convert = - (S64) reg32.sreg   ;
         }
     }
 
-    //logmsg("VECTOR CONVERT TO DECIMAL (32): lb=%d, reg32=%X, convert=%ld, convert=%lx \n", lb, reg32, convert, convert);
+    // logmsg("VECTOR CONVERT TO DECIMAL (32): lb=%d, reg32.ureg=%X, reg32.sreg=%d, possign=%d,  convert=%ld, convert=%lx \n", lb, reg32.ureg, reg32.sreg, possign, convert, convert);
+
+    /* start with zero vector */
+    SET_VR_ZERO( v1 );
 
     /* do convertion to decimal digits */
-    for (i = 30, temp = rdc; temp >0 && i >= 0 && convert > 0; i--, temp--)
+    for (i = 30, temp = rdc; temp > 0 && i >= 0 && convert > 0; i--, temp--)
     {
         digit = convert % 10;
         convert = convert / 10;
