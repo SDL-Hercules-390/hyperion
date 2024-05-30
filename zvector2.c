@@ -1706,10 +1706,10 @@ DEF_INST( vector_count_leading_zero_digits )
         isZero = vr_is_zero( regs, v2 );
         valid = valid_decimals2 && valid_sign2;
 
-        if      ( valid && isZero && !nz && !isNeg)                 cc = 0;
-        else if ( valid && (isNeg || (isNeg && nz && isZero) ) )    cc = 1;
-        else if ( valid && !isZero && !isNeg )                      cc = 2;
-        else                                                        cc = 3;
+        cc = 3; /* invalid */
+        if      (   valid && isZero   && !(nz && isNeg) )              cc = 0;
+        else if ( ( valid && isNeg )  || (nz && isNeg && isZero)  )    cc = 1;
+        else if (   valid && !isZero  && !isNeg )                      cc = 2;
 
         // logmsg( "VCLZDP: cc=%d : valid=%d, isZero=%d,  isNeg=%d, nz=%d\n", cc, valid, isZero, isNeg, nz );
     }
