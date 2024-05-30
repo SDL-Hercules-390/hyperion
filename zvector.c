@@ -1134,7 +1134,7 @@ DEF_INST( vector_isolate_string )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             if (regs->VR_B( v2, i ) != 0)
@@ -1152,7 +1152,7 @@ DEF_INST( vector_isolate_string )
             }
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             if (regs->VR_H( v2, i ) != 0)
@@ -1170,7 +1170,7 @@ DEF_INST( vector_isolate_string )
             }
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             if (regs->VR_F( v2, i ) != 0)
@@ -1233,28 +1233,28 @@ DEF_INST( vector_merge_low )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for ( i=0, j=8; i<16; i+=2, j++ )
         {
             regs->VR_B( v1, i   ) = regs->VR_B( v2, j );
             regs->VR_B( v1, i+1 ) = regs->VR_B( v3, j );
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for ( i=0, j=4; i<8; i+=2, j++ )
         {
             regs->VR_H( v1, i   ) = regs->VR_H( v2, j );
             regs->VR_H( v1, i+1 ) = regs->VR_H( v3, j );
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for ( i=0, j=2; i<4; i+=2, j++ )
         {
             regs->VR_F( v1, i   ) = regs->VR_F( v2, j );
             regs->VR_F( v1, i+1 ) = regs->VR_F( v3, j );
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         regs->VR_D( v1, 0 ) = regs->VR_D( v2, 1 );
         regs->VR_D( v1, 1 ) = regs->VR_D( v3, 1 );
         break;
@@ -1280,28 +1280,28 @@ DEF_INST( vector_merge_high )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for ( i=0, j=0; i<16; i+=2, j++ )
         {
             regs->VR_B( v1, i   ) = regs->VR_B( v2, j );
             regs->VR_B( v1, i+1 ) = regs->VR_B( v3, j );
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for ( i=0, j=0; i<8; i+=2, j++ )
         {
             regs->VR_H( v1, i   ) = regs->VR_H( v2, j );
             regs->VR_H( v1, i+1 ) = regs->VR_H( v3, j );
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for ( i=0, j=0; i<4; i+=2, j++ )
         {
             regs->VR_F( v1, i   ) = regs->VR_F( v2, j );
             regs->VR_F( v1, i+1 ) = regs->VR_F( v3, j );
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         regs->VR_D( v1, 0 ) = regs->VR_D( v2, 0 );
         regs->VR_D( v1, 1 ) = regs->VR_D( v3, 0 );
         break;
@@ -1625,28 +1625,20 @@ DEF_INST( vector_shift_left_by_byte )
 DEF_INST( vector_shift_left_double_by_byte )
 {
     int     v1, v2, v3, i4, m5;
-    int     i;
-    char*   p;
-    char    doublewide[32];
+    int     i, j;
+    SV      temp;
 
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
 
     ZVECTOR_CHECK( regs );
 
-    p = &doublewide[0];
-    for (i=0; i < 16; i++) {
-        *p = regs->VR_B( v2, i );
-        p++;
-    }
-    for (i=0; i < 16; i++) {
-        *p = regs->VR_B( v3, i );
-        p++;
+    for (i = 0; i < 2; i++) {
+        SV_D( temp, i   ) = regs->VR_D( v2, i );
+        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
     }
 
-    p = &doublewide[i4];
-    for (i=0; i < 16; i++) {
-        regs->VR_B( v1, i ) = *p;
-        p++;
+    for (i = 0, j = i4; i < 16; i++, j++) {
+        regs->VR_B(v1, i) = SV_B( temp, j );
     }
 
     ZVECTOR_END( regs );
@@ -2076,6 +2068,54 @@ DEF_INST( vector_permute_doubleword_immediate )
 }
 
 /*-------------------------------------------------------------------*/
+/* E786 VSLD   - Vector Shift Left Double By Bit             [VRI-d] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_shift_left_double_by_bit )
+{
+    int     v1, v2, v3, i4, m5;
+//    int     i, j;
+//    SV      temp;
+
+    VRI_D( inst, regs, v1, v2, v3, i4, m5 );
+
+    ZVECTOR_CHECK( regs );
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
+
+    if (i4 & 0xF8)
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    //
+    ZVECTOR_END( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E787 VSRD   - Vector Shift Right Double By Bit            [VRI-d] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_shift_right_double_by_bit )
+{
+    int     v1, v2, v3, i4, m5;
+//    int     i, j;
+//    SV      temp;
+
+    VRI_D( inst, regs, v1, v2, v3, i4, m5 );
+
+    ZVECTOR_CHECK( regs );
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
+
+    if (i4 & 0xF8)
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    //
+    ZVECTOR_END( regs );
+}
+
+/*-------------------------------------------------------------------*/
 /* E78A VSTRC  - Vector String Range Compare                 [VRR-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_string_range_compare )
@@ -2191,20 +2231,22 @@ DEF_INST( vector_string_range_compare )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_permute )
 {
-    int     v1, v2, v3, v4, m5, m6, i;
-    U8 temp[32];
+    int     v1, v2, v3, v4, m5, m6;
+    int     i, j;
+    SV      temp;
 
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
 
-    for (i=0; i < 16; i++) {
-        temp[i] = regs->VR_B(v2, i);
-        temp[i + 16] = regs->VR_B(v3, i);
+    for (i = 0; i < 2; i++) {
+        SV_D( temp, i   ) = regs->VR_D( v2, i );
+        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
     }
-    for (i=0; i < 16; i++) {
-        int x = regs->VR_B(v4, i) & 0x1f;
-        regs->VR_B(v1, i) = temp[x];
+
+    for (i = 0; i < 16; i++) {
+        j = regs->VR_B(v4, i) & 0x1f;
+        regs->VR_B(v1, i) = SV_B( temp, j );
     }
 
     ZVECTOR_END( regs );
@@ -2234,36 +2276,35 @@ DEF_INST( vector_pack )
 {
     int     v1, v2, v3, m4, m5, m6;
     int     i;
-    BYTE*   p;
-    BYTE    temp[32];
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
 
-    for (i=0; i < 16; i++) {
-        temp[i] = regs->VR_B( v2, i );
-        temp[i + 16] = regs->VR_B( v3, i );
+    for (i=0; i < 2; i++) {
+        SV_D( temp, i   ) = regs->VR_D( v2, i );
+        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
     }
 
     switch (m4)
     {
-    case 1:  /* Halfword */
-        for ( i = 0, p = &temp[1]; i < 16; i++, p+=2 )
+    case 1:  // Low-order bytes from 16 halfwords
+        for ( i = 0; i < 16; i++ )
         {
-            regs->VR_B( v1, i ) = *p;
+            regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
         }
         break;
-    case 2:  /* Word */
-        for ( i = 0, p = &temp[2]; i < 8; i++, p+=4 )
+    case 2:  // Low-order halfwords from 8 fullwords
+        for ( i = 0; i < 8; i++ )
         {
-            regs->VR_H( v1, i ) = *p;
+            regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
         }
         break;
-    case 3:  /* Doubleword */
-        for ( i = 0, p = &temp[4]; i < 4; i++, p+=8 )
+    case 3:  // Low-order fullwords from 4 doublewords
+        for ( i = 0; i < 4; i++ )
         {
-            regs->VR_F( v1, i ) = *p;
+            regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
         }
         break;
     default:
@@ -2279,74 +2320,96 @@ DEF_INST( vector_pack )
 /*-------------------------------------------------------------------*/
 DEF_INST(vector_pack_logical_saturate)
 {
-    int     v1, v2, v3, m4, m5, sat = 0, i;
-    U16     temp16[16];
-    U32     temp32[8];
-    U64     temp64[4];
+    int     v1, v2, v3, m4, m5;
+    int     sat = 0;
+    int     allsat = 0;
+    int     i;
+    BYTE    newcc;
+    SV      temp;
 
-    VRR_B(inst, regs, v1, v2, v3, m4, m5);
+    VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
-    ZVECTOR_CHECK(regs);
+    ZVECTOR_CHECK( regs );
 
-#define M5_CS ((m5 & 0x1) != 0) // Condition Code Set
+#define M5_CS ((m5 & 0x1) != 0)  // Condition Code Set
+
+    for (i=0; i < 2; i++) {
+        SV_D( temp, i   ) = regs->VR_D( v2, i );
+        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
+    }
 
     switch (m4)
     {
-    case 1:
-        for (i=0; i < 8; i++) {
-              temp16[i]   = regs->VR_H(v2, i);
-              temp16[i+8] = regs->VR_H(v3, i);
-        }
-        for (i=0; i < 16; i++) {
-            if (temp16[i] > 0xff) {
-                regs->VR_B(v1, i) = 0xff;
+    case 1:  // Low-order bytes from 16 halfwords
+        for ( i = 0; i < 16; i++ )
+        {
+            if ( SV_H( temp, i ) > 0x00FF )
+            {
+                regs->VR_B( v1, i ) = 0xFF;
                 sat++;
             }
-            else regs->VR_B(v1, i) = (U8) temp16[i];
+            else
+            {
+                regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+            }
         }
+        allsat = 16;
         break;
-    case 2:
-        for (i=0; i < 4; i++) {
-              temp32[i]   = regs->VR_F(v2, i);
-              temp32[i+4] = regs->VR_F(v3, i);
-        }
-        for (i=0; i < 8; i++) {
-            if (temp32[i] > 0xffff) {
-                regs->VR_H(v1, i) = 0xffff;
+    case 2:  // Low-order halfwords from 8 fullwords
+        for ( i = 0; i < 8; i++ )
+        {
+            if ( SV_F( temp, i ) > 0x0000FFFF )
+            {
+                regs->VR_H( v1, i ) = 0xFFFF;
                 sat++;
             }
-            else regs->VR_H(v1, i) = (U16) temp32[i];
+            else
+            {
+                regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+            }
         }
+        allsat = 8;
         break;
-    case 3:
-        for (i=0; i < 2; i++) {
-              temp64[i]   = regs->VR_D(v2, i);
-              temp64[i+2] = regs->VR_D(v3, i);
-        }
-        for (i=0; i < 4; i++) {
-            if (temp64[i] > 0xffffffff) {
-                regs->VR_F(v1, i) = 0xffffffff;
+    case 3:  // Low-order fullwords from 4 doublewords
+        for ( i = 0; i < 4; i++ )
+        {
+            if ( SV_D( temp, i ) > 0x00000000FFFFFFFFULL )
+            {
+                regs->VR_F( v1, i ) = 0x0000FFFF;
                 sat++;
             }
-            else regs->VR_F(v1, i) = (U32) temp64[i];
+            else
+            {
+                regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+            }
         }
+        allsat = 4;
         break;
     default:
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
     }
 
-    if (M5_CS) {               // if M5_CS (Condition Code Set)
-        if (sat == 0)
-            regs->psw.cc = 0;
-        else if (sat < 16)
-            regs->psw.cc = 1;
-        else if (sat == 16)
-            regs->psw.cc = 3;
+    if (M5_CS)               // if M5_CS (Condition Code Set)
+    {
+        if ( sat >= allsat )
+        {
+            newcc = 3;       // Saturation on all elements
+        }
+        else if ( sat != 0 )
+        {
+            newcc = 1;       // At least one but not all elements saturated
+        }
+        else
+        {
+            newcc = 0;       // No saturation
+        }
+        regs->psw.cc = newcc;
     }
+
 #undef M5_CS
 
-    ZVECTOR_END(regs);
+    ZVECTOR_END( regs );
 }
 
 /*-------------------------------------------------------------------*/
@@ -2355,15 +2418,94 @@ DEF_INST(vector_pack_logical_saturate)
 DEF_INST( vector_pack_saturate )
 {
     int     v1, v2, v3, m4, m5;
+    int     sat = 0;
+    int     allsat = 0;
+    int     i;
+    BYTE    newcc;
+    SV      temp;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+#define M5_CS ((m5 & 0x1) != 0)  // Condition Code Set
+
+    for (i=0; i < 2; i++) {
+        SV_D( temp, i   ) = regs->VR_D( v2, i );
+        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
+    }
+
+    switch (m4)
+    {
+    case 1:  // Low-order bytes from 16 halfwords
+        for ( i = 0; i < 16; i++ )
+        {
+            if ( SV_H( temp, i ) > 0x007F )
+            {
+                regs->VR_B( v1, i ) = 0x7F;
+                sat++;
+            }
+            else
+            {
+                regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+            }
+        }
+        allsat = 16;
+        break;
+    case 2:  // Low-order halfwords from 8 fullwords
+        for ( i = 0; i < 8; i++ )
+        {
+            if ( SV_F( temp, i ) > 0x00007FFF )
+            {
+                regs->VR_H( v1, i ) = 0x7FFF;
+                sat++;
+            }
+            else
+            {
+                regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+            }
+        }
+        allsat = 8;
+        break;
+    case 3:  // Low-order fullwords from 4 doublewords
+        for ( i = 0; i < 4; i++ )
+        {
+            if ( SV_D( temp, i ) > 0x000000007FFFFFFFULL )
+            {
+                regs->VR_F( v1, i ) = 0x00007FFF;
+                sat++;
+            }
+            else
+            {
+                regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+            }
+        }
+        allsat = 4;
+        break;
+    default:
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        break;
+    }
+
+    if (M5_CS)               // if M5_CS (Condition Code Set)
+    {
+        if ( sat >= allsat )
+        {
+            newcc = 3;       // Saturation on all elements
+        }
+        else if ( sat != 0 )
+        {
+            newcc = 1;       // At least one but not all elements saturated
+        }
+        else
+        {
+            newcc = 0;       // No saturation
+        }
+        regs->psw.cc = newcc;
+    }
+
+#undef M5_CS
+
     ZVECTOR_END( regs );
 }
 
@@ -3125,7 +3267,7 @@ DEF_INST(vector_subtract)
         break;
     case 4:
         high = regs->VR_D(v2, 0) - regs->VR_D(v3, 0);
-        low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 2);
+        low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 0);
         if (low > regs->VR_D(v2, 1))
             high--;
         regs->VR_D(v1, 0) = high;

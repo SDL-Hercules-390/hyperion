@@ -735,13 +735,15 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
      UNDEF_INST(vector_element_rotate_left_logical_vector)
      UNDEF_INST(vector_shift_left)
      UNDEF_INST(vector_shift_left_by_byte)
+     UNDEF_INST(vector_shift_left_double_by_bit)
      UNDEF_INST(vector_shift_left_double_by_byte)
      UNDEF_INST(vector_element_shift_right_logical_vector)
      UNDEF_INST(vector_element_shift_right_arithmetic_vector)
-     UNDEF_INST(vector_shift_right_logical)
-     UNDEF_INST(vector_shift_right_logical_by_byte)
      UNDEF_INST(vector_shift_right_arithmetic)
      UNDEF_INST(vector_shift_right_arithmetic_by_byte)
+     UNDEF_INST(vector_shift_right_double_by_bit)
+     UNDEF_INST(vector_shift_right_logical)
+     UNDEF_INST(vector_shift_right_logical_by_byte)
      UNDEF_INST(vector_find_element_equal)
      UNDEF_INST(vector_find_element_not_equal)
      UNDEF_INST(vector_find_any_element_equal)
@@ -5326,8 +5328,8 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E783*/ GENx___x___x___ ,
  /*E784*/ GENx___x___x900("VPDI"   , VRR_C  , ASMFMT_VRR_C  , vector_permute_doubleword_immediate                      ),
  /*E785*/ GENx___x___x___ ,
- /*E786*/ GENx___x___x___ ,
- /*E787*/ GENx___x___x___ ,
+ /*E786*/ GENx___x___x900("VSLD"   , VRI_D  , ASMFMT_VRI_D  , vector_shift_left_double_by_bit                          ),
+ /*E787*/ GENx___x___x900("VSRD"   , VRI_D  , ASMFMT_VRI_D  , vector_shift_right_double_by_bit                         ),
  /*E788*/ GENx___x___x___ ,
  /*E789*/ GENx___x___x___ ,
  /*E78A*/ GENx___x___x900("VSTRC"  , VRR_D  , ASMFMT_VRR_D  , vector_string_range_compare                              ),
