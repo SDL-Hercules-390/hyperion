@@ -2153,7 +2153,7 @@ DEF_INST( vector_convert_to_decimal_64 )
     else
     {                       /* signed */
         tempS64 = (S64) reg64;
-        if (tempS64 >0 )
+        if (tempS64 >= 0 )
         {
             possign = true;
             convert = (U64) tempS64;
