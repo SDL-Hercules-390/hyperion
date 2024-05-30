@@ -2440,18 +2440,22 @@ DEF_INST( vector_unpack_zoned_low )
     nv  = (m3 & 0x04) ? true : false;
     p1  = (m3 & 0x02) ? true : false;
 
-    /* validate sign: nsv=0 and nv=0 */
-    if ( !nsv && !nv && !vr_packed_valid_sign( regs, v2 ) )
+    /* any validation? */
+    if ( !nv )
     {
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
-    }
+        /* validate sign? */
+        if ( !nsv  &&  !vr_packed_valid_sign( regs, v2) )
+        {
+            regs->dxc = DXC_DECIMAL;
+            ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        }
 
-    /* validate decimals */
-    if (!nv && !vr_packed_valid_digits( regs, v2 ))
-    {
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        /*  validate decimals */
+        if ( !vr_packed_valid_digits( regs, v2 ) )
+        {
+            regs->dxc = DXC_DECIMAL;
+            ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        }
     }
 
     /* save v2 */
