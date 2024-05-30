@@ -1632,10 +1632,10 @@ DEF_INST( vector_shift_left_double_by_byte )
 
     ZVECTOR_CHECK( regs );
 
-    for (i = 0; i < 2; i++) {
-        SV_D( temp, i   ) = regs->VR_D( v2, i );
-        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
-    }
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
     for (i = 0, j = i4; i < 16; i++, j++) {
         regs->VR_B(v1, i) = SV_B( temp, j );
@@ -2068,26 +2068,81 @@ DEF_INST( vector_permute_doubleword_immediate )
 }
 
 /*-------------------------------------------------------------------*/
+/* E785 VBPERM - Vector Bit Permute                          [VRR-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_bit_permute )
+{
+    int     v1, v2, v3, m4, m5, m6;
+    int     i, j, k;
+    U16     result = 0;
+    SV      temp;
+
+    VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = 0;
+    SV_D( temp, 3 ) = 0;
+
+    // Each of the sixteen 1-byte elements in vector register v3
+    // contains the bit number (0 to 255) of a bit in the source
+    // vector.
+    // 1. Calculate the number of the byte (0 to 31) in the source
+    //    vector that contains the wanted bit number.
+    // 2. Calculate the number of the bit (0 to 7) that is the
+    //    wanted bit in the byte.
+    // 3. Calculate the value (0 or 1) of the wanted bit, and
+    //    place the bit value in the result variable.
+    // The bit value of the bit number in the first element of v3
+    // becomes result bit 0, the bit value of the bit number in the
+    // second element of v3 becomes result bit 1, and so on until
+    // the bit value of the bit number in the sixteenth element of
+    // v3 becomes result bit 15.
+    for (i = 0; i < 16; i++) {
+        j = regs->VR_B( v3, i ) / 8;
+        k = regs->VR_B( v3, i ) % 8;
+        result |= ( ( ( SV_B( temp, j ) & ( 0x80 >> k ) ) != 0 ) << ( 15 - i ) );
+    }
+
+    regs->VR_D( v1, 0 ) = 0;
+    regs->VR_D( v1, 1 ) = result;
+
+    ZVECTOR_END( regs );
+}
+
+/*-------------------------------------------------------------------*/
 /* E786 VSLD   - Vector Shift Left Double By Bit             [VRI-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_shift_left_double_by_bit )
 {
     int     v1, v2, v3, i4, m5;
-//    int     i, j;
-//    SV      temp;
+    int     i;
+    U64     j, k;
+    SV      temp;
 
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
     if (i4 & 0xF8)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    //
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
+
+    for (i = 0; i < 3; i++) {
+        j = SV_D( temp, i ) <<= i4;
+        k = SV_D( temp, i+1 ) >>= ( 64 - i4 );
+        SV_D( temp, i ) = ( j | k );
+    }
+
+    regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
+    regs->VR_D( v1, 1 ) = SV_D( temp, 1 );
+
     ZVECTOR_END( regs );
 }
 
@@ -2097,21 +2152,31 @@ DEF_INST( vector_shift_left_double_by_bit )
 DEF_INST( vector_shift_right_double_by_bit )
 {
     int     v1, v2, v3, i4, m5;
-//    int     i, j;
-//    SV      temp;
+    int     i;
+    U64     j, k;
+    SV      temp;
 
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
     if (i4 & 0xF8)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    //
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
+
+    for (i = 3; i > 0; i--) {
+        j = SV_D( temp, i-1 ) <<= ( 64 - i4 );
+        k = SV_D( temp, i ) >>= i4;
+        SV_D( temp, i ) = ( j | k );
+    }
+
+    regs->VR_D( v1, 0 ) = SV_D( temp, 2 );
+    regs->VR_D( v1, 1 ) = SV_D( temp, 3 );
+
     ZVECTOR_END( regs );
 }
 
@@ -2239,10 +2304,10 @@ DEF_INST( vector_permute )
 
     ZVECTOR_CHECK( regs );
 
-    for (i = 0; i < 2; i++) {
-        SV_D( temp, i   ) = regs->VR_D( v2, i );
-        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
-    }
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
     for (i = 0; i < 16; i++) {
         j = regs->VR_B(v4, i) & 0x1f;
@@ -2282,10 +2347,10 @@ DEF_INST( vector_pack )
 
     ZVECTOR_CHECK( regs );
 
-    for (i=0; i < 2; i++) {
-        SV_D( temp, i   ) = regs->VR_D( v2, i );
-        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
-    }
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
     switch (m4)
     {
@@ -2333,10 +2398,10 @@ DEF_INST(vector_pack_logical_saturate)
 
 #define M5_CS ((m5 & 0x1) != 0)  // Condition Code Set
 
-    for (i=0; i < 2; i++) {
-        SV_D( temp, i   ) = regs->VR_D( v2, i );
-        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
-    }
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
     switch (m4)
     {
@@ -2430,10 +2495,10 @@ DEF_INST( vector_pack_saturate )
 
 #define M5_CS ((m5 & 0x1) != 0)  // Condition Code Set
 
-    for (i=0; i < 2; i++) {
-        SV_D( temp, i   ) = regs->VR_D( v2, i );
-        SV_D( temp, i+2 ) = regs->VR_D( v3, i );
-    }
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
     switch (m4)
     {

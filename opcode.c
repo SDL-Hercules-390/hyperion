@@ -748,6 +748,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
      UNDEF_INST(vector_find_element_not_equal)
      UNDEF_INST(vector_find_any_element_equal)
      UNDEF_INST(vector_permute_doubleword_immediate)
+     UNDEF_INST(vector_bit_permute)
      UNDEF_INST(vector_string_range_compare)
      UNDEF_INST(vector_permute)
      UNDEF_INST(vector_select)
@@ -5327,7 +5328,7 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E782*/ GENx___x___x900("VFAE"   , VRR_B  , ASMFMT_VRR_B  , vector_find_any_element_equal                            ),
  /*E783*/ GENx___x___x___ ,
  /*E784*/ GENx___x___x900("VPDI"   , VRR_C  , ASMFMT_VRR_C  , vector_permute_doubleword_immediate                      ),
- /*E785*/ GENx___x___x___ ,
+ /*E785*/ GENx___x___x900("VBPERM" , VRR_C  , ASMFMT_VRR_C  , vector_bit_permute                                       ),
  /*E786*/ GENx___x___x900("VSLD"   , VRI_D  , ASMFMT_VRI_D  , vector_shift_left_double_by_bit                          ),
  /*E787*/ GENx___x___x900("VSRD"   , VRI_D  , ASMFMT_VRI_D  , vector_shift_right_double_by_bit                         ),
  /*E788*/ GENx___x___x___ ,
