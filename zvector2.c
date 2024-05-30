@@ -718,7 +718,7 @@ static inline bool vr_is_zero(REGS* regs, int v1)
     int     i;                 /* loop index                         */
 
     /* first 30 digits, two at a time */
-    for ( i = 0; i < VR_PACKED_SIGN -1; i ++)
+    for ( i = 0; i < VR_PACKED_SIGN; i ++)
         if ( regs->VR_B( v1, i)  != 0 ) return false;
 
     /* 31st digit */
@@ -759,22 +759,21 @@ static inline int vr_leading_zero(REGS* regs, int v1)
 {
     int     i;                 /* loop index                         */
     int     packedix;          /* packed index                       */
-    int     count = 0;         /* leading zero count                 */
+    int     count;             /* leading zero count                 */
 
     /* copy 'count' digits */
+    count = 0;
     packedix = 0;
-    for ( i = 0; i < MAX_DECIMAL_DIGITS; i++ )
+    for ( i = 0; i < MAX_DECIMAL_DIGITS; i++, count++ )
     {
         if (i & 1)
         {
-            if ( ( regs->VR_B( v1, packedix++) & 0xF0 ) != 0 ) return count;
+            if ( ( regs->VR_B( v1, packedix++) & 0x0F ) != 0 ) return count;
         }
         else
         {
-                if ( ( regs->VR_B( v1, packedix) & 0x0F ) != 0 ) return count;
+            if ( ( regs->VR_B( v1, packedix) & 0xF0 ) != 0 ) return count;
         }
-
-        count++;
     }
 
     return count;
@@ -1688,7 +1687,7 @@ DEF_INST( vector_count_leading_zero_digits )
     valid_decimals2 = vr_packed_valid_digits( regs, v2 );
     valid_sign2 = vr_packed_valid_sign( regs, v2 );
 
-    if (!nv || cs)
+    if ( !nv )
     {
         if ( !valid_decimals2 || !valid_sign2 )
         {
@@ -1711,6 +1710,8 @@ DEF_INST( vector_count_leading_zero_digits )
         else if ( valid && (isNeg || (isNeg && nz && isZero) ) )    cc = 1;
         else if ( valid && !isZero && !isNeg )                      cc = 2;
         else                                                        cc = 3;
+
+        // logmsg( "VCLZDP: cc=%d : valid=%d, isZero=%d,  isNeg=%d, nz=%d\n", cc, valid, isZero, isNeg, nz );
     }
 
     /* update V1 */
