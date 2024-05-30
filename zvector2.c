@@ -1819,18 +1819,22 @@ DEF_INST( vector_unpack_zoned_high )
     nsv = (m3 & 0x08) ? true : false;
     nv  = (m3 & 0x04) ? true : false;
 
-    /* validate sign */
-    if ( !nsv  &&  !vr_packed_valid_sign( regs, v2) )
+    /* any validation? */
+    if ( !nv )
     {
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
-    }
+        /* validate sign? */
+        if ( !nsv  &&  !vr_packed_valid_sign( regs, v2) )
+        {
+            regs->dxc = DXC_DECIMAL;
+            ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        }
 
-    /* validate decimals */
-    if (!nv && !vr_packed_valid_digits( regs, v2 ))
-    {
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        /*  validate decimals */
+        if ( !vr_packed_valid_digits( regs, v2 ) )
+        {
+            regs->dxc = DXC_DECIMAL;
+            ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        }
     }
 
     /* local v2 */
