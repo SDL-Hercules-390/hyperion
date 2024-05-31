@@ -1870,16 +1870,13 @@ DEF_INST( vector_convert_to_decimal_32 )
     bool    lb;                  /* Logical Binary (LB)              */
     bool    cs;                  /* Condition Code Set (CS)          */
     bool    possign;             /* result has positive sign         */
-    U64     convert;             /* value to convert                 */
+    S32     tempS32;             /* temp S32                         */
+    U32     convert;             /* value to convert                 */
+    U32     reg32;               /* register to convert              */
     int     i;                   /* Loop variable                    */
     U8      digit;               /* digit of packed byte             */
     int     temp;                /* temp                             */
     bool    overflow;            /* did an overflow occur            */
-    union {                      /* register to convert              */
-        S32 sreg;
-        U32 ureg;
-    } reg32;
-
 
     VRI_I( inst, regs, v1, r2, m4, i3 );
 
@@ -1908,26 +1905,27 @@ DEF_INST( vector_convert_to_decimal_32 )
     cs = (m4 & 0x01) ? true : false;
 
     /* get sign and value to convert */
-    reg32.ureg = regs->GR_L( r2 );  /* 32-bits to convert */
+    reg32 = regs->GR_L( r2 );  /* 32-bits to convert */
 
     if (lb)
     {
         /* unsigned */
-        convert = reg32.ureg;
+        convert = reg32;
         possign = true;
     }
     else
     {
         /* signed */
+        tempS32 = (S32) reg32;
         if ( reg32.sreg >= 0 )
         {
             possign = true;
-            convert = reg32.sreg;
+            convert = (U32) tempS32;
         }
         else
         {
             possign = false;
-            convert = - (S64) reg32.sreg   ;
+            convert = - (U32) -tempS32 ;
         }
     }
 
