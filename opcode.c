@@ -3431,7 +3431,7 @@ IPRINT_FUNC(ASMFMT_VRX);
 IPRINT_FUNC(ASMFMT_VSI);
     int v1, d2, b2, i3;
     UNREFERENCED(regs);
-    v1 = ((inst[4] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v1 = ((inst[4] >> 4) & 0x0F) | ((inst[4] & 0x01) << 4);
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[2] >> 4;
     i3 = inst[1];
