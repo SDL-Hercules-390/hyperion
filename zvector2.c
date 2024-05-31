@@ -718,13 +718,31 @@ static inline bool vr_is_zero(REGS* regs, int v1)
     int     i;                 /* loop index                         */
 
     /* first 30 digits, two at a time */
-    for ( i = 0; i < VR_PACKED_SIGN -1; i ++)
+    for ( i = 0; i < VR_PACKED_SIGN; i ++)
         if ( regs->VR_B( v1, i)  != 0 ) return false;
 
     /* 31st digit */
     if ( ( regs->VR_B( v1,  VR_PACKED_SIGN ) & 0xF0) != 0 ) return false;
 
     return true;
+}
+
+/*-------------------------------------------------------------------*/
+/* Is a packed decimal vector register minus zero                    */
+/*                                                                   */
+/* Input:                                                            */
+/*      regs    CPU register context for VR access                   */
+/*      v1      vector register - copied to                          */
+/* Returns:                                                          */
+/*      true    all vr decimal packed digits are zero and sign       */
+/*              is negative                                          */
+/*-------------------------------------------------------------------*/
+static inline bool vr_is_minus_zero(REGS* regs, int v1)
+{
+    if ( VR_HAS_MINUS_SIGN( v1 ) && vr_is_zero( regs, v1 ) )
+        return true;
+
+    return false;
 }
 
 /*-------------------------------------------------------------------*/
@@ -741,22 +759,21 @@ static inline int vr_leading_zero(REGS* regs, int v1)
 {
     int     i;                 /* loop index                         */
     int     packedix;          /* packed index                       */
-    int     count = 0;         /* leading zero count                 */
+    int     count;             /* leading zero count                 */
 
     /* copy 'count' digits */
+    count = 0;
     packedix = 0;
-    for ( i = 0; i < MAX_DECIMAL_DIGITS; i++ )
+    for ( i = 0; i < MAX_DECIMAL_DIGITS; i++, count++ )
     {
         if (i & 1)
         {
-            if ( ( regs->VR_B( v1, packedix++) & 0xF0 ) != 0 ) return count;
+            if ( ( regs->VR_B( v1, packedix++) & 0x0F ) != 0 ) return count;
         }
         else
         {
-                if ( ( regs->VR_B( v1, packedix) & 0x0F ) != 0 ) return count;
+            if ( ( regs->VR_B( v1, packedix) & 0xF0 ) != 0 ) return count;
         }
-
-        count++;
     }
 
     return count;
@@ -812,7 +829,7 @@ static inline bool vr_from_decNumber( REGS* regs, int v1, decNumber* pdn, bool f
     int     overflow = false;          /* overflow recognized        */
     U8      bcd_zn[DECNUMDIGITS];      /* decimal digits             */
     int     toCopy;                    /* number of digits to pack   */
-    int     i, j;                      /* indexes                    */
+    int     i, j, k;                   /* indexes                    */
     BYTE    ps;                        /* packed sign                */
     int     startZn;                   /* Zn index                   */
     int     startVr;                   /* vector index               */
@@ -833,12 +850,14 @@ static inline bool vr_from_decNumber( REGS* regs, int v1, decNumber* pdn, bool f
     startZn = pdn->digits - toCopy;
     startVr = (MAX_DECIMAL_DIGITS - toCopy) / 2;
 
-    // logmsg("packing: startVr=%d, startZn=%d, toCopy=%d, rdc=%d, digits=%d\n",startVr, startZn, toCopy, rdc, pdn->digits);
+    //logmsg("packing: startVr=%d, startZn=%d, toCopy=%d, rdc=%d, digits=%d\n",startVr, startZn, toCopy, rdc, pdn->digits);
 
     /* Pack digits into vector register */
-    for (i=startZn, j=startVr; i < startZn + toCopy; i++)
+    for (i=startZn, j=startVr, k=0; k < toCopy; i++, k++)
     {
-        if ( (MAX_DECIMAL_DIGITS - toCopy + i) & 1)
+        //logmsg("packing: k=%d, j (startVr)=%d, i (startZn)=%d, bcd_zn=%d, odd=%d\n", k, j, i, bcd_zn[i], ( (MAX_DECIMAL_DIGITS - toCopy + k) & 1) );
+
+        if ( (MAX_DECIMAL_DIGITS - toCopy + k) & 1)
             regs->VR_B( v1, j++) |= bcd_zn[i];
         else
             regs->VR_B( v1, j) |= bcd_zn[i] << 4;
@@ -1668,7 +1687,7 @@ DEF_INST( vector_count_leading_zero_digits )
     valid_decimals2 = vr_packed_valid_digits( regs, v2 );
     valid_sign2 = vr_packed_valid_sign( regs, v2 );
 
-    if (!nv || cs)
+    if ( !nv )
     {
         if ( !valid_decimals2 || !valid_sign2 )
         {
@@ -1687,10 +1706,12 @@ DEF_INST( vector_count_leading_zero_digits )
         isZero = vr_is_zero( regs, v2 );
         valid = valid_decimals2 && valid_sign2;
 
-        if      ( valid && isZero && !nz && !isNeg)                 cc = 0;
-        else if ( valid && (isNeg || (isNeg && nz && isZero) ) )    cc = 1;
-        else if ( valid && !isZero && !isNeg )                      cc = 2;
-        else                                                        cc = 3;
+        cc = 3; /* invalid */
+        if      (   valid && isZero   && !(nz && isNeg) )              cc = 0;
+        else if ( ( valid && isNeg )  || (nz && isNeg && isZero)  )    cc = 1;
+        else if (   valid && !isZero  && !isNeg )                      cc = 2;
+
+        // logmsg( "VCLZDP: cc=%d : valid=%d, isZero=%d,  isNeg=%d, nz=%d\n", cc, valid, isZero, isNeg, nz );
     }
 
     /* update V1 */
@@ -1798,18 +1819,22 @@ DEF_INST( vector_unpack_zoned_high )
     nsv = (m3 & 0x08) ? true : false;
     nv  = (m3 & 0x04) ? true : false;
 
-    /* validate sign */
-    if ( !nsv  &&  !vr_packed_valid_sign( regs, v2) )
+    /* any validation? */
+    if ( !nv )
     {
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
-    }
+        /* validate sign? */
+        if ( !nsv  &&  !vr_packed_valid_sign( regs, v2) )
+        {
+            regs->dxc = DXC_DECIMAL;
+            ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        }
 
-    /* validate decimals */
-    if (!nv && !vr_packed_valid_digits( regs, v2 ))
-    {
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        /*  validate decimals */
+        if ( !vr_packed_valid_digits( regs, v2 ) )
+        {
+            regs->dxc = DXC_DECIMAL;
+            ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        }
     }
 
     /* local v2 */
@@ -1844,15 +1869,14 @@ DEF_INST( vector_convert_to_decimal_32 )
     bool    p1;                  /* Force Operand 1 Positive (P1)    */
     bool    lb;                  /* Logical Binary (LB)              */
     bool    cs;                  /* Condition Code Set (CS)          */
-
     bool    possign;             /* result has positive sign         */
-    U64     convert;             /* value to convert                 */
+    S32     tempS32;             /* temp S32                         */
+    U32     convert;             /* value to convert                 */
     U32     reg32;               /* register to convert              */
     int     i;                   /* Loop variable                    */
     U8      digit;               /* digit of packed byte             */
     int     temp;                /* temp                             */
-    bool    overflow;            /* did an overfor occur             */
-
+    bool    overflow;            /* did an overflow occur            */
 
     VRI_I( inst, regs, v1, r2, m4, i3 );
 
@@ -1880,32 +1904,38 @@ DEF_INST( vector_convert_to_decimal_32 )
     p1 = (m4 & 0x02) ? true : false;
     cs = (m4 & 0x01) ? true : false;
 
-    /* start with zero vector */
-    SET_VR_ZERO( v1 );
-
     /* get sign and value to convert */
     reg32 = regs->GR_L( r2 );  /* 32-bits to convert */
+
     if (lb)
     {
-        convert = (U64) reg32;    /* unsigned */
+        /* unsigned */
+        convert = reg32;
         possign = true;
     }
     else
     {
-        convert = (S32) reg32;  /* signed */
-        if (convert >0 )
+        /* signed */
+        tempS32 = (S32) reg32;
+        if ( reg32.sreg >= 0 )
+        {
             possign = true;
+            convert = (U32) tempS32;
+        }
         else
         {
             possign = false;
-            convert = -convert;
+            convert = - (U32) -tempS32 ;
         }
     }
 
-    //logmsg("VECTOR CONVERT TO DECIMAL (32): lb=%d, reg32=%X, convert=%ld, convert=%lx \n", lb, reg32, convert, convert);
+    // logmsg("VECTOR CONVERT TO DECIMAL (32): lb=%d, reg32.ureg=%X, reg32.sreg=%d, possign=%d,  convert=%ld, convert=%lx \n", lb, reg32.ureg, reg32.sreg, possign, convert, convert);
+
+    /* start with zero vector */
+    SET_VR_ZERO( v1 );
 
     /* do convertion to decimal digits */
-    for (i = 30, temp = rdc; temp >0 && i >= 0 && convert > 0; i--, temp--)
+    for (i = 30, temp = rdc; temp > 0 && i >= 0 && convert > 0; i--, temp--)
     {
         digit = convert % 10;
         convert = convert / 10;
@@ -2046,10 +2076,14 @@ DEF_INST( vector_shift_and_round_decimal )
     /* store shifted result in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
+
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -2121,7 +2155,7 @@ DEF_INST( vector_convert_to_decimal_64 )
     else
     {                       /* signed */
         tempS64 = (S64) reg64;
-        if (tempS64 >0 )
+        if (tempS64 >= 0 )
         {
             possign = true;
             convert = (U64) tempS64;
@@ -2415,18 +2449,22 @@ DEF_INST( vector_unpack_zoned_low )
     nv  = (m3 & 0x04) ? true : false;
     p1  = (m3 & 0x02) ? true : false;
 
-    /* validate sign: nsv=0 and nv=0 */
-    if ( !nsv && !nv && !vr_packed_valid_sign( regs, v2 ) )
+    /* any validation? */
+    if ( !nv )
     {
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
-    }
+        /* validate sign? */
+        if ( !nsv  &&  !vr_packed_valid_sign( regs, v2) )
+        {
+            regs->dxc = DXC_DECIMAL;
+            ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        }
 
-    /* validate decimals */
-    if (!nv && !vr_packed_valid_digits( regs, v2 ))
-    {
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        /*  validate decimals */
+        if ( !vr_packed_valid_digits( regs, v2 ) )
+        {
+            regs->dxc = DXC_DECIMAL;
+            ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+        }
     }
 
     /* save v2 */
@@ -2691,12 +2729,12 @@ DEF_INST( vector_add_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -2761,7 +2799,7 @@ DEF_INST( vector_shift_and_round_decimal_register )
     p1 = (m5 & 0x02) ? true : false;
     cs = (m5 & 0x01) ? true : false;
 
-    /* get shamt from v3, bytes 7. note: shamt is signed */
+    /* get shamt from v3, byte 7. note: shamt is signed */
     shamt = (S8) regs->VR_B( v3, 7);
     if (shamt < -32 ) shamt = -32;
     if (shamt > +31 ) shamt = +31;
@@ -2823,10 +2861,14 @@ DEF_INST( vector_shift_and_round_decimal_register )
     /* store shifted result in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
+
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -2918,12 +2960,12 @@ DEF_INST( vector_subtract_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3072,12 +3114,12 @@ DEF_INST( vector_multiply_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3180,7 +3222,7 @@ DEF_INST( vector_multiply_and_shift_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3277,12 +3319,12 @@ DEF_INST( vector_divide_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3378,12 +3420,12 @@ DEF_INST( vector_remainder_decimal )
     // dn_logmsg("dnv1: ", &dnv1);
 
     /* store product in vector register */
-    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+    overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
@@ -3487,7 +3529,7 @@ DEF_INST( vector_shift_and_divide_decimal )
     /* set condition code */
     if (cs)
     {
-        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( decNumberIsNegative( &dnv1 ) ) ? 1 : 2;
+        cc = ( decNumberIsZero( &dnv1 ) ) ? 0 : ( VR_HAS_MINUS_SIGN( v1 ) ) ? 1 : 2;
         if ( overflow ) cc = 3;
         regs->psw.cc = cc;
     }
