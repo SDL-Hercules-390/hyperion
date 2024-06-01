@@ -2291,8 +2291,6 @@ DEF_INST( vector_perform_sign_operation_decimal )
     {
         case 0x00:                     /* 00 (maintain)       */
         {
-            if ( !LV_HAS_VALID_SIGN( LV2 ) )   { cc = 2; break;  }
-
             if (isZero)
             {
                if ( LV_HAS_PLUS_SIGN( LV2 ) && pc )
@@ -2309,6 +2307,9 @@ DEF_INST( vector_perform_sign_operation_decimal )
 
                 if ( LV_HAS_MINUS_SIGN( LV2 ) && nz )
                     { cc = 0; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
+
+                if ( !LV_HAS_VALID_SIGN( LV2 ) )
+                    { cc = 0; break;  }
             }
             else
             {
@@ -2318,8 +2319,11 @@ DEF_INST( vector_perform_sign_operation_decimal )
                 if ( LV_HAS_PLUS_SIGN( LV2 ) && !pc )
                     { cc = 2; SET_VR_SIGN( v1, PREFERRED_PLUS);  break;  }
 
-                if ( LV_HAS_MINUS_SIGN( LV2 ) && nz )
+                if ( LV_HAS_MINUS_SIGN( LV2 ) )
                     { cc = 1; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
+
+                if ( !LV_HAS_VALID_SIGN( LV2 ) )
+                    { cc = 2; break;  }
             }
         }
         break;
