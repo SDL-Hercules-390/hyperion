@@ -5694,7 +5694,6 @@ static void vector_ieee_cond_trap( int vix, REGS *regs, U32 ieee_traps )
 DEF_INST( vector_fp_test_data_class_immediate )
 {
     int     v1, v2, i3, m4, m5;
-    int     single_element;
     int     i;
     int     one_bit_found, zero_bit_found;
     U32     op2_dataclass;
@@ -5703,18 +5702,18 @@ DEF_INST( vector_fp_test_data_class_immediate )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m4 < 2 || m4 > 4 )
+        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m4 != 3 )
+        if ( m5 & 0x7 || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     one_bit_found = zero_bit_found = FALSE;
 
@@ -5724,7 +5723,7 @@ DEF_INST( vector_fp_test_data_class_immediate )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
                 op2_dataclass = float64_class( op2 );
@@ -5748,7 +5747,7 @@ DEF_INST( vector_fp_test_data_class_immediate )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
                 op2_dataclass = float32_class( op2 );
@@ -5794,6 +5793,8 @@ DEF_INST( vector_fp_test_data_class_immediate )
     else
         regs->psw.cc = 0;
 
+#undef M5_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -5811,7 +5812,6 @@ DEF_INST( vector_fp_test_data_class_immediate )
 DEF_INST( vector_fp_multiply_and_subtract )
 {
     int     v1, v2, v3, v4, m5, m6;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds;
 
@@ -5819,20 +5819,18 @@ DEF_INST( vector_fp_multiply_and_subtract )
 
     ZVECTOR_CHECK( regs );
 
-    BFPINST_CHECK( regs );
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m6 < 2 || m6 > 4 )
+        if ( m5 & 0x7 || m6 < 2 || m6 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m6 != 3 )
+        if ( m5 & 0x7 || m6 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     if ( m6 == 3 )  // Long format
     {
@@ -5840,7 +5838,7 @@ DEF_INST( vector_fp_multiply_and_subtract )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
                 VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
@@ -5883,7 +5881,7 @@ DEF_INST( vector_fp_multiply_and_subtract )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
                 VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
@@ -5961,6 +5959,8 @@ DEF_INST( vector_fp_multiply_and_subtract )
 
     }
 
+#undef M5_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -5978,7 +5978,6 @@ DEF_INST( vector_fp_multiply_and_subtract )
 DEF_INST( vector_fp_multiply_and_add )
 {
     int     v1, v2, v3, v4, m5, m6;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
 
@@ -5986,18 +5985,18 @@ DEF_INST( vector_fp_multiply_and_add )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m6 < 2 || m6 > 4 )
+        if ( m5 & 0x7 || m6 < 2 || m6 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m6 != 3 )
+        if ( m5 & 0x7 || m6 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     if ( m6 == 3 )  // Long format
     {
@@ -6005,7 +6004,7 @@ DEF_INST( vector_fp_multiply_and_add )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
                 VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
@@ -6041,7 +6040,7 @@ DEF_INST( vector_fp_multiply_and_add )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
                 VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
@@ -6105,6 +6104,8 @@ DEF_INST( vector_fp_multiply_and_add )
 
     }
 
+#undef M5_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -6122,7 +6123,6 @@ DEF_INST( vector_fp_multiply_and_add )
 DEF_INST( vector_fp_negative_multiply_and_subtract )
 {
     int     v1, v2, v3, v4, m5, m6;
-    int     single_element;
     int     i;
 //    U32     ieee_trap_conds = 0;
 
@@ -6135,25 +6135,25 @@ DEF_INST( vector_fp_negative_multiply_and_subtract )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m6 < 2 || m6 > 4 )
+        if ( m5 & 0x7 || m6 < 2 || m6 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m6 != 3 )
+        if ( m5 & 0x7 || m6 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     if ( m6 == 3 )  // Long format
     {
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
 
 /* !!!! */
@@ -6166,7 +6166,7 @@ DEF_INST( vector_fp_negative_multiply_and_subtract )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
 
 /* !!!! */
@@ -6181,6 +6181,8 @@ DEF_INST( vector_fp_negative_multiply_and_subtract )
 
 
     }
+
+#undef M5_SE
 
 
     //
@@ -6201,7 +6203,6 @@ DEF_INST( vector_fp_negative_multiply_and_subtract )
 DEF_INST( vector_fp_negative_multiply_and_add )
 {
     int     v1, v2, v3, v4, m5, m6;
-    int     single_element;
     int     i;
 //    U32     ieee_trap_conds = 0;
 
@@ -6214,25 +6215,25 @@ DEF_INST( vector_fp_negative_multiply_and_add )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m6 < 2 || m6 > 4 )
+        if ( m5 & 0x7 || m6 < 2 || m6 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m6 != 3 )
+        if ( m5 & 0x7 || m6 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     if ( m6 == 3 )  // Long format
     {
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
 
 /* !!!! */
@@ -6245,7 +6246,7 @@ DEF_INST( vector_fp_negative_multiply_and_add )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
 
 /* !!!! */
@@ -6260,6 +6261,8 @@ DEF_INST( vector_fp_negative_multiply_and_add )
 
 
     }
+
+#undef M5_SE
 
 
     //
@@ -6281,7 +6284,6 @@ DEF_INST( vector_fp_negative_multiply_and_add )
 DEF_INST( vector_fp_convert_to_logical )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
 
@@ -6289,20 +6291,18 @@ DEF_INST( vector_fp_convert_to_logical )
 
     ZVECTOR_CHECK( regs );
 
-    BFPRM_CHECK( m5 ,regs );
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
 
     if ( FACILITY_ENABLED( 148_VECTOR_ENH_2, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 < 2 || m3 > 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  /* BFP long format to doubleword */
     {
@@ -6311,7 +6311,7 @@ DEF_INST( vector_fp_convert_to_logical )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 SET_SF_RM_FROM_MASK( m5 );
 
@@ -6351,7 +6351,7 @@ DEF_INST( vector_fp_convert_to_logical )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 SET_SF_RM_FROM_MASK( m5 );
 
@@ -6385,6 +6385,8 @@ DEF_INST( vector_fp_convert_to_logical )
         }
     }
 
+#undef M4_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -6403,7 +6405,6 @@ DEF_INST( vector_fp_convert_to_logical )
 DEF_INST( vector_fp_convert_from_logical )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
 
@@ -6411,20 +6412,18 @@ DEF_INST( vector_fp_convert_from_logical )
 
     ZVECTOR_CHECK( regs );
 
-    BFPRM_CHECK( m5 ,regs );
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
 
     if ( FACILITY_ENABLED( 148_VECTOR_ENH_2, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 < 2 || m3 > 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  // Doubleword to BFP long format
     {
@@ -6433,7 +6432,7 @@ DEF_INST( vector_fp_convert_from_logical )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 SET_SF_RM_FROM_MASK( m5 );
 
@@ -6459,7 +6458,7 @@ DEF_INST( vector_fp_convert_from_logical )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 SET_SF_RM_FROM_MASK( m5 );
 
@@ -6479,6 +6478,8 @@ DEF_INST( vector_fp_convert_from_logical )
         }
     }
 
+#undef M4_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -6497,7 +6498,6 @@ DEF_INST( vector_fp_convert_from_logical )
 DEF_INST( vector_fp_convert_to_fixed )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
     U32     op2_dataclass;
@@ -6506,20 +6506,18 @@ DEF_INST( vector_fp_convert_to_fixed )
 
     ZVECTOR_CHECK( regs );
 
-    BFPRM_CHECK( m5 ,regs );
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
 
     if ( FACILITY_ENABLED( 148_VECTOR_ENH_2, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 < 2 || m3 > 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  /* BFP long format to doubleword */
     {
@@ -6528,7 +6526,7 @@ DEF_INST( vector_fp_convert_to_fixed )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
                 op2_dataclass = float64_class( op2 );
@@ -6581,7 +6579,7 @@ DEF_INST( vector_fp_convert_to_fixed )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
                 op2_dataclass = float32_class( op2 );
@@ -6628,6 +6626,8 @@ DEF_INST( vector_fp_convert_to_fixed )
         }
     }
 
+#undef M4_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -6646,7 +6646,6 @@ DEF_INST( vector_fp_convert_to_fixed )
 DEF_INST( vector_fp_convert_from_fixed )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
     int     ieee_trap_conds = 0;
 
@@ -6654,20 +6653,18 @@ DEF_INST( vector_fp_convert_from_fixed )
 
     ZVECTOR_CHECK( regs );
 
-    BFPRM_CHECK( m5 ,regs );
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
 
     if ( FACILITY_ENABLED( 148_VECTOR_ENH_2, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 < 2 || m3 > 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  // Doubleword to BFP long format
     {
@@ -6680,7 +6677,7 @@ DEF_INST( vector_fp_convert_from_fixed )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 SET_SF_RM_FROM_MASK( m5 );
 
@@ -6710,7 +6707,7 @@ DEF_INST( vector_fp_convert_from_fixed )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 SET_SF_RM_FROM_MASK( m5 );
 
@@ -6730,6 +6727,8 @@ DEF_INST( vector_fp_convert_from_fixed )
         }
     }
 
+#undef M4_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -6746,25 +6745,24 @@ DEF_INST( vector_fp_convert_from_fixed )
 DEF_INST( vector_fp_load_lengthened )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
 
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m4 & 0x07 || m3 < 2 || m3 > 3 )
+        if ( m4 & 0x7 || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m4 & 0x07 || m3 != 3 )
+        if ( m4 & 0x7 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  /* Long format to Extended format, i.e. 64-bit to 128-bit */
     {
@@ -6792,7 +6790,7 @@ DEF_INST( vector_fp_load_lengthened )
 
         for (i=0, j=0; i < 4; i+=2, j++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
                 softfloat_exceptionFlags = 0;
@@ -6809,6 +6807,8 @@ DEF_INST( vector_fp_load_lengthened )
             }
         }
     }
+
+#undef M4_SE
 
     ZVECTOR_END( regs );
 }
@@ -6828,7 +6828,6 @@ DEF_INST( vector_fp_load_lengthened )
 DEF_INST( vector_fp_load_rounded )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
 //    U32     ieee_trap_conds = 0;
 
@@ -6841,18 +6840,18 @@ DEF_INST( vector_fp_load_rounded )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 < 3 || m3 > 4 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 3 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  // Long format
     {
@@ -6860,7 +6859,7 @@ DEF_INST( vector_fp_load_rounded )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
 
@@ -6881,6 +6880,8 @@ DEF_INST( vector_fp_load_rounded )
         VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
     }
 
+#undef M4_SE
+
 
     //
     ZVECTOR_END( regs );
@@ -6900,7 +6901,6 @@ DEF_INST( vector_fp_load_rounded )
 DEF_INST( vector_load_fp_integer )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
 //    U32     ieee_trap_conds = 0;
 
@@ -6913,18 +6913,18 @@ DEF_INST( vector_load_fp_integer )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 < 2 || m3 > 4 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x03 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  // Long format
     {
@@ -6932,7 +6932,7 @@ DEF_INST( vector_load_fp_integer )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
 
@@ -6948,7 +6948,7 @@ DEF_INST( vector_load_fp_integer )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
 
@@ -6968,6 +6968,8 @@ DEF_INST( vector_load_fp_integer )
 
         VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
     }
+
+#undef M4_SE
 
 
     //
@@ -6994,12 +6996,12 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m4 & 0x0F || m3 < 2 || m3 > 4 )
+        if ( m4 & 0xF || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m4 & 0x0F || m3 != 3 )
+        if ( m4 & 0xF || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7079,12 +7081,12 @@ DEF_INST( vector_fp_compare_scalar )
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m4 & 0x0F || m3 < 2 || m3 > 4 )
+        if ( m4 & 0xF || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m4 & 0x0F || m3 != 3 )
+        if ( m4 & 0xF || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7173,7 +7175,6 @@ DEF_INST( vector_fp_compare_scalar )
 DEF_INST( vector_fp_perform_sign_operation )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
 //    U32     ieee_trap_conds = 0;
 
@@ -7186,18 +7187,18 @@ DEF_INST( vector_fp_perform_sign_operation )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 > 2 || m4 & 0x07 || m3 < 2 || m3 > 4 )
+        if ( m5 > 2 || m4 & 0x7 || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 > 2 || m4 & 0x07 || m3 != 3 )
+        if ( m5 > 2 || m4 & 0x7 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  // Long format
     {
@@ -7205,7 +7206,7 @@ DEF_INST( vector_fp_perform_sign_operation )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
 
@@ -7221,7 +7222,7 @@ DEF_INST( vector_fp_perform_sign_operation )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
 
@@ -7242,6 +7243,8 @@ DEF_INST( vector_fp_perform_sign_operation )
         VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
     }
 
+#undef M4_SE
+
 
     //
     ZVECTOR_END( regs );
@@ -7261,7 +7264,6 @@ DEF_INST( vector_fp_perform_sign_operation )
 DEF_INST( vector_fp_square_root )
 {
     int     v1, v2, m3, m4, m5;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
 
@@ -7269,18 +7271,18 @@ DEF_INST( vector_fp_square_root )
 
     ZVECTOR_CHECK( regs );
 
+#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m4 & 0x07 || m3 < 2 || m3 > 4 )
+        if ( m4 & 0x7 || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m4 & 0x07 || m3 != 3 )
+        if ( m4 & 0x7 || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m4 & 0x08);
 
     if ( m3 == 3 )  // Long format
     {
@@ -7288,7 +7290,7 @@ DEF_INST( vector_fp_square_root )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
@@ -7316,7 +7318,7 @@ DEF_INST( vector_fp_square_root )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M4_SE)
             {
                 VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
@@ -7361,6 +7363,8 @@ DEF_INST( vector_fp_square_root )
         SET_FPC_FLAGS_FROM_SF( regs );
     }
 
+#undef M4_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -7378,7 +7382,6 @@ DEF_INST( vector_fp_square_root )
 DEF_INST( vector_fp_subtract )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
 
@@ -7386,18 +7389,18 @@ DEF_INST( vector_fp_subtract )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m4 < 2 || m4 > 4 )
+        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m4 != 3 )
+        if ( m5 & 0x7 || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     if ( m4 == 3 )  // Long format
     {
@@ -7405,7 +7408,7 @@ DEF_INST( vector_fp_subtract )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
@@ -7439,7 +7442,7 @@ DEF_INST( vector_fp_subtract )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
@@ -7496,6 +7499,8 @@ DEF_INST( vector_fp_subtract )
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
     }
 
+#undef M5_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -7513,7 +7518,6 @@ DEF_INST( vector_fp_subtract )
 DEF_INST( vector_fp_add )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
 
@@ -7521,18 +7525,18 @@ DEF_INST( vector_fp_add )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m4 < 2 || m4 > 4 )
+        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m4 != 3 )
+        if ( m5 & 0x7 || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     if ( m4 == 3 )  // Long format
     {
@@ -7540,7 +7544,7 @@ DEF_INST( vector_fp_add )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
@@ -7574,7 +7578,7 @@ DEF_INST( vector_fp_add )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
@@ -7632,6 +7636,8 @@ DEF_INST( vector_fp_add )
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
     }
 
+#undef M5_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -7649,7 +7655,6 @@ DEF_INST( vector_fp_add )
 DEF_INST( vector_fp_divide )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
 
@@ -7657,18 +7662,18 @@ DEF_INST( vector_fp_divide )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m4 < 2 || m4 > 4 )
+        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m4 != 3 )
+        if ( m5 & 0x7 || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     if ( m4 == 3 )  // Long format
     {
@@ -7676,7 +7681,7 @@ DEF_INST( vector_fp_divide )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
@@ -7712,7 +7717,7 @@ DEF_INST( vector_fp_divide )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
@@ -7773,6 +7778,8 @@ DEF_INST( vector_fp_divide )
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
     }
 
+#undef M5_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -7790,7 +7797,6 @@ DEF_INST( vector_fp_divide )
 DEF_INST( vector_fp_multiply )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
     int     i;
     U32     ieee_trap_conds = 0;
 
@@ -7798,18 +7804,18 @@ DEF_INST( vector_fp_multiply )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x07 || m4 < 2 || m4 > 4 )
+        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x07 || m4 != 3 )
+        if ( m5 & 0x7 || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
 
     if ( m4 == 3 )  // Long format
     {
@@ -7817,7 +7823,7 @@ DEF_INST( vector_fp_multiply )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
@@ -7851,7 +7857,7 @@ DEF_INST( vector_fp_multiply )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
@@ -7908,6 +7914,8 @@ DEF_INST( vector_fp_multiply )
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
     }
 
+#undef M5_SE
+
     ZVECTOR_END( regs );
 }
 
@@ -7940,8 +7948,6 @@ DEF_INST( vector_fp_multiply )
 DEF_INST( vector_fp_compare_equal )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
-    int     signal_on_qnan;
     int     i;
     int     equal_found, not_equal_or_unordered_found;
     BYTE    newcc = 3;
@@ -7950,19 +7956,19 @@ DEF_INST( vector_fp_compare_equal )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SQ ((m5 & 0x4) != 0)  // Signal-on-QNaN (SQ)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m6 & 0x0E || m5 & 0x03 || m4 < 2 || m4 > 4 )
+        if ( m6 & 0xE || m5 & 0x3 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m6 & 0x0E || m5 & 0x07 || m4 != 3 )
+        if ( m6 & 0xE || m5 & 0x7 || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
-    signal_on_qnan = (m5 & 0x04);
 
     equal_found = not_equal_or_unordered_found = FALSE;
 
@@ -7972,14 +7978,14 @@ DEF_INST( vector_fp_compare_equal )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT64_COMPARE( op2, op3 );
-                if (newcc == 3 && signal_on_qnan)
+                if (newcc == 3 && M5_SQ)
                 {
                     softfloat_exceptionFlags = softfloat_flag_invalid;
                 }
@@ -8010,14 +8016,14 @@ DEF_INST( vector_fp_compare_equal )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT32_COMPARE( op2, op3 );
-                if (newcc == 3 && signal_on_qnan)
+                if (newcc == 3 && M5_SQ)
                 {
                     softfloat_exceptionFlags = softfloat_flag_invalid;
                 }
@@ -8051,7 +8057,7 @@ DEF_INST( vector_fp_compare_equal )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT128_COMPARE( op2, op3 );
-        if (newcc == 3 && signal_on_qnan)
+        if (newcc == 3 && M5_SQ)
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
@@ -8095,6 +8101,9 @@ DEF_INST( vector_fp_compare_equal )
             regs->psw.cc = 0;
     }
 
+#undef M5_SE
+#undef M5_SQ
+
     ZVECTOR_END( regs );
 }
 
@@ -8127,8 +8136,6 @@ DEF_INST( vector_fp_compare_equal )
 DEF_INST( vector_fp_compare_high_or_equal )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
-    int     signal_on_qnan;
     int     i;
     int     greater_than_or_equal_found, less_than_or_unordered_found;
     BYTE    newcc = 3;
@@ -8137,19 +8144,19 @@ DEF_INST( vector_fp_compare_high_or_equal )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SQ ((m5 & 0x4) != 0)  // Signal-on-QNaN (SQ)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m6 & 0x0E || m5 & 0x03 || m4 < 2 || m4 > 4 )
+        if ( m6 & 0xE || m5 & 0x3 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m6 & 0x0E || m5 & 0x07 || m4 != 3 )
+        if ( m6 & 0xE || m5 & 0x7 || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
-    signal_on_qnan = (m5 & 0x04);
 
     greater_than_or_equal_found = less_than_or_unordered_found = FALSE;
 
@@ -8159,14 +8166,14 @@ DEF_INST( vector_fp_compare_high_or_equal )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT64_COMPARE( op2, op3 );
-                if (newcc == 3 && signal_on_qnan)
+                if (newcc == 3 && M5_SQ)
                 {
                     softfloat_exceptionFlags = softfloat_flag_invalid;
                 }
@@ -8197,14 +8204,14 @@ DEF_INST( vector_fp_compare_high_or_equal )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT32_COMPARE( op2, op3 );
-                if (newcc == 3 && signal_on_qnan)
+                if (newcc == 3 && M5_SQ)
                 {
                     softfloat_exceptionFlags = softfloat_flag_invalid;
                 }
@@ -8238,7 +8245,7 @@ DEF_INST( vector_fp_compare_high_or_equal )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT128_COMPARE( op2, op3 );
-        if (newcc == 3 && signal_on_qnan)
+        if (newcc == 3 && M5_SQ)
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
@@ -8284,6 +8291,9 @@ DEF_INST( vector_fp_compare_high_or_equal )
             regs->psw.cc = 0;
     }
 
+#undef M5_SE
+#undef M5_SQ
+
     ZVECTOR_END( regs );
 }
 
@@ -8316,8 +8326,6 @@ DEF_INST( vector_fp_compare_high_or_equal )
 DEF_INST( vector_fp_compare_high )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
-    int     signal_on_qnan;
     int     i;
     int     greater_than_found, not_greater_than_or_unordered_found;
     BYTE    newcc = 3;
@@ -8326,19 +8334,19 @@ DEF_INST( vector_fp_compare_high )
 
     ZVECTOR_CHECK( regs );
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SQ ((m5 & 0x4) != 0)  // Signal-on-QNaN (SQ)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m6 & 0x0E || m5 & 0x03 || m4 < 2 || m4 > 4 )
+        if ( m6 & 0xE || m5 & 0x3 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m6 & 0x0E || m5 & 0x07 || m4 != 3 )
+        if ( m6 & 0xE || m5 & 0x7 || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-
-    single_element = (m5 & 0x08);
-    signal_on_qnan = (m5 & 0x04);
 
     greater_than_found = not_greater_than_or_unordered_found = FALSE;
 
@@ -8348,14 +8356,14 @@ DEF_INST( vector_fp_compare_high )
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT64_COMPARE( op2, op3 );
-                if (newcc == 3 && signal_on_qnan)
+                if (newcc == 3 && M5_SQ)
                 {
                     softfloat_exceptionFlags = softfloat_flag_invalid;
                 }
@@ -8386,14 +8394,14 @@ DEF_INST( vector_fp_compare_high )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT32_COMPARE( op2, op3 );
-                if (newcc == 3 && signal_on_qnan)
+                if (newcc == 3 && M5_SQ)
                 {
                     softfloat_exceptionFlags = softfloat_flag_invalid;
                 }
@@ -8427,7 +8435,7 @@ DEF_INST( vector_fp_compare_high )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT128_COMPARE( op2, op3 );
-        if (newcc == 3 && signal_on_qnan)
+        if (newcc == 3 && M5_SQ)
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
@@ -8473,6 +8481,9 @@ DEF_INST( vector_fp_compare_high )
             regs->psw.cc = 0;
     }
 
+#undef M5_SE
+#undef M5_SQ
+
     ZVECTOR_END( regs );
 }
 
@@ -8491,7 +8502,6 @@ DEF_INST( vector_fp_compare_high )
 DEF_INST( vector_fp_minimum )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -8503,9 +8513,11 @@ DEF_INST( vector_fp_minimum )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( (m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15) || m5 & 0x07 || m4 < 2 || m4 > 4 )
+        if ( (m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15) || m5 & 0x7 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
@@ -8513,15 +8525,13 @@ DEF_INST( vector_fp_minimum )
         ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
     }
 
-    single_element = (m5 & 0x08);
-
     if ( m4 == 3 )  // Long format
     {
         float64_t   op1, op2, op3;
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
@@ -8538,7 +8548,7 @@ DEF_INST( vector_fp_minimum )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
@@ -8560,6 +8570,8 @@ DEF_INST( vector_fp_minimum )
 
         VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
     }
+
+#undef M5_SE
 
 
     //
@@ -8581,7 +8593,6 @@ DEF_INST( vector_fp_minimum )
 DEF_INST( vector_fp_maximum )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     single_element;
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -8593,9 +8604,11 @@ DEF_INST( vector_fp_maximum )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
+#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( (m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15) || m5 & 0x07 || m4 < 2 || m4 > 4 )
+        if ( (m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15) || m5 & 0x7 || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
@@ -8603,15 +8616,13 @@ DEF_INST( vector_fp_maximum )
         ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
     }
 
-    single_element = (m5 & 0x08);
-
     if ( m4 == 3 )  // Long format
     {
         float64_t   op1, op2, op3;
 
         for (i=0; i < 2; i+=2)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
@@ -8628,7 +8639,7 @@ DEF_INST( vector_fp_maximum )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !single_element)
+            if (i == 0 || !M5_SE)
             {
                 VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
@@ -8650,6 +8661,8 @@ DEF_INST( vector_fp_maximum )
 
         VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
     }
+
+#undef M5_SE
 
 
     //

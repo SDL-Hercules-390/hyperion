@@ -2098,16 +2098,26 @@ do {                                                                  \
     /* Program check if vector instructions is executed when         */
     /* TXF constraint mode or VOP control is zero                    */
 
-#define ZVECTOR_CHECK(_regs) \
-        TXF_INSTR_CHECK(_regs); \
-        if( !((_regs)->CR(0) & CR0_VOP) ) { \
-            (_regs)->dxc = DXC_VECTOR_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
+//  #define ZVECTOR_CHECK(_regs)  /* (do nothing) */
+
+#define ZVECTOR_CHECK(_regs)                                                   \
+        TXF_INSTR_CHECK(_regs);                                                \
+        if( !((_regs)->CR(0) & CR0_VOP) )                                      \
+        {                                                                      \
+            (_regs)->dxc = DXC_VECTOR_INSTRUCTION;                             \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION);          \
         }
+
     /* Debug end of vector instruction execution                     */
-#define ZVECTOR_END(_regs) \
-        if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
-            ARCH_DEP(display_inst) (_regs, inst);
+
+#define ZVECTOR_END(_regs)  /* (do nothing) */
+
+//  #define ZVECTOR_END(_regs)                                                     \
+//              ARCH_DEP(display_inst) (_regs, inst);
+
+//  #define ZVECTOR_END(_regs)                                                     \
+//          if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36)                 \
+//              ARCH_DEP(display_inst) (_regs, inst);
 
 #endif /*defined( _FEATURE_129_ZVECTOR_FACILITY )*/
 

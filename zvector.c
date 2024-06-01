@@ -37,6 +37,7 @@
 /* E7C3 VCDG   - Vector FP Convert From Fixed (64 to long BFP)    [VRR-a] */
 /* E7C4 VFLL   - Vector FP Load Lengthened                        [VRR-a] */
 /* E7C5 VFLR   - Vector FP Load Rounded                           [VRR-a] */
+/* E7C7 VFI    - Vector Load FP Integer                           [VRR-a] */
 /* E7CA WFK    - Vector FP Compare and Signal Scalar              [VRR-a] */
 /* E7CB WFC    - Vector FP Compare Scalar                         [VRR-a] */
 /* E7CC VFPSO  - Vector FP Perform Sign Operation                 [VRR-a] */
@@ -50,15 +51,6 @@
 /* E7EB VFCH   - Vector FP Compare High                           [VRR-c] */
 /* E7EE VFMIN  - Vector FP Minimum                                [VRR-c] */
 /* E7EF VFMAX  - Vector FP Maximum                                [VRR-c] */
-/*------------------------------------------------------------------------*/
-/* See zvector2.c for the following Specialized-Function-Assist Vector    */
-/* Floating-Point Instructions.                                           */
-/*------------------------------------------------------------------------*/
-/* E656 VCLFNH - VECTOR FP Convert And Lengthen From NNP High     [VRR-a] */
-/* E65E VCLFNL - VECTOR FP Convert And Lengthen From NNP Low      [VRR-a] */
-/* E675 VCRNF  - VECTOR FP Convert And Round To NNP               [VRR-c] */
-/* E65D VCFN   - VECTOR FP Convert From NNP                       [VRR-a] */
-/* E656 VCNF   - VECTOR FP Convert To NNP                         [VRR-a] */
 /*------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -500,10 +492,22 @@ DEF_INST( vector_load_gr_from_vr_element )
 
     switch (m4)
     {
-    case 0: regs->GR( r1 ) = regs->VR_B( v3, d2 ); break;
-    case 1: regs->GR( r1 ) = regs->VR_H( v3, d2 ); break;
-    case 2: regs->GR( r1 ) = regs->VR_F( v3, d2 ); break;
-    case 3: regs->GR( r1 ) = regs->VR_D( v3, d2 ); break;
+    case 0:
+        if ( d2 > 15) break;
+        regs->GR( r1 ) = regs->VR_B( v3, d2 );
+        break;
+    case 1:
+        if ( d2 > 7 ) break;
+        regs->GR( r1 ) = regs->VR_H( v3, d2 );
+        break;
+    case 2:
+        if ( d2 > 3 ) break;
+        regs->GR( r1 ) = regs->VR_F( v3, d2 );
+        break;
+    case 3:
+        if ( d2 > 1 ) break;
+        regs->GR( r1 ) = regs->VR_D( v3, d2 );
+        break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -523,16 +527,26 @@ DEF_INST( vector_load_vr_element_from_gr )
 
     ZVECTOR_CHECK( regs );
 
-    if (m4 > 3 || d2 > (1 << m4)) /* m4 > elems or m4 > 3 => Specification excp */
-        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
-
     switch (m4)
     {
-    case 0: regs->VR_B( v1, d2 ) = regs->GR_LHLCL( r3 ); break;
-    case 1: regs->VR_H( v1, d2 ) = regs->GR_LHL  ( r3 ); break;
-    case 2: regs->VR_F( v1, d2 ) = regs->GR_L    ( r3 ); break;
-    case 3: regs->VR_D( v1, d2 ) = regs->GR_G    ( r3 ); break;
+    case 0:
+        if ( d2 > 15) break;
+        regs->VR_B( v1, d2 ) = regs->GR_LHLCL( r3 );
+        break;
+    case 1:
+        if ( d2 > 7 ) break;
+        regs->VR_H( v1, d2 ) = regs->GR_LHL  ( r3 );
+        break;
+    case 2:
+        if ( d2 > 3 ) break;
+        regs->VR_F( v1, d2 ) = regs->GR_L    ( r3 );
+        break;
+    case 3:
+        if ( d2 > 1 ) break;
+        regs->VR_D( v1, d2 ) = regs->GR_G    ( r3 );
+        break;
     default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
 
@@ -2074,7 +2088,7 @@ DEF_INST( vector_bit_permute )
 {
     int     v1, v2, v3, m4, m5, m6;
     int     i, j, k;
-    U16     result = 0;
+    U16     wanted, result = 0;
     SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -2091,23 +2105,29 @@ DEF_INST( vector_bit_permute )
     // vector.
     // 1. Calculate the number of the byte (0 to 31) in the source
     //    vector that contains the wanted bit number.
-    // 2. Calculate the number of the bit (0 to 7) that is the
-    //    wanted bit in the byte.
+    // 2. Calculate the number of the bit (0 to 7) in the byte
+    //    that is the wanted bit.
     // 3. Calculate the value (0 or 1) of the wanted bit, and
-    //    place the bit value in the result variable.
+    // 4. If the wanted bit has a value of 1, place the bit in
+    //    the result.
     // The bit value of the bit number in the first element of v3
     // becomes result bit 0, the bit value of the bit number in the
     // second element of v3 becomes result bit 1, and so on until
     // the bit value of the bit number in the sixteenth element of
     // v3 becomes result bit 15.
-    for (i = 0; i < 16; i++) {
+    for (i = 0; i < 16; i++)
+    {
         j = regs->VR_B( v3, i ) / 8;
         k = regs->VR_B( v3, i ) % 8;
-        result |= ( ( ( SV_B( temp, j ) & ( 0x80 >> k ) ) != 0 ) << ( 15 - i ) );
+        wanted = SV_B( temp, j ) & ( 0x80 >> k );
+        if (wanted)
+        {
+            result |= ( 0x0001 << ( 15 - i ) );
+        }
     }
 
-    regs->VR_D( v1, 0 ) = 0;
-    regs->VR_D( v1, 1 ) = result;
+    regs->VR_D( v1, 0 ) = result;
+    regs->VR_D( v1, 1 ) = 0;
 
     ZVECTOR_END( regs );
 }
@@ -2135,9 +2155,9 @@ DEF_INST( vector_shift_left_double_by_bit )
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
     for (i = 0; i < 3; i++) {
-        j = SV_D( temp, i ) <<= i4;
-        k = SV_D( temp, i+1 ) >>= ( 64 - i4 );
-        SV_D( temp, i ) = ( j | k );
+        j = SV_D( temp, i ) << i4;
+        k = SV_D( temp, i+1 ) >> ( 64 - i4 );
+        SV_D( temp, i ) = j | k;
     }
 
     regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
@@ -2169,9 +2189,9 @@ DEF_INST( vector_shift_right_double_by_bit )
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
     for (i = 3; i > 0; i--) {
-        j = SV_D( temp, i-1 ) <<= ( 64 - i4 );
-        k = SV_D( temp, i ) >>= i4;
-        SV_D( temp, i ) = ( j | k );
+        j = SV_D( temp, i-1 ) << ( 64 - i4 );
+        k = SV_D( temp, i ) >> i4;
+        SV_D( temp, i ) = j | k;
     }
 
     regs->VR_D( v1, 0 ) = SV_D( temp, 2 );
@@ -2440,7 +2460,7 @@ DEF_INST(vector_pack_logical_saturate)
         {
             if ( SV_D( temp, i ) > 0x00000000FFFFFFFFULL )
             {
-                regs->VR_F( v1, i ) = 0x0000FFFF;
+                regs->VR_F( v1, i ) = 0xFFFFFFFF;
                 sat++;
             }
             else
@@ -2537,7 +2557,7 @@ DEF_INST( vector_pack_saturate )
         {
             if ( SV_D( temp, i ) > 0x000000007FFFFFFFULL )
             {
-                regs->VR_F( v1, i ) = 0x00007FFF;
+                regs->VR_F( v1, i ) = 0x7FFFFFFF;
                 sat++;
             }
             else
