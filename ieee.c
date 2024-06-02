@@ -5702,16 +5702,17 @@ DEF_INST( vector_fp_test_data_class_immediate )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
+        if ( M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m4 != 3 )
+        if ( M5_RE || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -5725,7 +5726,7 @@ DEF_INST( vector_fp_test_data_class_immediate )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
                 op2_dataclass = float64_class( op2 );
                 softfloat_exceptionFlags = 0;
                 if (op2_dataclass & i3)
@@ -5749,7 +5750,7 @@ DEF_INST( vector_fp_test_data_class_immediate )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
                 op2_dataclass = float32_class( op2 );
                 softfloat_exceptionFlags = 0;
                 if (op2_dataclass & i3)
@@ -5794,6 +5795,7 @@ DEF_INST( vector_fp_test_data_class_immediate )
         regs->psw.cc = 0;
 
 #undef M5_SE
+#undef M5_RE
 
     ZVECTOR_END( regs );
 }
@@ -5819,16 +5821,17 @@ DEF_INST( vector_fp_multiply_and_subtract )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m6 < 2 || m6 > 4 )
+        if ( M5_RE || m6 < 2 || m6 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m6 != 3 )
+        if ( M5_RE || m6 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -5960,6 +5963,7 @@ DEF_INST( vector_fp_multiply_and_subtract )
     }
 
 #undef M5_SE
+#undef M5_RE
 
     ZVECTOR_END( regs );
 }
@@ -5985,16 +5989,17 @@ DEF_INST( vector_fp_multiply_and_add )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m6 < 2 || m6 > 4 )
+        if ( M5_RE || m6 < 2 || m6 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m6 != 3 )
+        if ( M5_RE || m6 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -6100,11 +6105,10 @@ DEF_INST( vector_fp_multiply_and_add )
 
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
-
-
     }
 
 #undef M5_SE
+#undef M5_RE
 
     ZVECTOR_END( regs );
 }
@@ -6124,68 +6128,177 @@ DEF_INST( vector_fp_negative_multiply_and_subtract )
 {
     int     v1, v2, v3, v4, m5, m6;
     int     i;
-//    U32     ieee_trap_conds = 0;
+    U32     ieee_trap_conds = 0;
 
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m6 < 2 || m6 > 4 )
+        if ( M5_RE || m6 < 2 || m6 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m6 != 3 )
+        if ( M5_RE || m6 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
     if ( m6 == 3 )  // Long format
     {
+        float64_t  op1, op2, op3, op4;
 
         for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
+                VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-/* !!!! */
+                /* if Operand 4 is not a NaN, the sign bit is inverted */
+                if (0
+                    || !(op4.v & 0x000FFFFFFFFFFFFF)
+                    || ((op4.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+                )
+                    op4.v ^= 0x8000000000000000ULL;
 
+                ieee_trap_conds = 0;
+                softfloat_exceptionFlags = 0;
+                SET_SF_RM_FROM_FPC;
+
+                op1 = f64_mulAdd( op2, op3, op4 );
+
+                if (softfloat_exceptionFlags)
+                {
+                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                    ieee_trap_conds = ieee_exception_test_oux( regs );
+
+                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                            SCALE_FACTOR_ARITH_OFLOW_LONG :
+                            SCALE_FACTOR_ARITH_UFLOW_LONG );
+               }
+
+                /* if Operand 1 is not a NaN, the sign bit is inverted */
+                if (0
+                    || !(op1.v & 0x000FFFFFFFFFFFFF)
+                    || ((op1.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+                )
+                    op1.v ^= 0x8000000000000000ULL;
+
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
+
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
             }
         }
     }
     else if ( m6 == 2 )  // Short format
     {
+        float32_t  op1, op2, op3, op4;
 
         for (i=0; i < 4; i++)
         {
             if (i == 0 || !M5_SE)
             {
+                VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
-/* !!!! */
+                /* if Operand 4 is not a NaN, the sign bit is inverted */
+                if (0
+                    || !(op4.v & 0x007FFFFF)
+                    || ((op4.v & 0x7F800000) ^ 0x7F800000)
+                )
+                    op4.v ^= 0x80000000;
 
-            }
+                ieee_trap_conds = 0;
+                softfloat_exceptionFlags = 0;
+                SET_SF_RM_FROM_FPC;
+
+                op1 = f32_mulAdd( op2, op3, op4 );
+
+                if (softfloat_exceptionFlags)
+                {
+                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                    ieee_trap_conds = ieee_exception_test_oux( regs );
+
+                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                            SCALE_FACTOR_ARITH_OFLOW_LONG :
+                            SCALE_FACTOR_ARITH_UFLOW_LONG );
+               }
+
+                /* if Operand 1 is not a NaN, the sign bit is inverted */
+                if (0
+                    || !(op1.v & 0x007FFFFF)
+                    || ((op1.v & 0x7F800000) ^ 0x7F800000)
+                )
+                    op1.v ^= 0x80000000;
+
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
+
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+           }
         }
     }
     else if ( m6 == 4 )  // Extended format
     {
+        float128_t  op1, op2, op3, op4;
 
-/* !!!! */
+
+        VECTOR_GET_FLOAT128_OP( op4, v4, 0, regs );
+        VECTOR_GET_FLOAT128_OP( op3, v3, 0, regs );
+        VECTOR_GET_FLOAT128_OP( op2, v2, 0, regs );
+
+        /* if Operand 4 is not a NaN, the sign bit is inverted */
+        if (0
+            || !(op4.v[FLOAT128_HI] & 0x000FFFFFFFFFFFFF)
+            || ((op4.v[FLOAT128_HI] & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+        )
+            op4.v[FLOAT128_HI] ^= 0x8000000000000000ULL;
+
+        ieee_trap_conds = 0;
+        softfloat_exceptionFlags = 0;
+        SET_SF_RM_FROM_FPC;
+
+        op1 = f128_mulAdd( op2, op3, op4 );
+
+        if (softfloat_exceptionFlags)
+        {
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
+            ieee_trap_conds = ieee_exception_test_oux( regs );
+
+            if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                op1 = f128_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                    SCALE_FACTOR_ARITH_OFLOW_LONG :
+                    SCALE_FACTOR_ARITH_UFLOW_LONG );
+        }
+
+        /* if Operand 1 is not a NaN, the sign bit is inverted */
+        if (0
+            || !(op1.v[FLOAT128_HI] & 0x000FFFFFFFFFFFFF)
+            || ((op1.v[FLOAT128_HI] & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+        )
+            op1.v[FLOAT128_HI] ^= 0x8000000000000000ULL;
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
+
+        VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
+            FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
 
     }
 
 #undef M5_SE
+#undef M5_RE
 
-
-    //
     ZVECTOR_END( regs );
 }
 
@@ -6204,68 +6317,154 @@ DEF_INST( vector_fp_negative_multiply_and_add )
 {
     int     v1, v2, v3, v4, m5, m6;
     int     i;
-//    U32     ieee_trap_conds = 0;
+    U32     ieee_trap_conds = 0;
 
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m6 < 2 || m6 > 4 )
+        if ( M5_RE || m6 < 2 || m6 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m6 != 3 )
+        if ( M5_RE || m6 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
     if ( m6 == 3 )  // Long format
     {
+        float64_t  op1, op2, op3, op4;
 
         for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
+                VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-/* !!!! */
+                ieee_trap_conds = 0;
+                softfloat_exceptionFlags = 0;
+                SET_SF_RM_FROM_FPC;
 
+                op1 = f64_mulAdd( op2, op3, op4 );
+
+                if (softfloat_exceptionFlags)
+                {
+                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                    ieee_trap_conds = ieee_exception_test_oux( regs );
+
+                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                            SCALE_FACTOR_ARITH_OFLOW_LONG :
+                            SCALE_FACTOR_ARITH_UFLOW_LONG );
+               }
+
+                /* if Operand 1 is not a NaN, the sign bit is inverted */
+                if (0
+                    || !(op1.v & 0x000FFFFFFFFFFFFF)
+                    || ((op1.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+                )
+                    op1.v ^= 0x8000000000000000ULL;
+
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
+
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
             }
         }
     }
     else if ( m6 == 2 )  // Short format
     {
+        float32_t  op1, op2, op3, op4;
 
         for (i=0; i < 4; i++)
         {
             if (i == 0 || !M5_SE)
             {
+                VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
-/* !!!! */
+                ieee_trap_conds = 0;
+                softfloat_exceptionFlags = 0;
+                SET_SF_RM_FROM_FPC;
 
-            }
+                op1 = f32_mulAdd( op2, op3, op4 );
+
+                if (softfloat_exceptionFlags)
+                {
+                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                    ieee_trap_conds = ieee_exception_test_oux( regs );
+
+                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                            SCALE_FACTOR_ARITH_OFLOW_LONG :
+                            SCALE_FACTOR_ARITH_UFLOW_LONG );
+               }
+
+                /* if Operand 1 is not a NaN, the sign bit is inverted */
+                if (0
+                    || !(op1.v & 0x007FFFFF)
+                    || ((op1.v & 0x7F800000) ^ 0x7F800000)
+                )
+                    op1.v ^= 0x80000000;
+
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
+
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+           }
         }
     }
     else if ( m6 == 4 )  // Extended format
     {
+        float128_t  op1, op2, op3, op4;
 
-/* !!!! */
 
+        VECTOR_GET_FLOAT128_OP( op4, v4, 0, regs );
+        VECTOR_GET_FLOAT128_OP( op3, v3, 0, regs );
+        VECTOR_GET_FLOAT128_OP( op2, v2, 0, regs );
 
+        ieee_trap_conds = 0;
+        softfloat_exceptionFlags = 0;
+        SET_SF_RM_FROM_FPC;
+
+        op1 = f128_mulAdd( op2, op3, op4 );
+
+        if (softfloat_exceptionFlags)
+        {
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
+            ieee_trap_conds = ieee_exception_test_oux( regs );
+
+            if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                op1 = f128_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                    SCALE_FACTOR_ARITH_OFLOW_LONG :
+                    SCALE_FACTOR_ARITH_UFLOW_LONG );
+        }
+
+        /* if Operand 1 is not a NaN, the sign bit is inverted */
+        if (0
+            || !(op1.v[FLOAT128_HI] & 0x000FFFFFFFFFFFFF)
+            || ((op1.v[FLOAT128_HI] & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+        )
+            op1.v[FLOAT128_HI] ^= 0x8000000000000000ULL;
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
+
+        VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
+            FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
     }
 
 #undef M5_SE
+#undef M5_RE
 
-
-    //
     ZVECTOR_END( regs );
 }
 
@@ -6291,16 +6490,18 @@ DEF_INST( vector_fp_convert_to_logical )
 
     ZVECTOR_CHECK( regs );
 
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_XC ((m4 & 0x4) != 0) // IEEE-inexact-exception control (XxC)  See SUPPRESS_INEXACT
+#define M4_RE ((m4 & 0x3) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 148_VECTOR_ENH_2, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -6315,7 +6516,7 @@ DEF_INST( vector_fp_convert_to_logical )
             {
                 SET_SF_RM_FROM_MASK( m5 );
 
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
                 softfloat_exceptionFlags = 0;
 
                 if (FLOAT64_ISNAN( op2 ))
@@ -6355,7 +6556,7 @@ DEF_INST( vector_fp_convert_to_logical )
             {
                 SET_SF_RM_FROM_MASK( m5 );
 
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
                 softfloat_exceptionFlags = 0;
 
                 if (FLOAT32_ISNAN( op2 ))
@@ -6386,6 +6587,8 @@ DEF_INST( vector_fp_convert_to_logical )
     }
 
 #undef M4_SE
+#undef M4_XC
+#undef M4_RE
 
     ZVECTOR_END( regs );
 }
@@ -6412,16 +6615,18 @@ DEF_INST( vector_fp_convert_from_logical )
 
     ZVECTOR_CHECK( regs );
 
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_XC ((m4 & 0x4) != 0) // IEEE-inexact-exception control (XxC)  See SUPPRESS_INEXACT
+#define M4_RE ((m4 & 0x3) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 148_VECTOR_ENH_2, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -6441,7 +6646,7 @@ DEF_INST( vector_fp_convert_from_logical )
 
                 op1 = ui64_to_f64( op2 );
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
 
                 if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
                 {
@@ -6467,7 +6672,7 @@ DEF_INST( vector_fp_convert_from_logical )
 
                 op1 = ui32_to_f32( op2 );
 
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
 
                 if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
                 {
@@ -6479,6 +6684,8 @@ DEF_INST( vector_fp_convert_from_logical )
     }
 
 #undef M4_SE
+#undef M4_XC
+#undef M4_RE
 
     ZVECTOR_END( regs );
 }
@@ -6506,16 +6713,18 @@ DEF_INST( vector_fp_convert_to_fixed )
 
     ZVECTOR_CHECK( regs );
 
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_XC ((m4 & 0x4) != 0) // IEEE-inexact-exception control (XxC)  See SUPPRESS_INEXACT
+#define M4_RE ((m4 & 0x3) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 148_VECTOR_ENH_2, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -6528,7 +6737,7 @@ DEF_INST( vector_fp_convert_to_fixed )
         {
             if (i == 0 || !M4_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
                 op2_dataclass = float64_class( op2 );
                 softfloat_exceptionFlags = 0;
 
@@ -6581,7 +6790,7 @@ DEF_INST( vector_fp_convert_to_fixed )
         {
             if (i == 0 || !M4_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
                 op2_dataclass = float32_class( op2 );
                 softfloat_exceptionFlags = 0;
 
@@ -6627,6 +6836,8 @@ DEF_INST( vector_fp_convert_to_fixed )
     }
 
 #undef M4_SE
+#undef M4_XC
+#undef M4_RE
 
     ZVECTOR_END( regs );
 }
@@ -6653,16 +6864,18 @@ DEF_INST( vector_fp_convert_from_fixed )
 
     ZVECTOR_CHECK( regs );
 
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_XC ((m4 & 0x4) != 0) // IEEE-inexact-exception control (XxC)  See SUPPRESS_INEXACT
+#define M4_RE ((m4 & 0x3) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 148_VECTOR_ENH_2, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -6670,7 +6883,7 @@ DEF_INST( vector_fp_convert_from_fixed )
     {
         /* Fixed 64-bit may not fit in the 52+1 bits available in a  */
         /* long BFP, IEEE Inexact exceptions are possible. If m4     */
-        /* Inexact suppression control (XxC) is on, then no Inexact  */
+        /* Inexact suppression control (XxC)  See SUPPRESS_INEXACT is on, then no Inexact  */
         /* exceptions recognized (no trap nor flag set).             */
         float64_t   op1;
         S64         op2;
@@ -6684,7 +6897,7 @@ DEF_INST( vector_fp_convert_from_fixed )
                 op2 = regs->VR_D( v2, i );
                 softfloat_exceptionFlags = 0;
                 op1 = i64_to_f64( op2);
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
 
                 /* Inexact occurred and not masked by m4? */
                 if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
@@ -6700,7 +6913,7 @@ DEF_INST( vector_fp_convert_from_fixed )
     {
         /* Fixed 32-bit may need to be rounded to fit in the 23+1    */
         /* bits available in a short BFP, IEEE Inexact may be        */
-        /* raised. If m4 Inexact suppression (XxC) is on, then no    */
+        /* raised. If m4 Inexact suppression (XxC)  See SUPPRESS_INEXACT is on, then no    */
         /* inexact exception is recognized (no trap nor flag set).   */
         float32_t   op1;
         S32         op2;
@@ -6714,7 +6927,7 @@ DEF_INST( vector_fp_convert_from_fixed )
                 op2 = regs->VR_F( v2, i );
                 softfloat_exceptionFlags = 0;
                 op1 = i32_to_f32( op2 );
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
 
                 /* Inexact occurred and not masked by m4? */
                 if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
@@ -6728,6 +6941,8 @@ DEF_INST( vector_fp_convert_from_fixed )
     }
 
 #undef M4_SE
+#undef M4_XC
+#undef M4_RE
 
     ZVECTOR_END( regs );
 }
@@ -6751,16 +6966,17 @@ DEF_INST( vector_fp_load_lengthened )
 
     ZVECTOR_CHECK( regs );
 
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_RE ((m4 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m4 & 0x7 || m3 < 2 || m3 > 3 )
+        if ( M4_RE || m3 < 2 || m3 > 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m4 & 0x7 || m3 != 3 )
+        if ( M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -6769,7 +6985,7 @@ DEF_INST( vector_fp_load_lengthened )
         float128_t  op1;
         float64_t   op2;
 
-        VECTOR_GET_FLOAT64_OP(  op2, v2, 0, regs );
+        VECTOR_GET_FLOAT64_OP( op2, v2, 0, regs );
         softfloat_exceptionFlags = 0;
         if (f64_isSignalingNaN( op2 ))
         {
@@ -6792,7 +7008,7 @@ DEF_INST( vector_fp_load_lengthened )
         {
             if (i == 0 || !M4_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
                 softfloat_exceptionFlags = 0;
                 if (f32_isSignalingNaN( op2 ))
                 {
@@ -6803,12 +7019,13 @@ DEF_INST( vector_fp_load_lengthened )
                     SET_FPC_FLAGS_FROM_SF( regs );
                 }
                 op1 = f32_to_f64( op2 );
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, j, regs );
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, j, regs );
             }
         }
     }
 
 #undef M4_SE
+#undef M4_RE
 
     ZVECTOR_END( regs );
 }
@@ -6828,62 +7045,95 @@ DEF_INST( vector_fp_load_lengthened )
 DEF_INST( vector_fp_load_rounded )
 {
     int     v1, v2, m3, m4, m5;
-    int     i;
-//    U32     ieee_trap_conds = 0;
+    int     i, j;
+    U32     ieee_trap_conds = 0;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_XC ((m4 & 0x4) != 0) // IEEE-inexact-exception control (XxC)  See SUPPRESS_INEXACT
+#define M4_RE ((m4 & 0x3) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 3 || m3 > 4 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 < 3 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
     if ( m3 == 3 )  // Long format
     {
-        float64_t   op1, op2;
+        float32_t   op1;
+        float64_t   op2;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0, j=0; i < 2; i++, j+=2)
         {
             if (i == 0 || !M4_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-/* !!!! */
+                SET_SF_RM_FROM_MASK( m5 );
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+                softfloat_exceptionFlags = 0;
+
+                op1 = f64_to_f32( op2 );
+
+                if (SUPPRESS_INEXACT( m4 ))
+                    softfloat_exceptionFlags &= ~softfloat_flag_inexact;
+
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, j, regs );
+
+                if (softfloat_exceptionFlags)
+                {
+                    ieee_trap_conds = ieee_exception_test_oux( regs );
+
+                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                        FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                }
             }
         }
     }
     else if ( m3 == 4 )  // Extended format
     {
-        float128_t  op1, op2;
+        float64_t   op1;
+        float128_t  op2;
 
         VECTOR_GET_FLOAT128_OP( op2, v2, 0, regs );
 
-/* !!!! */
+        SET_SF_RM_FROM_MASK( m5 );
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
+        softfloat_exceptionFlags = 0;
+
+        op1 = f128_to_f64( op2 );
+
+        if (SUPPRESS_INEXACT( m4 ))
+            softfloat_exceptionFlags &= ~softfloat_flag_inexact;
+
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
+
+        VECTOR_PUT_FLOAT64_NOCC( op1, v1, 0, regs );
+
+        if (softfloat_exceptionFlags)
+        {
+            ieee_trap_conds = ieee_exception_test_oux( regs );
+
+            VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+        }
     }
 
 #undef M4_SE
+#undef M4_XC
+#undef M4_RE
 
-
-    //
     ZVECTOR_END( regs );
 }
 
@@ -6902,27 +7152,24 @@ DEF_INST( vector_load_fp_integer )
 {
     int     v1, v2, m3, m4, m5;
     int     i;
-//    U32     ieee_trap_conds = 0;
+    U32     ieee_trap_conds = 0;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_XC ((m4 & 0x4) != 0) // IEEE-inexact-exception control (XxC)  See SUPPRESS_INEXACT
+#define M4_RE ((m4 & 0x3) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 < 2 || m3 > 4 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 == 2 || m5 > 7 || m4 & 0x3 || m3 != 3 )
+        if ( m5 == 2 || m5 > 7 || M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -6930,15 +7177,26 @@ DEF_INST( vector_load_fp_integer )
     {
         float64_t   op1, op2;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M4_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-/* !!!! */
+                softfloat_exceptionFlags = 0;
+                SET_SF_RM_FROM_MASK( m5 );
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+                op1 = f64_roundToInt( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
+
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
+
+                if (softfloat_exceptionFlags)
+                {
+                    ieee_trap_conds = ieee_exception_test_oux( regs );
+                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+                }
             }
         }
     }
@@ -6950,11 +7208,22 @@ DEF_INST( vector_load_fp_integer )
         {
             if (i == 0 || !M4_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
-/* !!!! */
+                softfloat_exceptionFlags = 0;
+                SET_SF_RM_FROM_MASK( m5 );
 
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
+                op1 = f32_roundToInt( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
+
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
+
+                if (softfloat_exceptionFlags)
+                {
+                    ieee_trap_conds = ieee_exception_test_oux( regs );
+                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+                }
             }
         }
     }
@@ -6964,15 +7233,26 @@ DEF_INST( vector_load_fp_integer )
 
         VECTOR_GET_FLOAT128_OP( op2, v2, 0, regs );
 
-/* !!!! */
+        softfloat_exceptionFlags = 0;
+        SET_SF_RM_FROM_MASK( m5 );
+
+        op1 = f128_roundToInt( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
+
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
 
         VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
+
+        if (softfloat_exceptionFlags)
+        {
+            ieee_trap_conds = ieee_exception_test_oux( regs );
+            VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds, FPC_MASK_IMX );
+        }
     }
 
 #undef M4_SE
+#undef M4_XC
+#undef M4_RE
 
-
-    //
     ZVECTOR_END( regs );
 }
 
@@ -6994,14 +7274,16 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
 
     ZVECTOR_CHECK( regs );
 
+#define M4_RE ((m4 & 0xF) != 0) // Reserved
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m4 & 0xF || m3 < 2 || m3 > 4 )
+        if ( M4_RE || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m4 & 0xF || m3 != 3 )
+        if ( M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7009,8 +7291,8 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
     {
         float64_t   op1, op2;
 
-        VECTOR_GET_FLOAT64_OP(  op2, v2, 0, regs );
-        VECTOR_GET_FLOAT64_OP(  op1, v1, 0, regs );
+        VECTOR_GET_FLOAT64_OP( op2, v2, 0, regs );
+        VECTOR_GET_FLOAT64_OP( op1, v1, 0, regs );
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT64_COMPARE( op1, op2 );
@@ -7024,8 +7306,8 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
     {
         float32_t   op1, op2;
 
-        VECTOR_GET_FLOAT32_OP(  op2, v2, 0, regs );
-        VECTOR_GET_FLOAT32_OP(  op1, v1, 0, regs );
+        VECTOR_GET_FLOAT32_OP( op2, v2, 0, regs );
+        VECTOR_GET_FLOAT32_OP( op1, v1, 0, regs );
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT32_COMPARE( op1, op2 );
@@ -7057,6 +7339,8 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
     //  2 First operand element high
     //  3 Operand elements unordered
     regs->psw.cc = newcc;
+
+#undef M4_RE
 
     ZVECTOR_END( regs );
 }
@@ -7079,14 +7363,16 @@ DEF_INST( vector_fp_compare_scalar )
 
     ZVECTOR_CHECK( regs );
 
+#define M4_RE ((m4 & 0xF) != 0) // Reserved
+
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m4 & 0xF || m3 < 2 || m3 > 4 )
+        if ( M4_RE || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m4 & 0xF || m3 != 3 )
+        if ( M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7094,8 +7380,8 @@ DEF_INST( vector_fp_compare_scalar )
     {
         float64_t   op1, op2;
 
-        VECTOR_GET_FLOAT64_OP(  op2, v2, 0, regs );
-        VECTOR_GET_FLOAT64_OP(  op1, v1, 0, regs );
+        VECTOR_GET_FLOAT64_OP( op2, v2, 0, regs );
+        VECTOR_GET_FLOAT64_OP( op1, v1, 0, regs );
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT64_COMPARE( op1, op2 );
@@ -7109,8 +7395,8 @@ DEF_INST( vector_fp_compare_scalar )
     {
         float32_t   op1, op2;
 
-        VECTOR_GET_FLOAT32_OP(  op2, v2, 0, regs );
-        VECTOR_GET_FLOAT32_OP(  op1, v1, 0, regs );
+        VECTOR_GET_FLOAT32_OP( op2, v2, 0, regs );
+        VECTOR_GET_FLOAT32_OP( op1, v1, 0, regs );
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT32_COMPARE( op1, op2 );
@@ -7142,6 +7428,8 @@ DEF_INST( vector_fp_compare_scalar )
     //  2 First operand element high
     //  3 Operand elements unordered
     regs->psw.cc = newcc;
+
+#undef M4_RE
 
     ZVECTOR_END( regs );
 }
@@ -7176,77 +7464,104 @@ DEF_INST( vector_fp_perform_sign_operation )
 {
     int     v1, v2, m3, m4, m5;
     int     i;
-//    U32     ieee_trap_conds = 0;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
-
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_RE ((m4 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 > 2 || m4 & 0x7 || m3 < 2 || m3 > 4 )
+        if ( m5 > 2 || M4_RE || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 > 2 || m4 & 0x7 || m3 != 3 )
+        if ( m5 > 2 || M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
     if ( m3 == 3 )  // Long format
     {
-        float64_t   op1, op2;
+        float64_t   op2;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M4_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-/* !!!! */
+                switch (m5)
+                {
+                case 0:  // Complement
+                    op2.v ^= 0x8000000000000000ULL;
+                    break;
+                case 1:  // Negative
+                    op2.v |= 0x8000000000000000ULL;
+                    break;
+                case 2:  // Positive
+                    op2.v &= 0x7FFFFFFFFFFFFFFFULL;
+                    break;
+                }
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT64_NOCC( op2, v1, i, regs );
             }
         }
     }
     else if ( m3 == 2 )  // Short format
     {
-        float32_t   op1, op2;
+        float32_t   op2;
 
         for (i=0; i < 4; i++)
         {
             if (i == 0 || !M4_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
-/* !!!! */
+                switch (m5)
+                {
+                case 0:  // Complement
+                    op2.v ^= 0x80000000;
+                    break;
+                case 1:  // Negative
+                    op2.v |= 0x80000000;
+                    break;
+                case 2:  // Positive
+                    op2.v |= 0x7FFFFFFF;
+                    break;
+                }
 
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT32_NOCC( op2, v1, i, regs );
             }
         }
     }
     else if ( m3 == 4 )  // Extended format
     {
-        float128_t  op1, op2;
+        float128_t  op2;
 
         VECTOR_GET_FLOAT128_OP( op2, v2, 0, regs );
 
-/* !!!! */
+        switch (m5)
+        {
+        case 0:  // Complement
+            op2.v[FLOAT128_HI] ^= 0x8000000000000000ULL;
+            break;
+        case 1:  // Negative
+            op2.v[FLOAT128_HI] |= 0x8000000000000000ULL;
+            break;
+        case 2:  // Positive
+            op2.v[FLOAT128_HI] &= 0x7FFFFFFFFFFFFFFFULL;
+            break;
+        }
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
+        VECTOR_PUT_FLOAT128_NOCC( op2, v1, 0, regs );
     }
 
 #undef M4_SE
+#undef M4_RE
 
-
-    //
     ZVECTOR_END( regs );
 }
 
@@ -7271,16 +7586,17 @@ DEF_INST( vector_fp_square_root )
 
     ZVECTOR_CHECK( regs );
 
-#define M4_SE ((m4 & 0x8) != 0)  // Single-Element-Control (S)
+#define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
+#define M4_RE ((m4 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m4 & 0x7 || m3 < 2 || m3 > 4 )
+        if ( M4_RE || m3 < 2 || m3 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m4 & 0x7 || m3 != 3 )
+        if ( M4_RE || m3 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7288,7 +7604,7 @@ DEF_INST( vector_fp_square_root )
     {
         float64_t   op1, op2;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M4_SE)
             {
@@ -7364,6 +7680,7 @@ DEF_INST( vector_fp_square_root )
     }
 
 #undef M4_SE
+#undef M4_RE
 
     ZVECTOR_END( regs );
 }
@@ -7389,16 +7706,17 @@ DEF_INST( vector_fp_subtract )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
+        if ( M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m4 != 3 )
+        if ( M5_RE || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7406,12 +7724,12 @@ DEF_INST( vector_fp_subtract )
     {
         float64_t   op1, op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 SET_SF_RM_FROM_FPC;
@@ -7444,8 +7762,8 @@ DEF_INST( vector_fp_subtract )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 SET_SF_RM_FROM_FPC;
@@ -7500,6 +7818,7 @@ DEF_INST( vector_fp_subtract )
     }
 
 #undef M5_SE
+#undef M5_RE
 
     ZVECTOR_END( regs );
 }
@@ -7525,16 +7844,17 @@ DEF_INST( vector_fp_add )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
+        if ( M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m4 != 3 )
+        if ( M5_RE || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7542,12 +7862,12 @@ DEF_INST( vector_fp_add )
     {
         float64_t   op1, op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 SET_SF_RM_FROM_FPC;
@@ -7565,7 +7885,7 @@ DEF_INST( vector_fp_add )
                             SCALE_FACTOR_ARITH_UFLOW_LONG );
                 }
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
 
                 VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
                     FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
@@ -7580,8 +7900,8 @@ DEF_INST( vector_fp_add )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 SET_SF_RM_FROM_FPC;
@@ -7599,7 +7919,7 @@ DEF_INST( vector_fp_add )
                             SCALE_FACTOR_ARITH_UFLOW_SHORT );
                 }
 
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
 
                 VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
                     FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
@@ -7637,6 +7957,7 @@ DEF_INST( vector_fp_add )
     }
 
 #undef M5_SE
+#undef M5_RE
 
     ZVECTOR_END( regs );
 }
@@ -7662,16 +7983,17 @@ DEF_INST( vector_fp_divide )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
+        if ( M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m4 != 3 )
+        if ( M5_RE || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7679,12 +8001,12 @@ DEF_INST( vector_fp_divide )
     {
         float64_t   op1, op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 SET_SF_RM_FROM_FPC;
@@ -7704,7 +8026,7 @@ DEF_INST( vector_fp_divide )
                             SCALE_FACTOR_ARITH_UFLOW_LONG );
                 }
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
 
                 VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
                     FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
@@ -7719,8 +8041,8 @@ DEF_INST( vector_fp_divide )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 SET_SF_RM_FROM_FPC;
@@ -7740,7 +8062,7 @@ DEF_INST( vector_fp_divide )
                             SCALE_FACTOR_ARITH_UFLOW_SHORT );
                 }
 
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
 
                 VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
                     FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
@@ -7779,6 +8101,7 @@ DEF_INST( vector_fp_divide )
     }
 
 #undef M5_SE
+#undef M5_RE
 
     ZVECTOR_END( regs );
 }
@@ -7804,16 +8127,17 @@ DEF_INST( vector_fp_multiply )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m5 & 0x7 || m4 < 2 || m4 > 4 )
+        if ( M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m5 & 0x7 || m4 != 3 )
+        if ( M5_RE || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7821,12 +8145,12 @@ DEF_INST( vector_fp_multiply )
     {
         float64_t   op1, op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 SET_SF_RM_FROM_FPC;
@@ -7844,7 +8168,7 @@ DEF_INST( vector_fp_multiply )
                             SCALE_FACTOR_ARITH_UFLOW_LONG );
                 }
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
 
                 VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
                     FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
@@ -7859,8 +8183,8 @@ DEF_INST( vector_fp_multiply )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 SET_SF_RM_FROM_FPC;
@@ -7878,7 +8202,7 @@ DEF_INST( vector_fp_multiply )
                             SCALE_FACTOR_ARITH_UFLOW_SHORT );
                 }
 
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
+                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
 
                 VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
                     FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
@@ -7915,6 +8239,7 @@ DEF_INST( vector_fp_multiply )
     }
 
 #undef M5_SE
+#undef M5_RE
 
     ZVECTOR_END( regs );
 }
@@ -7942,9 +8267,6 @@ DEF_INST( vector_fp_multiply )
 /*   WFKEDB  V1,V2,V3     VFCE V1,V2,V3,3,12,0                       */
 /*   WFKEDBS V1,V2,V3     VFCE V1,V2,V3,3,12,1                       */
 /*   WFKEXB  V1,V2,V3     VFCE V1,V2,V3,4,12,0                       */
-/*   WFKEXBS V1,V2,V3     VFCE V1,V2,V3,4,12,1                       */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
 DEF_INST( vector_fp_compare_equal )
 {
     int     v1, v2, v3, m4, m5, m6;
@@ -7956,17 +8278,20 @@ DEF_INST( vector_fp_compare_equal )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
-#define M5_SQ ((m5 & 0x4) != 0)  // Signal-on-QNaN (SQ)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_SQ ((m5 & 0x4) != 0) // Signal-on-QNaN (SQ)
+#define M5_RE ((m5 & 0x3) != 0) // Reserved
+#define M6_RE ((m6 & 0xE) != 0) // Reserved
+#define M6_CS ((m6 & 0x1) != 0) // Condition Code Set (CS)
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m6 & 0xE || m5 & 0x3 || m4 < 2 || m4 > 4 )
+        if ( M6_RE || M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m6 & 0xE || m5 & 0x7 || m4 != 3 )
+        if ( M6_RE || M5_RE || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -7976,12 +8301,12 @@ DEF_INST( vector_fp_compare_equal )
     {
         float64_t   op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT64_COMPARE( op2, op3 );
@@ -8018,8 +8343,8 @@ DEF_INST( vector_fp_compare_equal )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT32_COMPARE( op2, op3 );
@@ -8092,7 +8417,7 @@ DEF_INST( vector_fp_compare_equal )
     //  3 All elements not equal or unordered (All F results
     //    in Figure 24-5)
     //  Otherwise, the code remains unchanged.
-    if (m6 & 0x01) {
+    if M6_CS {
         if (equal_found == TRUE && not_equal_or_unordered_found == TRUE)
             regs->psw.cc = 1;
         else if (equal_found == FALSE && not_equal_or_unordered_found == TRUE)
@@ -8103,6 +8428,9 @@ DEF_INST( vector_fp_compare_equal )
 
 #undef M5_SE
 #undef M5_SQ
+#undef M5_RE
+#undef M6_RE
+#undef M6_CS
 
     ZVECTOR_END( regs );
 }
@@ -8144,17 +8472,20 @@ DEF_INST( vector_fp_compare_high_or_equal )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
-#define M5_SQ ((m5 & 0x4) != 0)  // Signal-on-QNaN (SQ)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_SQ ((m5 & 0x4) != 0) // Signal-on-QNaN (SQ)
+#define M5_RE ((m5 & 0x3) != 0) // Reserved
+#define M6_RE ((m6 & 0xE) != 0) // Reserved
+#define M6_CS ((m6 & 0x1) != 0) // Condition Code Set (CS)
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m6 & 0xE || m5 & 0x3 || m4 < 2 || m4 > 4 )
+        if ( M6_RE || M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m6 & 0xE || m5 & 0x7 || m4 != 3 )
+        if ( M6_RE || M5_RE || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -8164,12 +8495,12 @@ DEF_INST( vector_fp_compare_high_or_equal )
     {
         float64_t   op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT64_COMPARE( op2, op3 );
@@ -8206,8 +8537,8 @@ DEF_INST( vector_fp_compare_high_or_equal )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT32_COMPARE( op2, op3 );
@@ -8282,7 +8613,7 @@ DEF_INST( vector_fp_compare_high_or_equal )
     //  3 All elements less than or unordered (All F results
     //    in Figure 24-7)
     //  Otherwise, the code remains unchanged.
-    if (m6 & 0x01) {
+    if M6_CS {
         if (greater_than_or_equal_found == TRUE && less_than_or_unordered_found == TRUE)
             regs->psw.cc = 1;
         else if (greater_than_or_equal_found == FALSE && less_than_or_unordered_found == TRUE)
@@ -8293,6 +8624,9 @@ DEF_INST( vector_fp_compare_high_or_equal )
 
 #undef M5_SE
 #undef M5_SQ
+#undef M5_RE
+#undef M6_RE
+#undef M6_CS
 
     ZVECTOR_END( regs );
 }
@@ -8334,17 +8668,20 @@ DEF_INST( vector_fp_compare_high )
 
     ZVECTOR_CHECK( regs );
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
-#define M5_SQ ((m5 & 0x4) != 0)  // Signal-on-QNaN (SQ)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_SQ ((m5 & 0x4) != 0) // Signal-on-QNaN (SQ)
+#define M5_RE ((m5 & 0x3) != 0) // Reserved
+#define M6_RE ((m6 & 0xE) != 0) // Reserved
+#define M6_CS ((m6 & 0x1) != 0) // Condition Code Set (CS)
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( m6 & 0xE || m5 & 0x3 || m4 < 2 || m4 > 4 )
+        if ( M6_RE || M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
     {
-        if ( m6 & 0xE || m5 & 0x7 || m4 != 3 )
+        if ( M6_RE || M5_RE || m4 != 3 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
@@ -8354,12 +8691,12 @@ DEF_INST( vector_fp_compare_high )
     {
         float64_t   op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT64_COMPARE( op2, op3 );
@@ -8396,8 +8733,8 @@ DEF_INST( vector_fp_compare_high )
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
                 softfloat_exceptionFlags = 0;
                 newcc = FLOAT32_COMPARE( op2, op3 );
@@ -8472,7 +8809,7 @@ DEF_INST( vector_fp_compare_high )
     //  3 All elements not greater than, or unordered (All F
     //    results in Figure 24-6)
     //  Otherwise, the code remains unchanged.
-    if (m6 & 0x01) {
+    if M6_CS {
         if (greater_than_found == TRUE && not_greater_than_or_unordered_found == TRUE)
             regs->psw.cc = 1;
         else if (greater_than_found == FALSE && not_greater_than_or_unordered_found == TRUE)
@@ -8483,6 +8820,9 @@ DEF_INST( vector_fp_compare_high )
 
 #undef M5_SE
 #undef M5_SQ
+#undef M5_RE
+#undef M6_RE
+#undef M6_CS
 
     ZVECTOR_END( regs );
 }
@@ -8503,6 +8843,7 @@ DEF_INST( vector_fp_minimum )
 {
     int     v1, v2, v3, m4, m5, m6;
     int     i;
+    BYTE    newcc = 3;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -8513,11 +8854,12 @@ DEF_INST( vector_fp_minimum )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( (m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15) || m5 & 0x7 || m4 < 2 || m4 > 4 )
+        if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
@@ -8527,51 +8869,98 @@ DEF_INST( vector_fp_minimum )
 
     if ( m4 == 3 )  // Long format
     {
-        float64_t   op1, op2, op3;
+        float64_t   op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
 /* !!!! */
+                softfloat_exceptionFlags = 0;
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
+
+                switch (m5)
+                {
+                case 0:   // IEEE MinNum
+                    break;
+                case 1:   // Java Math.Min()
+                    break;
+                case 2:   // C-Style Min Macro
+                    break;
+                case 3:   // C++ algorithm.min()
+                    break;
+                case 4:   // fmin()
+                    break;
+                case 8:   // IEEE MinNum of absolute values
+                    break;
+                case 9:   // Java Math.Min() of absolute values
+                    break;
+                case 10:  // C-Style Min Macro of absolute values
+                    break;
+                case 11:  // C++ algorithm.min() of absolute values
+                    break;
+                case 12:  // fmin() of absolute values
+                    break;
+                }
+
+
+
+                newcc = FLOAT64_COMPARE( op2, op3 );
+                if (newcc == 3)
+                {
+                    softfloat_exceptionFlags = softfloat_flag_invalid;
+                }
+                /* Xi is only trap that suppresses result, no return */
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+                if (newcc == 3)
+                {
+                    continue;
+                }
+                if (newcc == 2)  // op3 is Minimum
+                {
+                    VECTOR_PUT_FLOAT64_NOCC( op3, v1, i, regs );
+                }
+                else             // op2 is Minimum, or op2 and op3 are equal
+                {
+                    VECTOR_PUT_FLOAT64_NOCC( op2, v1, i, regs );
+                }
+
             }
         }
     }
     else if ( m4 == 2 )  // Short format
     {
-        float32_t   op1, op2, op3;
+        float32_t   op2, op3;
 
         for (i=0; i < 4; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
 /* !!!! */
 
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
             }
         }
     }
     else if ( m4 == 4 )  // Extended format
     {
-        float128_t  op1, op2, op3;
+        float128_t  op2, op3;
 
         VECTOR_GET_FLOAT128_OP( op3, v3, 0, regs );
         VECTOR_GET_FLOAT128_OP( op2, v2, 0, regs );
 
 /* !!!! */
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
     }
 
 #undef M5_SE
+#undef M5_RE
 
 
     //
@@ -8604,11 +8993,12 @@ DEF_INST( vector_fp_maximum )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
-#define M5_SE ((m5 & 0x8) != 0)  // Single-Element-Control (S)
+#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+#define M5_RE ((m5 & 0x7) != 0) // Reserved
 
     if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
     {
-        if ( (m6 >= 5 && m6 <= 7) || (m6 >= 13 && m6 <= 15) || m5 & 0x7 || m4 < 2 || m4 > 4 )
+        if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
@@ -8618,51 +9008,72 @@ DEF_INST( vector_fp_maximum )
 
     if ( m4 == 3 )  // Long format
     {
-        float64_t   op1, op2, op3;
+        float64_t   op2, op3;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT64_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
 /* !!!! */
+                switch (m5)
+                {
+                case 0:   // IEEE MaxNum
+                    break;
+                case 1:   // Java Math.Max()
+                    break;
+                case 2:   // C-Style Max Macro
+                    break;
+                case 3:   // C++ Algorithm.max()
+                    break;
+                case 4:   // fmax()
+                    break;
+                case 8:   // IEEE MaxNumMag
+                    break;
+                case 9:   // Java Math.Max() of absolute values
+                    break;
+                case 10:  // C-Style Max Macro of absolute values
+                    break;
+                case 11:  // C++ Algorithm.max() of absolute values
+                    break;
+                case 12:  // fmax() of absolute values
+                    break;
+                }
 
-                VECTOR_PUT_FLOAT64_NOCC(  op1, v1, i, regs );
             }
         }
     }
     else if ( m4 == 2 )  // Short format
     {
-        float32_t   op1, op2, op3;
+        float32_t   op2, op3;
 
         for (i=0; i < 4; i++)
         {
             if (i == 0 || !M5_SE)
             {
-                VECTOR_GET_FLOAT32_OP(  op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP(  op2, v2, i, regs );
+                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
 /* !!!! */
 
-                VECTOR_PUT_FLOAT32_NOCC(  op1, v1, i, regs );
             }
         }
     }
     else if ( m4 == 4 )  // Extended format
     {
-        float128_t  op1, op2, op3;
+        float128_t  op2, op3;
 
         VECTOR_GET_FLOAT128_OP( op3, v3, 0, regs );
         VECTOR_GET_FLOAT128_OP( op2, v2, 0, regs );
 
 /* !!!! */
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, 0, regs );
     }
 
 #undef M5_SE
+#undef M5_RE
 
 
     //

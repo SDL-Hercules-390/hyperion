@@ -17,6 +17,33 @@
 #include "opcode.h"
 #include "inline.h"
 
+/* ====================================================================== */
+/* TEMPORARY while zvector.c is being developed */
+
+//  #if defined(__clang__)
+//      #pragma clang diagnostic ignored "-Wunused-variable"
+//      #pragma clang diagnostic ignored "-Wunused-but-set-variable"
+//      #pragma clang diagnostic ignored "-Wcomment"
+//      #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
+//      #pragma clang diagnostic ignored "-Wmacro-redefined"
+//  #elif defined(__GNUC__)
+//      #pragma GCC diagnostic ignored "-Wunused-variable"
+//      #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+//      #pragma GCC diagnostic ignored "-Wcomment"
+//      #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+//  #endif
+
+//  #undef ZVECTOR_END
+
+//  #define ZVECTOR_END(_regs)                                      \
+//              ARCH_DEP(display_inst) (_regs, inst);
+
+//  #define ZVECTOR_END(_regs)                                      \
+//          if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36)  \
+//              ARCH_DEP(display_inst) (_regs, inst);
+
+/* ====================================================================== */
+
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
 
 /*------------------------------------------------------------------------*/
@@ -1820,9 +1847,8 @@ DEF_INST( vector_find_element_equal )
                 ind2 = i;
         }
         break;
-    default:
-        break;
     }
+
     regs->VR_D(v1, 0) = 0x00;
     regs->VR_B(v1, 7) = min(ind1, ind2) * (1 << m4);
     regs->VR_D(v1, 1) = 0x00;
@@ -1905,9 +1931,8 @@ DEF_INST( vector_find_element_not_equal )
                 ind2 = i;
         }
         break;
-    default:
-        break;
     }
+
     regs->VR_D(v1, 0) = 0x00;
     regs->VR_B(v1, 7) = min(ind1, ind2) * (1 << m4);
     regs->VR_D(v1, 1) = 0x00;
