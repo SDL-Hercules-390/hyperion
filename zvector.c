@@ -9,6 +9,16 @@
 /* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
+/* ============================================= */
+/* TEMPORARY while zvector2.c is being developed */
+#if defined(__GNUC__)
+    #pragma GCC diagnostic ignored "-Wunused-variable"
+    #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+    #pragma GCC diagnostic ignored "-Wcomment"
+    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+/* ============================================= */
+
 #include "hstdinc.h"
 #define _ZVECTOR_C_
 #define _HENGINE_DLL_
