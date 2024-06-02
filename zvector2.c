@@ -2386,19 +2386,19 @@ DEF_INST( vector_perform_sign_operation_decimal )
         {
             if (isZero)
             {
-                   if ( !pc && !nz )
+                if ( !pc && !nz )
                     { cc = 0; SET_VR_SIGN( v1, PREFERRED_PLUS);  break;  }
 
-                   if ( pc && !nz )
+                if ( pc && !nz )
                     { cc = 0; SET_VR_SIGN( v1, PREFERRED_ZONE);  break;  }
 
-                   if ( nz )
+                if ( nz )
                     { cc = 0; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
 
             }
             else
             {
-                    { cc = 1; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
+                { cc = 1; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
             }
         }
         break;
