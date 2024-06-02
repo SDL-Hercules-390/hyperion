@@ -1571,6 +1571,9 @@
     <Image Include="html\images\favicon.ico" />
     <Image Include="html\images\greend.gif" />
     <Image Include="html\images\greenu.gif" />
+    <Image Include="html\images\herclin.jpg" />
+    <Image Include="html\images\herc-panel.jpg" />
+    <Image Include="html\images\herc-panel2.jpg" />
     <Image Include="html\images\hercpic-rblk-256.gif" />
     <Image Include="html\images\hercpic-rblk-80.gif" />
     <Image Include="html\images\interruptd.gif" />

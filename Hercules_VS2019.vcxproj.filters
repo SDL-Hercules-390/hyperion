@@ -4096,6 +4096,15 @@
     <Image Include="html\images\greenu.gif">
       <Filter>Other Files\DOC\html\images</Filter>
     </Image>
+    <Image Include="html\images\herclin.jpg">
+      <Filter>Other Files\DOC\html\images</Filter>
+    </Image>
+    <Image Include="html\images\herc-panel.jpg">
+      <Filter>Other Files\DOC\html\images</Filter>
+    </Image>
+    <Image Include="html\images\herc-panel2.jpg">
+      <Filter>Other Files\DOC\html\images</Filter>
+    </Image>
     <Image Include="html\images\hercpic-rblk-256.gif">
       <Filter>Other Files\DOC\html\images</Filter>
     </Image>

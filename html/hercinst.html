@@ -466,9 +466,75 @@ href="cckddasd.html">this page</a>.
 </table>
 </center>
 
+<p>
+
+Hercules can operate in either of two modes: (semi-)graphical "panel"
+mode or simple non-graphical standard command-line mode.
+
+<p>
+
+The default semi-graphical "panel" mode of operation is invoked by the
+"hercules.exe" executable, and the non-graphical standard command-line
+mode by the "herclin.exe" executable. They are both exactly identical
+except for how the terminal screen is managed.
+
+<p>
+
+In the normal (default) semi-graphical "panel" mode, Hercules.exe draws
+to screen directly itself, and does not rely on any terminal manager
+functionality (Terminal or Command-Prompt program). It paints (draws)
+messages and other information (such as its command line and CPU status
+line) on specifc screen lines starting at specific columns, etc:
+
+<br><br>
+<center>
+<img src="images/herc-panel.jpg"><br><br>Hercules managed Hardware Machine Console (HMC)
+</center>
+
+<p><br>
+
+It relies on certain keystrokes (such as the PageUp and PageDown keys,
+etc) to perform actions such as displaying previously issued messages
+and switching to its alternate semi-graphical display panel via the Esc.
+key (which shows an overal summary of the machine's state, such as its
+current set of register values, list of devices, etc):
+
+<br><br>
+<center>
+<img src="images/herc-panel2.jpg"><br><br>Hercules managed semi-graphical panel
+</center>
+
+<p><br>
+
+When started in standard command-line mode via "herclin.exe", the terminal
+screen is managed completely by your host operating system's terminal
+management software. Hercules does not paint the screen itself at all. It simply
+issues messages to "stdout" just like any other command-line program and your operating
+system's terminal management software decides where on the screen that line
+will be displayed. Additionally, Hercules does not read directly from the
+command-ine itself either. Instead, it simply reads from "stdin" and processes
+the commands it reads. Your host operating system's terminal manager is in charge
+of managing the command-line, not Hercules:
+
+<br><br>
+<center>
+<img src="images/herclin.jpg"><br><br><u><i>Unmanaged</i></u> "herclin.exe" terminal screen,<br>
+scrolled back several screens to see previously issued terminal commands.
+</center>
+
+<p><br>
+
+In standard "herclin.exe" command-line mode, Hercules operates just like any other
+normal command-line program, and you can use the Terminal's scroll bar (if it has
+one) and/or your mouse's scroll wheel to scroll the screen backward or forward to
+see previously issued mesages and/or commands and their responses. Your host
+operating system's terminal manager is in charge of painting the screen and reading
+the command line, not Hercules.
+
 <h4>Command line arguments</h4>
 <p>
-To start Hercules enter this command at the host's command prompt:
+To start Hercules in the default "panel" operating mode, enter this command
+at the host's command prompt:
 <blockquote><code><pre>
     hercules  [ -f <em>filename</em> ]           |  [ --config=<em>filename</em> ]
               [ -o <em>logfile</em>]             |  [ --output=<em>logfile</em> ]&nbsp;&nbsp;|&nbsp;&nbsp;[ --logfile=<em>logfile</em> ]
@@ -635,8 +701,9 @@ Now you can enter an ipl command from the control panel.
 <h4>Using the keyboard</h4>
 <p>
 
-The main Hercules screen contains a scrollable list of messages with a command
-input area and system status line at the bottom of the screen.
+In the default "panel" operating mode, the main Hercules screen contains
+a scrollable list of messages with a command input area and system status
+line at the bottom of the screen. (see further above)
 <p>
 To scroll through the messages, use either the Page Up or Page Down keys,
 the Ctrl + Up Arrow or Ctrl + Down Arrow keys, or the Home or End and/or

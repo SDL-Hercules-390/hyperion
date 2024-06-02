@@ -77,6 +77,9 @@ images_sources =                        \
     images/favicon.ico                  \
     images/greend.gif                   \
     images/greenu.gif                   \
+    images/herclin.jpg                  \
+    images/herc-panel.jpg               \
+    images/herc-panel2.jpg              \
     images/hercpic-rblk-256.gif         \
     images/hercpic-rblk-80.gif          \
     images/interruptd.gif               \
