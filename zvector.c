@@ -18,7 +18,7 @@
 #include "inline.h"
 
 /* ====================================================================== */
-/* TEMPORARY while zvector.c is being developed */
+/* TEMPORARY while zVector instructions are being developed */
 
 //  #if defined(__clang__)
 //      #pragma clang diagnostic ignored "-Wunused-variable"
@@ -32,6 +32,10 @@
 //      #pragma GCC diagnostic ignored "-Wcomment"
 //      #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 //  #endif
+
+//  #undef ZVECTOR_CHECK
+
+//  #define ZVECTOR_CHECK(_regs)  /* (do nothing) */
 
 //  #undef ZVECTOR_END
 

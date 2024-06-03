@@ -2095,29 +2095,45 @@ do {                                                                  \
 /*-------------------------------------------------------------------*/
 #if defined( _FEATURE_129_ZVECTOR_FACILITY )
 
-    /* Program check if vector instructions is executed when         */
-    /* TXF constraint mode or VOP control is zero                    */
+    /* Program check if vector instructions are executed when TXF    */
+    /* constraint mode, or if the vector enablement control (bit     */
+    /* 46) and the AFP control (bit 45) in control register zero     */
+    /* are not set to one.                                           */
 
-//  #define ZVECTOR_CHECK(_regs)  /* (do nothing) */
+  #if defined( _FEATURE_SIE )
 
-#define ZVECTOR_CHECK(_regs)                                                   \
+    #define ZVECTOR_CHECK(_regs)                                               \
         TXF_INSTR_CHECK(_regs);                                                \
-        if( !((_regs)->CR(0) & CR0_VOP) )                                      \
+        if (0                                                                  \
+            || !((_regs)->CR(0) & CR0_VOP)                                     \
+            || !((_regs)->CR(0) & CR0_AFP)                                     \
+            || (SIE_MODE((_regs)) && (0                                        \
+                                      || !(HOST(_regs)->CR(0) & CR0_VOP)       \
+                                      || !(HOST(_regs)->CR(0) & CR0_AFP)))     \
+        )                                                                      \
         {                                                                      \
             (_regs)->dxc = DXC_VECTOR_INSTRUCTION;                             \
             (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION);          \
         }
 
+  #else /* !defined( _FEATURE_SIE ) */
+
+    #define ZVECTOR_CHECK(_regs)                                               \
+        TXF_INSTR_CHECK(_regs);                                                \
+        if (0                                                                  \
+            || !((_regs)->CR(0) & CR0_VOP)                                     \
+            || !((_regs)->CR(0) & CR0_AFP)                                     \
+        )                                                                      \
+        {                                                                      \
+            (_regs)->dxc = DXC_VECTOR_INSTRUCTION;                             \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION);          \
+        }
+
+  #endif /* !defined( _FEATURE_SIE ) */
+
     /* Debug end of vector instruction execution                     */
 
-#define ZVECTOR_END(_regs)  /* (do nothing) */
-
-//  #define ZVECTOR_END(_regs)                                                     \
-//              ARCH_DEP(display_inst) (_regs, inst);
-
-//  #define ZVECTOR_END(_regs)                                                     \
-//          if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36)                 \
-//              ARCH_DEP(display_inst) (_regs, inst);
+    #define ZVECTOR_END(_regs)  /* (do nothing) */
 
 #endif /*defined( _FEATURE_129_ZVECTOR_FACILITY )*/
 
