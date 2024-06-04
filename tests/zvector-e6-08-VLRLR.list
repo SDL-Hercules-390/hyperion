@@ -1,0 +1,983 @@
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *        Zvector E6 instruction tests for VRS-d encoded:
+                                                     5 *
+                                                     6 *        E637 VLRLR  - VECTOR LOAD RIGHTMOST WITH LENGTH (reg)
+                                                     7 *
+                                                     8 *        James Wekel June 2024
+                                                     9 ***********************************************************************
+                                                    10
+                                                    11 ***********************************************************************
+                                                    12 *
+                                                    13 *        basic instruction tests
+                                                    14 *
+                                                    15 ***********************************************************************
+                                                    16 *  This program tests proper functioning of the z/arch E6 VRS-d vector
+                                                    17 *  load rightmost with length (reg). Exceptions are not tested.
+                                                    18 *
+                                                    19 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    20 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    21 *  NOT designed to test all aspects of any of the instructions.
+                                                    22 *
+                                                    23 ***********************************************************************
+                                                    24 *
+                                                    25 *    *Testcase zvector-e6-08-VLRLR: VECTOR E6 VRS-d VLRLR instruction
+                                                    26 *    *
+                                                    27 *    *   Zvector E6 tests for VRS-d encoded instructions:
+                                                    28 *    *
+                                                    29 *    *   E637 VLRLR  - VECTOR LOAD RIGHTMOST WITH LENGTH (reg)
+                                                    30 *    *
+                                                    31 *    *   # -------------------------------------------------------
+                                                    32 *    *   #  This tests only the basic function of the instruction.
+                                                    33 *    *   #  Exceptions are NOT tested.
+                                                    34 *    *   # -------------------------------------------------------
+                                                    35 *    *
+                                                    36 *    mainsize    2
+                                                    37 *    numcpu      1
+                                                    38 *    sysclear
+                                                    39 *    archlvl     z/Arch
+                                                    40 *
+                                                    41 *    diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    42 *    loadcore    "$(testpath)/zvector-e6-08-VLRLR.core" 0x0
+                                                    43 *    diag8cmd    disable   # (reset back to default)
+                                                    44 *
+                                                    45 *    *Done
+                                                    46 ***********************************************************************
+
+
+                              00000000  0000139B    48 ZVE6TST  START 0
+00000000                      00000000              49          USING ZVE6TST,R0            Low core addressability
+                                                    50
+                              00000140  00000000    51 SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0    53          ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                         54          DC    X'0000000180000000'
+000001A8  00000000 00000200                         55          DC    AD(BEGIN)
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+
+000001B0                      000001B0  000001D0    57          ORG   ZVE6TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                         58          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                         59          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200    61          ORG   ZVE6TST+X'200'        Start of actual test program...
+                                                    62
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    64 ***********************************************************************
+                                                    65 *               The actual "ZVE6TST" program itself...
+                                                    66 ***********************************************************************
+                                                    67 *
+                                                    68 *  Architecture Mode: z/Arch
+                                                    69 *  Register Usage:
+                                                    70 *
+                                                    71 *   R0       (work)
+                                                    72 *   R1-4     (work)
+                                                    73 *   R5       Testing control table - current test base
+                                                    74 *   R6-R7    (work)
+                                                    75 *   R8       First base register
+                                                    76 *   R9       Second base register
+                                                    77 *   R10      Third base register
+                                                    78 *   R11      E6TEST call return
+                                                    79 *   R12      E6TESTS register
+                                                    80 *   R13      (work)
+                                                    81 *   R14      Subroutine call
+                                                    82 *   R15      Secondary Subroutine call or work
+                                                    83 *
+                                                    84 ***********************************************************************
+
+00000200                      00000200              86          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200              87          USING  BEGIN+4096,R9   SECOND Base Register
+
+00000200  0580                                      89 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                      90          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                      91          BCTR  R8,0             Initalize FIRST base register
+
+00000206  4190 8800                     00000800    93          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800    94          LA    R9,2048(,R9)     Initalize SECOND base register
+
+0000020E  41A0 9800                     00000800    96          LA    R10,2048(,R9)    Initalize THIRD base register
+00000212  41A0 A800                     00000800    97          LA    R10,2048(,R10)   Initalize THIRD base register
+                                                    98
+00000216  B600 81DC                     000003DC    99          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
+0000021A  9604 81DD                     000003DD   100          OI    CTLR0+1,X'04'    Turn on AFP bit
+0000021E  9602 81DD                     000003DD   101          OI    CTLR0+1,X'02'    Turn on Vector bit
+00000222  B700 81DC                     000003DC   102          LCTL  R0,R0,CTLR0      Reload updated CR0
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   104 ***********************************************************************
+                                                   105 *              Do tests in the E6TESTS table
+                                                   106 ***********************************************************************
+                                                   107
+00000226  58C0 81E4                     000003E4   108          L     R12,E6TADR       get table of test addresses
+                                                   109
+                              0000022A  00000001   110 NEXTE6   EQU   *
+0000022A  5850 C000                     00000000   111          L     R5,0(0,R12)       get test address
+0000022E  1255                                     112          LTR   R5,R5                have a test?
+00000230  4780 80B2                     000002B2   113          BZ    ENDTEST                 done?
+                                                   114
+00000234                      00000000             115          USING E6TEST,R5
+00000234  E710 8EC0 0006                000010C0   116          VL    V1,V1FUDGE
+0000023A  58B0 5000                     00000000   117          L     R11,TSUB          get address of test routine
+0000023E  05BB                                     118          BALR  R11,R11           do test
+                                                   119
+                              00000240  00000001   120 TESTREST EQU   *
+00000240  E310 501C 0014                0000001C   121          LGF   R1,READDR         get address of expected result
+00000246  D50F 8EA0 1000      000010A0  00000000   122          CLC   V1OUTPUT,0(R1)    valid?
+0000024C  4770 8058                     00000258   123          BNE   FAILMSG              no, issue failed message
+                                                   124
+00000250  41C0 C004                     00000004   125          LA    R12,4(0,R12)      next test address
+00000254  47F0 802A                     0000022A   126          B     NEXTE6
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   128 ***********************************************************************
+                                                   129 * result not as expected:
+                                                   130 *        issue message with test number, instruction under test
+                                                   131 *              and instruction l2
+                                                   132 ***********************************************************************
+                              00000258  00000001   133 FAILMSG  EQU   *
+00000258  4820 5004                     00000004   134          LH    R2,TNUM              get test number and convert
+0000025C  4E20 8E70                     00001070   135          CVD   R2,DECNUM
+00000260  D211 8E5A 8E44      0000105A  00001044   136          MVC   PRT3,EDIT
+00000266  DE11 8E5A 8E70      0000105A  00001070   137          ED    PRT3,DECNUM
+0000026C  D202 8E14 8E67      00001014  00001067   138          MVC   PRTNUM(3),PRT3+13    fill in message with test #
+                                                   139
+00000272  D207 8E2F 5010      0000102F  00000010   140          MVC   PRTNAME,OPNAME       fill in message with instruction
+                                                   141
+00000278  B982 0022                                142          XGR   R2,R2                get L2 as U32
+0000027C  5820 5008                     00000008   143          L     R2,L2
+00000280  4E20 8E70                     00001070   144          CVD   R2,DECNUM            and convert
+00000284  D211 8E5A 8E44      0000105A  00001044   145          MVC   PRT3,EDIT
+0000028A  DE11 8E5A 8E70      0000105A  00001070   146          ED    PRT3,DECNUM
+00000290  D202 8E40 8E67      00001040  00001067   147          MVC   PRTL2(3),PRT3+13     fill in message with l2 field
+                                                   148
+00000296  4100 0040                     00000040   149          LA    R0,PRTLNG            message length
+0000029A  4110 8E04                     00001004   150          LA    R1,PRTLINE           messagfe address
+0000029E  45F0 80C0                     000002C0   151          BAL   R15,RPTERROR
+
+
+                                                   153 ***********************************************************************
+                                                   154 * continue after a failed test
+                                                   155 ***********************************************************************
+                              000002A2  00000001   156 FAILCONT EQU   *
+000002A2  5800 81E8                     000003E8   157          L     R0,=F'1'          set GLOBAL failed test indicator
+000002A6  5000 8E00                     00001000   158          ST    R0,FAILED
+                                                   159
+000002AA  41C0 C004                     00000004   160          LA    R12,4(0,R12)      next test address
+000002AE  47F0 802A                     0000022A   161          B     NEXTE6
+
+
+                                                   163 ***********************************************************************
+                                                   164 * end of testing; set ending psw
+                                                   165 ***********************************************************************
+                              000002B2  00000001   166 ENDTEST  EQU   *
+000002B2  5810 8E00                     00001000   167          L     R1,FAILED         did a test fail?
+000002B6  1211                                     168          LTR   R1,R1
+000002B8  4780 81C0                     000003C0   169          BZ    EOJ                  No, exit
+000002BC  47F0 81D8                     000003D8   170          B     FAILTEST             Yes, exit with BAD PSW
+                                                   171
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   173 ***********************************************************************
+                                                   174 *        RPTERROR          Report instruction test in error
+                                                   175 *                             R0 = MESSGAE LENGTH
+                                                   176 *                             R1 = ADDRESS OF MESSAGE
+                                                   177 ***********************************************************************
+
+000002C0  50F0 80E0                     000002E0   179 RPTERROR ST    R15,RPTSAVE          Save return address
+000002C4  5050 80E4                     000002E4   180          ST    R5,RPTSVR5           Save R5
+                                                   181 *
+                                                   182 *        Use Hercules Diagnose for Message to console
+                                                   183 *
+000002C8  9002 80E8                     000002E8   184          STM   R0,R2,RPTDWSAV       save regs used by MSG
+000002CC  4520 80F8                     000002F8   185          BAL   R2,MSG               call Hercules console MSG display
+000002D0  9802 80E8                     000002E8   186          LM    R0,R2,RPTDWSAV       restore regs
+
+
+000002D4  5850 80E4                     000002E4   188          L     R5,RPTSVR5         Restore R5
+000002D8  58F0 80E0                     000002E0   189          L     R15,RPTSAVE        Restore return address
+000002DC  07FF                                     190          BR    R15                Return to caller
+
+000002E0  00000000                                 192 RPTSAVE  DC    F'0'               R15 save area
+000002E4  00000000                                 193 RPTSVR5  DC    F'0'               R5 save area
+
+000002E8  00000000 00000000                        195 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   197 ***********************************************************************
+                                                   198 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   199 *              R2 = return address
+                                                   200 ***********************************************************************
+                                                   201
+000002F8  4900 81EC                     000003EC   202 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000002FC  07D2                                     203          BNHR  R2                     No, ignore
+                                                   204
+000002FE  9002 8130                     00000330   205          STM   R0,R2,MSGSAVE          Save registers
+                                                   206
+00000302  4900 81EE                     000003EE   207          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+00000306  47D0 810E                     0000030E   208          BNH   MSGOK                  Yes, continue
+0000030A  4100 005F                     0000005F   209          LA    R0,L'MSGMSG            No, set to maximum
+                                                   210
+0000030E  1820                                     211 MSGOK    LR    R2,R0                  Copy length to work register
+00000310  0620                                     212          BCTR  R2,0                   Minus-1 for execute
+00000312  4420 813C                     0000033C   213          EX    R2,MSGMVC              Copy message to O/P buffer
+                                                   214
+00000316  4120 200A                     0000000A   215          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+0000031A  4110 8142                     00000342   216          LA    R1,MSGCMD              Point to true command
+                                                   217
+0000031E  83120008                                 218          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+00000322  4780 8128                     00000328   219          BZ    MSGRET                 Return if successful
+00000326  0000                                     220          DC    H'0'                   CRASH for debugging purposes
+                                                   221
+00000328  9802 8130                     00000330   222 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+0000032C  07F2                                     223          BR    R2                     Return to caller
+
+
+
+
+00000330  00000000 00000000                        225 MSGSAVE  DC    3F'0'                  Registers save area
+0000033C  D200 814B 1000      0000034B  00000000   226 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+00000342  D4E2C7D5 D6C8405C                        228 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+0000034B  40404040 40404040                        229 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   230
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   232 ***********************************************************************
+                                                   233 *        Normal completion or Abnormal termination PSWs
+                                                   234 ***********************************************************************
+
+
+
+
+000003B0  00020001 80000000                        236 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+000003C0  B2B2 81B0                     000003B0   238 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+000003C8  00020001 80000000                        240 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+000003D8  B2B2 81C8                     000003C8   242 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+                                                   244 ***********************************************************************
+                                                   245 *        Working Storage
+                                                   246 ***********************************************************************
+
+
+000003DC  00000000                                 248 CTLR0    DS    F                CR0
+000003E0  00000000                                 249          DS    F
+                                                   250
+000003E4  00001370                                 251 E6TADR   DC    A(E6TESTS)       address of E6 test table
+
+
+000003E8                                           253          LTORG ,                Literals pool
+000003E8  00000001                                 254                =F'1'
+000003EC  0000                                     255                =H'0'
+000003EE  005F                                     256                =AL2(L'MSGMSG)
+                                                   257
+                                                   258 *        some constants
+                                                   259
+                              00000400  00000001   260 K        EQU   1024             One KB
+                              00001000  00000001   261 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   262 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   263 MB       EQU   (K*K)             1 MB
+                                                   264
+                              AABBCCDD  00000001   265 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   266 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   268 *======================================================================
+                                                   269 *
+                                                   270 *  NOTE: start data on an address that is easy to display
+                                                   271 *        within Hercules
+                                                   272 *
+                                                   273 *======================================================================
+                                                   274
+000003F0                      000003F0  00001000   275          ORG   ZVE6TST+X'1000'
+00001000  00000000                                 276 FAILED   DC    F'0'                     some test failed?
+
+
+                                                   278 ***********************************************************************
+                                                   279 *        TEST failed : result messgae
+                                                   280 ***********************************************************************
+                                                   281 *
+                                                   282 *        failed message and associated editting
+                                                   283 *
+00001004  40404040 40404040                        284 PRTLINE  DC    C'         Test # '
+00001014  A7A7A7                                   285 PRTNUM   DC    C'xxx'
+00001017  40868189 93858440                        286          DC    C' failed for instruction '
+0000102F  A7A7A7A7 A7A7A7A7                        287 PRTNAME  DC    CL8'xxxxxxxx'
+00001037  40A689A3 884093F2                        288          DC    C' with l2='
+00001040  A7A7A7                                   289 PRTL2    DC    C'xxx'
+00001043  4B                                       290          DC    C'.'
+                              00000040  00000001   291 PRTLNG   EQU   *-PRTLINE
+                                                   292
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   294 ***********************************************************************
+                                                   295 *        TEST failed : message working storge
+                                                   296 ***********************************************************************
+00001044  40212020 20202020                        297 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   298
+00001056  7E7E7E6E                                 299          DC    C'===>'
+0000105A  40404040 40404040                        300 PRT3     DC    CL18' '
+0000106C  4C7E7E7E                                 301          DC    C'<==='
+00001070  00000000 00000000                        302 DECNUM   DS    CL16
+                                                   303 *
+                                                   304 *        CC extrtaction
+                                                   305 *
+00001080  00000000 00000000                        306 CCPSW    DS    2F          extract PSW after test (has CC)
+00001088  00                                       307 CCFOUND  DS    X           extracted cc
+
+
+                                                   309 ***********************************************************************
+                                                   310 *        Vector instruction results, pollution and input
+                                                   311 ***********************************************************************
+00001090                                           312          DS    0FD
+00001090  00000000 00000000                        313          DS    XL16                                          gap
+000010A0  00000000 00000000                        314 V1OUTPUT DS    XL16                                      V1 OUTPUT
+000010B0  00000000 00000000                        315          DS    XL16                                          gap
+000010C0  FFFFFFFF FFFFFFFF                        316 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
+000010D0  F1F2F3F4 F5F6F7F8                        317 V1INPUT  DC    CL16'1234567890123456'                    V1 input
+000010E0  F7F8F9F0 F1F2F3F4                        318          DC    CL14'78901234567890'
+000010EE  D9                                       319          DC    X'D9'
+                                                   320
+000010EF  00000000 00000000                        321          DS    XL16
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   323 ***********************************************************************
+                                                   324 *        E6TEST DSECT
+                                                   325 ***********************************************************************
+
+
+                                                   327 E6TEST   DSECT ,
+00000000  00000000                                 328 TSUB     DC    A(0)           pointer  to test
+00000004  0000                                     329 TNUM     DC    H'00'          Test Number
+00000006  00                                       330          DC    X'00'
+00000007  00                                       331          DC    X'00'
+00000008  00000000                                 332 L2       DC    F'00'          L2 used
+0000000C  00000000                                 333 EADDR    DC    A(0)           address of source
+                                                   334
+00000010  40404040 40404040                        335 OPNAME   DC    CL8' '         E6 name
+                                                   336
+00000018  00000000                                 337 RELEN    DC    A(0)           RESULT LENGTH
+0000001C  00000000                                 338 READDR   DC    A(0)           expected result address
+                                                   339
+                                                   340 **
+                                                   341 *        test routine will be here (from VRS_D macro)
+                                                   342 * followed by
+                                                   343 *        16-byte EXPECTED RESULT
+                                                   344 *        16-byte source
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   346 ***********************************************************************
+                                                   347 *     Macros to help build test tables
+                                                   348 *----------------------------------------------------------------------
+                                                   349 *     VRI_F Macro to help build test tables
+                                                   350 ***********************************************************************
+                                                   351          MACRO
+                                                   352          VRS_D &INST,&L2
+                                                   353 .*                               &INST  - VRS-d instruction under test
+                                                   354 .*                               &L2    - length (loaded into reg)
+                                                   355 .*
+                                                   356          LCLA  &XCC(4)  &CC has mask values for FAILED condition codes
+                                                   357 &XCC(1)  SETA  7                 CC != 0
+                                                   358 &XCC(2)  SETA  11                CC != 1
+                                                   359 &XCC(3)  SETA  13                CC != 2
+                                                   360 &XCC(4)  SETA  14                CC != 3
+                                                   361
+                                                   362          GBLA  &TNUM
+                                                   363 &TNUM    SETA  &TNUM+1
+                                                   364
+                                                   365          DS    0FD
+                                                   366          USING *,R5              base for test data and test routine
+                                                   367
+                                                   368 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   369          DC    H'&TNUM'          test number
+                                                   370          DC    X'00'
+                                                   371          DC    X'00'
+                                                   372          DC    F'&L2'            l2
+                                                   373 EA2_&TNUM DC    A(RE&TNUM+16)    addr of 16-byte source
+                                                   374          DC    CL8'&INST'        instruction name
+                                                   375          DC    A(16)             result length
+                                                   376 REA&TNUM DC    A(RE&TNUM)        result address
+                                                   377 .*
+                                                   378 *                                INSTRUCTION UNDER TEST ROUTINE
+                                                   379 X&TNUM   DS    0F
+                                                   380          l     R1,L2             get number of bytes to load
+                                                   381          L     R2,EADDR          get address of source
+                                                   382
+                                                   383          &INST V1,R1,0(R2)  test instruction
+                                                   384
+                                                   385          VST   V1,V1OUTPUT       save result
+                                                   386          BR    R11               return
+                                                   387
+                                                   388 RE&TNUM  DC    0F
+                                                   389          DROP  R5
+                                                   390
+                                                   391          MEND
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   393 ***********************************************************************
+                                                   394 *     PTTABLE Macro to generate table of pointers to individual tests
+                                                   395 ***********************************************************************
+                                                   396
+                                                   397          MACRO
+                                                   398          PTTABLE
+                                                   399          GBLA  &TNUM
+                                                   400          LCLA  &CUR
+                                                   401 &CUR     SETA  1
+                                                   402 .*
+                                                   403 TTABLE   DS    0F
+                                                   404 .LOOP    ANOP
+                                                   405 .*
+                                                   406          DC    A(T&CUR)          address of test
+                                                   407 .*
+                                                   408 &CUR     SETA  &CUR+1
+                                                   409          AIF   (&CUR LE &TNUM).LOOP
+                                                   410 *
+                                                   411          DC    A(0)              END OF TABLE
+                                                   412          DC    A(0)
+                                                   413 .*
+                                                   414          MEND
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   416 ***********************************************************************
+                                                   417 *        E6 VRS_D tests
+                                                   418 ***********************************************************************
+                              00000000  0000139B   419 ZVE6TST  CSECT ,
+00001100                                           420          DS    0F
+
+
+                                                   422          PRINT DATA
+                                                   423 *
+                                                   424 *        E637 VLRLR  - VECTOR LOAD RIGHTMOST WITH LENGTH (reg)
+                                                   425 *
+                                                   426 *        VRS_D instr,l2
+                                                   427 *              followed by
+                                                   428 *              v1     - 16 byte expected result
+                                                   429 *              source - 16 byte source from which to get
+                                                   430 *                        L2+1 (up to 16) bytes
+                                                   431
+                                                   432 *---------------------------------------------------------------------
+                                                   433 *VLRLR  - VECTOR LOAD RIGHTMOST WITH LENGTH (reg)
+                                                   434 *---------------------------------------------------------------------
+                                                   435 * VLRLR simple
+                                                   436
+                                                   437          VRS_D VLRLR,0                                  1-byte
+00001100                                           438+         DS    0FD
+00001100                      00001100             439+         USING *,R5              base for test data and test routine
+00001100  00001120                                 440+T1       DC    A(X1)             address of test routine
+00001104  0001                                     441+         DC    H'1'              test number
+00001106  00                                       442+         DC    X'00'
+00001107  00                                       443+         DC    X'00'
+00001108  00000000                                 444+         DC    F'0'              l2
+0000110C  00001148                                 445+EA2_1    DC    A(RE1+16)         addr of 16-byte source
+00001110  E5D3D9D3 D9404040                        446+         DC    CL8'VLRLR'        instruction name
+00001118  00000010                                 447+         DC    A(16)             result length
+0000111C  00001138                                 448+REA1     DC    A(RE1)            result address
+                                                   449+*                                INSTRUCTION UNDER TEST ROUTINE
+00001120                                           450+X1       DS    0F
+00001120  5810 5008                     00000008   451+         l     R1,L2             get number of bytes to load
+00001124  5820 500C                     0000000C   452+         L     R2,EADDR          get address of source
+00001128  E601 2000 1037                00000000   453+         VLRLR V1,R1,0(R2)  test instruction
+0000112E  E710 8EA0 000E                000010A0   454+         VST   V1,V1OUTPUT       save result
+00001134  07FB                                     455+         BR    R11               return
+00001138                                           456+RE1      DC    0F
+00001138                                           457+         DROP  R5
+00001138  00000000 00000000                        458          DC    XL16'00000000000000000000000000000022'    V1
+00001140  00000000 00000022
+00001148  22000000 00000000                        459          DC    XL16'2200000000000000000000000000023C'   source
+00001150  00000000 0000023C
+                                                   460
+                                                   461          VRS_D VLRLR,1
+00001158                                           462+         DS    0FD
+00001158                      00001158             463+         USING *,R5              base for test data and test routine
+00001158  00001178                                 464+T2       DC    A(X2)             address of test routine
+0000115C  0002                                     465+         DC    H'2'              test number
+0000115E  00                                       466+         DC    X'00'
+0000115F  00                                       467+         DC    X'00'
+00001160  00000001                                 468+         DC    F'1'              l2
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001164  000011A0                                 469+EA2_2    DC    A(RE2+16)         addr of 16-byte source
+00001168  E5D3D9D3 D9404040                        470+         DC    CL8'VLRLR'        instruction name
+00001170  00000010                                 471+         DC    A(16)             result length
+00001174  00001190                                 472+REA2     DC    A(RE2)            result address
+                                                   473+*                                INSTRUCTION UNDER TEST ROUTINE
+00001178                                           474+X2       DS    0F
+00001178  5810 5008                     00000008   475+         l     R1,L2             get number of bytes to load
+0000117C  5820 500C                     0000000C   476+         L     R2,EADDR          get address of source
+00001180  E601 2000 1037                00000000   477+         VLRLR V1,R1,0(R2)  test instruction
+00001186  E710 8EA0 000E                000010A0   478+         VST   V1,V1OUTPUT       save result
+0000118C  07FB                                     479+         BR    R11               return
+00001190                                           480+RE2      DC    0F
+00001190                                           481+         DROP  R5
+00001190  00000000 00000000                        482          DC    XL16'00000000000000000000000000002233'    V1
+00001198  00000000 00002233
+000011A0  22330000 00000000                        483          DC    XL16'2233000000000000000000000000023C'   source
+000011A8  00000000 0000023C
+                                                   484
+                                                   485          VRS_D VLRLR,5
+000011B0                                           486+         DS    0FD
+000011B0                      000011B0             487+         USING *,R5              base for test data and test routine
+000011B0  000011D0                                 488+T3       DC    A(X3)             address of test routine
+000011B4  0003                                     489+         DC    H'3'              test number
+000011B6  00                                       490+         DC    X'00'
+000011B7  00                                       491+         DC    X'00'
+000011B8  00000005                                 492+         DC    F'5'              l2
+000011BC  000011F8                                 493+EA2_3    DC    A(RE3+16)         addr of 16-byte source
+000011C0  E5D3D9D3 D9404040                        494+         DC    CL8'VLRLR'        instruction name
+000011C8  00000010                                 495+         DC    A(16)             result length
+000011CC  000011E8                                 496+REA3     DC    A(RE3)            result address
+                                                   497+*                                INSTRUCTION UNDER TEST ROUTINE
+000011D0                                           498+X3       DS    0F
+000011D0  5810 5008                     00000008   499+         l     R1,L2             get number of bytes to load
+000011D4  5820 500C                     0000000C   500+         L     R2,EADDR          get address of source
+000011D8  E601 2000 1037                00000000   501+         VLRLR V1,R1,0(R2)  test instruction
+000011DE  E710 8EA0 000E                000010A0   502+         VST   V1,V1OUTPUT       save result
+000011E4  07FB                                     503+         BR    R11               return
+000011E8                                           504+RE3      DC    0F
+000011E8                                           505+         DROP  R5
+000011E8  00000000 00000000                        506          DC    XL16'00000000000000000000223344556677'    V1
+000011F0  00002233 44556677
+000011F8  22334455 66778800                        507          DC    XL16'2233445566778800000000000000023C'   source
+00001200  00000000 0000023C
+                                                   508
+                                                   509          VRS_D VLRLR,14
+00001208                                           510+         DS    0FD
+00001208                      00001208             511+         USING *,R5              base for test data and test routine
+00001208  00001228                                 512+T4       DC    A(X4)             address of test routine
+0000120C  0004                                     513+         DC    H'4'              test number
+0000120E  00                                       514+         DC    X'00'
+0000120F  00                                       515+         DC    X'00'
+00001210  0000000E                                 516+         DC    F'14'             l2
+00001214  00001250                                 517+EA2_4    DC    A(RE4+16)         addr of 16-byte source
+00001218  E5D3D9D3 D9404040                        518+         DC    CL8'VLRLR'        instruction name
+00001220  00000010                                 519+         DC    A(16)             result length
+00001224  00001240                                 520+REA4     DC    A(RE4)            result address
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   521+*                                INSTRUCTION UNDER TEST ROUTINE
+00001228                                           522+X4       DS    0F
+00001228  5810 5008                     00000008   523+         l     R1,L2             get number of bytes to load
+0000122C  5820 500C                     0000000C   524+         L     R2,EADDR          get address of source
+00001230  E601 2000 1037                00000000   525+         VLRLR V1,R1,0(R2)  test instruction
+00001236  E710 8EA0 000E                000010A0   526+         VST   V1,V1OUTPUT       save result
+0000123C  07FB                                     527+         BR    R11               return
+00001240                                           528+RE4      DC    0F
+00001240                                           529+         DROP  R5
+00001240  00223344 55667788                        530          DC    XL16'00223344556677880000000000000002'    V1
+00001248  00000000 00000002
+00001250  22334455 66778800                        531          DC    XL16'2233445566778800000000000000023C'   source
+00001258  00000000 0000023C
+                                                   532
+                                                   533          VRS_D VLRLR,15
+00001260                                           534+         DS    0FD
+00001260                      00001260             535+         USING *,R5              base for test data and test routine
+00001260  00001280                                 536+T5       DC    A(X5)             address of test routine
+00001264  0005                                     537+         DC    H'5'              test number
+00001266  00                                       538+         DC    X'00'
+00001267  00                                       539+         DC    X'00'
+00001268  0000000F                                 540+         DC    F'15'             l2
+0000126C  000012A8                                 541+EA2_5    DC    A(RE5+16)         addr of 16-byte source
+00001270  E5D3D9D3 D9404040                        542+         DC    CL8'VLRLR'        instruction name
+00001278  00000010                                 543+         DC    A(16)             result length
+0000127C  00001298                                 544+REA5     DC    A(RE5)            result address
+                                                   545+*                                INSTRUCTION UNDER TEST ROUTINE
+00001280                                           546+X5       DS    0F
+00001280  5810 5008                     00000008   547+         l     R1,L2             get number of bytes to load
+00001284  5820 500C                     0000000C   548+         L     R2,EADDR          get address of source
+00001288  E601 2000 1037                00000000   549+         VLRLR V1,R1,0(R2)  test instruction
+0000128E  E710 8EA0 000E                000010A0   550+         VST   V1,V1OUTPUT       save result
+00001294  07FB                                     551+         BR    R11               return
+00001298                                           552+RE5      DC    0F
+00001298                                           553+         DROP  R5
+00001298  22334455 66778800                        554          DC    XL16'2233445566778800000000000000023C'    V1
+000012A0  00000000 0000023C
+000012A8  22334455 66778800                        555          DC    XL16'2233445566778800000000000000023C'   source
+000012B0  00000000 0000023C
+                                                   556
+                                                   557          VRS_D VLRLR,32                      check r3>15
+000012B8                                           558+         DS    0FD
+000012B8                      000012B8             559+         USING *,R5              base for test data and test routine
+000012B8  000012D8                                 560+T6       DC    A(X6)             address of test routine
+000012BC  0006                                     561+         DC    H'6'              test number
+000012BE  00                                       562+         DC    X'00'
+000012BF  00                                       563+         DC    X'00'
+000012C0  00000020                                 564+         DC    F'32'             l2
+000012C4  00001300                                 565+EA2_6    DC    A(RE6+16)         addr of 16-byte source
+000012C8  E5D3D9D3 D9404040                        566+         DC    CL8'VLRLR'        instruction name
+000012D0  00000010                                 567+         DC    A(16)             result length
+000012D4  000012F0                                 568+REA6     DC    A(RE6)            result address
+                                                   569+*                                INSTRUCTION UNDER TEST ROUTINE
+000012D8                                           570+X6       DS    0F
+000012D8  5810 5008                     00000008   571+         l     R1,L2             get number of bytes to load
+000012DC  5820 500C                     0000000C   572+         L     R2,EADDR          get address of source
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000012E0  E601 2000 1037                00000000   573+         VLRLR V1,R1,0(R2)  test instruction
+000012E6  E710 8EA0 000E                000010A0   574+         VST   V1,V1OUTPUT       save result
+000012EC  07FB                                     575+         BR    R11               return
+000012F0                                           576+RE6      DC    0F
+000012F0                                           577+         DROP  R5
+000012F0  22334455 66778800                        578          DC    XL16'2233445566778800000000000000023C'    V1
+000012F8  00000000 0000023C
+00001300  22334455 66778800                        579          DC    XL16'2233445566778800000000000000023C'   source
+00001308  00000000 0000023C
+                                                   580
+                                                   581          VRS_D VLRLR,999                     check r3>15
+00001310                                           582+         DS    0FD
+00001310                      00001310             583+         USING *,R5              base for test data and test routine
+00001310  00001330                                 584+T7       DC    A(X7)             address of test routine
+00001314  0007                                     585+         DC    H'7'              test number
+00001316  00                                       586+         DC    X'00'
+00001317  00                                       587+         DC    X'00'
+00001318  000003E7                                 588+         DC    F'999'            l2
+0000131C  00001358                                 589+EA2_7    DC    A(RE7+16)         addr of 16-byte source
+00001320  E5D3D9D3 D9404040                        590+         DC    CL8'VLRLR'        instruction name
+00001328  00000010                                 591+         DC    A(16)             result length
+0000132C  00001348                                 592+REA7     DC    A(RE7)            result address
+                                                   593+*                                INSTRUCTION UNDER TEST ROUTINE
+00001330                                           594+X7       DS    0F
+00001330  5810 5008                     00000008   595+         l     R1,L2             get number of bytes to load
+00001334  5820 500C                     0000000C   596+         L     R2,EADDR          get address of source
+00001338  E601 2000 1037                00000000   597+         VLRLR V1,R1,0(R2)  test instruction
+0000133E  E710 8EA0 000E                000010A0   598+         VST   V1,V1OUTPUT       save result
+00001344  07FB                                     599+         BR    R11               return
+00001348                                           600+RE7      DC    0F
+00001348                                           601+         DROP  R5
+00001348  99334455 66778800                        602          DC    XL16'9933445566778800000000000009023C'    V1
+00001350  00000000 0009023C
+00001358  99334455 66778800                        603          DC    XL16'9933445566778800000000000009023C'   source
+00001360  00000000 0009023C
+                                                   604
+00001368  00000000                                 605          DC    F'0'     END OF TABLE
+0000136C  00000000                                 606          DC    F'0'
+                                                   607 *
+                                                   608 * table of pointers to individual load test
+                                                   609 *
+00001370                                           610 E6TESTS  DS    0F
+                                                   611          PTTABLE
+00001370                                           612+TTABLE   DS    0F
+00001370  00001100                                 613+         DC    A(T1)             address of test
+00001374  00001158                                 614+         DC    A(T2)             address of test
+00001378  000011B0                                 615+         DC    A(T3)             address of test
+0000137C  00001208                                 616+         DC    A(T4)             address of test
+00001380  00001260                                 617+         DC    A(T5)             address of test
+00001384  000012B8                                 618+         DC    A(T6)             address of test
+00001388  00001310                                 619+         DC    A(T7)             address of test
+                                                   620+*
+0000138C  00000000                                 621+         DC    A(0)              END OF TABLE
+00001390  00000000                                 622+         DC    A(0)
+                                                   623
+00001394  00000000                                 624          DC    F'0'     END OF TABLE
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001398  00000000                                 625          DC    F'0'
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   627 ***********************************************************************
+                                                   628 *        Register equates
+                                                   629 ***********************************************************************
+
+
+                              00000000  00000001   631 R0       EQU   0
+                              00000001  00000001   632 R1       EQU   1
+                              00000002  00000001   633 R2       EQU   2
+                              00000003  00000001   634 R3       EQU   3
+                              00000004  00000001   635 R4       EQU   4
+                              00000005  00000001   636 R5       EQU   5
+                              00000006  00000001   637 R6       EQU   6
+                              00000007  00000001   638 R7       EQU   7
+                              00000008  00000001   639 R8       EQU   8
+                              00000009  00000001   640 R9       EQU   9
+                              0000000A  00000001   641 R10      EQU   10
+                              0000000B  00000001   642 R11      EQU   11
+                              0000000C  00000001   643 R12      EQU   12
+                              0000000D  00000001   644 R13      EQU   13
+                              0000000E  00000001   645 R14      EQU   14
+                              0000000F  00000001   646 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                   648 ***********************************************************************
+                                                   649 *        Register equates
+                                                   650 ***********************************************************************
+
+
+                              00000000  00000001   652 V0       EQU   0
+                              00000001  00000001   653 V1       EQU   1
+                              00000002  00000001   654 V2       EQU   2
+                              00000003  00000001   655 V3       EQU   3
+                              00000004  00000001   656 V4       EQU   4
+                              00000005  00000001   657 V5       EQU   5
+                              00000006  00000001   658 V6       EQU   6
+                              00000007  00000001   659 V7       EQU   7
+                              00000008  00000001   660 V8       EQU   8
+                              00000009  00000001   661 V9       EQU   9
+                              0000000A  00000001   662 V10      EQU   10
+                              0000000B  00000001   663 V11      EQU   11
+                              0000000C  00000001   664 V12      EQU   12
+                              0000000D  00000001   665 V13      EQU   13
+                              0000000E  00000001   666 V14      EQU   14
+                              0000000F  00000001   667 V15      EQU   15
+                              00000010  00000001   668 V16      EQU   16
+                              00000011  00000001   669 V17      EQU   17
+                              00000012  00000001   670 V18      EQU   18
+                              00000013  00000001   671 V19      EQU   19
+                              00000014  00000001   672 V20      EQU   20
+                              00000015  00000001   673 V21      EQU   21
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001   674 V22      EQU   22
+                              00000017  00000001   675 V23      EQU   23
+                              00000018  00000001   676 V24      EQU   24
+                              00000019  00000001   677 V25      EQU   25
+                              0000001A  00000001   678 V26      EQU   26
+                              0000001B  00000001   679 V27      EQU   27
+                              0000001C  00000001   680 V28      EQU   28
+                              0000001D  00000001   681 V29      EQU   29
+                              0000001E  00000001   682 V30      EQU   30
+                              0000001F  00000001   683 V31      EQU   31
+                                                   684
+                                                   685          END
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    21
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2    89   55   86   87
+CCFOUND             X    00001088           1   307
+CCPSW               F    00001080           4   306
+CTLR0               F    000003DC           4   248   99  100  101  102
+DECNUM              C    00001070          16   302  135  137  144  146
+E6TADR              A    000003E4           4   251  108
+E6TEST              4    00000000          32   327  115
+E6TESTS             F    00001370           4   610  251
+EA2_1               A    0000110C           4   445
+EA2_2               A    00001164           4   469
+EA2_3               A    000011BC           4   493
+EA2_4               A    00001214           4   517
+EA2_5               A    0000126C           4   541
+EA2_6               A    000012C4           4   565
+EA2_7               A    0000131C           4   589
+EADDR               A    0000000C           4   333  452  476  500  524  548  572  596
+EDIT                X    00001044          18   297  136  145
+ENDTEST             U    000002B2           1   166  113
+EOJ                 I    000003C0           4   238  169
+EOJPSW              D    000003B0           8   236  238
+FAILCONT            U    000002A2           1   156
+FAILED              F    00001000           4   276  158  167
+FAILMSG             U    00000258           1   133  123
+FAILPSW             D    000003C8           8   240  242
+FAILTEST            I    000003D8           4   242  170
+IMAGE               1    00000000        5020     0
+K                   U    00000400           1   260  261  262  263
+K64                 U    00010000           1   262
+L2                  F    00000008           4   332  143  451  475  499  523  547  571  595
+MB                  U    00100000           1   263
+MSG                 I    000002F8           4   202  185
+MSGCMD              C    00000342           9   228  215  216
+MSGMSG              C    0000034B          95   229  209  226  207
+MSGMVC              I    0000033C           6   226  213
+MSGOK               I    0000030E           2   211  208
+MSGRET              I    00000328           4   222  219
+MSGSAVE             F    00000330           4   225  205  222
+NEXTE6              U    0000022A           1   110  126  161
+OPNAME              C    00000010           8   335  140
+PAGE                U    00001000           1   261
+PRT3                C    0000105A          18   300  136  137  138  145  146  147
+PRTL2               C    00001040           3   289  147
+PRTLINE             C    00001004          16   284  291  150
+PRTLNG              U    00000040           1   291  149
+PRTNAME             C    0000102F           8   287  140
+PRTNUM              C    00001014           3   285  138
+R0                  U    00000000           1   631   49   99  102  149  157  158  184  186  202  205  207  209  211  222
+R1                  U    00000001           1   632  121  122  150  167  168  216  226  451  453  475  477  499  501  523  525
+                                                     547  549  571  573  595  597
+R10                 U    0000000A           1   641   96   97
+R11                 U    0000000B           1   642  117  118  455  479  503  527  551  575  599
+R12                 U    0000000C           1   643  108  111  125  160
+R13                 U    0000000D           1   644
+R14                 U    0000000E           1   645
+R15                 U    0000000F           1   646  151  179  189  190
+R2                  U    00000002           1   633  134  135  142  143  144  184  185  186  203  205  211  212  213  215  222
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    22
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                     223  452  453  476  477  500  501  524  525  548  549  572  573  596  597
+R3                  U    00000003           1   634
+R4                  U    00000004           1   635
+R5                  U    00000005           1   636  111  112  115  180  188  439  457  463  481  487  505  511  529  535  553
+                                                     559  577  583  601
+R6                  U    00000006           1   637
+R7                  U    00000007           1   638
+R8                  U    00000008           1   639   86   89   90   91   93
+R9                  U    00000009           1   640   87   93   94   96
+RE1                 F    00001138           4   456  445  448
+RE2                 F    00001190           4   480  469  472
+RE3                 F    000011E8           4   504  493  496
+RE4                 F    00001240           4   528  517  520
+RE5                 F    00001298           4   552  541  544
+RE6                 F    000012F0           4   576  565  568
+RE7                 F    00001348           4   600  589  592
+REA1                A    0000111C           4   448
+REA2                A    00001174           4   472
+REA3                A    000011CC           4   496
+REA4                A    00001224           4   520
+REA5                A    0000127C           4   544
+REA6                A    000012D4           4   568
+REA7                A    0000132C           4   592
+READDR              A    0000001C           4   338  121
+REG2LOW             U    000000DD           1   266
+REG2PATT            U    AABBCCDD           1   265
+RELEN               A    00000018           4   337
+RPTDWSAV            D    000002E8           8   195  184  186
+RPTERROR            I    000002C0           4   179  151
+RPTSAVE             F    000002E0           4   192  179  189
+RPTSVR5             F    000002E4           4   193  180  188
+SVOLDPSW            U    00000140           0    51
+T1                  A    00001100           4   440  613
+T2                  A    00001158           4   464  614
+T3                  A    000011B0           4   488  615
+T4                  A    00001208           4   512  616
+T5                  A    00001260           4   536  617
+T6                  A    000012B8           4   560  618
+T7                  A    00001310           4   584  619
+TESTREST            U    00000240           1   120
+TNUM                H    00000004           2   329  134
+TSUB                A    00000000           4   328  117
+TTABLE              F    00001370           4   612
+V0                  U    00000000           1   652
+V1                  U    00000001           1   653  116  453  454  477  478  501  502  525  526  549  550  573  574  597  598
+V10                 U    0000000A           1   662
+V11                 U    0000000B           1   663
+V12                 U    0000000C           1   664
+V13                 U    0000000D           1   665
+V14                 U    0000000E           1   666
+V15                 U    0000000F           1   667
+V16                 U    00000010           1   668
+V17                 U    00000011           1   669
+V18                 U    00000012           1   670
+V19                 U    00000013           1   671
+V1FUDGE             X    000010C0          16   316  116
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    23
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V1INPUT             C    000010D0          16   317
+V1OUTPUT            X    000010A0          16   314  122  454  478  502  526  550  574  598
+V2                  U    00000002           1   654
+V20                 U    00000014           1   672
+V21                 U    00000015           1   673
+V22                 U    00000016           1   674
+V23                 U    00000017           1   675
+V24                 U    00000018           1   676
+V25                 U    00000019           1   677
+V26                 U    0000001A           1   678
+V27                 U    0000001B           1   679
+V28                 U    0000001C           1   680
+V29                 U    0000001D           1   681
+V3                  U    00000003           1   655
+V30                 U    0000001E           1   682
+V31                 U    0000001F           1   683
+V4                  U    00000004           1   656
+V5                  U    00000005           1   657
+V6                  U    00000006           1   658
+V7                  U    00000007           1   659
+V8                  U    00000008           1   660
+V9                  U    00000009           1   661
+X1                  F    00001120           4   450  440
+X2                  F    00001178           4   474  464
+X3                  F    000011D0           4   498  488
+X4                  F    00001228           4   522  512
+X5                  F    00001280           4   546  536
+X6                  F    000012D8           4   570  560
+X7                  F    00001330           4   594  584
+ZVE6TST             J    00000000        5020    48   51   53   57   61  275   49
+=AL2(L'MSGMSG)      R    000003EE           2   256  207
+=F'1'               F    000003E8           4   254  157
+=H'0'               H    000003EC           2   255  202
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    24
+
+ MACRO   DEFN  REFERENCES
+
+PTTABLE   398   611
+VRS_D     352   437   461   485   509   533   557   581
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    25
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    5020  0000-139B  0000-139B
+  Region            5020  0000-139B  0000-139B
+    CSECT  ZVE6TST  5020  0000-139B  0000-139B
+ASMA Ver. 0.7.0   zvector-e6-08-VLRLR (Zvector E6 VRS-d)                                            02 Jun 2024 15:59:40  Page    26
+
+   STMT                  FILE NAME
+
+1     /devstor/dev/tests/zvector-e6-08-VLRLR.asm
+
+
+** NO ERRORS FOUND **
+
+
