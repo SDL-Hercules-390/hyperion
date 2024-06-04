@@ -814,7 +814,7 @@
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
     <ClCompile Include="zvector.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="zvector2.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
