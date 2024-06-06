@@ -660,7 +660,9 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
     /* Set number of sense bytes according to controller specification */
     dev->numsense = dev->ckdcu->senselength;
 
-    /* Set flag bit if 3990 controller */
+    /* Set flag bit if 3880/3990 controller */
+    if (dev->ckdcu->devt == 0x3880)
+        dev->ckd3880 = 1;
     if (dev->ckdcu->devt == 0x3990)
         dev->ckd3990 = 1;
 
@@ -2276,6 +2278,37 @@ int             rc;                     /* Return code               */
     return 0;
 } /* end function ckd_write_data */
 
+
+/*-------------------------------------------------------------------*/
+/* ckd chaining requirement check: returns 0 = okay, -1 = error      */
+/*-------------------------------------------------------------------*/
+int ckd_chaining_check( DEVBLK* dev, BYTE* unitstat)
+{
+    /* For 3990, command reject if not preceded by Seek, Seek Cyl,
+       Locate Record, Read IPL, or Recalibrate command. The same
+       requirement is in place for 3880 with FC 3005. The 2105 and
+       later machines however, are not (yet?) considered.
+    */
+    if (1
+        && (0
+            || dev->ckd3880
+            || dev->ckd3990
+           )
+        && !dev->ckdseek
+        && !dev->ckdskcyl
+        && !dev->ckdlocat
+        && !dev->ckdrdipl
+        && !dev->ckdrecal
+    )
+    {
+        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_2, MESSAGE_2 );
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+    return 0;
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Forward references to static helper functions                     */
 /*-------------------------------------------------------------------*/
@@ -2321,6 +2354,7 @@ static bool DefineExtent
     BYTE*    unitstat,
     U32*     residual
 );
+
 
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
@@ -2453,7 +2487,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         && code != 0xDE // READ TRACK
     )
     {
-        ckd_build_sense( dev, SENSE_CR, 0, 0,FORMAT_0, MESSAGE_2 );
+        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return;
     }
@@ -2562,21 +2596,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* READ DATA                                                     */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (1
-            &&  dev->ckd3990
-            && !dev->ckdseek
-            && !dev->ckdskcyl
-            && !dev->ckdlocat
-            && !dev->ckdrdipl
-            && !dev->ckdrecal
-        )
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -2677,17 +2700,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* READ KEY AND DATA                                             */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -2783,17 +2799,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* READ COUNT                                                    */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -2853,17 +2862,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* READ RECORD ZERO                                              */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -2984,20 +2986,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
 
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command. The same
-           requirement is in place for 3880 with FC 3005. The 2105 and
-           later machines however, are not (yet?) considered.
-        */
-        if ((dev->ckd3990 || dev->ckdcu->devt == 0x3880)
-            && dev->ckdseek  == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -3091,17 +3082,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* READ HOME ADDRESS                                             */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -3164,17 +3148,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            so the IBM HA and Hercules 'track header' have identical
            contents.
         */
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek  == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -3227,17 +3204,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* READ COUNT KEY AND DATA                                       */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Check operation code if within domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -3333,17 +3303,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* READ MULTIPLE COUNT KEY AND DATA                              */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -3851,17 +3814,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
 
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Set residual count */
         num = (count < 1) ? count : 1;
@@ -3885,17 +3840,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* SEARCH KEY                                                    */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -3968,17 +3916,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* SEARCH ID                                                     */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -4027,17 +3968,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* SEARCH HOME ADDRESS EQUAL                                     */
     /*---------------------------------------------------------------*/
-        /* For 3990, command reject if not preceded by Seek, Seek Cyl,
-           Locate Record, Read IPL, or Recalibrate command */
-        if (dev->ckd3990
-            && dev->ckdseek == 0 && dev->ckdskcyl == 0
-            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
-            && dev->ckdrecal == 0)
-        {
-            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        /* Check for invalid command sequence */
+        if (ckd_chaining_check( dev, unitstat ))
             break;
-        }
 
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)

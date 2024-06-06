@@ -484,7 +484,9 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
     /* Set number of sense bytes according to controller specification */
     dev->numsense = dev->ckdcu->senselength;
 
-    /* Set flag bit if 3990 controller */
+    /* Set flag bit if 3880/3990 controller */
+    if (dev->ckdcu->devt == 0x3880)
+        dev->ckd3880 = 1;
     if (dev->ckdcu->devt == 0x3990)
         dev->ckd3990 = 1;
 

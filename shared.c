@@ -334,7 +334,9 @@ init_retry:
         return -1;
     }
 
-    /* Set flag bit if 3990 controller */
+    /* Set flag bit if 3880/3990 controller */
+    if (dev->ckdcu->devt == 0x3880)
+        dev->ckd3880 = 1;
     if (dev->ckdcu->devt == 0x3990)
         dev->ckd3990 = 1;
 

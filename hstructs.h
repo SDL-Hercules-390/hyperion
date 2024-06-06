@@ -1905,6 +1905,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    devcache:1;             /* 0 = device cache off
                                            1 = device cache on       */
         u_int   ckd3990:1;              /* 1=Control unit is 3990    */
+        u_int   ckd3880:1;              /* 1=Control unit is 3880    */
         u_int   ckdxtdef:1;             /* 1=Define Extent processed */
         u_int   ckdsetfm:1;             /* 1=Set File Mask processed */
         u_int   ckdlocat:1;             /* 1=Locate Record processed */
