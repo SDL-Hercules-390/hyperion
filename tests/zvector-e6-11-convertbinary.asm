@@ -118,6 +118,9 @@ NEXTE6   EQU   *
 
          USING E6TEST,R5
 
+         LH    R0,TNUM           save current test number
+         ST    R0,TESTING        for easy reference
+
          L     R11,TSUB          get address of test routine
          BALR  R11,R11           do test
 
@@ -274,6 +277,10 @@ MSGOK    LR    R2,R0                  Copy length to work register
 
          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
          BZ    MSGRET                 Return if successful
+
+         LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+         BZ    MSGRET                   an error occurred but coninue
+
          DC    H'0'                   CRASH for debugging purposes
 
 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
@@ -329,6 +336,7 @@ REG2LOW  EQU         X'DD'    (last byte above)
 
          ORG   ZVE6TST+X'1000'
 FAILED   DC    F'0'                     some test failed?
+TESTING  DC    F'0'                     current test number
                                                                SPACE 2
 ***********************************************************************
 *        TEST failed : result messgae
