@@ -1776,9 +1776,9 @@ DEF_INST( vector_convert_to_binary_64 )
     else
     {
         if ( (p2) ? true : VR_HAS_PLUS_SIGN( v2 ) )
-            overflow = ( result.Q.D.H.D != 0) ;
+            overflow = ( result.Q.D.H.D != 0 )        || ( (result.Q.D.L.D & 0x8000000000000000ULL) != 0 );
         else
-            overflow = ( result.Q.D.H.D != (U64) -1);
+            overflow = ( result.Q.D.H.D != (U64) -1 ) || ( (result.Q.D.L.D & 0x8000000000000000ULL) == 0 );
     }
 
     /* CC and 32 bit results */
