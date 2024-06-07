@@ -699,7 +699,7 @@ ZVE6TST  CSECT ,
          DC    XL08'7FFFFFFFFFFFFFFF'                   R1 result
          DC    XL16'0000000000009223372036854775807C'   V1 source
 
-         VRR_I VCVBG,9,0                                LONG_MIN
+         VRR_I VCVBG,9,3                                LONG_MIN
          DC    XL08'8000000000000000'                   R1 result
          DC    XL16'0000000000009223372036854775808D'   V1 source
 

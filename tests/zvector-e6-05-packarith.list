@@ -1,4 +1,4 @@
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     1
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -58,7 +58,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                     55 *
                                                     56 *  diag8cmd    enable    # (needed for messages to Hercules console)
                                                     57 *  runtest     2
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     2
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -87,7 +87,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 
 000001E0                      000001E0  00000200    76          ORG   ZVE6TST+X'200'        Start of actual test program...
                                                     77
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     3
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -130,7 +130,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000021A  9604 82AD                     000004AD   115          OI    CTLR0+1,X'04'    Turn on AFP bit
 0000021E  9602 82AD                     000004AD   116          OI    CTLR0+1,X'02'    Turn on Vector bit
 00000222  B700 82AC                     000004AC   117          LCTL  R0,R0,CTLR0      Reload updated CR0
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     4
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -169,7 +169,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000026E  47F0 802A                     0000022A   151          B     NEXTE6
                                                    152
 00000272  4700 8076                     00000276   153 TESTCC   BC    0,CCMSG          (fail if unexpected condition code)
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     5
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -218,7 +218,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000002FE  45F0 818C                     0000038C   197          BAL   R15,RPTERROR
                                                    198
 00000302  47F0 816E                     0000036E   199          B     FAILCONT
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     6
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -275,7 +275,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00000384  4780 8290                     00000490   249          BZ    EOJ                  No, exit
 00000388  47F0 82A8                     000004A8   250          B     FAILTEST             Yes, exit with BAD PSW
                                                    251
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     7
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -303,7 +303,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000003B0  00000000                                 273 RPTSVR5  DC    F'0'               R5 save area
 
 000003B8  00000000 00000000                        275 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     8
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -349,7 +349,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00000416  D4E2C7D5 D6C8405C                        312 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
 0000041F  40404040 40404040                        313 MSGMSG   DC    CL95' '                The message text to be displayed
                                                    314
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page     9
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page     9
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -400,7 +400,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                    349
                               AABBCCDD  00000001   350 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
                               000000DD  00000001   351 REG2LOW  EQU         X'DD'    (last byte above)
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    10
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    10
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -452,7 +452,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000010A7  A7                                       396 CCPRTGOT DC    C'x'
 000010A8  4B                                       397          DC    C'.'
                               00000055  00000001   398 CCPRTLNG   EQU   *-CCPRTLINE
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    11
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    11
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -486,7 +486,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001157  00000000 00000000                        426 V2PACKED DS    XL16                    packed version of macro v2
 00001167  00000000 00000000                        427 V3PACKED DS    XL16                    packed version of macro v3
 00001177  00000000 00000000                        428          DS    XL16
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    12
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    12
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -515,7 +515,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                    451 *        EXPECTED RESULT
                                                    452 **
                                                    453 *        test routine will be here (from VRI_F macro)
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    13
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    13
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -575,7 +575,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                    508          ST    R2,CCPSW              to save CC
                                                    509          BR    R11               return
                                                    510
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    14
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    14
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -583,7 +583,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                    512
                                                    513          DROP  R5
                                                    514          MEND
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    15
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    15
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -609,7 +609,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                    535          DC    A(0)
                                                    536 .*
                                                    537          MEND
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    16
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    16
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -669,7 +669,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000011F4                                           591+         DROP  R5
 000011F4  00000000 00000000                        592          DC    XL16'0000000000000000000000000000022C'
 000011FC  00000000 0000022C
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    17
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    17
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -729,7 +729,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000012C4  E720 8F57 0006                00001157   645+         VL    V2,V2PACKED
 000012CA  E320 5018 0004                000012A0   646+         LG    R2,V3_3           convert v3
 000012D0  E320 8F67 002E                00001167   647+         CVDG  R2,V3PACKED
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    18
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    18
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -789,7 +789,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001392  07                                       699+         DC    HL1'7'            cc failed mask
 00001398  FFFFFFFF FFFFFFF6                        700+V2_5     DC    FD'-10'           binary value for v2 packed decimal
 000013A0  00000000 0000000A                        701+V3_5     DC    FD'+10'           binary value for v3 packed decimal
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    19
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    19
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -849,7 +849,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                    753
                                                    754 * VAP larger #'s , i4=159(iom=1 & rdc=31)
                                                    755          VRI_F VAP,+99999999999999999,+1,159,1,2
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    20
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    20
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -909,7 +909,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000153E  E320 8F57 002E                00001157   805+         CVDG  R2,V2PACKED
 00001544  E720 8F57 0006                00001157   806+         VL    V2,V2PACKED
 0000154A  E320 5018 0004                00001520   807+         LG    R2,V3_8           convert v3
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    21
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    21
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -969,7 +969,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000160E  00                                       858+         DC    X'00'
 0000160F  9F                                       859+         DC    HL1'159'          i4
 00001610  09                                       860+         DC    HL1'9'            m5
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    22
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    22
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1029,7 +1029,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000016E8  B98D 0020                                910+         EPSW  R2,R0             exptract psw
 000016EC  5020 8EE8                     000010E8   911+         ST    R2,CCPSW              to save CC
 000016F0  07FB                                     912+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    23
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    23
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1089,7 +1089,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001798  00000000 0000000A                        963+V2_13    DC    FD'+10'           binary value for v2 packed decimal
 000017A0  00000000 0000000C                        964+V3_13    DC    FD'+12'           binary value for v3 packed decimal
 000017A8  E5E2D740 40404040                        965+         DC    CL8'VSP'          instruction name
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    24
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    24
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1149,7 +1149,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   1017          VRI_F VSP,+10,-12,1,1,3
 00001888                                          1018+         DS    0FD
 00001888                      00001888            1019+         USING *,R5              base for test data and test routine
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    25
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    25
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1209,7 +1209,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000195C  E612 3010 7073                          1072+         VSP   V1,V2,V3,7,1      test instruction
 00001962  E710 8F08 000E                00001108  1073+         VST   V1,V1OUTPUT       save result
 00001968  B98D 0020                               1074+         EPSW  R2,R0             exptract psw
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    26
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    26
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1269,7 +1269,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001A30  00000010                                1126+         DC    A(16)             result length
 00001A34  00001A74                                1127+REA18    DC    A(RE18)           result address
                                                   1128+*                                INSTRUCTION UNDER TEST ROUTINE
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    27
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    27
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1329,7 +1329,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001B08                      00001B08            1180+         USING *,R5              base for test data and test routine
 00001B08  00001B38                                1181+T20      DC    A(X20)            address of test routine
 00001B0C  0014                                    1182+         DC    H'20'             test number
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    28
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    28
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1389,7 +1389,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001BD6  E730 8F67 0006                00001167  1232+         VL    V3,V3PACKED
 00001BDC  E612 3019 F073                          1233+         VSP   V1,V2,V3,159,1    test instruction
 00001BE2  E710 8F08 000E                00001108  1234+         VST   V1,V1OUTPUT       save result
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    29
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    29
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1449,7 +1449,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001C98  FFDC790D 903F0001                           +                                 binary value for v2 packed decimal
 00001CA0  FFFFFFFF FFFFFFFF                       1285+V3_23    DC    FD'-1'            binary value for v3 packed decimal
 00001CA8  E5E2D740 40404040                       1286+         DC    CL8'VSP'          instruction name
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    30
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    30
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1509,7 +1509,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001D74  00000000 00000099                       1338          DC    XL16'0000000000000099999999999999998C'
 00001D7C  99999999 9999998C
                                                   1339
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    31
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    31
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1569,7 +1569,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001E38  E320 5010 0004                00001E18  1389+         LG    R2,V2_26          convert v2
 00001E3E  E320 8F57 002E                00001157  1390+         CVDG  R2,V2PACKED
 00001E44  E720 8F57 0006                00001157  1391+         VL    V2,V2PACKED
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    32
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    32
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1629,7 +1629,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001F08                      00001F08            1442+         USING *,R5              base for test data and test routine
 00001F08  00001F38                                1443+T28      DC    A(X28)            address of test routine
 00001F0C  001C                                    1444+         DC    H'28'             test number
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    33
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    33
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1689,7 +1689,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00001FE8  B98D 0020                               1497+         EPSW  R2,R0             exptract psw
 00001FEC  5020 8EE8                     000010E8  1498+         ST    R2,CCPSW              to save CC
 00001FF0  07FB                                    1499+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    34
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    34
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1728,8 +1728,8 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002070  07FB                                    1531+         BR    R11               return
 00002074                                          1532+RE30     DC    0F
 00002074                                          1533+         DROP  R5
-00002074  00000000 00000000                       1534          DC    XL16'0000000000000000000000000000000D'
-0000207C  00000000 0000000D
+00002074  00000000 00000000                       1534          DC    XL16'0000000000000000000000000000000C'
+0000207C  00000000 0000000C
                                                   1535
                                                   1536          VRI_F VMP,+10,-12,7,1,1
 00002088                                          1537+         DS    0FD
@@ -1749,7 +1749,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   1551+*                                INSTRUCTION UNDER TEST ROUTINE
 000020B8                                          1552+X31      DS    0F
 000020B8  E320 5010 0004                00002098  1553+         LG    R2,V2_31          convert v2
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    35
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    35
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1809,7 +1809,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000218E  00                                      1605+         DC    X'00'
 0000218F  07                                      1606+         DC    HL1'7'            i4
 00002190  01                                      1607+         DC    HL1'1'            m5
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    36
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    36
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1869,7 +1869,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002274                                          1660+RE34     DC    0F
 00002274                                          1661+         DROP  R5
 00002274  00000000 00000000                       1662          DC    XL16'0000000000000000000000000000100C'  note RDC
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    37
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    37
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1929,7 +1929,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002334  00002374                                1711+REA36    DC    A(RE36)           result address
                                                   1712+*                                INSTRUCTION UNDER TEST ROUTINE
 00002338                                          1713+X36      DS    0F
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    38
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    38
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1989,7 +1989,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002408  00002438                                1764+T38      DC    A(X38)            address of test routine
 0000240C  0026                                    1765+         DC    H'38'             test number
 0000240E  00                                      1766+         DC    X'00'
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    39
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    39
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2049,7 +2049,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000024DC  E612 3019 F078                          1816+         VMP   V1,V2,V3,159,1    test instruction
 000024E2  E710 8F08 000E                00001108  1817+         VST   V1,V1OUTPUT       save result
 000024E8  B98D 0020                               1818+         EPSW  R2,R0             exptract psw
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    40
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    40
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2109,7 +2109,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002592  0E                                      1869+         DC    HL1'14'           cc failed mask
                                                   1870+V2_41    DC    FD'-99999999999999999' \
 00002598  FE9CBA87 A2760001                           +                                 binary value for v2 packed decimal
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    41
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    41
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2169,7 +2169,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002674                                          1921+         DROP  R5
 00002674  00000000 00000009                       1922          DC    XL16'0000000000000009999999999999999F'
 0000267C  99999999 9999999F
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    42
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    42
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2229,7 +2229,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   1972+*                                INSTRUCTION UNDER TEST ROUTINE
 00002738                                          1973+X44      DS    0F
 00002738  E320 5010 0004                00002718  1974+         LG    R2,V2_44          convert v2
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    43
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    43
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2289,7 +2289,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002808                                          2026+         DS    0FD
 00002808                      00002808            2027+         USING *,R5              base for test data and test routine
 00002808  00002838                                2028+T46      DC    A(X46)            address of test routine
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    44
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    44
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2349,7 +2349,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000028E2  E710 8F08 000E                00001108  2081+         VST   V1,V1OUTPUT       save result
 000028E8  B98D 0020                               2082+         EPSW  R2,R0             exptract psw
 000028EC  5020 8EE8                     000010E8  2083+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    45
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    45
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2409,7 +2409,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000029B4  000029F4                                2135+REA49    DC    A(RE49)           result address
                                                   2136+*                                INSTRUCTION UNDER TEST ROUTINE
 000029B8                                          2137+X49      DS    0F
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    46
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    46
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2469,7 +2469,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002A8C  0033                                    2189+         DC    H'51'             test number
 00002A8E  00                                      2190+         DC    X'00'
 00002A8F  87                                      2191+         DC    HL1'135'          i4
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    47
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    47
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2529,7 +2529,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002B68  B98D 0020                               2243+         EPSW  R2,R0             exptract psw
 00002B6C  5020 8EE8                     000010E8  2244+         ST    R2,CCPSW              to save CC
 00002B70  07FB                                    2245+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    48
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    48
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2589,7 +2589,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002C30  00000010                                2295+         DC    A(16)             result length
 00002C34  00002C74                                2296+REA54    DC    A(RE54)           result address
                                                   2297+*                                INSTRUCTION UNDER TEST ROUTINE
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    49
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    49
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2649,7 +2649,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002D08                      00002D08            2348+         USING *,R5              base for test data and test routine
 00002D08  00002D38                                2349+T56      DC    A(X56)            address of test routine
 00002D0C  0038                                    2350+         DC    H'56'             test number
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    50
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    50
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2709,7 +2709,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002DDC  E612 3019 F07A                          2401+         VDP   V1,V2,V3,159,1    test instruction
 00002DE2  E710 8F08 000E                00001108  2402+         VST   V1,V1OUTPUT       save result
 00002DE8  B98D 0020                               2403+         EPSW  R2,R0             exptract psw
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    51
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    51
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2769,7 +2769,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   2454+V2_59    DC    FD'+99999999999999999' \
 00002E98  01634578 5D89FFFF                           +                                 binary value for v2 packed decimal
 00002EA0  FFFFFFFF FFFFFC18                       2455+V3_59    DC    FD'-1000'         binary value for v3 packed decimal
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    52
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    52
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2829,7 +2829,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00002F7C  99999999 9999999F
                                                   2507
                                                   2508 *                                                     m5=13(P2=1,P3=1)
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    53
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    53
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2889,7 +2889,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000303E  E320 8F57 002E                00001157  2559+         CVDG  R2,V2PACKED
 00003044  E720 8F57 0006                00001157  2560+         VL    V2,V2PACKED
 0000304A  E320 5018 0004                00003020  2561+         LG    R2,V3_62          convert v3
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    54
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    54
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2949,7 +2949,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003108                      00003108            2612+         USING *,R5              base for test data and test routine
 00003108  00003138                                2613+T64      DC    A(X64)            address of test routine
 0000310C  0040                                    2614+         DC    H'64'             test number
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    55
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    55
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3009,7 +3009,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000031E8  B98D 0020                               2667+         EPSW  R2,R0             exptract psw
 000031EC  5020 8EE8                     000010E8  2668+         ST    R2,CCPSW              to save CC
 000031F0  07FB                                    2669+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    56
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    56
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3069,7 +3069,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   2721+*                                INSTRUCTION UNDER TEST ROUTINE
 000032B8                                          2722+X67      DS    0F
 000032B8  E320 5010 0004                00003298  2723+         LG    R2,V2_67          convert v2
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    57
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    57
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3129,7 +3129,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000338E  00                                      2775+         DC    X'00'
 0000338F  07                                      2776+         DC    HL1'7'            i4
 00003390  01                                      2777+         DC    HL1'1'            m5
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    58
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    58
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3155,8 +3155,8 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000033F0  07FB                                    2797+         BR    R11               return
 000033F4                                          2798+RE69     DC    0F
 000033F4                                          2799+         DROP  R5
-000033F4  00000000 00000000                       2800          DC    XL16'0000000000000000000000000000000D'   NOTE MINUS 0
-000033FC  00000000 0000000D
+000033F4  00000000 00000000                       2800          DC    XL16'0000000000000000000000000000000C'   NOTE Plus 0
+000033FC  00000000 0000000C
                                                   2801
                                                   2802          VRI_F VRP,+1000001111,+10,135,1,2    i4=135(iom=1 & rdc=7)
 00003408                                          2803+         DS    0FD
@@ -3189,7 +3189,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003474                                          2830+RE70     DC    0F
 00003474                                          2831+         DROP  R5
 00003474  00000000 00000000                       2832          DC    XL16'0000000000000000000000000000001C'  note RDC
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    59
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    59
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3249,7 +3249,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   2882+*                                INSTRUCTION UNDER TEST ROUTINE
 00003538                                          2883+X72      DS    0F
 00003538  E320 5010 0004                00003518  2884+         LG    R2,V2_72          convert v2
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    60
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    60
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3309,7 +3309,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000360C  004A                                    2935+         DC    H'74'             test number
 0000360E  00                                      2936+         DC    X'00'
 0000360F  87                                      2937+         DC    HL1'135'          i4
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    61
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    61
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3369,7 +3369,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000036EC  5020 8EE8                     000010E8  2989+         ST    R2,CCPSW              to save CC
 000036F0  07FB                                    2990+         BR    R11               return
 000036F4                                          2991+RE75     DC    0F
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    62
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    62
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3429,7 +3429,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000037A8  E5D9D740 40404040                       3041+         DC    CL8'VRP'          instruction name
 000037B0  00000010                                3042+         DC    A(16)             result length
 000037B4  000037F4                                3043+REA77    DC    A(RE77)           result address
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    63
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    63
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3489,7 +3489,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003888                                          3094+         DS    0FD
 00003888                      00003888            3095+         USING *,R5              base for test data and test routine
 00003888  000038B8                                3096+T79      DC    A(X79)            address of test routine
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    64
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    64
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3549,7 +3549,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003956  E730 8F67 0006                00001167  3148+         VL    V3,V3PACKED
 0000395C  E612 30D8 707B                          3149+         VRP   V1,V2,V3,135,13   test instruction
 00003962  E710 8F08 000E                00001108  3150+         VST   V1,V1OUTPUT       save result
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    65
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    65
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3609,7 +3609,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003A18  0DE0B6B3 A763FFFF                           +                                 binary value for v2 packed decimal
 00003A20  00000000 000004D2                       3201+V3_82    DC    FD'+1234'         binary value for v3 packed decimal
 00003A28  E5D9D740 40404040                       3202+         DC    CL8'VRP'          instruction name
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    66
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    66
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3669,7 +3669,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003AD6  E730 8F67 0006                00001167  3255+         VL    V3,V3PACKED
 00003ADC  E612 3018 1079                          3256+         VMSP  V1,V2,V3,129,1    test instruction
 00003AE2  E710 8F08 000E                00001108  3257+         VST   V1,V1OUTPUT       save result
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    67
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    67
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3729,7 +3729,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003BA8  E5D4E2D7 40404040                       3309+         DC    CL8'VMSP'         instruction name
 00003BB0  00000010                                3310+         DC    A(16)             result length
 00003BB4  00003BF4                                3311+REA85    DC    A(RE85)           result address
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    68
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    68
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3781,15 +3781,15 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003C70  07FB                                    3356+         BR    R11               return
 00003C74                                          3357+RE86     DC    0F
 00003C74                                          3358+         DROP  R5
-00003C74  00000000 00000000                       3359          DC    XL16'0000000000000000000000000000000D'    NOTE MINUS 0
-00003C7C  00000000 0000000D
+00003C74  00000000 00000000                       3359          DC    XL16'0000000000000000000000000000000C'    NOTE Plus 0
+00003C7C  00000000 0000000C
                                                   3360
                                                   3361          VRI_F VMSP,-100,-12,0,1,2                       shamt=0
 00003C88                                          3362+         DS    0FD
 00003C88                      00003C88            3363+         USING *,R5              base for test data and test routine
 00003C88  00003CB8                                3364+T87      DC    A(X87)            address of test routine
 00003C8C  0057                                    3365+         DC    H'87'             test number
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    69
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    69
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3849,7 +3849,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003D68  B98D 0020                               3418+         EPSW  R2,R0             exptract psw
 00003D6C  5020 8EE8                     000010E8  3419+         ST    R2,CCPSW              to save CC
 00003D70  07FB                                    3420+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    70
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    70
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3909,7 +3909,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003E30  00000010                                3471+         DC    A(16)             result length
 00003E34  00003E74                                3472+REA90    DC    A(RE90)           result address
                                                   3473+*                                INSTRUCTION UNDER TEST ROUTINE
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    71
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    71
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3969,7 +3969,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   3523          VRI_F VMSP,-9999999999999999,-1,159,1,0         shamt=31
 00003F08                                          3524+         DS    0FD
 00003F08                      00003F08            3525+         USING *,R5              base for test data and test routine
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    72
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    72
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4029,7 +4029,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00003FD0  E320 8F67 002E                00001167  3576+         CVDG  R2,V3PACKED
 00003FD6  E730 8F67 0006                00001167  3577+         VL    V3,V3PACKED
 00003FDC  E612 3018 7079                          3578+         VMSP  V1,V2,V3,135,1    test instruction
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    73
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    73
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4074,8 +4074,8 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004070  07FB                                    3614+         BR    R11               return
 00004074                                          3615+RE94     DC    0F
 00004074                                          3616+         DROP  R5
-00004074  00000000 00000000                       3617          DC    XL16'0000000000000000000000000000000D'  NOTE MINUS 0
-0000407C  00000000 0000000D
+00004074  00000000 00000000                       3617          DC    XL16'0000000000000000000000000000000C'  NOTE Plus 0
+0000407C  00000000 0000000C
                                                   3618
                                                   3619 * VMSP larger #'s , i4=159(iom=1 & rdc=31)             CS=1 for all m5
                                                   3620 * check forced positive
@@ -4089,7 +4089,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000408F  81                                      3628+         DC    HL1'129'          i4
 00004090  09                                      3629+         DC    HL1'9'            m5
 00004091  02                                      3630+         DC    HL1'2'            cc
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    74
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    74
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4149,7 +4149,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004162  E710 8F08 000E                00001108  3680+         VST   V1,V1OUTPUT       save result
 00004168  B98D 0020                               3681+         EPSW  R2,R0             exptract psw
 0000416C  5020 8EE8                     000010E8  3682+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    75
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    75
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4209,7 +4209,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   3733+V2_98    DC    FD'-9999999999999999' \
 00004218  FFDC790D 903F0001                           +                                 binary value for v2 packed decimal
 00004220  FFFFFFFF FFFFFFFF                       3734+V3_98    DC    FD'-1'            binary value for v3 packed decimal
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    76
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    76
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4269,7 +4269,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000042F4                                          3785+RE99     DC    0F
 000042F4                                          3786+         DROP  R5
 000042F4  00000000 00000000                       3787          DC    XL16'0000000000000000000000000000099F'
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    77
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    77
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4329,7 +4329,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004390  01                                      3839+         DC    HL1'1'            m5
 00004391  02                                      3840+         DC    HL1'2'            cc
 00004392  0D                                      3841+         DC    HL1'13'           cc failed mask
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    78
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    78
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4389,7 +4389,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004474  00000000 00000000                       3894          DC    XL16'0000000000000000000000000000083D'
 0000447C  00000000 0000083D
                                                   3895
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    79
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    79
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4449,7 +4449,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 0000454A  E320 5018 0004                00004520  3948+         LG    R2,V3_104         convert v3
 00004550  E320 8F67 002E                00001167  3949+         CVDG  R2,V3PACKED
 00004556  E730 8F67 0006                00001167  3950+         VL    V3,V3PACKED
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    80
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    80
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4509,7 +4509,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004618  FFFFFFFF FFFFFF9C                       4002+V2_106   DC    FD'-100'          binary value for v2 packed decimal
 00004620  FFFFFFFF FFFFFFF6                       4003+V3_106   DC    FD'-10'           binary value for v3 packed decimal
 00004628  E5E2C4D7 40404040                       4004+         DC    CL8'VSDP'         instruction name
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    81
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    81
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4569,7 +4569,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   4056 * VSDP larger #'s
                                                   4057          VRI_F VSDP,+99999999999999999,+1,132,1,2        shamt=4
 00004708                                          4058+         DS    0FD
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    82
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    82
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4629,7 +4629,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 000047CA  E320 5018 0004                000047A0  4109+         LG    R2,V3_109         convert v3
 000047D0  E320 8F67 002E                00001167  4110+         CVDG  R2,V3PACKED
 000047D6  E730 8F67 0006                00001167  4111+         VL    V3,V3PACKED
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    83
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    83
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4689,7 +4689,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004892  0D                                      4162+         DC    HL1'13'           cc failed mask
                                                   4163+V2_111   DC    FD'-9999999999999999' \
 00004898  FFDC790D 903F0001                           +                                 binary value for v2 packed decimal
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    84
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    84
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4749,7 +4749,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004974  00000000 00000000                       4215          DC    XL16'0000000000000000000081037277147C'
 0000497C  00008103 7277147C
                                                   4216
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    85
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    85
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4809,7 +4809,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   4267+*                                INSTRUCTION UNDER TEST ROUTINE
 00004A38                                          4268+X114     DS    0F
 00004A38  E320 5010 0004                00004A18  4269+         LG    R2,V2_114         convert v2
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    86
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    86
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4869,7 +4869,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004B08                      00004B08            4320+         USING *,R5              base for test data and test routine
 00004B08  00004B38                                4321+T116     DC    A(X116)           address of test routine
 00004B0C  0074                                    4322+         DC    H'116'            test number
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    87
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    87
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4929,7 +4929,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004BD0  E320 8F67 002E                00001167  4373+         CVDG  R2,V3PACKED
 00004BD6  E730 8F67 0006                00001167  4374+         VL    V3,V3PACKED
 00004BDC  E612 30D8 707E                          4375+         VSDP  V1,V2,V3,135,13   test instruction
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    88
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    88
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4989,7 +4989,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004C90  0F                                      4426+         DC    HL1'15'           m5
 00004C91  03                                      4427+         DC    HL1'3'            cc
 00004C92  0E                                      4428+         DC    HL1'14'           cc failed mask
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    89
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    89
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -5049,7 +5049,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004D5C  00001B88                                4480+         DC    A(T21)            address of test
 00004D60  00001C08                                4481+         DC    A(T22)            address of test
 00004D64  00001C88                                4482+         DC    A(T23)            address of test
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    90
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    90
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -5109,7 +5109,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
 00004E3C  00003788                                4536+         DC    A(T77)            address of test
 00004E40  00003808                                4537+         DC    A(T78)            address of test
 00004E44  00003888                                4538+         DC    A(T79)            address of test
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    91
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    91
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -5159,7 +5159,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                                                   4582
 00004EF0  00000000                                4583          DC    F'0'     END OF TABLE
 00004EF4  00000000                                4584          DC    F'0'
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    92
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    92
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -5219,7 +5219,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                               00000013  00000001  4630 V19      EQU   19
                               00000014  00000001  4631 V20      EQU   20
                               00000015  00000001  4632 V21      EQU   21
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    93
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    93
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -5235,7 +5235,7 @@ ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)   
                               0000001F  00000001  4642 V31      EQU   31
                                                   4643
                                                   4644          END
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    94
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    94
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5295,7 +5295,7 @@ PRT3                C    000010BF          18   406   175   176   177   184   18
 PRTI4               C    00001044           3   375   220
 PRTLINE             C    00001008          16   370   380   230
 PRTLNG              U    0000004C           1   380   229
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    95
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    95
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5355,7 +5355,7 @@ R2                  U    00000002           1  4592   173   174   181   182   18
                                                      1974  1975  1977  1978  1982  1983  2010  2011  2013  2014  2018  2019  2042
                                                      2043  2045  2046  2050  2051  2074  2075  2077  2078  2082  2083  2106  2107
                                                      2109  2110  2114  2115  2138  2139  2141  2142  2146  2147  2170  2171  2173
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    96
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    96
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5415,7 +5415,7 @@ R5                  U    00000005           1  4595   126   127   132   260   26
                                                      4314  4320  4347  4354  4381  4387  4414  4421  4448
 R6                  U    00000006           1  4596
 R7                  U    00000007           1  4597
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    97
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    97
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5475,7 +5475,7 @@ RE37                F    000023F4           4  1757  1743
 RE38                F    00002474           4  1789  1775
 RE39                F    000024F4           4  1821  1807
 RE4                 F    00001374           4   686   672
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    98
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    98
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5535,7 +5535,7 @@ RE88                F    00003D74           4  3421  3407
 RE89                F    00003DF4           4  3453  3439
 RE9                 F    000015F4           4   847   833
 RE90                F    00003E74           4  3486  3472
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page    99
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page    99
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5595,7 +5595,7 @@ REA30               A    00002034           4  1518
 REA31               A    000020B4           4  1550
 REA32               A    00002134           4  1582
 REA33               A    000021B4           4  1614
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   100
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   100
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5655,7 +5655,7 @@ REA81               A    000039B4           4  3172
 REA82               A    00003A34           4  3204
 REA83               A    00003AB4           4  3247
 REA84               A    00003B34           4  3279
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   101
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   101
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5715,7 +5715,7 @@ T16                 A    00001908           4  1052  4475
 T17                 A    00001988           4  1084  4476
 T18                 A    00001A08           4  1116  4477
 T19                 A    00001A88           4  1148  4478
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   102
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   102
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5775,7 +5775,7 @@ T67                 A    00003288           4  2709  4526
 T68                 A    00003308           4  2741  4527
 T69                 A    00003388           4  2773  4528
 T7                  A    00001488           4   758  4466
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   103
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   103
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5835,7 +5835,7 @@ V1                  U    00000001           1  4612   137   585   586   617   61
                                                      3515  3546  3547  3578  3579  3610  3611  3645  3646  3679  3680  3712  3713
                                                      3746  3747  3780  3781  3823  3824  3855  3856  3887  3888  3919  3920  3951
                                                      3952  3983  3984  4015  4016  4047  4048  4080  4081  4112  4113  4144  4145
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   104
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   104
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5895,7 +5895,7 @@ V29                 U    0000001D           1  4640
 V2PACKED            X    00001157          16   426   580   581   612   613   644   645   676   677   708   709   740   741   773
                                                       774   805   806   837   838   871   872   903   904   935   936   971   972
                                                      1003  1004  1035  1036  1067  1068  1099  1100  1131  1132  1163  1164  1196
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   105
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   105
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5955,7 +5955,7 @@ V2_23               F    00001C98           8  1284  1291
 V2_24               F    00001D18           8  1318  1325
 V2_25               F    00001D98           8  1350  1357
 V2_26               F    00001E18           8  1382  1389
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   106
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   106
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -6015,7 +6015,7 @@ V2_74               F    00003618           8  2941  2948
 V2_75               F    00003698           8  2973  2980
 V2_76               F    00003718           8  3005  3012
 V2_77               F    00003798           8  3039  3046
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   107
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   107
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -6075,7 +6075,7 @@ V3PACKED            X    00001167          16   427   583   584   615   616   64
                                                      2271  2272  2303  2304  2335  2336  2367  2368  2399  2400  2433  2434  2465
                                                      2466  2497  2498  2530  2531  2562  2563  2595  2596  2631  2632  2663  2664
                                                      2695  2696  2727  2728  2759  2760  2791  2792  2823  2824  2856  2857  2888
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   108
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   108
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -6135,7 +6135,7 @@ V3_30               F    00002020           8  1515  1524
 V3_31               F    000020A0           8  1547  1556
 V3_32               F    00002120           8  1579  1588
 V3_33               F    000021A0           8  1611  1620
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   109
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   109
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -6195,7 +6195,7 @@ V3_81               F    000039A0           8  3169  3178
 V3_82               F    00003A20           8  3201  3210
 V3_83               F    00003AA0           8  3244  3253
 V3_84               F    00003B20           8  3276  3285
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   110
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   110
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -6255,7 +6255,7 @@ X19                 F    00001AB8           4  1161  1148
 X2                  F    00001238           4   610   597
 X20                 F    00001B38           4  1194  1181
 X21                 F    00001BB8           4  1226  1213
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   111
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   111
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -6315,7 +6315,7 @@ X7                  F    000014B8           4   771   758
 X70                 F    00003438           4  2818  2805
 X71                 F    000034B8           4  2851  2838
 X72                 F    00003538           4  2883  2870
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   112
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   112
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -6353,7 +6353,7 @@ ZVE6TST             J    00000000       20216    63    66    68    72    76   36
 =F'1'               F    000004B8           4   338   161   237
 =H'0'               H    000004C0           2   340   282
 =XL4'3'             X    000004BC           4   339   168
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   113
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   113
 
  MACRO   DEFN  REFERENCES
 
@@ -6365,7 +6365,7 @@ VRI_F     461    562    594    626    658    690    722    755    787    819    
                 2770   2802   2835   2867   2899   2931   2963   2995   3029   3061   3093   3126   3158   3190   3233   3265   3297
                 3329   3361   3393   3425   3458   3491   3523   3555   3587   3622   3656   3689   3723   3757   3800   3832   3864
                 3896   3928   3960   3992   4024   4057   4089   4121   4153   4185   4217   4252   4285   4318   4352   4385   4419
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   114
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   114
 
    DESC     SYMBOL   SIZE     POS        ADDR
 
@@ -6374,7 +6374,7 @@ Entry: 0
 Image      IMAGE    20216  0000-4EF7  0000-4EF7
   Region            20216  0000-4EF7  0000-4EF7
     CSECT  ZVE6TST  20216  0000-4EF7  0000-4EF7
-ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       06 Jun 2024 17:18:30  Page   115
+ASMA Ver. 0.7.0  zvector-e6-05-packarith (Zvector E6 VRI-f packed arithmetic)                       07 Jun 2024 11:16:59  Page   115
 
    STMT                         FILE NAME
 

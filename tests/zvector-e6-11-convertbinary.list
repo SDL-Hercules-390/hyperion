@@ -1,4 +1,4 @@
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     1
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -58,7 +58,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 
 
 00000000                      00000000  000001A0    55          ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     2
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -74,7 +74,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 
 000001E0                      000001E0  00000200    63          ORG   ZVE6TST+X'200'        Start of actual test program...
                                                     64
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     3
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -117,7 +117,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 0000021A  9604 8285                     00000485   102          OI    CTLR0+1,X'04'    Turn on AFP bit
 0000021E  9602 8285                     00000485   103          OI    CTLR0+1,X'02'    Turn on Vector bit
 00000222  B700 8284                     00000484   104          LCTL  R0,R0,CTLR0      Reload updated CR0
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     4
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -156,7 +156,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                    138
 0000026C  4700 8070                     00000270   139 TESTCC   BC    0,CCMSG          (fail if unexpected condition code)
                                                    140
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     5
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -205,7 +205,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 000002F8  45F0 8168                     00000368   184          BAL   R15,RPTERROR
                                                    185
 000002FC  47F0 814A                     0000034A   186          B     FAILCONT
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     6
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -255,7 +255,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00000360  4780 8268                     00000468   229          BZ    EOJ                  No, exit
 00000364  47F0 8280                     00000480   230          B     FAILTEST             Yes, exit with BAD PSW
                                                    231
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     7
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -283,7 +283,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 0000038C  00000000                                 253 RPTSVR5  DC    F'0'                 R5 save area
 
 00000390  00000000 00000000                        255 RPTDWSAV DC    2D'0'                R0-R2 save area for MSG call
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     8
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -329,7 +329,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 000003EE  D4E2C7D5 D6C8405C                        292 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
 000003F7  40404040 40404040                        293 MSGMSG   DC    CL95' '                The message text to be displayed
                                                    294
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page     9
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page     9
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -381,7 +381,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                    330
                               AABBCCDD  00000001   331 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
                               000000DD  00000001   332 REG2LOW  EQU         X'DD'    (last byte above)
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    10
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    10
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -394,7 +394,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                    340
 0000049C                      0000049C  00001000   341          ORG   ZVE6TST+X'1000'
 00001000  00000000                                 342 FAILED   DC    F'0'                     some test failed?
-00001004  00000000                                 343 testing  DC    F'0'
+00001004  00000000                                 343 TESTING  DC    F'0'                     current test number
 
 
                                                    345 ***********************************************************************
@@ -430,7 +430,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 0000109A  A7                                       374 CCPRTGOT DC    C'x'
 0000109B  4B                                       375          DC    C'.'
                               00000055  00000001   376 CCPRTLNG   EQU   *-CCPRTLINE
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    11
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    11
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -466,7 +466,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001168  F7F8F9F0 F1F2F3F4                        406          DC    CL14'78901234567890'
 00001176  D9                                       407          DC    X'D9'
 00001177  00000000 00000000                        408          DS    XL16                                          gap
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    12
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    12
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -493,7 +493,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                    429 *              followed by
                                                    430 *              r1     - expected result (64 bits) (even for VCVB)
                                                    431 *              v1     - 16 byte packed decimal source
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    13
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    13
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -552,7 +552,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                    485          DROP  R5
                                                    486
                                                    487          MEND
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    14
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    14
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -578,7 +578,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                    508          DC    A(0)
                                                    509 .*
                                                    510          MEND
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    15
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    15
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -638,7 +638,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 000011E6  00                                       563+         DC    XL1'00'
 000011E7  01                                       564+         DC    HL1'1'            &M3
 000011E8  00                                       565+         DC    HL1'0'            cc
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    16
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    16
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -698,7 +698,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001298  00                                       617+         DC    HL1'0'            cc
 00001299  07                                       618+         DC    HL1'7'            cc failed mask
 0000129A  E5C3E5C2 40404040                        619+         DC    CL8'VCVB'         instruction name
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    17
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    17
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -758,7 +758,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 0000134A  E5C3E5C2 40404040                        671+         DC    CL8'VCVB'         instruction name
 00001354  00000010                                 672+         DC    A(16)             result length
 00001358  00001380                                 673+REA6     DC    A(RE6)            result address
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    18
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    18
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -818,7 +818,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001408  00001430                                 725+REA8     DC    A(RE8)            result address
                                                    726+*                                INSTRUCTION UNDER TEST ROUTINE
 0000140C                                           727+X8       DS    0F
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    19
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    19
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -878,7 +878,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                    779+*                                INSTRUCTION UNDER TEST ROUTINE
 000014BC                                           780+X10      DS    0F
 000014BC  E310 8EE8 0004                000010E8   781+         LG    R1,R1FUDGE        pollute R1
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    20
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    20
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -938,7 +938,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 0000156C  E310 8EE8 0004                000010E8   833+         LG    R1,R1FUDGE        pollute R1
 00001572  E710 5048 0006                00001598   834+         VL    V1,RE12+8         get V1 source
 00001578  E611 0090 0050                           835+         VCVB  R1,V1,9           test instruction
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    21
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    21
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -998,7 +998,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001628  E611 0090 0050                           887+         VCVB  R1,V1,9           test instruction
 0000162E  E310 8F20 0024                00001120   888+         STG   R1,R1OUTPUT       save
 00001634  B98D 0020                                889+         EPSW  R2,R0             exptract psw
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    22
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    22
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1058,7 +1058,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 000016E4  B98D 0020                                941+         EPSW  R2,R0             exptract psw
 000016E8  5020 8ED8                     000010D8   942+         ST    R2,CCPSW              to save CC
 000016EC  07FB                                     943+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    23
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    23
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1118,7 +1118,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 0000179C  07FB                                     995+         BR    R11               return
 000017A0                                           996+RE18     DC    0F
 000017A0                                           997+         DROP  R5
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    24
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    24
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1178,7 +1178,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001844  B98D 0020                               1049+         EPSW  R2,R0             exptract psw
 00001848  5020 8ED8                     000010D8  1050+         ST    R2,CCPSW              to save CC
 0000184C  07FB                                    1051+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    25
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    25
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1238,7 +1238,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 000018FC  07FB                                    1103+         BR    R11               return
 00001900                                          1104+RE22     DC    0F
 00001900                                          1105+         DROP  R5
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    26
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    26
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1298,7 +1298,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 000019B0                                          1157+         DROP  R5
 000019B0  FFFFFFFF 80000000                       1158          DC    XL08'FFFFFFFF80000000'                   R1 result
 000019B8  00000000 00000000                       1159          DC    XL16'0000000000000000000002147483648D'   V1 source
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    27
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    27
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1358,7 +1358,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001A68  00000000 00000000                       1211          DC    XL16'0000000000000000000004294967296C'   V1 source
 00001A70  00000429 4967296C
                                                   1212
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    28
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    28
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1418,7 +1418,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                   1264
                                                   1265          VRR_I VCVBG,1,0                                LONG_MIN
 00001B28                                          1266+         DS    0FD
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    29
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    29
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1478,7 +1478,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001BD8                                          1318+         DS    0FD
 00001BD8                      00001BD8            1319+         USING *,R5              base for test data and test routine
 00001BD8  00001BF4                                1320+T31      DC    A(X31)            address of test routine
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    30
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    30
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1538,7 +1538,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001C88                      00001C88            1372+         USING *,R5              base for test data and test routine
 00001C88  00001CA4                                1373+T33      DC    A(X33)            address of test routine
 00001C8C  0021                                    1374+         DC    H'33'             test number
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    31
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    31
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1598,7 +1598,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001D3C  0023                                    1426+         DC    H'35'             test number
 00001D3E  00                                      1427+         DC    XL1'00'
 00001D3F  09                                      1428+         DC    HL1'9'            &M3
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    32
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    32
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1658,7 +1658,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001DEF  09                                      1480+         DC    HL1'9'            &M3
 00001DF0  00                                      1481+         DC    HL1'0'            cc
 00001DF1  07                                      1482+         DC    HL1'7'            cc failed mask
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    33
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    33
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1718,7 +1718,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001EA1  07                                      1534+         DC    HL1'7'            cc failed mask
 00001EA2  E5C3E5C2 C7404040                       1535+         DC    CL8'VCVBG'        instruction name
 00001EAC  00000010                                1536+         DC    A(16)             result length
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    34
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    34
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1778,7 +1778,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001F5C  00000010                                1588+         DC    A(16)             result length
 00001F60  00001F88                                1589+REA41    DC    A(RE41)           result address
                                                   1590+*                                INSTRUCTION UNDER TEST ROUTINE
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    35
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    35
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1823,22 +1823,22 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00001FE8  00000000 00009223                       1628          DC    XL16'0000000000009223372036854775807C'   V1 source
 00001FF0  37203685 4775807C
                                                   1629
-                                                  1630          VRR_I VCVBG,9,0                                LONG_MIN
+                                                  1630          VRR_I VCVBG,9,3                                LONG_MIN
 00001FF8                                          1631+         DS    0FD
 00001FF8                      00001FF8            1632+         USING *,R5              base for test data and test routine
 00001FF8  00002014                                1633+T43      DC    A(X43)            address of test routine
 00001FFC  002B                                    1634+         DC    H'43'             test number
 00001FFE  00                                      1635+         DC    XL1'00'
 00001FFF  09                                      1636+         DC    HL1'9'            &M3
-00002000  00                                      1637+         DC    HL1'0'            cc
-00002001  07                                      1638+         DC    HL1'7'            cc failed mask
+00002000  03                                      1637+         DC    HL1'3'            cc
+00002001  0E                                      1638+         DC    HL1'14'           cc failed mask
 00002002  E5C3E5C2 C7404040                       1639+         DC    CL8'VCVBG'        instruction name
 0000200C  00000010                                1640+         DC    A(16)             result length
 00002010  00002038                                1641+REA43    DC    A(RE43)           result address
                                                   1642+*                                INSTRUCTION UNDER TEST ROUTINE
 00002014                                          1643+X43      DS    0F
 00002014  E310 8EE8 0004                000010E8  1644+         LG    R1,R1FUDGE        pollute R1
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    36
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    36
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1898,7 +1898,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 000020C4  E310 8EE8 0004                000010E8  1696+         LG    R1,R1FUDGE        pollute R1
 000020CA  E710 5048 0006                000020F0  1697+         VL    V1,RE45+8         get V1 source
 000020D0  E611 00B0 0052                          1698+         VCVBG R1,V1,11          test instruction
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    37
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    37
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1958,7 +1958,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
 00002180  00001448                                1750+         DC    A(T9)             address of test
 00002184  000014A0                                1751+         DC    A(T10)            address of test
 00002188  000014F8                                1752+         DC    A(T11)            address of test
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    38
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    38
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2003,7 +2003,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                                                   1791
 00002220  00000000                                1792          DC    F'0'     END OF TABLE
 00002224  00000000                                1793          DC    F'0'
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    39
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    39
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2063,7 +2063,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                               00000013  00000001  1839 V19      EQU   19
                               00000014  00000001  1840 V20      EQU   20
                               00000015  00000001  1841 V21      EQU   21
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    40
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    40
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2079,7 +2079,7 @@ ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                 
                               0000001F  00000001  1851 V31      EQU   31
                                                   1852
                                                   1853          END
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    41
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    41
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -2139,7 +2139,7 @@ R0                  U    00000000           1  1799    51   101   104   117   12
                                                       758   785   811   837   863   889   915   941   967   993  1023  1049  1075
                                                      1101  1127  1153  1179  1205  1231  1257  1283  1309  1335  1361  1388  1414
                                                      1440  1466  1492  1518  1544  1570  1596  1622  1648  1674  1700  1726
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    42
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    42
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -2199,7 +2199,7 @@ RE1                 F    000011C8           4   553   543   547
 RE10                F    000014E0           4   788   778   782
 RE11                F    00001538           4   814   804   808
 RE12                F    00001590           4   840   830   834
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    43
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    43
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -2259,7 +2259,7 @@ REA19               A    000017D0           4  1016
 REA2                A    000011F8           4   569
 REA20               A    00001828           4  1042
 REA21               A    00001880           4  1068
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    44
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    44
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -2319,7 +2319,7 @@ T2                  A    000011E0           4   561  1743
 T20                 A    00001810           4  1034  1761
 T21                 A    00001868           4  1060  1762
 T22                 A    000018C0           4  1086  1763
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    45
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    45
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -2379,7 +2379,7 @@ V16                 U    00000010           1  1836
 V17                 U    00000011           1  1837
 V18                 U    00000012           1  1838
 V19                 U    00000013           1  1839
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    46
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    46
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -2439,7 +2439,7 @@ X35                 F    00001D54           4  1435  1425
 X36                 F    00001DAC           4  1461  1451
 X37                 F    00001E04           4  1487  1477
 X38                 F    00001E5C           4  1513  1503
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    47
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    47
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -2462,7 +2462,7 @@ ZVE6TST             J    00000000        8744    50    53    55    59    63   34
 =F'1'               F    00000490           4   318   148   217
 =H'0'               H    00000498           2   320   262
 =XL4'3'             X    00000494           4   319   155
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    48
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    48
 
  MACRO   DEFN  REFERENCES
 
@@ -2470,7 +2470,7 @@ PTTABLE   494   1740
 VRR_I     439    532    558    584    610    636    662    688    714    740    767    793    819    845    871    897    923    949
                  975   1005   1031   1057   1083   1109   1135   1161   1187   1213   1239   1265   1291   1317   1343   1370   1396
                 1422   1448   1474   1500   1526   1552   1578   1604   1630   1656   1682   1708
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    49
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    49
 
    DESC     SYMBOL  SIZE     POS        ADDR
 
@@ -2479,7 +2479,7 @@ Entry: 0
 Image      IMAGE    8744  0000-2227  0000-2227
   Region            8744  0000-2227  0000-2227
     CSECT  ZVE6TST  8744  0000-2227  0000-2227
-ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     06 Jun 2024 17:14:10  Page    50
+ASMA Ver. 0.7.0  zvector-e6-11-convertbinary (Zvector E6 VRR-i)                                     07 Jun 2024 11:17:36  Page    50
 
    STMT                           FILE NAME
 
