@@ -2735,6 +2735,10 @@ DEF_INST( vector_add_decimal )
     /* store product in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
+
     /* set condition code */
     if (cs)
     {
@@ -2966,6 +2970,10 @@ DEF_INST( vector_subtract_decimal )
     /* store product in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
+
     /* set condition code */
     if (cs)
     {
@@ -3120,6 +3128,10 @@ DEF_INST( vector_multiply_decimal )
     /* store product in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
+
     /* set condition code */
     if (cs)
     {
@@ -3223,6 +3235,10 @@ DEF_INST( vector_multiply_and_shift_decimal )
     /* store shifted result in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
 
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
+
     /* set condition code */
     if (cs)
     {
@@ -3325,6 +3341,10 @@ DEF_INST( vector_divide_decimal )
     /* store product in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
 
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
+
     /* set condition code */
     if (cs)
     {
@@ -3425,6 +3445,10 @@ DEF_INST( vector_remainder_decimal )
 
     /* store product in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, rdc);
+
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
 
     /* set condition code */
     if (cs)
@@ -3529,6 +3553,10 @@ DEF_INST( vector_shift_and_divide_decimal )
 
     /* store product in vector register */
     overflow = vr_from_decNumber( regs, v1, &dnv1, p1, MAX_DECIMAL_DIGITS);
+
+    /* if the result is 0 & the sign is negative; change to positive */
+    if ( vr_is_minus_zero( regs, v1 ) )
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
 
     /* set condition code */
     if (cs)
