@@ -9,6 +9,78 @@
 /* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
+/*-------------------------------------------------------------------------------------------------------------
+ James Wekel - June 2024
+
+ zvector2.c implements z/architecture E6xx instructions:
+
+facility  code  test#   Instruction                                             op-code    format
+--------  ----  -----   ----------------------------------------------------    -------    ------
+
+    v2       x   01     E601 VECTOR LOAD BYTE REVERSED ELEMENT (16)             VLEBRH      VRX
+    v2       x   01     E602 VECTOR LOAD BYTE REVERSED ELEMENT (64)             VLEBRG      VRX
+    v2       x   01     E603 VECTOR LOAD BYTE REVERSED ELEMENT (32)             VLEBRF      VRX
+    v2       x   01     E604 VECTOR LOAD BYTE REVERSED ELEMENT AND ZERO         VLLEBRZ     VRX
+    v2       x   01     E605 VECTOR LOAD BYTE REVERSED ELEMENT AND REPLICATE    VLBRREP     VRX
+    v2       x   01     E606 VECTOR LOAD BYTE REVERSED ELEMENTS                 VLBR        VRX
+    v2       x   01     E607 VECTOR LOAD ELEMENTS REVERSED                      VLER        VRX
+    v2       x   02     E609 VECTOR STORE BYTE REVERSED ELEMENT (16)            VSTEBRH     VRX
+    v2       x   02     E60A VECTOR STORE BYTE REVERSED ELEMENT (64)            VSTEBRG     VRX
+    v2       x   02     E60B VECTOR STORE BYTE REVERSED ELEMENT (32)            VSTEBRF     VRX
+    v2       x   02     E60E VECTOR STORE BYTE REVERSED ELEMENTS                VSTBR       VRX
+    v2       x   02     E60F VECTOR STORE ELEMENTS REVERSED                     VSTER       VRX
+    vd       x   03     E634 VECTOR PACK ZONED                                  VPKZ        VSI
+    vd       x   03     E635 VECTOR LOAD RIGHTMOST WITH LENGTH                  VLRL        VSI
+    vd       x   08 09  E637 VECTOR LOAD RIGHTMOST WITH LENGTH   (reg)          VLRLR       VRS-d
+    vd       x   04     E63C VECTOR UNPACK ZONED                                VUPKZ       VSI
+    vd       x   04     E63D VECTOR STORE RIGHTMOST WITH LENGTH                 VSTRL       VSI
+    vd       x   09     E63F VECTOR STORE RIGHTMOST WITH LENGTH  (reg)          VSTRLR      VRS-d
+    vd       x   10     E649 VECTOR LOAD IMMEDIATE DECIMAL                      VLIP        VRI-h
+    vd       x   11     E650 VECTOR CONVERT TO BINARY (32)                      VCVB        VRR-i
+    vd2      x   12     E651 VECTOR COUNT LEADING ZERO DIGITS                   VCLZDP      VRR-k
+    vd       x   11     E652 VECTOR CONVERT TO BINARY (64)                      VCVBG       VRR-i
+    vd2      x   12     E654 VECTOR UNPACK ZONED HIGH                           VUPKZH      VRR-k
+    nn                  E655 VECTOR FP CONVERT TO NNP                           VCNF        VRR-a
+    nn                  E656 VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH       VCLFNH      VRR-a
+    vd       x   13     E658 VECTOR CONVERT TO DECIMAL (32)                     VCVD        VRI-i
+    vd       x   16     E659 VECTOR SHIFT AND ROUND DECIMAL                     VSRP        VRI-g
+    vd       x   13     E65A VECTOR CONVERT TO DECIMAL (64)                     VCVDG       VRI-i
+    vd       x   16     E65B VECTOR PERFORM SIGN OPERATION DECIMAL              VPSOP       VRI-g
+    vd2      x   12     E65C VECTOR UNPACK ZONED LOW                            VUPKZL      VRR-k
+    nn                  E65D VECTOR FP CONVERT FROM NNP                         VCFN        VRR-a
+    nn                  E65E VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW        VCLFNL      VRR-a
+    vd       x   14     E65F VECTOR TEST DECIMAL                                VTP         VRR-g
+    vd2      x   06     E670 VECTOR PACK ZONED REGISTER                         VPKZR       VRI-f
+    vd       x   05     E671 VECTOR ADD DECIMAL                                 VAP         VRI-f
+    vd2      x   07     E672 VECTOR SHIFT AND ROUND DECIMAL REGISTER            VSRPR       VRI-f
+    vd       x   05     E673 VECTOR SUBTRACT DECIMAL                            VSP         VRI-f
+    vd2                 E674 DECIMAL SCALE AND CONVERT TO HFP                   VSCHP       VRR-b
+    nn                  E675 VECTOR FP CONVERT AND ROUND TO NNP                 VCRNF       VRR-c
+    vd       x   15     E677 VECTOR COMPARE DECIMAL                             VCP         VRR-h
+    vd       x   05     E678 VECTOR MULTIPLY DECIMAL                            VMP         VRI-f
+    vd       x   05     E679 VECTOR MULTIPLY AND SHIFT DECIMAL                  VMSP        VRI-f
+    vd       x   05     E67A VECTOR DIVIDE DECIMAL                              VDP         VRI-f
+    vd       x   05     E67B VECTOR REMAINDER DECIMAL                           VRP         VRI-f
+    vd2                 E67C DECIMAL SCALE AND CONVERT AND SPLIT TO HFP         VSCSHP      VRR-b
+    vd2                 E67D VECTOR CONVERT HFP TO SCALED DECIMAL               VCSPH       VRR-j
+    vd       x   05     E67E VECTOR SHIFT AND DIVIDE DECIMAL                    VSDP        VRI-f
+
+  facility (bit):
+    NN  -   165 - Neural-network-processing-assist facility
+    V2  -   148 - Vector-enhancements facility 2
+    VD  -   134 - Vector packed-decimal facility
+    VD2 -   192 - Vector-packed-decimal-enhancement facility 2
+
+  test#:
+    Instruction test are named 'zvector-e6-xx-hint' where 'xx' is the test# and 'hint' provides a hint of the
+    instructions tested. A test is limited to a single instruction format. Multiple instructions may be
+    tested within a single test. Multiple tests may be required to test all instructions for a given
+    instruction format, e.g. load type instructions in one test and store type instructions in a second test.
+
+  Implemented instruction are organized by ascending opcode. Unimplemented instructions are located after
+  implemented instructions and just raise an operation exception.
+-------------------------------------------------------------------------------------------------------------*/
+
 #include "hstdinc.h"
 
 #define _ZVECTOR2_C_
@@ -902,6 +974,7 @@ static inline void zn_ContextDefault( decContext* set )
 /* Achitecture Dependent Routines / Instructions                     */
 /*===================================================================*/
 
+#if defined( FEATURE_148_VECTOR_ENH_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* E601 VLEBRH   - VECTOR LOAD BYTE REVERSED ELEMENT (16)      [VRX] */
 /*-------------------------------------------------------------------*/
@@ -1270,6 +1343,9 @@ DEF_INST( vector_store_reversed_elements )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_148_VECTOR_ENH_FACILITY_2 ) */
+
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E634 VPKZ  - VECTOR PACK ZONED                              [VSI] */
 /*-------------------------------------------------------------------*/
@@ -1655,6 +1731,9 @@ DEF_INST( vector_convert_to_binary_32 )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E651 VCLZDP - VECTOR COUNT LEADING ZERO DIGITS            [VRR-k] */
 /*-------------------------------------------------------------------*/
@@ -1725,6 +1804,10 @@ DEF_INST( vector_count_leading_zero_digits )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
+
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E652 VCVBG  - VECTOR CONVERT TO BINARY (64)               [VRR-i] */
 /*-------------------------------------------------------------------*/
@@ -1797,6 +1880,9 @@ DEF_INST( vector_convert_to_binary_64 )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E654 VUPKZH - VECTOR UNPACK ZONED HIGH                    [VRR-k] */
 /*-------------------------------------------------------------------*/
@@ -1858,6 +1944,10 @@ DEF_INST( vector_unpack_zoned_high )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
+
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E658 VCVD   - VECTOR CONVERT TO DECIMAL (32)              [VRI-i] */
 /*-------------------------------------------------------------------*/
@@ -2428,6 +2518,9 @@ DEF_INST( vector_perform_sign_operation_decimal )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E65C VUPKZL - VECTOR UNPACK ZONED LOW                     [VRR-k] */
 /*-------------------------------------------------------------------*/
@@ -2497,6 +2590,10 @@ DEF_INST( vector_unpack_zoned_low )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
+
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E65F VTP    - VECTOR TEST DECIMAL                         [VRR-g] */
 /*-------------------------------------------------------------------*/
@@ -2525,6 +2622,9 @@ DEF_INST( vector_test_decimal )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E670 VPKZR  - VECTOR PACK ZONED REGISTER                  [VRI-f] */
 /*-------------------------------------------------------------------*/
@@ -2654,6 +2754,10 @@ DEF_INST( vector_pack_zoned_register )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
+
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E671 VAP    - VECTOR ADD DECIMAL                          [VRI-f] */
 /*-------------------------------------------------------------------*/
@@ -2755,6 +2859,9 @@ DEF_INST( vector_add_decimal )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E672 VSRPR  - VECTOR SHIFT AND ROUND DECIMAL REGISTER     [VRI-f] */
 /*-------------------------------------------------------------------*/
@@ -2889,6 +2996,10 @@ DEF_INST( vector_shift_and_round_decimal_register )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
+
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E673 VSP    - VECTOR SUBTRACT DECIMAL                     [VRI-f] */
 /*-------------------------------------------------------------------*/
@@ -2989,6 +3100,7 @@ DEF_INST( vector_subtract_decimal )
 
     ZVECTOR_END( regs );
 }
+
 
 /*-------------------------------------------------------------------*/
 /* E677 VCP    - VECTOR COMPARE DECIMAL                      [VRR-h] */
@@ -3466,6 +3578,7 @@ DEF_INST( vector_remainder_decimal )
     ZVECTOR_END( regs );
 }
 
+
 /*-------------------------------------------------------------------*/
 /* E67E VSDP   - VECTOR SHIFT AND DIVIDE DECIMAL             [VRI-f] */
 /*-------------------------------------------------------------------*/
@@ -3574,6 +3687,7 @@ DEF_INST( vector_shift_and_divide_decimal )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
 
 /*===================================================================*/
 /* Vector Floating Point                                             */
@@ -3581,7 +3695,13 @@ DEF_INST( vector_shift_and_divide_decimal )
 
 /* ============================================= */
 /* TEMPORARY while zvector2.c is being developed */
-#if defined(__GNUC__)
+#if defined(__clang__)
+    #pragma clang diagnostic ignored "-Wunused-variable"
+    #pragma clang diagnostic ignored "-Wunused-but-set-variable"
+    #pragma clang diagnostic ignored "-Wcomment"
+    #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
+    #pragma clang diagnostic ignored "-Wmacro-redefined"
+#elif defined(__GNUC__)
     #pragma GCC diagnostic ignored "-Wunused-variable"
     #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
     #pragma GCC diagnostic ignored "-Wcomment"
@@ -3589,6 +3709,7 @@ DEF_INST( vector_shift_and_divide_decimal )
 #endif
 /* ============================================= */
 
+#if defined( FEATURE_165_NNET_ASSIST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E655 VCNF   - VECTOR FP CONVERT TO NNP                    [VRR-a] */
 /*-------------------------------------------------------------------*/
@@ -3609,6 +3730,7 @@ DEF_INST( vector_fp_convert_nnp )
     //
     ZVECTOR_END( regs );
 }
+
 
 /*--------------------------------------------------------------------*/
 /* E656 VCLFNH - VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH [VRR_a] */
@@ -3648,6 +3770,7 @@ DEF_INST( vector_fp_convert_from_nnp )
     ZVECTOR_END( regs );
 }
 
+
 /*-------------------------------------------------------------------*/
 /* E65E VCLFNL - VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW [VRR-a] */
 /*-------------------------------------------------------------------*/
@@ -3666,6 +3789,10 @@ DEF_INST( vector_fp_convert_and_lengthen_from_nnp_low )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_165_NNET_ASSIST_FACILITY ) */
+
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E674 VSCHP  - DECIMAL SCALE AND CONVERT TO HFP            [VRR-b] */
 /*-------------------------------------------------------------------*/
@@ -3683,6 +3810,9 @@ DEF_INST( decimal_scale_and_convert_to_hfp )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
+#if defined( FEATURE_165_NNET_ASSIST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E675 VCRNF  - VECTOR FP CONVERT AND ROUND TO NNP          [VRR-c] */
 /*-------------------------------------------------------------------*/
@@ -3700,6 +3830,9 @@ DEF_INST( vector_fp_convert_and_round_to_nnp )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FFEATURE_165_NNET_ASSIST_FACILITY ) */
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E67C VSCSHP - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP  [VRR-b] */
 /*-------------------------------------------------------------------*/
@@ -3718,6 +3851,7 @@ DEF_INST(decimal_scale_and_convert_and_split_to_hfp )
     ZVECTOR_END( regs );
 }
 
+
 /*-------------------------------------------------------------------*/
 /* E67D VCSPH  - VECTOR CONVERT HFP TO SCALED DECIMAL        [VRR-j] */
 /*-------------------------------------------------------------------*/
@@ -3735,6 +3869,9 @@ DEF_INST( vector_convert_hfp_to_scaled_decimal )
     //
     ZVECTOR_END( regs );
 }
+
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
 
 #endif /* defined(FEATURE_129_ZVECTOR_FACILITY) */
 
