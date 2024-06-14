@@ -5753,7 +5753,7 @@ DEF_INST( vector_fp_test_data_class_immediate )
     {
         float64_t   op2;
 
-        for (i=0; i < 2; i+=2)
+        for (i=0; i < 2; i++)
         {
             if (i == 0 || !M5_SE)
             {
@@ -5818,12 +5818,16 @@ DEF_INST( vector_fp_test_data_class_immediate )
         }
     }
 
-    if (one_bit_found == TRUE && zero_bit_found == TRUE)
-        regs->psw.cc = 1;
-    else if (one_bit_found == FALSE && zero_bit_found == TRUE)
-        regs->psw.cc = 3;
-    else
+    // Selected bit is 1 for all elements (match)
+    if (one_bit_found == TRUE && zero_bit_found == FALSE)
         regs->psw.cc = 0;
+    // Selected bit is 1 for at least one but not all elements (when S-bit is zero)
+    // Note: When the selected bit is 1 and the S-bit is 1 the previous if will be true
+    if (one_bit_found == TRUE)
+        regs->psw.cc = 1;
+    // Selected bit is 0 for all elements (no match)
+    else
+        regs->psw.cc = 3;
 
 #undef M5_SE
 #undef M5_RE
@@ -7083,6 +7087,11 @@ DEF_INST( vector_fp_load_rounded )
 
     ZVECTOR_CHECK( regs );
 
+    //
+    // TODO: implement this instruction
+    //
+    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
+
 #define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
 #define M4_XC ((m4 & 0x4) != 0) // IEEE-inexact-exception control (XxC)  See SUPPRESS_INEXACT
 #define M4_RE ((m4 & 0x3) != 0) // Reserved
@@ -7151,6 +7160,7 @@ DEF_INST( vector_fp_load_rounded )
         VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
 
         VECTOR_PUT_FLOAT64_NOCC( op1, v1, 0, regs );
+        VECTOR_PUT_FLOAT64_NOCC( op1, v1, 1, regs );
 
         if (softfloat_exceptionFlags)
         {
@@ -7258,7 +7268,7 @@ DEF_INST( vector_load_fp_integer )
             }
         }
     }
-    else if ( m4 == 4 )  // Extended format
+    else if ( m3 == 4 )  // Extended format
     {
         float128_t  op1, op2;
 
