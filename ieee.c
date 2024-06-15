@@ -5818,15 +5818,18 @@ DEF_INST( vector_fp_test_data_class_immediate )
         }
     }
 
-    // Selected bit is 1 for all elements (match)
-    if (one_bit_found == TRUE && zero_bit_found == FALSE)
-        regs->psw.cc = 0;
-    // Selected bit is 1 for at least one but not all elements (when S-bit is zero)
-    // Note: When the selected bit is 1 and the S-bit is 1 the previous if will be true
     if (one_bit_found == TRUE)
-        regs->psw.cc = 1;
-    // Selected bit is 0 for all elements (no match)
+    {
+        if (zero_bit_found == TRUE)
+            // Selected bit is 1 for at least one but not all elements (when S-bit is zero)
+            // Note: When the selected bit is 1 and the S-bit is 1 the previous if will not be true
+            regs->psw.cc = 1;
+        else
+            // Selected bit is 1 for all elements (match)
+            regs->psw.cc = 0;
+    }
     else
+        // Selected bit is 0 for all elements (no match)
         regs->psw.cc = 3;
 
 #undef M5_SE
@@ -7087,11 +7090,6 @@ DEF_INST( vector_fp_load_rounded )
 
     ZVECTOR_CHECK( regs );
 
-    //
-    // TODO: implement this instruction
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-
 #define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
 #define M4_XC ((m4 & 0x4) != 0) // IEEE-inexact-exception control (XxC)  See SUPPRESS_INEXACT
 #define M4_RE ((m4 & 0x3) != 0) // Reserved
@@ -7543,7 +7541,7 @@ DEF_INST( vector_fp_perform_sign_operation )
                     op2.v |= 0x8000000000000000ULL;
                     break;
                 case 2:  // Positive
-                    op2.v &= 0x7FFFFFFFFFFFFFFFULL;
+                    op2.v &= ~0x8000000000000000ULL;
                     break;
                 }
 
@@ -7570,7 +7568,7 @@ DEF_INST( vector_fp_perform_sign_operation )
                     op2.v |= 0x80000000;
                     break;
                 case 2:  // Positive
-                    op2.v |= 0x7FFFFFFF;
+                    op2.v &= ~0x80000000;
                     break;
                 }
 
@@ -7593,7 +7591,7 @@ DEF_INST( vector_fp_perform_sign_operation )
             op2.v[FLOAT128_HI] |= 0x8000000000000000ULL;
             break;
         case 2:  // Positive
-            op2.v[FLOAT128_HI] &= 0x7FFFFFFFFFFFFFFFULL;
+            op2.v[FLOAT128_HI] &= ~0x8000000000000000ULL;
             break;
         }
 
@@ -8879,7 +8877,6 @@ DEF_INST( vector_fp_compare_high )
 /*   WFMINXB V1,V2,V3,M6  VFMIN V1,V2,V3,4,8,M6                      */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-// FixMe!  Add vector_fp_minimum to tables
 DEF_INST( vector_fp_minimum )
 {
     int     v1, v2, v3, m4, m5, m6;
@@ -8889,9 +8886,8 @@ DEF_INST( vector_fp_minimum )
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
+
+    /* FixMe! Investigate how to implement this instruction! */
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
@@ -8904,9 +8900,7 @@ DEF_INST( vector_fp_minimum )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
-    {
         ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    }
 
     if ( m4 == 3 )  // Long format
     {
@@ -8919,11 +8913,10 @@ DEF_INST( vector_fp_minimum )
                 VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-/* !!!! */
-                softfloat_exceptionFlags = 0;
+                /* FixMe! Write some code that implements this instruction! */
 
 
-                switch (m5)
+                switch (m6)
                 {
                 case 0:   // IEEE MinNum
                     break;
@@ -8948,7 +8941,6 @@ DEF_INST( vector_fp_minimum )
                 }
 
 
-
                 newcc = FLOAT64_COMPARE( op2, op3 );
                 if (newcc == 3)
                 {
@@ -8970,6 +8962,7 @@ DEF_INST( vector_fp_minimum )
                     VECTOR_PUT_FLOAT64_NOCC( op2, v1, i, regs );
                 }
 
+
             }
         }
     }
@@ -8984,7 +8977,7 @@ DEF_INST( vector_fp_minimum )
                 VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
-/* !!!! */
+                /* FixMe! Write some code that implements this instruction! */
 
             }
         }
@@ -8996,15 +8989,13 @@ DEF_INST( vector_fp_minimum )
         VECTOR_GET_FLOAT128_OP( op3, v3, regs );
         VECTOR_GET_FLOAT128_OP( op2, v2, regs );
 
-/* !!!! */
+        /* FixMe! Write some code that implements this instruction! */
 
     }
 
 #undef M5_SE
 #undef M5_RE
 
-
-    //
     ZVECTOR_END( regs );
 }
 
@@ -9019,7 +9010,6 @@ DEF_INST( vector_fp_minimum )
 /*   WFMAXXB V1,V2,V3,M6  VFMAX V1,V2,V3,4,8,M6                      */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-// FixMe!  Add vector_fp_maximum to tables
 DEF_INST( vector_fp_maximum )
 {
     int     v1, v2, v3, m4, m5, m6;
@@ -9028,9 +9018,8 @@ DEF_INST( vector_fp_maximum )
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
+
+    /* FixMe! Investigate how to implement this instruction! */
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
@@ -9043,9 +9032,7 @@ DEF_INST( vector_fp_maximum )
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
     else
-    {
         ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    }
 
     if ( m4 == 3 )  // Long format
     {
@@ -9058,8 +9045,10 @@ DEF_INST( vector_fp_maximum )
                 VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-/* !!!! */
-                switch (m5)
+                /* FixMe! Write some code that implements this instruction! */
+
+
+                switch (m6)
                 {
                 case 0:   // IEEE MaxNum
                     break;
@@ -9083,6 +9072,7 @@ DEF_INST( vector_fp_maximum )
                     break;
                 }
 
+
             }
         }
     }
@@ -9097,7 +9087,7 @@ DEF_INST( vector_fp_maximum )
                 VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
-/* !!!! */
+                /* FixMe! Write some code that implements this instruction! */
 
             }
         }
@@ -9109,15 +9099,13 @@ DEF_INST( vector_fp_maximum )
         VECTOR_GET_FLOAT128_OP( op3, v3, regs );
         VECTOR_GET_FLOAT128_OP( op2, v2, regs );
 
-/* !!!! */
+        /* FixMe! Write some code that implements this instruction! */
 
     }
 
 #undef M5_SE
 #undef M5_RE
 
-
-    //
     ZVECTOR_END( regs );
 }
 

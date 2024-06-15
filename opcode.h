@@ -3641,6 +3641,7 @@ DEF_INST(vector_find_any_element_equal);
 DEF_INST(vector_permute_doubleword_immediate);
 DEF_INST(vector_bit_permute);
 DEF_INST(vector_string_range_compare);
+DEF_INST(vector_string_search);
 DEF_INST(vector_permute);
 DEF_INST(vector_select);
 DEF_INST(vector_fp_multiply_and_subtract);

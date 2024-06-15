@@ -2341,6 +2341,24 @@ DEF_INST( vector_string_range_compare )
 }
 
 /*-------------------------------------------------------------------*/
+/* E78B VSTRS  - Vector String Search                        [VRR-d] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_string_search )
+{
+    int     v1, v2, v3, v4, m5, m6;
+
+    VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+    //
+    // TODO: insert code here
+    //
+    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
+    //
+    ZVECTOR_END( regs );
+}
+
+/*-------------------------------------------------------------------*/
 /* E78C VPERM  - Vector Permute                              [VRR-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_permute )

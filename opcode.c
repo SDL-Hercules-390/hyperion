@@ -5334,7 +5334,7 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E788*/ GENx___x___x___ ,
  /*E789*/ GENx___x___x___ ,
  /*E78A*/ GENx___x___x900("VSTRC"  , VRR_D  , ASMFMT_VRR_D  , vector_string_range_compare                              ),
- /*E78B*/ GENx___x___x___ ,
+ /*E78B*/ GENx___x___x900("VSTRS"  , VRR_D  , ASMFMT_VRR_D  , vector_string_search                                     ),
  /*E78C*/ GENx___x___x900("VPERM"  , VRR_E  , ASMFMT_VRR_E  , vector_permute                                           ),
  /*E78D*/ GENx___x___x900("VSEL"   , VRR_E  , ASMFMT_VRR_E  , vector_select                                            ),
  /*E78E*/ GENx___x___x900("VFMS"   , VRR_E  , ASMFMT_VRR_E  , vector_fp_multiply_and_subtract                          ),
