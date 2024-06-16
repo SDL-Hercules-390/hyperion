@@ -1098,15 +1098,81 @@ DEF_INST( vector_replicate )
 DEF_INST( vector_population_count )
 {
     int     v1, v2, m3, m4, m5;
+    int     i, j, count;
+    U64     delement;
+    U32     felement;
+    U16     helement;
+    BYTE    belement;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    if ( !FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
+    {
+        if ( m3 > 1 )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+    }
+
+    switch (m3)
+    {
+    case 0:  // Byte
+        for (i=0; i < 16; i++)
+        {
+            count = 0;
+            belement = regs->VR_B(v2, i);
+            for (j=0; j < 8; j++)
+            {
+                if (belement & 0x80) count++;
+                belement <<= 1;
+            }
+            regs->VR_B(v1, i) = count;
+        }
+        break;
+    case 1:  // Halfword
+        for (i=0; i < 8; i++)
+        {
+            count = 0;
+            helement = regs->VR_H(v2, i);
+            for (j=0; j < 16; j++)
+            {
+                if (helement & 0x8000) count++;
+                helement <<= 1;
+            }
+            regs->VR_H(v1, i) = count;
+        }
+        break;
+    case 2:  // Fullword
+        for (i=0; i < 4; i++)
+        {
+            count = 0;
+            felement = regs->VR_F(v2, i);
+            for (j=0; j < 32; j++)
+            {
+                if (felement & 0x80000000) count++;
+                felement <<= 1;
+            }
+            regs->VR_F(v1, i) = count;
+        }
+        break;
+    case 3:  // Doubleword
+        for (i=0; i < 2; i++)
+        {
+            count = 0;
+            delement = regs->VR_D(v2, i);
+            for (j=0; j < 64; j++)
+            {
+                if (delement & 0x8000000000000000ull) count++;
+                delement <<= 1;
+            }
+            regs->VR_D(v1, i) = count;
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -1116,15 +1182,71 @@ DEF_INST( vector_population_count )
 DEF_INST( vector_count_trailing_zeros )
 {
     int     v1, v2, m3, m4, m5;
+    int     i, j, count;
+    U64     delement;
+    U32     felement;
+    U16     helement;
+    BYTE    belement;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m3)
+    {
+    case 0:  // Byte
+        for (i=0; i < 16; i++)
+        {
+            belement = regs->VR_B(v2, i);
+            for (j=0, count=0; j < 8; j++, count++)
+            {
+                if (belement & 0x01) break;
+                belement >>= 1;
+            }
+            regs->VR_B(v1, i) = count;
+        }
+        break;
+    case 1:  // Halfword
+        for (i=0; i < 8; i++)
+        {
+            helement = regs->VR_H(v2, i);
+            for (j=0, count=0; j < 16; j++, count++)
+            {
+                if (helement & 0x0001) break;
+                helement >>= 1;
+            }
+            regs->VR_H(v1, i) = count;
+        }
+        break;
+    case 2:  // Fullword
+        for (i=0; i < 4; i++)
+        {
+            felement = regs->VR_F(v2, i);
+            for (j=0, count=0; j < 32; j++, count++)
+            {
+                if (felement & 0x00000001) break;
+                felement >>= 1;
+            }
+            regs->VR_F(v1, i) = count;
+        }
+        break;
+    case 3:  // Doubleword
+        for (i=0; i < 2; i++)
+        {
+            delement = regs->VR_D(v2, i);
+            for (j=0, count=0; j < 64; j++, count++)
+            {
+                if (delement & 0x0000000000000001ull) break;
+                delement >>= 1;
+            }
+            regs->VR_D(v1, i) = count;
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -1134,15 +1256,71 @@ DEF_INST( vector_count_trailing_zeros )
 DEF_INST( vector_count_leading_zeros )
 {
     int     v1, v2, m3, m4, m5;
+    int     i, j, count;
+    U64     delement;
+    U32     felement;
+    U16     helement;
+    BYTE    belement;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m3)
+    {
+    case 0:  // Byte
+        for (i=0; i < 16; i++)
+        {
+            belement = regs->VR_B(v2, i);
+            for (j=0, count=0; j < 8; j++, count++)
+            {
+                if (belement & 0x80) break;
+                belement <<= 1;
+            }
+            regs->VR_B(v1, i) = count;
+        }
+        break;
+    case 1:  // Halfword
+        for (i=0; i < 8; i++)
+        {
+            helement = regs->VR_H(v2, i);
+            for (j=0, count=0; j < 16; j++, count++)
+            {
+                if (helement & 0x8000) break;
+                helement <<= 1;
+            }
+            regs->VR_H(v1, i) = count;
+        }
+        break;
+    case 2:  // Fullword
+        for (i=0; i < 4; i++)
+        {
+            felement = regs->VR_F(v2, i);
+            for (j=0, count=0; j < 32; j++, count++)
+            {
+                if (felement & 0x80000000) break;
+                felement <<= 1;
+            }
+            regs->VR_F(v1, i) = count;
+        }
+        break;
+    case 3:  // Doubleword
+        for (i=0; i < 2; i++)
+        {
+            delement = regs->VR_D(v2, i);
+            for (j=0, count=0; j < 64; j++, count++)
+            {
+                if (delement & 0x8000000000000000ull) break;
+                delement <<= 1;
+            }
+            regs->VR_D(v1, i) = count;
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -1182,16 +1360,16 @@ DEF_INST( vector_isolate_string )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            if (regs->VR_B( v2, i ) != 0)
+            if (regs->VR_B(v2, i) != 0)
             {
-                regs->VR_B( v1, i ) = regs->VR_B( v2, i );
+                regs->VR_B(v1, i) = regs->VR_B(v2, i);
             }
             else
             {
                 newcc = 0;
                 for (; i < 16; i++)
                 {
-                    regs->VR_B( v1, i ) = 0;
+                    regs->VR_B(v1, i) = 0;
                 }
                 break;
             }
@@ -1200,16 +1378,16 @@ DEF_INST( vector_isolate_string )
     case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
-            if (regs->VR_H( v2, i ) != 0)
+            if (regs->VR_H(v2, i) != 0)
             {
-                regs->VR_H( v1, i ) = regs->VR_H( v2, i );
+                regs->VR_H(v1, i) = regs->VR_H(v2, i);
             }
             else
             {
                 newcc = 0;
                 for (; i < 8; i++)
                 {
-                    regs->VR_H( v1, i ) = 0;
+                    regs->VR_H(v1, i) = 0;
                 }
                 break;
             }
@@ -1218,16 +1396,16 @@ DEF_INST( vector_isolate_string )
     case 2:  // Word
         for (i=0; i < 4; i++)
         {
-            if (regs->VR_F( v2, i ) != 0)
+            if (regs->VR_F(v2, i) != 0)
             {
-                regs->VR_F( v1, i ) = regs->VR_F( v2, i );
+                regs->VR_F(v1, i) = regs->VR_F(v2, i);
             }
             else
             {
                 newcc = 0;
                 for (; i < 4; i++)
                 {
-                    regs->VR_F( v1, i ) = 0;
+                    regs->VR_F(v1, i) = 0;
                 }
                 break;
             }
@@ -2362,7 +2540,7 @@ DEF_INST( vector_string_search )
     /* Get the contents of v2 and v3 as a string of bytes arranged */
     /* as they would be if they were in the guests storage.        */
     for (i = 0; i < 16; i++)
-        v2_temp[i] = regs->VR_B( v2, i );
+        v2_temp[i] = regs->VR_B(v2, i);
     for (i = 0; i < 16; i++)
         v3_temp[i] = regs->VR_B( v3, i );
 
@@ -2686,7 +2864,7 @@ DEF_INST(vector_pack_logical_saturate)
     case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
-            if ( SV_D( temp, i ) > 0x00000000FFFFFFFFULL )
+            if ( SV_D( temp, i ) > 0x00000000FFFFFFFFull )
             {
                 regs->VR_F( v1, i ) = 0xFFFFFFFF;
                 sat++;
@@ -2783,7 +2961,7 @@ DEF_INST( vector_pack_saturate )
     case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
-            if ( SV_D( temp, i ) > 0x000000007FFFFFFFULL )
+            if ( SV_D( temp, i ) > 0x000000007FFFFFFFull )
             {
                 regs->VR_F( v1, i ) = 0x7FFFFFFF;
                 sat++;
