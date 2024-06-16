@@ -2346,15 +2346,196 @@ DEF_INST( vector_string_range_compare )
 DEF_INST( vector_string_search )
 {
     int     v1, v2, v3, v4, m5, m6;
+    char    v2_temp[16], v3_temp[16], nulls[16];
+    int     char_size, substr_len, str_len, i, k, eos;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+#define M6_RE ((m6 & 0xD) != 0) // Reserved
+#define M6_ZS ((m6 & 0x2) != 0) // Zero Search
+
+    if (m5 > 2 || M6_RE)
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* Get the contents of v2 and v3 as a string of bytes arranged */
+    /* as they would be if they were in the guests storage.        */
+    for (i = 0; i < 16; i++)
+        v2_temp[i] = regs->VR_B( v2, i );
+    for (i = 0; i < 16; i++)
+        v3_temp[i] = regs->VR_B( v3, i );
+
+    switch (m5)
+    {
+    case 0:
+        char_size = 1;
+        break;
+    case 1:
+        char_size = 2;
+        break;
+    case 2:
+        char_size = 4;
+        break;
+    }
+
+    substr_len = regs->VR_B( v4, 7 );
+    if (substr_len < 0 || substr_len > 16)
+        goto vector_string_search_mdresult;
+
+    str_len = i = k = eos = 0;
+
+    if (M6_ZS)
+    {
+        memset( nulls, 0, sizeof(nulls) );
+
+        for (i = 0; i < 16; i += char_size)
+        {
+            if ( memcmp(&v3_temp[i], &nulls, char_size) == 0 )
+            {
+                break;
+            }
+        }
+
+        if ( i < substr_len )
+        {
+            substr_len = i;
+        }
+
+        if (substr_len == 0)
+        {
+            goto vector_string_search_full_match;
+        }
+        else
+        {
+            for ( ; ; k += char_size )
+            {
+                if ( memcmp(&v2_temp[k], &nulls, char_size) == 0 )
+                {
+                    eos = 1;
+                    break;
+                }
+            }
+
+            str_len = k;
+            k = 0;
+
+            if ( (substr_len % char_size) != 0 )
+            {
+                goto vector_string_search_mdresult;
+            }
+
+            for ( ; ; k += char_size )
+            {
+                if ( k < str_len )
+                {
+                    if ( eos == 0 || ( k + substr_len ) <= str_len )
+                    {
+                        if ((k + substr_len) <= str_len)
+                        {
+                            if ( memcmp(&v2_temp[k], &v3_temp[0], substr_len) == 0 )
+                            {
+                                goto vector_string_search_full_match;
+                            }
+                        }
+                        else
+                        {
+                            if ( memcmp(&v2_temp[k], &v3_temp[0], k + substr_len - 16) == 0 )
+                            {
+                                goto vector_string_search_partial_match;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        goto vector_string_search_no_match_zero;
+                    }
+                }
+                else
+                {
+                    goto vector_string_search_no_match_zero;
+                }
+            }
+        }
+    }
+    else
+    {
+        if ( substr_len == 0 )
+        {
+            goto vector_string_search_full_match;
+        }
+        else
+        {
+            if ( (substr_len % char_size) != 0 )
+            {
+                goto vector_string_search_mdresult;
+            }
+
+            for ( ; ; k += char_size )
+            {
+                if (k == 16)
+                {
+                    goto vector_string_search_no_match;
+                }
+
+                if ((k + substr_len) <= 16)
+                {
+                    if ( memcmp(&v2_temp[k], &v3_temp[0], substr_len) == 0 )
+                    {
+                        goto vector_string_search_full_match;
+                    }
+                }
+                else
+                {
+                    if ( memcmp(&v2_temp[k], &v3_temp[0], k + substr_len - 16) == 0 )
+                    {
+                        goto vector_string_search_partial_match;
+                    }
+                }
+            }
+        }
+    }
+
+    UNREACHABLE_CODE( goto vector_string_search_mdresult );
+
+vector_string_search_mdresult:
+    regs->VR_D( v1, 0 ) = 0;                     /* Model dependant */
+    regs->VR_D( v1, 1 ) = 0;                     /* results are     */
+    regs->psw.cc = 0;  /* no match */            /* unpredictable   */
+    goto vector_string_search_end;
+
+vector_string_search_no_match:
+    regs->VR_D( v1, 0 ) = 16;
+    regs->VR_D( v1, 1 ) = 0;
+    regs->psw.cc = 0;  /* no match */
+    goto vector_string_search_end;
+
+vector_string_search_no_match_zero:
+    regs->VR_D( v1, 0 ) = 16;
+    regs->VR_D( v1, 1 ) = 0;
+    if ( eos == 1 )
+        regs->psw.cc = 1;  /* no match, zero char */
+    else
+        regs->psw.cc = 0;  /* no match */
+    goto vector_string_search_end;
+
+vector_string_search_full_match:
+    regs->VR_D( v1, 0 ) = k;
+    regs->VR_D( v1, 1 ) = 0;
+    regs->psw.cc = 2;  /* full match */
+    goto vector_string_search_end;
+
+vector_string_search_partial_match:
+    regs->VR_D( v1, 0 ) = k;
+    regs->VR_D( v1, 1 ) = 0;
+    regs->psw.cc = 3;  /* partial match */
+    goto vector_string_search_end;
+
+vector_string_search_end:
+
+#undef M6_RE
+#undef M6_ZS
+
     ZVECTOR_END( regs );
 }
 
