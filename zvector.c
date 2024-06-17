@@ -1789,11 +1789,10 @@ DEF_INST( vector_and_with_complement )
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    regs->VR_D(v1, 0) = regs->VR_D(v2, 0) & ~regs->VR_D(v3, 0);
+    regs->VR_D(v1, 1) = regs->VR_D(v2, 1) & ~regs->VR_D(v3, 1);
+
     ZVECTOR_END( regs );
 }
 
@@ -1807,11 +1806,10 @@ DEF_INST( vector_or )
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    regs->VR_D(v1, 0) = regs->VR_D(v2, 0) | regs->VR_D(v3, 0);
+    regs->VR_D(v1, 1) = regs->VR_D(v2, 1) | regs->VR_D(v3, 1);
+
     ZVECTOR_END( regs );
 }
 
@@ -1825,11 +1823,27 @@ DEF_INST( vector_nor )
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    regs->VR_D(v1, 0) = ~regs->VR_D(v2, 0) & ~regs->VR_D(v3, 0);
+    regs->VR_D(v1, 1) = ~regs->VR_D(v2, 1) & ~regs->VR_D(v3, 1);
+
+    ZVECTOR_END( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E76C VNX    - Vector Not Exclusive OR                     [VRR-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_not_exclusive_or )
+{
+    int     v1, v2, v3, m4, m5, m6;
+
+    VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    regs->VR_D(v1, 0) = ~(regs->VR_D(v2, 0) ^ regs->VR_D(v3, 0));
+    regs->VR_D(v1, 1) = ~(regs->VR_D(v2, 1) ^ regs->VR_D(v3, 1));
+
     ZVECTOR_END( regs );
 }
 
@@ -1846,6 +1860,40 @@ DEF_INST( vector_exclusive_or )
 
     regs->VR_D(v1, 0) = regs->VR_D(v2, 0) ^ regs->VR_D(v3, 0);
     regs->VR_D(v1, 1) = regs->VR_D(v2, 1) ^ regs->VR_D(v3, 1);
+
+    ZVECTOR_END( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E76E VNN    - Vector NAND                                 [VRR-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_nand )
+{
+    int     v1, v2, v3, m4, m5, m6;
+
+    VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    regs->VR_D(v1, 0) = ~regs->VR_D(v2, 0) | ~regs->VR_D(v3, 0);
+    regs->VR_D(v1, 1) = ~regs->VR_D(v2, 1) | ~regs->VR_D(v3, 1);
+
+    ZVECTOR_END( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E76F VOC    - Vector OR with Complement                   [VRR-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_or_with_complement )
+{
+    int     v1, v2, v3, m4, m5, m6;
+
+    VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    regs->VR_D(v1, 0) = regs->VR_D(v2, 0) | ~regs->VR_D(v3, 0);
+    regs->VR_D(v1, 1) = regs->VR_D(v2, 1) | ~regs->VR_D(v3, 1);
 
     ZVECTOR_END( regs );
 }
