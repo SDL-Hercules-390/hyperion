@@ -1726,33 +1726,38 @@ DEF_INST( vector_sum_across_quadword )
 {
     int     v1, v2, v3, m4, m5, m6;
     U64     high, low, add;
+    int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
 
+    high = low = add = 0;
+
     switch (m4)
     {
-    case 2:
-        regs->VR_D(v1, 0) = 0x00;
-        regs->VR_D(v1, 1) = regs->VR_F(v2, 0) + regs->VR_F(v2, 1) + regs->VR_F(v2, 2) + regs->VR_F(v2, 3)
-            + regs->VR_F(v3, 3);
+    case 2:  // Word
+        for (i = 0; i < 4; i++)
+        {
+            add += regs->VR_F(v2, i);
+        }
+        add += regs->VR_F(v3, 3);
         break;
-    case 3:
-        high = 0x00;
+    case 3:  // Doubleword
         low = regs->VR_D(v2, 0);
         add = low + regs->VR_D(v2, 1);
         if (add < low) high++;
         low = add;
         add = low + regs->VR_D(v3, 1);
         if (add < low) high++;
-        regs->VR_D(v1, 0) = high;
-        regs->VR_D(v1, 1) = add;
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
     }
+
+    regs->VR_D(v1, 0) = high;
+    regs->VR_D(v1, 1) = add;
 
     ZVECTOR_END( regs );
 }
