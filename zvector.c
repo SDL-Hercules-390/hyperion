@@ -1142,7 +1142,7 @@ DEF_INST( vector_population_count )
             regs->VR_H(v1, i) = count;
         }
         break;
-    case 2:  // Fullword
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             count = 0;
@@ -1218,7 +1218,7 @@ DEF_INST( vector_count_trailing_zeros )
             regs->VR_H(v1, i) = count;
         }
         break;
-    case 2:  // Fullword
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             felement = regs->VR_F(v2, i);
@@ -1292,7 +1292,7 @@ DEF_INST( vector_count_leading_zeros )
             regs->VR_H(v1, i) = count;
         }
         break;
-    case 2:  // Fullword
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             felement = regs->VR_F(v2, i);
@@ -1430,15 +1430,49 @@ DEF_INST( vector_isolate_string )
 DEF_INST( vector_sign_extend_to_doubleword )
 {
     int     v1, v2, m3, m4, m5;
+    U64     element;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m3)
+    {
+    case 0:  // Byte
+        element = regs->VR_B(v2, 7);
+        if (element & 0x0000000000000080ull)
+            element |= 0xFFFFFFFFFFFFFF00ull;
+        regs->VR_D(v1, 0) = element;
+        element = regs->VR_B(v2, 15);
+        if (element & 0x0000000000000080ull)
+            element |= 0xFFFFFFFFFFFFFF00ull;
+        regs->VR_D(v1, 1) = element;
+        break;
+    case 1:  // Halfword
+        element = regs->VR_H(v2, 3);
+        if (element & 0x0000000000008000ull)
+            element |= 0xFFFFFFFFFFFF0000ull;
+        regs->VR_D(v1, 0) = element;
+        element = regs->VR_H(v2, 7);
+        if (element & 0x0000000000008000ull)
+            element |= 0xFFFFFFFFFFFF0000ull;
+        regs->VR_D(v1, 1) = element;
+        break;
+    case 2:  // Word
+        element = regs->VR_F(v2, 1);
+        if (element & 0x0000000080000000ull)
+            element |= 0xFFFFFFFF00000000ull;
+        regs->VR_D(v1, 0) = element;
+        element = regs->VR_F(v2, 3);
+        if (element & 0x0000000080000000ull)
+            element |= 0xFFFFFFFF00000000ull;
+        regs->VR_D(v1, 1) = element;
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -1559,15 +1593,45 @@ DEF_INST( vector_load_vr_from_grs_disjoint )
 DEF_INST( vector_sum_across_word )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     i, j;
+    U32     sum[4];
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m4)
+    {
+    case 0:  // Byte
+        for (i = 0, j = 0; i < 4; i++, j+=4)
+        {
+            sum[i] = 0;
+            sum[i] += regs->VR_B(v2, j+0);
+            sum[i] += regs->VR_B(v2, j+1);
+            sum[i] += regs->VR_B(v2, j+2);
+            sum[i] += regs->VR_B(v2, j+3);
+            sum[i] += regs->VR_B(v3, j+3);
+        }
+        break;
+    case 1:  // Halfword
+        for (i = 0, j = 0; i < 4; i++, j+=2)
+        {
+            sum[i] = 0;
+            sum[i] += regs->VR_H(v2, j+0);
+            sum[i] += regs->VR_H(v2, j+1);
+            sum[i] += regs->VR_H(v3, j+1);
+        }
+        break;
+    default:
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        break;
+    }
+
+    regs->VR_F(v1, 0) = sum[0];
+    regs->VR_F(v1, 1) = sum[1];
+    regs->VR_F(v1, 2) = sum[2];
+    regs->VR_F(v1, 3) = sum[3];
+
     ZVECTOR_END( regs );
 }
 
@@ -1577,15 +1641,43 @@ DEF_INST( vector_sum_across_word )
 DEF_INST( vector_sum_across_doubleword )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     i, j;
+    U64     sum[2];
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m4)
+    {
+    case 1:  // Halfword
+        for (i = 0, j = 0; i < 2; i++, j+=4)
+        {
+            sum[i] = 0;
+            sum[i] += regs->VR_H(v2, j+0);
+            sum[i] += regs->VR_H(v2, j+1);
+            sum[i] += regs->VR_H(v2, j+2);
+            sum[i] += regs->VR_H(v2, j+3);
+            sum[i] += regs->VR_H(v3, j+3);
+        }
+        break;
+    case 2:  // Word
+        for (i = 0, j = 0; i < 2; i++, j+=2)
+        {
+            sum[i] = 0;
+            sum[i] += regs->VR_F(v2, j+0);
+            sum[i] += regs->VR_F(v2, j+1);
+            sum[i] += regs->VR_F(v3, j+1);
+        }
+        break;
+    default:
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        break;
+    }
+
+    regs->VR_D(v1, 0) = sum[0];
+    regs->VR_D(v1, 1) = sum[1];
+
     ZVECTOR_END( regs );
 }
 
@@ -1595,15 +1687,35 @@ DEF_INST( vector_sum_across_doubleword )
 DEF_INST( vector_checksum )
 {
     int     v1, v2, v3, m4, m5, m6;
+    U64     ksum;
+    U32     carry[2];
+    int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    ksum = 0;
+    carry[0] = carry[1] = 0;
+
+    for (i = 0; i < 4; i++)
+    {
+        ksum += regs->VR_F(v2, i);
+        carry[1] = ksum >> 32;
+        if (carry[0] != carry[1])
+            ksum += 1;
+        carry[0] = carry[1];
+    }
+
+    ksum += regs->VR_F(v3, 1);
+    carry[1] = ksum >> 32;
+    if (carry[0] != carry[1])
+        ksum += 1;
+
+    regs->VR_F(v1, 0) = 0;
+    regs->VR_F(v1, 1) = ksum;
+    regs->VR_D(v1, 1) = 0;
+
     ZVECTOR_END( regs );
 }
 
