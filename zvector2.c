@@ -54,22 +54,22 @@ facility  code  test#   Instruction                                             
     vd       x   05     E671 VECTOR ADD DECIMAL                                 VAP         VRI-f
     vd2      x   07     E672 VECTOR SHIFT AND ROUND DECIMAL REGISTER            VSRPR       VRI-f
     vd       x   05     E673 VECTOR SUBTRACT DECIMAL                            VSP         VRI-f
-    vd2                 E674 DECIMAL SCALE AND CONVERT TO HFP                   VSCHP       VRR-b
+    vd2      x   17     E674 DECIMAL SCALE AND CONVERT TO HFP                   VSCHP       VRR-b
     nn                  E675 VECTOR FP CONVERT AND ROUND TO NNP                 VCRNF       VRR-c
     vd       x   15     E677 VECTOR COMPARE DECIMAL                             VCP         VRR-h
     vd       x   05     E678 VECTOR MULTIPLY DECIMAL                            VMP         VRI-f
     vd       x   05     E679 VECTOR MULTIPLY AND SHIFT DECIMAL                  VMSP        VRI-f
     vd       x   05     E67A VECTOR DIVIDE DECIMAL                              VDP         VRI-f
     vd       x   05     E67B VECTOR REMAINDER DECIMAL                           VRP         VRI-f
-    vd2                 E67C DECIMAL SCALE AND CONVERT AND SPLIT TO HFP         VSCSHP      VRR-b
-    vd2                 E67D VECTOR CONVERT HFP TO SCALED DECIMAL               VCSPH       VRR-j
+    vd2      x   18     E67C DECIMAL SCALE AND CONVERT AND SPLIT TO HFP         VSCSHP      VRR-b
+    vd2      x   19     E67D VECTOR CONVERT HFP TO SCALED DECIMAL               VCSPH       VRR-j
     vd       x   05     E67E VECTOR SHIFT AND DIVIDE DECIMAL                    VSDP        VRI-f
 
   facility (bit):
-    NN  -   165 - Neural-network-processing-assist facility
-    V2  -   148 - Vector-enhancements facility 2
-    VD  -   134 - Vector packed-decimal facility
-    VD2 -   192 - Vector-packed-decimal-enhancement facility 2
+    nn  -   165 - Neural-network-processing-assist facility
+    v2  -   148 - Vector-enhancements facility 2
+    vd  -   134 - Vector packed-decimal facility
+    vd2 -   192 - Vector-packed-decimal-enhancement facility 2
 
   test#:
     Instruction test are named 'zvector-e6-xx-hint' where 'xx' is the test# and 'hint' provides a hint of the
@@ -431,6 +431,22 @@ static inline void dn_logmsg( const char * msg, decNumber* dn  )
     logmsg("%s: decNumber: digits=%d, bits=%hhx, exponent=%d, value=%s \n", msg, dn->digits, dn->bits, dn->exponent, string);
 }
 
+/*-------------------------------------------------------------------*/
+/* Debug helper for decNumber Context                                */
+/*                                                                   */
+/* Input:                                                            */
+/*      msg         pointer to logmsg context string                 */
+/*      context     pointer to decContext                            */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static inline void dc_logmsg( const char * msg, decContext* set  )
+{
+    int rounding;
+
+    rounding = decContextGetRounding( set );
+    logmsg("%s: decContext: rounding %d \n", msg, rounding);
+}
+
 /*===================================================================*/
 /* Local Vector Register Helpers                                     */
 /*===================================================================*/
@@ -612,6 +628,24 @@ static inline void lv_copy_to_vr(REGS* regs, int v1, LOCAL_REGS* lregs, int v2, 
 /*===================================================================*/
 /* Vector Register Helpers                                           */
 /*===================================================================*/
+
+/*-------------------------------------------------------------------*/
+/* Is a vector register true zero                                    */
+/*                                                                   */
+/* Input:                                                            */
+/*      regs    CPU register context for VR access                   */
+/*      v1      vector register - copied to                          */
+/* Returns:                                                          */
+/*      true    all vr bytes are zero                                */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static inline bool vr_is_true_zero(REGS* regs, int v1)
+{
+    if (regs->VR_D( v1, 0 ) != 0 ) return false;
+    if (regs->VR_D( v1, 1 ) != 0 ) return false;
+
+    return true;
+}
 
 /*-------------------------------------------------------------------*/
 /* Check a signed packed decimal VR for valid digits                 */
@@ -966,6 +1000,534 @@ static inline void zn_ContextDefault( decContext* set )
     set->digits= DECNUMDIGITS;
 }
 
+/*===================================================================*/
+/* hexFloat (from float.c)                                           */
+/*===================================================================*/
+/*-------------------------------------------------------------------*/
+/* Structure definition for internal short floatingpoint format      */
+/*-------------------------------------------------------------------*/
+typedef struct _SHORT_FLOAT {
+        U32     short_fract;            /* Fraction                  */
+        short   expo;                   /* Exponent + 64             */
+        BYTE    sign;                   /* Sign                      */
+} SHORT_FLOAT;
+
+
+/*-------------------------------------------------------------------*/
+/* Structure definition for internal long floatingpoint format       */
+/*-------------------------------------------------------------------*/
+typedef struct _LONG_FLOAT {
+        U64     long_fract;             /* Fraction                  */
+        short   expo;                   /* Exponent + 64             */
+        BYTE    sign;                   /* Sign                      */
+} LONG_FLOAT;
+
+
+/*-------------------------------------------------------------------*/
+/* Structure definition for internal extended floatingpoint format   */
+/*-------------------------------------------------------------------*/
+typedef struct _EXTENDED_FLOAT {
+        U64     ms_fract, ls_fract;     /* Fraction                  */
+        short   expo;                   /* Exponent + 64             */
+        BYTE    sign;                   /* Sign                      */
+} EXTENDED_FLOAT;
+
+/*===================================================================*/
+/* copied from float.c    TEMPORARY                                  */
+/*===================================================================*/
+
+/*-------------------------------------------------------------------*/
+/* Get extended float from registers                                 */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted to             */
+/*      fpr1    Pointer to first register to be converted from       */
+/*      fpr2    Pointer to second register to be converted from      */
+/*-------------------------------------------------------------------*/
+static inline void get_ef( EXTENDED_FLOAT *fl, U64 *fpr1, U64 *fpr2)
+{
+    fl->sign = *fpr1 >> 63;
+    fl->expo = (*fpr1 >> 56) & 0x007F;
+    fl->ms_fract = (*fpr1 & 0x00FFFFFFFFFFFFFFULL) >> 8;
+    fl->ls_fract = (*fpr1 << 56)
+                 | (*fpr2 & 0x00FFFFFFFFFFFFFFULL);
+
+} /* end function get_ef */
+
+/*-------------------------------------------------------------------*/
+/* Store short float to register                                     */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted from           */
+/*      fpr     Pointer to register to be converted to               */
+/*-------------------------------------------------------------------*/
+static inline void store_sf( SHORT_FLOAT *fl, U32 *fpr )
+{
+    *fpr = ((U32)fl->sign << 31)
+         | ((U32)fl->expo << 24)
+         | (fl->short_fract);
+
+} /* end function store_sf */
+
+/*-------------------------------------------------------------------*/
+/* Store long float to register                                      */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted from           */
+/*      fpr     Pointer to register to be converted to               */
+/*-------------------------------------------------------------------*/
+static inline void store_lf( LONG_FLOAT *fl, U64 *fpr )
+{
+    *fpr = ((U64)fl->sign << 63)
+         | ((U64)fl->expo << 56)
+         | (fl->long_fract);
+
+} /* end function store_lf */
+
+/*-------------------------------------------------------------------*/
+/* Store extended float to register                                  */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted from           */
+/*      fpr1    Pointer to first register to be converted to         */
+/*      fpr2    Pointer to second register to be converted to        */
+/*-------------------------------------------------------------------*/
+static inline void store_ef( EXTENDED_FLOAT *fl, U64 *fpr1, U64 *fpr2 )
+{
+    *fpr1 = ((U64)fl->sign << 63)
+          | ((U64)fl->expo << 56)
+          | (fl->ms_fract << 8)
+          | (fl->ls_fract >> 56);
+    *fpr2 = ((U64)fl->sign << 63)
+          | (fl->ls_fract & 0x00FFFFFFFFFFFFFFULL);
+
+    if ( *fpr1 || *fpr2 ) {
+        *fpr2 |= ((((U64)fl->expo << 56) - 0x0E00000000000000ULL) & 0x7F00000000000000ULL);
+    }
+
+} /* end function store_ef */
+
+/*-------------------------------------------------------------------*/
+/* HEX FLOATING-POINT HELPERS                                        */
+/*-------------------------------------------------------------------*/
+#undef  SHORT_FLOAT_NUM_DIGITS
+#define SHORT_FLOAT_NUM_DIGITS       6
+
+#undef  LONG_FLOAT_NUM_DIGITS
+#define LONG_FLOAT_NUM_DIGITS       14
+
+#undef  EXTENDED_FLOAT_NUM_DIGITS
+#define EXTENDED_FLOAT_NUM_DIGITS   28
+
+/*===================================================================*/
+/* hexNumber                                                         */
+/*===================================================================*/
+/* hexNumber is similar to decNumber but with base 16 digits         */
+/*===================================================================*/
+
+  /* Bit settings for hexNumber.bits (same as decNumber)             */
+  #define HEXNEG    DECNEG   /* Sign; 1=negative, 0=positive or zero */
+  #define HEXINF    DECINF   /* 1=Infinity                           */
+  #define HEXNAN    DECNAN   /* 1=NaN                                */
+  #define HEXSNAN   DECSNAN  /* 1=sNaN                               */
+
+  typedef struct {
+    int digits;         /* Count of digits in the coefficient; >0    */
+    int exponent;       /* Unadjusted exponent, unbiased, in         */
+                        /* range: -1999999997 through 999999999      */
+    uint8_t  bits;           /* Indicator bits (see decNumber)            */
+                        /* Coefficient, from least significant unit  */
+    char hexDigit[DECNUMDIGITS];
+    } hexNumber;
+
+/* hexNumnber prototypes */
+static inline void hexNumberZero( hexNumber* hexN );
+static inline bool hexNumberIsZero( hexNumber* hexN );
+static inline void hexNumberCopy( hexNumber* hn,  hexNumber* rhs);
+static inline void hexNumberToString( hexNumber* hexN, char* s );
+static inline void decNumberToHexNumber( decNumber * dn, hexNumber* hexN );
+static inline void decNumberFromExtendedFloat( decNumber * dn, EXTENDED_FLOAT* ef );
+static inline void hexNumberRound( hexNumber* hn, hexNumber* rhs, int numDigits );
+static inline void hexNumberSplit( hexNumber* hn, SHORT_FLOAT* sf,  LONG_FLOAT* lf );
+static inline void hexNumberToShortFloat( hexNumber* hn, SHORT_FLOAT* sf );
+static inline void hexNumberToLongFloat( hexNumber* hn, LONG_FLOAT* lf );
+static inline void hexNumberToExtendedFloat( hexNumber* hn, EXTENDED_FLOAT* ef );
+
+/*-------------------------------------------------------------------*/
+/* hexNumberZero: set a hexNumber to zero                            */
+/*-------------------------------------------------------------------*/
+static inline void hexNumberZero( hexNumber* hexN )
+{
+    hexN->bits =   0;
+    hexN->exponent = 0;
+    hexN->digits = 1;
+    hexN->hexDigit[0] = 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* hexNumberIsZero: is hexNumber zero?                               */
+/*-------------------------------------------------------------------*/
+static inline bool hexNumberIsZero( hexNumber* hexN )
+{
+    if ( 1                              &&
+        (hexN->bits & ~HEXNEG) ==  0   &&
+        hexN->exponent == 0            &&
+        hexN->digits == 1              &&
+        hexN->hexDigit[0] == 0
+      )
+        return true;
+    else
+        return false;
+}
+
+/*-------------------------------------------------------------------*/
+/* hexNumberCopy: copy hexNumber                                     */
+/*-------------------------------------------------------------------*/
+static inline void hexNumberCopy( hexNumber* hn,  hexNumber* rhs)
+{
+    memcpy( hn, rhs, sizeof(hexNumber) );
+}
+
+/*-------------------------------------------------------------------*/
+/* hexNumberToString:  convert hexNumber to a string                 */
+/*   NOTE: currently only converts coefficient                       */
+/*-------------------------------------------------------------------*/
+static inline void hexNumberToString( hexNumber* hexN, char* s )
+{
+    char hc[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                    'A', 'B', 'C', 'D', 'E', 'F'
+                  };
+    int i;
+    for ( i = 0; i < hexN->digits; i++ )
+        s[hexN->digits-1 - i] = hc[ (int) hexN->hexDigit[i] ];
+
+    s[ hexN->digits ] = 0;                 /* add \0 to end string */
+}
+
+/*-------------------------------------------------------------------*/
+/* decNumberToHexNumber: convert a decNumber to a hexNumber          */
+/*-------------------------------------------------------------------*/
+static inline void decNumberToHexNumber( decNumber * dn, hexNumber* hexN )
+{
+    int i;                          /* loop index                    */
+    int hexNumberDigits;            /* count of hex digits           */
+    decNumber   dn16;               /* decNumber constant 16         */
+    decNumber   dnrem;              /* remainder decNumber           */
+    decNumber   dntemp;             /* temp decNumber                */
+    decContext  set;                /* zn default context            */
+
+    zn_ContextDefault( &set );
+    decNumberFromInt32( &dn16, 16 );
+
+    decNumberCopy( &dntemp, dn);
+    dntemp.bits &= ~DECNEG;            /* set positive */
+
+    for ( i = 0, hexNumberDigits = 0; !decNumberIsZero( &dntemp ) && i < DECNUMDIGITS; i++ )
+    {
+        decNumberRemainder( &dnrem, &dntemp, &dn16, &set );
+        decNumberDivideInteger( &dntemp, &dntemp, &dn16, &set );
+        hexN->hexDigit[ hexNumberDigits ] = (U8) decNumberToUInt32( &dnrem, &set );
+
+        //logmsg(" VSCHP  - hexNumber digit: %x \n", hexN->hexDigit[ hexNumberDigits ] );
+
+        hexNumberDigits++;
+    }
+
+    hexN->bits = dn->bits;        /* same sign */
+    hexN->digits = hexNumberDigits;
+    hexN->exponent = 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* decNumberFromExtendedFloat: convert an Extended Float to decNumber*/
+/*-------------------------------------------------------------------*/
+static inline void decNumberFromExtendedFloat( decNumber * dn, EXTENDED_FLOAT* ef)
+{
+
+    unsigned int hexpart;           /* part of  ef fraction          */
+    decNumber   dn16;               /* decNumber constant 16         */
+    decNumber   dnpart;             /* hxpart as decNumber           */
+    decNumber   dntemp;             /* temp decNumber                */
+    decNumber   dnraise;            /* raise to decNumber            */
+    decNumber   dnpower;            /* using in decNumberPower       */
+    decContext  set;                /* zn default context            */
+
+    zn_ContextDefault( &set );
+    decNumberFromInt32( &dn16, 16 );
+    decNumberZero( dn );
+
+    /* let decNumber do the heavy lifting             */
+    /* process fraction in 32-bit chunks              */
+
+    /* chunk 1: ls - low 32 bits */
+    hexpart = ef->ls_fract & 0x00000000FFFFFFFFULL;
+    if (hexpart != 0)
+    {
+        decNumberFromUInt32( &dnpart, hexpart );
+        decNumberFromInt32 ( &dnraise, ef->expo - 64 - (4+8+8+8) );
+        decNumberPower( &dnpower, &dn16, &dnraise, &set );
+        decNumberMultiply( dn, &dnpart, &dnpower, &set );
+        decNumberTrim( dn );
+
+        if (0) /* debug */
+        {
+            dn_logmsg("decNumberFromExtendedFloat: chunk 1 - dnpart: ", &dnpart);
+            dn_logmsg("decNumberFromExtendedFloat: chunk 1 - dn:     ", dn);
+        }
+    }
+
+    /* chunk 2: ls - high 32 bits */
+    hexpart = ef->ls_fract >> 32;
+    if (hexpart != 0)
+    {
+        decNumberFromUInt32( &dnpart, hexpart );
+        decNumberFromInt32 ( &dnraise, ef->expo - 64 - (4+8+8) );
+        decNumberPower( &dnpower, &dn16, &dnraise, &set );
+        decNumberMultiply( &dntemp, &dnpart, &dnpower, &set );
+        decNumberAdd( dn, dn, &dntemp, &set );
+        decNumberTrim( dn );
+
+        if (0) /* debug */
+        {
+            dn_logmsg("decNumberFromExtendedFloat: chunk 2 - dntemp: ", &dntemp);
+            dn_logmsg("decNumberFromExtendedFloat: chunk 2 - dn:     ", dn);
+        }
+    }
+
+    /* chunk 3: ms - low 32 bits */
+    hexpart = ef->ms_fract & 0x00000000FFFFFFFFULL;
+    if (hexpart != 0)
+    {
+        decNumberFromUInt32( &dnpart, hexpart );
+        decNumberFromInt32 ( &dnraise, ef->expo - 64 - (4+8) );
+        decNumberPower( &dnpower, &dn16, &dnraise, &set );
+        decNumberMultiply( &dntemp, &dnpart, &dnpower, &set );
+        decNumberAdd( dn, dn, &dntemp, &set );
+        decNumberTrim( dn );
+
+        if (0) /* debug */
+        {
+            dn_logmsg("decNumberFromExtendedFloat: chunk 3 - dntemp: ", &dntemp);
+            dn_logmsg("decNumberFromExtendedFloat: chunk 3 - dn:     ", dn);
+        }
+    }
+
+    /* chunk 3: ms - high 32 bits */
+    hexpart = ef->ms_fract >> 32;
+    if (hexpart != 0)
+    {
+        decNumberFromUInt32( &dnpart, hexpart );
+        decNumberFromInt32 ( &dnraise, ef->expo - 64 - (4) );
+        decNumberPower( &dnpower, &dn16, &dnraise, &set );
+        decNumberMultiply( &dntemp, &dnpart, &dnpower, &set );
+        decNumberAdd( dn, dn, &dntemp, &set );
+        decNumberTrim( dn );
+
+
+        if (0) /* debug */
+        {
+            dn_logmsg("decNumberFromExtendedFloat: chunk 4 - dntemp: ", &dntemp);
+            dn_logmsg("decNumberFromExtendedFloat: chunk 4 - dn:     ", dn);
+        }
+    }
+
+    /* set sign */
+    if (ef->sign)
+    { /* negative */
+        decNumberMinus( dn, dn, &set );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* hexNumberRound: round a hexNumber for a # of significant digits   */
+/*-------------------------------------------------------------------*/
+static inline void hexNumberRound( hexNumber* hn, hexNumber* rhs, int numDigits )
+{
+    int i;                          /* loop index                    */
+    int carry;                      /* carry for rounding            */
+    int idxGuard;                   /* index of guard digit          */
+    int hexTemp;                    /* temp hex digit                */
+    int hnIndex;                    /* index to hn digit             */
+
+    if ( rhs->digits <= numDigits)    /* is rounding requied */
+    {
+        hexNumberCopy( hn, rhs);
+        return;
+    }
+
+    hn->bits = rhs->bits;
+    hn->exponent = rhs->exponent + rhs->digits - numDigits;
+    hn-> digits = numDigits;
+
+    /* initial carry */
+    idxGuard = rhs->digits - numDigits -1;
+    carry = (rhs->hexDigit[ idxGuard ] + 8) >> 4;
+
+    /* copy digits with carry */
+    for( i = idxGuard+1, hnIndex = 0; i < rhs->digits; i++, hnIndex++ )
+    {
+        if (carry == 0)
+        {
+            hn->hexDigit[ hnIndex ] = rhs->hexDigit[ i ];
+            continue;
+        }
+
+        /* adjust with carry */
+        hexTemp = rhs->hexDigit[ i ] + carry;
+        carry = hexTemp >> 4;
+        hexTemp = hexTemp & 0x0F;
+        hn->hexDigit[ hnIndex ] = hexTemp;
+    }
+
+    /* carry -> additional digit */
+    if ( carry != 0 )
+    {
+        hn->hexDigit[ hn->digits ] = carry;
+        hn->digits++;
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* hexNumberSplit: split hexNumber to a Short_Float & a Long_Float   */
+/*-------------------------------------------------------------------*/
+static inline void hexNumberSplit( hexNumber* hn, SHORT_FLOAT* sf,  LONG_FLOAT* lf )
+{
+    int i;                          /* loop index                    */
+    hexNumber shex;                 /* short hexNumber               */
+    hexNumber lhex;                 /* long hexNumber                */
+
+    /* long float is 0? */
+    if( hn->digits <= SHORT_FLOAT_NUM_DIGITS )
+    {
+        hexNumberToShortFloat( hn, sf);
+        hexNumberZero ( &lhex );
+        hexNumberToLongFloat( &lhex, lf);
+        return;
+    }
+
+    /* have to split hn */
+    /* high result - short_float */
+    hexNumberCopy(&shex, hn);
+    shex.exponent += hn->digits - SHORT_FLOAT_NUM_DIGITS;
+    shex.digits = SHORT_FLOAT_NUM_DIGITS;
+    for (i = 0; i < SHORT_FLOAT_NUM_DIGITS; i++)
+        shex.hexDigit[ i ] = shex.hexDigit[ hn->digits - SHORT_FLOAT_NUM_DIGITS + i];
+    hexNumberToShortFloat( &shex, sf);
+
+    /* high result - short_float */
+    hexNumberCopy(&lhex, hn);
+    lhex.exponent = hn->exponent;
+    lhex.digits = hn->digits - SHORT_FLOAT_NUM_DIGITS;
+
+    /* remove high order '0' digits  */
+    for (i = lhex.digits -1; i > 0 ;i--)
+    {
+        if ( lhex.hexDigit[ i ] == 0 )
+            lhex.digits--;
+        else
+            break;
+    }
+     hexNumberToLongFloat( &lhex, lf);
+}
+
+/*-------------------------------------------------------------------*/
+/* hexNumberToShortFloat: convert hexNumber to Short_Float           */
+/*-------------------------------------------------------------------*/
+static inline void hexNumberToShortFloat( hexNumber* hn, SHORT_FLOAT* sf )
+{
+    int i;                          /* loop index                    */
+    int hxdc;                       /* hex digit count               */
+    U32 sfDigits[SHORT_FLOAT_NUM_DIGITS];   /* short float digits    */
+
+    /* sign */
+    sf->sign = (hn->bits & HEXNEG) ? 1 : 0;
+
+    /* fraction digits */
+    sf->short_fract = 0;
+    memset( sfDigits, 0, sizeof(sfDigits) );
+    for ( i= hn->digits -1, hxdc = 0; i >= 0 && hxdc < SHORT_FLOAT_NUM_DIGITS; i--, hxdc++)
+        sfDigits[ hxdc ] = hn->hexDigit[ i ];
+
+    /* note: let compiler optimize */
+    sf->short_fract = (U32) ( sfDigits[0] << 20 ) |
+                      (U32) ( sfDigits[1] << 16 ) |
+                      (U32) ( sfDigits[2] << 12 ) |
+                      (U32) ( sfDigits[3] <<  8 ) |
+                      (U32) ( sfDigits[4] <<  4 ) |
+                      (U32) ( sfDigits[5] );
+
+    /* exponent +64 */
+    sf->expo = hn->exponent + hn->digits +64;
+}
+
+/*-------------------------------------------------------------------*/
+/* hexNumberToLongFloat: convert hexNumber to Long_Float             */
+/*-------------------------------------------------------------------*/
+
+static inline void hexNumberToLongFloat( hexNumber* hn, LONG_FLOAT* lf )
+{
+    int i;                          /* loop index                    */
+    int hxdc;                       /* hex digit count               */
+    U8  lfDigits[LONG_FLOAT_NUM_DIGITS]; /* long float digits        */
+    int shift;                      /* shift left amount             */
+
+    /* sign */
+    lf->sign = (hn->bits & HEXNEG) ? 1 : 0;
+
+    /* fraction digits */
+    lf->long_fract = 0;
+    memset( lfDigits, 0, sizeof(lfDigits) );
+    for ( i= hn->digits -1, hxdc = 0; i >= 0 && hxdc < LONG_FLOAT_NUM_DIGITS; i--, hxdc++)
+        lfDigits[ hxdc ] = hn->hexDigit[ i ];
+
+
+    for (i = 0, shift = 64-8-4; i <  LONG_FLOAT_NUM_DIGITS; i++, shift-=4)
+        lf->long_fract |= (U64) ( ( (U64)lfDigits [ i ] ) << shift);
+
+
+    /* exponent +64 */
+    lf->expo = hn->exponent + hn->digits +64;
+}
+
+/*-------------------------------------------------------------------*/
+/* hexNumberToExtendedFloat: convert hexNumber to Extended_Float     */
+/*-------------------------------------------------------------------*/
+
+static inline void hexNumberToExtendedFloat( hexNumber* hn, EXTENDED_FLOAT* ef )
+{
+    int i;                          /* loop index                    */
+    int hxdc;                       /* hex digit count               */
+    U8  efDigits[EXTENDED_FLOAT_NUM_DIGITS]; /* extended float digits*/
+    int shift;                      /* shift left amount             */
+    U64 ms_f = 0;                   /* ms fraction                   */
+    U64 ls_f = 0;                   /* ls fraction                   */
+
+    /* sign */
+    ef->sign = (hn->bits & HEXNEG) ? 1 : 0;
+
+    /* fraction digits */
+    ef->ms_fract = 0;
+    ef->ls_fract = 0;
+    memset( efDigits, 0, sizeof(efDigits) );
+    for ( i= hn->digits -1, hxdc = 0; i >= 0 && hxdc < EXTENDED_FLOAT_NUM_DIGITS; i--, hxdc++)
+        efDigits[ hxdc ] = hn->hexDigit[ i ];
+
+    /* ms_fraction - first half */
+    for (i = 0, shift = 64-8-4; i <  EXTENDED_FLOAT_NUM_DIGITS / 2; i++, shift-=4)
+        ms_f |= (U64) ( ( (U64)efDigits [ i ] ) << shift);
+
+    /* ls_fraction - second half */
+    for (i = EXTENDED_FLOAT_NUM_DIGITS / 2, shift = 64-8-4; i <  EXTENDED_FLOAT_NUM_DIGITS ; i++, shift-=4)
+        ls_f |= (U64) ( ( (U64)efDigits [ i ] ) << shift);
+
+    /* reformat fraction to float.c Extended */
+    ef->ms_fract = ms_f >> 8;
+    ef->ls_fract = ms_f << 56 | ls_f;
+
+    /* exponent +64 */
+    ef->expo = hn->exponent + hn->digits +64;
+}
 
 #endif /*!defined(_ZVECTOR2_ARCH_INDEPENDENT_)*/
 
@@ -1670,7 +2232,7 @@ DEF_INST( vector_convert_to_binary_32 )
     bool    cs;                  /* Condition Code Set (CS)          */
     bool    iom;                 /* Instruction-Overflow Mask (IOM)  */
     U128    result;              /* converted binary                 */
-    bool    overflow;            /* did an overfor occur             */
+    bool    overflow;            /* did an overflow occur            */
 
     bool    valid_sign2;         /* v2: is sign valid?               */
     bool    valid_decimals2;     /* v2: are decimals valid?          */
@@ -2079,7 +2641,7 @@ DEF_INST( vector_shift_and_round_decimal )
     decNumber dnv2;            /* v2 as decNumber                    */
     decNumber dntemp;          /* temp decNumber                     */
     decNumber dnshift;         /* -shamt as decNumber (note:negative)*/
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_G( inst, regs, v1, v2, i4, m5, i3 );
 
@@ -3100,8 +3662,149 @@ DEF_INST( vector_subtract_decimal )
 
     ZVECTOR_END( regs );
 }
+#endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
+/*-------------------------------------------------------------------*/
+/* E674 VSCHP  - DECIMAL SCALE AND CONVERT TO HFP            [VRR-b] */
+/*-------------------------------------------------------------------*/
+DEF_INST( decimal_scale_and_convert_to_hfp )
+{
+    int     v1, v2, v3, m4, m5;
+
+    bool    rm;                /* Rounding Mode (RM)                 */
+    U8      scale;             /* scale factor: V3 byte 7            */
+    bool    valid_sign2;       /* v2: is sign valid?                 */
+    bool    valid_decimals2;   /* v2: are decimals valid?            */
+    decNumber   dnv2;          /* v2 as decNumber                    */
+    decNumber   dntemp;        /* temp decNumber                     */
+    decNumber   dnscale;       /* scale as decNumber                 */
+    decContext  set;           /* zn default context                 */
+    U8 hxNumber[DECNUMDIGITS]; /* hexNumber digits                   */
+    int roundDigits;           /* number of significant digits       */
+    hexNumber htemp;           /* temp hexNumber                     */
+    hexNumber hNum;            /* result hexNumber                   */
+    SHORT_FLOAT sf;            /* hNum converted to short float      */
+    LONG_FLOAT  lf;            /* hNum converted to long float       */
+    EXTENDED_FLOAT ef;         /* hNum converted to extended float   */
+
+    VRR_B(inst, regs, v1, v2, v3, m4, m5);
+    ZVECTOR_CHECK( regs );
+
+    /* m4: HFP format */
+    switch (m4)
+    {
+        case 2: break;       /*    short HFP */
+        case 3: break;       /*     long HFP */
+        case 4: break;       /* extended HFP */
+        default:             /* reserved     */
+            ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
+    }
+
+    /* m5 parts */
+    rm = (m5 & 0x01) ? true : false;
+
+    /* valid checks */
+    valid_decimals2 = vr_packed_valid_digits( regs, v2 );
+    valid_sign2 = vr_packed_valid_sign( regs, v2 );
+
+    if (!valid_decimals2 || !valid_sign2 )
+    {
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+    }
+
+    /* zero check */
+    if ( vr_is_zero( regs, v2) )
+    {
+        SET_VR_ZERO( v1 );          /* true zero; all formats */
+
+        ZVECTOR_END( regs );
+        return;
+    }
+
+    /* get scale factor from v3, byte 7. note: scale is unsigned */
+    scale = regs->VR_B( v3, 7);
+
+    /* scale factor:                                         */
+    /*      limited to values less than 8 otherwise results  */
+    /*      are unpredictable.                               */
+    if (scale >= 8)
+    {
+        /* unpredicatable --> do nothing  */
+        return;
+    }
+
+    /* operands as decNumber and context */
+    vr_to_decNumber( regs, v2, &dnv2, false );
+    zn_ContextDefault( &set );
+    decNumberFromInt32( &dnscale, (S32) scale );
+
+    /* scale/shift V2 */
+    decNumberShift( &dntemp, &dnv2, &dnscale, &set );
+    decNumberToHexNumber( &dntemp, &htemp );
+
+    /* debug */
+    if (0)
+    {
+        hexNumberToString(&htemp, hxNumber);
+        logmsg(" VSCHP  - hexNumberToString: %s \n", hxNumber );
+    }
+
+    /* round? */
+    if ( rm )
+    {
+        switch (m4)                                                     /* m4: HFP format */
+        {
+            case 2: roundDigits = SHORT_FLOAT_NUM_DIGITS; break;        /* short HFP    */
+            case 3: roundDigits = LONG_FLOAT_NUM_DIGITS; break;         /* long HFP     */
+            case 4: roundDigits = EXTENDED_FLOAT_NUM_DIGITS; break;     /* extended HFP */
+                                                             /* avoid compiler warining */
+            default: roundDigits = DECNUMDIGITS;                        /* reserved     */
+        }
+        hexNumberRound(&hNum, &htemp, roundDigits);
+
+        /* debug */
+        if (0)
+        {
+            hexNumberToString(&hNum, hxNumber);
+            logmsg(" VSCHP  - rounded: %d, hn: %s \n", roundDigits, hxNumber );
+        }
+    }
+    else
+        hexNumberCopy(&hNum, &htemp);
+
+    /* convert hexNumber to HFP */
+    SET_VR_ZERO (v1);
+
+    switch (m4)                                     /* m4: HFP format */
+    {
+        case 2:                                     /*    short HFP */
+            hexNumberToShortFloat( &hNum, &sf );
+            store_sf( &sf, &regs->VR_F(v1,0));
+            break;
+
+        case 3:                                     /*     long HFP */
+            hexNumberToLongFloat( &hNum, &lf );
+            store_lf( &lf, &regs->VR_D(v1,0));
+            break;
+
+        case 4:                                     /* extended HFP */
+            hexNumberToExtendedFloat( &hNum, &ef );
+            store_ef( &ef, &regs->VR_D(v1,0), &regs->VR_D(v1,1));
+            break;
+
+        default:             /* reserved     */
+            ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
+    }
+
+    ZVECTOR_END( regs );
+}
+
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
 
 
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E677 VCP    - VECTOR COMPARE DECIMAL                      [VRR-h] */
 /*-------------------------------------------------------------------*/
@@ -3578,7 +4281,187 @@ DEF_INST( vector_remainder_decimal )
     ZVECTOR_END( regs );
 }
 
+#endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
 
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
+/*-------------------------------------------------------------------*/
+/* E67C VSCSHP - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP  [VRR-b] */
+/*-------------------------------------------------------------------*/
+DEF_INST(decimal_scale_and_convert_and_split_to_hfp )
+{
+    int     v1, v2, v3, m4, m5;
+
+    U8      scale;             /* scale factor: V3 byte 7            */
+    bool    valid_sign2;       /* v2: is sign valid?                 */
+    bool    valid_decimals2;   /* v2: are decimals valid?            */
+    decNumber   dnv2;          /* v2 as decNumber                    */
+    decNumber   dntemp;        /* temp decNumber                     */
+    decNumber   dnscale;       /* scale as decNumber                 */
+    decContext  set;           /* zn default context                 */
+    U8 hxNumber[DECNUMDIGITS]; /* hexNumber digits                   */
+    hexNumber htemp;           /* temp hexNumber                     */
+    SHORT_FLOAT sf;            /* hNum converted to short float      */
+    LONG_FLOAT  lf;            /* hNum converted to long float       */
+
+    VRR_B(inst, regs, v1, v2, v3, m4, m5);
+    ZVECTOR_CHECK( regs );
+
+    /* programmers note: m4 and m5 are unused!!!       */
+    /* to avoid GCC [-Wunused-but-set-variable] waring */
+    if (0 && m4 && m5) scale = 0;
+
+    /* valid checks */
+    valid_decimals2 = vr_packed_valid_digits( regs, v2 );
+    valid_sign2 = vr_packed_valid_sign( regs, v2 );
+
+    if (!valid_decimals2 || !valid_sign2 )
+    {
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+    }
+
+    /* zero check */
+    if ( vr_is_zero( regs, v2) )
+    {
+        SET_VR_ZERO( v1 );          /* true zeros */
+
+        ZVECTOR_END( regs );
+        return;
+    }
+
+    /* get scale factor from v3, byte 7. note: scale is unsigned */
+    scale = regs->VR_B( v3, 7);
+
+    /* scale factor:                                         */
+    /*      limited to values less than 8 otherwise results  */
+    /*      are unpredictable.                               */
+    if (scale >= 8)
+    {
+        /* unpredicatable --> do nothing  */
+        return;
+    }
+
+    /* operands as decNumber and context */
+    vr_to_decNumber( regs, v2, &dnv2, false );
+    zn_ContextDefault( &set );
+    decNumberFromInt32( &dnscale, (S32) scale );
+
+    /* scale/shift V2 */
+    decNumberShift( &dntemp, &dnv2, &dnscale, &set );
+    decNumberToHexNumber( &dntemp, &htemp );
+
+    /* debug */
+    if (0)
+    {
+        hexNumberToString(&htemp, hxNumber);
+        logmsg(" VSCSHP  - hexNumberToString: %s \n", hxNumber );
+    }
+
+    /* convert and split hexNumber */
+    SET_VR_ZERO (v1);
+
+    /* high and low results */
+    hexNumberSplit( &htemp, &sf, &lf );
+    store_sf( &sf, &regs->VR_F(v1,0));
+
+    /* not zero, save. (v1, already has true zero for low result) */
+    if ( lf.long_fract != 0 )
+    {
+        store_lf( &lf, &regs->VR_D(v1,1));
+    }
+
+    ZVECTOR_END( regs );
+}
+
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
+/*-------------------------------------------------------------------*/
+/* E67D VCSPH  - VECTOR CONVERT HFP TO SCALED DECIMAL        [VRR-j] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_convert_hfp_to_scaled_decimal )
+{
+    int     v1, v2, v3, m4;
+
+    bool        rm;            /* Rounding Mode (RM)                 */
+    U8          scale;         /* scale factor: V3 byte 7            */
+    decNumber   dnv1;          /* v1 as decNumber                    */
+    decNumber   dntemp;        /* temp decNumber                     */
+    decNumber   dntemp2;       /* temp decNumber                     */
+    decNumber   dnscale;       /* scale as decNumber                 */
+    decContext  set;           /* zn default context                 */
+    EXTENDED_FLOAT  ef;        /* v2 as extended float               */
+
+    VRR_J( inst, regs, v1, v2, v3, m4 );
+
+    ZVECTOR_CHECK( regs );
+
+    /* m4 parts */
+    rm = (m4 & 0x01) ? true : false;
+
+    /* get scale factor from v3, byte 7. note: scale is unsigned */
+    scale = regs->VR_B( v3, 7);
+
+    /* scale factor:                                         */
+    /*      must be less than 32 otherwise the result is     */
+    /*      unpredictable.                                   */
+    if (scale >= 32)
+    {
+        /* unpredicatable --> do nothing  */
+        return;
+    }
+
+    /* zero check */
+    if ( vr_is_true_zero( regs, v2) )
+    {
+        SET_VR_ZERO( v1 );
+        SET_VR_SIGN( v1, PREFERRED_PLUS );
+
+        ZVECTOR_END( regs );
+        return;
+    }
+
+    /* get Extended Float form v2 */
+    get_ef( &ef, &regs->VR_D(v2,0), &regs->VR_D(v2,1) );
+
+    /* as decNumber */
+    decNumberFromExtendedFloat( &dntemp, &ef );
+
+    /* apply shift */
+    decNumberFromUInt32( &dnscale, scale );
+    zn_ContextDefault( &set );
+    decNumberShift( &dntemp2, &dntemp, &dnscale, &set );
+
+    /* convert to decimal integer */
+    if (rm)
+    {   /* rounded to nearest with ties away from zero */
+        decContextSetRounding( &set, DEC_ROUND_HALF_UP );
+    }
+    else
+    {
+        /* truncate */
+        decContextSetRounding( &set, DEC_ROUND_DOWN );
+    }
+    decNumberToIntegralValue( &dnv1, &dntemp2, &set );
+
+    if (0) /*debug */
+    {
+        dc_logmsg("VCSPH: ", &set);
+        dn_logmsg("VCSPH  - v1: ", &dnv1);
+    }
+
+    /* load into vr */
+    vr_from_decNumber( regs, v1, &dnv1, false, 31);
+
+
+    ZVECTOR_END( regs );
+}
+
+#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
+
+
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E67E VSDP   - VECTOR SHIFT AND DIVIDE DECIMAL             [VRI-f] */
 /*-------------------------------------------------------------------*/
@@ -3792,26 +4675,6 @@ DEF_INST( vector_fp_convert_and_lengthen_from_nnp_low )
 #endif /* defined( FEATURE_165_NNET_ASSIST_FACILITY ) */
 
 
-#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
-/*-------------------------------------------------------------------*/
-/* E674 VSCHP  - DECIMAL SCALE AND CONVERT TO HFP            [VRR-b] */
-/*-------------------------------------------------------------------*/
-DEF_INST( decimal_scale_and_convert_to_hfp )
-{
-    int     v1, v2, m3, m4, m5;
-
-    VRR_B(inst, regs, v1, v2, m3, m4, m5);
-    ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-    //
-    ZVECTOR_END( regs );
-}
-
-#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
-
 #if defined( FEATURE_165_NNET_ASSIST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E675 VCRNF  - VECTOR FP CONVERT AND ROUND TO NNP          [VRR-c] */
@@ -3831,46 +4694,6 @@ DEF_INST( vector_fp_convert_and_round_to_nnp )
 }
 
 #endif /* defined( FFEATURE_165_NNET_ASSIST_FACILITY ) */
-
-#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
-/*-------------------------------------------------------------------*/
-/* E67C VSCSHP - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP  [VRR-b] */
-/*-------------------------------------------------------------------*/
-DEF_INST(decimal_scale_and_convert_and_split_to_hfp )
-{
-    int     v1, v2, v3, m4, m5;
-
-    VRR_B( inst, regs, v1, v2, v3, m4, m5 );
-
-    ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-    //
-    ZVECTOR_END( regs );
-}
-
-
-/*-------------------------------------------------------------------*/
-/* E67D VCSPH  - VECTOR CONVERT HFP TO SCALED DECIMAL        [VRR-j] */
-/*-------------------------------------------------------------------*/
-DEF_INST( vector_convert_hfp_to_scaled_decimal )
-{
-    int     v1, v2, v3, m4;
-
-    VRR_J( inst, regs, v1, v2, v3, m4 );
-
-    ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-    //
-    ZVECTOR_END( regs );
-}
-
-#endif /* defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) */
 
 
 #endif /* defined(FEATURE_129_ZVECTOR_FACILITY) */
