@@ -49,6 +49,65 @@
 *   *Done
 *
 ***********************************************************************
+                                                                EJECT
+***********************************************************************
+*        FCHECK Macro - Is a Facility Bit set?
+*
+*        If the facility bit is NOT set, an message is issued and
+*        the test is skipped.
+*
+*        Fcheck uses R0, R1 and R2
+*
+* eg.    FCHECK 134,'vector-packed-decimal'
+***********************************************************************
+         MACRO
+         FCHECK &BITNO,&NOTSETMSG
+.*                        &BITNO : facility bit number to check
+.*                        &NOTSETMSG : 'facility name'
+         LCLA  &FBBYTE           Facility bit in Byte
+         LCLA  &FBBIT            Facility bit within Byte
+
+         LCLA  &L(8)
+&L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+
+&FBBYTE  SETA  &BITNO/8
+&FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+.*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+
+         B     X&SYSNDX
+*                                      Fcheck data area
+*                                      skip messgae
+SKT&SYSNDX DC  C'          Skipping tests: '
+         DC    C&NOTSETMSG
+         DC    C' facility (bit &BITNO) is not installed.'
+SKL&SYSNDX EQU *-SKT&SYSNDX
+*                                      facility bits
+         DS    FD                      gap
+FB&SYSNDX DS   4FD
+         DS    FD                      gap
+*
+X&SYSNDX EQU *
+         LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+         STFLE FB&SYSNDX               get facility bits
+
+         XGR   R0,R0
+         IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+         N     R0,=F'&FBBIT'           is bit set?
+         BNZ   XC&SYSNDX
+*
+* facility bit not set, issue message and exit
+*
+         LA    R0,SKL&SYSNDX           message length
+         LA    R1,SKT&SYSNDX           message address
+         BAL   R2,MSG
+
+         B     EOJ
+XC&SYSNDX EQU *
+         MEND
+                                                                EJECT
+***********************************************************************
+*        Low core PSWs
+***********************************************************************
                                                                 SPACE 2
 ZVE6TST  START 0
          USING ZVE6TST,R0            Low core addressability
@@ -79,9 +138,10 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
 *   R6-R7    (work)
 *   R8       First base register
 *   R9       Second base register
-*   R10      E6TESTS register
+*   R10      Third base register
 *   R11      E6TEST call return
-*   R12-R13  (work)
+*   R12      E6TESTS register
+*   R13      (work)
 *   R14      Subroutine call
 *   R15      Secondary Subroutine call or work
 *
@@ -89,6 +149,7 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
                                                                 SPACE
          USING  BEGIN,R8        FIRST Base Register
          USING  BEGIN+4096,R9   SECOND Base Register
+         USING  BEGIN+8192,R10  THIRD Base Register
                                                                 SPACE
 BEGIN    BALR  R8,0             Initalize FIRST base register
          BCTR  R8,0             Initalize FIRST base register
@@ -97,20 +158,36 @@ BEGIN    BALR  R8,0             Initalize FIRST base register
          LA    R9,2048(,R8)     Initalize SECOND base register
          LA    R9,2048(,R9)     Initalize SECOND base register
 
+         LA    R10,2048(,R9)    Initalize THIRD base register
+         LA    R10,2048(,R10)   Initalize THIRD base register
+
          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
          OI    CTLR0+1,X'04'    Turn on AFP bit
          OI    CTLR0+1,X'02'    Turn on Vector bit
          LCTL  R0,R0,CTLR0      Reload updated CR0
 
-*
-         LA    R10,E6TESTS       get table of test addresses
+***********************************************************************
+* Is Vector packed-decimal facility installed  (bit 134)
+***********************************************************************
+
+         FCHECK 134,'vector-packed-decimal'
+                                                                EJECT
+***********************************************************************
+*              Do tests in the E6TESTS table
+***********************************************************************
+
+         L     R12,=A(E6TESTS)       get table of test addresses
 
 NEXTE6   EQU   *
-         L     R5,0(0,R10)       get test address
+         L     R5,0(0,R12)       get test address
          LTR   R5,R5                have a test?
          BZ    ENDTEST                 done?
 
          USING E6TEST,R5
+
+         LH    R0,TNUM           save current test number
+         ST    R0,TESTING        for easy reference
+
          MVC   V1OUTPUT,V1FUDGE      fill output area
          MVC   V1OUTPUT+16,V1FUDGE
 
@@ -125,23 +202,32 @@ NEXTE6   EQU   *
 
          BNE   FAILMSG           no, issue failed message
 
-         LA    R10,4(0,R10)      next test address
+         LA    R12,4(0,R12)      next test address
          B     NEXTE6
                                                                 SPACE 2
 EXCLC    CLC   V1OUTPUT(0),0(R1)    valid?
-                                                                SPACE 2
-*
-* test failed: issue message with test number, instruction under test
-*              and instruction I3
-*
+                                                                 EJECT
+***********************************************************************
+* result not as expected:
+*        issue message with test number, instruction under test
+*              and instruction i3
+***********************************************************************
 FAILMSG  EQU   *
          BAL   R15,RPTERROR
+                                                                SPACE 2
+***********************************************************************
+* continue after a failed test
+***********************************************************************
+FAILCONT EQU   *
          L     R0,=F'1'          set failed test indicator
          ST    R0,FAILED
 
-         LA    R10,4(0,R10)      next test address
+         LA    R12,4(0,R12)      next test address
          B     NEXTE6
-
+                                                                SPACE 2
+***********************************************************************
+* end of testing; set ending psw
+***********************************************************************
 ENDTEST  EQU   *
          L     R1,FAILED         did a test fail?
          LTR   R1,R1
@@ -212,6 +298,10 @@ MSGOK    LR    R2,R0                  Copy length to work register
                                                                 SPACE
          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
          BZ    MSGRET                 Return if successful
+
+         LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+         BZ    MSGRET                   an error occurred but coninue
+
          DC    H'0'                   CRASH for debugging purposes
                                                                 SPACE
 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
@@ -264,6 +354,7 @@ REG2LOW  EQU         X'DD'    (last byte above)
 
          ORG   ZVE6TST+X'1000'
 FAILED   DC    F'0'                     some test failed?
+TESTING  DC    F'0'                     current test number
                                                                SPACE 2
 *
 *        failed message and associated editting

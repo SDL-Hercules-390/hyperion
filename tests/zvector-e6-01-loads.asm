@@ -59,6 +59,65 @@
 *    *Done
 *
 ***********************************************************************
+                                                                EJECT
+***********************************************************************
+*        FCHECK Macro - Is a Facility Bit set?
+*
+*        If the facility bit is NOT set, an message is issued and
+*        the test is skipped.
+*
+*        Fcheck uses R0, R1 and R2
+*
+* eg.    FCHECK 134,'vector-packed-decimal'
+***********************************************************************
+         MACRO
+         FCHECK &BITNO,&NOTSETMSG
+.*                        &BITNO : facility bit number to check
+.*                        &NOTSETMSG : 'facility name'
+         LCLA  &FBBYTE           Facility bit in Byte
+         LCLA  &FBBIT            Facility bit within Byte
+
+         LCLA  &L(8)
+&L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+
+&FBBYTE  SETA  &BITNO/8
+&FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+.*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+
+         B     X&SYSNDX
+*                                      Fcheck data area
+*                                      skip messgae
+SKT&SYSNDX DC  C'          Skipping tests: '
+         DC    C&NOTSETMSG
+         DC    C' facility (bit &BITNO) is not installed.'
+SKL&SYSNDX EQU *-SKT&SYSNDX
+*                                      facility bits
+         DS    FD                      gap
+FB&SYSNDX DS   4FD
+         DS    FD                      gap
+*
+X&SYSNDX EQU *
+         LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+         STFLE FB&SYSNDX               get facility bits
+
+         XGR   R0,R0
+         IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+         N     R0,=F'&FBBIT'           is bit set?
+         BNZ   XC&SYSNDX
+*
+* facility bit not set, issue message and exit
+*
+         LA    R0,SKL&SYSNDX           message length
+         LA    R1,SKT&SYSNDX           message address
+         BAL   R2,MSG
+
+         B     EOJ
+XC&SYSNDX EQU *
+         MEND
+                                                                EJECT
+***********************************************************************
+*        Low core PSWs
+***********************************************************************
                                                                 SPACE 2
 ZVE6TST  START 0
          USING ZVE6TST,R0            Low core addressability
@@ -81,6 +140,8 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
 ***********************************************************************
 *
 *  Architecture Mode: z/Arch
+*
+*  Architecture Mode: z/Arch
 *  Register Usage:
 *
 *   R0       (work)
@@ -89,9 +150,10 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
 *   R6-R7    (work)
 *   R8       First base register
 *   R9       Second base register
-*   R10      E6TESTS register
+*   R10      Third base register
 *   R11      E6TEST call return
-*   R12-R13  (work)
+*   R12      E6TESTS register
+*   R13      (work)
 *   R14      Subroutine call
 *   R15      Secondary Subroutine call or work
 *
@@ -99,50 +161,80 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
                                                                 SPACE
          USING  BEGIN,R8        FIRST Base Register
          USING  BEGIN+4096,R9   SECOND Base Register
-                                                                SPACE
+         USING  BEGIN+8192,R10  THIRD Base Register
+
 BEGIN    BALR  R8,0             Initalize FIRST base register
          BCTR  R8,0             Initalize FIRST base register
          BCTR  R8,0             Initalize FIRST base register
-                                                                SPACE
+
          LA    R9,2048(,R8)     Initalize SECOND base register
          LA    R9,2048(,R9)     Initalize SECOND base register
+
+         LA    R10,2048(,R9)    Initalize THIRD base register
+         LA    R10,2048(,R10)   Initalize THIRD base register
 
          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
          OI    CTLR0+1,X'04'    Turn on AFP bit
          OI    CTLR0+1,X'02'    Turn on Vector bit
          LCTL  R0,R0,CTLR0      Reload updated CR0
 
-*
-         LA    R10,E6TESTS       get table of test addresses
+***********************************************************************
+* Is Vector-enhancements facility 2 installed  (bit 148
+***********************************************************************
+
+         FCHECK 148,'Vector-enhancements facility 2'
+                                                                EJECT
+***********************************************************************
+*              Do tests in the E6TESTS table
+***********************************************************************
+
+         L     R12,=A(E6TESTS)       get table of test addresses
 
 NEXTE6   EQU   *
-         L     R5,0(0,R10)       get test address
+         L     R5,0(0,R12)       get test address
          LTR   R5,R5                have a test?
          BZ    ENDTEST                 done?
 
          USING E6TEST,R5
+
+         LH    R0,TNUM           save current test number
+         ST    R0,TESTING        for easy reference
+
          VL    V1,V1FUDGE        pollute V1
          L     R11,TSUB          get address of test routine
          BALR  R11,R11           do test
-         VST   V1,V1SAVED        save test vector
-         CLC   V1SAVED,RESULT    valid?
+
+         VST   V1,V1OUTPUT       save test vector
+
+         LGF   R1,READDR         get address of expected result
+         CLC   V1OUTPUT,0(R1)    valid?
          BNE   FAILMSG              no, issue failed message
 
-         LA    R10,4(0,R10)      next test address
+         LA    R12,4(0,R12)      next test address
          B     NEXTE6
 
-*
-* test failed: issue message with test number, instruction under test
+                                                                 EJECT
+***********************************************************************
+* result not as expected:
+*        issue message with test number, instruction under test
 *              and instruction m3
-*
+***********************************************************************
 FAILMSG  EQU   *
          BAL   R15,RPTERROR
+                                                                SPACE 2
+***********************************************************************
+* continue after a failed test
+***********************************************************************
+FAILCONT EQU   *
          L     R0,=F'1'          set failed test indicator
          ST    R0,FAILED
 
-         LA    R10,4(0,R10)      next test address
+         LA    R12,4(0,R12)      next test address
          B     NEXTE6
-
+                                                                SPACE 2
+***********************************************************************
+* end of testing; set ending psw
+***********************************************************************
 ENDTEST  EQU   *
          L     R1,FAILED         did a test fail?
          LTR   R1,R1
@@ -151,7 +243,9 @@ ENDTEST  EQU   *
 
                                                                EJECT
 ***********************************************************************
-*        RPTERROR                 Report instruction test in error
+*        RPTERROR          Report instruction test in error
+*                             R0 = MESSGAE LENGTH
+*                             R1 = ADDRESS OF MESSAGE
 ***********************************************************************
                                                                SPACE
 RPTERROR ST    R15,RPTSAVE          Save return address
@@ -212,6 +306,10 @@ MSGOK    LR    R2,R0                  Copy length to work register
                                                                 SPACE
          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
          BZ    MSGRET                 Return if successful
+
+         LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+         BZ    MSGRET                   an error occurred but coninue
+
          DC    H'0'                   CRASH for debugging purposes
                                                                 SPACE
 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
@@ -264,6 +362,7 @@ REG2LOW  EQU         X'DD'    (last byte above)
 
          ORG   ZVE6TST+X'1000'
 FAILED   DC    F'0'                     some test failed?
+TESTING  DC    F'0'                     current test number
                                                                SPACE 2
 *
 *        failed message and associated editting
@@ -287,7 +386,7 @@ DECNUM   DS    CL16
 *        Vector instruction results, pollution and input
 *
          DS    0F
-V1SAVED  DS    XL16                                      V1 OUTPUT
+V1OUTPUT  DS    XL16                                      V1 OUTPUT
          DS    XL16                                         gap
 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
 V1INPUT  DC    XL16'00010203040506070809101112131415'    V1 input
@@ -304,11 +403,13 @@ TNUM     DC    H'00'          Test Number
 M3       DC    X'00'          M3 used
 
 OPNAME   DC    CL8' '         E6 name
-RELEN    DC    A(0)           RESULT LENGTH
-RESULT   DC    A(0)
-*        EXPECTED RESULT
-**
+RELEN    DC    A(0)           result length
+READDR   DC    A(0)           result address
+
 *        test routine will be here (from VRX macro)
+*
+*        followed by
+*              EXPECTED RESULT
                                                                 SPACE 2
 ZVE6TST  CSECT ,
          DS    0F
@@ -321,10 +422,10 @@ ZVE6TST  CSECT ,
 * macro to generate individual test
 *
          MACRO
-         VRX   &INST,&M3,&RESULT
+         VRX   &INST,&M3
 .*                               &INST    - VRX instruction under test
 .*                               &M3      - m3 field
-.*                               &RESULT  - XL16 result field
+
          GBLA  &TNUM
 &TNUM    SETA  &TNUM+1
 
@@ -336,16 +437,17 @@ T&TNUM   DC    A(X&TNUM)         address of test routine
          DC    X'00'
          DC    X'&M3'            M3
          DC    CL8'&INST'        instruction name
-         DC    A(X&TNUM-RE&TNUM)  result length
-RE&TNUM  DC    &RESULT           expected result
+         DC    A(16)             result length
+REA&TNUM DC    A(RE&TNUM)        result address
 .*
 *
 X&TNUM   DS    0F
          &INST V1,V1INPUT,&M3    test instruction
          BR    R11               return
 
+RE&TNUM  DC    0F                xl16 result
+
          DROP  R5
-.*
          MEND
                                                                SPACE 3
 *
@@ -382,46 +484,118 @@ TTABLE   DS    0F
 *        E606 VLBR    - VECTOR LOAD BYTE REVERSED ELEMENTS
 *        E607 VLER    - VECTOR LOAD ELEMENTS REVERSED
 
-*        VRX   instruction, m3, 16 byte expected result
-         VRX   VLEBRH,0,XL16'0100FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
-         VRX   VLEBRH,1,XL16'FFFF0100FFFFFFFFFFFFFFFFFFFFFFFF'
-         VRX   VLEBRH,2,XL16'FFFFFFFF0100FFFFFFFFFFFFFFFFFFFF'
-         VRX   VLEBRH,3,XL16'FFFFFFFFFFFF0100FFFFFFFFFFFFFFFF'
-         VRX   VLEBRH,4,XL16'FFFFFFFFFFFFFFFF0100FFFFFFFFFFFF'
-         VRX   VLEBRH,5,XL16'FFFFFFFFFFFFFFFFFFFF0100FFFFFFFF'
-         VRX   VLEBRH,6,XL16'FFFFFFFFFFFFFFFFFFFFFFFF0100FFFF'
-         VRX   VLEBRH,7,XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFF0100'
-*
-         VRX   VLEBRG,0,XL16'0706050403020100FFFFFFFFFFFFFFFF'
-         VRX   VLEBRG,1,XL16'FFFFFFFFFFFFFFFF0706050403020100'
-*
-         VRX   VLEBRF,0,XL16'03020100FFFFFFFFFFFFFFFFFFFFFFFF'
-         VRX   VLEBRF,1,XL16'FFFFFFFF03020100FFFFFFFFFFFFFFFF'
-         VRX   VLEBRF,2,XL16'FFFFFFFFFFFFFFFF03020100FFFFFFFF'
-         VRX   VLEBRF,3,XL16'FFFFFFFFFFFFFFFFFFFFFFFF03020100'
-*
-         VRX   VLLEBRZ,1,XL16'00000000000001000000000000000000'
-         VRX   VLLEBRZ,2,XL16'00000000030201000000000000000000'
-         VRX   VLLEBRZ,3,XL16'07060504030201000000000000000000'
-         VRX   VLLEBRZ,6,XL16'03020100000000000000000000000000'
-*
-         VRX   VLBRREP,1,XL16'01000100010001000100010001000100'
-         VRX   VLBRREP,2,XL16'03020100030201000302010003020100'
-         VRX   VLBRREP,3,XL16'07060504030201000706050403020100'
-*
-         VRX   VLBR,1,XL16'01000302050407060908111013121514'
-         VRX   VLBR,2,XL16'03020100070605041110090815141312'
-         VRX   VLBR,3,XL16'07060504030201001514131211100908'
-         VRX   VLBR,4,XL16'15141312111009080706050403020100'
-*
-         VRX   VLER,1,XL16'14151213101108090607040502030001'
-         VRX   VLER,2,XL16'12131415080910110405060700010203'
-         VRX   VLER,3,XL16'08091011121314150001020304050607'
+*        VRX   instruction, m3
+*              followed by 16 byte expected result
+*---------------------------------------------------------------------
+* VLEBRH  - VECTOR LOAD BYTE REVERSED ELEMENT (16)
+*---------------------------------------------------------------------
+         VRX   VLEBRH,0
+         DC    XL16'0100FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+
+         VRX   VLEBRH,1
+         DC    XL16'FFFF0100FFFFFFFFFFFFFFFFFFFFFFFF'
+
+         VRX   VLEBRH,2
+         DC    XL16'FFFFFFFF0100FFFFFFFFFFFFFFFFFFFF'
+
+         VRX   VLEBRH,3
+         DC    XL16'FFFFFFFFFFFF0100FFFFFFFFFFFFFFFF'
+
+         VRX   VLEBRH,4
+         DC    XL16'FFFFFFFFFFFFFFFF0100FFFFFFFFFFFF'
+
+         VRX   VLEBRH,5
+         DC    XL16'FFFFFFFFFFFFFFFFFFFF0100FFFFFFFF'
+
+         VRX   VLEBRH,6
+         DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFF0100FFFF'
+
+         VRX   VLEBRH,7
+         DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFF0100'
+
+*---------------------------------------------------------------------
+* VLEBRG  - VECTOR LOAD BYTE REVERSED ELEMENT (64)
+*---------------------------------------------------------------------
+         VRX   VLEBRG,0
+         DC    XL16'0706050403020100FFFFFFFFFFFFFFFF'
+
+         VRX   VLEBRG,1
+         DC    XL16'FFFFFFFFFFFFFFFF0706050403020100'
+
+*---------------------------------------------------------------------
+* VLEBRF  - VECTOR LOAD BYTE REVERSED ELEMENT (32)
+*---------------------------------------------------------------------
+         VRX   VLEBRF,0
+         DC    XL16'03020100FFFFFFFFFFFFFFFFFFFFFFFF'
+
+         VRX   VLEBRF,1
+         DC    XL16'FFFFFFFF03020100FFFFFFFFFFFFFFFF'
+
+         VRX   VLEBRF,2
+         DC    XL16'FFFFFFFFFFFFFFFF03020100FFFFFFFF'
+
+         VRX   VLEBRF,3
+         DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFF03020100'
+
+*---------------------------------------------------------------------
+* VLLEBRZ - VECTOR LOAD BYTE REVERSED ELEMENT AND ZERO
+*---------------------------------------------------------------------
+         VRX   VLLEBRZ,1
+         DC    XL16'00000000000001000000000000000000'
+
+         VRX   VLLEBRZ,2
+         DC    XL16'00000000030201000000000000000000'
+
+         VRX   VLLEBRZ,3
+         DC    XL16'07060504030201000000000000000000'
+
+         VRX   VLLEBRZ,6
+         DC    XL16'03020100000000000000000000000000'
+
+*---------------------------------------------------------------------
+* VLBRREP - VECTOR LOAD BYTE REVERSED ELEMENT AND REPLICATE
+*---------------------------------------------------------------------
+         VRX   VLBRREP,1
+         DC    XL16'01000100010001000100010001000100'
+
+         VRX   VLBRREP,2
+         DC    XL16'03020100030201000302010003020100'
+
+         VRX   VLBRREP,3
+         DC    XL16'07060504030201000706050403020100'
+
+*---------------------------------------------------------------------
+* VLBR    - VECTOR LOAD BYTE REVERSED ELEMENTS
+*---------------------------------------------------------------------
+         VRX   VLBR,1
+         DC    XL16'01000302050407060908111013121514'
+
+         VRX   VLBR,2
+         DC    XL16'03020100070605041110090815141312'
+
+         VRX   VLBR,3
+         DC    XL16'07060504030201001514131211100908'
+
+         VRX   VLBR,4
+         DC    XL16'15141312111009080706050403020100'
+
+*---------------------------------------------------------------------
+* LER    - VECTOR LOAD ELEMENTS REVERSED
+*---------------------------------------------------------------------
+         VRX   VLER,1
+         DC    XL16'14151213101108090607040502030001'
+
+         VRX   VLER,2
+         DC    XL16'12131415080910110405060700010203'
+
+         VRX   VLER,3
+         DC    XL16'08091011121314150001020304050607'
+
 
          DC    F'0'     END OF TABLE
          DC    F'0'
 *
-* table of pointers to individual load test
+* table of pointers to individual tests
 *
 E6TESTS  DS    0F
          PTTABLE
