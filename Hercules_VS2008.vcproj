@@ -3722,6 +3722,18 @@
 						RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.core"
 						>
 					</File>
+					<File
+						RelativePath=".\tests\zvector-e6-17-VSCHP.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e6-18-VSCSHP.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e6-19-VCSPH.core"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="scripts"
@@ -4993,6 +5005,18 @@
 							RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.tst"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\zvector-e6-17-VSCHP.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e6-18-VSCSHP.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e6-19-VCSPH.tst"
+							>
+						</File>
 						<Filter
 							Name="subtst"
 							>
@@ -5419,6 +5443,18 @@
 						</File>
 						<File
 						RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.asm"
+						>
+						</File>
+						<File
+						RelativePath=".\tests\zvector-e6-17-VSCHP.asm"
+						>
+						</File>
+						<File
+						RelativePath=".\tests\zvector-e6-18-VSCSHP.asm"
+						>
+						</File>
+						<File
+						RelativePath=".\tests\zvector-e6-19-VCSPH.asm"
 						>
 						</File>
 						<Filter
@@ -6122,6 +6158,30 @@
 							</File>
 							<File
 							RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.pdf"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-17-VSCHP.list"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-17-VSCHP.pdf"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-18-VSCSHP.list"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-18-VSCSHP.pdf"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-19-VCSPH.list"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-19-VCSPH.pdf"
 							>
 							</File>
 						</Filter>

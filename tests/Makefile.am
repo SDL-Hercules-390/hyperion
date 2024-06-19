@@ -702,4 +702,19 @@ EXTRA_DIST =                    \
      zvector-e6-16-VSRP-VPSOP.core          \
      zvector-e6-16-VSRP-VPSOP.list          \
      zvector-e6-16-VSRP-VPSOP.pdf           \
-     zvector-e6-16-VSRP-VPSOP.tst
+     zvector-e6-16-VSRP-VPSOP.tst           \
+     zvector-e6-17-VSCHP.asm                \
+     zvector-e6-17-VSCHP.core               \
+     zvector-e6-17-VSCHP.list               \
+     zvector-e6-17-VSCHP.pdf                \
+     zvector-e6-17-VSCHP.tst                \
+     zvector-e6-18-VSCSHP.asm               \
+     zvector-e6-18-VSCSHP.core              \
+     zvector-e6-18-VSCSHP.list              \
+     zvector-e6-18-VSCSHP.pdf               \
+     zvector-e6-18-VSCSHP.tst               \
+     zvector-e6-19-VCSPH.asm                \
+     zvector-e6-19-VCSPH.core               \
+     zvector-e6-19-VCSPH.list               \
+     zvector-e6-19-VCSPH.pdf                \
+     zvector-e6-19-VCSPH.tst
