@@ -1941,15 +1941,61 @@ DEF_INST( vector_element_shift_left_vector )
 DEF_INST( vector_element_rotate_and_insert_under_mask )
 {
     int     v1, v2, v3, i4, m5;
+    int     sl, sr;
+    union   { U64 d[2]; U32 f[2]; U16 h[2]; BYTE b[2]; } temp;
+    int     i;
 
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m5)
+    {
+    case 0:  // Byte
+        for (i=0; i < 16; i++)
+        {
+            sl = i4 % 8;
+            sr = 8 - sl;
+            temp.b[1] = ((regs->VR_B( v2, i ) << sl) | (regs->VR_B( v2, i ) >> sr)) & regs->VR_B( v3, i );
+            temp.b[0] = regs->VR_B( v1, i ) & (~regs->VR_B( v3, i ));
+            regs->VR_B( v1, i ) = temp.b[0] | temp.b[1];
+        }
+        break;
+    case 1:  // Halfword
+        for (i=0; i < 8; i++)
+        {
+            sl = i4 % 16;
+            sr = 16 - sl;
+            temp.h[1] = ((regs->VR_H( v2, i ) << sl) | (regs->VR_H( v2, i ) >> sr)) & regs->VR_H( v3, i );
+            temp.h[0] = regs->VR_H( v1, i ) & (~regs->VR_H( v3, i ));
+            regs->VR_H( v1, i ) = temp.h[0] | temp.h[1];
+        }
+        break;
+    case 2:  // Word
+        for (i=0; i < 4; i++)
+        {
+            sl = i4 % 32;
+            sr = 32 - sl;
+            temp.f[1] = ((regs->VR_F( v2, i ) << sl) | (regs->VR_F( v2, i ) >> sr)) & regs->VR_F( v3, i );
+            temp.f[0] = regs->VR_F( v1, i ) & (~regs->VR_F( v3, i ));
+            regs->VR_F( v1, i ) = temp.f[0] | temp.f[1];
+        }
+        break;
+    case 3:  // Doubleword
+        for (i=0; i < 2; i++)
+        {
+            sl = i4 % 64;
+            sr = 64 - sl;
+            temp.d[1] = ((regs->VR_D( v2, i ) << sl) | (regs->VR_D( v2, i ) >> sr)) & regs->VR_D( v3, i );
+            temp.d[0] = regs->VR_D( v1, i ) & (~regs->VR_D( v3, i ));
+            regs->VR_D( v1, i ) = temp.d[0] | temp.d[1];
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -1959,15 +2005,51 @@ DEF_INST( vector_element_rotate_and_insert_under_mask )
 DEF_INST( vector_element_rotate_left_logical_vector )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     sl, sr, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m4)
+    {
+    case 0:  // Byte
+        for (i=0; i < 16; i++)
+        {
+            sl = regs->VR_B( v3, i ) % 8;
+            sr = 8 - sl;
+            regs->VR_B( v1, i ) = (regs->VR_B( v2, i ) << sl) | (regs->VR_B( v2, i ) >> sr);
+        }
+        break;
+    case 1:  // Halfword
+        for (i=0; i < 8; i++)
+        {
+            sl = regs->VR_H( v3, i ) % 16;
+            sr = 16 - sl;
+            regs->VR_H( v1, i ) = (regs->VR_H( v2, i ) << sl) | (regs->VR_H( v2, i ) >> sr);
+        }
+        break;
+    case 2:  // Word
+        for (i=0; i < 4; i++)
+        {
+            sl = regs->VR_F( v3, i ) % 32;
+            sr = 32 - sl;
+            regs->VR_F( v1, i ) = (regs->VR_F( v2, i ) << sl) | (regs->VR_F( v2, i ) >> sr);
+        }
+        break;
+    case 3:  // Doubleword
+        for (i=0; i < 2; i++)
+        {
+            sl = regs->VR_D( v3, i ) % 64;
+            sr = 64 - sl;
+            regs->VR_D( v1, i ) = (regs->VR_D( v2, i ) << sl) | (regs->VR_D( v2, i ) >> sr);
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -1977,15 +2059,24 @@ DEF_INST( vector_element_rotate_left_logical_vector )
 DEF_INST( vector_shift_left )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     sl, sr, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    for (i = 0 ; ; i++)
+    {
+        sl = regs->VR_B( v3, i ) & 0x07;
+        if (i == 15)
+        {
+            regs->VR_B( v1, i ) = regs->VR_B( v2, i ) << sl;
+            break;
+        }
+        sr = 8 - sl;
+        regs->VR_B( v1, i ) = (regs->VR_B( v2, i ) << sl) | (regs->VR_B( v2, i+1 ) >> sr);
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -1995,15 +2086,18 @@ DEF_INST( vector_shift_left )
 DEF_INST( vector_shift_left_by_byte )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     sl, sr;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    sl = ((regs->VR_B( v3, 7 ) & 0x78) >> 3) * 8;
+    sr = 64 - sl;
+
+    regs->VR_D( v1, 0 ) = (regs->VR_D( v2, 0 ) << sl) | (regs->VR_D( v2, 1 ) >> sr);
+    regs->VR_D( v1, 1 ) = regs->VR_D( v2, 1 ) << sl;
+
     ZVECTOR_END( regs );
 }
 
@@ -2038,33 +2132,97 @@ DEF_INST( vector_shift_left_double_by_byte )
 DEF_INST( vector_element_shift_right_logical_vector )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     shift, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m4)
+    {
+    case 0:  // Byte
+        for (i=0; i < 16; i++)
+        {
+            shift = regs->VR_B( v3, i ) % 8;
+            regs->VR_B( v1, i ) = regs->VR_B( v2, i ) >> shift;
+        }
+        break;
+    case 1:  // Halfword
+        for (i=0; i < 8; i++)
+        {
+            shift = regs->VR_H( v3, i ) % 16;
+            regs->VR_H( v1, i ) = regs->VR_H( v2, i ) >> shift;
+        }
+        break;
+    case 2:  // Word
+        for (i=0; i < 4; i++)
+        {
+            shift = regs->VR_F( v3, i ) % 32;
+            regs->VR_F( v1, i ) = regs->VR_F( v2, i ) >> shift;
+        }
+        break;
+    case 3:  // Doubleword
+        for (i=0; i < 2; i++)
+        {
+            shift = regs->VR_D( v3, i ) % 64;
+            regs->VR_D( v1, i ) = regs->VR_D( v2, i ) >> shift;
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
 /*-------------------------------------------------------------------*/
-/* E77A VESRAV - Vector Element Shift Right Arithmetic Vector [VRR-c] */
+/* E77A VESRAV - Vector Element Shift Right Arithmetic Vector[VRR-c] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_element_shift_right_arithmetic_vector )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     shift, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m4)
+    {
+    case 0:  // Byte
+        for (i=0; i < 16; i++)
+        {
+            shift = regs->VR_B( v3, i ) % 8;
+            regs->VR_B( v1, i ) = (S8) regs->VR_B( v2, i ) >> shift;
+        }
+        break;
+    case 1:  // Halfword
+        for (i=0; i < 8; i++)
+        {
+            shift = regs->VR_H( v3, i ) % 16;
+            regs->VR_H( v1, i ) = (S16) regs->VR_H( v2, i ) >> shift;
+        }
+        break;
+    case 2:  // Word
+        for (i=0; i < 4; i++)
+        {
+            shift = regs->VR_F( v3, i ) % 32;
+            regs->VR_F( v1, i ) = (S32) regs->VR_F( v2, i ) >> shift;
+        }
+        break;
+    case 3:  // Doubleword
+        for (i=0; i < 2; i++)
+        {
+            shift = regs->VR_D( v3, i ) % 64;
+            regs->VR_D( v1, i ) = (S64) regs->VR_D( v2, i ) >> shift;
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -2074,15 +2232,24 @@ DEF_INST( vector_element_shift_right_arithmetic_vector )
 DEF_INST( vector_shift_right_logical )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     sr, sl, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    for (i = 15 ; ; i--)
+    {
+        sr = regs->VR_B( v3, i ) & 0x07;
+        if (i == 0)
+        {
+            regs->VR_B( v1, i ) = regs->VR_B( v2, i ) >> sr;
+            break;
+        }
+        sl = 8 - sr;
+        regs->VR_B( v1, i ) = (regs->VR_B( v2, i ) >> sr) | (regs->VR_B( v2, i-1 ) << sl);
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -2091,19 +2258,18 @@ DEF_INST( vector_shift_right_logical )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_shift_right_logical_by_byte )
 {
-    int     v1, v2, v3, m4, m5, m6, shift, i;
+    int     v1, v2, v3, m4, m5, m6;
+    int     sr, sl;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
 
-    shift = (regs->VR_B(v3, 7) >> 3) & 0x0f;
+    sr = ((regs->VR_B( v3, 7 ) & 0x78) >> 3) * 8;
+    sl = 64 - sr;
 
-    regs->VR_D(v1, 0) = 0x00;
-    regs->VR_D(v1, 1) = 0x00;
-
-    for (i=shift; i < 16; i++)
-        regs->VR_B(v1, i) = regs->VR_B(v2, i - shift);
+    regs->VR_D( v1, 0 ) = regs->VR_D( v2, 0 ) >> sr;
+    regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 0 ) << sl) | (regs->VR_D( v2, 1 ) >> sr);
 
     ZVECTOR_END( regs );
 }
@@ -2114,15 +2280,24 @@ DEF_INST( vector_shift_right_logical_by_byte )
 DEF_INST( vector_shift_right_arithmetic )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     sr, sl, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    for (i = 15 ; ; i--)
+    {
+        sr = regs->VR_B( v3, i ) & 0x07;
+        if (i == 0)
+        {
+            regs->VR_B( v1, i ) = (S8) regs->VR_B( v2, i ) >> sr;
+            break;
+        }
+        sl = 8 - sr;
+        regs->VR_B( v1, i ) = (regs->VR_B( v2, i ) >> sr) | (regs->VR_B( v2, i-1 ) << sl);
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -2132,15 +2307,18 @@ DEF_INST( vector_shift_right_arithmetic )
 DEF_INST( vector_shift_right_arithmetic_by_byte )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     sr, sl;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    sr = ((regs->VR_B( v3, 7 ) & 0x78) >> 3) * 8;
+    sl = 64 - sr;
+
+    regs->VR_D( v1, 0 ) = (S64) regs->VR_D( v2, 0 ) >> sr;
+    regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 0 ) << sl) | (regs->VR_D( v2, 1 ) >> sr);
+
     ZVECTOR_END( regs );
 }
 
