@@ -1868,6 +1868,15 @@
     <None Include="tests\zvector-e6-16-VSRP-VPSOP.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\zvector-e6-17-VSCHP.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e6-18-VSCSHP.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e6-19-VCSPH.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\FAC53.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2360,6 +2369,15 @@
     <None Include="tests\zvector-e6-16-VSRP-VPSOP.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\ zvector-e6-17-VSCHP.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e6-18-VSCSHP.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e6-19-VCSPH.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
@@ -2592,6 +2610,15 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\zvector-e6-16-VSRP-VPSOP.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e6-17-VSCHP.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e6-18-VSCSHP.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e6-19-VCSPH.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\3211.list">
@@ -2973,6 +3000,24 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\zvector-e6-16-VSRP-VPSOP.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-17-VSCHP.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-17-VSCHP.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-18-VSCSHP.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-18-VSCSHP.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-19-VCSPH.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-19-VCSPH.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="hercules.cnf">
