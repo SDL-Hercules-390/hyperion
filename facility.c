@@ -4586,11 +4586,19 @@ int facility_enable_disable( int argc, char* argv[] )
         /* Then fall through to enable/disable 370X itself */
     }
 
-    /* Enable or disable the requested facility */
+    /* Enable or disable the requested facility in SYSBLK */
     if (enable)
         sysblk.facility_list[ at->num ][ fbyte ] |= fbit;
     else
         sysblk.facility_list[ at->num ][ fbyte ] &= ~fbit;
+
+    /* Refresh each online CPU's facility list with updated list */
+    {
+        int  cpu;
+        for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+            if (IS_CPU_ONLINE( cpu ))
+                init_cpu_facilities( sysblk.regs[ cpu ] );
+    }
 
     /* Update flags */
     enabled  = sysblk.facility_list[ at->num ][ fbyte ] & fbit;
