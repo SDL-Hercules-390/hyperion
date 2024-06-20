@@ -4306,9 +4306,9 @@ DEF_INST(decimal_scale_and_convert_and_split_to_hfp )
     VRR_B(inst, regs, v1, v2, v3, m4, m5);
     ZVECTOR_CHECK( regs );
 
-    /* programmers note: m4 and m5 are unused!!!       */
-    /* to avoid GCC [-Wunused-but-set-variable] waring */
-    if (0 && m4 && m5) scale = 0;
+    /* m4 and m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     /* valid checks */
     valid_decimals2 = vr_packed_valid_digits( regs, v2 );
