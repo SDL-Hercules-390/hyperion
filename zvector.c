@@ -4036,6 +4036,7 @@ DEF_INST( vector_average )
     int     v1, v2, v3, m4, m5, m6;
 
     int i;                          /* loop index                    */
+    S64 temps64;                    /* signed temp                   */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -4076,8 +4077,16 @@ DEF_INST( vector_average )
                 if  ( regs->VR_D(v2, i) & 0x8000000000000000ULL )
                 {
                     /* negative signs: allow overflow and force back to negative */
-                    regs->VR_D(v1, i) = (U64) ( ( (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i)  + 1) >> 1 );
-                    regs->VR_D(v1, i) |= 0x8000000000000000ULL;
+                    temps64 = (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i);
+                    if ( temps64 < 0 )
+                    {   /* no overflow: still negative: round +1 */
+                        temps64++;
+                    }
+                    else
+                    {   /* overflow: now positive: round -1 */
+                        temps64--;
+                    }
+                    regs->VR_D(v1, i) = (U64) ( temps64 >> 1 ) | 0x8000000000000000ULL;
                 }
                 else
                 {
