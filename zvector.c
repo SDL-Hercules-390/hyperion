@@ -4313,15 +4313,86 @@ DEF_INST( vector_compare_equal )
 DEF_INST( vector_compare_high_logical )
 {
     int     v1, v2, v3, m4, m5;
+    int     hi = 0;
+    int     nothi = 0;
+    int     i;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+#define M5_CS ((m5 & 0x1) != 0) // Condition Code Set
+
+    switch (m4)
+    {
+    case 0:         /* Byte */
+        for (i=0; i < 16; i++) {
+            if (regs->VR_B(v2, i) > regs->VR_B(v3, i)) {
+                regs->VR_B(v1, i) = 0xff;
+                hi++;
+            }
+            else {
+                regs->VR_B(v1, i) = 0x00;
+                nothi++;
+            }
+        }
+        break;
+
+    case 1:        /* Halfword */
+        for (i=0; i < 8; i++) {
+            if (regs->VR_H(v2, i) > regs->VR_H(v3, i)) {
+                regs->VR_H(v1, i) = 0xffff;
+                hi++;
+            }
+            else {
+                regs->VR_H(v1, i) = 0x0000;
+                nothi++;
+            }
+        }
+        break;
+
+    case 2:         /* Word */
+        for (i=0; i < 4; i++) {
+            if (regs->VR_F(v2, i) > regs->VR_F(v3, i)) {
+                regs->VR_F(v1, i) = 0xffffffff;
+                hi++;
+            }
+            else {
+                regs->VR_F(v1, i) = 0x00000000;
+                nothi++;
+            }
+        }
+        break;
+
+    case 3:        /* Doubleword */
+        for (i=0; i < 2; i++) {
+            if (regs->VR_D(v2, i) > regs->VR_D(v3, i)) {
+                regs->VR_D(v1, i) = 0xffffffffffffffff;
+                hi++;
+            }
+            else {
+                regs->VR_D(v1, i) = 0x0000000000000000;
+                nothi++;
+            }
+        }
+        break;
+
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
+    if (M5_CS) {
+        if (nothi == 0)
+            regs->psw.cc = 0;
+        else if (hi > 0)
+            regs->psw.cc = 1;
+        else if (hi == 0)
+            regs->psw.cc = 3;
+    }
+
+#undef M5_CS
+
     ZVECTOR_END( regs );
 }
 
@@ -4331,15 +4402,86 @@ DEF_INST( vector_compare_high_logical )
 DEF_INST( vector_compare_high )
 {
     int     v1, v2, v3, m4, m5;
+    int     hi = 0;
+    int     nothi = 0;
+    int     i;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+#define M5_CS ((m5 & 0x1) != 0) // Condition Code Set
+
+    switch (m4)
+    {
+    case 0:         /* Byte */
+        for (i=0; i < 16; i++) {
+            if ( (S8) regs->VR_B(v2, i) > (S8) regs->VR_B(v3, i) ) {
+                regs->VR_B(v1, i) = 0xff;
+                hi++;
+            }
+            else {
+                regs->VR_B(v1, i) = 0x00;
+                nothi++;
+            }
+        }
+        break;
+
+    case 1:        /* Halfword */
+        for (i=0; i < 8; i++) {
+            if ( (S16) regs->VR_H(v2, i) > (S16) regs->VR_H(v3, i) ) {
+                regs->VR_H(v1, i) = 0xffff;
+                hi++;
+            }
+            else {
+                regs->VR_H(v1, i) = 0x0000;
+                nothi++;
+            }
+        }
+        break;
+
+    case 2:         /* Word */
+        for (i=0; i < 4; i++) {
+            if ( (S32) regs->VR_F(v2, i) > (S32) regs->VR_F(v3, i) ) {
+                regs->VR_F(v1, i) = 0xffffffff;
+                hi++;
+            }
+            else {
+                regs->VR_F(v1, i) = 0x00000000;
+                nothi++;
+            }
+        }
+        break;
+
+    case 3:        /* Doubleword */
+        for (i=0; i < 2; i++) {
+            if ( (S64) regs->VR_D(v2, i) > (S64) regs->VR_D(v3, i) ) {
+                regs->VR_D(v1, i) = 0xffffffffffffffff;
+                hi++;
+            }
+            else {
+                regs->VR_D(v1, i) = 0x0000000000000000;
+                nothi++;
+            }
+        }
+        break;
+
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
+    if (M5_CS) {
+        if (nothi == 0)
+            regs->psw.cc = 0;
+        else if (hi > 0)
+            regs->psw.cc = 1;
+        else if (hi == 0)
+            regs->psw.cc = 3;
+    }
+
+#undef M5_CS
+
     ZVECTOR_END( regs );
 }
 
