@@ -48,7 +48,7 @@ fac q raw
 *
 *Compare 
 r 212.1           # Where STFLE stored facility 19's byte
-*Want EF
+*Want EF          # facility 19 = X'10' bit should be OFF
 *
 fac ena 19        # put back to the way it was
 *

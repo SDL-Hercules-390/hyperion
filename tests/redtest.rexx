@@ -756,8 +756,10 @@ Do
    Parse Var rest  '"' info '"' rest
    info = '"'info'"'
    rest = STRIP( rest )
+   Parse Var rest rest '#' .
 End
 Else
+   Parse Var rest rest '#' .
    info = ''
    Call OkayOrNot rest = storbytes, 'Storage compare mismatch.',,
       'Want:' storaddr STRIP( rest ) ' 'info, 'Got: ' storaddr STRIP( storbytes )
