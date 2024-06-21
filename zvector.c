@@ -3950,14 +3950,63 @@ DEF_INST( vector_average_logical )
 {
     int     v1, v2, v3, m4, m5, m6;
 
+    int i;                          /* loop index                    */
+    U64 lsa, lsb;                   /* least significant 64-bits     */
+    U64 msa;                        /* most significant 64-bits      */
+
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    /* m5 and m5 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
+    switch (m4)
+    {
+    case 0:         /* Byte */
+        for (i=0; i < 16; i++) {
+            regs->VR_B(v1, i) = (U8) ( ( (U16) regs->VR_B(v2, i) + (U16) regs->VR_B(v3, i) + 1) >> 1 );
+        }
+        break;
+
+    case 1:         /* Halfword */
+        for (i=0; i < 8; i++) {
+            regs->VR_H(v1, i) = (U16) ( ( (U32) regs->VR_H(v2, i) + (U32) regs->VR_H(v3, i) + 1) >> 1 );
+        }
+        break;
+
+    case 2:         /* Word */
+        for (i=0; i < 4; i++) {
+            regs->VR_F(v1, i) = (U32) ( ( (U64) regs->VR_F(v2, i) + (U64) regs->VR_F(v3, i) + 1) >> 1 );
+        }
+        break;
+
+    case 3:         /* Doubleword */
+        for (i=0; i < 2; i++) {
+            /* U128 a + U64 b */
+            msa = 0;
+            lsa = regs->VR_B(v2, i);
+            lsb = regs->VR_B(v3, i);
+
+            /* inline U128:  a + b */
+            lsa += lsb;
+            if ( lsa < lsb ) msa++;
+
+            /* inline U128: a+1 */
+            lsa += 1;
+            if ( lsa < 1 ) msa++;
+
+            /* shift right: average  */
+            regs->VR_D(v1, i) = (lsa >> 1) | ( msa << 63 );
+        }
+        break;
+
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -3986,14 +4035,66 @@ DEF_INST( vector_average )
 {
     int     v1, v2, v3, m4, m5, m6;
 
+    int i;                          /* loop index                    */
+
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    /* m5 and m5 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
+    switch (m4)
+    {
+    case 0:         /* Byte */
+        for (i=0; i < 16; i++) {
+            regs->VR_B(v1, i) = (U8) ( ( (S16) regs->VR_B(v2, i) + (S16) regs->VR_B(v3, i) + 1) >> 1 );
+        }
+        break;
+
+    case 1:         /* Halfword */
+        for (i=0; i < 8; i++) {
+            regs->VR_H(v1, i) = (U16) ( ( (S32) regs->VR_H(v2, i) + (S32) regs->VR_H(v3, i) + 1) >> 1 );
+        }
+        break;
+
+    case 2:         /* Word */
+        for (i=0; i < 4; i++) {
+            regs->VR_F(v1, i) = (U32) ( ( (S64) regs->VR_F(v2, i) + (S64) regs->VR_F(v3, i) + 1) >> 1 );
+        }
+        break;
+
+    case 3:         /* Doubleword */
+        for (i=0; i < 2; i++) {
+            if  (
+                    ( regs->VR_D(v2, i) & 0x8000000000000000ULL )  ==
+                    ( regs->VR_D(v3, i) & 0x8000000000000000ULL )
+                )
+            {
+                /* same sign: possible overflow */
+                if  ( regs->VR_D(v2, i) & 0x8000000000000000ULL )
+                {
+                    /* negative signs: allow overflow and force back to negative */
+                    regs->VR_D(v1, i) = (U64) ( ( (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i)  + 1) >> 1 );
+                    regs->VR_D(v1, i) |= 0x8000000000000000ULL;
+                }
+                else
+                {
+                    /* positive signs: handle as U64 values */
+                    regs->VR_D(v1, i) = (U64) ( ( (U64) regs->VR_D(v2, i) + (U64) regs->VR_D(v3, i) + 1) >> 1 );
+                }
+            }
+            else
+                regs->VR_D(v1, i) = (U64) ( ( (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i) + 1) >> 1 );
+        }
+        break;
+
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -4362,19 +4463,19 @@ DEF_INST( vector_minimum )
 
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
-            regs->VR_H(v1, i) = (S8) regs->VR_H(v2, i) <= (S8) regs->VR_H(v3, i) ? regs->VR_H(v2, i) : regs->VR_H(v3, i);
+            regs->VR_H(v1, i) = (S16) regs->VR_H(v2, i) <= (S16) regs->VR_H(v3, i) ? regs->VR_H(v2, i) : regs->VR_H(v3, i);
         }
         break;
 
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
-            regs->VR_F(v1, i) = (S8) regs->VR_F(v2, i) <= (S8) regs->VR_F(v3, i) ? regs->VR_F(v2, i) : regs->VR_F(v3, i);
+            regs->VR_F(v1, i) = (S32) regs->VR_F(v2, i) <= (S32) regs->VR_F(v3, i) ? regs->VR_F(v2, i) : regs->VR_F(v3, i);
         }
         break;
 
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
-            regs->VR_D(v1, i) = (S8) regs->VR_D(v2, i) <= (S8) regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
+            regs->VR_D(v1, i) = (S64) regs->VR_D(v2, i) <= (S64) regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
         }
         break;
 
@@ -4412,19 +4513,19 @@ DEF_INST( vector_maximum )
 
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
-            regs->VR_H(v1, i) = (S8) regs->VR_H(v2, i) >= (S8) regs->VR_H(v3, i) ? regs->VR_H(v2, i) : regs->VR_H(v3, i);
+            regs->VR_H(v1, i) = (S16) regs->VR_H(v2, i) >= (S16) regs->VR_H(v3, i) ? regs->VR_H(v2, i) : regs->VR_H(v3, i);
         }
         break;
 
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
-            regs->VR_F(v1, i) = (S8) regs->VR_F(v2, i) >= (S8) regs->VR_F(v3, i) ? regs->VR_F(v2, i) : regs->VR_F(v3, i);
+            regs->VR_F(v1, i) = (S32) regs->VR_F(v2, i) >= (S32) regs->VR_F(v3, i) ? regs->VR_F(v2, i) : regs->VR_F(v3, i);
         }
         break;
 
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
-            regs->VR_D(v1, i) = (S8) regs->VR_D(v2, i) >= (S8) regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
+            regs->VR_D(v1, i) = (S64) regs->VR_D(v2, i) >= (S64) regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
         }
         break;
 
