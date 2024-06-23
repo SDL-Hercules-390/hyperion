@@ -5234,7 +5234,7 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E724*/ GENx___x___x___ ,
  /*E725*/ GENx___x___x___ ,
  /*E726*/ GENx___x___x___ ,
- /*E727*/ GENx___x___x900("LCBB"   , RXE    , ASMFMT_RXE    , load_count_to_block_boundary                             ),
+ /*E727*/ GENx___x___x900("LCBB"   , RXE    , ASMFMT_RXE_M3 , load_count_to_block_boundary                             ),
  /*E728*/ GENx___x___x___ ,
  /*E729*/ GENx___x___x___ ,
  /*E72A*/ GENx___x___x___ ,
