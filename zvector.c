@@ -2094,23 +2094,28 @@ DEF_INST( vector_shift_left )
 DEF_INST( vector_shift_left_by_byte )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     sl, sr;
+    int     i, j;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
 
-    sl = ((regs->VR_B( v3, 7 ) & 0x78) >> 3) * 8;
-    sr = 64 - sl;
+    SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v2, 1 );
+    SV_D( temp, 2 ) = 0;
+    SV_D( temp, 3 ) = 0;
 
-    regs->VR_D( v1, 0 ) = (regs->VR_D( v2, 0 ) << sl) | (regs->VR_D( v2, 1 ) >> sr);
-    regs->VR_D( v1, 1 ) = regs->VR_D( v2, 1 ) << sl;
+    j = (regs->VR_B( v3, 7 ) & 0x78) >> 3;
+
+    for (i = 0; i < 16; i++, j++)
+        regs->VR_B(v1, i) = SV_B( temp, j );
 
     ZVECTOR_END( regs );
 }
 
 /*-------------------------------------------------------------------*/
-/* E777 VSLDB  - Vector Shift Left Double By Byte            [VRI-d] */
+/* git7 VSLDB  - Vector Shift Left Double By Byte            [VRI-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_shift_left_double_by_byte )
 {
@@ -2127,9 +2132,8 @@ DEF_INST( vector_shift_left_double_by_byte )
     SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
-    for (i = 0, j = i4; i < 16; i++, j++) {
+    for (i = 0, j = i4; i < 16; i++, j++)
         regs->VR_B(v1, i) = SV_B( temp, j );
-    }
 
     ZVECTOR_END( regs );
 }
@@ -2267,17 +2271,22 @@ DEF_INST( vector_shift_right_logical )
 DEF_INST( vector_shift_right_logical_by_byte )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     sr, sl;
+    int     i, j;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
 
-    sr = ((regs->VR_B( v3, 7 ) & 0x78) >> 3) * 8;
-    sl = 64 - sr;
+    SV_D( temp, 0 ) = 0;
+    SV_D( temp, 1 ) = 0;
+    SV_D( temp, 2 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v2, 1 );
 
-    regs->VR_D( v1, 0 ) = regs->VR_D( v2, 0 ) >> sr;
-    regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 0 ) << sl) | (regs->VR_D( v2, 1 ) >> sr);
+    j = 16 - ((regs->VR_B( v3, 7 ) & 0x78) >> 3);
+
+    for (i = 0; i < 16; i++, j++)
+        regs->VR_B(v1, i) = SV_B( temp, j );
 
     ZVECTOR_END( regs );
 }
@@ -2299,7 +2308,7 @@ DEF_INST( vector_shift_right_arithmetic )
         sr = regs->VR_B( v3, i ) & 0x07;
         if (i == 0)
         {
-            regs->VR_B( v1, i ) = (S8) regs->VR_B( v2, i ) >> sr;
+            regs->VR_B( v1, i ) = (S8)regs->VR_B( v2, i ) >> sr;
             break;
         }
         sl = 8 - sr;
@@ -2315,17 +2324,30 @@ DEF_INST( vector_shift_right_arithmetic )
 DEF_INST( vector_shift_right_arithmetic_by_byte )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     sr, sl;
+    int     i, j;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
 
-    sr = ((regs->VR_B( v3, 7 ) & 0x78) >> 3) * 8;
-    sl = 64 - sr;
+    if (regs->VR_B( v2, 0 ) & 0x80)
+    {
+        SV_D( temp, 0 ) = 0xFFFFFFFFFFFFFFFFull;
+        SV_D( temp, 1 ) = 0xFFFFFFFFFFFFFFFFull;
+    }
+    else
+    {
+        SV_D( temp, 0 ) = 0;
+        SV_D( temp, 1 ) = 0;
+    }
+    SV_D( temp, 2 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v2, 1 );
 
-    regs->VR_D( v1, 0 ) = (S64) regs->VR_D( v2, 0 ) >> sr;
-    regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 0 ) << sl) | (regs->VR_D( v2, 1 ) >> sr);
+    j = 16 - ((regs->VR_B( v3, 7 ) & 0x78) >> 3);
+
+    for (i = 0; i < 16; i++, j++)
+        regs->VR_B(v1, i) = SV_B( temp, j );
 
     ZVECTOR_END( regs );
 }
@@ -3851,7 +3873,7 @@ DEF_INST( vector_multiply_and_add_logical_even )
         {
             temp.h = regs->VR_B(v2, i);
             temp.h *= regs->VR_B(v3, i);
-            temp.h += regs->VR_B(v4, i);
+            temp.h += regs->VR_H(v4, j);
             regs->VR_H(v1, j) = temp.h;
         }
         break;
@@ -3860,7 +3882,7 @@ DEF_INST( vector_multiply_and_add_logical_even )
         {
             temp.f = regs->VR_H(v2, i);
             temp.f *= regs->VR_H(v3, i);
-            temp.f += regs->VR_H(v4, i);
+            temp.f += regs->VR_F(v4, j);
             regs->VR_F(v1, j) = temp.f;
         }
         break;
@@ -3869,7 +3891,7 @@ DEF_INST( vector_multiply_and_add_logical_even )
         {
             temp.d = regs->VR_F(v2, i);
             temp.d *= regs->VR_F(v3, i);
-            temp.d += regs->VR_F(v4, i);
+            temp.d += regs->VR_D(v4, j);
             regs->VR_D(v1, j) = temp.d;
         }
         break;
@@ -3901,7 +3923,7 @@ DEF_INST( vector_multiply_and_add_logical_odd )
         {
             temp.h = regs->VR_B(v2, i);
             temp.h *= regs->VR_B(v3, i);
-            temp.h += regs->VR_B(v4, i);
+            temp.h += regs->VR_H(v4, j);
             regs->VR_H(v1, j) = temp.h;
         }
         break;
@@ -3910,7 +3932,7 @@ DEF_INST( vector_multiply_and_add_logical_odd )
         {
             temp.f = regs->VR_H(v2, i);
             temp.f *= regs->VR_H(v3, i);
-            temp.f += regs->VR_H(v4, i);
+            temp.f += regs->VR_F(v4, j);
             regs->VR_F(v1, j) = temp.f;
         }
         break;
@@ -3919,7 +3941,7 @@ DEF_INST( vector_multiply_and_add_logical_odd )
         {
             temp.d = regs->VR_F(v2, i);
             temp.d *= regs->VR_F(v3, i);
-            temp.d += regs->VR_F(v4, i);
+            temp.d += regs->VR_D(v4, j);
             regs->VR_D(v1, j) = temp.d;
         }
         break;
@@ -3951,7 +3973,7 @@ DEF_INST( vector_multiply_and_add_even )
         {
             temp.sh = (S8)regs->VR_B(v2, i);
             temp.sh *= (S8)regs->VR_B(v3, i);
-            temp.sh += (S8)regs->VR_B(v4, i);
+            temp.sh += (S16)regs->VR_H(v4, j);
             regs->VR_H(v1, j) = temp.sh;
         }
         break;
@@ -3960,7 +3982,7 @@ DEF_INST( vector_multiply_and_add_even )
         {
             temp.sf = (S16)regs->VR_H(v2, i);
             temp.sf *= (S16)regs->VR_H(v3, i);
-            temp.sf += (S16)regs->VR_H(v4, i);
+            temp.sf += (S32)regs->VR_F(v4, j);
             regs->VR_F(v1, j) = temp.sf;
         }
         break;
@@ -3969,7 +3991,7 @@ DEF_INST( vector_multiply_and_add_even )
         {
             temp.sd = (S32)regs->VR_F(v2, i);
             temp.sd *= (S32)regs->VR_F(v3, i);
-            temp.sd += (S32)regs->VR_F(v4, i);
+            temp.sd += (S64)regs->VR_D(v4, j);
             regs->VR_D(v1, j) = temp.sd;
         }
         break;
@@ -4001,7 +4023,7 @@ DEF_INST( vector_multiply_and_add_odd )
         {
             temp.sh = (S8)regs->VR_B(v2, i);
             temp.sh *= (S8)regs->VR_B(v3, i);
-            temp.sh += (S8)regs->VR_B(v4, i);
+            temp.sh += (S16)regs->VR_H(v4, j);
             regs->VR_H(v1, j) = temp.sh;
         }
         break;
@@ -4010,7 +4032,7 @@ DEF_INST( vector_multiply_and_add_odd )
         {
             temp.sf = (S16)regs->VR_H(v2, i);
             temp.sf *= (S16)regs->VR_H(v3, i);
-            temp.sf += (S16)regs->VR_H(v4, i);
+            temp.sf += (S32)regs->VR_F(v4, j);
             regs->VR_F(v1, j) = temp.sf;
         }
         break;
@@ -4019,7 +4041,7 @@ DEF_INST( vector_multiply_and_add_odd )
         {
             temp.sd = (S32)regs->VR_F(v2, i);
             temp.sd *= (S32)regs->VR_F(v3, i);
-            temp.sd += (S32)regs->VR_F(v4, i);
+            temp.sd += (S64)regs->VR_D(v4, j);
             regs->VR_D(v1, j) = temp.sd;
         }
         break;
