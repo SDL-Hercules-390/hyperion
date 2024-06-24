@@ -4095,19 +4095,27 @@ DEF_INST( vector_galois_field_multiply_sum )
 DEF_INST( vector_add_with_carry_compute_carry )
 {
     int     v1, v2, v3, v4, m5, m6;
+    union   { U64 d[4]; } temp;
+    U64     carry;
+    int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
 
     switch (m5)
     {
     case 4:  // Quadword
+        carry = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
+        for (i=3; i >= 0; i--)
+        {
+            temp.d[i] = carry;
+            temp.d[i] += regs->VR_F( v3, i );
+            temp.d[i] += regs->VR_F( v2, i );
+            carry = temp.d[i] >> 32;
+        }
+        regs->VR_D( v1, 0 ) = 0;
+        regs->VR_D( v1, 1 ) = carry;
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -4123,19 +4131,27 @@ DEF_INST( vector_add_with_carry_compute_carry )
 DEF_INST( vector_add_with_carry )
 {
     int     v1, v2, v3, v4, m5, m6;
+    union   { U64 d[4]; } temp;
+    U64     carry;
+    int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
 
     switch (m5)
     {
     case 4:  // Quadword
+        carry = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
+        for (i=3; i >= 0; i--)
+        {
+            temp.d[i] = carry;
+            temp.d[i] += regs->VR_F( v3, i );
+            temp.d[i] += regs->VR_F( v2, i );
+            carry = temp.d[i] >> 32;
+        }
+        for (i=3; i >= 0; i--)
+            regs->VR_F( v1, i ) = temp.d[i];
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -4169,19 +4185,27 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
 {
     int     v1, v2, v3, v4, m5, m6;
+    union   { U64 d[4]; } temp;
+    U64     carry;
+    int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
 
     switch (m5)
     {
     case 4:  // Quadword
+        carry = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
+        for (i=3; i >= 0; i--)
+        {
+            temp.d[i] = carry;
+            temp.d[i] += ~regs->VR_F( v3, i );
+            temp.d[i] += regs->VR_F( v2, i );
+            carry = temp.d[i] >> 32;
+        }
+        regs->VR_D( v1, 0 ) = 0;
+        regs->VR_D( v1, 1 ) = carry;
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -4197,19 +4221,27 @@ DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
 DEF_INST( vector_subtract_with_borrow_indication )
 {
     int     v1, v2, v3, v4, m5, m6;
+    union   { U64 d[4]; } temp;
+    U64     carry;
+    int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
 
     switch (m5)
     {
     case 4:  // Quadword
+        carry = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
+        for (i=3; i >= 0; i--)
+        {
+            temp.d[i] = carry;
+            temp.d[i] += ~regs->VR_F( v3, i );
+            temp.d[i] += regs->VR_F( v2, i );
+            carry = temp.d[i] >> 32;
+        }
+        for (i=3; i >= 0; i--)
+            regs->VR_F( v1, i ) = temp.d[i];
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
