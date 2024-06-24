@@ -4082,7 +4082,7 @@ DEF_INST( vector_galois_field_multiply_sum )
 
     ZVECTOR_CHECK( regs );
     //
-    // TODO: insert code here
+    // TODO: insert code here          hard!
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
     //
@@ -4172,7 +4172,7 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 
     ZVECTOR_CHECK( regs );
     //
-    // TODO: insert code here
+    // TODO: insert code here          hard!
     //
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
     //
@@ -4257,9 +4257,7 @@ DEF_INST( vector_subtract_with_borrow_indication )
 DEF_INST( vector_unpack_logical_low )
 {
     int     v1, v2, m3, m4, m5, i;
-    U16      temp16[8];
-    U32      temp32[4];
-    U64      temp64[2];
+    union   { U64 d[2]; U32 f[4]; U16 h[8]; } temp;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -4269,21 +4267,21 @@ DEF_INST( vector_unpack_logical_low )
     {
     case 0:  // Byte
         for (i = 0; i < 8; i++)
-            temp16[i] = (U16) regs->VR_B(v2, i + 8);
+            temp.h[i] = (U16) regs->VR_B(v2, i + 8);
         for (i = 0; i < 8; i++)
-            regs->VR_H(v1, i) = temp16[i];
+            regs->VR_H(v1, i) = temp.h[i];
         break;
     case 1:  // Halfword
         for (i = 0; i < 4; i++)
-            temp32[i] = (U32) regs->VR_H(v2, i + 4);
+            temp.f[i] = (U32) regs->VR_H(v2, i + 4);
         for (i = 0; i < 4; i++)
-            regs->VR_F(v1, i) = temp32[i];
+            regs->VR_F(v1, i) = temp.f[i];
         break;
     case 2:  // Word
         for (i = 0; i < 2; i++)
-            temp64[i] = (U64) regs->VR_F(v2, i + 2);
+            temp.d[i] = (U64) regs->VR_F(v2, i + 2);
         for (i = 0; i < 2; i++)
-            regs->VR_D(v1, i) = temp64[i];
+            regs->VR_D(v1, i) = temp.d[i];
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -4299,9 +4297,7 @@ DEF_INST( vector_unpack_logical_low )
 DEF_INST( vector_unpack_logical_high )
 {
     int     v1, v2, m3, m4, m5, i;
-    U16      temp16[8];
-    U32      temp32[4];
-    U64      temp64[2];
+    union   { U64 d[2]; U32 f[4]; U16 h[8]; } temp;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -4311,21 +4307,21 @@ DEF_INST( vector_unpack_logical_high )
     {
     case 0:  // Byte
         for (i = 0; i < 8; i++)
-            temp16[i] = (U16) regs->VR_B(v2, i);
+            temp.h[i] = (U16) regs->VR_B(v2, i);
         for (i = 0; i < 8; i++)
-            regs->VR_H(v1, i) = temp16[i];
+            regs->VR_H(v1, i) = temp.h[i];
         break;
     case 1:  // Halfword
         for (i = 0; i < 4; i++)
-            temp32[i] = (U32) regs->VR_H(v2, i);
+            temp.f[i] = (U32) regs->VR_H(v2, i);
         for (i = 0; i < 4; i++)
-            regs->VR_F(v1, i) = temp32[i];
+            regs->VR_F(v1, i) = temp.f[i];
         break;
     case 2:  // Word
         for (i = 0; i < 2; i++)
-            temp64[i] = (U64) regs->VR_F(v2, i);
+            temp.d[i] = (U64) regs->VR_F(v2, i);
         for (i = 0; i < 2; i++)
-            regs->VR_D(v1, i) = temp64[i];
+            regs->VR_D(v1, i) = temp.d[i];
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -4341,15 +4337,38 @@ DEF_INST( vector_unpack_logical_high )
 DEF_INST( vector_unpack_low )
 {
     int     v1, v2, m3, m4, m5;
+    union   { U64 sd[2]; U32 sf[4]; U16 sh[8]; } temp;
+    int     i;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m3)
+    {
+    case 0:  // Byte
+        for (i = 0; i < 8; i++)
+            temp.sh[i] = (S16) regs->VR_B(v2, i + 8);
+        for (i = 0; i < 8; i++)
+            regs->VR_H(v1, i) = temp.sh[i];
+        break;
+    case 1:  // Halfword
+        for (i = 0; i < 4; i++)
+            temp.sf[i] = (S32) regs->VR_H(v2, i + 4);
+        for (i = 0; i < 4; i++)
+            regs->VR_F(v1, i) = temp.sf[i];
+        break;
+    case 2:  // Word
+        for (i = 0; i < 2; i++)
+            temp.sd[i] = (S64) regs->VR_F(v2, i + 2);
+        for (i = 0; i < 2; i++)
+            regs->VR_D(v1, i) = temp.sd[i];
+        break;
+    default:
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -4359,15 +4378,38 @@ DEF_INST( vector_unpack_low )
 DEF_INST( vector_unpack_high )
 {
     int     v1, v2, m3, m4, m5;
+    union   { U64 sd[2]; U32 sf[4]; U16 sh[8]; } temp;
+    int     i;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m3)
+    {
+    case 0:  // Byte
+        for (i = 0; i < 8; i++)
+            temp.sh[i] = (S16) regs->VR_B(v2, i);
+        for (i = 0; i < 8; i++)
+            regs->VR_H(v1, i) = temp.sh[i];
+        break;
+    case 1:  // Halfword
+        for (i = 0; i < 4; i++)
+            temp.sf[i] = (S32) regs->VR_H(v2, i);
+        for (i = 0; i < 4; i++)
+            regs->VR_F(v1, i) = temp.sf[i];
+        break;
+    case 2:  // Word
+        for (i = 0; i < 2; i++)
+            temp.sd[i] = (S64) regs->VR_F(v2, i);
+        for (i = 0; i < 2; i++)
+            regs->VR_D(v1, i) = temp.sd[i];
+        break;
+    default:
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -4377,15 +4419,42 @@ DEF_INST( vector_unpack_high )
 DEF_INST( vector_test_under_mask )
 {
     int     v1, v2, m3, m4, m5;
+    union   { U32 f[2]; } temp;
+    int     i, j, masko, selz, selo;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    masko = selz = selo = 0;
+    for (i=0; i < 4; i++)
+    {
+        temp.f[0] = regs->VR_F( v1, i );
+        temp.f[1] = regs->VR_F( v2, i );
+        for (j=0; j < 32; j++)
+        {
+            if (temp.f[1] & 0x80000000)
+            {
+                masko++;
+                if (temp.f[0] & 0x80000000)
+                    selo++;
+                else
+                    selz++;
+            }
+            temp.f[0] <<= 1;
+            temp.f[1] <<= 1;
+        }
+    }
+
+    if (masko == 0)
+        regs->psw.cc = 0;    // All mask bits zero
+    else if (masko == selz)
+        regs->psw.cc = 0;    // Selected bits all zeros
+    else if (masko == selo)
+        regs->psw.cc = 3;    // Selected bits all ones
+    else
+        regs->psw.cc = 1;    // Selected bits a mix of zeros and ones
+
     ZVECTOR_END( regs );
 }
 
@@ -4399,11 +4468,46 @@ DEF_INST( vector_element_compare_logical )
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m3)
+    {
+    case 0:  // Byte
+        if (regs->VR_B( v1, 7 ) == regs->VR_B( v2, 7 ))
+            regs->psw.cc = 0;
+        else if (regs->VR_B( v1, 7 ) < regs->VR_B( v2, 7 ))
+            regs->psw.cc = 1;
+        else
+            regs->psw.cc = 2;
+        break;
+    case 1:  // Halfword
+        if (regs->VR_H( v1, 3 ) == regs->VR_H( v2, 3 ))
+            regs->psw.cc = 0;
+        else if (regs->VR_H( v1, 3 ) < regs->VR_H( v2, 3 ))
+            regs->psw.cc = 1;
+        else
+            regs->psw.cc = 2;
+        break;
+    case 2:  // Word
+        if (regs->VR_F( v1, 1 ) == regs->VR_F( v2, 1 ))
+            regs->psw.cc = 0;
+        else if (regs->VR_F( v1, 1 ) < regs->VR_F( v2, 1 ))
+            regs->psw.cc = 1;
+        else
+            regs->psw.cc = 2;
+        break;
+    case 3:  // Doubleword
+        if (regs->VR_D( v1, 0 ) == regs->VR_D( v2, 0 ))
+            regs->psw.cc = 0;
+        else if (regs->VR_D( v1, 0 ) < regs->VR_D( v2, 0 ))
+            regs->psw.cc = 1;
+        else
+            regs->psw.cc = 2;
+        break;
+    default:
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -4417,11 +4521,46 @@ DEF_INST( vector_element_compare )
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m3)
+    {
+    case 0:  // Byte
+        if ((S8)regs->VR_B( v1, 7 ) == (S8)regs->VR_B( v2, 7 ))
+            regs->psw.cc = 0;
+        else if ((S8)regs->VR_B( v1, 7 ) < (S8)regs->VR_B( v2, 7 ))
+            regs->psw.cc = 1;
+        else
+            regs->psw.cc = 2;
+        break;
+    case 1:  // Halfword
+        if ((S16)regs->VR_H( v1, 3 ) == (S16)regs->VR_H( v2, 3 ))
+            regs->psw.cc = 0;
+        else if ((S16)regs->VR_H( v1, 3 ) < (S16)regs->VR_H( v2, 3 ))
+            regs->psw.cc = 1;
+        else
+            regs->psw.cc = 2;
+        break;
+    case 2:  // Word
+        if ((S32)regs->VR_F( v1, 1 ) == (S32)regs->VR_F( v2, 1 ))
+            regs->psw.cc = 0;
+        else if ((S32)regs->VR_F( v1, 1 ) < (S32)regs->VR_F( v2, 1 ))
+            regs->psw.cc = 1;
+        else
+            regs->psw.cc = 2;
+        break;
+    case 3:  // Doubleword
+        if ((S64)regs->VR_D( v1, 0 ) == (S64)regs->VR_D( v2, 0 ))
+            regs->psw.cc = 0;
+        else if ((S64)regs->VR_D( v1, 0 ) < (S64)regs->VR_D( v2, 0 ))
+            regs->psw.cc = 1;
+        else
+            regs->psw.cc = 2;
+        break;
+    default:
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
