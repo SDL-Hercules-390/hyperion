@@ -8887,7 +8887,7 @@ DEF_INST( vector_fp_minimum )
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Investigate how to implement this instruction! */
+    /* Todo: FixMe! Investigate how to implement this instruction! */
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
@@ -8913,7 +8913,7 @@ DEF_INST( vector_fp_minimum )
                 VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-                /* FixMe! Write some code that implements this instruction! */
+                /* Todo: FixMe! Write some code that implements this instruction! */
 
 
                 switch (m6)
@@ -8977,7 +8977,7 @@ DEF_INST( vector_fp_minimum )
                 VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
-                /* FixMe! Write some code that implements this instruction! */
+                /* Todo: FixMe! Write some code that implements this instruction! */
 
             }
         }
@@ -8989,7 +8989,7 @@ DEF_INST( vector_fp_minimum )
         VECTOR_GET_FLOAT128_OP( op3, v3, regs );
         VECTOR_GET_FLOAT128_OP( op2, v2, regs );
 
-        /* FixMe! Write some code that implements this instruction! */
+        /* Todo: FixMe! Write some code that implements this instruction! */
 
     }
 
@@ -9000,7 +9000,7 @@ DEF_INST( vector_fp_minimum )
 }
 
 /*-------------------------------------------------------------------*/
-/* E7EF VFMAX  - Vector FP Maximum                           [VRR-c] */
+q* E7EF VFMAX  - Vector FP Maximum                           [VRR-c] */
 /*                                                                   */
 /*   Extended Mnemonic    Base Mnemonic                              */
 /*   VFMAXSB V1,V2,V3,M6  VFMAX V1,V2,V3,2,0,M6                      */
@@ -9019,7 +9019,7 @@ DEF_INST( vector_fp_maximum )
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Investigate how to implement this instruction! */
+    /* Todo: FixMe! Investigate how to implement this instruction! */
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
@@ -9045,7 +9045,7 @@ DEF_INST( vector_fp_maximum )
                 VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
                 VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
 
-                /* FixMe! Write some code that implements this instruction! */
+                /* Todo: FixMe! Write some code that implements this instruction! */
 
 
                 switch (m6)
@@ -9087,7 +9087,7 @@ DEF_INST( vector_fp_maximum )
                 VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
                 VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
 
-                /* FixMe! Write some code that implements this instruction! */
+                /* Todo: FixMe! Write some code that implements this instruction! */
 
             }
         }
@@ -9099,7 +9099,7 @@ DEF_INST( vector_fp_maximum )
         VECTOR_GET_FLOAT128_OP( op3, v3, regs );
         VECTOR_GET_FLOAT128_OP( op2, v2, regs );
 
-        /* FixMe! Write some code that implements this instruction! */
+        /* Todo: FixMe! Write some code that implements this instruction! */
 
     }
 
