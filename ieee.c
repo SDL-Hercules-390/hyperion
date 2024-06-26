@@ -9000,7 +9000,7 @@ DEF_INST( vector_fp_minimum )
 }
 
 /*-------------------------------------------------------------------*/
-q* E7EF VFMAX  - Vector FP Maximum                           [VRR-c] */
+/* E7EF VFMAX  - Vector FP Maximum                           [VRR-c] */
 /*                                                                   */
 /*   Extended Mnemonic    Base Mnemonic                              */
 /*   VFMAXSB V1,V2,V3,M6  VFMAX V1,V2,V3,2,0,M6                      */
