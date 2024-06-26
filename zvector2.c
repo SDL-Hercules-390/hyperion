@@ -77,8 +77,9 @@ facility  code  test#   Instruction                                             
     tested within a single test. Multiple tests may be required to test all instructions for a given
     instruction format, e.g. load type instructions in one test and store type instructions in a second test.
 
-  Implemented instruction are organized by ascending opcode. Unimplemented instructions are located after
-  implemented instructions and just raise an operation exception.
+  Implemented instruction are organized by ascending opcode.
+
+  Unimplemented instructions are located after implemented instructions and raise an operation exception.
 -------------------------------------------------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -316,7 +317,7 @@ static inline U128 U128_sub( U128 a, U128 b)
 /*-------------------------------------------------------------------*/
 /* U128 * U32 Multiply: return a * b (overflow ignored)              */
 /*                                                                   */
-/* Very simple, standard approach to arithmetic mulpiply             */
+/* Very simple, standard approach to arithmetic multiply             */
 /*                                                                   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -484,8 +485,6 @@ static inline bool  lv_packed_valid_digits ( LOCAL_REGS* regs, int v1 )
     int     i, j;                           /* Array subscript       */
     bool    valid = true;                   /* valid result          */
 
-    /* check for non-zero for leading0 digits */
-    /* Pack digits into packed decimal work area */
     for (i=0, j=0; i < MAX_DECIMAL_DIGITS && valid; i++)
     {
         if (i & 1)
@@ -570,7 +569,6 @@ static inline int lv_leading_zero( LOCAL_REGS* regs, int v1 )
     int     packedix;          /* packed index                       */
     int     count = 0;         /* leading zero count                 */
 
-    /* copy 'count' digits */
     packedix = 0;
     for ( i = 0; i < MAX_DECIMAL_DIGITS; i++ )
     {
@@ -663,8 +661,6 @@ static inline bool  vr_packed_valid_digits ( REGS* regs, int v1 )
     int     i, j;                           /* Array subscript           */
     bool    valid = true;                   /* valid result              */
 
-    /* check for non-zero for leading0 digits */
-    /* Pack digits into packed decimal work area */
     for (i=0, j=0; i < MAX_DECIMAL_DIGITS && valid; i++)
     {
         if (i & 1)
@@ -716,7 +712,7 @@ static inline bool  vr_packed_valid ( REGS* regs, int v1 )
 /*      regs    CPU register context for VR access                   */
 /*      v1      vector register to check                             */
 /*      un      pointer to U128 field                                */
-/*      forcePositive   boolean to inicate wheter the value should   */
+/*      forcePositive   boolean to inicate whether the value should  */
 /*              forced to a positive value                           */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -867,7 +863,6 @@ static inline int vr_leading_zero(REGS* regs, int v1)
     int     packedix;          /* packed index                       */
     int     count;             /* leading zero count                 */
 
-    /* copy 'count' digits */
     count = 0;
     packedix = 0;
     for ( i = 0; i < MAX_DECIMAL_DIGITS; i++, count++ )
@@ -892,7 +887,7 @@ static inline int vr_leading_zero(REGS* regs, int v1)
 /*      regs    CPU register context for VR access                   */
 /*      v1      vector register to check                             */
 /*      dn      pointer to decNumber to save vector packed value     */
-/*      forcePositive   boolean to inicate wheter the value should   */
+/*      forcePositive   boolean to inicate whether the value should  */
 /*              forced to a positive value                           */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -910,14 +905,14 @@ static inline void vr_to_decNumber( REGS* regs, int v1, decNumber* pdn, bool for
 }
 
 /*-------------------------------------------------------------------*/
-/* Load a vector register froma decNumber                            */
+/* Load a vector register from a decNumber                           */
 /*                                                                   */
 /*                                                                   */
 /* Input:                                                            */
 /*      regs    CPU register context for VR access                   */
 /*      v1      vector register to check                             */
 /*      dn      pointer to decNumber to save vector packed value     */
-/*      forcePositive   boolean to inicate wheter the value should   */
+/*      forcePositive   boolean to inicate whether the value should  */
 /*              forced to a positive value                           */
 /*      rdc     result digit count: the number of rightmost digits   */
 /*              to load                                              */
@@ -1415,7 +1410,7 @@ static inline void hexNumberSplit( hexNumber* hn, SHORT_FLOAT* sf,  LONG_FLOAT* 
         shex.hexDigit[ i ] = shex.hexDigit[ hn->digits - SHORT_FLOAT_NUM_DIGITS + i];
     hexNumberToShortFloat( &shex, sf);
 
-    /* high result - short_float */
+    /* low result - long_float */
     hexNumberCopy(&lhex, hn);
     lhex.exponent = hn->exponent;
     lhex.digits = hn->digits - SHORT_FLOAT_NUM_DIGITS;
@@ -1428,7 +1423,7 @@ static inline void hexNumberSplit( hexNumber* hn, SHORT_FLOAT* sf,  LONG_FLOAT* 
         else
             break;
     }
-     hexNumberToLongFloat( &lhex, lf);
+    hexNumberToLongFloat( &lhex, lf);
 }
 
 /*-------------------------------------------------------------------*/
