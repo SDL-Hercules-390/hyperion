@@ -2648,26 +2648,11 @@ DEF_INST( vector_find_element_not_equal )
 /*-------------------------------------------------------------------*/
 /* E782 VFAE   - Vector Find Any Element Equal               [VRR-b] */
 /*-------------------------------------------------------------------*/
-/* In PoP (SA22-7832-13), for VFAE & VFEE we can read:
-"Programming Notes:
-1. If the RT flag is zero, a byte index is always
-stored into the first operand for any element size.
-For example, if the specified element size is halfword
-and the 2nd indexed halfword compared
-equal, a byte index of 4 would be stored."
-
-But I think that 4 would be a 2.
-The 2nd Half = 1 (index byte) x 2 (length of H) = 2.
-
-After 35 years, I must say this is the first typo I found in POP.
-Sent to IBM, they will reformulate the sentence.
-
-salva - 2023, feb,27.
-*/
-
 DEF_INST( vector_find_any_element_equal )
 {
-    int     v1, v2, v3, m4, m5, int1, ind1, ind2, max, i, j, s;
+    int     v1, v2, v3, m4, m5;
+    int     int1, ind1, ind2, max, i, j, s;
+    BYTE    inter1[16], inter2[16];
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -2680,81 +2665,168 @@ DEF_INST( vector_find_any_element_equal )
 
     switch (m4)
     {
-    case 0:
-        max = 16, int1 = 0;  ind1 = max, ind2 = ind1;
-        for (i=0; i < max; i++)
+    case 0:  // Byte
+
+
+        for (i=0; i<16; i++)
         {
-            for (j=0; j < max; j++)
-                if (regs->VR_B(v2, i) == regs->VR_B(v3, j))
-                    int1 |= (1 << i);
-            if (M5_ZS && (regs->VR_B(v2, i) == 0x00)) // if M5-ZS (Zero Search)
-                ind2 = min(ind2, i);
+            inter1[i] = inter2[i] = FALSE;
+            for (j=0; j<16; j++)
+            {
+                if (regs->VR_B(v2,i) == regs->VR_B(v3,j))
+                {
+                    inter1[i] = TRUE;
+                    break;
+                }
+            }
+            if (M5_ZS)                 // if M5_ZS (Zero Search)
+            {
+                if (regs->VR_B(v2,i) == 0)
+                {
+                    inter2[i] = TRUE;
+                }
+            }
+            if (M5_IN)                 // if M5_IN (Invert Result)
+            {
+                inter1[i] ^= TRUE;
+            }
         }
-        if (M5_IN)
-            int1 = ~int1;
-        for (i=0; i < max; i++)
+        if (M5_RT)                     // if M5_RT (Result Type)
         {
-            s = (int1 >> i) & 0x1;
-            if (s)
-                ind1 = min(ind1, i);
-            if (M5_RT)
-                regs->VR_B(v1, i) = s ? 0xff: 0x00;
+            for (i=0; i<16; i++)
+            {
+                if (inter1[i] == TRUE)
+                    regs->VR_B(v1,i) = 0xFF;
+                else
+                    regs->VR_B(v1,i) = 0x00;
+            }
         }
+        else                           // else !M5_RT
+        {
+            ind1 = ind2 = 16;
+            for (i=0; i<16; i++)
+            {
+                if (inter1[i] == TRUE && ind1 == 16)
+                    ind1 = i;
+                if (inter2[i] == TRUE && ind2 == 16)
+                    ind2 = i;
+            }
+            regs->VR_D(v1, 0) = min(ind1, ind2);
+            regs->VR_D(v1, 1) = 0;
+        }
+
+
         break;
-    case 1:
-        max = 8, int1 = 0;  ind1 = max, ind2 = ind1;
-        for (i=0; i < max; i++)
+    case 1:  // Halfword
+
+
+        for (i=0; i<8; i++)
         {
-            for (j=0; j < max; j++)
-                if (regs->VR_H(v2, i) == regs->VR_H(v3, j))
-                    int1 |= (1 << i);
-            if (M5_ZS && (regs->VR_H(v2, i) == 0x0000)) // if M5-ZS (Zero Search)
-                ind2 = min(ind2, i);
+            inter1[i] = inter2[i] = FALSE;
+            for (j=0; j<8; j++)
+            {
+                if (regs->VR_H(v2,i) == regs->VR_H(v3,j))
+                {
+                    inter1[i] = TRUE;
+                    break;
+                }
+            }
+            if (M5_ZS)                 // if M5_ZS (Zero Search)
+            {
+                if (regs->VR_H(v2,i) == 0)
+                {
+                    inter2[i] = TRUE;
+                }
+            }
+            if (M5_IN)                 // if M5_IN (Invert Result)
+            {
+                inter1[i] ^= TRUE;
+            }
         }
-        if (M5_IN)
-            int1 = ~int1;
-        for (i=0; i < max; i++)
+        if (M5_RT)                     // if M5_RT (Result Type)
         {
-            s = (int1 >> i) & 0x1;
-            if (s)
-                ind1 = min(ind1, i);
-            if (M5_RT)
-                regs->VR_H(v1, i) = s ? 0xffff : 0x0000;
+            for (j=0; j<8; j++)
+            {
+                if (inter1[i] == TRUE)
+                    regs->VR_H(v1,i) = 0xFFFF;
+                else
+                    regs->VR_H(v1,i) = 0x0000;
+            }
         }
+        else                           // else !M5_RT
+        {
+            ind1 = ind2 = 16;
+            for (i=0; i<8; i++)
+            {
+                if (inter1[i] == TRUE && ind1 == 16)
+                    ind1 = i * 2;
+                if (inter2[i] == TRUE && ind2 == 16)
+                    ind2 = i * 2;
+            }
+            regs->VR_D(v1, 0) = min(ind1, ind2);
+            regs->VR_D(v1, 1) = 0;
+        }
+
+
         break;
-    case 2:
-        max = 4, int1 = 0;  ind1 = max, ind2 = ind1;
-        for (i=0; i < max; i++)
+    case 2:  // Word
+
+
+        for (i=0; i<4; i++)
         {
-            for (j=0; j < max; j++)
-                if (regs->VR_F(v2, i) == regs->VR_F(v3, j))
-                    int1 |= (1 << i);
-            if (M5_ZS && (regs->VR_F(v2, i) == 0x00)) // if M5-ZS (Zero Search)
-                ind2 = min(ind2, i);
+            inter1[i] = inter2[i] = FALSE;
+            for (j=0; j<4; j++)
+            {
+                if (regs->VR_F(v2,i) == regs->VR_F(v3,j))
+                {
+                    inter1[i] = TRUE;
+                    break;
+                }
+            }
+            if (M5_ZS)                 // if M5_ZS (Zero Search)
+            {
+                if (regs->VR_F(v2,i) == 0)
+                {
+                    inter2[i] = TRUE;
+                }
+            }
+            if (M5_IN)                 // if M5_IN (Invert Result)
+            {
+                inter1[i] ^= TRUE;
+            }
         }
-        if (M5_IN)
-            int1 = ~int1;
-        for (i=0; i < max; i++)
+        if (M5_RT)                     // if M5_RT (Result Type)
         {
-            s = (int1 >> i) & 0x1;
-            if (s)
-                ind1 = min(ind1, i);
-            if (M5_RT)
-                regs->VR_F(v1, i) = s ? 0xffffffff : 0x00000000;
+            for (j=0; j<4; j++)
+            {
+                if (inter1[i] == TRUE)
+                    regs->VR_F(v1,i) = 0xFFFFFFFF;
+                else
+                    regs->VR_F(v1,i) = 0x00000000;
+            }
         }
+        else                           // else !M5_RT
+        {
+            ind1 = ind2 = 16;
+            for (i=0; i<4; i++)
+            {
+                if (inter1[i] == TRUE && ind1 == 16)
+                    ind1 = i * 4;
+                if (inter2[i] == TRUE && ind2 == 16)
+                    ind2 = i * 4;
+            }
+            regs->VR_D(v1, 0) = min(ind1, ind2);
+            regs->VR_D(v1, 1) = 0;
+        }
+
+
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
-    if (!M5_RT)               // if !M5_RT (No result Type)
-    {
-        regs->VR_D(v1, 0) = 0x00;
-        regs->VR_B(v1, 7) = min(ind1, ind2) * (1 << m4);
-        regs->VR_D(v1, 1) = 0x00;
-    }
 
-    if (M5_CS)               // if M5_CS (Condition Code Set)
+    if (M5_CS)                         // if M5_CS (Condition Code Set)
     {
         if (M5_ZS && (ind1 >= ind2))
             regs->psw.cc = 0;
