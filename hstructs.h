@@ -1506,7 +1506,12 @@ struct DEVBLK {                         /* Device configuration block*/
                 cdwmerge:1,             /* 1=Channel will merge data
                                              chained write CCWs      */
                 debug:1,                /* 1=generic debug flag      */
-                reinit:1;               /* 1=devinit, not attach     */
+                reinit:1,               /* 1=devinit, not attach     */
+				handshake:1;            /* 1='handshake' option   WED*/
+										/* (print/punch only)     WED*/
+#define HANDSHAKE_OPEN       0xF1       /* CCW opcode: open file  WED*/
+#define HANDSHAKE_CLOSE      0xFF       /*  "     "    close file WED*/
+#define HANDSHAKE_CLOSE_NAME 0xF9       /*  "     "    close/name WED*/
 
         unsigned int                    /* Device state - serialized
                                             by dev->lock             */
@@ -1533,6 +1538,7 @@ struct DEVBLK {                         /* Device configuration block*/
         U64     excps;                  /* Number of channel pgms Ex */
 
         /*  Device dependent data (generic)                          */
+		/*  (points to a UROUTBLK structure for print/punch)      WED*/
         void    *dev_data;
 
         /*  External GUI fields                                      */
@@ -1995,5 +2001,21 @@ struct GUISTAT
     char    szStatStrBuff1[GUI_STATSTR_BUFSIZ];
     char    szStatStrBuff2[GUI_STATSTR_BUFSIZ];
 };
+
+
+/*-------------------------------------------------------------------*/
+/* Structure to hold output file mgmt info for UR out devices     WED*/
+/* (pointed to by DEVBLK.dev_data)                                WED*/
+/*-------------------------------------------------------------------*/
+struct UROUTBLK
+{
+											/* file from devinit  WED*/
+	char    cmd_filename[PATH_MAX + 1];		/* .. full path/name  WED*/
+	char	cmd_pathpart[DIR_MAX + 1];		/* .. path part       WED*/
+	char	cmd_namepart[FNAME_MAX + 1];	/* .. name part       WED*/
+	char	cmd_extpart[EXT_MAX + 1];		/* .. extension part  WED*/
+	char	cur_filename[PATH_MAX + 1];		/* current output fileWED*/
+};
+#define UROUT(dev) ((struct UROUTBLK *)((dev)->dev_data))
 
 #endif // _HSTRUCTS_H

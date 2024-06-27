@@ -752,6 +752,98 @@ DLL_EXPORT int timed_wait_condition_relative_usecs_impl
     return hthread_timed_wait_condition( pCOND, pLOCK, &timeout_timespec, loc );
 }
 
+/*BEGIN changes by WED:
+
+  Retrieves parts of the filename path after it has been parsed
+  and normalized by a call to 'hostpath'
+  getPathPart: returns the part of 'inpath' up to and including the
+               last path separator character ('/' or '\') as a new
+               null-terminated string.
+  getNamePart: returns the part of 'inpath' between the last path
+               separator character and the last dot (without either
+               delimiter
+  getExtPart:  returns the part of 'inpath' from the last dot to
+               the end (including the last dot)
+*/
+DLL_EXPORT char* getPathPart(char* outPath, const char* inpath, size_t outSize)
+{
+
+}
+DLL_EXPORT char* getNamePart(char* outname, const char* inpath, size_t buffsize)
+{
+
+}
+DLL_EXPORT char* getExtPart(char* outext, const char* inpath, size_t buffsize)
+{
+
+}
+
+/*
+   These methods are used in unit-record out drivers
+   (printer.c,cardpch.c) in processing the names of the output files
+     initUROfile:    initialize the UROUTBLK with the filename
+                     components for handling files created by
+                     the unit record output devices
+     openUROFile:    Open/create a new URO file optionally with
+                     a filename supplied by the handskake CCW
+     closeUROFile:   Flush and close URO file optionally renamed
+                     to a filename supplied by the handskake CCW
+     finishUROFile:  Flush and close the current URO file with no
+                     changed to the name. 'append' option applys.
+*/
+
+/**
+ * Process the file name argument from the initdev command
+ * breaking it into its parts. These are used to fill in the
+ * UROUTBLK that is attached to the DEVBLK.
+ *
+ * Parameters:
+ *    dev:     pointer to the DEVBLK for the URO device
+ *    namearg: pointer to the 'devinit' filename argument
+ *
+ * Returns:
+ *    0 = success
+ *   !0 = failure. error message already issued
+ */
+DLL_EXPORT int initUROfile(DEVBLK* dev, const char* namearg)
+{
+    struct UROUTBLK* urOutBlk;
+    char* p1, * p2;
+    int ix;
+
+    if (dev->dev_data != NULL) {
+        free(dev->dev_data);
+    }
+    dev->dev_data = urOutBlk = (struct UROUTBLK *)malloc(sizeof(struct UROUTBLK));
+    memset(urOutBlk, 0, sizeof(struct UROUTBLK));
+
+    /* Save the file name in the device block */
+    hostpath(dev->filename, namearg, sizeof(dev->filename)); // save as default name
+    strlcpy(urOutBlk->cmd_filename, dev->filename, sizeof(urOutBlk->cmd_filename));
+
+    p1 = strrchr(urOutBlk->cmd_filename, '/');
+    p2 = strrchr(urOutBlk->cmd_filename, '\\');
+    p1 = MAX(p1, p2);
+    ix = p1 - urOutBlk->cmd_filename;
+
+
+
+    UROUT(dev)->cmd_filename = hostpath(UROUT(dev)->cmd_filename, namearg, sizeof(UROUT(dev)->cmd_filename));
+    hostpath(dev->filename, namearg, sizeof(dev->filename)); // save as default name
+
+    /* Get/save full path part (up to & including last / or \ */
+    getPathPart(UROUT(dev)->cmd_pathpart, namearg, sizeof(UROUT(dev)->cmd_pathpart));
+
+    /* Get/save the file extnesion (starting with & including the last . */
+    getExtPart(UROUT(dev)->cmd_extpart, namearg, sizeof(UROUT(dev)->cmd_extpart));
+}
+
+DLL_EXPORT int makeNewFilename(DEVBLK* dev, const char* ccwD9name)
+{
+
+}
+/*END changes by WED */
+
 /*********************************************************************
   The following couple of Hercules 'utility' functions may be defined
   elsewhere depending on which host platform we're being built for...
@@ -780,6 +872,37 @@ DLL_EXPORT char *hostpath( char *outpath, const char *inpath, size_t buffsize )
         *outpath = 0;
     return outpath;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Poor man's  "fcntl( fd, F_GETFL )"... */
 /* (only returns access-mode flags and not any others) */

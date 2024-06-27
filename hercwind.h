@@ -31,13 +31,19 @@
 #pragma intrinsic( memset, memcmp, memcpy )
 
 #ifdef                  _MAX_PATH
-  #define   PATH_MAX    _MAX_PATH
+  #define   PATH_MAX    _MAX_PATH	// max. length of full pathname
+  #define	DIR_MAX		_MAX_DIR	// max. length of path component
+  #define	FNAME_MAX	_MAX_FNAME	// max. length of file name component
+  #define	EXT_MAX		_MAX_EXT	// max. length of extension component
 #else
   #ifdef                FILENAME_MAX
     #define PATH_MAX    FILENAME_MAX
   #else
     #define PATH_MAX    260
   #endif
+  #define DIR_MAX		256
+  #define FNAME_MAX		256
+  #define EXT_MAX		256
 #endif
 
 struct dirent

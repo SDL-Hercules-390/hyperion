@@ -259,6 +259,7 @@ bool    sockdev = false;
     dev->crlf    = 0;
     dev->excps   = 0;
     dev->stopdev = FALSE;
+	dev->handshake = 0; // 'vm' handshake option
 
     /* Process the driver arguments */
     for (i=1; i < argc; i++)
@@ -306,6 +307,18 @@ bool    sockdev = false;
             sockdev = true;
             continue;
         }
+
+		/* 'handshake' option: default=false
+		   this enables the use of the x'd9' and x'db'
+		   CCW opcodes that are the file open/close
+		   handshaking interface with the guest O/S
+		*/
+		if (strcasecmp(argv[i], "handshake") == 0)
+		{
+			dev->handshake = 1;
+			continue;
+		}
+
 
         // "%1d:%04X Card: parameter %s in argument %d is invalid"
         WRMSG( HHC01209, "E", LCSS_DEVNUM, argv[i], i+1 );
@@ -437,6 +450,18 @@ static int cardpch_close_device( DEVBLK* dev )
     return 0;
 } /* end function cardpch_close_device */
 
+static int ForHandshakeOnly (DEVBLK *dev, BYTE *unitstat)
+{
+	if (dev->handshake) {
+		return 1;
+	} else {
+        /* Command Reject */
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return 0;
+	}
+}
+
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
@@ -567,6 +592,50 @@ BYTE            c;                      /* Output character          */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
+
+	case 0xF1:
+	/*---------------------------------------------------------------*/
+	/* OPEN & NAME A NEW FILE                         (VM Handshake) */
+	/*---------------------------------------------------------------*/
+		if (ForHandshakeOnly(dev, unitstat)) {
+			/* Close any existing file */
+
+			/* Build full name for new file */
+
+			/* Open/init the new file */
+
+			/* Return normal status */
+			*unitstat = CSW_CE | CSW_DE;
+		}
+		break;
+
+	case 0xFF:
+	/*---------------------------------------------------------------*/
+	/* CLOSE & NAME FILE                              (VM Handshake) */
+	/*---------------------------------------------------------------*/
+		if (ForHandshakeOnly(dev, unitstat)) {
+			/* Close the existing file */
+
+			/* Build full name for file */
+
+			/* Rename the file */
+
+			/* Return normal status */
+			*unitstat = CSW_CE | CSW_DE;
+		}
+		break;
+
+	case 0xF9:
+	/*---------------------------------------------------------------*/
+	/* CLOSE CURRENT FILE                             (VM Handshake) */
+	/*---------------------------------------------------------------*/
+		if (ForHandshakeOnly(dev, unitstat)) {
+			/* Close the existing file */
+
+			/* Return normal status */
+			*unitstat = CSW_CE | CSW_DE;
+		}
+		break;
 
     default:
     /*---------------------------------------------------------------*/

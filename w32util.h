@@ -158,6 +158,43 @@ W32_DLL_IMPORT char* strtok_r ( char* s, const char* sep, char** lasts);
 // to outpath in the form "x:/foo.bar" for Windows compatibility.
 W32_DLL_IMPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize );
 
+/*BEGIN changes by WED:
+
+  Retrieves parts of the filename path after it has been parsed
+  and normalized by a call to 'hostpath'
+  getPathPart: returns the part of 'inpath' up to and including the
+			   last path separator character ('/' or '\')
+  getNamePart: returns the part of 'inpath' between the last path
+			   separator character and the last dot (without either
+			   delimiter
+  getExtPart:  returns the part of 'inpath' from the last dot to
+			   the end (including the last dot)
+*/
+W32_DLL_IMPORT BYTE *getPathPart( BYTE *outpath, const BYTE *inpath, size_t outsize );
+W32_DLL_IMPORT BYTE *getNamePart( BYTE *outname, const BYTE *inpath, size_t outsize );
+W32_DLL_IMPORT BYTE *getExtPart( BYTE *outext, const BYTE *inpath, size_t outsize );
+
+  /*
+	 These methods are used in unit-record out drivers 
+	 (printer.c,cardpch.c)
+	 in processing the names of the output files
+	 initUROfile:    initialize the UROUTBLK with the filename 
+	                 components for handling files created by
+					 the unit record output devices
+	 openUROFile:    Open/create a new URO file optionally with
+	                 a filename supplied by the handskake CCW
+	 closeUROFile:   Flush and close URO file optionally renamed
+	                 to a filename supplied by the handskake CCW
+	 finishUROFile:  Flush and close the current URO file with no
+	                 changed to the name. 'append' option applys.
+  */
+W32_DLL_IMPORT int initUROfile( DEVBLK *dev, const BYTE *namearg );
+W32_DLL_IMPORT int openUROfile( DEVBLK *dev, const BYTE *ccwName );
+W32_DLL_IMPORT int finishUROfile( DEVBLK *dev );
+W32_DLL_IMPORT int closeUROfile( DEVBLK *dev, const BYTE *ccwName );
+
+/*END changes by WED */
+
 // Poor man's  "fcntl( fd, F_GETFL )"...
 // (only returns access-mode flags and not any others)
 W32_DLL_IMPORT int get_file_accmode_flags( int fd );
