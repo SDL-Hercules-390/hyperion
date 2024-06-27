@@ -2453,6 +2453,9 @@
     <None Include="tests\text2tst.rexx">
       <Filter>Other Files\tests</Filter>
     </None>
+    <None Include="readme\README.VMHANDSHAKE.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crypto\include\crypto.h">

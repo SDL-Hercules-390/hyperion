@@ -43,6 +43,44 @@
   */
   char *hostpath( char *outpath, const char *inpath, size_t buffsize );
 
+  /*BEGIN changes by WED: 
+
+    Retrieves parts of the filename path after it has been parsed
+	and normalized by a call to 'hostpath'
+	getPathPart: returns the part of 'inpath' up to and including the
+	             last path separator character ('/' or '\')
+	getNamePart: returns the part of 'inpath' between the last path
+	             separator character and the last dot (without either
+	             delimiter
+	getExtPart:  returns the part of 'inpath' from the last dot to
+	             the end (including the last dot)
+  */
+  char *getPathPart( char *outpath, const char *inpath, size_t outsize );
+  char *getNamePart( char *outname, const char *inpath, size_t outsize );
+  char *getExtPart( char *outext, const char *inpath, size_t outsize );
+
+  /*
+	 These methods are used in unit-record out drivers 
+	 (printer.c,cardpch.c)
+	 in processing the names of the output files
+	 initUROfile:       initialize the UROUTBLK with the filename 
+	                    components for handling files created by
+						the unit record output devices
+	 openUROFile:    Open/create a new URO file optionally with
+	                 a filename supplied by the handskake CCW
+	 closeUROFile:   Flush and close URO file optionally renamed
+	                 to a filename supplied by the handskake CCW
+	 finishUROFile:  Flush and close the current URO file with no
+	                 changed to the name. 'append' option applys.
+  */
+  int initUROfile( DEVBLK *dev, const char *namearg );
+  int openUROfile( DEVBLK *dev, const char *ccwName );
+  int finishUROfile( DEVBLK *dev );
+  int closeUROfile( DEVBLK *dev, const char *ccwName );
+
+  /*END changes by WED */
+
+
   /* Poor man's  "fcntl( fd, F_GETFL )"... */
   /* (only returns access-mode flags and not any others) */
   int get_file_accmode_flags( int fd );

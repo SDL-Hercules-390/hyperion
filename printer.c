@@ -962,7 +962,8 @@ int   fcbsize;                          /* FCB size for this devtype */
     }
 
     /* Save the file name in the device block */
-    hostpath( dev->filename, argv[0], sizeof( dev->filename ));
+	//hostpath(dev->filename, argv[0], sizeof(dev->filename)); //WED
+	initUROfile(dev, (const BYTE *)argv[0]);                   //WED
 
     /* Save the device type */
     sscanf( dev->typname, "%hx", &dev->devtype );
@@ -998,6 +999,7 @@ int   fcbsize;                          /* FCB size for this devtype */
     dev->stopdev  = FALSE;
     dev->append   = 0;
     dev->ispiped  = (dev->filename[0] == '|');
+	dev->handshake = 0; // 'handshake' option
 
     /* Set length of print buffer */
     dev->bufsize = BUFF_SIZE;
@@ -1502,6 +1504,17 @@ int   fcbsize;                          /* FCB size for this devtype */
             continue;
         }
 
+		/* 'handshake' option: default=false
+		   this enables the use of the x'd9' and x'db'
+		   CCW opcodes that are the file open/close
+		   handshaking interface with the guest O/S
+		*/
+		if (strcasecmp(argv[iarg], "handshake") == 0)
+		{
+			dev->handshake = 1;
+			continue;
+		}
+
         // "%1d:%04X Printer: argument %d parameter '%s' is invalid"
         WRMSG( HHC01102, "E", LCSS_DEVNUM,
             iarg + 1, argv[ iarg ]);
@@ -1542,6 +1555,22 @@ int   fcbsize;                          /* FCB size for this devtype */
         return -1;
     }
 
+	if (sockdev && dev->handshake)
+	{
+		// "%1d:%04X Printer: option %s is incompatible"
+		WRMSG(HHC01104, "E", LCSS_DEVNUM,
+			"sockdev/handshake");
+		return -1;
+	}
+
+	if (dev->ispiped && dev->handshake)
+	{
+		// "%1d:%04X Printer: option %s is incompatible"
+		WRMSG(HHC01104, "E", LCSS_DEVNUM,
+			"piped/handshake");
+		return -1;
+	}
+
     /* If socket device, create a listening socket
        to accept connections on.
     */
@@ -1551,9 +1580,10 @@ int   fcbsize;                          /* FCB size for this devtype */
         return -1;  // (error msg already issued)
     }
 
-    /* Open the device file right away */
-    if (!sockdev && open_printer( dev ) != 0)
-        return -1;  // (error msg already issued)
+	//WED: defer file open until first CCW
+    // /* Open the device file right away */
+    // if (!sockdev && open_printer( dev ) != 0)
+    //     return -1;  // (error msg already issued)
 
     return 0;
 } /* end function printer_init_handler */
@@ -1573,7 +1603,8 @@ static void printer_query_device (DEVBLK *dev, char **devclass,
                 (dev->bs      ? " sockdev"   : ""),
                 (dev->crlf    ? " crlf"      : ""),
                 (dev->append  ? " append"    : ""),
-                (dev->stopdev ? " (stopped)" : ""),
+		        (dev->handshake ? " handshake" : ""),
+		        (dev->stopdev ? " (stopped)" : ""),
                  dev->excps );
 
 } /* end function printer_query_device */
@@ -1786,6 +1817,18 @@ int fd = dev->fd;
     return 0;
 
 } /* end function printer_close_device */
+
+static int ForHandshakeOnly (DEVBLK *dev, BYTE *unitstat)
+{
+	if (dev->handshake) {
+		return 1;
+	} else {
+        /* Command Reject */
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return 0;
+	}
+}
 
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
@@ -2526,6 +2569,50 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
             }
         }
         break;
+
+	case HANDSHAKE_OPEN:
+	/*---------------------------------------------------------------*/
+	/* OPEN & NAME A NEW FILE                         (VM Handshake) */
+	/*---------------------------------------------------------------*/
+		if (ForHandshakeOnly(dev, unitstat)) {
+			/* Close any existing file */
+
+			/* Build full name for new file */
+
+			/* Open/init the new file */
+
+			/* Return normal status */
+			*unitstat = CSW_CE | CSW_DE;
+		}
+		break;
+
+	case HANDSHAKE_CLOSE_NAME:
+	/*---------------------------------------------------------------*/
+	/* CLOSE & NAME FILE                              (VM Handshake) */
+	/*---------------------------------------------------------------*/
+		if (ForHandshakeOnly(dev, unitstat)) {
+			/* Close the existing file */
+
+			/* Build full name for file */
+
+			/* Rename the file */
+
+			/* Return normal status */
+			*unitstat = CSW_CE | CSW_DE;
+		}
+		break;
+
+	case HANDSHAKE_CLOSE:
+	/*---------------------------------------------------------------*/
+	/* CLOSE CURRENT FILE                             (VM Handshake) */
+	/*---------------------------------------------------------------*/
+		if (ForHandshakeOnly(dev, unitstat)) {
+			/* Close the existing file */
+
+			/* Return normal status */
+			*unitstat = CSW_CE | CSW_DE;
+		}
+		break;
 
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
