@@ -2733,12 +2733,6 @@ void ARCH_DEP( load_real_address_proc ) (REGS *regs,
 void packed_to_binary (BYTE *dec, int len, U64 *result,
     int *ovf, int *dxf);
 void binary_to_packed (S64 bin, BYTE *result);
-void add_decimal (BYTE *dec1, BYTE *dec2,
-                        BYTE *result, int *count);
-void subtract_decimal (BYTE *dec1, BYTE *dec2,
-                        BYTE *result, int *count, int *sign);
-void divide_decimal (BYTE *dec1, int count1, BYTE *dec2,
-                        int count2, BYTE *quot, BYTE *rem);
 
 
 /* Functions in module diagnose.c */
