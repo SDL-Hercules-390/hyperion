@@ -39,12 +39,16 @@
 
 //  #undef ZVECTOR_END
 
+/* remove GCC: warning: multi-line comment [-Wcomment]
+
 //  #define ZVECTOR_END(_regs)                                      \
 //              ARCH_DEP(display_inst) (_regs, inst);
 
 //  #define ZVECTOR_END(_regs)                                      \
 //          if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36)  \
 //              ARCH_DEP(display_inst) (_regs, inst);
+
+*/ /*end remove GCC: warning: multi-line comment [-Wcomment] */
 
 /* ====================================================================== */
 
@@ -252,6 +256,9 @@ DEF_INST( vector_load )
 
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3);
 
+    /* m3 is not part of this instruction */
+    UNREFERENCED( m3 );
+
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
@@ -381,6 +388,9 @@ DEF_INST( vector_store )
     VADR    effective_addr2;
 
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
+
+    /* m3 is not part of this instruction */
+    UNREFERENCED( m3 );
 
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
@@ -722,6 +732,9 @@ DEF_INST( vector_load_multiple )
 
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
 
+    /* m4 is not part of this instruction */
+    UNREFERENCED( m4 );
+
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
@@ -748,6 +761,9 @@ DEF_INST( vector_load_with_length )
     BYTE    temp[16];
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
+
+    /* m4 is not part of this instruction */
+    UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
@@ -860,6 +876,9 @@ DEF_INST( vector_store_multiple )
 
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
 
+    /* m4 is not part of this instruction */
+    UNREFERENCED( m4 );
+
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
@@ -886,6 +905,9 @@ DEF_INST( vector_store_with_length )
     BYTE    temp[16];
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
+
+    /* m4 is not part of this instruction */
+    UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
@@ -991,6 +1013,9 @@ DEF_INST( vector_generate_byte_mask )
 
     VRI_A( inst, regs, v1, i2, m3 );
 
+    /* m3 is not part of this instruction */
+    UNREFERENCED( m3 );
+
     ZVECTOR_CHECK( regs );
 
     for (i=0; i < 16; i++)
@@ -1056,21 +1081,21 @@ DEF_INST( vector_generate_mask )
     case 0:
         i2 &= 7;
         i3 &= 7;
-        bitmask = (i2 <= i3) ? (1 << (8 - i2)) - (1 << (7 - i3)) : 0xffu - (1u << (7 - i3)) + (1u << (8 - i2));
+        bitmask = (i2 <= i3) ? (1u << (8 - i2)) - (1u << (7 - i3)) : 0xffu - (1u << (7 - i3)) + (1u << (8 - i2));
         for (i=0; i < 16; i++)
             regs->VR_B(v1, i) = bitmask;
         break;
     case 1:
         i2 &= 15;
         i3 &= 15;
-        bitmask = (i2 <= i3) ? (1 << (16 - i2)) - (1 << (15 - i3)) : 0xffffu - (1u << (15 - i3)) + (1u << (16 - i2));
+        bitmask = (i2 <= i3) ? (1u << (16 - i2)) - (1u << (15 - i3)) : 0xffffu - (1u << (15 - i3)) + (1u << (16 - i2));
         for (i=0; i < 8; i++)
             regs->VR_H(v1, i) = bitmask;
         break;
     case 2:
         i2 &= 31;
         i3 &= 31;
-        bitmask = (i2 <= i3) ? (1 << (32 - i2)) - (1u << (31 - i3)) : 0xffffffffu - (1u << (31 - i3)) + (1u << (32 - i2));
+        bitmask = (i2 <= i3) ? (1u << (32 - i2)) - (1u << (31 - i3)) : 0xffffffffu - (1u << (31 - i3)) + (1u << (32 - i2));
         for (i=0; i < 4; i++)
             regs->VR_F(v1, i) = bitmask;
         break;
@@ -1142,6 +1167,10 @@ DEF_INST( vector_population_count )
     BYTE    belement;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -1227,6 +1256,10 @@ DEF_INST( vector_count_trailing_zeros )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m3)
@@ -1301,6 +1334,10 @@ DEF_INST( vector_count_leading_zeros )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m3)
@@ -1370,6 +1407,11 @@ DEF_INST( vector_load_vector )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m3, m4, m5 are not part of this instruction */
+    UNREFERENCED( m3 );
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     regs->VR_Q( v1 ) = regs->VR_Q( v2 );
@@ -1387,6 +1429,9 @@ DEF_INST( vector_isolate_string )
     BYTE    newcc = 3;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m4 is not part of this instruction */
+    UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
 
@@ -1471,6 +1516,10 @@ DEF_INST( vector_sign_extend_to_doubleword )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m3)
@@ -1523,6 +1572,10 @@ DEF_INST( vector_merge_low )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -1569,6 +1622,10 @@ DEF_INST( vector_merge_high )
     int     i, j;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -1635,6 +1692,10 @@ DEF_INST( vector_sum_across_word )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -1683,6 +1744,10 @@ DEF_INST( vector_sum_across_doubleword )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -1708,6 +1773,10 @@ DEF_INST( vector_sum_across_doubleword )
         }
         break;
     default:
+        /* remove initialization warning */
+        sum[0] = 0;
+        sum[1] = 0;
+
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
     }
@@ -1729,6 +1798,11 @@ DEF_INST( vector_checksum )
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -1766,6 +1840,10 @@ DEF_INST( vector_sum_across_quadword )
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -1808,6 +1886,11 @@ DEF_INST( vector_and )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     regs->VR_D(v1, 0) = regs->VR_D(v2, 0) & regs->VR_D(v3, 0);
@@ -1824,6 +1907,11 @@ DEF_INST( vector_and_with_complement )
     int     v1, v2, v3, m4, m5, m6;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -1842,6 +1930,11 @@ DEF_INST( vector_or )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     regs->VR_D(v1, 0) = regs->VR_D(v2, 0) | regs->VR_D(v3, 0);
@@ -1858,6 +1951,11 @@ DEF_INST( vector_nor )
     int     v1, v2, v3, m4, m5, m6;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -1876,6 +1974,11 @@ DEF_INST( vector_not_exclusive_or )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     regs->VR_D(v1, 0) = ~(regs->VR_D(v2, 0) ^ regs->VR_D(v3, 0));
@@ -1892,6 +1995,11 @@ DEF_INST( vector_exclusive_or )
     int     v1, v2, v3, m4, m5, m6;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -1910,6 +2018,11 @@ DEF_INST( vector_nand )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     regs->VR_D(v1, 0) = ~regs->VR_D(v2, 0) | ~regs->VR_D(v3, 0);
@@ -1927,6 +2040,11 @@ DEF_INST( vector_or_with_complement )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     regs->VR_D(v1, 0) = regs->VR_D(v2, 0) | ~regs->VR_D(v3, 0);
@@ -1943,6 +2061,10 @@ DEF_INST( vector_element_shift_left_vector )
     int     v1, v2, v3, m4, m5, m6, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -2046,6 +2168,10 @@ DEF_INST( vector_element_rotate_left_logical_vector )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -2100,6 +2226,11 @@ DEF_INST( vector_shift_left )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     for (i = 0 ; ; i++)
@@ -2128,6 +2259,11 @@ DEF_INST( vector_shift_left_by_byte )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
@@ -2154,6 +2290,9 @@ DEF_INST( vector_shift_left_double_by_byte )
 
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
 
+    /* m5 is not part of this instruction */
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
@@ -2176,6 +2315,10 @@ DEF_INST( vector_element_shift_right_logical_vector )
     int     shift, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -2227,6 +2370,10 @@ DEF_INST( vector_element_shift_right_arithmetic_vector )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -2277,6 +2424,11 @@ DEF_INST( vector_shift_right_logical )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     for (i = 15 ; ; i--)
@@ -2305,6 +2457,11 @@ DEF_INST( vector_shift_right_logical_by_byte )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     SV_D( temp, 0 ) = 0;
@@ -2329,6 +2486,11 @@ DEF_INST( vector_shift_right_arithmetic )
     int     sr, sl, i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -2357,6 +2519,11 @@ DEF_INST( vector_shift_right_arithmetic_by_byte )
     SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -2822,6 +2989,9 @@ DEF_INST( vector_find_any_element_equal )
 
         break;
     default:
+        /* remove initialization warnings */
+        max = 0, int1 = 0;  ind1 = max, ind2 = ind1;
+
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
@@ -2855,6 +3025,10 @@ DEF_INST( vector_permute_doubleword_immediate )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
 #define M4_SO ((m4 & 0x4) != 0)  // Second operand index
@@ -2880,6 +3054,11 @@ DEF_INST( vector_bit_permute )
     SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m4, m5, m6 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -2932,6 +3111,9 @@ DEF_INST( vector_shift_left_double_by_bit )
 
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
 
+    /* m5 is not part of this instruction */
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     if (i4 & 0xF8)
@@ -2965,6 +3147,9 @@ DEF_INST( vector_shift_right_double_by_bit )
     SV      temp;
 
     VRI_D( inst, regs, v1, v2, v3, i4, m5 );
+
+    /* m5 is not part of this instruction */
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -3076,6 +3261,9 @@ DEF_INST( vector_string_range_compare )
         }
         break;
     default:
+        /* remove initialization warnings */
+        max = 0, low1 = max, low2 = max;
+
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
@@ -3106,7 +3294,8 @@ DEF_INST( vector_string_search )
 {
     int     v1, v2, v3, v4, m5, m6;
     char    v2_temp[16], v3_temp[16], nulls[16];
-    int     char_size, substr_len, str_len, i, k, eos;
+    int     substr_len, str_len, i, k, eos;
+    int     char_size = 1; /* initialize to remove warning */
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -3309,6 +3498,10 @@ DEF_INST( vector_permute )
 
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
@@ -3333,6 +3526,10 @@ DEF_INST( vector_select )
 
     VRR_E( inst, regs, v1, v2, v3, v4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     regs->VR_D(v1, 1) = (regs->VR_D(v4, 1) & regs->VR_D(v2, 1)) | (~regs->VR_D(v4, 1) & regs->VR_D(v3, 1));
@@ -3351,6 +3548,10 @@ DEF_INST( vector_pack )
     SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -3592,6 +3793,10 @@ DEF_INST( vector_multiply_logical_high )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -3638,6 +3843,10 @@ DEF_INST( vector_multiply_low )
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -3686,6 +3895,10 @@ DEF_INST( vector_multiply_high )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -3732,6 +3945,10 @@ DEF_INST( vector_multiply_logical_even )
     int     i, j;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -3780,6 +3997,10 @@ DEF_INST( vector_multiply_logical_odd )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -3826,6 +4047,10 @@ DEF_INST( vector_multiply_even )
     int     i, j;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -3874,6 +4099,10 @@ DEF_INST( vector_multiply_odd )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -3920,6 +4149,9 @@ DEF_INST( vector_multiply_and_add_logical_high )
     int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -3971,8 +4203,10 @@ DEF_INST(vector_multiply_and_add_low)
 
     VRR_D(inst, regs, v1, v2, v3, v4, m5, m6);
 
-    ZVECTOR_CHECK(regs);
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
+    ZVECTOR_CHECK(regs);
 
     switch (m5)
     {
@@ -4021,6 +4255,9 @@ DEF_INST( vector_multiply_and_add_high )
     int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4072,6 +4309,9 @@ DEF_INST( vector_multiply_and_add_logical_even )
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m5)
@@ -4121,6 +4361,9 @@ DEF_INST( vector_multiply_and_add_logical_odd )
     int     i, j;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4172,6 +4415,9 @@ DEF_INST( vector_multiply_and_add_even )
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m5)
@@ -4222,6 +4468,9 @@ DEF_INST( vector_multiply_and_add_odd )
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m5)
@@ -4270,6 +4519,14 @@ DEF_INST( vector_galois_field_multiply_sum )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* Temporary prior to instruction implementation */
+    UNREFERENCED( v1 );
+    UNREFERENCED( v2 );
+    UNREFERENCED( v3 );
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
     //
     // TODO: insert code here          hard!
@@ -4290,6 +4547,9 @@ DEF_INST( vector_add_with_carry_compute_carry )
     int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4327,6 +4587,9 @@ DEF_INST( vector_add_with_carry )
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m5)
@@ -4351,14 +4614,22 @@ DEF_INST( vector_add_with_carry )
     ZVECTOR_END( regs );
 }
 
-/*-------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------*/
 /* E7BC VGFMA  - Vector Galois Field Multiply Sum and Accumulate [VRR-d] */
-/*-------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------*/
 DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 {
     int     v1, v2, v3, v4, m5, m6;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    /* Temporary prior to instruction implementation */
+    UNREFERENCED( v1 );
+    UNREFERENCED( v2 );
+    UNREFERENCED( v3 );
+    UNREFERENCED( v4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
     //
@@ -4369,9 +4640,9 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
     ZVECTOR_END( regs );
 }
 
-/*-------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 /* E7BD VSBCBI - Vector Subtract With Borrow Compute Borrow Indication [VRR-d] */
-/*-------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
 {
     int     v1, v2, v3, v4, m5, m6;
@@ -4379,6 +4650,9 @@ DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
     int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4415,6 +4689,9 @@ DEF_INST( vector_subtract_with_borrow_indication )
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m5)
@@ -4448,6 +4725,10 @@ DEF_INST( vector_unpack_logical_low )
     union   { U64 d[2]; U32 f[4]; U16 h[8]; } temp;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4488,6 +4769,10 @@ DEF_INST( vector_unpack_logical_high )
     union   { U64 d[2]; U32 f[4]; U16 h[8]; } temp;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4530,6 +4815,10 @@ DEF_INST( vector_unpack_low )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m3)
@@ -4571,6 +4860,10 @@ DEF_INST( vector_unpack_high )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m3)
@@ -4611,6 +4904,11 @@ DEF_INST( vector_test_under_mask )
     int     i, j, masko, selz, selo;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m3, m4, m5 are not part of this instruction */
+    UNREFERENCED( m3 );
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4654,6 +4952,10 @@ DEF_INST( vector_element_compare_logical )
     int     v1, v2, m3, m4, m5;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4707,6 +5009,10 @@ DEF_INST( vector_element_compare )
     int     v1, v2, m3, m4, m5;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4762,6 +5068,10 @@ DEF_INST( vector_load_complement )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m3)
@@ -4799,6 +5109,10 @@ DEF_INST( vector_load_positive )
     int     i;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -4905,6 +5219,10 @@ DEF_INST( vector_add_compute_carry )
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -5048,6 +5366,10 @@ DEF_INST(vector_add)
 
     VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK(regs);
 
     switch (m4)
@@ -5098,6 +5420,10 @@ DEF_INST( vector_subtract_compute_borrow_indication )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     switch (m4)
@@ -5139,6 +5465,10 @@ DEF_INST(vector_subtract)
     U64     high, low;
 
      VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
+
+    /* m5, m6 are not part of this instruction */
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
      ZVECTOR_CHECK(regs);
 
@@ -5451,11 +5781,11 @@ DEF_INST( vector_minimum_logical )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
-    ZVECTOR_CHECK( regs );
-
-    /* m5 and m5 are not part of this instruction */
+    /* m5, m6 are not part of this instruction */
     UNREFERENCED( m5 );
     UNREFERENCED( m6 );
+
+    ZVECTOR_CHECK( regs );
 
     switch (m4)
     {
@@ -5502,11 +5832,11 @@ DEF_INST( vector_maximum_logical )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
-    ZVECTOR_CHECK( regs );
-
-    /* m5 and m5 are not part of this instruction */
+    /* m5, m6 are not part of this instruction */
     UNREFERENCED( m5 );
     UNREFERENCED( m6 );
+
+    ZVECTOR_CHECK( regs );
 
     switch (m4)
     {
@@ -5553,11 +5883,11 @@ DEF_INST( vector_minimum )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
-    ZVECTOR_CHECK( regs );
-
-    /* m5 and m5 are not part of this instruction */
+    /* m5, m6 are not part of this instruction */
     UNREFERENCED( m5 );
     UNREFERENCED( m6 );
+
+    ZVECTOR_CHECK( regs );
 
     switch (m4)
     {
@@ -5603,11 +5933,11 @@ DEF_INST( vector_maximum )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
-    ZVECTOR_CHECK( regs );
-
-    /* m5 and m5 are not part of this instruction */
+    /* m5, m6 are not part of this instruction */
     UNREFERENCED( m5 );
     UNREFERENCED( m6 );
+
+    ZVECTOR_CHECK( regs );
 
     switch (m4)
     {
