@@ -515,29 +515,33 @@ DEF_INST( vector_scatter_element_32 )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_load_gr_from_vr_element )
 {
-    int     r1, v3, b2, d2, m4;
+    int     r1, v3, b2, m4;
+    VADR    effective_addr2;
+    int     i;
 
-    VRS_C( inst, regs, r1, v3, b2, d2, m4 );
+    VRS_C( inst, regs, r1, v3, b2, effective_addr2, m4 );
 
     ZVECTOR_CHECK( regs );
+
+    i = effective_addr2 & 0xFFF;  // Isolate the element index
 
     switch (m4)
     {
     case 0:
-        if ( d2 > 15) break;
-        regs->GR( r1 ) = regs->VR_B( v3, d2 );
+        if ( i > 15 ) break;
+        regs->GR( r1 ) = regs->VR_B( v3, i );
         break;
     case 1:
-        if ( d2 > 7 ) break;
-        regs->GR( r1 ) = regs->VR_H( v3, d2 );
+        if ( i > 7 ) break;
+        regs->GR( r1 ) = regs->VR_H( v3, i );
         break;
     case 2:
-        if ( d2 > 3 ) break;
-        regs->GR( r1 ) = regs->VR_F( v3, d2 );
+        if ( i > 3 ) break;
+        regs->GR( r1 ) = regs->VR_F( v3, i );
         break;
     case 3:
-        if ( d2 > 1 ) break;
-        regs->GR( r1 ) = regs->VR_D( v3, d2 );
+        if ( i > 1 ) break;
+        regs->GR( r1 ) = regs->VR_D( v3, i );
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -552,29 +556,33 @@ DEF_INST( vector_load_gr_from_vr_element )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_load_vr_element_from_gr )
 {
-    int     v1, r3, b2, d2, m4;
+    int     v1, r3, b2, m4;
+    VADR    effective_addr2;
+    int     i;
 
-    VRS_B( inst, regs, v1, r3, b2, d2, m4 );
+    VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
 
     ZVECTOR_CHECK( regs );
+
+    i = effective_addr2 & 0xFFF;  // Isolate the element index
 
     switch (m4)
     {
     case 0:
-        if ( d2 > 15) break;
-        regs->VR_B( v1, d2 ) = regs->GR_LHLCL( r3 );
+        if ( i > 15 ) break;
+        regs->VR_B( v1, i ) = regs->GR_LHLCL( r3 );
         break;
     case 1:
-        if ( d2 > 7 ) break;
-        regs->VR_H( v1, d2 ) = regs->GR_LHL  ( r3 );
+        if ( i > 7 ) break;
+        regs->VR_H( v1, i ) = regs->GR_LHL  ( r3 );
         break;
     case 2:
-        if ( d2 > 3 ) break;
-        regs->VR_F( v1, d2 ) = regs->GR_L    ( r3 );
+        if ( i > 3 ) break;
+        regs->VR_F( v1, i ) = regs->GR_L    ( r3 );
         break;
     case 3:
-        if ( d2 > 1 ) break;
-        regs->VR_D( v1, d2 ) = regs->GR_G    ( r3 );
+        if ( i > 1 ) break;
+        regs->VR_D( v1, i ) = regs->GR_G    ( r3 );
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -601,7 +609,7 @@ DEF_INST( load_count_to_block_boundary )
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
-                            4: 1K - byte, 5: 2K - Byte, 6: 4K - Byte */
+                            4: 1 K-byte, 5: 2 K-Byte, 6: 4 K-Byte */
 
     nextbound = (effective_addr2 + boundary) & ~(boundary - 1);
     length = min( 16, nextbound - effective_addr2 );
@@ -2378,7 +2386,9 @@ DEF_INST( vector_shift_right_arithmetic_by_byte )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_find_element_equal )
 {
-    int     v1, v2, v3, m4, m5, ind1, ind2, max, i;
+    int     v1, v2, v3, m4, m5;
+    int     ef, ei, zf, zi, i;
+    BYTE    newcc;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -2391,55 +2401,112 @@ DEF_INST( vector_find_element_equal )
     if (m4 > 2 || M5_RE)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
+    zf = ef = FALSE;
+    ei = 16;    // Number of bytes in vector
+    newcc = 3;  // No equal, no zero
+
     switch (m4)
     {
-    case 0:
-        ind1 = 16, ind2 = ind1, max = ind1;
-        for (i=0; i < max && (ind1 == max || ind2 == max); i++)
+    case 0:  // Byte
+        for (i=0; i<16; i++)
         {
-            if ((ind1 == max) && regs->VR_B(v2,i) == regs->VR_B(v3,i))
-                ind1 = i;
-            if ((ind2 == max) && M5_ZS && regs->VR_B(v2,i) == 0x00) // if M5-ZS (Zero Search)
-                ind2 = i;
+            if (regs->VR_B(v2,i) == regs->VR_B(v3,i))
+            {
+                ef = TRUE;
+                ei = i;     // Element index in bytes
+                newcc = 1;  // Equal, no zero
+                break;
+            }
+        }
+        if (M5_ZS)
+        {
+            for (i=0; i<16; i++)
+            {
+                if (regs->VR_B(v2,i) == 0)
+                {
+                    zf = TRUE;
+                    zi = i;      // Zero element index in bytes
+                    break;
+                }
+            }
         }
         break;
-    case 1:
-        ind1 = 8, ind2 = ind1, max = ind1;
-        for (i=0; i < max && (ind1 == max || ind2 == max); i++)
+    case 1:  // Halfword
+        for (i=0; i<8; i++)
         {
-            if ((ind1 == max) && regs->VR_H(v2,i) == regs->VR_H(v3,i))
-                ind1 = i;
-            if ((ind2 == max) && M5_ZS && regs->VR_H(v2, i) == 0x0000) // if M5-ZS (Zero Search)
-                ind2 = i;
+            if (regs->VR_H(v2,i) == regs->VR_H(v3,i))
+            {
+                ef = TRUE;
+                ei = i * 2;  // Element index in bytes
+                newcc = 1;   // Equal, no zero
+                break;
+            }
+        }
+        if (M5_ZS)
+        {
+            for (i=0; i<8; i++)
+            {
+                if (regs->VR_H(v2,i) == 0)
+                {
+                    zf = TRUE;
+                    zi = i * 2;  // Zero element index in bytes
+                    break;
+                }
+            }
         }
         break;
-    case 2:
-        ind1 = 4, ind2 = ind1, max = ind1;
-        for (i=0; i < max && (ind1 == max || ind2 == max); i++)
+    case 2:  // Word
+        for (i=0; i<4; i++)
         {
-            if ((ind1 == max) && regs->VR_F(v2,i) == regs->VR_F(v3,i))
-                ind1 = i;
-            if ((ind2 == max) && M5_ZS && regs->VR_F(v2,i) == 0x00000000) // if M5-ZS (Zero Search)
-                ind2 = i;
+            if (regs->VR_F(v2,i) == regs->VR_F(v3,i))
+            {
+                ef = TRUE;
+                ei = i * 4;  // Element index in bytes
+                newcc = 1;   // Equal, no zero
+                break;
+            }
+        }
+        if (M5_ZS)
+        {
+            for (i=0; i<4; i++)
+            {
+                if (regs->VR_F(v2,i) == 0)
+                {
+                    zf = TRUE;
+                    zi = i * 4;  // Zero element index in bytes
+                    break;
+                }
+            }
         }
         break;
     }
 
-    regs->VR_D(v1, 0) = 0x00;
-    regs->VR_B(v1, 7) = min(ind1, ind2) * (1 << m4);
-    regs->VR_D(v1, 1) = 0x00;
-
-    if (M5_CS)               // if M5_CS (Condition Code Set)
+    if (zf)
     {
-        if (M5_ZS && (ind2 <= ind1))
-            regs->psw.cc = 0;
-        else if ((ind1 < max) && (ind2 == max))
-            regs->psw.cc = 1;
-        else if (M5_ZS && (ind1 < ind2) && (ind2 < max))
-            regs->psw.cc = 2;
-        else if ((ind1 == max) && (ind2 == max))
-            regs->psw.cc = 3;
+        if (ef)
+        {
+            if (zi < ei)
+            {
+                ei = zi;    // Element index in bytes
+                newcc = 0;  // Zero before equal
+            }
+            else
+            {
+                newcc = 2;  // Zero not before equal
+            }
+        }
+        else
+        {
+            ei = zi;        // Element index in bytes
+            newcc = 0;      // Zero before equal
+        }
     }
+
+    regs->VR_D(v1, 0) = ei;
+    regs->VR_D(v1, 1) = 0;
+
+    if (M5_CS)
+        regs->psw.cc = newcc;
 
 #undef M5_RE
 #undef M5_ZS
@@ -2453,7 +2520,9 @@ DEF_INST( vector_find_element_equal )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_find_element_not_equal )
 {
-    int     v1, v2, v3, m4, m5, i, ind1, ind2, max, match = 0;
+    int     v1, v2, v3, m4, m5;
+    int     nef, nei, zf, zi, i;
+    BYTE    newcc;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -2466,62 +2535,108 @@ DEF_INST( vector_find_element_not_equal )
     if (m4 > 2 || M5_RE)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
+    zf = nef = FALSE;
+    nei = 16;   // Number of bytes in vector
+    newcc = 3;  // All equal, no zero
+
     switch (m4)
     {
-    case 0:
-        ind1 = 16, ind2 = ind1, max = ind1;
-        for (i=0; i < max && (ind1 == max || ind2 == max); i++)
+    case 0:  // Byte
+        for (i=0; i<16; i++)
         {
-            if ((ind1 == max) && regs->VR_B(v2,i) != regs->VR_B(v3,i))
+            if (regs->VR_B(v2,i) != regs->VR_B(v3,i))
             {
-                match = (regs->VR_B(v2,i) < regs->VR_B(v3,i)) ? 1:2;
-                ind1 = i;
+                nef = TRUE;
+                nei = i;     // Element index in bytes
+                newcc = (regs->VR_B(v2,i) < regs->VR_B(v3,i)) ? 1 : 2;
+                break;
             }
-            if ((ind2 == max) && M5_ZS && regs->VR_B(v2, i) == 0x00) // if M5-ZS (Zero Search)
-                ind2 = i;
+        }
+        if (M5_ZS)
+        {
+            for (i=0; i<16; i++)
+            {
+                if (regs->VR_B(v2,i) == 0)
+                {
+                    zf = TRUE;
+                    zi = i;      // Zero element index in bytes
+                    break;
+                }
+            }
         }
         break;
-    case 1:
-        ind1 = 8, ind2 = ind1, max = ind1;
-        for (i=0; i < max && (ind1 == max || ind2 == max); i++)
+    case 1:  // Halfword
+        for (i=0; i<8; i++)
         {
-            if ((ind1 == max) && regs->VR_H(v2, i) != regs->VR_H(v3, i))
+            if (regs->VR_H(v2,i) != regs->VR_H(v3,i))
             {
-                match = (regs->VR_H(v2, i) < regs->VR_H(v3, i)) ? 1 : 2;
-                ind1 = i;
+                nef = TRUE;
+                nei = i * 2;  // Element index in bytes
+                newcc = (regs->VR_H(v2,i) < regs->VR_H(v3,i)) ? 1 : 2;
+                break;
             }
-            if ((ind2 == max) && M5_ZS && regs->VR_H(v2, i) == 0x0000) // if M5-ZS (Zero Search)
-                ind2 = i;
+        }
+        if (M5_ZS)
+        {
+            for (i=0; i<8; i++)
+            {
+                if (regs->VR_H(v2,i) == 0)
+                {
+                    zf = TRUE;
+                    zi = i * 2;  // Zero element index in bytes
+                    break;
+                }
+            }
         }
         break;
-    case 2:
-        ind1 = 4, ind2 = ind1, max = ind1;
-        for (i=0; i < max && (ind1 == max || ind2 == max); i++)
+    case 2:  // Word
+        for (i=0; i<4; i++)
         {
-            if ((ind1 == max) && regs->VR_F(v2, i) != regs->VR_F(v3, i))
+            if (regs->VR_F(v2,i) != regs->VR_F(v3,i))
             {
-                match = (regs->VR_F(v2, i) < regs->VR_F(v3, i)) ? 1 : 2;
-                ind1 = i;
+                nef = TRUE;
+                nei = i * 4;  // Element index in bytes
+                newcc = (regs->VR_F(v2,i) < regs->VR_F(v3,i)) ? 1 : 2;
+                break;
             }
-            if ((ind2 == max) && M5_ZS && regs->VR_F(v2, i) == 0x00000000) // if M5-ZS (Zero Search)
-                ind2 = i;
+        }
+        if (M5_ZS)
+        {
+            for (i=0; i<4; i++)
+            {
+                if (regs->VR_F(v2,i) == 0)
+                {
+                    zf = TRUE;
+                    zi = i * 4;  // Zero element index in bytes
+                    break;
+                }
+            }
         }
         break;
     }
 
-    regs->VR_D(v1, 0) = 0x00;
-    regs->VR_B(v1, 7) = min(ind1, ind2) * (1 << m4);
-    regs->VR_D(v1, 1) = 0x00;
-
-    if (M5_CS)               // if M5_CS (Condition Code Set)
+    if (zf)
     {
-        if (M5_ZS && (ind2 < ind1))
-            regs->psw.cc = 0;
-        else if (match)
-            regs->psw.cc = match;
-        else if ((ind1 == max) && (ind2 == max))
-            regs->psw.cc = 3;
+        if (nef)
+        {
+            if (zi < nei)
+            {
+                nei = zi;   // Element index in bytes
+                newcc = 0;  // Zero before not equal
+            }
+        }
+        else
+        {
+            nei = zi;       // Element index in bytes
+            newcc = 0;      // Zero before equal
+        }
     }
+
+    regs->VR_D(v1, 0) = nei;
+    regs->VR_D(v1, 1) = 0;
+
+    if (M5_CS)
+        regs->psw.cc = newcc;
 
 #undef M5_RE
 #undef M5_ZS
