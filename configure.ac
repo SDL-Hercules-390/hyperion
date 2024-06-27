@@ -26,8 +26,10 @@ AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxillary build tools)
 # -----------------------------------------------------------------------------
 
 VERS_MAJ=4                    # first  digit of version
-VERS_INT=3                    # second digit of version
-VERS_MIN=9999                 # third  digit of version
+VERS_INT=7                    # second digit of version
+VERS_MIN=0                    # third  digit of version
+VERS_DEV=0                    # flag: 1 = between releases development version
+                              #       0 = official formal release version
 
 AM_INIT_AUTOMAKE(hercules,${VERS_MAJ}.${VERS_INT}.${VERS_MIN})
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -38,6 +40,14 @@ AC_CONFIG_HEADERS(config.h)   # (the file the resulting configure script will pr
 AM_MAINTAINER_MODE()
 AC_CANONICAL_HOST()           # (sets $host_cpu, $host_vendor, and $host_os)
 AC_CANONICAL_TARGET()         # (sets $target_cpu, $target_vendor, and $target_os)
+
+# FORTRAN detection scanning can goof up our shared libraries.
+# So we diable checking for it.  And C++, too, while we're at it.
+#
+# Idea from https://stackoverflow.com/questions/4292683
+#
+m4_defun([_LT_AC_LANG_CXX_CONFIG], [:])
+m4_defun([_LT_AC_LANG_F77_CONFIG], [:])
 
 ###############################################################################
 #   Programs section...
@@ -90,6 +100,13 @@ case "$target_os" in
         else
             hc_cv_is_apple=no
         fi
+
+        # Added for Apple Mac M1
+        if test $target_cpu = aarch64; then
+            hc_cv_build_apple_m1=yes
+        else
+            hc_cv_build_apple_m1=no
+        fi
         ;;
     *bsd*)
         hc_cv_is_aix=no
@@ -128,6 +145,18 @@ case "$target_cpu" in
     arm*)
         hc_cv_cpu_arch=arm
         hc_cv_pkg_lib_subdir="/arm"
+
+        case "$target_os" in
+          *darwin*)
+            hc_cv_cpu_arch=aarch64
+            hc_cv_pkg_lib_subdir="/aarch64"
+            ;;
+        esac
+        ;;
+
+    e2k*)
+        hc_cv_cpu_arch=e2k
+        hc_cv_pkg_lib_subdir="/e2k"
         ;;
 
     mips*)
@@ -138,6 +167,11 @@ case "$target_cpu" in
     ppc*|powerpc*)
         hc_cv_cpu_arch=ppc
         hc_cv_pkg_lib_subdir="/ppc"
+        ;;
+
+    riscv64*)
+        hc_cv_cpu_arch=riscv64
+        hc_cv_pkg_lib_subdir="/riscv64"
         ;;
 
     sparc*)
@@ -174,8 +208,28 @@ case "$target_cpu" in
     *64|*64le)
         hc_cv_cpu_bits=64
         ;;
+    s390x)
+        hc_cv_cpu_bits=64
+        ;;
     *)
         hc_cv_cpu_bits=32
+        ;;
+esac
+
+case "$target_os" in
+
+    *linux*)
+        if test $target_cpu = e2k; then
+            # e2k-mcst-linux-gnu
+            hc_cv_cpu_bits=64
+        fi
+        ;;
+    *darwin*)
+        if test $target_cpu = arm; then
+            # arm-apple-darwin20.6.0
+            target_cpu=aarch64
+            hc_cv_cpu_bits=64
+        fi
         ;;
 esac
 
@@ -364,6 +418,14 @@ AC_LIBTOOL_WIN32_DLL()                  # (we need Win32 support in libtool)
 # -----------------------------------------------------------------------------
 
 case $host_os in
+    freebsd1 | freebsd1.* | freebsd2 | freebsd2.* | freebsd3 | freebsd3.*)
+      lt_cv_deplibs_check_method="match_pattern /lib[^/]+(\\.so|_pic\\.a|\\.a)\$"
+      ;;
+
+    freebsd*)
+      lt_cv_deplibs_check_method="pass_all"
+      ;;
+
     netbsd*)
       #lt_cv_deplibs_check_method="match_pattern /lib[^/]+(\\.so|_pic\\.a|\\.a)\$"
       lt_cv_deplibs_check_method="pass_all"
@@ -515,7 +577,7 @@ hc_error=no
 #  statements coded somewhere. We place them all here simply for convenience.
 
 AH_TEMPLATE( [CUSTOM_BUILD_STRING],     [Define to provide additional information about this build] )
-AH_TEMPLATE( [MAX_CPU_ENGINES],         [Defines the maximum number of emulated CPU engines] )
+AH_TEMPLATE( [MAX_CPU_ENGS],            [Defines the maximum number of emulated CPU engines] )
 AH_TEMPLATE( [HOST_ARCH],               [Define as quoted 'target_cpu' value = target host CPU architecture] )
 AH_TEMPLATE( [DEBUG],                   [Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros)] )
 AH_TEMPLATE( [C99_FLEXIBLE_ARRAYS],     [Define if your gcc properly supports C99 flexible arrays] )
@@ -535,6 +597,7 @@ AH_TEMPLATE( [OPTION_HAO],              [Define to enable Hercules Automatic Ope
 AH_TEMPLATE( [HDL_USE_LIBTOOL],         [Define to cause dynamic loader to use libtool instead of dlopen] )
 AH_TEMPLATE( [BUILD_HERCIFC],           [Define if hercifc program is to be built] )
 AH_TEMPLATE( [WIN32],                   [Define when building under Win32 (MinGW or Cygwin)] )
+AH_TEMPLATE( [BUILD_APPLE_M1],          [Define when building for Apple Darwin M1 ARM] )
 AH_TEMPLATE( [OPTION_FTHREADS],         [Define to use included threads implementation (fthreads)] )
 AH_TEMPLATE( [TIMESPEC_IN_TIME_H],      [Define if 'struct timespec' defined in <time.h>] )
 AH_TEMPLATE( [TIMESPEC_IN_SYS_TYPES_H], [Define if 'struct timespec' defined in <sys/types.h>] )
@@ -784,6 +847,9 @@ AC_CHECK_HEADERS( sys/wait.h,       [hc_cv_have_sys_wait_h=yes],       [hc_cv_ha
 AC_CHECK_HEADERS( sys/un.h,         [hc_cv_have_sys_un_h=yes],         [hc_cv_have_sys_un_h=no]         )
 AC_CHECK_HEADERS( byteswap.h,       [hc_cv_have_byteswap_h=yes],       [hc_cv_have_byteswap_h=no]       )
 AC_CHECK_HEADERS( bzlib.h,          [hc_cv_have_bzlib_h=yes],          [hc_cv_have_bzlib_h=no]          )
+
+AC_CHECK_HEADERS( dirent.h,         [hc_cv_have_dirent_h=yes],         [hc_cv_have_dirent_h=no]         )
+
 AC_CHECK_HEADERS( dlfcn.h,          [hc_cv_have_dlfcn_h=yes],          [hc_cv_have_dlfcn_h=no]          )
 AC_CHECK_HEADERS( fenv.h,           [hc_cv_have_fenv_h=yes],           [hc_cv_have_fenv_h=no]           )
 AC_CHECK_HEADERS( inttypes.h,       [hc_cv_have_inttypes_h=yes],       [hc_cv_have_inttypes_h=no]       )
@@ -2441,7 +2507,7 @@ if test "$hc_cv_opt_capabilities" = "yes"; then
   fi
 fi
 
-hc_cv_opt_custom_build_str="** The SoftDevLabs version of Hercules **"
+hc_cv_opt_custom_build_str="** The SDL 4.x Hyperion version of Hercules **"
 
 AC_ARG_ENABLE( custom,
 
@@ -2830,15 +2896,30 @@ if test "$hc_cv_auto_optimize" = "yes"; then
 
         # Dynamically inline small block string operations
         # (subroutine calls still made for large area calls)
-        #
-        # Note: option introduced in GCC 4.3 Release Series, but it
-        # is unclear which 4.3 version so we test for 4.4 or greater.
-        # See:  https://gcc.gnu.org/gcc-4.3/changes.html
+        # But only if the compiler supports it
 
-        if test "$hc_cv_is_apple" != "yes"; then
-           AS_VERSION_COMPARE( $hc_gcc_level, "4.4.0", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
-                                                       [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"],
-                                                       [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"] )
+        AC_CACHE_CHECK( [for -minline-stringops-dynamically flag],
+
+            [hc_cv_have_inline_stringops_dynamically],
+            [
+                hc_temp="$CFLAGS"
+                CFLAGS="-minline-stringops-dynamically"
+
+                AC_COMPILE_IFELSE(
+                [
+                    int main(void) { return 0; }
+                ],
+                [hc_cv_have_inline_stringops_dynamically=yes],
+                [hc_cv_have_inline_stringops_dynamically=no] )
+
+                CFLAGS="$hc_temp"
+            ]
+        )
+
+        if test "$hc_cv_have_inline_stringops_dynamically" = "yes"; then
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"
+        else
+            hc_cv_optimization_flags="$hc_cv_optimization_flags"
         fi
 
         if test "$hc_cv_builtin_alloca_broke" != "yes" &&
@@ -2874,8 +2955,8 @@ if test "x$hc_cv_opt_custom_build_str" != "x"; then
     AC_DEFINE_UNQUOTED( [CUSTOM_BUILD_STRING], "${hc_cv_opt_custom_build_str}" )
 fi
 
-AC_DEFINE_UNQUOTED( [MAX_CPU_ENGINES],  ${hc_cv_opt_num_cpu_engines} )
-AC_DEFINE_UNQUOTED( [HOST_ARCH],       "${target_cpu}" )
+AC_DEFINE_UNQUOTED( [MAX_CPU_ENGS],  ${hc_cv_opt_num_cpu_engines} )
+AC_DEFINE_UNQUOTED( [HOST_ARCH],    "${target_cpu}" )
 
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_BOOL_LOCK_FREE],     ${hc_cv_c11_atomic_bool_lock_free}     )
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_CHAR_LOCK_FREE],     ${hc_cv_c11_atomic_char_lock_free}     )
@@ -2921,6 +3002,7 @@ test "$hc_cv_have_getsetuid"             != "yes"  &&  AC_DEFINE(NO_SETUID)
 test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
 test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
+test "$hc_cv_build_apple_m1"              = "yes"  &&  AC_DEFINE(BUILD_APPLE_M1)
 test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILITIES)
 test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(HAVE_OBJECT_REXX)
 test "$hc_cv_ena_regina_rexx"             = "yes"  &&  AC_DEFINE(HAVE_REGINA_REXX)
@@ -3055,6 +3137,8 @@ if test "x$hc_cv_hercifc_groupname" != "x"; then
     AC_SUBST(HERCIFC_GROUPNAME)
 fi
 
+AM_CONDITIONAL( BUILD_APPLE_M1,      [ test "$hc_cv_build_apple_m1"   = "yes" ] )
+
 ###############################################################################
 #                       External Packages support
 ###############################################################################
@@ -3175,18 +3259,21 @@ if test -z "${hc_cv_extpkg_dir}"; then
                       found_crypto="yes"
         fi
       fi
+
       if test -z   "${found_decnumber}"; then
         if test -r ${dir}/${decnumber_libname}; then
                             decnumber_libdir="${dir}"
                       found_decnumber="yes"
         fi
       fi
+
       if test -z   "${found_softfloat}"; then
         if test -r ${dir}/${softfloat_libname}; then
                             softfloat_libdir="${dir}"
                       found_softfloat="yes"
         fi
       fi
+
       if test -z   "${found_telnet}"; then
         if test -r ${dir}/${telnet_libname}; then
                             telnet_libdir="${dir}"
@@ -3207,6 +3294,19 @@ ${LIBRARY_PATH}:
 END
 fi
 
+LIBS="$LIBS -l${crypto_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${crypto_libdir}"
+
+LIBS="$LIBS -l${decnumber_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
+
+
+LIBS="$LIBS -l${softfloat_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
+
+LIBS="$LIBS -l${telnet_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${telnet_libdir}"
+
 ###############################################################################
 #          Pass values to other subdirectory Makefile.am files
 ###############################################################################
@@ -3221,10 +3321,11 @@ extpkg_headers="${crypto_headers}       \
                 ${softfloat_headers}    \
                 ${telnet_headers}"
 
-extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
-              ${decnumber_libdir}/${decnumber_libname}    \
-              ${softfloat_libdir}/${softfloat_libname}    \
-              ${telnet_libdir}/${telnet_libname}"
+# extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
+#               ${decnumber_libdir}/${decnumber_libname}    \
+#               ${softfloat_libdir}/${softfloat_libname}    \
+#               ${telnet_libdir}/${telnet_libname}"
+extpkg_ldadd=
 
 ##----------------------------------------------------------------
 ##                         DEBUGGING
@@ -3233,6 +3334,10 @@ extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
 ## AC_MSG_NOTICE( [Using decnumber_libdir = ${decnumber_libdir}] )
 ## AC_MSG_NOTICE( [Using softfloat_libdir = ${softfloat_libdir}] )
 ## AC_MSG_NOTICE( [Using telnet_libdir    = ${telnet_libdir}]    )
+
+## AC_MSG_NOTICE( [LIBS    = ${LIBS}]    )
+## AC_MSG_NOTICE( [LDFLAGS = ${LDFLAGS}]    )
+## AC_MSG_NOTICE( [extpkg_incdirs = ${extpkg_incdirs}]    )
 
 EXTPKG_INCDIRS="${extpkg_incdirs}"
 AC_SUBST(EXTPKG_INCDIRS)
@@ -3253,6 +3358,10 @@ AC_SUBST(HQA_INC)
 AC_CACHE_SAVE()
 
 AC_OUTPUT([  Makefile  util/Makefile  html/Makefile  man/Makefile  m4/Makefile  ])
+
+dnl Kludge to fix Debian/Ubuntu libtool
+sed -e 's/^link_all_deplibs=no$/link_all_deplibs=yes/' <libtool >libtool.tmp
+mv libtool.tmp libtool
 
 ###############################################################################
 #   (end-of-file)

@@ -2,6 +2,7 @@
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              (C) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2011-2023                             */
 /*              CE mode functions                                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -16,6 +17,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #define _HENGINE_DLL_
 
 #include "hercules.h"
+#include "opcode.h"
 
 /*-------------------------------------------------------------------*/
 /*    architecture dependent 'pr_cmd' prefix command handler         */
@@ -41,8 +43,8 @@ int ARCH_DEP( archdep_pr_cmd )( REGS *regs, int argc, char *argv[] )
         if (px > regs->mainlim)
         {
             // PROGRAMMING NOTE: 'F_RADR' and 'RADR' are very likely
-            // 64-bit due to FEATURE_INTERPRETIVE_EXECUTION normally
-            // being #defined, causing _FEATURE_ZSIE to be #defined.
+            // 64-bit due to FEATURE_SIE normally being #defined,
+            // causing _FEATURE_ZSIE to be #defined.
 
             MSGBUF( buf, "A:"F_RADR"  Addressing exception", (RADR) px );
             WRMSG( HHC02290, "E", buf );
@@ -231,7 +233,7 @@ int aea_cmd( int argc, char* argv[], char* cmdline )
             // HHC02282 == "%s"  // (aea_cmd)
             WRMSG( HHC02282, "I", "aea SIE" );
 
-            regs = regs->guestregs;
+            regs = GUESTREGS;
             report_aea( regs );
         }
     }
@@ -351,13 +353,12 @@ DLL_EXPORT int aia_cmd( int argc, char* argv[], char* cmdline )
 
         regs = sysblk.regs[ sysblk.pcpu ];
 
-        MSGBUF( buf, "AIV %16.16"PRIx64" aip %p ip %p aie %p aim %p",
+        MSGBUF( buf, "AIV %16.16"PRIx64" aip %p ip %p aie %p",
 
                 regs->AIV_G,
                 regs->aip,
                 regs->ip,
-                regs->aie,
-                (BYTE*) regs->aim
+                regs->aie
         );
 
         // "%s" (aia_cmd)
@@ -367,7 +368,7 @@ DLL_EXPORT int aia_cmd( int argc, char* argv[], char* cmdline )
         {
             char wrk[128];
 
-            regs = regs->guestregs;
+            regs = GUESTREGS;
 
             MSGBUF( wrk, "AIV %16.16"PRIx64" aip %p ip %p aie %p"
 
@@ -456,8 +457,8 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
 
     if (regs->sie_active)
     {
-        regs = regs->guestregs;
-        shift = regs->guestregs->arch_mode == ARCH_370_IDX ? 11 : 12;
+        regs = GUESTREGS;
+        shift = GUESTREGS->arch_mode == ARCH_370_IDX ? 11 : 12;
         bytemask = regs->arch_mode == ARCH_370_IDX ? 0x1FFFFF : 0x3FFFFF;
         pagemask = regs->arch_mode == ARCH_370_IDX ? 0x00E00000 :
                    regs->arch_mode == ARCH_390_IDX ? 0x7FC00000 :
@@ -547,7 +548,7 @@ char buf[384];
 int pr_cmd( int argc, char *argv[], char *cmdline )
 {
     REGS  *regs;
-    int    cpu, rc;
+    int    cpu, rc = 0;
 
     UNREFERENCED( cmdline );
 
@@ -578,8 +579,7 @@ int pr_cmd( int argc, char *argv[], char *cmdline )
     case ARCH_900_IDX:
         rc = z900_archdep_pr_cmd( regs, argc, argv ); break;
 #endif
-    default:
-        rc = -1; break;
+    default: CRASH();
     }
 
     release_lock( &sysblk.cpulock[ cpu ]);
@@ -791,7 +791,7 @@ char  buf[512];
     if (modflag)
     {
         regs->psw.IA_G &= regs->psw.AMASK_G;
-        regs->aie = NULL;
+        regs->aie = INVALID_AIE;
     }
 
     /* Display the PSW and PSW field by field */
@@ -817,7 +817,7 @@ char  buf[512];
         if ( !IS_IC_DISABLED_WAIT_PSW( regs ) )     rc = 1; /* Enabled Wait */
         else                                        rc = 2; /* Disabled Wait */
     }
-    else if ( sysblk.inststep )                     rc = 3; /* Instruction Step */
+    else if ( sysblk.instbreak )                    rc = 3; /* Instruction Step */
     else if ( regs->cpustate == CPUSTATE_STOPPED )  rc = 4; /* Manual Mode */
     else                                            rc = 0; /* Running Normal */
 
@@ -912,13 +912,319 @@ REGS *regs;
 
 
 /*-------------------------------------------------------------------*/
+/* tf -- trace file command: ON|OFF FILE=filename MAX=nnnS NOSTOP    */
+/*-------------------------------------------------------------------*/
+int tf_cmd( int argc, char* argv[], char* cmdline )
+{
+    U64          maxsize    = 0;
+    FILE*        traceFILE  = NULL;
+
+    char         filename[MAX_PATH+1] = {0};
+    char         buf[sizeof(filename)+32] = {0};
+
+    int          mgs = 0;
+    char         mg = 'M';
+    const char*  quote = "\"";
+    bool         enable = false;
+    bool         nostop = false;
+
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0( argv );
+
+    // Too many arguments?
+
+    if (argc > 5)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    // Parse new values...
+
+    maxsize = sysblk.maxtracesize;
+    enable = sysblk.traceFILE ? true : false;
+#ifdef FISH_TFNOSTOP2
+    nostop = sysblk.tfnostop2 ? true : false;
+#else
+    nostop = sysblk.tfnostop ? true : false;
+#endif
+
+    if (argc > 1)
+    {
+        int  i;
+        for (i=1; i < argc; i++)
+        {
+            if (0
+                || strcasecmp( argv[i], "ON"   ) == 0
+                || strcasecmp( argv[i], "OPEN" ) == 0
+            )
+            {
+                enable = true;
+            }
+            else if (0
+                || strcasecmp( argv[i], "OFF"   ) == 0
+                || strcasecmp( argv[i], "CLOSE" ) == 0
+            )
+            {
+                enable = false;
+            }
+            else if (0
+                || strcasecmp( argv[i], "NOSTOP" ) == 0
+                || strcasecmp( argv[i], "CONT"   ) == 0
+            )
+            {
+                nostop = true;
+            }
+            else if (0
+                || strcasecmp( argv[i], "STOP"   ) == 0
+                || strcasecmp( argv[i], "NOCONT" ) == 0
+            )
+            {
+                nostop = false;
+            }
+            else if (strncasecmp( argv[i], "FILE=", 5 ) == 0)
+            {
+                if (traceFILE)
+                    VERIFY( 0 == fclose( traceFILE ));
+
+                STRLCPY( filename, argv[i]+5 );
+                traceFILE = NULL;
+
+                if (!filename[0])
+                {
+                    // "Invalid %s= value: %s"
+                    WRMSG( HHC02380, "E", "FILE", "(null)" );
+                    if (traceFILE)
+                        VERIFY( 0 == fclose( traceFILE ));
+                    return -1;
+                }
+
+                if (!(traceFILE = fopen( filename, "wb" )))
+                {
+                    // "Trace file open error %s: \"%s\""
+                    WRMSG( HHC02377, "E", strerror( errno ), filename );
+                    return -1;
+                }
+            }
+            else if (strncasecmp( argv[i], "MAX=", 4 ) == 0)
+            {
+                char* endptr;
+                U64 factor = ONE_GIGABYTE;
+                errno = 0;
+                maxsize = strtoul( argv[i]+4, &endptr, 10 );
+
+                if (0
+                    || errno
+                    || (1
+                        && endptr[0] != 'M'
+                        && endptr[0] != 'm'
+                        && endptr[0] != 'G'
+                        && endptr[0] != 'g'
+                       )
+                    || endptr[1] // (not NULL terminator)
+                    || maxsize < 1
+                    || maxsize > 999
+                )
+                {
+                    // "Invalid MAX= value: %s"
+                    WRMSG( HHC02378, "E", argv[i]+4 );
+                    if (traceFILE)
+                        VERIFY( 0 == fclose( traceFILE ));
+                    return -1;
+                }
+
+                if (endptr[0] == 'M' ||
+                    endptr[0] == 'm') factor = ONE_MEGABYTE;
+                else                  factor = ONE_GIGABYTE;
+
+                maxsize *= factor;
+            }
+            else
+            {
+                // "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                if (traceFILE)
+                    VERIFY( 0 == fclose( traceFILE ));
+                return -1;
+            }
+        }
+        // end for()
+
+        if (enable)
+        {
+            // File is required if they want to enable it
+            if (!sysblk.traceFILE && !sysblk.tracefilename && !traceFILE)
+            {
+                // "Invalid %s= value: %s"
+                WRMSG( HHC02380, "E", "FILE", "(null)" );
+                return -1;
+            }
+
+            // A non-zero maximum filesize is also required to enable
+            if (!sysblk.maxtracesize && !maxsize)
+            {
+                // "Invalid %s= value: %s"
+                WRMSG( HHC02380, "E", "MAX", "0" );
+                if (traceFILE)
+                    VERIFY( 0 == fclose( traceFILE ));
+                return -1;
+            }
+        }
+        else
+        {
+            // They don't want to enable it (yet),
+            // or they want to disable it.
+
+            if (!maxsize)
+                maxsize = sysblk.maxtracesize;
+            if (!maxsize)
+                maxsize = ONE_MEGABYTE;
+        }
+
+        // Activate/Deactivate (enable/disable) tracefile tracing...
+        OBTAIN_TRACEFILE_LOCK();
+        {
+            if (enable)
+            {
+                void* tracebuff;
+
+                // Allocate a fresh buffer
+
+                if (!(tracebuff = calloc( 1, tf_MAX_RECSIZE() )))
+                {
+                    RELEASE_TRACEFILE_LOCK();
+
+                    // "Out of memory"
+                    WRMSG( HHC00152, "E" );
+                    RELEASE_TRACEFILE_LOCK();
+
+                    if (traceFILE)
+                        VERIFY( 0 == fclose( traceFILE ));
+
+                    return -1;
+                }
+
+                free( sysblk.tracefilebuff );
+                sysblk.tracefilebuff = tracebuff;
+
+                // Switch over to using the new file if specified
+                // (or reuse existing one if new one wasn't given)
+
+                if (sysblk.traceFILE)
+                    tf_close_locked();
+
+                if (traceFILE)
+                {
+                    // switch over to using their new tracefile
+                    sysblk.traceFILE = traceFILE;
+                    free( sysblk.tracefilename );
+                    sysblk.tracefilename = strdup( filename );
+                }
+                else // (continue use existing tracefile)
+                {
+                    if (!(sysblk.traceFILE = fopen( sysblk.tracefilename, "wb" )))
+                    {
+                        // "Trace file open error %s: \"%s\""
+                        WRMSG( HHC02377, "E", strerror( errno ), sysblk.tracefilename );
+                        RELEASE_TRACEFILE_LOCK();
+                        return -1;
+                    }
+                }
+
+                sysblk.curtracesize = 0;
+            }
+            else // (Deactivate/disable)
+            {
+                // Close trace file and free buffer,
+                // but keep existing filename unless
+                // they specified a new one.
+
+                if (traceFILE)
+                {
+                    // (switch to new file)
+                    VERIFY( 0 == fclose( traceFILE ));
+                    free( sysblk.tracefilename );
+                    sysblk.tracefilename = strdup( filename );
+                }
+
+                // (close existing file)
+                if (sysblk.traceFILE)
+                    tf_close_locked();
+
+                free( sysblk.tracefilebuff );
+                sysblk.tracefilebuff = NULL;
+                sysblk.traceFILE     = NULL;
+                sysblk.curtracesize  = 0;
+            }
+
+            sysblk.tfnostop = nostop;
+
+            if (maxsize)
+                sysblk.maxtracesize = maxsize;
+            else
+                maxsize = sysblk.maxtracesize;
+        }
+        RELEASE_TRACEFILE_LOCK();
+    }
+    // end if (argc > 1)
+
+    // Display current values...
+
+    if ((maxsize = sysblk.maxtracesize) >= ONE_GIGABYTE)
+    {
+        mg = 'G';
+        maxsize = ROUND_UP( maxsize, ONE_GIGABYTE );
+        mgs = (int) (maxsize / ONE_GIGABYTE);
+    }
+    else
+    {
+        mg = 'M';
+        maxsize = ROUND_UP( maxsize, ONE_MEGABYTE );
+        mgs = (int) (maxsize / ONE_MEGABYTE);
+    }
+
+    if (sysblk.tracefilename)
+    {
+        STRLCPY( filename, sysblk.tracefilename );
+        if (strchr( filename, ' ' )) quote = "\"";
+        else                         quote = "";
+    }
+
+    MSGBUF( buf, "%s MAX=%d%c %sSTOP %sFILE=%s%s",
+        sysblk.traceFILE ? "ON" : "OFF",
+        mgs, mg,
+        sysblk.tfnostop ? "NO" : "",
+        quote, filename, quote
+    );
+
+    if (argc > 1)
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], buf );
+    else
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], buf );
+
+    /* Auto-stop tracing unless asked not to */
+    if (!enable && !nostop)
+    {
+        if (tf_autostop())
+            // "File closed, tracing %s"
+            WRMSG( HHC02381, "I", "auto-stopped" );
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* tracing commands: x, x+, x-, x?, where 'x' is either t, s or b.   */
 /*-------------------------------------------------------------------*/
 int trace_cmd( int argc, char* argv[], char* cmdline )
 {
     U64   addr[2]         =  {0};       /* Parsed address range      */
     BYTE  c[2]            =  {0};       /* [0]=range sep, [1]=sscanf */
-    U16   stepasid        =   0;        /* Optional asid argument    */
+    U16   breakasid       =   0;        /* Optional asid argument    */
 
     char  rangemsg [128]  =  {0};       /* MSGBUF work buffer        */
     char  asidmsg  [128]  =  {0};       /* MSGBUF work buffer        */
@@ -930,6 +1236,9 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     bool  off     =  false;             /* Whether - was specified   */
     bool  query   =  false;             /* Whether ? was specified   */
     bool  update  =  false;             /* Whether parms were given  */
+    bool  unlock  =  false;             /* Should do RELEASE_INTLOCK */
+
+    cmdline[0] = tolower( (unsigned char)cmdline[0] );
 
     trace  = (cmdline[0] == 't');       // trace command
     step   = (cmdline[0] == 's');       // stepping command
@@ -1054,18 +1363,19 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                 return -1;
             }
 
-            stepasid = (U16) (asid & 0xFFFF);
+            breakasid = (U16) (asid & 0xFFFF);
         }
     }
     else
         c[0] = '-';
 
     /* Process their request */
-    OBTAIN_INTLOCK( NULL );
+    unlock = (TRY_OBTAIN_INTLOCK( NULL ) == 0);
     {
         /* Update and/or enable/disable tracing/stepping */
         if (on || off || update)
         {
+            int cpu;
             bool auto_disabled = false;
 
             /* Explicit tracing overrides automatic tracing */
@@ -1082,23 +1392,31 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                 {
                     sysblk.traceaddr[0] = addr[0];
                     sysblk.traceaddr[1] = addr[1];
-                    sysblk.stepasid     = 0;
+                    sysblk.breakasid    = 0;
                 }
 
                 if (on || off)
+                {
                     sysblk.insttrace = on;
+
+                    for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+                    {
+                        if (IS_CPU_ONLINE( cpu ))
+                            sysblk.regs[ cpu ]->insttrace = on;
+                    }
+                }
             }
             else // (step || breakp)
             {
                 if (update)
                 {
-                    sysblk.stepaddr[0] = addr[0];
-                    sysblk.stepaddr[1] = addr[1];
-                    sysblk.stepasid    = stepasid;
+                    sysblk.breakaddr[0] = addr[0];
+                    sysblk.breakaddr[1] = addr[1];
+                    sysblk.breakasid    = breakasid;
                 }
 
                 if (on || off)
-                    sysblk.inststep = on;
+                    sysblk.instbreak = on;
             }
 
             SET_IC_TRACE;
@@ -1113,20 +1431,20 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         /* Save (possibly updated) settings for user feedback */
         if (trace)
         {
-            addr[0]  = sysblk.traceaddr[0];
-            addr[1]  = sysblk.traceaddr[1];
-            stepasid = 0;
-            on       = sysblk.insttrace;
+            addr[0]   = sysblk.traceaddr[0];
+            addr[1]   = sysblk.traceaddr[1];
+            breakasid = 0;
+            on        = sysblk.insttrace;
         }
         else // (step || breakp)
         {
-            addr[0]  = sysblk.stepaddr[0];
-            addr[1]  = sysblk.stepaddr[1];
-            stepasid = sysblk.stepasid;
-            on       = sysblk.inststep;
+            addr[0]   = sysblk.breakaddr[0];
+            addr[1]   = sysblk.breakaddr[1];
+            breakasid = sysblk.breakasid;
+            on        = sysblk.instbreak;
         }
     }
-    RELEASE_INTLOCK( NULL );
+    if (unlock) RELEASE_INTLOCK( NULL );
 
     /* Build range and asid message fragments, if appropriate */
     if (addr[0] || addr[1])
@@ -1139,8 +1457,8 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         );
     }
 
-    if (stepasid)
-        MSGBUF( asidmsg, " asid x'%4.4"PRIx16"'", stepasid );
+    if (breakasid)
+        MSGBUF( asidmsg, " asid x'%4.4"PRIx16"'", breakasid );
 
     /* Display (current or new) settings */
 
@@ -1158,12 +1476,460 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     if (sysblk.auto_trace_beg || sysblk.auto_trace_amt)
         panel_command( "-t+-" );
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* Also show txf tracing settings if enabled */
+    if (sysblk.txf_tracing & TXF_TR_INSTR)
+        panel_command( "-txf" );
+#endif
+
+    if (query)
+    {
+        unlock = (TRY_OBTAIN_INTLOCK( NULL ) == 0);
+        {
+            DEVBLK* dev;
+            char typ[16] = {0};
+            char who[1024] = {0};
+            int cpu, on = 0, off = 0;
+
+            /* Also show instruction tracing for each individual CPU,
+               but only if not all CPUs are being traced or not (i.e.
+               only if some are being traced but not others, or vice-
+               versa).
+            */
+            for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+            {
+                if (IS_CPU_ONLINE( cpu ))
+                {
+                    if (sysblk.regs[ cpu ]->insttrace)
+                        ++on;
+                    else
+                        ++off;
+                }
+            }
+
+            /* If only some (but not all) have instruction tracing enabled
+               (or vice versa), then show them which ones have it enabled.
+            */
+            if (on && off)  // Some on, some off? (i.e. neither is zero?)
+            {
+                ASSERT( sysblk.insttrace ); // sanity check
+
+                for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+                {
+                    if (IS_CPU_ONLINE( cpu ))
+                    {
+                        if (sysblk.regs[ cpu ]->insttrace)
+                        {
+                            MSGBUF( who, "CPU %s%02X",
+                                ptyp2short( sysblk.ptyp[ cpu ] ), cpu );
+
+                            // "%stracing active for %s"
+                            WRMSG( HHC02382, "I", "instruction ", who );
+                        }
+                    }
+                }
+            }
+
+            /* Also show CCW/ORB tracing if enabled */
+            for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+            {
+                typ[0] = 0;
+
+                if (dev->orbtrace   ) STRLCAT( typ, "ORB " );
+                if (dev->ccwtrace   ) STRLCAT( typ, "CCW " );
+                if (dev->ckdkeytrace) STRLCAT( typ, "CKD " );
+
+                if (typ[0])
+                {
+                    char for_ccws[1024] = {0};
+
+                    if (dev->ccwopstrace)
+                    {
+                        int  i;
+                        char ccwop[4] = {0};
+
+                        STRLCAT( for_ccws, " for CCWs (" );
+
+                        for (i=0; i < 256; ++i)
+                        {
+                            if (dev->ccwops[i])
+                            {
+                                MSGBUF( ccwop, "%2.2x,", i );
+                                STRLCAT( for_ccws, ccwop );
+                            }
+                        }
+
+                        rtrim( for_ccws, "," );
+                        STRLCAT( for_ccws, ")" );
+                    }
+
+                    MSGBUF( who, "device %1d:%04X%s",
+                        SSID_TO_LCSS( dev->ssid ), dev->devnum, for_ccws );
+
+                    // "%stracing active for %s"
+                    WRMSG( HHC02382, "I", typ, who );
+                }
+            }
+        }
+        if (unlock) RELEASE_INTLOCK( NULL );
+    }
+
     return 0;
 }
 
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 /*-------------------------------------------------------------------*/
-/* automatic tracing command:   "t+-  [ON=nnnn  [OFF=nnnn]]"         */
+/* txf_cmd - control TXF tracing                                     */
+/*-------------------------------------------------------------------*/
+int txf_cmd( int argc, char* argv[], char* cmdline )
+{
+    U32  txf_tracing  = sysblk.txf_tracing;
+    U32  txf_why_mask = sysblk.txf_why_mask;
+    int  txf_tac      = sysblk.txf_tac;
+    int  txf_tnd      = sysblk.txf_tnd;
+    int  txf_cpuad    = sysblk.txf_cpuad;
+    int  txf_fails    = sysblk.txf_fails;
+    int  rc           = 0;
+    char c;
+    bool stats = false;
+
+    UNREFERENCED( cmdline );
+
+    // txf  [0 | STATS | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
+    //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [FAILS nn] ]
+
+    if (argc > 1)  // (define new settings?)
+    {
+        // Display statistics?
+        if (str_caseless_eq( argv[1], "STATS" ))
+        {
+            if (argc > 2)
+                rc = -1;
+            else
+                stats = true;
+        }
+        // Disable all TXF tracing?
+        else if (str_caseless_eq( argv[1], "0"))
+        {
+            if (argc > 2)
+                rc = -1;
+            else
+                txf_tracing = 0;
+        }
+        else // Define new options...
+        {
+            int i;
+
+            txf_tracing  = 0;
+            txf_why_mask = 0;
+            txf_tac      = 0;
+            txf_tnd      = 0;
+            txf_cpuad    = -1;
+            txf_fails    = 0;
+
+            for (i=1; i < argc; ++i)
+            {
+                     if (str_caseless_eq( argv[i], "INSTR"   )) txf_tracing |= TXF_TR_INSTR;
+                else if (str_caseless_eq( argv[i], "U"       )) txf_tracing |= TXF_TR_U;
+                else if (str_caseless_eq( argv[i], "C"       )) txf_tracing |= TXF_TR_C;
+                else if (str_caseless_eq( argv[i], "GOOD"    )) txf_tracing |= TXF_TR_SUCCESS;
+                else if (str_caseless_eq( argv[i], "SUCCESS" )) txf_tracing |= TXF_TR_SUCCESS;
+                else if (str_caseless_eq( argv[i], "BAD"     )) txf_tracing |= TXF_TR_FAILURE;
+                else if (str_caseless_eq( argv[i], "FAILURE" )) txf_tracing |= TXF_TR_FAILURE;
+                else if (str_caseless_eq( argv[i], "FAIL"    )) txf_tracing |= TXF_TR_FAILURE;
+                else if (str_caseless_eq( argv[i], "TDB"     )) txf_tracing |= TXF_TR_TDB;
+                else if (str_caseless_eq( argv[i], "PAGES"   )) txf_tracing |= TXF_TR_PAGES;
+                else if (str_caseless_eq( argv[i], "LINES"   )) txf_tracing |= TXF_TR_LINES;
+                else if (1
+                    && str_caseless_eq(   argv[i+0], "WHY" )
+                    &&                    argv[i+1]
+                    && sscanf(            argv[i+1], "%"SCNx32"%c", &txf_why_mask, &c ) == 1
+                )
+                {
+                    txf_tracing |= TXF_TR_WHY;
+                    ++i;
+                }
+                else if (1
+                    && str_caseless_eq( argv[i+0], "TAC" )
+                    &&                  argv[i+1]
+                    && (txf_tac = atoi( argv[i+1] )) > 0
+                )
+                {
+                    txf_tracing |= TXF_TR_TAC;
+                    ++i;
+                }
+                else if (1
+                    && str_caseless_eq( argv[i+0], "TND" )
+                    &&                  argv[i+1]
+                    && (txf_tnd = atoi( argv[i+1] )) > 0
+                )
+                {
+                    txf_tracing |= TXF_TR_TND;
+                    ++i;
+                }
+                else if (1
+                    && str_caseless_eq(   argv[i+0], "CPU" )
+                    &&                    argv[i+1]
+                    && (txf_cpuad = atoi( argv[i+1] )) >= 0
+                )
+                {
+                    txf_tracing |= TXF_TR_CPU;
+                    ++i;
+                }
+                else if (1
+                    && str_caseless_eq(   argv[i+0], "FAILS" )
+                    &&                    argv[i+1]
+                    && (txf_fails = atoi( argv[i+1] )) > 0
+                )
+                {
+                    txf_tracing |= TXF_TR_FAILS;
+                    ++i;
+                }
+                else
+                {
+                    rc = -1;
+                    break;
+                }
+            }
+
+            if (rc == 0)
+            {
+                //------------------------------------------------
+                //   If neither U nor C specified, set both.
+                //------------------------------------------------
+                if (!(txf_tracing & (TXF_TR_U | TXF_TR_C)))
+                {
+                    txf_tracing |= (TXF_TR_U | TXF_TR_C);
+                }
+
+                //------------------------------------------------
+                //  If neither GOOD nor BAD specified, set both.
+                //------------------------------------------------
+                if (!(txf_tracing & (TXF_TR_SUCCESS | TXF_TR_FAILURE)))
+                {
+                    txf_tracing |= (TXF_TR_SUCCESS | TXF_TR_FAILURE);
+                }
+
+                //------------------------------------------------
+                //   If WHY, TAC or FAILS specified, set BAD.
+                //------------------------------------------------
+                if (txf_tracing & (TXF_TR_WHY | TXF_TR_TAC | TXF_TR_FAILS))
+                {
+                    txf_tracing |= TXF_TR_FAILURE;
+                }
+
+                //------------------------------------------------
+                //   If FAILS specified, set C BAD.
+                //------------------------------------------------
+                if (txf_tracing & TXF_TR_FAILS)
+                {
+                    txf_tracing |= (TXF_TR_C | TXF_TR_FAILURE);
+                }
+
+                //------------------------------------------------
+                //      If LINES specified, set PAGES too.
+                //------------------------------------------------
+                if (txf_tracing & TXF_TR_LINES)
+                {
+                    txf_tracing |= TXF_TR_PAGES;
+                }
+
+                //------------------------------------------------
+                //     Ignore TDB unless BAD also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_FAILURE))
+                {
+                    txf_tracing &= ~TXF_TR_TDB;
+                }
+
+                //------------------------------------------------
+                //     Ignore WHY unless BAD also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_FAILURE))
+                {
+                    txf_tracing &= ~TXF_TR_WHY;
+                    txf_why_mask = 0;
+                }
+
+                //------------------------------------------------
+                //     Ignore TAC unless BAD also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_FAILURE))
+                {
+                    txf_tracing &= ~TXF_TR_TAC;
+                    txf_tac = 0;
+                }
+
+                //------------------------------------------------
+                //     Ignore FAILS unless BAD also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_FAILURE))
+                {
+                    txf_tracing &= ~TXF_TR_FAILS;
+                    txf_fails = 0;
+                }
+
+                //------------------------------------------------
+                //     Ignore FAILS unless C also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_C))
+                {
+                    txf_tracing &= ~TXF_TR_FAILS;
+                    txf_fails = 0;
+                }
+            }
+        }
+
+        if (rc == 0)
+        {
+            sysblk.txf_tracing  = txf_tracing;
+            sysblk.txf_why_mask = txf_why_mask;
+            sysblk.txf_tac      = txf_tac;
+            sysblk.txf_tnd      = txf_tnd;
+            sysblk.txf_cpuad    = txf_cpuad;
+            sysblk.txf_fails    = txf_fails;
+        }
+    }
+
+    if (rc != 0)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+    }
+    else if (!stats) // Display new/current settings
+    {
+        char buf[1024] = {0};
+
+        // txf  [0 | STATS | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
+        //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [FAILS nn] ]
+
+        if (txf_tracing)
+        {
+            char why[256] = {0}; // WHY hhhhhhhh (xxx xxx xxx ... )
+            char tac[64]  = {0};
+            char tnd[32]  = {0};
+            char cpu[32]  = {0};
+            char cfl[32]  = {0};
+
+            if (txf_why_mask)    MSGBUF( why, "WHY 0x%8.8"PRIX32" ",  txf_why_mask );
+            if (txf_tac    >  0) MSGBUF( tac, "TAC %d ",              txf_tac      );
+            if (txf_tnd    >  0) MSGBUF( tnd, "TND %d ",              txf_tnd      );
+            if (txf_cpuad  >= 0) MSGBUF( cpu, "CPU %d ",              txf_cpuad    );
+            if (txf_fails  >  0) MSGBUF( cfl, "FAILS %d ",            txf_fails    );
+
+            MSGBUF( buf, "%s%s%s%s%s%s%s%s" "%s%s%s%s%s"
+
+                , txf_tracing & TXF_TR_INSTR   ? "INSTR " : ""
+                , txf_tracing & TXF_TR_U       ? "U "     : ""
+                , txf_tracing & TXF_TR_C       ? "C "     : ""
+                , txf_tracing & TXF_TR_SUCCESS ? "GOOD "  : ""
+                , txf_tracing & TXF_TR_FAILURE ? "BAD "   : ""
+                , txf_tracing & TXF_TR_TDB     ? "TDB "   : ""
+                , txf_tracing & TXF_TR_PAGES   ? "PAGES " : ""
+                , txf_tracing & TXF_TR_LINES   ? "LINES " : ""
+
+                , why
+                , tac
+                , tnd
+                , cpu
+                , cfl
+            );
+            RTRIM( buf );
+        }
+
+        UPPER_ARGV_0( argv );
+
+        if (argc > 1)  // Defined new options...
+        {
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], buf );
+        }
+        else // Display current settings...
+        {
+            // "%-14s: %s"
+            WRMSG( HHC02203, "I", argv[0], buf );
+        }
+    }
+    else // (stats)
+    {
+        int  contran;
+        for (contran=0; contran <= 1; contran++)
+        {
+            if (sysblk.txf_stats[ contran ].txf_trans)
+            {
+                double total, count;
+                int i;
+
+                // "Total %s Transactions =%12"PRIu64
+                WRMSG( HHC17730, "I", TXF_CONSTRAINED( contran ),
+                        sysblk.txf_stats[ contran ].txf_trans );
+                total = sysblk.txf_stats[ contran ].txf_trans;
+
+                // "  Retries for ANY/ALL reason(s):"
+                WRMSG( HHC17731, "I" );
+
+                /* Print buckets up until just BEFORE the last bucket */
+                for (i=0; i < (TXF_STATS_RETRY_SLOTS-1); i++)
+                {
+                    count = sysblk.txf_stats[ contran ].txf_retries[ i ];
+
+                    // "    %1d%cretries =%12"PRIu64"  (%4.1f%%)"
+                    WRMSG( HHC17732, "I",
+                        i, ' ',
+                        sysblk.txf_stats[ contran ].txf_retries[ i ],
+                        (count/total) * 100.0 );
+                }
+
+                /* Now print the LAST bucket */
+                count = sysblk.txf_stats[ contran ].txf_retries[ i ];
+
+                // "    %1d%cretries =%12"PRIu64"  (%4.1f%%)"
+                WRMSG( HHC17732, "I",
+                    i, '+',
+                    sysblk.txf_stats[ contran ].txf_retries[ i ],
+                    (count/total) * 100.0 );
+
+                // "    MAXIMUM   =%12"PRIu64
+                WRMSG( HHC17733, "I", sysblk.txf_stats[ contran ].txf_retries_hwm );
+
+                /* Report how often a transaction was aborted by TAC */
+                for (i = 2; i < TXF_STATS_TAC_SLOTS; i++)
+                {
+                    /* (TAC 3 == undefined/unassigned; skip) */
+                    if (i == 3)
+                    {
+                        // (sanity check: total for this slot should be zero)
+                        ASSERT( 0 == sysblk.txf_stats[ contran ].txf_aborts_by_tac[ i ] );
+                        continue; // (skip TAC slot 3 == unassigned)
+                    }
+
+                    // "  %12"PRIu64"  (%4.1f%%)  Retries due to TAC %3d %s"
+                    count =               sysblk.txf_stats[ contran ].txf_aborts_by_tac[ i ];
+                    WRMSG( HHC17734, "I", sysblk.txf_stats[ contran ].txf_aborts_by_tac[ i ],
+                        (count/total) * 100.0, i, tac2long( i ) );
+                }
+
+                // "  %12"PRIu64"  (%4.1f%%)  Retries due to TAC %3d %s"
+                count =               sysblk.txf_stats[ contran ].txf_aborts_by_tac_misc;
+                WRMSG( HHC17734, "I", sysblk.txf_stats[ contran ].txf_aborts_by_tac_misc,
+                    (count/total) * 100.0, TAC_MISC, tac2long( TAC_MISC ) );
+
+                // "  %12"PRIu64"  (%4.1f%%)  Retries due to other TAC"
+                count =               sysblk.txf_stats[ contran ].txf_aborts_by_tac[ 0 ];
+                WRMSG( HHC17735, "I", sysblk.txf_stats[ contran ].txf_aborts_by_tac[ 0 ],
+                    (count/total) * 100.0 );
+            }
+        }
+    }
+
+    return rc;
+}
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+
+/*-------------------------------------------------------------------*/
+/* automatic tracing command:  "t+- [ BEG=<instrcount>  AMT=num ]"   */
 /*-------------------------------------------------------------------*/
 int auto_trace_cmd( int argc, char* argv[], char* cmdline )
 {
@@ -1229,7 +1995,7 @@ int auto_trace_cmd( int argc, char* argv[], char* cmdline )
     }
     else // (auto_trace_beg && auto_trace_amt)
     {
-        // "Automatic tracing enabled: BEG=%"PRIu64", AMT=%"PRIu64
+        // "Automatic tracing enabled: BEG=%"PRIu64" AMT=%"PRIu64
         WRMSG( HHC02374, "I", auto_trace_beg, auto_trace_amt );
     }
 
@@ -1369,36 +2135,36 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         {
             WRMSG( HHC00850, "I", "IE", sysblk.regs[i]->cpuad,
                             IC_INTERRUPT_CPU(sysblk.regs[i]),
-                            sysblk.regs[i]->guestregs->ints_state,
-                            sysblk.regs[i]->guestregs->ints_mask);
+                            GUEST( sysblk.regs[i] )->ints_state,
+                            GUEST( sysblk.regs[i] )->ints_mask);
             WRMSG( HHC00851, "I", "IE", sysblk.regs[i]->cpuad,
-                            IS_IC_INTERRUPT(sysblk.regs[i]->guestregs) ? "" : "not ");
+                            IS_IC_INTERRUPT( GUEST( sysblk.regs[i] )) ? "" : "not ");
             WRMSG( HHC00852, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_IOPENDING ? "" : "not ");
-            WRMSG( HHC00853, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_CLKC(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00854, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_PTIMER(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00855, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_ITIMER(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00857, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_EXTCALL(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00858, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_EMERSIG(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00859, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_MCKPENDING(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG( HHC00853, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_CLKC(       GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00854, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_PTIMER(     GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00855, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_ITIMER(     GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00857, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_EXTCALL(    GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00858, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_EMERSIG(    GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00859, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_MCKPENDING( GUEST( sysblk.regs[i] )) ? "" : "not ");
             WRMSG( HHC00860, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_SERVSIG ? "" : "not ");
             WRMSG( HHC00864, "I", "IE", sysblk.regs[i]->cpuad, test_lock(&sysblk.cpulock[i]) ? "" : "not ");
 
             if (ARCH_370_IDX == sysblk.arch_mode)
             {
-                if (0xFFFF == sysblk.regs[i]->guestregs->chanset)
+                if (0xFFFF == GUEST( sysblk.regs[i] )->chanset)
                 {
                     MSGBUF( buf, "none");
                 }
                 else
                 {
-                    MSGBUF( buf, "%4.4X", sysblk.regs[i]->guestregs->chanset);
+                    MSGBUF( buf, "%4.4X", GUEST( sysblk.regs[i] )->chanset);
                 }
                 WRMSG( HHC00865, "I", "IE", sysblk.regs[i]->cpuad, buf );
             }
-            WRMSG( HHC00866, "I", "IE", sysblk.regs[i]->cpuad, states[sysblk.regs[i]->guestregs->cpustate]);
-            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, (S64)sysblk.regs[i]->guestregs->instcount);
-            WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->siototal);
-            copy_psw(sysblk.regs[i]->guestregs, curpsw);
+            WRMSG( HHC00866, "I", "IE", sysblk.regs[i]->cpuad, states[ GUEST( sysblk.regs[i] )->cpustate ]);
+            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, (S64)GUEST( sysblk.regs[i] )->instcount);
+            WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, GUEST( sysblk.regs[i] )->siototal);
+            copy_psw( GUEST( sysblk.regs[i] ), curpsw );
             if (ARCH_900_IDX == sysblk.arch_mode)
             {
                MSGBUF( buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
@@ -1562,6 +2328,68 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 #if defined( SUPPRESS_128BIT_PRINTF_FORMAT_WARNING )
 POP_GCC_WARNINGS()
 #endif
+
+
+/*-------------------------------------------------------------------*/
+/* bear command - display or alter BEAR register                     */
+/*-------------------------------------------------------------------*/
+int bear_cmd( int argc, char* argv[], char* cmdline )
+{
+    UNREFERENCED( cmdline );
+
+    UPPER_ARGV_0( argv );
+
+    /* Correct number of arguments? */
+
+    if (argc < 1 || argc > 2)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    obtain_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+    {
+        REGS* regs = sysblk.regs[ sysblk.pcpu ];
+        char cbear[17] = {0};
+
+        if (!IS_CPU_ONLINE( sysblk.pcpu ))
+        {
+            release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+            // "Processor %s%02X: processor is not %s"
+            WRMSG( HHC00816, "E", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online");
+            return -1;
+        }
+
+        if (argc > 1)       // (set new value)
+        {
+            U64 bear;
+            BYTE c;
+
+            if (sscanf( argv[1], "%"SCNx64"%c", &bear, &c) != 1)
+            {
+                release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[1], ": invalid address" );
+                return -1;
+            }
+
+            regs->bear = bear;
+
+            // "%-14s set to %s"
+            MSGBUF( cbear, "%"PRIx64, regs->bear );
+            WRMSG( HHC02204, "I", argv[0], cbear );
+        }
+        else // (display current value)
+        {
+            // "%-14s: %s"
+            MSGBUF( cbear, "%"PRIx64, regs->bear );
+            WRMSG( HHC02203, "I", argv[0], cbear );
+        }
+    }
+    release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+    return 0;
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -1858,23 +2686,45 @@ int i_cmd( int argc, char* argv[], char* cmdline )
 }
 
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
+/*-------------------------------------------------------------------*/
+/* Definition of opcode execution count entries                      */
+/*-------------------------------------------------------------------*/
+typedef struct {
+    unsigned char opcode1; // Operation code, first byte
+    unsigned char opcode2; // Operation code, second byte
+    U8 opc2pos;            // Opcode2 position in Instr
+    U64 count;             // Execution count from sysblk.imaps.imap??
+    U64 time;              // Execution time
+} ICOUNT_INSTR;
+
+/*-------------------------------------------------------------------*/
+/* icount command sort callback (Descending by exec count)           */
+/*-------------------------------------------------------------------*/
+static int icount_cmd_sort(const ICOUNT_INSTR *x, const ICOUNT_INSTR *y)
+{
+    return (x->count < y->count) ? +1 : -1;
+}
+
 /*-------------------------------------------------------------------*/
 /* icount command - display instruction counts                       */
 /*-------------------------------------------------------------------*/
 int icount_cmd( int argc, char* argv[], char* cmdline )
 {
-    int i, i1, i2, i3;
+    int i, i1, i2;
+    REGS *regs;
+    BYTE fakeinst[6];
 
 #define  MAX_ICOUNT_INSTR   1000    /* Maximum number of instructions
                                      in architecture instruction set */
     U64  total;
-    U64  count[ MAX_ICOUNT_INSTR ];
 
-    unsigned char opcode1[ MAX_ICOUNT_INSTR ];
-    unsigned char opcode2[ MAX_ICOUNT_INSTR ];
+    ICOUNT_INSTR icount[MAX_ICOUNT_INSTR];
 
-    char buf[ 128 ];
+    char buf[ 192 ];
+    char instText[ 7 ];
+
+    regs = sysblk.regs[sysblk.pcpu];
 
     UNREFERENCED( cmdline );
 
@@ -1894,7 +2744,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             || CMD( argv[1], ZERO,  1 )
         )
         {
-            memset( IMAP_FIRST, 0, IMAP_SIZE );
+            memset( &sysblk.imaps, 0, sizeof sysblk.imaps );
             // "%-14s set to %s"
             WRMSG( HHC02204, "I", argv[0], "ZERO" );
             return 0;
@@ -1924,12 +2774,6 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
         return -1;
     }
 
-    /* Display sorted counts... */
-
-    memset( opcode1, 0, sizeof( opcode1 ));
-    memset( opcode2, 0, sizeof( opcode2 ));
-    memset( count,   0, sizeof( count   ));
-
     /* (collect...) */
 
     i = 0;
@@ -1937,99 +2781,84 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
 
     for (i1 = 0; i1 < 256; i1++)
     {
-      switch (i1)
-      {
-#define ICOUNT_COLLECT_CASE( _case, _map, _nn )             \
-                                                            \
-        case _case:                                         \
-        {                                                   \
-          for (i2=0; i2 < _nn; i2++)                        \
-          {                                                 \
-            if (sysblk._map[ i2 ])                          \
-            {                                               \
-              opcode1[ i ] = i1;                            \
-              opcode2[ i ] = i2;                            \
-              count[ i++ ] = sysblk._map[ i2 ];             \
-              total += sysblk._map[ i2 ];                   \
-                                                            \
-              if (i == (MAX_ICOUNT_INSTR - 1))              \
-              {                                             \
-                /* "Too many instructions! (Sorry!)" */     \
-                WRMSG( HHC02252, "E" );                     \
-                return -1;                                  \
-              }                                             \
-            }                                               \
-          }                                                 \
-          break;                                            \
-        }
-
-        ICOUNT_COLLECT_CASE( 0x01, imap01, 256 )
-        ICOUNT_COLLECT_CASE( 0xA4, imapa4, 256 )
-        ICOUNT_COLLECT_CASE( 0xA5, imapa5, 256 )
-        ICOUNT_COLLECT_CASE( 0xA6, imapa6, 256 )
-        ICOUNT_COLLECT_CASE( 0xA7, imapa7,  16 )
-        ICOUNT_COLLECT_CASE( 0xB2, imapb2, 256 )
-        ICOUNT_COLLECT_CASE( 0xB3, imapb3, 256 )
-        ICOUNT_COLLECT_CASE( 0xB9, imapb9, 256 )
-        ICOUNT_COLLECT_CASE( 0xC0, imapc0,  16 )
-        ICOUNT_COLLECT_CASE( 0xC2, imapc2,  16 )
-        ICOUNT_COLLECT_CASE( 0xC4, imapc4,  16 )
-        ICOUNT_COLLECT_CASE( 0xC6, imapc6,  16 )
-        ICOUNT_COLLECT_CASE( 0xC8, imapc8,  16 )
-        ICOUNT_COLLECT_CASE( 0xE3, imape3, 256 )
-        ICOUNT_COLLECT_CASE( 0xE4, imape4, 256 )
-        ICOUNT_COLLECT_CASE( 0xE5, imape5, 256 )
-        ICOUNT_COLLECT_CASE( 0xEB, imapeb, 256 )
-        ICOUNT_COLLECT_CASE( 0xEC, imapec, 256 )
-        ICOUNT_COLLECT_CASE( 0xED, imaped, 256 )
-
-        default:
+        switch (i1)
         {
-          if (sysblk.imapxx[ i1 ])
-          {
-            opcode1[ i ] = i1;
-            opcode2[ i ] = 0;
-            count[ i++ ] = sysblk.imapxx[ i1 ];
-            total += sysblk.imapxx[ i1 ];
-
-            if (i == (MAX_ICOUNT_INSTR - 1))
-            {
-                // "Too many instructions! (Sorry!)"
-                WRMSG( HHC02252, "E" );
-                return -1;
+#define ICOUNT_COLLECT_CASE( _case, _map, _mapT, _nn, _pos )        \
+                                                                    \
+            case _case:                                             \
+            {                                                       \
+                for (i2=0; i2 < _nn; i2++)                          \
+                {                                                   \
+                    if (sysblk.imaps._map[ i2 ])                    \
+                    {                                               \
+                        icount[i].opcode1 = i1;                     \
+                        icount[i].opcode2 = i2;                     \
+                        icount[i].opc2pos = _pos;                   \
+                        icount[i].time = sysblk.imaps._mapT[ i2 ];  \
+                        icount[i++].count = sysblk.imaps._map[ i2 ];\
+                        total += sysblk.imaps._map[ i2 ];           \
+                                                                    \
+                        if (i == (MAX_ICOUNT_INSTR - 1))            \
+                        {                                           \
+                            /* "Too many instructions! (Sorry!)" */ \
+                            WRMSG( HHC02252, "E" );                 \
+                            return -1;                              \
+                        }                                           \
+                    }                                               \
+                }                                                   \
+                break;                                              \
             }
-          }
-          break;
+
+            ICOUNT_COLLECT_CASE( 0x01, imap01, imap01T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xA4, imapa4, imapa4T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xA5, imapa5, imapa5T,  16, 1 )
+            ICOUNT_COLLECT_CASE( 0xA6, imapa6, imapa6T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xA7, imapa7, imapa7T,  16, 1 )
+            ICOUNT_COLLECT_CASE( 0xB2, imapb2, imapb2T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xB3, imapb3, imapb3T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xB9, imapb9, imapb9T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xC0, imapc0, imapc0T,  16, 1 )
+            ICOUNT_COLLECT_CASE( 0xC2, imapc2, imapc2T,  16, 1 )
+            ICOUNT_COLLECT_CASE( 0xC4, imapc4, imapc4T,  16, 1 )
+            ICOUNT_COLLECT_CASE( 0xC6, imapc6, imapc6T,  16, 1 )
+            ICOUNT_COLLECT_CASE( 0xC8, imapc8, imapc8T,  16, 1 )
+            ICOUNT_COLLECT_CASE( 0xE3, imape3, imape3T, 256, 5 )
+            ICOUNT_COLLECT_CASE( 0xE4, imape4, imape4T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xE5, imape5, imape5T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xE7, imape7, imape7T, 256, 5 )
+            ICOUNT_COLLECT_CASE( 0xEB, imapeb, imapebT, 256, 5 )
+            ICOUNT_COLLECT_CASE( 0xEC, imapec, imapecT, 256, 5 )
+            ICOUNT_COLLECT_CASE( 0xED, imaped, imapedT, 256, 5 )
+
+            default:
+            {
+
+                if (sysblk.imaps.imapxx[ i1 ])
+                {
+                    icount[i].opcode1 = i1;
+                    icount[i].opcode2 = 0;
+                    icount[i].opc2pos = 0;
+                    icount[i].time = sysblk.imaps.imapxxT[ i1 ];
+                    icount[i++].count = sysblk.imaps.imapxx[i1];
+
+                    total += sysblk.imaps.imapxx[ i1 ];
+
+                    if (i == (MAX_ICOUNT_INSTR - 1))
+                    {
+                        // "Too many instructions! (Sorry!)"
+                        WRMSG( HHC02252, "E" );
+                        return -1;
+                    }
+                }
+                break;
+            }
         }
-      }
+        /* end switch() */
     }
+    /* end for() */
 
     /* (sort...) */
-
-    for (i1=0; i1 < i; i1++)
-    {
-      /* (find highest) */
-
-      for (i2 = i1, i3 = i1; i2 < i; i2++)
-      {
-        if (count[ i2 ] > count[ i3 ])
-          i3 = i2;
-      }
-
-      /* (exchange) */
-
-      opcode1[ (MAX_ICOUNT_INSTR - 1) ] = opcode1[ i1 ];
-      opcode2[ (MAX_ICOUNT_INSTR - 1) ] = opcode2[ i1 ];
-      count  [ (MAX_ICOUNT_INSTR - 1) ] = count  [ i1 ];
-
-      opcode1[ i1 ] = opcode1[ i3 ];
-      opcode2[ i1 ] = opcode2[ i3 ];
-      count  [ i1 ] = count  [ i3 ];
-
-      opcode1[ i3 ] = opcode1[ (MAX_ICOUNT_INSTR - 1) ];
-      opcode2[ i3 ] = opcode2[ (MAX_ICOUNT_INSTR - 1) ];
-      count  [ i3 ] = count  [ (MAX_ICOUNT_INSTR - 1) ];
-    }
+    qsort(icount, i, sizeof(ICOUNT_INSTR), icount_cmd_sort);
 
 #define  ICOUNT_WIDTH  "12"     /* Print field width */
 
@@ -2038,59 +2867,65 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
     // "%s"
     WRMSG( HHC02292, "I", "Sorted icount display:" );
 
-    for (i1=0; i1 < i; i1++)
+    for (i1 = 0; i1 < i; i1++)
     {
-      switch (opcode1[ i1 ])
-      {
-        case 0x01:
-        case 0xA4:
-        case 0xA5:
-        case 0xA6:
-        case 0xA7:
-        case 0xB2:
-        case 0xB3:
-        case 0xB9:
-        case 0xC0:
-        case 0xC2:
-        case 0xC4:
-        case 0xC6:
-        case 0xC8:
-        case 0xE3:
-        case 0xE4:
-        case 0xE5:
-        case 0xEB:
-        case 0xEC:
-        case 0xED:
+        memset(fakeinst, 0, sizeof(fakeinst));
+        int bufl = 0;
+
+        switch (icount[i1].opcode1)
         {
-          MSGBUF
-          (
-            buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64 " (%2d%%)",
-            opcode1[ i1 ], opcode2[ i1 ],
-            count[ i1 ],
-            (int) (count[ i1 ] * 100 / total)
-          );
-          // "%s"
-          WRMSG( HHC02292, "I", buf );
-          break;
+            case 0x01:
+            case 0xA4:
+            case 0xA5:
+            case 0xA6:
+            case 0xA7:
+            case 0xB2:
+            case 0xB3:
+            case 0xB9:
+            case 0xC0:
+            case 0xC2:
+            case 0xC4:
+            case 0xC6:
+            case 0xC8:
+            case 0xE3:
+            case 0xE4:
+            case 0xE5:
+            case 0xE7:
+            case 0xEB:
+            case 0xEC:
+            case 0xED:
+            {
+                MSGBUF( instText, "'%2.2X%2.2X'", icount[i1].opcode1, icount[i1].opcode2 );
+                fakeinst[icount[i1].opc2pos] = icount[i1].opcode2;
+                break;
+            }
+            default:
+            {
+                MSGBUF( instText, "'%2.2X'  ", icount[i1].opcode1 );
+                break;
+            }
         }
-        default:
-        {
-          MSGBUF
-          (
-            buf, "Inst '%2.2X'   count %" ICOUNT_WIDTH PRIu64 " (%2d%%)",
-            opcode1[ i1 ], count[ i1 ],
-            (int) (count[ i1 ] * 100 / total)
-          );
-          // "%s"
-          WRMSG( HHC02292, "I", buf );
-          break;
-        }
-      }
+
+        bufl = MSGBUF
+        (
+            buf,
+            "Inst %s count %" ICOUNT_WIDTH PRIu64 " (%2d%%) time %" ICOUNT_WIDTH PRIu64 " (%10f) ",
+            instText,
+            icount[i1].count,
+            (int)(icount[i1].count * 100 / total),
+            icount[i1].time,
+            ((float)icount[i1].time / icount[i1].count)
+        );
+
+        fakeinst[0] = icount[i1].opcode1;
+        bufl += PRINT_INST(regs->arch_mode, fakeinst, buf + bufl);
+        WRMSG( HHC02292, "I", buf );
     }
+    /* end for() */
 
     return 0;
 }
-#endif /* defined( OPTION_INSTRUCTION_COUNTING ) */
+#endif /* defined( OPTION_INSTR_COUNT_AND_TIME ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2130,7 +2965,8 @@ void setCpuIdregs
     S32    arg_model,
     S16    arg_version,
     S32    arg_serial,
-    S32    arg_MCEL
+    S32    arg_MCEL,
+    bool   force
 )
 {
     U16  model;
@@ -2139,7 +2975,7 @@ void setCpuIdregs
     U16  MCEL;
 
     /* Return if CPU out-of-range */
-    if (regs->cpuad >= MAX_CPU_ENGINES)
+    if (regs->cpuad >= MAX_CPU_ENGS)
         return;
 
     /* Gather needed values */
@@ -2149,7 +2985,7 @@ void setCpuIdregs
     MCEL    = arg_MCEL    >= 0 ? (U32) arg_MCEL                : sysblk.cpuid;
 
     /* Version is always zero in z/Architecture mode */
-    if (regs->arch_mode == ARCH_900_IDX)
+    if (!force && regs->arch_mode == ARCH_900_IDX)
         version = 0;
 
     /* Register new CPU ID settings */
@@ -2214,13 +3050,14 @@ void setCpuId
     S32                 arg_model,
     S16                 arg_version,
     S32                 arg_serial,
-    S32                 arg_MCEL
+    S32                 arg_MCEL,
+    bool                force
 )
 {
     REGS*  regs;
 
     /* Return if CPU out-of-range */
-    if (cpu >= MAX_CPU_ENGINES)
+    if (cpu >= MAX_CPU_ENGS)
         return;
 
     /* Return if CPU undefined */
@@ -2230,7 +3067,7 @@ void setCpuId
     regs = sysblk.regs[ cpu ];
 
     /* Set new CPU ID */
-    setCpuIdregs( regs, arg_model, arg_version, arg_serial, arg_MCEL );
+    setCpuIdregs( regs, arg_model, arg_version, arg_serial, arg_MCEL, force );
 }
 
 
@@ -2257,7 +3094,7 @@ void setOperationMode()
 /*-------------------------------------------------------------------*/
 /* Set/update all CPU IDs                                            */
 /*-------------------------------------------------------------------*/
-BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S32 MCEL )
+BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S32 MCEL, bool force )
 {
     U64  mcel;
     int  cpu;
@@ -2284,8 +3121,8 @@ BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S
     sysblk.cpuid = createCpuId( sysblk.cpumodel, sysblk.cpuversion, sysblk.cpuserial, mcel );
 
     /* Set a tailored CPU ID for each and every defined CPU */
-    for (cpu=0; cpu < MAX_CPU_ENGINES; ++cpu )
-        setCpuId( cpu, model, version, serial, MCEL );
+    for (cpu=0; cpu < MAX_CPU_ENGS; ++cpu )
+        setCpuId( cpu, model, version, serial, MCEL, force );
 
    return TRUE;
 }
@@ -2294,13 +3131,13 @@ BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S
 /*-------------------------------------------------------------------*/
 /* setAllCpuIds_lock  -  Obtain INTLOCK and then set all CPU IDs     */
 /*-------------------------------------------------------------------*/
-BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, const S32 MCEL )
+BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, const S32 MCEL, bool force )
 {
     BYTE success;
     OBTAIN_INTLOCK( NULL );
     {
         /* Call unlocked version of setAllCpuIds */
-        success = setAllCpuIds( model, version, serial, MCEL );
+        success = setAllCpuIds( model, version, serial, MCEL, force );
     }
     RELEASE_INTLOCK( NULL );
     return success;
@@ -2312,7 +3149,7 @@ BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, co
 /*-------------------------------------------------------------------*/
 BYTE resetAllCpuIds()
 {
-    return setAllCpuIds( -1, -1, -1, -1 );
+    return setAllCpuIds( -1, -1, -1, -1, true );
 }
 
 

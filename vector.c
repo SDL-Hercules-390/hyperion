@@ -230,7 +230,7 @@ U64     d;
 
     ODD_CHECK(r1, regs);
 
-    /* n contrains the current save area address */
+    /* n contains the current save area address */
     n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */
@@ -266,7 +266,7 @@ U64     d;
             regs->GR_L(r1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            UPD_PSW_IA(regs, PSW_IA(regs, -4));
+            SET_PSW_IA_AND_MAYBE_IP(regs, PSW_IA_FROM_IP(regs, -4));
             return;
 #endif
         }
@@ -307,7 +307,7 @@ U64     d;
 
     ODD_CHECK(r1, regs);
 
-    /* n contrains the current save area address */
+    /* n contains the current save area address */
     n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */
@@ -338,7 +338,7 @@ U64     d;
             regs->GR_L(r1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            UPD_PSW_IA(regs, PSW_IA(regs, -4));
+            SET_PSW_IA_AND_MAYBE_IP(regs, PSW_IA_FROM_IP(regs, -4));
             return;
 #endif
         }
@@ -380,7 +380,7 @@ U64     d;
 
     ODD_CHECK(r1, regs);
 
-    /* n contrains the current save area address */
+    /* n contains the current save area address */
     n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */
@@ -411,7 +411,7 @@ U64     d;
             regs->GR_L(r1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            UPD_PSW_IA(regs, PSW_IA(regs, -4));
+            SET_PSW_IA_AND_MAYBE_IP(regs, PSW_IA_FROM_IP(regs, -4));
             return;
 #endif
         }
@@ -615,6 +615,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -632,6 +633,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -650,6 +652,7 @@ U32     n1, n2;
 U64     d;
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -699,6 +702,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -817,6 +821,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -836,6 +841,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -844,7 +850,7 @@ VADR    effective_addr2;                /* Effective address         */
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs, IC3, VACSV))
+    if(SIE_STATE_BIT_ON(regs, IC3, VACSV))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -860,6 +866,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -868,7 +875,7 @@ VADR    effective_addr2;                /* Effective address         */
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs, IC3, VACRS))
+    if(SIE_STATE_BIT_ON(regs, IC3, VACRS))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 

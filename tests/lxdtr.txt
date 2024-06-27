@@ -1,5 +1,5 @@
 * LXDTR test
-sysclear           
+sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
@@ -17,10 +17,10 @@ r 22A=B3DC0893     # LXDTR F9,F3,8     Load FPR9,11 from FPR3 SNAN
 r 22E=B3DA50D4     # AXTR F13,F4,F5    Multiply FPR4,6 by FPR5,7 giving FPR13,15
 r 232=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 240=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 244=80000000     # FPCREG            Floating point control register        
+r 244=80000000     # FPCREG            Floating point control register
 r 248=7833123456789ABC                 # INFP Positive infinity
 r 250=F813ABCDEF123456                 # INFN Negative infinity
-r 258=7D55ABCDEF123456                 # QNAN Quiet NaN   
+r 258=7D55ABCDEF123456                 # QNAN Quiet NaN
 r 260=7F55ABCDEF123456                 # SNAN Signaling NaN
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 s+

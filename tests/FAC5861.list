@@ -1,0 +1,643 @@
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *                        FAC5861.ASM
+                                                     4 ***********************************************************************
+                                                     5 *
+                                                     6 *  This program performs a quick test of the instructions defined by
+                                                     7 *  the new Miscellaneous-Instruction-Extensions Facilities 2 and 3.
+                                                     8 *  It is NOT a comprehensive test. It does not, for example, check
+                                                     9 *  for proper detection of overflow and/or boundary conditions, etc.
+                                                    10 *  It simply verifies a simple execution of each instruction produces
+                                                    11 *  the expected results. Nothing more.
+                                                    12 *
+                                                    13 ***********************************************************************
+
+
+                              00000000  000010F8    15 FAC5861  START 0
+00000000                      00000000              16          USING FAC5861,R0
+
+
+
+
+00000000                      00000000  000001A0    18          ORG   FAC5861+X'1A0'       z Restart New PSW
+000001A0  00000001 80000000                         19          DC    X'0000000180000000',AD(BEGIN)
+
+
+
+
+000001B0                      000001B0  000001D0    21          ORG   FAC5861+X'1D0'       z Program New PSW
+000001D0  00000001 80000000                         22 ZPGMNEW  DC    X'0000000180000000',AD(PGMCHK)
+
+
+
+
+                                                    24 ***********************************************************************
+                                                    25 *                  Start of actual program...
+                                                    26 ***********************************************************************
+
+000001E0                      000001E0  00000200    28          ORG   FAC5861+X'200'     So no base registers needed
+
+00000200  4100 001F                     0000001F    30 BEGIN    LA    R0,(L'FACLIST/8)-1
+00000204  B2B0 0800                     00000800    31          STFLE FACLIST
+
+00000208  9120 0807                     00000807    33          TM    FACLIST+M2FACBYT,M2FACBIT
+0000020C  A784 037A                     00000900    34          JZ    M2FAIL
+
+00000210  9104 0807                     00000807    36          TM    FACLIST+M3FACBYT,M3FACBIT
+00000214  A784 037A                     00000908    37          JZ    M3FAIL
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    39 ***********************************************************************
+                                                    40 *            Miscellaneous-Instruction-Extensions Facility 2
+                                                    41 ***********************************************************************
+                                                    42 *
+                                                    43 **            Add Halfword
+                                                    44 *
+00000218  9201 093F                     0000093F    45          MVI   FAILPSW+16-1,X'01'   Test number...
+0000021C  E300 0950 0004                00000950    46          LG    R0,=XL8'0000000000000001'
+00000222  E300 0A5C 0038                00000A5C    47          AGH   R0,=H'123'
+00000228  A7D4 0194                     00000550    48          BRC   B'1101',FAILURE              not cc2 > 0, no oflow
+0000022C  E300 0958 0020                00000958    49          CG    R0,=XL8'000000000000007C'
+00000232  A774 018F                     00000550    50          JNE   FAILURE
+                                                    51 *
+00000236  E300 0960 0004                00000960    52          LG    R0,=XL8'FFFFFFFFFFFFFFFF'
+0000023C  E300 0A5E 0038                00000A5E    53          AGH   R0,=H'-123'
+00000242  A7B4 0187                     00000550    54          BRC   B'1011',FAILURE              not cc1 < 0, no oflow
+00000246  E300 0968 0020                00000968    55          CG    R0,=XL8'FFFFFFFFFFFFFF84'
+0000024C  A774 0182                     00000550    56          JNE   FAILURE
+                                                    57 *
+00000250  E300 0960 0004                00000960    58          LG    R0,=XL8'FFFFFFFFFFFFFFFF'
+00000256  E300 0A60 0038                00000A60    59          AGH   R0,=H'1'
+0000025C  A774 017A                     00000550    60          BRC   B'0111',FAILURE              not cc0 = 0, no oflow
+00000260  E300 0970 0020                00000970    61          CG    R0,=XL8'0000000000000000'
+00000266  A774 0175                     00000550    62          JNE   FAILURE
+
+
+                                                    64 *
+                                                    65 **          Subtract Halfword
+                                                    66 *
+0000026A  9202 093F                     0000093F    67          MVI   FAILPSW+16-1,X'02'   Test number...
+0000026E  E300 0950 0004                00000950    68          LG    R0,=XL8'0000000000000001'
+00000274  E300 0A5C 0039                00000A5C    69          SGH   R0,=H'123'
+0000027A  A7B4 016B                     00000550    70          BRC   B'1011',FAILURE              not cc1 < 0, no oflow
+0000027E  E300 0978 0020                00000978    71          CG    R0,=XL8'FFFFFFFFFFFFFF86'
+00000284  A774 0166                     00000550    72          JNE   FAILURE
+                                                    73 *
+00000288  E300 0960 0004                00000960    74          LG    R0,=XL8'FFFFFFFFFFFFFFFF'
+0000028E  E300 0A5E 0039                00000A5E    75          SGH   R0,=H'-123'
+00000294  A7D4 015E                     00000550    76          BRC   B'1101',FAILURE              not cc2 > 0, no oflow
+00000298  E300 0980 0020                00000980    77          CG    R0,=XL8'000000000000007A'
+0000029E  A774 0159                     00000550    78          JNE   FAILURE
+                                                    79 *
+000002A2  E300 0960 0004                00000960    80          LG    R0,=XL8'FFFFFFFFFFFFFFFF'
+000002A8  E300 0A62 0039                00000A62    81          SGH   R0,=H'-1'
+000002AE  A774 0151                     00000550    82          BRC   B'0111',FAILURE              not cc0 = 0, no oflow
+000002B2  E300 0970 0020                00000970    83          CG    R0,=XL8'0000000000000000'
+000002B8  A774 014C                     00000550    84          JNE   FAILURE
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    86 *
+                                                    87 **          Multiply Halfword
+                                                    88 *
+000002BC  9203 093F                     0000093F    89          MVI   FAILPSW+16-1,X'03'   Test number...
+000002C0  E300 0960 0004                00000960    90          LG    R0,=XL8'FFFFFFFFFFFFFFFF'
+000002C6  E300 0A5C 003C                00000A5C    91          MGH   R0,=H'123'
+000002CC  E300 0988 0020                00000988    92          CG    R0,=XL8'FFFFFFFFFFFFFF85'
+000002D2  A774 013F                     00000550    93          JNE   FAILURE
+
+
+                                                    95 *
+                                                    96 **          Multiply
+                                                    97 *
+000002D6  9204 093F                     0000093F    98          MVI   FAILPSW+16-1,X'04'   Test number...
+000002DA  E320 0990 0004                00000990    99          LG    R2,=XL8'000000000000007B'
+000002E0  B9EC 2002                                100          MGRK  R0,R2,R2
+000002E4  B902 0000                                101          LTGR  R0,R0
+000002E8  A774 0134                     00000550   102          JNZ   FAILURE
+000002EC  E310 0998 0020                00000998   103          CG    R1,=XL8'0000000000003B19'
+000002F2  A774 012F                     00000550   104          JNE   FAILURE
+                                                   105 *
+000002F6  9205 093F                     0000093F   106          MVI   FAILPSW+16-1,X'05'   Test number...
+000002FA  E310 0990 0004                00000990   107          LG    R1,=XL8'000000000000007B'
+00000300  E300 0990 0084                00000990   108          MG    R0,=XL8'000000000000007B'
+00000306  B902 0000                                109          LTGR  R0,R0
+0000030A  A774 0123                     00000550   110          JNZ   FAILURE
+0000030E  E310 0998 0020                00000998   111          CG    R1,=XL8'0000000000003B19'
+00000314  A774 011E                     00000550   112          JNE   FAILURE
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   114 *
+                                                   115 **          Multiply Single
+                                                   116 *
+00000318  9206 093F                     0000093F   117          MVI   FAILPSW+16-1,X'06'   Test number...
+0000031C  5810 0A30                     00000A30   118          L     R1,=XL4'7FFFFFFF'
+00000320  5820 0A34                     00000A34   119          L     R2,=F'34800'
+00000324  B9FD 2001                                120          MSRKC R0,R1,R2
+00000328  A7E4 0114                     00000550   121          JNO   FAILURE
+0000032C  5900 0A38                     00000A38   122          C     R0,=XL4'FFFF7810'
+00000330  A774 0110                     00000550   123          JNE   FAILURE
+                                                   124 *
+00000334  9207 093F                     0000093F   125          MVI   FAILPSW+16-1,X'07'   Test number...
+00000338  5800 0A30                     00000A30   126          L     R0,=XL4'7FFFFFFF'
+0000033C  E300 0A34 0053                00000A34   127          MSC   R0,=F'34800'
+00000342  A7E4 0107                     00000550   128          JNO   FAILURE
+00000346  5900 0A38                     00000A38   129          C     R0,=XL4'FFFF7810'
+0000034A  A774 0103                     00000550   130          JNE   FAILURE
+                                                   131 *
+0000034E  9208 093F                     0000093F   132          MVI   FAILPSW+16-1,X'08'   Test number...
+00000352  E310 09A0 0004                000009A0   133          LG    R1,=XL8'000000007FFFFFFF'
+00000358  E320 09A8 0004                000009A8   134          LG    R2,=D'34800'
+0000035E  B9ED 2001                                135          MSGRKC R0,R1,R2
+00000362  A7D4 00F7                     00000550   136          JNP   FAILURE
+00000366  E300 09B0 0020                000009B0   137          CG    R0,=XL8'000043F7FFFF7810'
+0000036C  A774 00F2                     00000550   138          JNE   FAILURE
+                                                   139 *
+00000370  9209 093F                     0000093F   140          MVI   FAILPSW+16-1,X'09'   Test number...
+00000374  E300 09A0 0004                000009A0   141          LG    R0,=XL8'000000007FFFFFFF'
+0000037A  E300 09A8 0083                000009A8   142          MSGC  R0,=D'34800'
+00000380  A7D4 00E8                     00000550   143          JNP   FAILURE
+00000384  E300 09B0 0020                000009B0   144          CG    R0,=XL8'000043F7FFFF7810'
+0000038A  A774 00E3                     00000550   145          JNE   FAILURE
+
+
+                                                   147 *
+                                                   148 **          Branch Indirect On Condition
+                                                   149 *
+0000038E  9210 093F                     0000093F   150          MVI   FAILPSW+16-1,X'10'   Test number...
+00000392  E380 0910 0047                00000910   151          BIC   B'1000',ADDRAAAA
+00000398  A7F4 00DC                     00000550   152 BBBB     J     FAILURE
+0000039C  E370 0918 0047                00000918   153 AAAA     BIC   B'0111',ADDRBBBB
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   155 ***********************************************************************
+                                                   156 *            Miscellaneous-Instruction-Extensions Facility 3
+                                                   157 ***********************************************************************
+                                                   158 *
+                                                   159 **          And With Complement
+                                                   160 *
+000003A2  9211 093F                     0000093F   161          MVI   FAILPSW+16-1,X'11'   Test number...
+000003A6  5810 0A3C                     00000A3C   162          L     R1,=XL4'81818181'
+000003AA  5820 0A40                     00000A40   163          L     R2,=XL4'01010101'
+000003AE  B9F5 2001                                164          NCRK  R0,R1,R2
+000003B2  5900 0A44                     00000A44   165          C     R0,=XL4'80808080'
+000003B6  A774 00CD                     00000550   166          JNE   FAILURE
+                                                   167 *
+000003BA  9212 093F                     0000093F   168          MVI   FAILPSW+16-1,X'12'   Test number...
+000003BE  E310 09B8 0004                000009B8   169          LG    R1,=XL8'8181818181818181'
+000003C4  E320 09C0 0004                000009C0   170          LG    R2,=XL8'0101010101010101'
+000003CA  B9E5 2001                                171          NCGRK R0,R1,R2
+000003CE  E300 09C8 0020                000009C8   172          CG    R0,=XL8'8080808080808080'
+000003D4  A774 00BE                     00000550   173          JNE   FAILURE
+
+
+                                                   175 *
+                                                   176 **          Move Right To Left
+                                                   177 *
+000003D8  9213 093F                     0000093F   178          MVI   FAILPSW+16-1,X'13'   Test number...
+000003DC  4100 00FF                     000000FF   179          LA    R0,256-1
+000003E0  E50A 0CC1 0FF9      00000CC1  00000FF9   180          MVCRL DST,SRC
+000003E6  D5FF 0CC1 0FF9      00000CC1  00000FF9   181          CLC   DST,SRC
+000003EC  4770 0550                     00000550   182          BNE   FAILURE
+
+
+                                                   184 *
+                                                   185 **          Nand
+                                                   186 *
+000003F0  9214 093F                     0000093F   187          MVI   FAILPSW+16-1,X'14'   Test number...
+000003F4  5810 0A3C                     00000A3C   188          L     R1,=XL4'81818181'
+000003F8  5820 0A48                     00000A48   189          L     R2,=XL4'F0F0F0F0'
+000003FC  B974 2001                                190          NNRK  R0,R1,R2
+00000400  5900 0A4C                     00000A4C   191          C     R0,=XL4'7F7F7F7F'
+00000404  A774 00A6                     00000550   192          JNE   FAILURE
+                                                   193 *
+00000408  9215 093F                     0000093F   194          MVI   FAILPSW+16-1,X'15'   Test number...
+0000040C  E310 09B8 0004                000009B8   195          LG    R1,=XL8'8181818181818181'
+00000412  E320 09D0 0004                000009D0   196          LG    R2,=XL8'F0F0F0F0F0F0F0F0'
+00000418  B964 2001                                197          NNGRK R0,R1,R2
+0000041C  E300 09D8 0020                000009D8   198          CG    R0,=XL8'7F7F7F7F7F7F7F7F'
+00000422  A774 0097                     00000550   199          JNE   FAILURE
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   201 *
+                                                   202 **          Nor
+                                                   203 *
+00000426  9216 093F                     0000093F   204          MVI   FAILPSW+16-1,X'16'   Test number...
+0000042A  5810 0A44                     00000A44   205          L     R1,=XL4'80808080'
+0000042E  5820 0A50                     00000A50   206          L     R2,=XL4'08080808'
+00000432  B976 2001                                207          NORK  R0,R1,R2
+00000436  5900 0A54                     00000A54   208          C     R0,=XL4'77777777'
+0000043A  A774 008B                     00000550   209          JNE   FAILURE
+                                                   210 *
+0000043E  9217 093F                     0000093F   211          MVI   FAILPSW+16-1,X'17'   Test number...
+00000442  E310 09C8 0004                000009C8   212          LG    R1,=XL8'8080808080808080'
+00000448  E320 09E0 0004                000009E0   213          LG    R2,=XL8'0808080808080808'
+0000044E  B966 2001                                214          NOGRK R0,R1,R2
+00000452  E300 09E8 0020                000009E8   215          CG    R0,=XL8'7777777777777777'
+00000458  A774 007C                     00000550   216          JNE   FAILURE
+
+
+                                                   218 *
+                                                   219 **          Not Exclusive Or
+                                                   220 *
+0000045C  9218 093F                     0000093F   221          MVI   FAILPSW+16-1,X'18'   Test number...
+00000460  5810 0A3C                     00000A3C   222          L     R1,=XL4'81818181'
+00000464  5820 0A40                     00000A40   223          L     R2,=XL4'01010101'
+00000468  B977 2001                                224          NXRK  R0,R1,R2
+0000046C  5900 0A4C                     00000A4C   225          C     R0,=XL4'7F7F7F7F'
+00000470  A774 0070                     00000550   226          JNE   FAILURE
+                                                   227 *
+00000474  9219 093F                     0000093F   228          MVI   FAILPSW+16-1,X'19'   Test number...
+00000478  E310 09B8 0004                000009B8   229          LG    R1,=XL8'8181818181818181'
+0000047E  E320 09C0 0004                000009C0   230          LG    R2,=XL8'0101010101010101'
+00000484  B967 2001                                231          NXGRK R0,R1,R2
+00000488  E300 09D8 0020                000009D8   232          CG    R0,=XL8'7F7F7F7F7F7F7F7F'
+0000048E  A774 0061                     00000550   233          JNE   FAILURE
+
+
+                                                   235 *
+                                                   236 **          Or With Complement
+                                                   237 *
+00000492  9220 093F                     0000093F   238          MVI   FAILPSW+16-1,X'20'   Test number...
+00000496  5810 0A44                     00000A44   239          L     R1,=XL4'80808080'
+0000049A  5820 0A58                     00000A58   240          L     R2,=XL4'FEFEFEFE'
+0000049E  B975 2001                                241          OCRK  R0,R1,R2
+000004A2  5900 0A3C                     00000A3C   242          C     R0,=XL4'81818181'
+000004A6  A774 0055                     00000550   243          JNE   FAILURE
+                                                   244 *
+000004AA  9221 093F                     0000093F   245          MVI   FAILPSW+16-1,X'21'   Test number...
+000004AE  E310 09C8 0004                000009C8   246          LG    R1,=XL8'8080808080808080'
+000004B4  E320 09F0 0004                000009F0   247          LG    R2,=XL8'FEFEFEFEFEFEFEFE'
+000004BA  B965 2001                                248          OCGRK R0,R1,R2
+000004BE  E300 09B8 0020                000009B8   249          CG    R0,=XL8'8181818181818181'
+000004C4  A774 0046                     00000550   250          JNE   FAILURE
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   252 *
+                                                   253 **          Select
+                                                   254 *
+000004C8  9222 093F                     0000093F   255          MVI   FAILPSW+16-1,X'22'   Test number...
+000004CC  E300 09F8 0004                000009F8   256          LG    R0,=XL8'1122334455667788'
+000004D2  E310 0A00 0004                00000A00   257          LG    R1,=XL8'AAAAAAAA11111111'
+000004D8  E320 0A08 0004                00000A08   258          LG    R2,=XL8'BBBBBBBB22222222'
+000004DE  B9F0 2801                                259          SELR  R0,R1,R2,B'1000'
+000004E2  E300 0A10 0020                00000A10   260          CG    R0,=XL8'1122334411111111'
+000004E8  4770 0550                     00000550   261          BNE   FAILURE
+                                                   262 *
+000004EC  9223 093F                     0000093F   263          MVI   FAILPSW+16-1,X'23'   Test number...
+000004F0  E300 09F8 0004                000009F8   264          LG    R0,=XL8'1122334455667788'
+000004F6  E310 0A00 0004                00000A00   265          LG    R1,=XL8'AAAAAAAA11111111'
+000004FC  E320 0A08 0004                00000A08   266          LG    R2,=XL8'BBBBBBBB22222222'
+00000502  B9E3 2801                                267          SELGR R0,R1,R2,B'1000'
+00000506  E300 0A00 0020                00000A00   268          CG    R0,=XL8'AAAAAAAA11111111'
+0000050C  4770 0550                     00000550   269          BNE   FAILURE
+
+
+                                                   271 *
+                                                   272 **          Select High
+                                                   273 *
+00000510  9224 093F                     0000093F   274          MVI   FAILPSW+16-1,X'24'   Test number...
+00000514  E300 09F8 0004                000009F8   275          LG    R0,=XL8'1122334455667788'
+0000051A  E310 0A00 0004                00000A00   276          LG    R1,=XL8'AAAAAAAA11111111'
+00000520  E320 0A08 0004                00000A08   277          LG    R2,=XL8'BBBBBBBB22222222'
+00000526  B9C0 2801                                278          SELFHR R0,R1,R2,B'1000'
+0000052A  E300 0A18 0020                00000A18   279          CG    R0,=XL8'AAAAAAAA55667788'
+00000530  4770 0550                     00000550   280          BNE   FAILURE
+
+
+                                                   282 *
+                                                   283 **          Population Count
+                                                   284 *
+00000534  9225 093F                     0000093F   285          MVI   FAILPSW+16-1,X'25'   Test number...
+00000538  E310 0A20 0004                00000A20   286          LG    R1,=XL8'0102040810204080'
+0000053E  B9E1 8001                                287          POPCNT R0,R1,B'1000'
+00000542  E300 0A28 0020                00000A28   288          CG    R0,=D'8'
+00000548  4770 0550                     00000550   289          BNE   FAILURE
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   291 ***********************************************************************
+                                                   292 *                         SUCCESS!
+                                                   293 ***********************************************************************
+
+0000054C  B2B2 0920                     00000920   295 SUCCESS  LPSWE    GOODPSW         Load test completed successfully PSW
+
+
+
+
+
+                                                   297 ***********************************************************************
+                                                   298 *                         FAILURE!
+                                                   299 ***********************************************************************
+
+00000550  B2B2 0930                     00000930   301 FAILURE  LPSWE    FAILPSW         Load the test FAILED somewhere!! PSW
+
+
+
+
+
+                                                   303 ***********************************************************************
+                                                   304 *                       PROGRAM CHECK!
+                                                   305 ***********************************************************************
+
+00000554  D200 094F 093F      0000094F  0000093F   307 PGMCHK   MVC    PROGPSW+16-1(1),FAILPSW+16-1  Copy test number to PSW
+0000055A  B2B2 0940                     00000940   308          LPSWE  PROGPSW                       UNEXPECTED PROGRAM CHECK
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   310 ***********************************************************************
+                                                   311 *                      WORKING STORAGE
+                                                   312 ***********************************************************************
+
+0000055E                      0000055E  00000FF9   314          ORG   FAC5861+X'FF9'   (odd alignment + page cross)
+
+00000FF9                                           316 SRC      DS    0CL256           MVCRL instruction source operand
+00000FF9  C1C1C1C1 C1C1C1C1                        317          DC    256C'A'
+
+000010F9                      000010F9  00000CC1   319          ORG   FAC5861+X'CC1'   (odd alignment)
+
+00000CC1                                           321 DST      DS    0CL256           MVCRL instruction destination operand
+00000CC1  C2C2C2C2 C2C2C2C2                        322          DC    256C'B'
+
+00000DC1                      00000DC1  00000800   324          ORG   FAC5861+X'800'   (primary working storage)
+
+00000800  00000000 00000000                        326 FACLIST  DC    XL256'00'        Facility List
+
+                              0000003A  00000001   328 M2FACNUM EQU   58       Miscellaneous-Instruction-Extensions Facility 2
+                              00000007  00000001   329 M2FACBYT EQU   X'07'
+                              00000020  00000001   330 M2FACBIT EQU   X'20'
+00000900  9258 093F                     0000093F   331 M2FAIL   MVI   FAILPSW+16-1,X'58'
+00000904  A7F4 FE26                     00000550   332          J     FAILURE
+
+                              0000003D  00000001   334 M3FACNUM EQU   61       Miscellaneous-Instruction-Extensions Facility 3
+                              00000007  00000001   335 M3FACBYT EQU   X'07'
+                              00000004  00000001   336 M3FACBIT EQU   X'04'
+00000908  9261 093F                     0000093F   337 M3FAIL   MVI   FAILPSW+16-1,X'61'
+0000090C  A7F4 FE22                     00000550   338          J     FAILURE
+
+00000910  00000000 0000039C                        340 ADDRAAAA DC    AD(AAAA)         BIC instruction branch address
+00000918  00000000 00000398                        341 ADDRBBBB DC    AD(BBBB)         BIC instruction branch address
+
+00000920                                           343          DC    0D'0'            (alignment)
+
+00000920  00020001 80000000                        345 GOODPSW  DC    XL8'0002000180000000'
+00000928  00000000 00000000                        346          DC    XL4'00000000',A(X'00000000')
+
+00000930  00020001 80000000                        348 FAILPSW   DC    XL8'0002000180000000'
+00000938  00000BAD 000000FF                        349          DC    XL4'00000BAD',A(X'000000FF') FF = code where we failed
+
+00000940  00020001 80000000                        351 PROGPSW  DC    XL8'0002000180000000'
+00000948  0000DEAD 000000FF                        352          DC    XL4'0000DEAD',A(X'000000FF') FF = code where we failed
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   354 ***********************************************************************
+                                                   355 *        Literals Pool
+                                                   356 ***********************************************************************
+
+00000950                                           358          LTORG ,
+00000950  00000000 00000001                        359                =XL8'0000000000000001'
+00000958  00000000 0000007C                        360                =XL8'000000000000007C'
+00000960  FFFFFFFF FFFFFFFF                        361                =XL8'FFFFFFFFFFFFFFFF'
+00000968  FFFFFFFF FFFFFF84                        362                =XL8'FFFFFFFFFFFFFF84'
+00000970  00000000 00000000                        363                =XL8'0000000000000000'
+00000978  FFFFFFFF FFFFFF86                        364                =XL8'FFFFFFFFFFFFFF86'
+00000980  00000000 0000007A                        365                =XL8'000000000000007A'
+00000988  FFFFFFFF FFFFFF85                        366                =XL8'FFFFFFFFFFFFFF85'
+00000990  00000000 0000007B                        367                =XL8'000000000000007B'
+00000998  00000000 00003B19                        368                =XL8'0000000000003B19'
+000009A0  00000000 7FFFFFFF                        369                =XL8'000000007FFFFFFF'
+000009A8  00000000 000087F0                        370                =D'34800'
+000009B0  000043F7 FFFF7810                        371                =XL8'000043F7FFFF7810'
+000009B8  81818181 81818181                        372                =XL8'8181818181818181'
+000009C0  01010101 01010101                        373                =XL8'0101010101010101'
+000009C8  80808080 80808080                        374                =XL8'8080808080808080'
+000009D0  F0F0F0F0 F0F0F0F0                        375                =XL8'F0F0F0F0F0F0F0F0'
+000009D8  7F7F7F7F 7F7F7F7F                        376                =XL8'7F7F7F7F7F7F7F7F'
+000009E0  08080808 08080808                        377                =XL8'0808080808080808'
+000009E8  77777777 77777777                        378                =XL8'7777777777777777'
+000009F0  FEFEFEFE FEFEFEFE                        379                =XL8'FEFEFEFEFEFEFEFE'
+000009F8  11223344 55667788                        380                =XL8'1122334455667788'
+00000A00  AAAAAAAA 11111111                        381                =XL8'AAAAAAAA11111111'
+00000A08  BBBBBBBB 22222222                        382                =XL8'BBBBBBBB22222222'
+00000A10  11223344 11111111                        383                =XL8'1122334411111111'
+00000A18  AAAAAAAA 55667788                        384                =XL8'AAAAAAAA55667788'
+00000A20  01020408 10204080                        385                =XL8'0102040810204080'
+00000A28  00000000 00000008                        386                =D'8'
+00000A30  7FFFFFFF                                 387                =XL4'7FFFFFFF'
+00000A34  000087F0                                 388                =F'34800'
+00000A38  FFFF7810                                 389                =XL4'FFFF7810'
+00000A3C  81818181                                 390                =XL4'81818181'
+00000A40  01010101                                 391                =XL4'01010101'
+00000A44  80808080                                 392                =XL4'80808080'
+00000A48  F0F0F0F0                                 393                =XL4'F0F0F0F0'
+00000A4C  7F7F7F7F                                 394                =XL4'7F7F7F7F'
+00000A50  08080808                                 395                =XL4'08080808'
+00000A54  77777777                                 396                =XL4'77777777'
+00000A58  FEFEFEFE                                 397                =XL4'FEFEFEFE'
+00000A5C  007B                                     398                =H'123'
+00000A5E  FF85                                     399                =H'-123'
+00000A60  0001                                     400                =H'1'
+00000A62  FFFF                                     401                =H'-1'
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   403 ***********************************************************************
+                                                   404 *        Register equates
+                                                   405 ***********************************************************************
+
+
+                              00000000  00000001   407 R0       EQU   0
+                              00000001  00000001   408 R1       EQU   1
+                              00000002  00000001   409 R2       EQU   2
+                              00000003  00000001   410 R3       EQU   3
+                              00000004  00000001   411 R4       EQU   4
+                              00000005  00000001   412 R5       EQU   5
+                              00000006  00000001   413 R6       EQU   6
+                              00000007  00000001   414 R7       EQU   7
+                              00000008  00000001   415 R8       EQU   8
+                              00000009  00000001   416 R9       EQU   9
+                              0000000A  00000001   417 R10      EQU   10
+                              0000000B  00000001   418 R11      EQU   11
+                              0000000C  00000001   419 R12      EQU   12
+                              0000000D  00000001   420 R13      EQU   13
+                              0000000E  00000001   421 R14      EQU   14
+                              0000000F  00000001   422 R15      EQU   15
+
+
+
+                                                   424          END
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page    12
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+AAAA                I    00039C       6   153  340
+ADDRAAAA            A    000910       8   340  151
+ADDRBBBB            A    000918       8   341  153
+BBBB                I    000398       4   152  341
+BEGIN               I    000200       4    30   19
+DST                 C    000CC1     256   321  180  181
+FAC5861             J    000000    4345    15   18   21   28  314  319  324   16
+FACLIST             X    000800     256   326   30   31   33   36
+FAILPSW             X    000930       8   348   45   67   89   98  106  117  125  132  140  150  161  168  178  187  194  204  211
+                                               221  228  238  245  255  263  274  285  301  307  331  337
+FAILURE             I    000550       4   301   48   50   54   56   60   62   70   72   76   78   82   84   93  102  104  110  112
+                                               121  123  128  130  136  138  143  145  152  166  173  182  192  199  209  216  226
+                                               233  243  250  261  269  280  289  332  338
+GOODPSW             X    000920       8   345  295
+IMAGE               1    000000    4345     0
+M2FACBIT            U    000020       1   330   33
+M2FACBYT            U    000007       1   329   33
+M2FACNUM            U    00003A       1   328
+M2FAIL              I    000900       4   331   34
+M3FACBIT            U    000004       1   336   36
+M3FACBYT            U    000007       1   335   36
+M3FACNUM            U    00003D       1   334
+M3FAIL              I    000908       4   337   37
+PGMCHK              I    000554       6   307   22
+PROGPSW             X    000940       8   351  307  308
+R0                  U    000000       1   407   16   30   46   47   49   52   53   55   58   59   61   68   69   71   74   75   77
+                                                80   81   83   90   91   92  100  101  108  109  120  122  126  127  129  135  137
+                                               141  142  144  164  165  171  172  179  190  191  197  198  207  208  214  215  224
+                                               225  231  232  241  242  248  249  256  259  260  264  267  268  275  278  279  287
+                                               288
+R1                  U    000001       1   408  103  107  111  118  120  133  135  162  164  169  171  188  190  195  197  205  207
+                                               212  214  222  224  229  231  239  241  246  248  257  259  265  267  276  278  286
+                                               287
+R10                 U    00000A       1   417
+R11                 U    00000B       1   418
+R12                 U    00000C       1   419
+R13                 U    00000D       1   420
+R14                 U    00000E       1   421
+R15                 U    00000F       1   422
+R2                  U    000002       1   409   99  100  119  120  134  135  163  164  170  171  189  190  196  197  206  207  213
+                                               214  223  224  230  231  240  241  247  248  258  259  266  267  277  278
+R3                  U    000003       1   410
+R4                  U    000004       1   411
+R5                  U    000005       1   412
+R6                  U    000006       1   413
+R7                  U    000007       1   414
+R8                  U    000008       1   415
+R9                  U    000009       1   416
+SRC                 C    000FF9     256   316  180  181
+SUCCESS             I    00054C       4   295
+ZPGMNEW             X    0001D0       8    22
+=D'34800'           D    0009A8       8   370  134  142
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page    13
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+=D'8'               D    000A28       8   386  288
+=F'34800'           F    000A34       4   388  119  127
+=H'-1'              H    000A62       2   401   81
+=H'-123'            H    000A5E       2   399   53   75
+=H'1'               H    000A60       2   400   59
+=H'123'             H    000A5C       2   398   47   69   91
+=XL4'01010101'      X    000A40       4   391  163  223
+=XL4'08080808'      X    000A50       4   395  206
+=XL4'77777777'      X    000A54       4   396  208
+=XL4'7F7F7F7F'      X    000A4C       4   394  191  225
+=XL4'7FFFFFFF'      X    000A30       4   387  118  126
+=XL4'80808080'      X    000A44       4   392  165  205  239
+=XL4'81818181'      X    000A3C       4   390  162  188  222  242
+=XL4'F0F0F0F0'      X    000A48       4   393  189
+=XL4'FEFEFEFE'      X    000A58       4   397  240
+=XL4'FFFF7810'      X    000A38       4   389  122  129
+=XL8'0000000000000000'
+                    X    000970       8   363   61   83
+=XL8'0000000000000001'
+                    X    000950       8   359   46   68
+=XL8'000000000000007A'
+                    X    000980       8   365   77
+=XL8'000000000000007B'
+                    X    000990       8   367   99  107  108
+=XL8'000000000000007C'
+                    X    000958       8   360   49
+=XL8'0000000000003B19'
+                    X    000998       8   368  103  111
+=XL8'000000007FFFFFFF'
+                    X    0009A0       8   369  133  141
+=XL8'000043F7FFFF7810'
+                    X    0009B0       8   371  137  144
+=XL8'0101010101010101'
+                    X    0009C0       8   373  170  230
+=XL8'0102040810204080'
+                    X    000A20       8   385  286
+=XL8'0808080808080808'
+                    X    0009E0       8   377  213
+=XL8'1122334411111111'
+                    X    000A10       8   383  260
+=XL8'1122334455667788'
+                    X    0009F8       8   380  256  264  275
+=XL8'7777777777777777'
+                    X    0009E8       8   378  215
+=XL8'7F7F7F7F7F7F7F7F'
+                    X    0009D8       8   376  198  232
+=XL8'8080808080808080'
+                    X    0009C8       8   374  172  212  246
+=XL8'8181818181818181'
+                    X    0009B8       8   372  169  195  229  249
+=XL8'AAAAAAAA11111111'
+                    X    000A00       8   381  257  265  268  276
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page    14
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+=XL8'AAAAAAAA55667788'
+                    X    000A18       8   384  279
+=XL8'BBBBBBBB22222222'
+                    X    000A08       8   382  258  266  277
+=XL8'F0F0F0F0F0F0F0F0'
+                    X    0009D0       8   375  196
+=XL8'FEFEFEFEFEFEFEFE'
+                    X    0009F0       8   379  247
+=XL8'FFFFFFFFFFFFFF84'
+                    X    000968       8   362   55
+=XL8'FFFFFFFFFFFFFF85'
+                    X    000988       8   366   92
+=XL8'FFFFFFFFFFFFFF86'
+                    X    000978       8   364   71
+=XL8'FFFFFFFFFFFFFFFF'
+                    X    000960       8   361   52   58   74   80   90
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page    15
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page    16
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    4345  0000-10F8  0000-10F8
+  Region            4345  0000-10F8  0000-10F8
+    CSECT  FAC5861  4345  0000-10F8  0000-10F8
+ASMA Ver. 0.2.1  FAC5861  --  Qucik Test of Misc. Instr. Ext. Facilities 2 & 3                      23 Jan 2021 13:37:59  Page    17
+
+   STMT                                          FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\FAC5861\FAC5861.asm
+
+
+** NO ERRORS FOUND **
+
+

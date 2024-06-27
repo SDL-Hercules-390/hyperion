@@ -1,4 +1,5 @@
 /* HTYPES.H     (C) Copyright Roger Bowler, 1999-2016                */
+/*              (C) and others 2017-2023                             */
 /*              Hercules Type Definitions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -203,6 +204,7 @@ typedef struct GUISTAT   GUISTAT;   // EXTERNALGUI Device Status Ctl
 
 typedef struct COMMADPT         COMMADPT;         // Comm Adapter
 typedef struct bind_struct      bind_struct;      // Socket Device Ctl
+typedef struct TCPNJE           TCPNJE;           // TCPNJE communications
 
 typedef struct TAPEMEDIA_HANDLER  TAPEMEDIA_HANDLER;  // (see tapedev.h)
 typedef struct TAPEAUTOLOADENTRY  TAPEAUTOLOADENTRY;  // (see tapedev.h)
@@ -281,6 +283,16 @@ typedef BCRYPT_ALG_HANDLE   HRANDHAND;  /* secure random api handle  */
 #else
 typedef int                 HRANDHAND;  /* secure random api handle  */
 #endif
+
+/*-------------------------------------------------------------------*/
+/*            Trace File helper function typedefs                    */
+/*-------------------------------------------------------------------*/
+
+typedef BYTE TFGSK( U64 );                  // get_storage_key
+typedef S64  TFGCT( REGS* );                // get_cpu_timer
+typedef void TFSIT( REGS* );                // store_int_timer
+typedef int  TFVTR( U64*, int*, U64, int,   // virt_to_real
+                    REGS*, int );
 
 /*-------------------------------------------------------------------*/
 

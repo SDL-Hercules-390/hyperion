@@ -154,6 +154,10 @@ static int dummydev_init_handler (DEVBLK *dev, int argc, char *argv[])
                 break;
         }
     }
+    if(errcnt>0)
+    {
+        return(-1);
+    }
     /*
      * Check parameters consistency
     */
@@ -242,6 +246,12 @@ static void dummydev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
     int num;
+
+    UNREFERENCED( flags );
+    UNREFERENCED( chained );
+    UNREFERENCED( prevcode );
+    UNREFERENCED( ccwseq );
+
     switch(code)
     {
         case 0x01:

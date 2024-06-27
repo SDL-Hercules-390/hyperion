@@ -10,11 +10,6 @@
 #
 # ***************************************************************************
 
-# -------------------------------------------------
-# NOTE! must set our prefered 'cdebug' value(s)
-#       AFTER calling win32.mak since it sets it.
-# -------------------------------------------------
-
 MAPFILE = /map:$(MAPDIR)\$(@B).map
 
 !IFDEF NODEBUG
@@ -22,7 +17,7 @@ MAPFILE = /map:$(MAPDIR)\$(@B).map
 # RETAIL: full optimization
 # -------------------------------
 
-# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
+# PROGRAMMING NOTE: we're purposely discarding the existing $(cdebug) setting
 # and replacing them with our own by leaving "$(cdebug)" out of the statement
 
 cdebug = /O2 /GL /D NDEBUG
@@ -39,7 +34,7 @@ ldebug = $(ldebug) /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
 # DEBUG: no optimizations at all
 # -------------------------------
 
-# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
+# PROGRAMMING NOTE: we're purposely discarding the existing $(cdebug) setting
 # and replacing them with our own by leaving "$(cdebug)" out of the statement
 
 cdebug  = -Zi -Od -D DEBUG -D _DEBUG -Gm

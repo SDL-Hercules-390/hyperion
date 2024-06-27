@@ -1,4 +1,5 @@
 /* DIAGMSSF.C   (C) Copyright Jan Jaeger, 1999-2012                  */
+/*              (C) and others 2013-2021                             */
 /*              ESA/390 Diagnose Functions                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -307,7 +308,7 @@ DEVBLK            *dev;                /* Device block pointer       */
     FETCH_HW(spccblen,spccb->length);
 
     /* Mark page referenced */
-    STORAGE_KEY(spccb_absolute_addr, regs) |= STORKEY_REF;
+    ARCH_DEP( or_storage_key )( spccb_absolute_addr, STORKEY_REF );
 
     /* Program check if end of SPCCB falls outside main storage */
     if ( sysblk.mainsize - spccblen < spccb_absolute_addr )
@@ -322,7 +323,7 @@ DEVBLK            *dev;                /* Device block pointer       */
         return 2;   /* Service Processor Busy */
     }
 
-    if( spccb_absolute_addr & 0x7ffff800 ) {
+    if( spccb_absolute_addr & 0x000007FF ) {
         spccb->resp[0] = SPCCB_REAS_NOT2KALIGN;
         spccb->resp[1] = SPCCB_RESP_NOT2KALIGN;
     } else
@@ -426,7 +427,7 @@ DEVBLK            *dev;                /* Device block pointer       */
         } /* end switch(mssf_command) */
 
     /* Mark page changed */
-    STORAGE_KEY(spccb_absolute_addr, regs) |= STORKEY_CHANGE;
+    ARCH_DEP( or_storage_key )( spccb_absolute_addr, STORKEY_CHANGE );
 
     /* Set service signal external interrupt pending */
     sysblk.servparm &= ~SERVSIG_ADDR;
@@ -445,32 +446,34 @@ DEVBLK            *dev;                /* Device block pointer       */
 /*-------------------------------------------------------------------*/
 /* Process LPAR DIAG 204 call                                        */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs)
+void ARCH_DEP( diag204_call )( int r1, int r2, REGS* regs )
 {
 DIAG204_HDR       *hdrinfo;            /* Header                     */
 DIAG204_PART      *partinfo;           /* Partition info             */
 DIAG204_PART_CPU  *cpuinfo;            /* CPU info                   */
-#if defined(FEATURE_EXTENDED_DIAG204)
-DIAG204_X_HDR      *hdrxinfo;          /* Header                     */
-DIAG204_X_PART     *partxinfo;         /* Partition info             */
-DIAG204_X_PART_CPU *cpuxinfo;          /* CPU info                   */
-#endif /*defined(FEATURE_EXTENDED_DIAG204)*/
-RADR              abs;                 /* abs addr of data area      */
-int               i;                   /* loop counter               */
-struct timespec   cputime;             /* to obtain thread time data */
-ETOD              ETOD;                /* Extended TOD clock         */
-U64               uCPU[MAX_CPU_ENGINES];    /* User CPU time    (us) */
-U64               tCPU[MAX_CPU_ENGINES];    /* Total CPU time   (us) */
 
-#if defined(FEATURE_PHYSICAL_DIAG204)
+#if defined( FEATURE_EXTENDED_DIAG204 )
+DIAG204_X_HDR       *hdrxinfo;         /* Header                     */
+DIAG204_X_PART      *partxinfo;        /* Partition info             */
+DIAG204_X_PART_CPU  *cpuxinfo;         /* CPU info                   */
+#endif
+
+RADR             abs;                  /* abs addr of data area      */
+int              i;                    /* loop counter               */
+struct timespec  cputime;              /* to obtain thread time data */
+ETOD             ETOD;                 /* Extended TOD clock         */
+U64              uCPU[ MAX_CPU_ENGS ]; /* User CPU time    (usecs)   */
+U64              tCPU[ MAX_CPU_ENGS ]; /* Total CPU time   (usecs)   */
+
+#if defined( FEATURE_PHYSICAL_DIAG204 )
 static BYTE       physical[8] =
               {0xD7,0xC8,0xE8,0xE2,0xC9,0xC3,0xC1,0xD3}; /* PHYSICAL */
-#endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
+#endif
 
-#if defined(FEATURE_EXTENDED_DIAG204)
-U64               oCPU[MAX_CPU_ENGINES];    /* Online CPU time  (us) */
-U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
-#endif /*defined(FEATURE_EXTENDED_DIAG204)*/
+#if defined( FEATURE_EXTENDED_DIAG204 )
+U64              oCPU[ MAX_CPU_ENGS ];  /* Online CPU time  (usecs)  */
+U64              wCPU[ MAX_CPU_ENGS ];  /* Wait CPU time    (usecs)  */
+#endif
 
     /* Test DIAG204 command word */
     switch (regs->GR_L(r2)) {
@@ -491,7 +494,7 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
         hdrinfo = (DIAG204_HDR*)(regs->mainstor + abs);
 
         /* Mark page referenced */
-        STORAGE_KEY(abs, regs) |= STORKEY_REF | STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( abs, STORKEY_REF | STORKEY_CHANGE );
 
         /* Retrieve the TOD clock value */
         etod_clock(regs, &ETOD, ETOD_extended);
@@ -506,8 +509,8 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
                 /* Get CPU times in microseconds */
                 if( clock_gettime(sysblk.cpuclockid[i], &cputime) == 0 )
                 {
-                    uCPU[i] = timespec2us(&cputime);
-                    tCPU[i] = uCPU[i] + etod2us(sysblk.regs[i]->waittime_accumulated
+                    uCPU[i] = timespec2usecs(&cputime);
+                    tCPU[i] = uCPU[i] + ETOD_high64_to_usecs(sysblk.regs[i]->waittime_accumulated
                                               + sysblk.regs[i]->waittime ) ;
                 }
             }
@@ -520,7 +523,7 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
         STORE_HW(hdrinfo->physcpu,sysblk.cpus);
         STORE_HW(hdrinfo->offown,sizeof(DIAG204_HDR));
-        STORE_DW(hdrinfo->diagstck,ETOD2tod(ETOD));
+        STORE_DW(hdrinfo->diagstck,ETOD2TOD(ETOD));
 
         /* hercules partition */
         partinfo = (DIAG204_PART*)(hdrinfo + 1);
@@ -608,12 +611,12 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
         {
             if (IS_CPU_ONLINE(i))
             {
-                oCPU[i] = etod2us(ETOD.high - regs->tod_epoch - sysblk.cpucreateTOD[i]);
+                oCPU[i] = ETOD_high64_to_usecs(ETOD.high - regs->tod_epoch - sysblk.cpucreateTOD[i]);
                 /* Get CPU times in microseconds */
                 if( clock_gettime(sysblk.cpuclockid[i], &cputime) == 0 )
                 {
-                    uCPU[i] = timespec2us(&cputime);
-                    tCPU[i] = uCPU[i] + etod2us(sysblk.regs[i]->waittime_accumulated
+                    uCPU[i] = timespec2usecs(&cputime);
+                    tCPU[i] = uCPU[i] + ETOD_high64_to_usecs(sysblk.regs[i]->waittime_accumulated
                                               + sysblk.regs[i]->waittime ) ;
                 }
                 wCPU[i] = tCPU[i] - uCPU[i];
@@ -753,7 +756,7 @@ unsigned int      len, ptyp, i;        /* work                       */
         ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
 
     /* Mark page referenced */
-    STORAGE_KEY( abs, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( abs, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* Point to DIAG 224 return area */
     p = regs->mainstor + abs;

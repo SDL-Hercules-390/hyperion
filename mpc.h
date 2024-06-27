@@ -1,6 +1,7 @@
 /* MPC.H        (C) Copyright Jan Jaeger,  2010-2012                 */
 /*              (C) Copyright Ian Shorter, 2011-2012                 */
 /*              (C) Copyright Harold Grovesteen, 2011-2012           */
+/*              (C) and others 2013-2021                             */
 /*              MPC (Multi-Path Channel) functions                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -530,17 +531,13 @@ typedef struct _MPC_IPA {
                       | IPA_MULTICASTING \
                       | IPA_QUERY_ARP_COUNTERS \
                       | IPA_SETADAPTERPARMS \
-                      | IPA_VLAN_PRIO \
                       | IPA_PASSTHRU \
-                      | IPA_FULL_VLAN \
                       )
 #define IPA_SUPP_IPv6 ( 0 \
                       | IPA_IPV6 \
                       | IPA_MULTICASTING \
                       | IPA_SETADAPTERPARMS \
-                      | IPA_VLAN_PRIO \
                       | IPA_PASSTHRU \
-                      | IPA_FULL_VLAN \
                       )
 #else
 #define IPA_SUPP_IPv4 ( 0 \
@@ -549,9 +546,7 @@ typedef struct _MPC_IPA {
                       | IPA_MULTICASTING \
                       | IPA_QUERY_ARP_COUNTERS \
                       | IPA_SETADAPTERPARMS \
-                      | IPA_VLAN_PRIO \
                       | IPA_PASSTHRU \
-                      | IPA_FULL_VLAN \
                       )
 #endif /*defined(ENABLE_IPV6)*/
 
@@ -755,8 +750,9 @@ struct MPC_IPA_SAS_HDR {
 #define IPA_SAS_CMD_STOP       0x0002
 #define IPA_SAS_CMD_CONFIGURE  0x0003
 #define IPA_SAS_CMD_ENABLE     0x0004
-#define IPA_SAS_CMD_0005       0x0005   /* I wonder what */
-#define IPA_SAS_CMD_0006       0x0006   /* these two do? */
+#define IPA_SAS_CMD_0005       0x0005   /* I wonder what this does?  */
+#define IPA_SAS_CMD_0006       0x0006   /* And this?                 */
+#define IPA_SAS_CMD_0008       0x0008   /* And this?                 */
 /*008*/ HWORD   rc;             /* Return code                       */
 /*00A*/ BYTE    norep;          /* Number of replies                 */
 /*00B*/ BYTE    seqno;          /* Sequence number                   */

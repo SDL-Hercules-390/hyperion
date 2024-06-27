@@ -1,5 +1,6 @@
 /* HTHREADS.H   (C) Copyright Roger Bowler, 1999-2013                */
 /*              (C) Copyright "Fish" (David B. Trout), 2013          */
+/*              (C) and others 2014-2021                             */
 /*              Hercules locking and threading                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -206,6 +207,40 @@ typedef pthread_rwlock_t        HRWLOCK;
 #endif /* !defined( OPTION_FTHREADS ) */
 
 /*-------------------------------------------------------------------*/
+/*                      Apple QOS support                            */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  macOS uses a different method of setting thread priorities than  */
+/*  other POSIX systems with pthreads. It defines a set of classes   */
+/*  of service, and uses that information to decide whether to       */
+/*  schedule each thread on an efficiency (slow but power-sipping)   */
+/*  CPU core or a performance (fast but power-hungry) core. The idea */
+/*  is that background tasks go on an efficiency core, while tasks   */
+/*  the user interacts with go on the performance cores.             */
+/*                                                                   */
+/*  This has some serious benefits for battery life in the normal    */
+/*  case, but it means that Hercules runs much more slowly than the  */
+/*  user expects. We define the Hercules console and HTTP server as  */
+/*  being used for user interaction, and the remainder as being used */
+/*  for user-initiated tasks, which will tell macOS that they can    */
+/*  be scheduled on performance cores whenever available. This makes */
+/*  a dramatic difference in Hercules performance, at the cost of    */
+/*  shorter battery life in a laptop environment.                    */
+/*                                                                   */
+/*  We only do this when building for Apple Silicon, as no macOS     */
+/*  system on Intel has efficiency cores.                            */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+#if defined( BUILD_APPLE_M1 )
+  #define SET_THREAD_PRIORITY( PRI, QOS ) \
+    { rc = pthread_set_qos_class_self_np( (QOS), (PRI) - sysblk.minprio ); }
+#else
+  #define SET_THREAD_PRIORITY( PRI, QOS ) \
+    { rc = set_thread_priority( (PRI) ); }
+#endif
+
+/*-------------------------------------------------------------------*/
 /*       Hercules threading macros, consts and typedefs              */
 /*-------------------------------------------------------------------*/
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
@@ -256,6 +291,9 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define LOGGER_THREAD_NAME      "logger_thread"
 #define SCRIPT_THREAD_NAME      "script_thread"
 #define TIMER_THREAD_NAME       "timer_thread"
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+#define RUBATO_THREAD_NAME      "rubato_thread"
+#endif
 #define SCSISTAT_THREAD_NAME    "scsi_status"
 #define SCSIMOUNT_THREAD_NAME   "scsi_mount"
 #define CCKD_RA_THREAD_NAME     "cckd_ra"
@@ -267,6 +305,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define HTTP_SRVR_THREAD_NAME   "http_server"
 #define HTTP_REQ_THREAD_NAME    "http_request"
 #define WATCHDOG_THREAD_NAME    "watchdog_thread"
+#define HERCLIN_KB_THREAD       "keyboard thread"
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */

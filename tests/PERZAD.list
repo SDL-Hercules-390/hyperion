@@ -1,0 +1,456 @@
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *                          PERZAD.ASM
+                                                     4 ***********************************************************************
+                                                     5 *
+                                                     6 *  This program performs a quick test of PER Zero-Address Detection.
+                                                     7 *
+                                                     8 *  It is NOT an exhaustive test. It only tests a few instructions
+                                                     9 *  to verify the PER Zero-Address Detection event either does, or
+                                                    10 *  does not occur, for only a few of the more popular instructions.
+                                                    11 *
+                                                    12 *  Refer to pages 4-38 and 4-39 ("Zero-Address Detection") of the
+                                                    13 *  SA22-7832-12 "z/Architecture Principles of Operation" manual for
+                                                    14 *  more information about the PER Zero-Address Detection Facility.
+                                                    15 *
+                                                    16 ***********************************************************************
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    18 ***********************************************************************
+                                                    19 *                           Low Core
+                                                    20 ***********************************************************************
+
+
+
+                              00000000  00000955    22 PERZAD   START 0
+00000000                      00000000              23          USING PERZAD,R0
+
+
+
+
+
+00000000                      00000000  0000008C    25          ORG   PERZAD+X'8C'         Program interrupt code
+0000008C  00000000                                  26 PGMCODE  DC    F'0'                 Program interrupt code
+                              00000080  00000001    27 PGM_PER_EVENT  EQU  X'80'           PER Event program interrupt code
+                                                    28
+
+
+
+00000090                      00000090  00000096    30          ORG   PERZAD+X'96'         PER interrupt fields
+00000096  0000                                      31 PERCODE  DC    XL2'00'              PER interrupt code
+00000098  00000000 00000000                         32 PERADDR  DC    AD(0)                PER interrupt address
+
+
+
+                              00000150  00000000    34 PGMOPSW  EQU   PERZAD+X'150'        z Program Old PSW
+
+
+
+000000A0                      000000A0  000001A0    36          ORG   PERZAD+X'1A0'        z Restart New PSW
+000001A0  00000001 80000000                         37          DC    X'0000000180000000'
+000001A8  00000000 00000200                         38          DC    AD(GO)
+
+
+
+000001B0                      000001B0  000001D0    40          ORG   PERZAD+X'1D0'        z Program New PSW
+000001D0  00000001 80000000                         41          DC    X'0000000180000000'
+000001D8  00000000 000002CC                         42          DC    AD(PGMRUPT)
+
+
+
+
+
+
+000001E0                      000001E0  00000200    44          ORG   PERZAD+X'200'        Start of actual program...
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    46 ***********************************************************************
+                                                    47 *                       Begin tests...
+                                                    48 ***********************************************************************
+
+00000200  EB9B 0928 002F                00000928    50 GO       LCTLG R9,R11,PERCTL      Init CR9-CR11 PER Control Registers
+00000206  8000 0940                     00000940    51          SSM   ENPER              Enable Program Event Recording
+
+0000020A  D201 0000 0948      00000000  00000948    53          MVC   0(2,R0),=XL2'0700'     (just go on to next instruction)
+00000210  D203 0002 0944      00000002  00000944    54          MVC   2(4,R0),=XL4'47F00000' (to be fixed by tests before use)
+                                                    55
+                              00000216  00000001    56 BEGRANGE EQU   *                  Begin of PER Range
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    58 ***********************************************************************
+                                                    59 *    Instructions that should NEVER cause a PER ZAD event...
+                                                    60 ***********************************************************************
+
+00000216  EB0F 0888 0004                00000888    62          LMG   R0,R15,ZEROREGS    Initialize all registers to zero
+
+0000021C  4110 0000                     00000000    64          LA    R1,0
+00000220  1811                                      65          LR    R1,R1
+00000222  1E11                                      66          ALR   R1,R1
+00000224  1F11                                      67          SLR   R1,R1
+00000226  1511                                      68          CLR   R1,R1
+00000228  1211                                      69          LTR   R1,R1
+
+0000022A  4120 0002                     00000002    71          LA    R2,2               R2 --> branch instruction in low core
+0000022E  D201 2002 094A      00000002  0000094A    72          MVC   2(2,R2),=S(B)
+00000234  47F0 1000                     00000000    73          B     0(,R1)
+                              00000238  00000001    74 B        EQU   *
+
+00000238  D201 2002 094C      00000002  0000094C    76          MVC   2(2,R2),=S(BR)
+0000023E  07F1                                      77          BR    R1
+                              00000240  00000001    78 BR       EQU   *
+
+00000240  D201 2002 094E      00000002  0000094E    80          MVC   2(2,R2),=S(BCTR)
+00000246  4130 0003                     00000003    81          LA    R3,3
+0000024A  0631                                      82          BCTR  R3,R1
+                              0000024C  00000001    83 BCTR     EQU   *
+
+0000024C  D201 2002 0950      00000002  00000950    85          MVC   2(2,R2),=S(EX)
+00000252  1830                                      86          LR    R3,R0
+00000254  4430 1000                     00000000    87          EX    R3,0(,R1)
+                              00000258  00000001    88 EX       EQU   *
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    90 ***********************************************************************
+                                                    91 *    Instructions that should ALWAYS cause a PER ZAD event...
+                                                    92 ***********************************************************************
+
+00000258  EB0F 0888 0004                00000888    94          LMG   R0,R15,ZEROREGS    Reset all registers back to zero
+
+0000025E  5800 1000                     00000000    96 ZAD01    L     R0,0(,R1)
+
+00000262  5000 1000                     00000000    98 ZAD02    ST    R0,0(,R1)
+
+00000266  9180 1000                     00000000   100 ZAD03    TM    0(R1),X'80'
+
+0000026A  D200 1000 2000      00000000  00000000   102 ZAD04    MVC   0(1,R1),0(R2)
+
+00000270  D500 1000 2000      00000000  00000000   104 ZAD05    CLC   0(1,R1),0(R2)
+
+00000276  5500 1000                     00000000   106 ZAD06    CL    R0,0(,R1)
+
+0000027A  9500 1000                     00000000   108 ZAD07    CLI   0(R1),X'00'
+
+0000027E  BF0F 1000                     00000000   110 ZAD08    ICM   R0,15,0(R1)
+
+00000282  4300 1000                     00000000   112 ZAD09    IC    R0,0(,R1)
+
+00000286  980F 1000                     00000000   114 ZAD10    LM    R0,R15,0(R1)
+
+0000028A  4800 1000                     00000000   116 ZAD11    LH    R0,0(,R1)
+
+0000028E  9680 1000                     00000000   118 ZAD12    OI    0(R1),X'80'
+
+00000292  4130 0001                     00000001   120          LA    R3,1               Destination length must be non-zero
+00000296  4150 00FF                     000000FF   121          LA    R5,X'FF'           Pad char to make src len reg non-zero
+0000029A  8950 0018                     00000018   122          SLL   R5,24              Move into high-order byte position
+
+0000029E  0E24                                     124 ZAD13    MVCL  R2,R4
+
+000002A0  0F24                                     126 ZAD14    CLCL  R2,R4
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   128 ***********************************************************************
+                                                   129 *          Verify we've seen ALL expected PER ZAD events...
+                                                   130 ***********************************************************************
+
+                              000002A2  00000001   132 ENDRANGE EQU   *                        End of PER Range
+
+000002A2  4110 0800                     00000800   134          LA    R1,ZADOKTAB              R1 --> table
+000002A6  4120 000E                     0000000E   135          LA    R2,NUMZADS               R2 <== number of table entries
+
+000002AA  95FF 1001                     00000001   137 DONELOOP CLI   1(R1),X'FF'              Have we seen this event?
+000002AE  A774 0008                     000002BE   138          JNE   DONEFAIL                 No?! ** FAIL!! **
+
+000002B2  4110 1008                     00000008   140          LA    R1,L'ZADOKTAB(,R1)       Bump to next table entry
+000002B6  4620 02AA                     000002AA   141          BCT   R2,DONELOOP              Loooop... through all entries
+
+000002BA  A7F4 02E3                     00000880   143          J     SUCCESS                  Done! Successful Test!
+
+
+
+
+
+                                                   145 ***********************************************************************
+                                                   146 *           FAIL!  Missing PER Zero-Address Detection Event!
+                                                   147 ***********************************************************************
+
+000002BE  D201 0922 0952      00000922  00000952   149 DONEFAIL MVC   BADPSW+8+2(2),=XL2'0BAD' Indicate test failure
+000002C4  9203 0927                     00000927   150          MVI   BADPSW+16-1,BADNOZAD     Indicate failure code
+000002C8  A7F4 02DE                     00000884   151          J     FAILURE                  ** FAIL!! **
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   153 ***********************************************************************
+                                                   154 *                Program Interrupt Handler...
+                                                   155 ***********************************************************************
+
+000002CC  9180 008F                     0000008F   157 PGMRUPT  TM    PGMCODE+3,PGM_PER_EVENT  Expected interrupt?
+000002D0  A784 02D0                     00000870   158          JZ    ABORT                    No?! ** ABORT!! **
+
+000002D4  9504 0096                     00000096   160          CLI   PERCODE,ZADEVENT         Zero-Address Detection event?
+000002D8  4780 02EA                     000002EA   161          BE    ZADCHECK                 Yes, go check event address
+
+000002DC  D201 0922 0954      00000922  00000954   163          MVC   BADPSW+8+2(2),=XL2'DEAD' Indicate PGMRUPT failure
+000002E2  9201 0927                     00000927   164          MVI   BADPSW+16-1,BADPER       Indicate failure code
+000002E6  A7F4 02CF                     00000884   165          J     FAILURE                  ** FAIL!! **
+
+000002EA  EB0F 0328 0024                00000328   167 ZADCHECK STMG  R0,R15,PGMREGS           Save caller's registers
+000002F0  4110 0800                     00000800   168          LA    R1,ZADOKTAB              R1 --> table
+000002F4  4120 000E                     0000000E   169          LA    R2,NUMZADS               R2 <== number of table entries
+
+000002F8  5830 1004                     00000004   171 ZADLOOP  L     R3,4(,R1)                R3 <== Expected Event Address
+000002FC  5530 009C                     0000009C   172          CL    R3,PERADDR+4             Expected Event Address?
+00000300  A774 0009                     00000312   173          JNE   ZADNEXT                  No, try next entry
+
+00000304  92FF 1001                     00000001   175          MVI   1(R1),X'FF'              Yes, flag as having been seen
+00000308  EB0F 0328 0004                00000328   176          LMG   R0,R15,PGMREGS           Restore caller's registers
+0000030E  B2B2 0150                     00000150   177          LPSWE PGMOPSW                  Return to caller...
+
+00000312  4110 1008                     00000008   179 ZADNEXT  LA    R1,L'ZADOKTAB(,R1)       Bump to next table entry
+00000316  4620 02F8                     000002F8   180          BCT   R2,ZADLOOP               Loooop... to try next entry
+
+0000031A  D201 0922 0952      00000922  00000952   182          MVC   BADPSW+8+2(2),=XL2'0BAD' Indicate test failure
+00000320  9202 0927                     00000927   183          MVI   BADPSW+16-1,BADZAD       Indicate failure code
+00000324  A7F4 02B0                     00000884   184          J     FAILURE                  ** FAIL!! **
+
+
+00000328  00000000 00000000                        186 PGMREGS  DC    16D'0'                   Saved GR registers 0 - 15
+
+
+
+
+                                                   188 ***********************************************************************
+                                                   189 *                   Test FAILURE codes...
+                                                   190 ***********************************************************************
+
+                              00000001  00000001   192 BADPER   EQU   X'01'    Unexpected PER Event Code
+                              00000002  00000001   193 BADZAD   EQU   X'02'    Unexpected PER ZAD Event
+                              00000003  00000001   194 BADNOZAD EQU   X'03'    Missing PER ZAD Event
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   196 ***********************************************************************
+                                                   197 *          Table of expected PER Zero-Address Detection events
+                                                   198 ***********************************************************************
+
+000003A8                      000003A8  00000800   200          ORG   PERZAD+X'800'                 Fixed table location
+00000800                                           201 ZADOKTAB DC    0D'0'                         PER ZAD Addresses Table
+
+                                                   203 *                 (nn)                        = test# ("ZADnn" label#)
+                                                   204 *                  ||  X'FF'                  = event was detected
+                                                   205 *                  ||    ||          A(xxxx)  = PER event address
+                                                   206 *                  ||    ||            ||||
+                                                   207 *                  ||    ||            ||||
+                                                   208 *                  VV    VV            VVVV
+
+00000800  01000000 0000025E                        210          DC    AL1(01),X'00',XL2'00',A(ZAD01)
+00000808  02000000 00000262                        211          DC    AL1(02),X'00',XL2'00',A(ZAD02)
+00000810  03000000 00000266                        212          DC    AL1(03),X'00',XL2'00',A(ZAD03)
+00000818  04000000 0000026A                        213          DC    AL1(04),X'00',XL2'00',A(ZAD04)
+00000820  05000000 00000270                        214          DC    AL1(05),X'00',XL2'00',A(ZAD05)
+00000828  06000000 00000276                        215          DC    AL1(06),X'00',XL2'00',A(ZAD06)
+00000830  07000000 0000027A                        216          DC    AL1(07),X'00',XL2'00',A(ZAD07)
+00000838  08000000 0000027E                        217          DC    AL1(08),X'00',XL2'00',A(ZAD08)
+00000840  09000000 00000282                        218          DC    AL1(09),X'00',XL2'00',A(ZAD09)
+00000848  0A000000 00000286                        219          DC    AL1(10),X'00',XL2'00',A(ZAD10)
+00000850  0B000000 0000028A                        220          DC    AL1(11),X'00',XL2'00',A(ZAD11)
+00000858  0C000000 0000028E                        221          DC    AL1(12),X'00',XL2'00',A(ZAD12)
+00000860  0D000000 0000029E                        222          DC    AL1(13),X'00',XL2'00',A(ZAD13)
+00000868  0E000000 000002A0                        223          DC    AL1(14),X'00',XL2'00',A(ZAD14)
+                              0000000E  00000001   224 NUMZADS  EQU   (*-ZADOKTAB)/8           Number of table entries
+
+
+
+
+                                                   226 ***********************************************************************
+                                                   227 *          ABORT test run due to unexpected program interrupt
+                                                   228 ***********************************************************************
+
+00000870  D201 0922 0954      00000922  00000954   230 ABORT    MVC   BADPSW+8+2(2),=XL2'DEAD'
+00000876  D203 0924 008C      00000924  0000008C   231          MVC   BADPSW+16-L'PGMCODE(L'PGMCODE),PGMCODE
+0000087C  A7F4 0004                     00000884   232          J     FAILURE
+
+
+
+
+                                                   234 ***********************************************************************
+                                                   235 *          Successful completion / Abnormal termination
+                                                   236 ***********************************************************************
+
+00000880  B2B2 0908                     00000908   238 SUCCESS  LPSWE    GOODPSW         Load test completed successfully PSW
+00000884  B2B2 0918                     00000918   239 FAILURE  LPSWE    BADPSW          Load the test FAILED somewhere!! PSW
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   241 ***********************************************************************
+                                                   242 *                      WORKING STORAGE
+                                                   243 ***********************************************************************
+
+00000888  00000000 00000000                        245 ZEROREGS DC    16D'0'                   ZEROED GR registers 0 - 15
+
+00000908  00020001 80000000                        247 GOODPSW  DC    XL8'0002000180000000'
+00000910  00000000 00000000                        248          DC    XL4'00000000',A(X'00000000')
+
+00000918  00020001 80000000                        250 BADPSW   DC    XL8'0002000180000000'
+00000920  0000DEAD 000000FF                        251          DC    XL4'0000DEAD',A(X'000000FF')  (FF = Reason for Failure)
+
+                              04000000  00000001   253 CR9_ZEROADDR   EQU  X'04000000'         Zero-address Detection
+                              00000004  00000001   254 ZADEVENT EQU   X'04'                    Zero-address Detection event
+
+00000928  00000000 04000000                        256 PERCTL   DC    AD(CR9_ZEROADDR)         PER events
+00000930  00000000 00000216                        257          DC    AD(BEGRANGE)             CR10 = Range begining address
+00000938  00000000 000002A2                        258          DC    AD(ENDRANGE)             CR11 = Range ending   address
+
+00000940  40                                       260 ENPER    DC    B'01000000'              Enable PER bit in PSW
+
+00000944                                           262          LTORG ,                        Literals Pool
+00000944  47F00000                                 263                =XL4'47F00000'
+00000948  0700                                     264                =XL2'0700'
+0000094A  0238                                     265                =S(B)
+0000094C  0240                                     266                =S(BR)
+0000094E  024C                                     267                =S(BCTR)
+00000950  0258                                     268                =S(EX)
+00000952  0BAD                                     269                =XL2'0BAD'
+00000954  DEAD                                     270                =XL2'DEAD'
+
+                              00000000  00000001   272 R0       EQU   0                        Register equates
+                              00000001  00000001   273 R1       EQU   1
+                              00000002  00000001   274 R2       EQU   2
+                              00000003  00000001   275 R3       EQU   3
+                              00000004  00000001   276 R4       EQU   4
+                              00000005  00000001   277 R5       EQU   5
+                              00000006  00000001   278 R6       EQU   6
+                              00000007  00000001   279 R7       EQU   7
+                              00000008  00000001   280 R8       EQU   8
+                              00000009  00000001   281 R9       EQU   9
+                              0000000A  00000001   282 R10      EQU   10
+                              0000000B  00000001   283 R11      EQU   11
+                              0000000C  00000001   284 R12      EQU   12
+                              0000000D  00000001   285 R13      EQU   13
+                              0000000E  00000001   286 R14      EQU   14
+                              0000000F  00000001   287 R15      EQU   15
+
+                                                   289          END
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page    10
+
+     SYMBOL        TYPE   VALUE    LENGTH   DEFN  REFERENCES
+
+ABORT               I    0000870         6   230  158
+B                   U    0000238         1    74   72
+BADNOZAD            U    0000003         1   194  150
+BADPER              U    0000001         1   192  164
+BADPSW              X    0000918         8   250  149  150  163  164  182  183  230  231  239
+BADZAD              U    0000002         1   193  183
+BCTR                U    000024C         1    83   80
+BEGRANGE            U    0000216         1    56  257
+BR                  U    0000240         1    78   76
+CR9_ZEROADDR        U    4000000         1   253  256
+DONEFAIL            I    00002BE         6   149  138
+DONELOOP            I    00002AA         4   137  141
+ENDRANGE            U    00002A2         1   132  258
+ENPER               B    0000940         1   260   51
+EX                  U    0000258         1    88   85
+FAILURE             I    0000884         4   239  151  165  184  232
+GO                  I    0000200         6    50   38
+GOODPSW             X    0000908         8   247  238
+IMAGE               1    0000000      2390     0
+NUMZADS             U    000000E         1   224  135  169
+PERADDR             A    0000098         8    32  172
+PERCODE             X    0000096         2    31  160
+PERCTL              A    0000928         8   256   50
+PERZAD              J    0000000      2390    22   25   30   34   36   40   44  200   23
+PGMCODE             F    000008C         4    26  157  231
+PGMOPSW             U    0000150         0    34  177
+PGMREGS             D    0000328         8   186  167  176
+PGMRUPT             I    00002CC         4   157   42
+PGM_PER_EVENT       U    0000080         1    27  157
+R0                  U    0000000         1   272   23   53   54   62   86   94   96   98  106  110  112  114  116  167  176
+R1                  U    0000001         1   273   64   65   66   67   68   69   73   77   82   87   96   98  100  102  104  106
+                                                  108  110  112  114  116  118  134  137  140  168  171  175  179
+R10                 U    000000A         1   282
+R11                 U    000000B         1   283   50
+R12                 U    000000C         1   284
+R13                 U    000000D         1   285
+R14                 U    000000E         1   286
+R15                 U    000000F         1   287   62   94  114  167  176
+R2                  U    0000002         1   274   71   72   76   80   85  102  104  124  126  135  141  169  180
+R3                  U    0000003         1   275   81   82   86   87  120  171  172
+R4                  U    0000004         1   276  124  126
+R5                  U    0000005         1   277  121  122
+R6                  U    0000006         1   278
+R7                  U    0000007         1   279
+R8                  U    0000008         1   280
+R9                  U    0000009         1   281   50
+SUCCESS             I    0000880         4   238  143
+ZAD01               I    000025E         4    96  210
+ZAD02               I    0000262         4    98  211
+ZAD03               I    0000266         4   100  212
+ZAD04               I    000026A         6   102  213
+ZAD05               I    0000270         6   104  214
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page    11
+
+     SYMBOL        TYPE   VALUE    LENGTH   DEFN  REFERENCES
+
+ZAD06               I    0000276         4   106  215
+ZAD07               I    000027A         4   108  216
+ZAD08               I    000027E         4   110  217
+ZAD09               I    0000282         4   112  218
+ZAD10               I    0000286         4   114  219
+ZAD11               I    000028A         4   116  220
+ZAD12               I    000028E         4   118  221
+ZAD13               I    000029E         2   124  222
+ZAD14               I    00002A0         2   126  223
+ZADCHECK            I    00002EA         6   167  161
+ZADEVENT            U    0000004         1   254  160
+ZADLOOP             I    00002F8         4   171  180
+ZADNEXT             I    0000312         4   179  173
+ZADOKTAB            D    0000800         8   201  224  134  140  168  179
+ZEROREGS            D    0000888         8   245   62   94
+=S(B)               S    000094A         2   265   72
+=S(BCTR)            S    000094E         2   267   80
+=S(BR)              S    000094C         2   266   76
+=S(EX)              S    0000950         2   268   85
+=XL2'0700'          X    0000948         2   264   53
+=XL2'0BAD'          X    0000952         2   269  149  182
+=XL2'DEAD'          X    0000954         2   270  163  230
+=XL4'47F00000'      X    0000944         4   263   54
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page    12
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page    13
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   2390  000-955  000-955
+  Region           2390  000-955  000-955
+    CSECT  PERZAD  2390  000-955  000-955
+ASMA Ver. 0.2.1               PERZAD  --  Quick PER Zero-Address Detection test                     18 Feb 2022 17:40:42  Page    14
+
+   STMT                                         FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\PERZAD\PERZAD.asm
+
+
+** NO ERRORS FOUND **
+
+

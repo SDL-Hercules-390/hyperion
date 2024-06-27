@@ -1,5 +1,6 @@
-/* cckdmap.c   (C) Copyright "Fish" (David B. Trout), 2019           */
-/*                 Compressed dasd file map                          */
+/* cckdmap.c    (C) Copyright "Fish" (David B. Trout), 2019-2022     */
+/*              (C) and others 2022-2023                             */
+/*               Compressed dasd file map                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -24,7 +25,7 @@
 /*   collector's cckd_gc_l2 (Reposition level 2 tables) function     */
 /*   will likely be invoked or not (which is known to be buggy).     */
 /*                                                                   */
-/*       Usage:    cckdmap.exe  [ -t | -v ]   infile                 */
+/*       Usage:    cckdmap.exe  [ -i | -t | -v ]   infile            */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
@@ -43,14 +44,25 @@
 /*-------------------------------------------------------------------*/
 char*       pgm              = NULL;    /* less any extension (.ext) */
 SPCTAB64*   spacetab         = NULL;    /* Spaces table              */
+U64         filesize         = 0;       /* File size (i.e. st_size)  */
+U64         total_unknown    = 0;       /* Total unknown space       */
+U64         L2_lower_pos     = 0;       /* L2 lower bound position   */
+int         hdrerr           = 0;       /* Non-zero = header errors  */
 int         numspace         = 0;       /* Number of spaces in table */
 S32         num_L1tab        = 0;       /* Number of L1 tab entries  */
+int         num_act_L2tab    = 0;       /* Number of active L2 tabs  */
 bool        cckd64           = false;   /* true = CCKD64 input       */
 bool        swaps_needed     = false;   /* true = endian swap needed */
 bool        fba              = false;   /* true = FBA, false = CKD   */
 bool        shadow           = false;   /* true = shadow, else base  */
 bool        data             = false;   /* Consolidated tracks report*/
 bool        verbose          = false;   /* Report detailed track info*/
+bool        overlap          = false;   /* Space overlaps next space */
+bool        new_format       = false;   /* "NEW" free chain format   */
+bool        info_only        = false;   /* Summary Information Only  */
+
+CCKD_FREEBLK    freeblk32    = {0};     /* Free block (file)         */
+CCKD64_FREEBLK  freeblk      = {0};     /* Free block (file)         */
 
 CCKD_DEVHDR     cdevhdr32    = {0};     /* CCKD   device header      */
 CCKD_L1ENT*     L1tab32      = NULL;    /* CCKD   Level 1 table      */
@@ -65,7 +77,7 @@ CCKD64_L2ENT    L2tab[256]   = {0};     /* CCKD64 Level 2 table      */
 /*-------------------------------------------------------------------*/
 static int syntax()
 {
-    // Usage: %s [ -t | -v ] infile
+    // Usage: %s [ -i | -t | -v ] infile
     //   infile   Input file
     // options:
     //   -t       report consolidated track data
@@ -145,21 +157,6 @@ static void L2tab_to_64()
 }
 
 /*-------------------------------------------------------------------*/
-/* Determine if running on a big endian system or not                */
-/*-------------------------------------------------------------------*/
-static bool are_big_endian()
-{
-    static union
-    {
-        uint32_t  ui32;
-        char      b[4];
-    }
-    test = {0x01020304};
-
-    return (0x01 == test.b[0]);
-}
-
-/*-------------------------------------------------------------------*/
 /* Determine if endian swaps are going to be needed or not           */
 /*-------------------------------------------------------------------*/
 static bool are_swaps_needed( const CCKD64_DEVHDR* cdevhdr64 )
@@ -184,11 +181,21 @@ static bool are_swaps_needed( const CCKD64_DEVHDR* cdevhdr64 )
 /*-------------------------------------------------------------------*/
 #define ADD_SPACE( spc ) \
             add_spc_to_table( &spc )
-
 static void add_spc_to_table( SPCTAB64* spc )
 {
     spacetab = realloc( spacetab, (numspace + 1) * sizeof( SPCTAB64 ));
     memcpy( &spacetab[ numspace++ ], spc, sizeof( SPCTAB64 ));
+}
+
+/*-------------------------------------------------------------------*/
+/* Remove old entry from spaces table (array)                        */
+/*-------------------------------------------------------------------*/
+#define DEL_SPACE( i ) \
+            del_spc_from_table( i )
+static void del_spc_from_table( int i )
+{
+    memmove( &spacetab[ i ], &spacetab[ i+1 ], (numspace - (i+1)) * sizeof( SPCTAB64 ));
+    numspace--;
 }
 
 /*-------------------------------------------------------------------*/
@@ -215,6 +222,31 @@ static int sort_spacetab_by_file_offset( const void* a, const void* b )
 }
 
 /*-------------------------------------------------------------------*/
+/* Return calculated Garbage Collector State value (0-4)             */
+/*-------------------------------------------------------------------*/
+static int dev_gc_state()
+{
+    U64  size, fsiz;
+    int  gc;
+
+    size = cdevhdr.cdh_size;
+    fsiz = cdevhdr.free_total;
+
+    if      (fsiz >= (size = size/2)) gc = 0; // critical   50% - 100%
+    else if (fsiz >= (size = size/2)) gc = 1; // severe     25% - 50%
+    else if (fsiz >= (size = size/2)) gc = 2; // moderate 12.5% - 25%
+    else if (fsiz >= (size = size/2)) gc = 3; // light     6.3% - 12.5%
+    else                              gc = 4; // none        0% - 6.3%
+
+    // Adjust the state based on the number of free spaces
+    if (cdevhdr.free_num >  800 && gc > 0) gc--;
+    if (cdevhdr.free_num > 1800 && gc > 0) gc--;
+    if (cdevhdr.free_num > 3000)           gc = 0;
+
+    return gc;
+}
+
+/*-------------------------------------------------------------------*/
 /*                          MAIN                                     */
 /*-------------------------------------------------------------------*/
 int main( int argc, char* argv[] )
@@ -227,10 +259,13 @@ char            str_used    [64];       /* Work area for fmt_S64     */
 char            str_total   [64];       /* Work area for fmt_S64     */
 char            str_largest [64];       /* Work area for fmt_S64     */
 char            track_range [32];       /* Work area for fmt_S64     */
+char            space_type  [32];       /* spc_typ_to_str work area  */
 
 off_t           curpos;                 /* Work: saved file position */
 
 CKDDEV*         ckdtab     = NULL;      /* Device table entry        */
+FBADEV*         fbatab     = NULL;      /* Device table entry        */
+
 CKD_DEVHDR      devhdr     = {0};       /* CKD device header         */
 SPCTAB64        spc        = {0};       /* Space table entry         */
 char            ser[12+1]  = {0};       /* Serial number             */
@@ -263,20 +298,31 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             break;
 
         if (0
+            || strcasecmp( argv[0], "-i"     ) == 0
+            || strcasecmp( argv[0], "--info" ) == 0
+        )
+        {
+            info_only = true;   /* Report only summary information */
+            data      = false;
+            verbose   = false;
+        }
+        else if (0
             || strcasecmp( argv[0], "-t"       ) == 0
             || strcasecmp( argv[0], "--tracks" ) == 0
         )
         {
-            data    = true;     /* Consolidated tracks report */
-            verbose = false;
+            info_only = false;
+            data      = true;   /* Consolidated tracks report */
+            verbose   = false;
         }
         else if (0
             || strcasecmp( argv[0], "-v"        ) == 0
             || strcasecmp( argv[0], "--verbose" ) == 0
         )
         {
-            verbose = true;     /* Report detailed track info */
-            data    = false;
+            info_only = false;
+            data      = false;
+            verbose   = true;   /* Report detailed track info */
         }
         else
         {
@@ -334,8 +380,15 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     spc.spc_val2 = -1;
     ADD_SPACE( spc );
 
+    /* Save file size for later */
+    filesize = curpos;
+
+    // "File size:      (%s bytes)"
+    fmt_S64( str_size, (S64) filesize );
+    WRMSG( HHC03007, "I", str_size );
+
     /* Read the device header */
-    size = (U32) sizeof( devhdr );
+    size = (U32) CKD_DEVHDR_SIZE;
     if ((curpos = lseek( fd, 0, SEEK_SET )) < 0)
     {
         // "%s error: %s"
@@ -357,11 +410,11 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         return -1;
     }
 
-    /* Remember whether input is CCKD or CCKD64 */
+    /* Remember whether input is CCKD/CFBA or CCKD64/CFBA64 */
     if (imgtyp & ANY64_CMP_OR_SF_TYP)
         cckd64 = true;
 
-    /* Remember whether input is FBA or CKD */
+    /* Remember whether input is CFBA/CFBA64 or CCKD/CCKD64 */
     if (imgtyp & FBA_CMP_OR_SF_TYP)
         fba = true;
 
@@ -372,16 +425,20 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     /* Add CKD device header to spaces table */
     spc.spc_typ  = SPCTAB_DEVHDR;
     spc.spc_off  = 0;
-    spc.spc_siz  = sizeof( CKD_DEVHDR );
-    spc.spc_len  = sizeof( CKD_DEVHDR );
+    spc.spc_siz  = CKD_DEVHDR_SIZE;
+    spc.spc_len  = spc.spc_siz;
     spc.spc_val  = -1;
     spc.spc_val2 = -1;
     ADD_SPACE( spc );
 
-    /* Read the compressed device header */
+    /* Read the compressed device header... */
+
+    /* Init the size of the device header */
+    size   = CCKD64_DEVHDR_SIZE;
+    size32 = CCKD_DEVHDR_SIZE;
+
     if (cckd64)
     {
-        size = (U32) sizeof( cdevhdr );
         if ((curpos = lseek( fd, CCKD64_DEVHDR_POS, SEEK_SET )) < 0)
         {
             // "%s error: %s"
@@ -395,9 +452,8 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             return -1;
         }
     }
-    else // (32-bit CCKD)
+    else
     {
-        size32 = (U32) sizeof( cdevhdr32 );
         if ((curpos = lseek( fd, CCKD_DEVHDR_POS, SEEK_SET )) < 0)
         {
             // "%s error: %s"
@@ -411,7 +467,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             return -1;
         }
 
-        /* Convert 32-bit CCKD compressed device header to 64-bit CCKD64 */
+        /* Convert 32-bit CCKD/CFBA header to 64-bit CCKD64/CFBA64 */
         cdevhdr_to_64();
     }
 
@@ -419,7 +475,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     spc.spc_typ  = SPCTAB_CDEVHDR;
     spc.spc_off  = curpos;
     spc.spc_siz  = cckd64 ? size : size32;
-    spc.spc_len  = cckd64 ? size : size32;
+    spc.spc_len  = spc.spc_siz;
     spc.spc_val  = -1;
     spc.spc_val2 = -1;
     ADD_SPACE( spc );
@@ -431,43 +487,243 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     SWAP_CCKD64_DEVHDR( &cdevhdr );
 
     /* Save some values for reporting */
-    devtype = 0x3300 + devhdr.dh_devtyp;
+    devtype = devhdr.dh_devtyp;
 
     FETCH_LE_FW( heads,   devhdr.dh_heads   );
     FETCH_LE_FW( trksize, devhdr.dh_trksize );
     FETCH_LE_FW( cyls,   cdevhdr.cdh_cyls   );
 
-    tracks = cyls * heads;
+    if (fba)
+        // (for fba, cyls is total sectors and tracks is blkgrps)
+        tracks = (cyls + CFBA_BLKS_PER_GRP - 1) / CFBA_BLKS_PER_GRP;
+    else
+        tracks = cyls * heads;
 
-    /* Locate the CKD dasd table entry */
-    if (!(ckdtab = dasd_lookup( DASD_CKDDEV, NULL, devtype, cyls )))
+    /* Locate the CKD/FBA dasd table entry */
+    if (fba)
     {
-        // "Device type %4.4X not found in dasd table"
-        FWRMSG( stderr, HHC03005, "E", devtype );
-        return -1;
+        if (!(fbatab = dasd_lookup( DASD_FBADEV, NULL, devtype, cyls )))
+        {
+            // "Device type '%2.2X' not found in dasd table"
+            FWRMSG( stderr, HHC03005, "E", devtype );
+            return -1;
+        }
+    }
+    else
+    {
+        if (!(ckdtab = dasd_lookup( DASD_CKDDEV, NULL, devtype, cyls )))
+        {
+            // "Device type '%2.2X' not found in dasd table"
+            FWRMSG( stderr, HHC03005, "E", devtype );
+            return -1;
+        }
+    }
+
+    /* Read the free space chain and add to table */
+    if (cdevhdr.free_num)
+    {
+        int free_num;
+
+        /* Save the number of free spaces */
+        free_num = (int) cdevhdr.free_num;
+
+        /* Init the size of a free space block */
+        size     = (U32) CCKD64_FREEBLK_SIZE;
+        size32   = (U32) CCKD_FREEBLK_SIZE;
+
+        /* First, determine which format the INITIAL free space CHAIN
+           was written in: old format or "new" format, determined by
+           whether or not the very first free space block contains the
+           literal "FREE_BLK" or not (see documentation).
+        */
+
+        curpos = cdevhdr.free_off;  // (position of first free block)
+
+        if (lseek( fd, curpos, SEEK_SET ) < 0)
+        {
+            // "%s error: %s"
+            FWRMSG( stderr, HHC03006, "E", "lseek()", strerror( errno ));
+            return -1;
+        }
+
+        if (cckd64)
+        {
+            if ((rc = read( fd, &freeblk, size )) < (int) size)
+            {
+                // "%s error: %s"
+                FWRMSG( stderr, HHC03006, "E", "read()", strerror( errno ));
+                return -1;
+            }
+
+            if (mem_eq( &freeblk, "FREE_BLK", 8))
+                new_format = true;
+        }
+        else // (32-bit CCKD)
+        {
+            if ((rc = read( fd, &freeblk32, size32 )) < (int) size32)
+            {
+                // "%s error: %s"
+                FWRMSG( stderr, HHC03006, "E", "read()", strerror( errno ));
+                return -1;
+            }
+
+            if (mem_eq( &freeblk32, "FREE_BLK", 8))
+                new_format = true;
+        }
+
+        /* Now we know HOW to read in the initial free space chain... */
+
+        if (new_format)
+        {
+            /* Read the entire free space chain in all at once */
+
+            int     chainbytes = free_num * (cckd64 ? size : size32);
+            void*   freechain  = malloc( chainbytes );
+
+            if (lseek( fd, curpos + (cckd64 ? size : size32), SEEK_SET ) < 0)
+            {
+                // "%s error: %s"
+                FWRMSG( stderr, HHC03006, "E", "lseek()", strerror( errno ));
+                return -1;
+            }
+
+            if ((rc = read( fd, freechain, chainbytes )) < (int) chainbytes)
+            {
+                // "%s error: %s"
+                FWRMSG( stderr, HHC03006, "E", "read()", strerror( errno ));
+                return -1;
+            }
+
+            /* Then add each of those free spaces to our table */
+            {
+                CCKD64_FREEBLK*  block     = freechain;
+                CCKD_FREEBLK*    block32   = freechain;
+
+                for (i=0; i < free_num; ++i)
+                {
+                    /* Convert 32-bit CCKD free block to 64-bit */
+                    if (cckd64)
+                    {
+                        memcpy( &freeblk, &block[i], size );
+                    }
+                    else // (32-bit CCKD)
+                    {
+                        memcpy( &freeblk32, &block32[i], size32 );
+
+                        freeblk.fb_offnxt = freeblk32.fb_offnxt;
+                        freeblk.fb_len    = freeblk32.fb_len;
+                    }
+
+                    /* Add free space entry */
+                    spc.spc_typ  = SPCTAB_FREE;
+                    spc.spc_off  = freeblk.fb_offset;
+                    spc.spc_siz  = freeblk.fb_len;
+                    spc.spc_len  = spc.spc_siz;
+                    spc.spc_val  = -1;
+                    spc.spc_val2 = -1;
+                    ADD_SPACE( spc );
+                }
+            }
+
+            /* Clean up after ourselves */
+            free( freechain );
+        }
+        else // (old format: chase each free space block individually)
+        {
+            /* Read each entry in the chain one by one */
+
+            freeblk.fb_offnxt = curpos; // (init pos of "next" block)
+
+            for (i=0; i < free_num; i++)
+            {
+                /* Offset of next free space block in the chain */
+                curpos = freeblk.fb_offnxt;
+
+                if (lseek( fd, curpos, SEEK_SET ) < 0)
+                {
+                    // "%s error: %s"
+                    FWRMSG( stderr, HHC03006, "E", "lseek()", strerror( errno ));
+                    return -1;
+                }
+
+                if (cckd64)
+                {
+                    if ((rc = read( fd, &freeblk, size )) < (int) size)
+                    {
+                        // "%s error: %s"
+                        FWRMSG( stderr, HHC03006, "E", "read()", strerror( errno ));
+                        return -1;
+                    }
+                }
+                else // (32-bit CCKD)
+                {
+                    if ((rc = read( fd, &freeblk32, size32 )) < (int) size32)
+                    {
+                        // "%s error: %s"
+                        FWRMSG( stderr, HHC03006, "E", "read()", strerror( errno ));
+                        return -1;
+                    }
+
+                    freeblk.fb_offnxt = freeblk32.fb_offnxt;
+                    freeblk.fb_len    = freeblk32.fb_len;
+                }
+
+                /* Add free space entry */
+                spc.spc_typ  = SPCTAB_FREE;
+                spc.spc_off  = curpos;
+                spc.spc_siz  = freeblk.fb_len;
+                spc.spc_len  = spc.spc_siz;
+                spc.spc_val  = -1;
+                spc.spc_val2 = -1;
+                ADD_SPACE( spc );
+            }
+        }
     }
 
     /* Report the dasd device header fields */
 
-    // dh_devid:      %s        (%s-bit C%s%s %s)
-    // dh_heads:      %u
-    // dh_trksize:    %u
-    // dh_devtyp:     0x%02.2X            (%s)
-    // dh_fileseq:    0x%02.2X
-    // dh_highcyl:    %u
-    // dh_serial:     %s
-
     memcpy( ser, devhdr.dh_serial, sizeof( devhdr.dh_serial ));
 
-    WRMSG( HHC03022, "I", dh_devid_str( imgtyp ),
-        cckd64 ? "64"          : "32",
-        fba    ? "FBA"         : "CKD",
-        cckd64 ? "64"          : "",
-        shadow ? "shadow file" : "base image",
-        heads, trksize,
-        devhdr.dh_devtyp, ckdtab->name, devhdr.dh_fileseq,
-        fetch_hw( devhdr.dh_highcyl ),
-        ser );
+    if (fba)
+    {
+        // dh_devid:      %s        (%s-bit C%s%s %s)
+        // dh_heads:      %u         (total sectors)
+        // dh_trksize:    %u             (sector size)
+        // dh_devtyp:     0x%02.2X            (%s)
+        // dh_fileseq:    0x%02.2X
+        // dh_highcyl:    %u
+        // dh_serial:     %s
+        WRMSG( HHC03048, "I", dh_devid_str( imgtyp ),
+            cckd64 ? "64"          : "32",
+                     "FBA",
+            cckd64 ? "64"          : "",
+            shadow ? "shadow file" : "base image",
+            heads, trksize,
+            devhdr.dh_devtyp, fbatab->name,
+            devhdr.dh_fileseq,
+            fetch_hw( devhdr.dh_highcyl ),
+            ser );
+    }
+    else
+    {
+        // dh_devid:      %s        (%s-bit C%s%s %s)
+        // dh_heads:      %u
+        // dh_trksize:    %u
+        // dh_devtyp:     0x%02.2X            (%s)
+        // dh_fileseq:    0x%02.2X
+        // dh_highcyl:    %u
+        // dh_serial:     %s
+        WRMSG( HHC03022, "I", dh_devid_str( imgtyp ),
+            cckd64 ? "64"          : "32",
+                     "CKD",
+            cckd64 ? "64"          : "",
+            shadow ? "shadow file" : "base image",
+            heads, trksize,
+            devhdr.dh_devtyp, ckdtab->name,
+            devhdr.dh_fileseq,
+            fetch_hw( devhdr.dh_highcyl ),
+            ser );
+    }
 
     /* Report the compressed device header fields */
 
@@ -477,55 +733,146 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     len_total   = fmt_S64( str_total,   (S64) cdevhdr.free_total   );
     len_largest = fmt_S64( str_largest, (S64) cdevhdr.free_largest );
 
-    // cdh_vrm:       %u.%u.%u
-    // cdh_opts:      0x%02.2X
-    // num_L1tab:     %"PRId32
-    // num_L2tab:     %"PRId32
-    // cdh_cyls:      %"PRIu32"            (%"PRIu32" tracks)
-    // cdh_size:      0x%10.10"PRIX64"    (%*s bytes)
-    // cdh_used:      0x%10.10"PRIX64"    (%*s bytes)
-    // free_off:      0x%10.10"PRIX64
-    // free_total:    0x%10.10"PRIX64"    (%*s bytes)
-    // free_largest:  0x%10.10"PRIX64"    (%*s bytes)
-    // free_num:      %"PRId64
-    // free_imbed:    %"PRIu64
-    // cdh_nullfmt:   %u               (%s)
-    // cmp_algo:      %u               (%s)
-    // cmp_parm:      %"PRId16"              %s(%s)
+    fmt_S64( track_range, (S64) tracks );
 
-    WRMSG( HHC03023, "I"
-        , (U32) cdevhdr.cdh_vrm[0], (U32) cdevhdr.cdh_vrm[1], (U32) cdevhdr.cdh_vrm[2]
-        , cdevhdr.cdh_opts
-        , cdevhdr.num_L1tab
-        , cdevhdr.num_L2tab
-        , cyls, tracks
-        , cdevhdr.cdh_size, (int) max( len_size, len_used ), str_size
-        , cdevhdr.cdh_used, (int) max( len_used, len_size ), str_used
-        , cdevhdr.free_off
-        , cdevhdr.free_total,   (int) max( len_total, len_largest ), str_total
-        , cdevhdr.free_largest, (int) max( len_total, len_largest ), str_largest
-        , cdevhdr.free_num
-        , cdevhdr.free_imbed
-        , (U32) cdevhdr.cdh_nullfmt, cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT0 ? "ha r0 EOF" :
-                                     cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT1 ? "ha r0" :
-                                     cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT2 ? "linux" : "???"
-        , (U32) cdevhdr.cmp_algo,   !cdevhdr.cmp_algo                        ? "none"  :
-                                    (cdevhdr.cmp_algo & CCKD_COMPRESS_ZLIB)  ? "zlib"  :
-                                    (cdevhdr.cmp_algo & CCKD_COMPRESS_BZIP2) ? "bzip2" : "INVALID"
-        , cdevhdr.cmp_parm
-        , cdevhdr.cmp_parm <  0 ? ""        : " "
-        , cdevhdr.cmp_parm <  0 ? "default" :
-          cdevhdr.cmp_parm == 0 ? "none"    :
-          cdevhdr.cmp_parm <= 3 ? "low"     :
-          cdevhdr.cmp_parm <= 6 ? "medium"  : "high"
-    );
+    if (fba)
+    {
+        // cdh_vrm:       %u.%u.%u
+        // cdh_opts:      0x%02.2X
+        // num_L1tab:     %"PRId32
+        // num_L2tab:     %"PRId32
+        // cdh_cyls:      %"PRIu32"           (%s blkgrps)
+        // cdh_size:      0x%10.10"PRIX64"    (%*s bytes)
+        // cdh_used:      0x%10.10"PRIX64"    (%*s bytes)
+        // free_off:      0x%10.10"PRIX64"    (%s format)
+        // free_total:    0x%10.10"PRIX64"    (%*s bytes)
+        // free_largest:  0x%10.10"PRIX64"    (%*s bytes)
+        // free_num:      %"PRId64
+        // free_imbed:    %"PRIu64
+        // cdh_nullfmt:   %u               (%s)
+        // cmp_algo:      %u               (%s)
+        // cmp_parm:      %"PRId16"              %s(%s)
+
+        WRMSG( HHC03024, "I"
+            , (U32) cdevhdr.cdh_vrm[0], (U32) cdevhdr.cdh_vrm[1], (U32) cdevhdr.cdh_vrm[2]
+            , cdevhdr.cdh_opts
+            , cdevhdr.num_L1tab
+            , cdevhdr.num_L2tab
+            , cyls, track_range
+            , cdevhdr.cdh_size, (int) max( len_size, len_used ), str_size
+            , cdevhdr.cdh_used, (int) max( len_used, len_size ), str_used
+            , cdevhdr.free_off, new_format ? "NEW" : "old"
+            , cdevhdr.free_total,   (int) max( len_total, len_largest ), str_total
+            , cdevhdr.free_largest, (int) max( len_total, len_largest ), str_largest
+            , cdevhdr.free_num
+            , cdevhdr.free_imbed
+            , (U32) cdevhdr.cdh_nullfmt, cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT0 ? "ha r0 EOF" :
+                                         cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT1 ? "ha r0" :
+                                         cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT2 ? "linux" : "???"
+            , (U32) cdevhdr.cmp_algo,   !cdevhdr.cmp_algo                        ? "none"  :
+                                        (cdevhdr.cmp_algo & CCKD_COMPRESS_ZLIB)  ? "zlib"  :
+                                        (cdevhdr.cmp_algo & CCKD_COMPRESS_BZIP2) ? "bzip2" : "INVALID"
+            , cdevhdr.cmp_parm
+            , cdevhdr.cmp_parm <  0 ? ""        : " "
+            , cdevhdr.cmp_parm <  0 ? "default" :
+              cdevhdr.cmp_parm == 0 ? "none"    :
+              cdevhdr.cmp_parm <= 3 ? "low"     :
+              cdevhdr.cmp_parm <= 6 ? "medium"  : "high"
+        );
+    }
+    else
+    {
+        // cdh_vrm:       %u.%u.%u
+        // cdh_opts:      0x%02.2X
+        // num_L1tab:     %"PRId32
+        // num_L2tab:     %"PRId32
+        // cdh_cyls:      %"PRIu32"           (%s tracks)
+        // cdh_size:      0x%10.10"PRIX64"    (%*s bytes)
+        // cdh_used:      0x%10.10"PRIX64"    (%*s bytes)
+        // free_off:      0x%10.10"PRIX64"    (%s format)
+        // free_total:    0x%10.10"PRIX64"    (%*s bytes)
+        // free_largest:  0x%10.10"PRIX64"    (%*s bytes)
+        // free_num:      %"PRId64
+        // free_imbed:    %"PRIu64
+        // cdh_nullfmt:   %u               (%s)
+        // cmp_algo:      %u               (%s)
+        // cmp_parm:      %"PRId16"              %s(%s)
+
+        WRMSG( HHC03023, "I"
+            , (U32) cdevhdr.cdh_vrm[0], (U32) cdevhdr.cdh_vrm[1], (U32) cdevhdr.cdh_vrm[2]
+            , cdevhdr.cdh_opts
+            , cdevhdr.num_L1tab
+            , cdevhdr.num_L2tab
+            , cyls, track_range
+            , cdevhdr.cdh_size, (int) max( len_size, len_used ), str_size
+            , cdevhdr.cdh_used, (int) max( len_used, len_size ), str_used
+            , cdevhdr.free_off, new_format ? "NEW" : "old"
+            , cdevhdr.free_total,   (int) max( len_total, len_largest ), str_total
+            , cdevhdr.free_largest, (int) max( len_total, len_largest ), str_largest
+            , cdevhdr.free_num
+            , cdevhdr.free_imbed
+            , (U32) cdevhdr.cdh_nullfmt, cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT0 ? "ha r0 EOF" :
+                                         cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT1 ? "ha r0" :
+                                         cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT2 ? "linux" : "???"
+            , (U32) cdevhdr.cmp_algo,   !cdevhdr.cmp_algo                        ? "none"  :
+                                        (cdevhdr.cmp_algo & CCKD_COMPRESS_ZLIB)  ? "zlib"  :
+                                        (cdevhdr.cmp_algo & CCKD_COMPRESS_BZIP2) ? "bzip2" : "INVALID"
+            , cdevhdr.cmp_parm
+            , cdevhdr.cmp_parm <  0 ? ""        : " "
+            , cdevhdr.cmp_parm <  0 ? "default" :
+              cdevhdr.cmp_parm == 0 ? "none"    :
+              cdevhdr.cmp_parm <= 3 ? "low"     :
+              cdevhdr.cmp_parm <= 6 ? "medium"  : "high"
+        );
+    }
+
+    /* Retrieve and report garbage collector state, but ONLY if
+       the image is over 100MB in size. This prevents "scaring"
+       the user about SEVERELY fragmented files when the file
+       is too small to be much of a concern, as is usually the
+       case with e.g. shadow files.
+    */
+    if (cdevhdr.cdh_size > (100 * _1M))
+    {
+        int gc = dev_gc_state();
+        const char *gc_str, *sev;
+
+             if (gc <= 1) gc_str = "SEVERELY",   sev = "W";
+        else if (gc <= 2) gc_str = "moderately", sev = "W";
+        else if (gc <= 3) gc_str = "slightly",   sev = "I";
+        else              gc_str = "not",        sev = "I";
+
+        // "Image is %s fragmented%s"
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03050, sev, gc_str, gc <= 1 ? "!" : "." );
+    }
+
+    /* cdevhdr inconsistencies check */
+    hdrerr  = 0;
+    hdrerr |= cdevhdr.cdh_size != filesize && cdevhdr.cdh_size != cdevhdr.free_off ? 0x0001 : 0;
+    hdrerr |= cdevhdr.cdh_size !=      cdevhdr.free_total  +  cdevhdr.cdh_used     ? 0x0002 : 0;
+    hdrerr |= cdevhdr.free_largest  >  cdevhdr.free_total  -  cdevhdr.free_imbed   ? 0x0004 : 0;
+    hdrerr |= cdevhdr.free_off == 0 && cdevhdr.free_num    != 0                    ? 0x0008 : 0;
+    hdrerr |= cdevhdr.free_off == 0 && cdevhdr.free_total  != cdevhdr.free_imbed   ? 0x0010 : 0;
+    hdrerr |= cdevhdr.free_off != 0 && cdevhdr.free_total  == 0                    ? 0x0020 : 0;
+    hdrerr |= cdevhdr.free_off != 0 && cdevhdr.free_num    == 0                    ? 0x0040 : 0;
+    hdrerr |= cdevhdr.free_num == 0 && cdevhdr.free_total  != cdevhdr.free_imbed   ? 0x0080 : 0;
+    hdrerr |= cdevhdr.free_num != 0 && cdevhdr.free_total  <= cdevhdr.free_imbed   ? 0x0100 : 0;
+    hdrerr |= cdevhdr.free_imbed    >  cdevhdr.free_total                          ? 0x0200 : 0;
+
+    if (hdrerr != 0)
+    {
+        // "Compressed device header inconsistency(s) found! code: %4.4X"
+        WRMSG( HHC03020, "I" );
+        FWRMSG( stderr, HHC03008, "W", hdrerr );
+    }
 
     /* Save the number of L1 table entries */
     num_L1tab = cdevhdr.num_L1tab;
 
-    /* Save the size of the L1 table */
-    size   = (U32) (num_L1tab * sizeof( CCKD64_L1ENT ));
-    size32 = (U32) (num_L1tab * sizeof( CCKD_L1ENT   ));
+    /* Init the size of the L1 table */
+    size   = (num_L1tab * CCKD64_L1ENT_SIZE);
+    size32 = (num_L1tab * CCKD_L1ENT_SIZE);
 
     /* Allocate room for the L1 table */
     if (!(L1tab = (CCKD64_L1ENT*) calloc( 1, size )))
@@ -589,7 +936,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     spc.spc_typ  = SPCTAB_L1;
     spc.spc_off  = curpos;
     spc.spc_siz  = cckd64 ? size : size32;
-    spc.spc_len  = cckd64 ? size : size32;
+    spc.spc_len  = spc.spc_siz;
     spc.spc_val  = 0;
     spc.spc_val2 = tracks - 1;
     ADD_SPACE( spc );
@@ -598,26 +945,18 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     curpos += (cckd64 ? size : size32);
 
     /* Add the calculated L2 tables LOWER bounds to spaces table */
+    L2_lower_pos = curpos;
     spc.spc_typ  = SPCTAB_L2LOWER;
-    spc.spc_off  = curpos;
+    spc.spc_off  = L2_lower_pos;
     spc.spc_siz  = 0;
     spc.spc_len  = 0;
     spc.spc_val  = -1;
     spc.spc_val2 = -1;
     ADD_SPACE( spc );
 
-    /* Save the size of each L2 table */
-    size   = (U32) sizeof( L2tab   );
-    size32 = (U32) sizeof( L2tab32 );
-
-    /* Add the calculated L2 tables UPPER bounds to spaces table */
-    spc.spc_typ  = SPCTAB_L2UPPER;
-    spc.spc_off  = curpos + (num_L1tab * (cckd64 ? size : size32));
-    spc.spc_siz  = 0;
-    spc.spc_len  = 0;
-    spc.spc_val  = -1;
-    spc.spc_val2 = -1;
-    ADD_SPACE( spc );
+    /* Init the size of each L2 table */
+    size   = CCKD64_L2TAB_SIZE;
+    size32 = CCKD_L2TAB_SIZE;
 
     /* Read in all of the L2 tables */
     for (i=0; i < num_L1tab; i++)
@@ -626,8 +965,8 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
 
         /* Skip non-existent L2 tables */
         if (0
-            || L1tab[i] == 0
-            || L1tab[i] == ULLONG_MAX
+            || L1tab[i] == CCKD64_NOSIZE
+            || L1tab[i] == CCKD64_MAXSIZE
         )
             continue;  // (skip non-existent L2 table)
 
@@ -668,19 +1007,22 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         spc.spc_typ  = SPCTAB_L2;
         spc.spc_off  = curpos;
         spc.spc_siz  = cckd64 ? size : size32;
-        spc.spc_len  = cckd64 ? size : size32;
+        spc.spc_len  = spc.spc_siz;
         spc.spc_val  = L1track;
         spc.spc_val2 = L1track + 256 - 1;
         ADD_SPACE( spc );
 
-        /* Add all track data to the table */
+        /* Count active L2 tables */
+        num_act_L2tab++;
+
+        /* Add all of this L2 table's active track data to the table */
         for (k=0; k < 256 && (L1track + k) < tracks; ++k)
         {
             if (0
-                || L2tab[k].L2_trkoff == 0
-                || L2tab[k].L2_trkoff == ULLONG_MAX
+                || L2tab[k].L2_trkoff == CCKD64_NOSIZE
+                || L2tab[k].L2_trkoff == CCKD64_MAXSIZE
             )
-                continue;  // (skip non-existent tracks)
+                continue;  // (skip non-active tracks)
 
             /* Add this track's offset to the table */
             spc.spc_typ  = fba ? SPCTAB_BLKGRP : SPCTAB_TRK;
@@ -696,7 +1038,65 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     /* Close input file */
     close( fd );
 
-    /* Scan for free space and add to table */
+    /* Add the calculated L2 tables UPPER bounds to spaces table */
+    spc.spc_typ  = SPCTAB_L2UPPER;
+    spc.spc_off  = L2_lower_pos + (num_act_L2tab * (cckd64 ? size : size32));
+    spc.spc_siz  = 0;
+    spc.spc_len  = 0;
+    spc.spc_val  = -1;
+    spc.spc_val2 = -1;
+    ADD_SPACE( spc );
+
+    /* Consolidate track data unless detailed track report wanted */
+    if (!verbose && !info_only)
+    {
+        /* Sort table by file offset */
+        qsort( spacetab, numspace, sizeof( SPCTAB64 ), sort_spacetab_by_file_offset );
+
+        /* Find contiguous track entries... */
+        for (i=0; i < numspace && spacetab[i].spc_typ != SPCTAB_EOF; ++i)
+        {
+            /* Find next unconsolidated track entry... */
+            if (spacetab[i].spc_typ != (fba ? SPCTAB_BLKGRP : SPCTAB_TRK))
+                continue;
+
+            /* We found a track entry. Consolidate all IMMEDIATELY
+               following ADJACENT/contiguous track entries into one. */
+
+            spacetab[i].spc_typ = SPCTAB_DATA;
+
+            for (k = i+1; k < numspace; ++k)
+            {
+                /* Is this track IMMEDIATELY ADJACENT TO previous? */
+                if (0
+                    || spacetab[k].spc_typ != (fba ? SPCTAB_BLKGRP : SPCTAB_TRK)
+                    || spacetab[k].spc_off != (spacetab[i].spc_off + spacetab[i].spc_siz)
+                )
+                    break;
+
+                /* Consolidate this track's data
+                   into original previous  entry
+                */
+                spacetab[i].spc_siz += spacetab[k].spc_siz;
+                spacetab[i].spc_len += spacetab[k].spc_len;
+
+                /* Mark track as having been consolidated */
+                spacetab[k].spc_typ = SPCTAB_NONE;
+            }
+        }
+
+        /* Remove consolidated spaces (all SPCTAB_NONE spaces) */
+        for (i=0; i < numspace && spacetab[i].spc_typ != SPCTAB_EOF; ++i)
+        {
+            if (SPCTAB_NONE == spacetab[i].spc_typ)
+            {
+                DEL_SPACE( i );
+                i--;
+            }
+        }
+    }
+
+    /* Scan for unknown space and add to table */
     do
     {
         /* Sort table by file offset */
@@ -706,142 +1106,173 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         for (i=0; i < numspace && spacetab[i].spc_typ != SPCTAB_EOF; ++i)
         {
             if (0
-                || !spacetab[i].spc_siz
+                ||  spacetab[i].spc_typ == SPCTAB_NONE
+                ||  spacetab[i].spc_siz == 0
                 || (spacetab[i].spc_off + spacetab[i].spc_siz) >= spacetab[i+1].spc_off
             )
                 continue;
 
-            /* Add free space entry */
-            spc.spc_typ  = SPCTAB_FREE;
+            /* Unknown space detected! */
+            spc.spc_typ  = SPCTAB_UNKNOWN;
             spc.spc_off  =                         (spacetab[i].spc_off + spacetab[i].spc_siz);
             spc.spc_siz  = spacetab[i+1].spc_off - (spacetab[i].spc_off + spacetab[i].spc_siz);
-            spc.spc_len  = spacetab[i+1].spc_off - (spacetab[i].spc_off + spacetab[i].spc_siz);
+            spc.spc_len  = spc.spc_siz;
             spc.spc_val  = -1;
             spc.spc_val2 = -1;
+            total_unknown += spc.spc_siz;
             ADD_SPACE( spc );
             break;
         }
     }
     while (spacetab[i].spc_typ != SPCTAB_EOF);
 
-    /* Consolidate track data unless detailed track report wanted */
-    if (!verbose)
+    if (total_unknown)
     {
-        /* Find contiguous track entries... */
+        // ""
+        // "Total unknown space    = %s bytes"
+        fmt_S64( str_total, (S64) total_unknown );
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03049, "I", str_total );
+    }
+
+    /* Calculate average distance from each L2 table to its tracks/blkgrps */
+
+    if (verbose || info_only)  /* (inaccurate statistics otherwise!) */
+    {
+        seek_total    = 0;
+        active_tracks = 0;
+
         for (i=0; i < numspace && spacetab[i].spc_typ != SPCTAB_EOF; ++i)
         {
-            /* Find next unconsolidated track entry... */
-            if (spacetab[i].spc_typ != (fba ? SPCTAB_BLKGRP : SPCTAB_TRK))
+            /* Locate next L2 table entry */
+            if (spacetab[i].spc_typ != SPCTAB_L2)
                 continue;
 
-            /* We found a track entry. Consolidate all
-               following track entries into this one. */
-            spacetab[i].spc_typ = SPCTAB_DATA;
-            for (k = i + 1; k < numspace; ++k)
+            /* Save starting track/blkgrp number for this L2 table */
+            L1track = spacetab[i].spc_val;
+
+            /* Find all tracks/blkgrps for this L2 table */
+            for (k=0; k < numspace && spacetab[k].spc_typ != SPCTAB_EOF; ++k)
             {
-                /* Is this a track entry immediately following the first? */
-                if (spacetab[k].spc_typ != (fba ? SPCTAB_BLKGRP : SPCTAB_TRK))
-                    break;
+                if ((0
+                    || spacetab[k].spc_typ == SPCTAB_TRK
+                    || spacetab[k].spc_typ == SPCTAB_BLKGRP
+                )
+                && (1
+                    && spacetab[k].spc_val >= (L1track +   0)
+                    && spacetab[k].spc_val <  (L1track + 256)
+                ))
+                {
+                    /* Count active track/blkgrp */
+                    active_tracks++;
 
-                /* Consolidate this track's data into first */
-                spacetab[i].spc_siz += spacetab[k].spc_siz;
-                spacetab[i].spc_len += spacetab[k].spc_len;
-
-                /* Mark track as having been consolidated */
-                spacetab[k].spc_typ = SPCTAB_NONE;
+                    /* Calculate this track's/blkgrp's distance from its L2 table */
+                    if (                spacetab[i].spc_off > spacetab[k].spc_off)
+                         seek_total += (spacetab[i].spc_off - spacetab[k].spc_off);
+                    else seek_total += (spacetab[k].spc_off - spacetab[i].spc_off);
+                }
             }
         }
+
+        if (fba)
+        {
+            // ""
+            // "Total active blkgrps   = %"PRIu32" groups"
+            // "Avg. L2-to-block seek  = %.3f MB"
+            if (!total_unknown) WRMSG( HHC03020, "I" );
+            WRMSG( HHC03045, "I", active_tracks );
+            WRMSG( HHC03046, "I", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
+        }
+        else
+        {
+            // ""
+            // "Total active tracks    = %"PRIu32" tracks"
+            // "Avg. L2-to-track seek  = %.3f MB"
+            if (!total_unknown) WRMSG( HHC03020, "I" );
+            WRMSG( HHC03043, "I", active_tracks );
+            WRMSG( HHC03044, "I", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
+        }
     }
 
-    /* Print the map... */
+    /* Finally, print the actual map (i.e. where everything is) ... */
 
-    // ""
-    // "         File offset    Size (hex)    Size (dec)   track(s)"
-    // ""
-    WRMSG( HHC03020, "I" );
-    WRMSG( HHC03020, "I" );
-    WRMSG( HHC03040, "I" );
-    WRMSG( HHC03020, "I" );
-
-    for (i=0; i < numspace; ++i)
+    if (!info_only)
     {
-        if (0
-            || (spacetab[i].spc_typ == SPCTAB_NONE)
-            || (spacetab[i].spc_typ == SPCTAB_DATA && !data)
-            || (spacetab[i].spc_typ == (fba ? SPCTAB_BLKGRP : SPCTAB_TRK) && !verbose)
-        )
-            continue; // (skip this entry)
-
-        if (0
-            || spacetab[i].spc_typ == SPCTAB_L2LOWER
-            || spacetab[i].spc_typ == SPCTAB_L2UPPER
-        )
-            // "***********************************************************"
-            WRMSG( HHC03041, "I" );
-
-        /* Track number or track range */
-        track_range[0] = 0;
-        if (spacetab[i].spc_typ != SPCTAB_DATA)
+        if (fba)
         {
-            if (spacetab[i].spc_val != spacetab[i].spc_val2)
-                MSGBUF( track_range, "  %"PRId32" - %"PRId32, spacetab[i].spc_val, spacetab[i].spc_val2 );
-            else if (spacetab[i].spc_val >= 0)
-                MSGBUF( track_range, "  %"PRId32,             spacetab[i].spc_val );
+            // ""
+            // "         File offset    Size (hex)         Size  group(s)"
+            // ""
+            WRMSG( HHC03020, "I" );
+            WRMSG( HHC03047, "I" );
+            WRMSG( HHC03020, "I" );
+        }
+        else
+        {
+            // ""
+            // "         File offset    Size (hex)         Size  track(s)"
+            // ""
+            WRMSG( HHC03020, "I" );
+            WRMSG( HHC03040, "I" );
+            WRMSG( HHC03020, "I" );
         }
 
-        // "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
-        WRMSG( HHC03042, "I", spc_typ_to_str( spacetab[i].spc_typ ),
-            spacetab[i].spc_off, spacetab[i].spc_siz ,spacetab[i].spc_siz,
-            RTRIM( track_range ));
-    }
-
-    /* Calculate average distance from each L2 table to its tracks */
-
-    seek_total    = 0;
-    active_tracks = 0;
-
-    for (i=0; i < numspace && spacetab[i].spc_typ != SPCTAB_EOF; ++i)
-    {
-        /* Locate next L2 table entry */
-        if (spacetab[i].spc_typ != SPCTAB_L2)
-            continue;
-
-        /* Save starting track number for this L2 table */
-        L1track = spacetab[i].spc_val;
-
-        /* Find all tracks for this L2 table */
-        for (k=0; k < numspace && spacetab[k].spc_typ != SPCTAB_EOF; ++k)
+        for (i=0; i < numspace; ++i)
         {
-            if ((0
-                || spacetab[k].spc_typ == SPCTAB_TRK
-                || spacetab[k].spc_typ == SPCTAB_BLKGRP
-                || spacetab[k].spc_typ == SPCTAB_DATA
-                || spacetab[k].spc_typ == SPCTAB_NONE
+            if (spacetab[i].spc_typ == SPCTAB_NONE)
+                continue;
+
+            /* Print dashed line to mark L2 area lower/upper bounds */
+            if (0
+                || spacetab[i].spc_typ == SPCTAB_L2LOWER
+                || spacetab[i].spc_typ == SPCTAB_L2UPPER
             )
-            && (1
-                && spacetab[k].spc_val >= (L1track +   0)
-                && spacetab[k].spc_val <  (L1track + 256)
-                && spacetab[k].spc_val <  (tracks)
-            ))
-            {
-                /* Count active track */
-                active_tracks++;
+                // "***********************************************************"
+                WRMSG( HHC03041, "I" );
 
-                /* Calculate this track's distance from its L2 table */
-                if (                spacetab[i].spc_off > spacetab[k].spc_off)
-                     seek_total += (spacetab[i].spc_off - spacetab[k].spc_off);
-                else seek_total += (spacetab[k].spc_off - spacetab[i].spc_off);
+            /* Format track/blkgrp number or track/blkgrp range, if appropriate */
+            track_range[0] = 0;
+            if (0
+                || spacetab[i].spc_typ == SPCTAB_L2
+                || spacetab[i].spc_typ == SPCTAB_TRK
+                || spacetab[i].spc_typ == SPCTAB_BLKGRP
+            )
+            {
+                // Do we have a range or not? (is val2 different from val?)
+                if (spacetab[i].spc_val != spacetab[i].spc_val2)
+                    MSGBUF( track_range, "  %"PRId32" - %"PRId32, spacetab[i].spc_val, spacetab[i].spc_val2 );
+                else if (spacetab[i].spc_val >= 0)
+                    MSGBUF( track_range, "  %"PRId32,             spacetab[i].spc_val );
             }
+
+            /* There should NEVER be any overlaps! */
+            overlap =
+            (1
+                /* If there's another space after this one ... */
+                && (i+1) < numspace
+
+                /* ... and neither is a lower/upper bound space ... */
+                &&  spacetab[i+0].spc_typ != SPCTAB_L2LOWER
+                &&  spacetab[i+0].spc_typ != SPCTAB_L2UPPER
+                &&  spacetab[i+1].spc_typ != SPCTAB_L2LOWER
+                &&  spacetab[i+1].spc_typ != SPCTAB_L2UPPER
+
+                /* ... then check if this space overlaps the next */
+                && (spacetab[i+0].spc_off
+                  + spacetab[i+0].spc_siz)
+                  > spacetab[i+1].spc_off
+            )
+            ? true : false;
+
+            MSGBUF( space_type, "%s%s",
+                spc_typ_to_str( spacetab[i].spc_typ ), overlap ? "!" : "" );
+
+            // "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
+            WRMSG( HHC03042, "I", space_type, spacetab[i].spc_off,
+                spacetab[i].spc_siz, spacetab[i].spc_siz, RTRIM( track_range ));
         }
     }
 
-    // ""
-    // "Total active tracks      = %"PRIu32" tracks"
-    // "Average L2-to-track seek = %.3f MB"
-    // ""
-    WRMSG( HHC03020, "I" );
-    WRMSG( HHC03043, "I", active_tracks );
-    WRMSG( HHC03044, "I", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
     WRMSG( HHC03020, "I" );
 
     /* DONE! */

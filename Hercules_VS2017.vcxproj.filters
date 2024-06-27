@@ -136,6 +136,9 @@
     <Filter Include="Other Files\Build\msvc\VS2019">
       <UniqueIdentifier>{9C420C3E-E3FC-4eaa-A730-385D018336B9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Other Files\Build\msvc\VS2022">
+      <UniqueIdentifier>{884a6127-b7f1-4774-b9d7-30e623c4a03f}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Other Files\Build\other">
       <UniqueIdentifier>{3bffa35c-5784-4032-bad4-aa9ce018456b}</UniqueIdentifier>
     </Filter>
@@ -328,6 +331,9 @@
       <Filter>Source Files\Utilities\tape</Filter>
     </ClCompile>
     <ClCompile Include="vmfplc2.c">
+      <Filter>Source Files\Utilities\tape</Filter>
+    </ClCompile>
+    <ClCompile Include="vstore.c">
       <Filter>Source Files\Utilities\tape</Filter>
     </ClCompile>
     <ClCompile Include="conspawn.c">
@@ -603,6 +609,9 @@
     <ClCompile Include="hchan.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hbyteswp.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="hconsole.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -672,6 +681,9 @@
     <ClCompile Include="impl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="inline.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="io.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -693,10 +705,10 @@
     <ClCompile Include="losc.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ltdl.c">
+    <ClCompile Include="machchk.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="machchk.c">
+    <ClCompile Include="machdep.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="memrchr.c">
@@ -744,6 +756,9 @@
     <ClCompile Include="sie.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="skey.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="sr.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -755,6 +770,15 @@
     </ClCompile>
     <ClCompile Include="tcpip.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfprint.c">
+      <Filter>Source Files\Utilities\other</Filter>
+    </ClCompile>
+    <ClCompile Include="tfswap.c">
+      <Filter>Source Files\Utilities\other</Filter>
+    </ClCompile>
+    <ClCompile Include="txt2card.c">
+      <Filter>Source Files\Utilities\other</Filter>
     </ClCompile>
     <ClCompile Include="timer.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
@@ -785,6 +809,9 @@
     </ClCompile>
     <ClCompile Include="xstore.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dasdload2.h">
+      <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -962,6 +989,9 @@
     <None Include="readme\README.COMMADPT.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="readme\README.DAEMON.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.DYNMOD.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
@@ -989,7 +1019,7 @@
     <None Include="readme\README.HRAF.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="readme\README.IOARCH.md">
+    <None Include="readme\README.MAKETAPE.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.MINGW.md">
@@ -1022,6 +1052,9 @@
     <None Include="readme\README.SETUID.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="readme\README.SNA.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.SUN.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
@@ -1032,6 +1065,9 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.TCPNJE.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="readme\README.TRACEFILE.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.VMFPLC2.md">
@@ -1394,6 +1430,15 @@
     <None Include="Hercules_VS2019.vcxproj.filters">
       <Filter>Other Files\Build\msvc\VS2019</Filter>
     </None>
+    <None Include="Hercules_VS2022.sln">
+      <Filter>Other Files\Build\msvc\VS2022</Filter>
+    </None>
+    <None Include="Hercules_VS2022.vcxproj">
+      <Filter>Other Files\Build\msvc\VS2022</Filter>
+    </None>
+    <None Include="Hercules_VS2022.vcxproj.filters">
+      <Filter>Other Files\Build\msvc\VS2022</Filter>
+    </None>
     <None Include="_dynamic_version">
       <Filter>Other Files\Build\other</Filter>
     </None>
@@ -1544,15 +1589,6 @@
     <None Include="util\awswrite.jcl">
       <Filter>Other Files\Utilities</Filter>
     </None>
-    <None Include="util\cckddump.hla">
-      <Filter>Other Files\Utilities</Filter>
-    </None>
-    <None Include="util\cckddu64.hla">
-      <Filter>Other Files\Utilities</Filter>
-    </None>
-    <None Include="util\cckdload.hla">
-      <Filter>Other Files\Utilities</Filter>
-    </None>
     <None Include="util\configure.ac">
       <Filter>Other Files\Utilities</Filter>
     </None>
@@ -1579,6 +1615,15 @@
     </None>
     <None Include="util\zzsacard.bin">
       <Filter>Other Files\Utilities</Filter>
+    </None>
+    <None Include="tests\3330.cckd64">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\3380.cckd64">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\3390.cckd64">
+      <Filter>Other Files\tests</Filter>
     </None>
     <None Include="tests\awsbsf.aws">
       <Filter>Other Files\tests</Filter>
@@ -1612,6 +1657,21 @@
     </None>
     <None Include="tests\3211.core">
       <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bc-ilc.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bc-ilc.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bc-ilc.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bc-ilc.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bc-ilc.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\bfp-001-divtoint.core">
       <Filter>Other Files\tests\core</Filter>
@@ -1685,10 +1745,73 @@
     <None Include="tests\bim-001-add-sub.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
-    <None Include="tests\cpu0off.core">
+    <None Include="tests\CLCLE-01-unaligned-buffers.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCLE-03-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CU12-01-xpage.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CU14-01-xpage.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CU14-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CUSE-01-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CUSE-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\E7Prefix.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\dfp-080-from-packed.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\dfp-080-to-packed.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\FAC53.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\GH615.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRE-01-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRTE-01-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRTE-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRTR-01-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRTR-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRTRE-01-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\FAC53.asm">
@@ -1702,6 +1825,54 @@
     </None>
     <None Include="tests\FAC53.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\FAC5861.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\FAC5861.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\FAC5861.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\FAC5861.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\FAC5861.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\fix-page.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\fix-page.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\fix-page.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\fix-page.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\fix-page.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\float.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\float.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\float.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\float.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\float.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\PERZAD.core">
+      <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\pfpo.core">
       <Filter>Other Files\tests\core</Filter>
@@ -1750,6 +1921,39 @@
     </None>
     <None Include="tests\sigp.assemble">
       <Filter>Other Files\tests\scripts\assemble</Filter>
+    </None>
+    <None Include="tests\skey370.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\skey390z.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\skey370.TXTCARDS">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\skey370.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\skey390z.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\skey370.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\skey370.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\skey390z.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\skey390z.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\skey370.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\skey390z.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\sske.assemble">
       <Filter>Other Files\tests\scripts\assemble</Filter>
@@ -1874,19 +2078,61 @@
     <None Include="tests\bim-001-add-sub.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CLCLE-03-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\cipher.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\cmd-abs.tst">
+    <None Include="tests\cmd-abs.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\cmd-rv.tst">
+    <None Include="tests\cmd-rv.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\cr.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\csxtr.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CU12-01-xpage.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CU14-01-xpage.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CU14-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CUSE-01-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CUSE-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\E7Prefix.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\dfp-080-from-packed.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\dfp-080-to-packed.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\GH615.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\digest.tst">
@@ -1919,6 +2165,24 @@
     <None Include="tests\mvcle.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\mvcos-001.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\mvcos-001.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\mvcos-001.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mvcos-001.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mvcos-001.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\PERZAD.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\pfpo.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -1934,16 +2198,16 @@
     <None Include="tests\sigp.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\ssk370.tst">
+    <None Include="tests\ssk370.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\sske.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\sske370.tst">
+    <None Include="tests\sske370.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\sske390.tst">
+    <None Include="tests\sske390.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\stfl.tst">
@@ -1964,22 +2228,49 @@
     <None Include="tests\stidp.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\stidp-force.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\timeout.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\cmd-abs-2K.subtst">
+    <None Include="tests\TRE-01-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRTE-01-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRTE-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRTR-01-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRTR-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRTRE-01-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
-    <None Include="tests\cmd-abs-4K.subtst">
+    <None Include="tests\cmd-abs-4K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
-    <None Include="tests\cmd-rv-2K.subtst">
+    <None Include="tests\cmd-rv-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
-    <None Include="tests\cmd-rv-4K-32.subtst">
+    <None Include="tests\cmd-rv-4K-32.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
-    <None Include="tests\cmd-rv-4K-64.subtst">
+    <None Include="tests\cmd-rv-4K-64.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
     <None Include="tests\dummy.subtst">
@@ -2078,10 +2369,79 @@
     <None Include="tests\bim-001-add-sub.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CLCLE-03-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CU12-01-xpage.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CU14-01-xpage.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CU14-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CUSE-01-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CUSE-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\E7Prefix.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\dfp-080-from-packed.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\dfp-080-to-packed.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\dc-float.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\GH615.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\PERZAD.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\pfpo.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRE-01-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRTE-01-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRTE-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRTR-01-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRTR-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRTRE-01-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\3211.list">
@@ -2093,67 +2453,133 @@
     <None Include="tests\bfp-001-divtoint.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-001-divtoint.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-002-loadr.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-003-loadfpi.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-003-loadfpi.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-004-cvttolog.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-005-cvttolog64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-005-cvttolog64.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-006-cvttofix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-007-cvttofix64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-007-cvttofix64.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-008-cvtfrlog.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-009-cvtfrlog64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-009-cvtfrlog64.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-010-cvtfrfix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-011-cvtfrfix64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-011-cvtfrfix64.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-012-loadtest.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-013-comps.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-013-comps.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-014-divide.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-015-sqrt.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-015-sqrt.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-016-add.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-017-loadl.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-017-loadl.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-018-subtract.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-019-multiply.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-019-multiply.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-020-multlonger.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-021-multadd.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-021-multadd.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-022-multsub.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-023-threads.list">
@@ -2162,10 +2588,145 @@
     <None Include="tests\bim-001-add-sub.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bim-001-add-sub.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-03-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-03-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU12-01-xpage.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU12-01-xpage.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU12-02-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU14-01-xpage.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU14-01-xpage.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU14-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CU14-02-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CUSE-01-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CUSE-01-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CUSE-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CUSE-02-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\E7Prefix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\E7Prefix.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\dfp-080-from-packed.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\dfp-080-to-packed.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\GH615.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\GH615.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\PERZAD.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\pfpo.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\PERZAD.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\PFPO.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRE-01-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRE-01-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTE-01-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTE-01-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTE-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTE-02-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTR-01-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTR-01-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTR-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTR-02-performance.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTRE-01-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTRE-01-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRTRE-02-performance.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="hercules.cnf">
@@ -2315,16 +2876,31 @@
     <None Include="tests\stfl.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\stfl.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\str-001-cksm.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\str-001-cksm.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\str-001-clst.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\str-001-clst.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\str-001-mvst.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\str-001-mvst.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\str-001-srst.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\str-001-srst.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\tape.core">
@@ -2343,6 +2919,21 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\tape.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TXFPER.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TXFPER.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TXFPER.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TXFPER.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TXFPER.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\CBUC.core">
@@ -2367,6 +2958,9 @@
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\CCWILS.3390-1.comp-z">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\datetime.rexx">
       <Filter>Other Files\tests</Filter>
     </None>
     <None Include="tests\CCW-ILS.asm">
@@ -2447,6 +3041,9 @@
     <None Include=".travis.yml">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="CODEOWNERS">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="tests\dotest">
       <Filter>Other Files\tests</Filter>
     </None>
@@ -2455,6 +3052,8 @@
     </None>
     <None Include="readme\README.VMHANDSHAKE.md">
       <Filter>Other Files\DOC\README</Filter>
+    <None Include="util\cckddump-cckdload.zip">
+      <Filter>Other Files\Utilities</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -2579,9 +3178,6 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ccwarn.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="chain.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="chsc.h">
@@ -2779,9 +3375,6 @@
     <ClInclude Include="logger.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ltdl.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="machdep.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
@@ -2815,6 +3408,12 @@
     <ClInclude Include="service.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sie.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skey.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="sr.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
@@ -2825,6 +3424,9 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tcpip.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="transact.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="version.h">
@@ -2916,6 +3518,9 @@
     <Text Include="tests\axtr.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
+    <Text Include="tests\BEAR.txt">
+      <Filter>Other Files\tests\scripts\txt</Filter>
+    </Text>
     <Text Include="tests\brc.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
@@ -2974,6 +3579,9 @@
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
     <Text Include="tests\epsw.txt">
+      <Filter>Other Files\tests\scripts\txt</Filter>
+    </Text>
+    <Text Include="tests\ex.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
     <Text Include="tests\exrl.txt">
@@ -3309,6 +3917,9 @@
     <Text Include="tests\printer.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
+    <Text Include="tests\punch.txt">
+      <Filter>Other Files\tests\scripts\txt</Filter>
+    </Text>
     <Text Include="tests\ptf.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
@@ -3599,6 +4210,9 @@
       <Filter>Other Files\DOC\html\images</Filter>
     </Image>
     <Image Include="readme\images\herclogo.jpg">
+      <Filter>Other Files\DOC\README\images</Filter>
+    </Image>
+    <Image Include="readme\images\httpsrvr.jpg">
       <Filter>Other Files\DOC\README\images</Filter>
     </Image>
     <Image Include="readme\images\image_header_herculeshyperionSDL.png">

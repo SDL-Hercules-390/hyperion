@@ -57,10 +57,18 @@ int main( int argc, char **argv )
 
     pszProgName = strdup( argv[0] );
 
+    if (argv[1])
+    {
+        sysblk.msglvl = atoi( argv[1] );
+
+        if (argv[2])
+            set_codepage_no_msgs( argv[2] );
+    }
+
     // Must not be run from the commandline
     if( isatty( STDIN_FILENO ) )
     {
-        // "%s: Must be called from within Hercules."
+        // "%s: Must be called from within Hercules; ... exiting"
         FWRMSG( stderr, HHC00162, "E", pszProgName );
         exit( 1 );
     }
@@ -70,7 +78,7 @@ int main( int argc, char **argv )
 
     if( fd_inet < 0 )
     {
-        // "%s: Cannot obtain %s socket: %s"
+        // "%s: Cannot obtain %s socket: %s; ... exiting"
         FWRMSG( stderr, HHC00163, "E", pszProgName, "inet", strerror( errno ));
         exit( 2 );
     }
@@ -80,7 +88,7 @@ int main( int argc, char **argv )
 
     if( fd_inet6 < 0 )
     {
-        // "%s: Cannot obtain %s socket: %s"
+        // "%s: Cannot obtain %s socket: %s; ... exiting"
         FWRMSG( stderr, HHC00163, "E", pszProgName, "inet6", strerror( errno ));
         fd_inet6 = fd_inet;
     }
@@ -97,16 +105,22 @@ int main( int argc, char **argv )
 
         if( rc == -1 )
         {
-            // "%s: I/O error on read: %s."
+            // "%s: I/O error on read: %s; ... exiting"
             FWRMSG( stderr, HHC00164, "E", pszProgName, strerror( errno ));
+            close( STDIN_FILENO  );
+            close( STDOUT_FILENO );
+            close( STDERR_FILENO );
             exit( 3 );
         }
 
         if( ppid != getppid() )
         {
             sleep( 1 ); // Let other messages go first
-            // "%s: Hercules disappeared!! .. exiting"
+            // "%s: Hercules disappeared!! ... exiting"
             FWRMSG( stderr, HHC00168, "E", pszProgName );
+            close( STDIN_FILENO  );
+            close( STDOUT_FILENO );
+            close( STDERR_FILENO );
             exit( 4 );
         }
 
@@ -219,21 +233,24 @@ int main( int argc, char **argv )
             break;
 #endif
         case CTLREQ_OP_DONE:
+            // HHC00169 "%s: DONE! ... exiting"
+            FWRMSG( stderr, HHC00169, "I", pszProgName );
             close( STDIN_FILENO  );
             close( STDOUT_FILENO );
             close( STDERR_FILENO );
             exit( 0 );
 
         default:
-            // "%s: Unknown request: %lX"
+            // "%s: Unknown request: %lX; ... ignoring and continuing"
             FWRMSG( stderr, HHC00165, "W", pszProgName, ctlreq.iCtlOp );
             continue;
         }
 
-#if defined(DEBUG) || defined(_DEBUG)
-        // "%s: Doing %s on %s"
-        FWRMSG( stderr, HHC00167, "D", pszProgName, pOp, pIF );
-#endif /*defined(DEBUG) || defined(_DEBUG)*/
+        if (MLVL( DEBUG ))
+        {
+            // "%s: Doing %s on %s ..."
+            FWRMSG( stderr, HHC00167, "D", pszProgName, pOp, pIF );
+        }
 
         rc = ioctl( fd, ctlreq.iCtlOp, pArg );
         if( rc < 0 )
@@ -253,7 +270,7 @@ int main( int argc, char **argv )
         #endif
                )
             {
-                // "%s: ioctl error doing %s on %s: %d %s"
+                // "%s: ioctl error doing %s on %s: %d %s; ... ignoring and continuing"
                 FWRMSG( stderr, HHC00166, "E", pszProgName, pOp, pIF, errno, strerror( errno ));
             }
         }
@@ -261,7 +278,8 @@ int main( int argc, char **argv )
         {
             VERIFY(0 <= write( STDOUT_FILENO, &ctlreq, CTLREQ_SIZE ));
         }
-    }
+
+    } // end while (1)
 
     UNREACHABLE_CODE( return -1 );
 }

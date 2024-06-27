@@ -893,7 +893,7 @@ CHPGM09B CCW1  WRITEPLB,PRT09B,CC,L'PRT09B
          CCW1  CHKREAD,CKRD09B,SLI,L'CKRD09B
                                                                 EJECT
 ***********************************************************************
-*        Literals Pool                    
+*        Literals Pool
 ***********************************************************************
                                                                 SPACE
          LTORG ,

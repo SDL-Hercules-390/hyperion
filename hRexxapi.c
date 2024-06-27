@@ -47,9 +47,10 @@ typedef const RXSTRING          CRXSTRING, *PCRXSTRING;
 /*-------------------------------------------------------------------*/
 /* Private global variables                                          */
 /*-------------------------------------------------------------------*/
-static char*  REXX_DEP( PackageName    )  = QSTR( REXX_PKG );
-static char*  REXX_DEP( PackageVersion )  = NULL;
-static char*  REXX_DEP( PackageSource  )  = NULL;
+static char*  REXX_DEP( PackageName      )  = QSTR( REXX_PKG );
+static char*  REXX_DEP( PackageVersion   )  = NULL;
+static char*  REXX_DEP( PackageSource    )  = NULL;
+static char   REXX_DEP( PackageMajorVers )  = '0';
 
 static char*  LibName       = REXX_LIBNAME;
 static char*  ApiLibName    = REXX_APILIBNAME;
@@ -130,6 +131,8 @@ static HR_EXTFUNC_T     AWSCmd
     HR_PCSZ_T   Queuename,      // Current queue name
     PRXSTRING   RetValue        // Returned result string
 );
+
+    static BYTE RegisterRexxHandlersAndFunctions();
 
 /*-------------------------------------------------------------------*/
 /* Helper function to 'sprintf' to an RXSTRING                       */
@@ -602,13 +605,18 @@ static HR_ERR_T   HerculesCommand
 {
     HR_ERR_T  err;          // Hercules Rexx error code
     char*     resp;         // Response from panel_command
+    bool      quiet;        // don't show response on console if true
 
     /* Validate arguments and trim Hercules command line */
     if (!herccmd || !*TRIM( herccmd ) || !panelrc)
         return HRERR_BADARGS;
 
+    /* if response is wanted, ask Hercules to be quiet on the console */
+    if (stemname) quiet = true;
+    else          quiet = false;
+
     /* Issue the Hercules command and capture the response */
-    *panelrc = panel_command_capture( herccmd, &resp );
+    *panelrc = panel_command_capture( herccmd, &resp, quiet );
 
     /* Format response string stem values if response is wanted */
     if (stemname)
@@ -878,6 +886,10 @@ static HR_REXXRC_T  HRexxStart
        debug every call made to RexxStart without having to set many
        separate breakpoints all over the place.
     */
+#if REXX_PKGNUM == REGINA_PKGNUM
+    /* When running a Regina script in background, handlers need to be re-registered. */
+    if (!equal_threads( thread_id(), sysblk.impltid )) RegisterRexxHandlersAndFunctions();
+#endif
     HR_REXXRC_T  rc  = REXX_DEP( RexxStart )
     (
         ArgCount,                       // Number of arguments
@@ -1225,6 +1237,15 @@ static BYTE GetRexxVersionSource()
         *source++ = 0; // (null terminate version and point to source)
         REXX_DEP( PackageVersion ) = strdup( Result );
         REXX_DEP( PackageSource  ) = strdup( source );
+
+        /* Extract the major version number too */
+
+        // "REXX-ooRexx_4.2.0(MT)_32-bit"
+        //              ^
+        //              ^
+        //              ^
+
+        REXX_DEP( PackageMajorVers ) = REXX_DEP( PackageVersion )[12];
     }
 
     return source ? TRUE : FALSE;
@@ -1262,6 +1283,21 @@ BYTE REXX_DEP( LoadExtra )( BYTE verbose )
     {
         libname = REXX_DEP( ExtraLibs )[i];
 
+        /* ooRexx version 5 and higher doesn't have the rexxutil library anymore */
+#if REXX_PKGNUM == OOREXX_PKGNUM
+        if (1
+            && (REXX_DEP( PackageMajorVers ) >= '5')
+    #if defined( _MSVC_ )
+            && !strcmp( libname, "rexxutil.dll" )
+    #elif defined( __APPLE__ )
+            && !strcmp( libname, "librexxutil.dylib" )
+    #else
+            && !strcmp( libname, "librexxutil.so" )
+    #endif
+           )
+               continue;
+#endif
+
         if (libname && !(libhandle[i] = dlopen( libname, RTLD_NOW )))
         {
             bSuccess = FALSE;
@@ -1269,7 +1305,7 @@ BYTE REXX_DEP( LoadExtra )( BYTE verbose )
             if (verbose)
             {
                 // "REXX(%s) dlopen '%s' failed: %s"
-                WRMSG( HHC17531, "E", REXX_DEP( PackageName ),
+                WRMSG( HHC17531, "W", REXX_DEP( PackageName ),
                     libname, dlerror());
             }
         }
@@ -1388,12 +1424,19 @@ BYTE REXX_DEP( Load )( BYTE verbose )
     /*---------------------------------------------------------------*/
     if (!REXX_DEP( LoadExtra )( verbose ))
     {
-        dlclose( LibHandle );
-        if (ApiLibHandle != LibHandle)
-            dlclose( ApiLibHandle );
-        LibHandle    = NULL;
-        ApiLibHandle = NULL;
-        return FALSE;
+        // A failure to load the ExtraLibs is fatal for
+        // version 4.2.0 of ooRexx or earlier. For ooRexx
+        // version 5.0.0 and later it is only a warning.
+
+        if (REXX_DEP( PackageMajorVers ) < '5')
+        {
+            dlclose( LibHandle );
+            if (ApiLibHandle != LibHandle)
+                dlclose( ApiLibHandle );
+            LibHandle    = NULL;
+            ApiLibHandle = NULL;
+            return FALSE;
+        }
     }
 
     return TRUE;

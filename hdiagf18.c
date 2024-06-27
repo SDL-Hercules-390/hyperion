@@ -96,7 +96,7 @@ CPB cap =
              0x80
 #endif
 /*        ( 0x80 * ( SIZEOF_SIZE_T == 8 ) ) */
-#if   defined(__gnu_linux__)
+#if   defined(__gnu_linux__) || defined(__linux__)
           + 0x01
 #elif defined(WIN32)
           + 0x02
@@ -270,7 +270,8 @@ U16     options;                     /* supplied options             */
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     } /* end switch(regs->GR_L(r1)) */
-} /* end function ARCH_DEP(host_rsc_acc) */
+
+} /* end function ARCH_DEP( diagf18_call ) */
 
 
 #endif /* defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY) */

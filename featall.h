@@ -1,4 +1,5 @@
 /* FEATALL.H    (C) Copyright Jan Jaeger, 2000-2012                  */
+/*              (C) and others 2013-2023                             */
 /*              Architecture-dependent macro definitions             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -22,28 +23,59 @@
 #define OPTION_900_MODE                 /* Generate z/Arch support   */
 #endif
 
+/*-------------------------------------------------------------------*/
+/*               Research/Workaround build options                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The following build options either fix or workaround a problem    */
+/* we were having where we were unsure exactly what was causing the  */
+/* problem (and thus were unsure whether the implemented workaround  */
+/* is proper/correct or not) and are thus technically *temporary*    */
+/* in nature/spirit until such time as the root cause can be found.  */
+/*                                                                   */
+/* They're implemented as #define build OPTIONS so the developer is  */
+/* able to see both what the original code WAS doing as well as how  */
+/* the fix/workaround was implemented. This allow us, at any time,   */
+/* to disable the fix/workaround and restore the original code if    */
+/* we think we might have discovered the root cause of the original  */
+/* problem and wish to test a possible permanent fix for it.         */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+#define OPTION_USE_SKAIP_AS_LOCK        // Use SKAIP as lock, not RCP
+#define OPTION_SIE2BK_FLD_COPY          // SIE2BK 'fld' is NOT a mask
+#define OPTION_IODELAY_KLUDGE           // IODELAY kludge for Linux
+#define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
+#define OPTION_SIE_PURGE_DAT_ALWAYS     // Ivan 2016-07-30: purge DAT
+                                        // ALWAYS at start SIE mode
+#define OPTION_NOASYNC_SF_CMDS          // Bypass bug in cache logic
+                                        // (see GitHub Issue #618!)
+
+/*-------------------------------------------------------------------*/
+/*              Normal default OPTIONs and FEATUREs                  */
+/*-------------------------------------------------------------------*/
+
+//efine OPTION_SKEY_ABS_CHECK           /* skey debugging option     */
+//efine OPTION_ATOMIC_SKEYS             /* Update skeys atomically   */
+
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
 
 #define CKD_MAXFILES                 27 /* Max files per CKD volume  */
 
+#define PANEL_REFRESH_RATE_MIN    (1000 / CLK_TCK)  /* (likely 1ms!) */
+#define PANEL_REFRESH_RATE_MAX     5000 /* Arbitrary, but reasonable */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */
 
-#define MIN_TOD_UPDATE_USECS          1 /* Min TOD updt freq (usecs) */
+#define MIN_TOD_UPDATE_USECS         50 /* Min TOD updt freq (usecs) */
 #define DEF_TOD_UPDATE_USECS         50 /* Def TOD updt freq (usecs) */
-#define MAX_TOD_UPDATE_USECS    1000000 /* Max TOD updt freq (usecs) */
+#define MAX_TOD_UPDATE_USECS     999999 /* Max TOD updt freq (usecs) */
 
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
-
-#define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
-#define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
-#define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
 //efine OPTION_LONG_HOSTINFO            /* Detailed host & logo info */
-
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
-#undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
-#define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
+#undef  OPTION_INSTR_COUNT_AND_TIME     /* First use trace and count */
 #undef  MODEL_DEPENDENT_STCM            /* STCM, STCMH always store  */
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 
@@ -52,11 +84,12 @@
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
 //efine SIE_DEBUG_PERFMON               /* SIE performance monitor   */
 
+#define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
+
 #if !defined( OPTION_OPTINST ) && !defined( NO_OPTINST )
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #endif
-
-#define OPTION_NO_E3_OPTINST            /* Temporary?                */
+#define OPTION_NO_E3_OPTINST            /* Problematic!              */
 
 #if defined( HAVE_FULL_KEEPALIVE )
   #if !defined( HAVE_PARTIAL_KEEPALIVE ) || !defined( HAVE_BASIC_KEEPALIVE )
@@ -89,6 +122,12 @@
   #error Either OPTION_WATCHDOG or OPTION_NO_WATCHDOG must be specified, not both
 #elif !defined( OPTION_WATCHDOG ) && !defined( OPTION_NO_WATCHDOG )
   #define OPTION_WATCHDOG
+#endif
+
+#define OPTION_HARDWARE_SYNC_ALL        // All PERFORM_SERIALIZATION
+//#define OPTION_HARDWARE_SYNC_BCR_ONLY   // ONLY the BCR instructions
+#if defined( OPTION_HARDWARE_SYNC_ALL ) && defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
+  #error OPTION_HARDWARE_SYNC_ALL and OPTION_HARDWARE_SYNC_BCR_ONLY are mutually exclusive!
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -206,6 +245,7 @@
 #undef  FEATURE_054_EE_CMPSC_FACILITY
 #undef  FEATURE_057_MSA_EXTENSION_FACILITY_5
 #undef  FEATURE_058_MISC_INSTR_EXT_FACILITY_2
+#undef  FEATURE_061_MISC_INSTR_EXT_FACILITY_3
 #undef  FEATURE_066_RES_REF_BITS_MULT_FACILITY
 #undef  FEATURE_067_CPU_MEAS_COUNTER_FACILITY
 #undef  FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY
@@ -218,9 +258,11 @@
 #undef  DYNINST_077_MSA_EXTENSION_FACILITY_4               /*dyncrypt*/
 #undef  FEATURE_078_ENHANCED_DAT_FACILITY_2
 #undef  FEATURE_080_DFP_PACK_CONV_FACILITY
+#undef  FEATURE_081_PPA_IN_ORDER_FACILITY
 #undef  FEATURE_129_ZVECTOR_FACILITY
 #undef  FEATURE_130_INSTR_EXEC_PROT_FACILITY
 #undef  FEATURE_131_SIDE_EFFECT_ACCESS_FACILITY
+#undef  FEATURE_131_ENH_SUPP_ON_PROT_2_FACILITY
 #undef  FEATURE_133_GUARDED_STORAGE_FACILITY
 #undef  FEATURE_134_ZVECTOR_PACK_DEC_FACILITY
 #undef  FEATURE_135_ZVECTOR_ENH_FACILITY_1
@@ -230,7 +272,22 @@
 #undef  FEATURE_144_TEST_PEND_EXTERNAL_FACILITY
 #undef  FEATURE_145_INS_REF_BITS_MULT_FACILITY
 #undef  FEATURE_146_MSA_EXTENSION_FACILITY_8
+#undef  FEATURE_148_VECTOR_ENH_FACILITY_2
+#undef  FEATURE_149_MOVEPAGE_SETKEY_FACILITY
+#undef  FEATURE_150_ENH_SORT_FACILITY
+#undef  FEATURE_151_DEFLATE_CONV_FACILITY
+#undef  FEATURE_152_VECT_PACKDEC_ENH_FACILITY
+#undef  FEATURE_155_MSA_EXTENSION_FACILITY_9
+#undef  FEATURE_158_ULTRAV_CALL_FACILITY
+#undef  FEATURE_161_SEC_EXE_UNPK_FACILITY
+#undef  FEATURE_165_NNET_ASSIST_FACILITY
 #undef  FEATURE_168_ESA390_COMPAT_MODE_FACILITY
+#undef  FEATURE_169_SKEY_REMOVAL_FACILITY
+#undef  FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY
+#undef  FEATURE_193_BEAR_ENH_FACILITY
+#undef  FEATURE_194_RESET_DAT_PROT_FACILITY
+#undef  FEATURE_196_PROC_ACT_FACILITY
+#undef  FEATURE_197_PROC_ACT_EXT_1_FACILITY
 
 /*-------------------------------------------------------------------*/
 /*      FEATUREs that DON'T have any facility bits defined           */
@@ -282,7 +339,6 @@
 #undef  FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #undef  FEATURE_INTEGRATED_3270_CONSOLE
 #undef  FEATURE_INTEGRATED_ASCII_CONSOLE
-#undef  FEATURE_INTERPRETIVE_EXECUTION
 #undef  FEATURE_INTERVAL_TIMER
 #undef  FEATURE_IO_ASSIST
 #undef  FEATURE_LINKAGE_STACK
@@ -301,6 +357,8 @@
 #undef  FEATURE_PER1
 #undef  FEATURE_PER2
 #undef  FEATURE_PER3
+#undef  FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY
+#undef  FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY
 #undef  FEATURE_PERFORM_LOCKED_OPERATION
 #undef  FEATURE_PRIVATE_SPACE
 #undef  FEATURE_PROGRAM_DIRECTED_REIPL
@@ -321,6 +379,7 @@
 #undef  FEATURE_SEGMENT_PROTECTION
 #undef  FEATURE_SERVICE_PROCESSOR
 #undef  FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST
+#undef  FEATURE_SIE
 #undef  FEATURE_SQUARE_ROOT
 #undef  FEATURE_STORAGE_KEY_ASSIST
 #undef  FEATURE_STORAGE_PROTECTION_OVERRIDE
@@ -336,5 +395,6 @@
 #undef  FEATURE_VM_BLOCKIO
 #undef  FEATURE_WAITSTATE_ASSIST
 #undef  FEATURE_TCPIP_EXTENSION
+#undef  FEATURE_ZVM_ESSA
 
 /* end of FEATALL.H */

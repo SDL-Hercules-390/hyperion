@@ -452,9 +452,9 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
                 WRMSG(HHC01050,"D",LCSS_DEVNUM,txt,buf);
                 buf[0] = 0;
             }
-            MSGBUF(buf, ": %04X", (unsigned) i);
+            MSGBUF(buf, "%04X:", (unsigned) i);
         }
-        if( i%4 == 0 && i)
+        if( i%4 == 0 )
         {
             STRLCAT( buf, " " );
         }
@@ -1042,7 +1042,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
             }
             if  (ca->uctrans && c >= 'a' && c <= 'z')
             {
-                c = toupper( c );     /* make uppercase */
+                c = toupper( (unsigned char)c );     /* make uppercase */
             }
             /* now map the character from ASCII into proper S/370 byte format */
             if (ca->term == COMMADPT_TERM_TTY)
@@ -1307,7 +1307,7 @@ static void *commadpt_thread(void *vca)
     init_signaled=0;
 
     /* Set server thread priority; ignore any errors */
-    set_thread_priority( sysblk.srvprio);
+    SET_THREAD_PRIORITY( sysblk.srvprio, sysblk.qos_user_initiated );
 
     MSGBUF(threadname, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
     LOG_THREAD_BEGIN( threadname );
@@ -1474,7 +1474,7 @@ static void *commadpt_thread(void *vca)
                 if(ca->inbfr.havedata || ca->eol_flag)
                 {
                     if (ca->term == COMMADPT_TERM_2741) {
-                        usleep(10000);
+                        USLEEP(10000);
                     }
                     ca->curpending=COMMADPT_PEND_IDLE;
                     signal_condition(&ca->ipc);
@@ -1541,6 +1541,7 @@ static void *commadpt_thread(void *vca)
                     FD_SET(ca->sfd,&rfd);
                     maxfd=maxfd<ca->sfd?ca->sfd:maxfd;
                 }
+                /* FALLTHRU */
                 /* DO NOT BREAK - Continue with WRITE processing */
             case COMMADPT_PEND_WRITE:
                 if(!writecont)
@@ -3533,20 +3534,29 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
                             {
                                 /* If there was a DLE on previous pass */
                                 if(gotdle)
-                            {
-                                /* check for DLE/ETX */
-                                if(b==0x02)
                                 {
-                                    /* Indicate transparent mode on */
-                                    turnxpar=1;
+                                    /* check for DLE/STX */
+                                    if(b==0x02)
+                                    {
+                                        /* Indicate transparent mode on */
+                                        turnxpar=1;
+                                    }
+                                   gotdle=0;
+                                }
+                                else
+                                {
+                                    if((b==0x03) || (b==0x26))
+                                    {
+                                        commadpt_ring_push(&dev->commadpt->outbfr,b);
+                                        break;
+                                    }
                                 }
                             }
                         }
-                    }
-                }  /* end of else (async) */
-                /* Put the current byte on the output ring */
-                commadpt_ring_push(&dev->commadpt->outbfr,b);
-            }
+                    }  /* end of else (async) */
+                    /* Put the current byte on the output ring */
+                    commadpt_ring_push(&dev->commadpt->outbfr,b);
+                }
             if (IS_BSC_LNCTL(dev->commadpt))
             {
                 /* If we had a DLE/STX, the line is now in Transparent Write Wait state */

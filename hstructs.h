@@ -1,5 +1,6 @@
 /* HSTRUCTS.H   (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) Copyright TurboHercules, SAS 2011                */
+/*              (C) and others 2013-2023                             */
 /*              Hercules Structure Definitions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -11,6 +12,48 @@
 //      The <config.h> header and other required headers are
 //      presumed to have already been #included ahead of it...
 
+//---------------------------------------------------------------------
+//             *** IMPORTANT PROGRAMMING NOTE ***
+//---------------------------------------------------------------------
+//
+//  Normally, using any type of architecturally dependent constant
+//  in any of the below REGS, SYSBLK or DEVBLK structures (such as
+//  RADR) would be considered a serious error, since the width of
+//  such constants varies depending on which architecture is being
+//  built at the time. RADR for example is 32-bits wide (U32) for
+//  the S370 and S390 architectures (__GEN_ARCH == 370 or 390) but
+//  is 64-bits wide (U64) for z/Arch (__GEN_ARCH == 900), which
+//  would result in a different size/layout for each struct (REGS,
+//  SYSBLK and DEVBLK), which needless to say would be VERY BAD!
+//
+//  Our "RADR" constant however (which is used in several different
+//  places in the below structures) is an exception to the rule. It
+//  is completely safe to use RADR in the below structs because it
+//  is always #defined as a 64-bit wide U64 whenever build support
+//  for z/Architecture SIE is defined (i.e. _FEATURE_ZSIE), which
+//  forces RADR to always be #defined as U64 regardless of which
+//  build architecture is being built. When the 370 or 390 build
+//  architectures are being built for example, RADR -- which would
+//  normally be #defined as U32 for 370 and 390 -- is nevertheless
+//  defined as U64 instead via the following code in "feature.h":
+//
+//          #if !defined( _FEATURE_ZSIE )
+//            #define RADR    U32
+//            #define F_RADR  "%8.8"PRIX32
+//          #else
+//            #define RADR    U64
+//            #define F_RADR  "%16.16"PRIX64
+//          #endif
+//
+//  Thus it is safe to use 'RADR' in any of the below structures
+//  since it should thus *always* end up being defined as a U64.
+//
+//  Using any OTHER type of build architecture dependent constant
+//  in any of the below strutures would be a SERIOUS ARCHITECTURE
+//  DEPENDENCY VIOLATION!
+//
+//---------------------------------------------------------------------
+
 #ifndef _HSTRUCTS_H
 #define _HSTRUCTS_H
 
@@ -20,6 +63,16 @@
 #include "telnet.h"         // Need telnet_t
 #include "stfl.h"           // Need STFL_HERC_BY_SIZE
 #include "cckd.h"           // Need CCKD structs
+#include "transact.h"       // Need Transactional Execution Facility
+
+#if !defined( _FEATURE_SIE )
+  /*------------------------------------------------------------*/
+  /* FIXME: all RADR fields should be changed to U64 instead!   */
+  /* Refer to *** IMPORTANT PROGRAMMING NOTE *** further above! */
+  /*------------------------------------------------------------*/
+  #error RADR struct use causes arch dep violation for non-SIE builds!
+#endif
+
 
 /*-------------------------------------------------------------------*/
 /*              Typedefs for CPU bitmap fields                       */
@@ -28,7 +81,7 @@
 /* width of the bitmap depends on the maximum number of processing   */
 /* engines that was selected at build time.                          */
 /*                                                                   */
-/* Due to GCC and MSVC limitations, a MAX_CPU_ENGINES value greater  */
+/* Due to GCC and MSVC limitations, a 'MAX_CPU_ENGS' value greater   */
 /* than 64 (e.g. 128) is only supported on platforms whose long long */
 /* integer size is actually 128 bits:                                */
 /*                                                                   */
@@ -39,21 +92,21 @@
 /*  less than 128 bits wide."                                        */
 /*-------------------------------------------------------------------*/
 
-#if MAX_CPU_ENGINES <= 0
-  #error MAX_CPU_ENGINES must be greater than zero!
-#elif MAX_CPU_ENGINES <= 32
+#if MAX_CPU_ENGS <= 0
+  #error MAX_CPU_ENGS must be greater than zero!
+#elif MAX_CPU_ENGS <= 32
     typedef U32                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%8.8"PRIX32
-#elif MAX_CPU_ENGINES <= 64
+#elif MAX_CPU_ENGS <= 64
     typedef U64                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%16.16"PRIX64
-#elif MAX_CPU_ENGINES <= 128
+#elif MAX_CPU_ENGS <= 128
   typedef __uint128_t         CPU_BITMAP;
   // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
   #define SUPPRESS_128BIT_PRINTF_FORMAT_WARNING
   #define F_CPU_BITMAP        "%16.16"PRIX64
 #else
-  #error MAX_CPU_ENGINES cannot exceed 128
+  #error MAX_CPU_ENGS cannot exceed 128
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -72,80 +125,114 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 struct REGS {                           /* Processor registers       */
+
 #define HDL_NAME_REGS   "REGS"          /* Eye-Catch NAME            */
 #define HDL_VERS_REGS   "SDL 4.00"      /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
-/*000*/ BLOCK_HEADER;                   /* Name of block   REGS_CP00 */
-/*030*/ U64     cpuid;                  /* Formatted CPU ID          */
-/*038*/ U32     cpuserial;              /* CPU serial number         */
-/*03C*/ U16     cpumodel;               /* CPU model number          */
-/*03E*/ U8      cpuversion;             /* CPU version code          */
-/*03F*/ U8      _cpu_reserved;          /* Reserved for future use   */
+
+        BLOCK_HEADER;                   /* Name of block   REGS_CP00 */
+
+        U64     cpuid;                  /* Formatted CPU ID          */
+        U32     cpuserial;              /* CPU serial number         */
+        U16     cpumodel;               /* CPU model number          */
+        U8      cpuversion;             /* CPU version code          */
+        U8      cpu_reserved;           /* (reserved for future use) */
+
                                         /* --- 64-byte cache line -- */
-/*040*/ SYSBLK *sysblk;                 /* Pointer to sysblk         */
+        SYSBLK *sysblk;                 /* Pointer to sysblk         */
+
         ALIGN_8
-/*048*/ U32     ints_state;             /* CPU Interrupts Status     */
-/*04C*/ U32     ints_mask;              /* Respective Interrupts Mask*/
-/*050*/ CPU_BITMAP cpubit;              /* Only this CPU's bit is 1  */
+        U32     ints_state;             /* CPU Interrupts Status     */
+        U32     ints_mask;              /* Respective Interrupts Mask*/
+        CPU_BITMAP cpubit;              /* Only this CPU's bit is 1  */
+
         ALIGN_16
-/*060*/ BYTE    cpustate;               /* CPU stopped/started state */
-/*061*/ BYTE    _cpu_reserved2;         /* Available...              */
-/*062*/ U16     extccpu;                /* CPU causing external call */
-/*064*/ int     arch_mode;              /* Architectural mode        */
-/*068*/ BYTE   *ip;                     /* Mainstor inst address     */
-/*070*/ DW      px;                     /* Prefix register           */
-                                        /* --- 64-byte cache line -- */
-/*080*/ PSW     psw;                    /* Program status word       */
-/*0E8-0FF*/                             /* Available...              */
+        BYTE    cpustate;               /* CPU stopped/started state */
+        BYTE    _cpu_reserved2;         /* Available...              */
+        U16     extccpu;                /* CPU causing external call */
+        int     arch_mode;              /* Architectural mode        */
+        BYTE   *ip;                     /* Mainstor inst address     */
 
-        ALIGN_128                       /* --- 64-byte cache line -- */
-/*100*/ BYTE    malfcpu                 /* Malfuction alert flags    */
-                    [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
+        DW      px;                     /* Prefix register           */
+#define PX_G    px.D
+#define PX_L    px.F.L.F
+
+        PSW     psw;                    /* Program status word       */
+
         ALIGN_128
-/*180*/ BYTE    emercpu                 /* Emergency signal flags    */
-                    [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
+        BYTE    malfcpu                 /* Malfuction alert flags    */
+                    [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
 
-     /* AIA - Instruction fetch accelerator                          */
-/*200*/ ALIGN_128
+        ALIGN_128
+        BYTE    emercpu                 /* Emergency signal flags    */
+                    [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
+
+        /* AIA - Instruction fetch accelerator                       */
+
+        ALIGN_128
         BYTE   *aip;                    /* Mainstor page address     */
-/*208*/ ALIGN_8
-        uintptr_t aim;                  /* Mainstor xor address      */
-/*210*/ ALIGN_8
+
+        ALIGN_8
         BYTE   *aie;                    /* Mainstor page end address */
-/*218*/ DW      aiv;                    /* Virtual page address      */
 
-/*220*/ U64     bear;                   /* Breaking event address reg*/
-/*228*/ BYTE   *bear_ip;                /* Breaking event inst ptr   */
+        DW      aiv;                    /* Virtual page address      */
+#define AIV_G   aiv.D
+#define AIV_L   aiv.F.L.F
 
-/*230-27F*/                             /* Available...              */
+        U64     bear;                   /* Breaking event address reg*/
+        U64     bear_ex;                /* (same, but for EX/EXRL)   */
 
-
-/*280*/ ALIGN_128
+        ALIGN_128
         DW      gr[16];                 /* General registers         */
-/*300*/ U32     ar[16];                 /* Access registers          */
-/*340*/ U32     fpr[32];                /* Floating point registers  */
-/*380*/ U32     fpc;                    /* IEEE Floating Point
-                                                    Control Register */
-/*384*/ BYTE    __reserved_space[52];   /* Available...              */
+        U32     ar[16];                 /* Access registers          */
+        U32     fpr[32];                /* FP registers              */
+        U32     fpc;                    /* FP Control register       */
 
-#define CR_ASD_REAL     -1
-#define CR_ALB_OFFSET   16
+#define GR_G(_r)     gr[(_r)].D
+#define GR_H(_r)     gr[(_r)].F.H.F       /* Fullword bits 0-31      */
+#define GR_HHH(_r)   gr[(_r)].F.H.H.H.H   /* Halfword bits 0-15      */
+#define GR_HHL(_r)   gr[(_r)].F.H.H.L.H   /* Halfword low, bits 16-31*/
+#define GR_HHLCL(_r) gr[(_r)].F.H.H.L.B.L /* Character, bits 24-31   */
+#define GR_L(_r)     gr[(_r)].F.L.F       /* Fullword low, bits 32-63*/
+#define GR_LHH(_r)   gr[(_r)].F.L.H.H.H   /* Halfword bits 32-47     */
+#define GR_LHL(_r)   gr[(_r)].F.L.H.L.H   /* Halfword low, bits 48-63*/
+#define GR_LHHCH(_r) gr[(_r)].F.L.H.H.B.H /* Character, bits 32-39   */
+#define GR_LA24(_r)  gr[(_r)].F.L.A.A     /* 24 bit addr, bits 40-63 */
+#define GR_LA8(_r)   gr[(_r)].F.L.A.B     /* 24 bit addr, unused bits*/
+#define GR_LHLCL(_r) gr[(_r)].F.L.H.L.B.L /* Character, bits 56-63   */
+#define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H /* Character, bits 48-55   */
 
-#ifndef NOCHECK_AEA_ARRAY_BOUNDS
-/*3B8*/ DW      cr_struct[1+16+16];
-#define XR(_crn) cr_struct[1+(_crn)]
-#else
-#define XR(_crn) cr[(_crn)]
-/*3B8*/ DW      cr_special[1];          /* Negative Index into cr    */
-/*3C0*/ DW      cr[16];                 /* Control registers         */
-/*440*/ DW      alb[16];                /* Accesslist Lookaside cr   */
-#endif
+#define AR(_r)       ar[(_r)]
 
-/*4C0*/ U32     dxc;                    /* Data exception code       */
-/*4C4*/                                 /* Available...              */
-/*4C8*/ DW      mc;                     /* Monitor Code              */
-/*4D0*/ DW      ea;                     /* Exception address         */
-/*4D8*/ DW      et;                     /* Execute Target address    */
+        ALIGN_128
+        DW           cr_struct[1+16+16];  /* Control registers       */
+#define XR(_crn)     cr_struct[1+(_crn)]
+#define CR_G(_r)     XR((_r)).D           /* Bits 0-63               */
+#define CR_H(_r)     XR((_r)).F.H.F       /* Fullword bits 0-31      */
+#define CR_HHH(_r)   XR((_r)).F.H.H.H.H   /* Halfword bits 0-15      */
+#define CR_HHL(_r)   XR((_r)).F.H.H.L.H   /* Halfword low, bits 16-31*/
+#define CR_L(_r)     XR((_r)).F.L.F       /* Fullword low, bits 32-63*/
+#define CR_LHH(_r)   XR((_r)).F.L.H.H.H   /* Halfword bits 32-47     */
+#define CR_LHHCH(_r) XR((_r)).F.L.H.H.B.H /* Character, bits 32-39   */
+#define CR_LHL(_r)   XR((_r)).F.L.H.L.H   /* Halfword low, bits 48-63*/
+
+#define CR_ASD_REAL    -1
+#define CR_ALB_OFFSET  16
+#define ARN(_arn)      ((_arn) >= USE_ARMODE ? ((_arn) & 0xF) : (_arn))
+
+        U32     dxc;                    /* Data exception code       */
+
+        DW      mc;                     /* Monitor Code              */
+#define MC_G    mc.D
+#define MC_L    mc.F.L.F
+
+        DW      ea;                     /* Exception address         */
+#define EA_G    ea.D
+#define EA_L    ea.F.L.F
+
+        DW      et;                     /* Execute Target address    */
+#define ET_G    et.D
+#define ET_L    et.F.L.F
 
         unsigned int                    /* Flags (cpu thread only)   */
                 execflag:1,             /* 1=EXecuted instruction    */
@@ -164,12 +251,14 @@ struct REGS {                           /* Processor registers       */
                 loadstate:1,            /* 1=CPU is in load state    */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
-                tracing:1,              /* 1=Trace is active         */
+                insttrace:1,            /* 1=Inst trace enabled      */
+                breakortrace:1,         /* 1=Inst break/trace active */
+                stepping:1,             /* 1=Inst stepping is active */
                 stepwait:1,             /* 1=Wait in inst stepping   */
                 sigp_reset:1,           /* 1=SIGP cpu reset received */
                 sigp_ini_reset:1;       /* 1=SIGP initial cpu reset  */
 
-        CACHE_ALIGN                     /* --- 64-byte cache line -- */
+        CACHE_ALIGN
         S64     tod_epoch;              /* TOD epoch for this CPU    */
         TOD     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
@@ -181,7 +270,6 @@ struct REGS {                           /* Processor registers       */
         S32     old_timer;              /* S/370 Interval timer int  */
         S32     ecps_oldtmr;            /* ECPS Virtual Int. tmr int */
 
-                                        /* --- 64-byte cache line -- */
         BYTE   *ecps_vtmrpt;            /* Pointer to VTMR or zero   */
 
         U64     rcputime;               /* Real CPU time used (us)   */
@@ -192,47 +280,14 @@ struct REGS {                           /* Processor registers       */
         U32     siocount;               /* SIO/SSCH counter          */
         U32     siosrate;               /* IOs per second            */
         U64     siototal;               /* Total SIO/SSCH count      */
-                                        /* --- 64-byte cache line -- */
+
         int     cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait     */
         U64     waittime;               /* Wait time in interval     */
         U64     waittime_accumulated;   /* Wait time accumulated     */
 
-        CACHE_ALIGN                     /* --- 64-byte cache line -- */
+        CACHE_ALIGN
         DAT     dat;                    /* Fields for DAT use        */
-
-#define GR_G(_r) gr[(_r)].D
-#define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
-#define GR_HHH(_r) gr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
-#define GR_HHL(_r) gr[(_r)].F.H.H.L.H    /* Halfword low, bits 16-31 */
-#define GR_HHLCL(_r) gr[(_r)].F.H.H.L.B.L   /* Character, bits 24-31 */
-#define GR_L(_r) gr[(_r)].F.L.F          /* Fullword low, bits 32-63 */
-#define GR_LHH(_r) gr[(_r)].F.L.H.H.H    /* Halfword bits 32-47      */
-#define GR_LHL(_r) gr[(_r)].F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define GR_LHHCH(_r) gr[(_r)].F.L.H.H.B.H   /* Character, bits 32-39 */
-#define GR_LA24(_r) gr[(_r)].F.L.A.A     /* 24 bit addr, bits 40-63  */
-#define GR_LA8(_r) gr[(_r)].F.L.A.B      /* 24 bit addr, unused bits */
-#define GR_LHLCL(_r) gr[(_r)].F.L.H.L.B.L   /* Character, bits 56-63 */
-#define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H   /* Character, bits 48-55 */
-#define CR_G(_r)   XR((_r)).D            /* Bits 0-63                */
-#define CR_H(_r)   XR((_r)).F.H.F        /* Fullword bits 0-31       */
-#define CR_HHH(_r) XR((_r)).F.H.H.H.H    /* Halfword bits 0-15       */
-#define CR_HHL(_r) XR((_r)).F.H.H.L.H    /* Halfword low, bits 16-31 */
-#define CR_L(_r)   XR((_r)).F.L.F        /* Fullword low, bits 32-63 */
-#define CR_LHH(_r) XR((_r)).F.L.H.H.H    /* Halfword bits 32-47      */
-#define CR_LHHCH(_r) XR((_r)).F.L.H.H.B.H   /* Character, bits 32-39 */
-#define CR_LHL(_r) XR((_r)).F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define MC_G      mc.D
-#define MC_L      mc.F.L.F
-#define EA_G      ea.D
-#define EA_L      ea.F.L.F
-#define ET_G      et.D
-#define ET_L      et.F.L.F
-#define PX_G      px.D
-#define PX_L      px.F.L.F
-#define AIV_G     aiv.D
-#define AIV_L     aiv.F.L.F
-#define AR(_r)    ar[(_r)]
 
         U16     chanset;                /* Connected channel set     */
         U16     monclass;               /* Monitor event class       */
@@ -246,40 +301,50 @@ struct REGS {                           /* Processor registers       */
                                         /* guest storage limit (SIE) */
         union
         {
-            PSA_3XX *psa;         /* -> PSA for this CPU 370 and ESA */
-            PSA_900 *zpsa;     /* -> PSA for this CPU when in z arch */
+            PSA_3XX *psa;               /* -> PSA for 370 and ESA    */
+            PSA_900 *zpsa;              /* -> PSA for z/Arch         */
         };
 
-     /*
-      * The fields hostregs and guestregs have been move outside the
-      * scope of _FEATURE_SIE to reduce conditional code.
-      *
-      *   sysblk.regs[i] always points to the host regs
-      *   flag `host' is always 1 for the host regs
-      *   flag `guest' is always 1 for the guest regs
-      *   `hostregs' is always equal to sysblk.regs[i] (in both
-      *       hostregs and guestregs)
-      *   `guestregs' is always equal to sysblk.regs[i]->guestregs
-      *       (in both hostregs and guestregs).
-      *       sysblk.regs[i]->guestregs is NULL until the first SIE
-      *       instruction is executed on that CPU.
-      *   `sie_active' is 1 in hostregs if SIE is executing
-      *       and the current register context is `guestregs'
-      *   `sie_mode' is 1 in guestregs always
-      *   `sie_state' has the real address of the SIEBK
-      *   `siebk' has the mainstor address of the SIEBK
-      */
+    /*---------------------------------------------------------------*/
+    /*                     PROGRAMMING NOTE                          */
+    /*---------------------------------------------------------------*/
+    /* The fields 'hostregs' and 'guestregs' have been moved outside */
+    /* the scope of _FEATURE_SIE to reduce conditional code.         */
+    /*                                                               */
+    /*   'sysblk.regs[i]'   ALWAYS points to the host regs           */
+    /*                                                               */
+    /*   'hostregs'         ALWAYS = sysblk.regs[i]                  */
+    /*                      in BOTH host regs and guest regs         */
+    /*                                                               */
+    /*   'guestregs'        ALWAYS = sysblk.regs[i]->guestregs       */
+    /*                      in BOTH host regs and guest regs,        */
+    /*                      but will be NULL until the first SIE     */
+    /*                      instruction is executed on that CPU.     */
+    /*                                                               */
+    /*   'host'             ALWAYS 1 in host regs ONLY               */
+    /*   'sie_active'       ALWAYS 1 in host regs ONLY whenever      */
+    /*                      the SIE instruction is executing.        */
+    /*                                                               */
+    /*   'guest'            ALWAYS 1 in guest regs ONLY              */
+    /*   'sie_mode'         ALWAYS 1 in guest regs ONLY              */
+    /*                                                               */
+    /*   'sie_state'        host real address of the SIEBK           */
+    /*   'siebk'            mainstor  address of the SIEBK           */
+    /*                                                               */
+    /*---------------------------------------------------------------*/
+
         REGS   *hostregs;               /* Pointer to the hypervisor
                                            register context          */
         REGS   *guestregs;              /* Pointer to the guest
                                            register context          */
 
-#if defined(_FEATURE_SIE)
-        CACHE_ALIGN                     /* --- 64-byte cache line -- */
+#if defined( _FEATURE_SIE )
+
+        CACHE_ALIGN
         RADR    sie_state;              /* Address of the SIE state
                                            descriptor block or 0 when
                                            not running under SIE     */
-        SIEBK  *siebk;                  /* Sie State Desc structure  */
+        SIEBK  *siebk;                  /* SIE State Desc structure  */
         RADR    sie_px;                 /* Host address of guest px  */
         RADR    sie_mso;                /* Main Storage Origin       */
         RADR    sie_xso;                /* eXpanded Storage Origin   */
@@ -287,18 +352,20 @@ struct REGS {                           /* Processor registers       */
         RADR    sie_rcpo;               /* Ref and Change Preserv.   */
         RADR    sie_scao;               /* System Contol Area        */
         S64     sie_epoch;              /* TOD offset in state desc. */
-#endif /*defined(_FEATURE_SIE)*/
+#endif
         unsigned int
-                sie_active:1,           /* SIE active (host only)    */
-                sie_mode:1,             /* Running under SIE (guest) */
+                sie_active:1,           /* SIE active   (host  only) */
+                sie_mode:1,             /* In SIE mode  (guest only) */
                 sie_pref:1;             /* Preferred-storage mode    */
+                                        /* (e.g. V=R guest)          */
 
-// #if defined(FEATURE_PER)
+        bool    sie_fld;                /* SIE2BK fld field provided */
+
         ALIGN_16
         U16     perc;                   /* PER code                  */
         RADR    peradr;                 /* PER address               */
         BYTE    peraid;                 /* PER access id             */
-// #endif /*defined(FEATURE_PER)*/
+        RADR    periaddr;               /* Fetched instruct. address */
 
      /*
       * Making the following flags 'stand-alone' (instead of bit-
@@ -307,18 +374,18 @@ struct REGS {                           /* Processor registers       */
       * used during synchronize broadcast (cpu<->cpu communication)
       */
         ALIGN_8
-        int     intwait;                /* 1=Waiting on intlock      */
+        bool    intwait;                /* true = Waiting on intlock */
         BYTE    inst[8];                /* Fetched instruction when
                                            instruction crosses a page
                                            boundary                  */
         BYTE    *invalidate_main;       /* Mainstor addr to invalidat*/
-        CACHE_ALIGN                     /* --- 64-byte cache line -- */
+
+        CACHE_ALIGN
         PSW     captured_zpsw;          /* Captured-z/Arch PSW reg   */
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
         CACHE_ALIGN
         VFREGS *vf;                     /* Vector Facility           */
 #endif
-
         CACHE_ALIGN
         jmp_buf progjmp;                /* longjmp destination for
                                            program check return      */
@@ -329,36 +396,133 @@ struct REGS {                           /* Processor registers       */
         COND    intcond;                /* CPU interrupt condition   */
         LOCK    *cpulock;               /* CPU lock for this CPU     */
 
-     /* Mainstor address lookup accelerator                          */
+        /* Mainstor address lookup accelerator                       */
 
         BYTE    aea_mode;               /* aea addressing mode       */
 
-#ifndef NOCHECK_AEA_ARRAY_BOUNDS
         int     aea_ar_struct[5+16];
 #define AEA_AR(_arn) aea_ar_struct[5+(_arn)]
-#else
-#define AEA_AR(_arn) aea_ar[(_arn)]
-        int     aea_ar_special[5];      /* Negative index into ar    */
-        int     aea_ar[16];             /* arn to cr number          */
-#endif
 
-#ifndef NOCHECK_AEA_ARRAY_BOUNDS
         BYTE    aea_common_struct[1+16+16];
 #define AEA_COMMON(_asd) aea_common_struct[1+(_asd)]
-#else
-#define AEA_COMMON(_asd) aea_common[(_asd)]
-        BYTE    aea_common_special[1];  /* real asd                  */
-        BYTE    aea_common[16];         /* 1=asd is not private      */
-        BYTE    aea_common_alb[16];     /* alb pseudo registers      */
-#endif
 
         BYTE    aea_aleprot[16];        /* ale protected             */
 
      /* Function pointers */
-        pi_func program_interrupt;
+        pi_func  program_interrupt;
 
      /* Active Facility List */
         BYTE    facility_list[ STFL_HERC_BY_SIZE ];
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /*---------------------------------------------------------------*/
+    /*      Transactional-Execution Facility control fields          */
+    /*---------------------------------------------------------------*/
+
+        TDB     txf_tdb;                /* Internal TDB              */
+
+        bool    txf_NTSTG;              /* true == NTSTG instruction */
+        bool    txf_contran;            /* true == CONSTRAINED mode  */
+        bool    txf_UPGM_abort;         /* true == transaction was
+                                           aborted due to TAC_UPGM   */
+        int     txf_aborts;             /* Abort count               */
+        S32     txf_PPA;                /* PPA assistance level      */
+        BYTE    txf_tnd;                /* Transaction nesting depth.
+                                           Use txf_lock to access!   */
+
+        BYTE    txf_ctlflag;            /* Flags for access mode
+                                           change, float allowed     */
+
+#define TXF_CTL_AR      0x08            /* AR reg changes allowed
+                                           in transaction mode       */
+#define TXF_CTL_FLOAT   0x04            /* Float and vector allowed
+                                           in transaction mode       */
+#define TXF_CTL_PIFC    0x03            /* PROG 'rupt filtering ctl. */
+
+        U16     txf_higharchange;       /* Highest level that
+                                           AR change is active       */
+
+        U16     txf_highfloat;          /* Highest level that
+                                           float is active           */
+
+        U16     txf_instctr;            /* Instruction counter for
+                                           contran and auto abort*/
+
+        U16     txf_abortctr;           /* If non-zero, abort when
+                                           txf_instctr >= this value */
+
+        U16     txf_pifc;               /* Program-Interruption
+                                           Filtering Control (PIFC)  */
+
+#define TXF_PIFC_NONE       0           /* Exception conditions having
+                                           classes 1, 2 or 3 always
+                                           result in an interruption */
+
+#define TXF_PIFC_LIMITED    1           /* Exception conditions having
+                                           classes 1 or 2 result in an
+                                           interruption; conditions
+                                           having class 3 do not result
+                                           in an interruption.       */
+
+#define TXF_PIFC_MODERATE   2           /* Only exception conditions
+                                           having class 1 result in an
+                                           interruption; conditions
+                                           having classes 2 or 3 do not
+                                           result in an interruption */
+
+#define TXF_PIFC_RESERVED   3           /* Reserved (invalid)        */
+
+        U64     txf_tdba;               /* TBEGIN TDB address        */
+        int     txf_tdba_b1;            /* TBEGIN op1 base address   */
+        U64     txf_conflict;           /* Logical address where
+                                           conflict was detected     */
+
+        TPAGEMAP  txf_pagesmap[ MAX_TXF_PAGES ]; /* Page addresses   */
+        int       txf_pgcnt;            /* Entries in TPAGEMAP table */
+
+        BYTE    txf_gprmask;            /* GPR register restore mask */
+        DW      txf_savedgr[16];        /* Saved gpr register values */
+
+        int     txf_tac;                /* Transaction abort code.
+                                           Use txf_lock to access!   */
+
+        int     txf_random_tac;         /* Random abort code         */
+
+        /* --------------- TXF debugging --------------------------- */
+
+        int          txf_who;           /* CPU doing delayed abort   */
+        const char*  txf_loc;           /* Where the abort occurred  */
+
+        /*-----------------------------------------------------------*/
+        /* Transaction Abort PSW fields                              */
+
+        PSW        txf_tapsw;           /* Transaction abort PSW     */
+        BYTE*      txf_ip;              /* AIA Mainstor inst address */
+        BYTE*      txf_aip;             /* AIA Mainstor page address */
+        DW         txf_aiv;             /* AIA Virtual page address  */
+
+        /*-----------------------------------------------------------*/
+        /* CONSTRAINED transaction instruction fetching constraint   */
+
+        BYTE*   txf_aie;                /* Maximum trans ip address  */
+        U64     txf_aie_aiv;            /* Virtual page address      */
+        U64     txf_aie_aiv2;           /* 2nd page if trans crosses */
+        int     txf_aie_off2;           /* Offset into 2nd page      */
+        /*-----------------------------------------------------------*/
+
+        U32     txf_piid;               /* Transaction Program
+                                           Interrupt Identifier      */
+        BYTE    txf_dxc_vxc;            /* Data/Vector Exception Code*/
+
+        U32     txf_why;                /* why transaction aborted   */
+                                        /* see transact.h for codes  */
+        int     txf_lastarn;            /* Last access arn           */
+
+        U16     txf_pifctab[ MAX_TXF_TND ];   /* PIFC control table  */
+
+        TXFTRACE  txf_trace;            /* Saved values for tracing  */
+
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
      /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */
@@ -458,6 +622,10 @@ enum OPERATION_MODE
     om_emif  = 2    /*  lparmode = 1; cpuidfmt = 1; partitions 0-255 */
 };
 
+/* We use the below in sysblk, but it's not defined except on Apple. */
+#if !defined( BUILD_APPLE_M1 )
+    typedef unsigned qos_class_t;
+#endif
 
 /*-------------------------------------------------------------------*/
 /* System configuration block                                        */
@@ -477,6 +645,7 @@ struct SYSBLK {
   const char  **bld_opts;               /* Build options             */
   const char  **extpkg_vers;            /* External Package versions */
 
+        bool    ulimit_unlimited;       /* ulimit -c unlimited       */
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         LOCK    bindlock;               /* Sockdev bind lock         */
@@ -504,6 +673,16 @@ struct SYSBLK {
         TID     loggertid;              /* logger_thread Thread-id   */
 #if defined( OPTION_WATCHDOG )
         TID     wdtid;                  /* Thread-id for watchdog    */
+#if defined( _MSVC_ )
+        /* Normal operation: both false. During suspend but before
+           resume, suspended = true, resumed = false. After waking
+           up from being suspended, suspended = false, resumed = true.
+           Watchdog thread will reset resumed to false again once it
+           notices resumed = true.
+        */
+        bool    sys_suspended;          /* System has been suspended */
+        bool    sys_resumed;            /* System has been resumed   */
+#endif
 #endif
         enum OPERATION_MODE operation_mode; /* CPU operation mode    */
         u_int   lparmode:1;             /* LPAR mode active          */
@@ -534,16 +713,77 @@ struct SYSBLK {
         U8      cpcai;                  /* Dynamic CP capacity adj.  */
         U8      hhc_111_112;            /* HHC00111/HHC00112 issued  */
         U8      unused1;                /* (pad/align/unused/avail)  */
+
         COND    cpucond;                /* CPU config/deconfig cond  */
-        LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
-        TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
-        TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
-        clockid_t                              /* CPU clock          */
-                cpuclockid[MAX_CPU_ENGINES];   /* identifiers        */
-        BYTE    ptyp[MAX_CPU_ENGINES];  /* SCCB ptyp for each engine */
+        LOCK    cpulock[ MAX_CPU_ENGS ];/* CPU lock               */
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+        /* Transactional-Execution Facility locks                    */
+
+        LOCK    txf_lock[ MAX_CPU_ENGS ]; /* CPU transaction lock for
+                                             txf_tnd/txf_tac access  */
+
+#define OBTAIN_TXFLOCK( regs )    obtain_lock ( &sysblk.txf_lock[ (regs)->cpuad ])
+#define RELEASE_TXFLOCK( regs )   release_lock( &sysblk.txf_lock[ (regs)->cpuad ])
+
+        // PROGRAMMING NOTE: we purposely define the below count
+        // as a signed value (rather than unsigned) so that we can
+        // detect if, due to a bug, it ever goes negative (which
+        // would indicate a serious logic error!). This is checked
+        // by the UPDATE_SYSBLK_TRANSCPUS macro, which should be
+        // the only way this field is ever updated.
+
+        S32     txf_transcpus;          /* Counts transacting CPUs   */
+
+        /* Transactional-Execution Facility debugging flags          */
+
+        U32     txf_tracing;            /* TXF tracing control;      */
+                                        /* see #defines below.       */
+        U32     txf_why_mask;           /* (only when TXF_TR_WHY)    */
+        int     txf_tac;                /* (only when TXF_TR_TAC)    */
+        int     txf_tnd;                /* (only when TXF_TR_TND)    */
+        int     txf_fails;              /* (only when TXF_TR_FAILS)  */
+        int     txf_cpuad;              /* (only when TXF_TR_CPU)    */
+
+        TID     rubtid;                 /* Threadid for rubato timer */
+        LOCK    rublock;                /* Rubato thread lock        */
+        U32     txf_counter;            /* counts TBEGIN/TBEGINC     */
+        int     txf_timerint;           /* modulation of timerint    */
+
+#define TXF_TR_INSTR    0x80000000      // instructions
+#define TXF_TR_C        0x08000000      // constrained
+#define TXF_TR_U        0x04000000      // unconstrained
+#define TXF_TR_SUCCESS  0x00800000      // success
+#define TXF_TR_FAILURE  0x00400000      // failure
+#define TXF_TR_WHY      0x00200000      // why mask
+#define TXF_TR_TAC      0x00100000      // TAC
+#define TXF_TR_TND      0x00080000      // TND
+#define TXF_TR_CPU      0x00040000      // specific CPU
+#define TXF_TR_FAILS    0x00020000      // aborted count
+#define TXF_TR_TDB      0x00000800      // tdb
+#define TXF_TR_PAGES    0x00000080      // page information
+#define TXF_TR_LINES    0x00000040      // cache lines too
+
+        TXFSTATS  txf_stats[2];         /* Transactional statistics
+                                           (slot 0 = unconstrained)  */
+#define TXF_STATS( ctr, contran )       \
+                                        \
+atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
+
+#define TXF_CONSTRAINED( contran ) (contran ? "CONSTRAINED" : "UNconstrained" )
+
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+        TOD     cpucreateTOD[ MAX_CPU_ENGS ];   /* CPU creation time */
+        TID     cputid[ MAX_CPU_ENGS ];         /* CPU thread ids    */
+        clockid_t                               /* CPU clock         */
+                cpuclockid[ MAX_CPU_ENGS ];     /* identifiers       */
+
+        BYTE    ptyp[ MAX_CPU_ENGS ];   /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
-        REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
+        REGS   *regs[ MAX_CPU_ENGS + 1];/* Registers for each CPU    */
 
         /* Active Facility List */
         BYTE    facility_list[ NUM_GEN_ARCHS ][ STFL_HERC_DW_SIZE * sizeof( DW ) ];
@@ -573,14 +813,14 @@ struct SYSBLK {
 #endif
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
-        VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
+        VFREGS  vf[ MAX_CPU_ENGS ];     /* Vector Facility           */
 #endif
 #if defined(_FEATURE_SIE)
         ZPBLK   zpb[FEATURE_SIE_MAXZONES];  /* SIE Zone Parameter Blk*/
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(OPTION_FOOTPRINT_BUFFER)
-        REGS    footprregs[MAX_CPU_ENGINES][OPTION_FOOTPRINT_BUFFER];
-        U32     footprptr[MAX_CPU_ENGINES];
+        REGS    footprregs[ MAX_CPU_ENGS ][OPTION_FOOTPRINT_BUFFER];
+        U32     footprptr[ MAX_CPU_ENGS ];
 #endif
 #define LOCK_OWNER_NONE  0xFFFF
 #define LOCK_OWNER_OTHER 0xFFFE
@@ -650,7 +890,27 @@ struct SYSBLK {
 #define SHCMDOPT_ENABLE   0x01          /* Allow host shell access   */
 #define SHCMDOPT_DIAG8    0x02          /* Allow for DIAG8 as well   */
         int     panrate;                /* Panel refresh rate        */
+        int     pan_colors;             /* Panel colors option:      */
+
+#define PANC_NONE   0                   /* No colors (default)       */
+#define PANC_DARK   1                   /* Dark background scheme    */
+#define PANC_LIGHT  2                   /* Light/white background    */
+
+        int pan_color[7][2];            /* Panel message colors:     */
+
+#define PANC_X_IDX      0               /*  (default)                */
+#define PANC_I_IDX      1               /*  'I'nformational          */
+#define PANC_E_IDX      2               /*  'E'rror                  */
+#define PANC_W_IDX      3               /*  'W'arning                */
+#define PANC_D_IDX      4               /*  'D'ebug                  */
+#define PANC_S_IDX      5               /*  'S'evere                 */
+#define PANC_A_IDX      6               /*  'A'ction                 */
+
+#define PANC_FG_IDX     0               /*  Foreground               */
+#define PANC_BG_IDX     1               /*  Background               */
+
         int     timerint;               /* microsecs timer interval  */
+        int     cfg_timerint;           /* (value defined in config) */
         char   *pantitle;               /* Alt console panel title   */
 #if defined( OPTION_SCSI_TAPE )
         /* Access to all SCSI fields controlled by sysblk.stape_lock */
@@ -668,15 +928,6 @@ struct SYSBLK {
                 stape_query_status_tod; /* TOD of last status query  */
 #endif // defined( OPTION_SCSI_TAPE )
 
-
-        /*-----------------------------------------------------------*/
-        /*      Control Units                                        */
-        /*-----------------------------------------------------------*/
-
-        U16     cuhigh;                 /* Highest used CU number    */
-       CHAINBLK cuchain;                /* -> CU chain               */
-
-
         /*-----------------------------------------------------------*/
         /*      Devices                                              */
         /*-----------------------------------------------------------*/
@@ -690,6 +941,10 @@ struct SYSBLK {
         int     highsubchan[FEATURE_LCSS_MAX];  /* Highest subchan+1 */
         CHPBLK *firstchp;               /* -> First channel path     */
         LOCK    dasdcache_lock;         /* Global DASD caching lock  */
+
+        int     num_pfxs;               /* Number  command prefixes  */
+        char*   cmd_pfxs;               /* Default command prefixes  */
+        char*   used_pfxs;              /* Used    command prefixes  */
 
         /*-----------------------------------------------------------*/
         /*      I/O Management                                       */
@@ -726,6 +981,7 @@ struct SYSBLK {
         unsigned int                    /* Flags                     */
                 sys_reset:1,            /* 1 = system in reset state */
                 ipled:1,                /* 1 = guest has been IPL'ed */
+                sfcmd:1,                /* 1 = 'sf' command issued   */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
                 npquiet:1,              /* New Panel quiet indicator */
@@ -734,8 +990,10 @@ struct SYSBLK {
                 scpimply:1,             /* scp imply mode indicator  */
 #endif
                 sigintreq:1,            /* 1 = SIGINT request pending*/
-                insttrace:1,            /* 1 = Instruction trace     */
-                inststep:1,             /* 1 = Instruction step      */
+                insttrace:1,            /* 1 = Inst trace enabled    */
+                tfnostop:1,             /* 1 = tf continue tracing   */
+                instbreak:1,            /* 1 = Inst break enabled    */
+                shutbegin:1,            /* 1 = shutdown begin req    */
                 shutdown:1,             /* 1 = shutdown requested    */
                 shutfini:1,             /* 1 = shutdown complete     */
                 shutimmed:1,            /* 1 = shutdown req immed    */
@@ -758,17 +1016,20 @@ struct SYSBLK {
                 nolrasoe:1,             /* 1 = No trace LRA Special  */
                                         /*     Operation Exceptions  */
                 noch9oflow:1,           /* Suppress CH9 O'Flow trace */
-                devnameonly:1;          /* Display only dev filename */
+                devnameonly:1,          /* Display only dev filename */
+                config_processed;       /* config file processed     */
+        int     quitmout;               /* quit timeout value        */
         U32     ints_state;             /* Common Interrupts Status  */
         CPU_BITMAP config_mask;         /* Configured CPUs           */
         CPU_BITMAP started_mask;        /* Started CPUs              */
         CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
-        U16     stepasid;               /* Stepping ASID             */
-        U64     stepaddr[2];            /* Stepping address range    */
+        U16     breakasid;              /* Break ASID                */
+        U64     breakaddr[2];           /* Break address range       */
         U64     traceaddr[2];           /* Tracing address range     */
         U64     auto_trace_beg;         /* Automatic t+ instcount    */
         U64     auto_trace_amt;         /* Automatic tracing amount  */
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
+        char    loadparm[8+1];          /* Default LOADPARM          */
 #ifdef _FEATURE_ECPSVM
 //
         /* ECPS:VM */
@@ -782,6 +1043,7 @@ struct SYSBLK {
 //
 #endif
         U64     pgminttr;               /* Program int trace mask    */
+        U32     ostailor;               /* Current OSTAILOR setting  */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
         int     hercnice;               /* Herc. process NICE value  */
         int     minprio;                /* pthread minimum priority  */
@@ -793,11 +1055,19 @@ struct SYSBLK {
         int     srvprio;                /* Listeners thread priority */
         TID     httptid;                /* HTTP listener thread id   */
 
+     /* Classes of service for macOS's scheduler on Apple Silicon.   */
+        qos_class_t qos_user_interactive;
+        qos_class_t qos_user_initiated;
+        qos_class_t qos_default;
+        qos_class_t qos_utility;
+        qos_class_t qos_background;
+
      /* Fields used by SYNCHRONIZE_CPUS */
-        int     syncing;                /* 1=Sync in progress        */
+        bool    syncing;                /* 1=Sync in progress        */
         CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
-        COND    sync_cond;              /* COND for syncing CPU      */
-        COND    sync_bc_cond;           /* COND for other CPUs       */
+        COND    all_synced_cond;        /* Sync in progress COND     */
+        COND    sync_done_cond;         /* Synchronization done COND */
+
 #if defined( OPTION_SHARED_DEVICES )
         LOCK    shrdlock;               /* shrdport LOCK             */
         COND    shrdcond;               /* shrdport COND             */
@@ -820,61 +1090,88 @@ struct SYSBLK {
         gid_t   rgid, egid, sgid;
 #endif /*!defined(NO_SETUID)*/
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 
         bool    icount;                 /* true = enabled, else not. */
+        struct timeval start_time;      /* OPCODE start time         */
 
-#define IMAP_FIRST      sysblk.imap01
+        struct IMAPS {
+            U64 imap01[256];
+            U64 imapa4[256];
+            U64 imapa5[16];
+            U64 imapa6[256];
+            U64 imapa7[16];
+            U64 imapb2[256];
+            U64 imapb3[256];
+            U64 imapb9[256];
+            U64 imapc0[16];
+            U64 imapc2[16];
+            U64 imapc4[16];
+            U64 imapc6[16];
+            U64 imapc8[16];
+            U64 imape3[256];
+            U64 imape4[256];
+            U64 imape5[256];
+            U64 imape7[256];
+            U64 imapeb[256];
+            U64 imapec[256];
+            U64 imaped[256];
+            U64 imapxx[256];
 
-        U64 imap01[256];
-        U64 imapa4[256];
-        U64 imapa5[ 16];
-        U64 imapa6[256];
-        U64 imapa7[ 16];
-        U64 imapb2[256];
-        U64 imapb3[256];
-        U64 imapb9[256];
-        U64 imapc0[ 16];
-        U64 imapc2[ 16];
-        U64 imapc4[ 16];
-        U64 imapc6[ 16];
-        U64 imapc8[ 16];
-        U64 imape3[256];
-        U64 imape4[256];
-        U64 imape5[256];
-        U64 imapeb[256];
-        U64 imapec[256];
-        U64 imaped[256];
-        U64 imapxx[256];
+            U64 imap01T[256];
+            U64 imapa4T[256];
+            U64 imapa5T[16];
+            U64 imapa6T[256];
+            U64 imapa7T[16];
+            U64 imapb2T[256];
+            U64 imapb3T[256];
+            U64 imapb9T[256];
+            U64 imapc0T[16];
+            U64 imapc2T[16];
+            U64 imapc4T[16];
+            U64 imapc6T[16];
+            U64 imapc8T[16];
+            U64 imape3T[256];
+            U64 imape4T[256];
+            U64 imape5T[256];
+            U64 imape7T[256];
+            U64 imapebT[256];
+            U64 imapecT[256];
+            U64 imapedT[256];
+            U64 imapxxT[256];
+        } imaps;
 
-#define IMAP_SIZE \
-            ( sizeof(sysblk.imap01) \
-            + sizeof(sysblk.imapa4) \
-            + sizeof(sysblk.imapa5) \
-            + sizeof(sysblk.imapa6) \
-            + sizeof(sysblk.imapa7) \
-            + sizeof(sysblk.imapb2) \
-            + sizeof(sysblk.imapb3) \
-            + sizeof(sysblk.imapb9) \
-            + sizeof(sysblk.imapc0) \
-            + sizeof(sysblk.imapc2) /*@Z9*/ \
-            + sizeof(sysblk.imapc4) /*208*/ \
-            + sizeof(sysblk.imapc6) /*208*/ \
-            + sizeof(sysblk.imapc8) \
-            + sizeof(sysblk.imape3) \
-            + sizeof(sysblk.imape4) \
-            + sizeof(sysblk.imape5) \
-            + sizeof(sysblk.imapeb) \
-            + sizeof(sysblk.imapec) \
-            + sizeof(sysblk.imaped) \
-            + sizeof(sysblk.imapxx) )
-
-#endif // defined( OPTION_INSTRUCTION_COUNTING )
+#endif // defined( OPTION_INSTR_COUNT_AND_TIME )
 
         char    *cnslport;              /* console port string       */
+        char    *sysgport;              /* SYSG console port string  */
         char    **herclogo;             /* Constructed logo screen   */
         char    *logofile;              /* File name of logo file    */
         size_t  logolines;              /* Logo file number of lines */
+
+        /*-----------------------------------------------------------*/
+        /*      Trace File support                                   */
+        /*-----------------------------------------------------------*/
+
+        LOCK        tracefileLock;      /* LOCK for below fields     */
+#define OBTAIN_TRACEFILE_LOCK()     obtain_lock(  &sysblk.tracefileLock )
+#define RELEASE_TRACEFILE_LOCK()    release_lock( &sysblk.tracefileLock )
+        const char* tracefilename;      /* File name of trace file   */
+        FILE*       traceFILE;          /* Ptr to trace file FILE    */
+        U64         curtracesize;       /* Current trace file size   */
+        U64         maxtracesize;       /* Maximum trace file size   */
+        void*       tracefilebuff;      /* Ptr to trace file buffer  */
+
+        TFGSK*      s370_gsk;           /* s370_get_storage_key      */
+        TFGSK*      s390_gsk;           /* s390_get_storage_key      */
+        TFGSK*      z900_gsk;           /* z900_get_storage_key      */
+
+        TFVTR*      s370_vtr;           /* virt_to_real              */
+        TFVTR*      s390_vtr;           /* virt_to_real              */
+        TFVTR*      z900_vtr;           /* virt_to_real              */
+
+        TFSIT*      s370_sit;           /* store_int_timer           */
+        TFGCT*      gct;                /* get_cpu_timer             */
 
         /* Merged Counters for all CPUs                              */
         U64     instcount;              /* Instruction counter       */
@@ -938,22 +1235,6 @@ struct IOINT {                          /* I/O interrupt queue entry */
 #endif // defined( OPTION_SCSI_TAPE )
 
 /*-------------------------------------------------------------------*/
-/* Control Unit configuration block                                  */
-/*-------------------------------------------------------------------*/
-
-typedef struct _CUBLK {                 /* CU configuration block    */
-        CHAIN   chain;                  /* Block chain               */
-        U16     cunum;                  /* CU number                 */
-        void   *cudesc;                 /* CU descriptor             */
-        U8      maxssid;                /* Maximum number of SSIDs   */
-        U8      ssidcount;              /* Number of associated SSID */
-       CHAINBLK sschain;                /* Associated SSIDs          */
-        U16     maxdev;                 /* Maximum associated dev    */
-        U16     devcount;               /* Number of associated dev  */
-} CUBLK;
-
-
-/*-------------------------------------------------------------------*/
 /* tdparms loader types (ACL mode)                                   */
 /*-------------------------------------------------------------------*/
 enum type_loader {  LDR_MANUAL, /* No automation             */
@@ -961,23 +1242,6 @@ enum type_loader {  LDR_MANUAL, /* No automation             */
                     LDR_SILO,   /* Use LOAD DISPLAY          */
                     LDR_QUEUE   /* Like AUTO                 */
                  };
-
-/*-------------------------------------------------------------------*/
-/* Subsystem ID configuration block                                  */
-/*-------------------------------------------------------------------*/
-
-typedef struct _SSBLK {                 /* Subsystem ID block        */
-        CHAIN   chain;                  /* Block chain               */
-        CUBLK  *cu;                     /* Owning CU                 */
-        U16     ssid;                   /* Subsystem ID (if present) */
-        LOCK    lock;                   /* Update lock               */
-        void   *cudesc;                 /* CU descriptor             */
-        U16     maxdev;                 /* Maximum associated dev    */
-        U8      devcount;               /* Number of associated dev  */
-        DEVBLK *dev[256];               /* Associated devblocks      */
-        void   *stats;                  /* Associated statistics     */
-} SSBLK;
-
 
 /*-------------------------------------------------------------------*/
 /* Channel Path config block                                         */
@@ -992,6 +1256,17 @@ struct CHPBLK {
         BYTE    chptype;
 };
 
+/*-------------------------------------------------------------------*/
+/* Channel prefetch logic IDAW Types                                 */
+/*-------------------------------------------------------------------*/
+typedef enum
+{
+   PF_NO_IDAW = 0,
+   PF_IDAW1   = 1,      // Format-1 IDAW
+   PF_IDAW2   = 2,      // Format-2 IDAW
+   PF_MIDAW   = 3       // Modified-IDAW
+}
+PF_IDATYPE;
 
 /*-------------------------------------------------------------------*/
 /* Telnet Control Block                                              */
@@ -1004,6 +1279,7 @@ struct TELNET {
         char    tgroup[16];             /* Terminal group name       */
         char    clientid[32];           /* Client Id string          */
         int     csock;                  /* Client socket             */
+        bool    sysg;                   /* SYSG port connection      */
 
         unsigned int  sendbuf_size;     /* One shot send buffer size */
         char         *sendbuf;          /* One shot send buffer      */
@@ -1046,8 +1322,6 @@ struct DEVBLK {                         /* Device configuration block*/
         int     allocated;              /* Device block free/in use  */
 
         /*  device identification                                    */
-        CUBLK  *cu;                     /* -> Control Unit block     */
-        SSBLK  *ssidblk;                /* -> Subsystem ID block     */
         U16     ssid;                   /* Subsystem ID incl. lcssid */
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */
@@ -1189,9 +1463,7 @@ struct DEVBLK {                         /* Device configuration block*/
         unsigned int                    /* Flags                     */
                 append:1,               /* 1=append new data to end  */
                 s370start:1,            /* 1=S/370 non-BMX behavior  */
-#ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
-#endif /*OPTION_CKD_KEY_TRACING*/
 #if defined( OPTION_SHARED_DEVICES )
                 shareable:1,            /* 1=Device is shareable     */
 #endif // defined( OPTION_SHARED_DEVICES )
@@ -1207,7 +1479,7 @@ struct DEVBLK {                         /* Device configuration block*/
                 oslinux:1,              /* 1=Linux                   */
                 orbtrace:1,             /* 1=ORB trace               */
                 ccwtrace:1,             /* 1=CCW trace               */
-                ccwstep:1,              /* 1=CCW single step         */
+                ccwopstrace:1,          /* 1=trace CCW opcodes       */
                 cdwmerge:1,             /* 1=Channel will merge data
                                              chained write CCWs      */
                 debug:1,                /* 1=generic debug flag      */
@@ -1656,6 +1928,27 @@ struct DEVBLK {                         /* Device configuration block*/
 #define QTYPE_READ   1
 #define QTYPE_WRITE  2
 #define QTYPE_DATA   3
+
+// E7 Prefix CCW support...
+
+        BYTE    ckdformat;              /* Prefix CCW Format byte    */
+        BYTE    ckdvalid;               /* Prefix CCW Validity byte  */
+        BYTE    ckdauxiliary;           /* Prefix CCW auxiliary byte */
+
+// Format byte
+#define PFX_F_DX            0x00        /* Define Extent             */
+#define PFX_F_DX_LRE        0x01        /* DX+Locate Record Extended */
+#define PFX_F_DX_PSF        0x02        /* DX+Perform Subsys. Func.  */
+
+// Validity byte
+#define PFX_V_DX_VALID      0x80        /* Define Extent bytes valid */
+#define PFX_V_TS_VALID      0x40        /* DX Time Stamp field valid */
+
+// Auxiliary byte
+#define PFX_A_SMR           0x80        /* Suspend Multipath Reconn. */
+#define PFX_A_VALID         0x08        /* All DX+LRE parms valid    */
+
+        BYTE    ccwops[256];            /* CCW opcodes to trace      */
 
         BLOCK_TRAILER;                  /* eye-end                   */
 };

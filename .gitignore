@@ -9,6 +9,7 @@
 .DS_Store
 .deps/
 .libs/
+build/
 Makefile
 autogen.log
 config.log
@@ -16,6 +17,7 @@ autoconf/compile
 /aclocal.m4
 /autom4te.cache
 /cckd2ckd
+/cckd642ckd
 /cckdcdsk
 /cckdcdsk64
 /cckdcomp
@@ -26,7 +28,10 @@ autoconf/compile
 /cckdswap
 /cckdswap64
 /cfba2fba
+/cfba642fba
 /ckd2cckd
+/ckd2cckd64
+/conspawn
 /config.cache
 /config.h
 /config.h.in~
@@ -47,19 +52,30 @@ autoconf/compile
 /dasdseq
 /dasdser
 /dmap2hrc
+/dyncrypt
 /dyngui
 /dyngui.res
 /fba2cfba
+/fba2cfba64
+/hdasd
 /hdt1052c
 /hdt1403
 /hdt2703
+/hdt2880
 /hdt3088
 /hdt3270
 /hdt3420
 /hdt3505
 /hdt3525
+/hdt3705
+/hdtdummy
 /hdteq
 /hercifc
+/hdtptp
+/hdtqeth
+/hdttcpnje
+/hdtzfcp
+/hengine
 /herclin
 /hercules
 /hercules-*.tar.gz
@@ -69,8 +85,11 @@ autoconf/compile
 /hetinit
 /hetmap
 /hetupd
+/hsys
 /libtool
 /makefile
+/htape
+/hutil
 /maketape
 /msvc.AMD64.bin
 /msvc.AMD64.cod
@@ -88,6 +107,9 @@ autoconf/compile
 /tapecopy
 /tapemap
 /tapesplt
+/tfprint
+/tfswap
+/txt2card
 /vmfplc2
 /winbuild
 
@@ -161,3 +183,7 @@ allTests.*
 # Dynamically generated files
 /AutoBuildCount.h
 /_nmake_pjj.bat
+/3211.txt
+/tests/3330-shadow_1.cckd64
+/tests/3380-shadow_1.cckd64
+/tests/3390-shadow_1.cckd64

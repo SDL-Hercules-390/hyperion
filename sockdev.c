@@ -64,7 +64,9 @@ static void term_sockdev( void* arg )
     if (!init_done) init_sockdev();
     SIGNAL_SOCKDEV_THREAD();
     join_thread   ( sysblk.socktid, NULL );
-    detach_thread ( sysblk.socktid );
+#if defined( OPTION_FTHREADS )
+    detach_thread ( sysblk.socktid );  // only needed for fthreads
+#endif
 }
 
 /*-------------------------------------------------------------------*/
@@ -172,7 +174,7 @@ int inet_socket( char* spec )
         memcpy( &sin.sin_addr, he->h_addr_list[0], sizeof( sin.sin_addr ));
     }
 
-    if (isdigit( service[0] ))
+    if (isdigit( (unsigned char)service[0] ))
     {
         sin.sin_port = htons( atoi( service ));
     }
@@ -297,7 +299,7 @@ void socket_device_connection_handler( bind_struct* bs )
 
     /* Obtain the device lock */
 
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
     {
         /* Reject if device is busy or interrupt pending */
 
@@ -310,7 +312,7 @@ void socket_device_connection_handler( bind_struct* bs )
             close_socket( csock );
             // "%1d:%04X COMM: client %s, IP %s connection to device %s rejected: device busy or interrupt pending"
             WRMSG( HHC01037, "E", LCSS_DEVNUM, clientname, clientip, bs->spec );
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
@@ -322,7 +324,7 @@ void socket_device_connection_handler( bind_struct* bs )
             // "%1d:%04X COMM: client %s, IP %s connection to device %s rejected: client %s ip %s still connected"
             WRMSG( HHC01038, "E", LCSS_DEVNUM, clientname, clientip, bs->spec,
                 bs->clientname, bs->clientip );
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
@@ -345,14 +347,14 @@ void socket_device_connection_handler( bind_struct* bs )
             dev->fd = -1;
             // "%1d:%04X COMM: client %s, IP %s connection to device %s rejected: by onconnect callback"
             WRMSG( HHC01039, "E", LCSS_DEVNUM, clientname, clientip, bs->spec );
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
         // "%1d:%04X COMM: client %s, IP %s connected to device %s"
         WRMSG( HHC01040, "I", LCSS_DEVNUM, clientname, clientip, bs->spec );
     }
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
 
     device_attention( dev, CSW_DE );
 }
@@ -404,7 +406,7 @@ void* socket_thread( void* arg )
 
     UNREFERENCED( arg );
 
-    set_thread_priority( sysblk.srvprio );
+    SET_THREAD_PRIORITY( sysblk.srvprio, sysblk.qos_user_initiated );
 
     /* Display thread started message on control panel */
     LOG_THREAD_BEGIN( SOCKET_THREAD_NAME  );

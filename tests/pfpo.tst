@@ -1,45 +1,63 @@
 
-# This file was put into the public domain 2016-10-28
-# by John P. Hartmann.  You can use it for anything you like,
-# as long as this notice remains.
 
-#----------------------------------------------------------------------
-#     PROGRAMMING NOTE: until such time as we can code a PROPER
-#     test for this instruction, this test has been temporarily
-#     neutered.  It currently does NOTHING and tests NOTHING.
-#----------------------------------------------------------------------
-
-*Testcase PFPO-390: Perform Floating Point Operation (ESA/390 mode)
-
+*Testcase PFPO    ORIGINAL
+mainsize    3
+numcpu      1
 sysclear
-archlvl ESA/390
-
-# When run in ESA/390 mode, the test skips the PFPO instruction
-
-loadcore "$(testpath)/pfpo.core"
-
-runtest .1
-
+archlvl     z/Arch
+loadcore    "$(testpath)/pfpo.core"
+*
+* 6.283185307179586476925286766559004  (original input)
+*
+r 600=39FFD2B32D873E6E                # original input
+r 608=A9DAAD5ABE6B6404                # original input
+*
+defsym  expected1   416487ED          # expected original output
+defsym  expected2   5110B461          # expected original output
+*
+r  700=$(expected1)$(expected2)       # expected original output
+*
+runtest     .1                        # RUN THE TEST...
+*
+r  600.10                             # input
+*
+r  700.8                              # expected output
+*
+*Compare
+r  710.8
+*Want   $(expected1) $(expected2)
+*
 *Done
 
-#----------------------------------------------------------------------
 
-*Testcase PFPO-Z: Perform Floating Point Operation (z/Arch mode)
 
+
+
+*Testcase PFPO    TRUNCATED
+mainsize    3
+numcpu      1
 sysclear
-archlvl z/Arch
-
-# when run in z/Arch mode, the PFPO instruction is tested.  
-
-cr 00=0000000000040060          # (AFP bit 45 required for PFPO)
-
-loadcore "$(testpath)/pfpo.core"
-
-runtest .1
-
-gpr
-fpr
-
+archlvl     z/Arch
+loadcore    "$(testpath)/pfpo.core"
+*
+* 6.283185307179586476925286766559     (truncated input)
+*
+r 600=22008064ACCB61CF                # truncated input
+r 608=9BAA76AB56AF9AD9                # truncated input
+*
+defsym  expected1   416487ED          # expected truncated output
+defsym  expected2   5110B461          # expected truncated output
+*
+r  700=$(expected1)$(expected2)       # expected truncated output
+*
+runtest     .1                        # RUN THE TEST...
+*
+r  600.10                             # input
+*
+r  700.8                              # expected output
+*
+*Compare
+r  710.8
+*Want   $(expected1) $(expected2)
+*
 *Done
-
-#----------------------------------------------------------------------

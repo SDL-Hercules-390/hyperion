@@ -1,5 +1,5 @@
 * STFL/STFLE test
-sysclear           
+sysclear
 archmode ESAME
 r 000=0008000000000200                 # EC mode restart PSW
 r 068=000A00000000DEAD                 # EC mode pgm new PSW
@@ -30,4 +30,4 @@ pause 1
 * Display STFL facility bits
 r 0C8.4
 * Display STFLE result table - req.len : cond.code : ret.len : facility bits
-r 400.100          
+r 400.100

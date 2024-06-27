@@ -593,33 +593,31 @@ BYTE            skey1, skey2;           /* Storage keys of first and
         return 2;
     }
 
-    /* Obtain the device lock */
-    obtain_lock (&dev->lock);
-
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
-    /* Return code 5 and condition code 1 if status pending */
-    if ((dev->scsw.flag3 & SCSW3_SC_PEND)
-        || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
+    OBTAIN_DEVLOCK( dev );
     {
-        release_lock (&dev->lock);
-        regs->GR_L(15) = 5;
-        return 1;
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+        /* Return code 5 and condition code 1 if status pending */
+        if ((dev->scsw.flag3 & SCSW3_SC_PEND)
+            || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
+        {
+            RELEASE_DEVLOCK( dev );
+            regs->GR_L(15) = 5;
+            return 1;
+        }
+#endif
+
+        /* Return code 5 and condition code 1 if device is busy */
+        if (dev->busy || IOPENDING(dev))
+        {
+            RELEASE_DEVLOCK( dev );
+            regs->GR_L(15) = 5;
+            return 1;
+        }
+
+        /* Set the device busy indicator */
+        dev->busy = 1;
     }
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
-
-    /* Return code 5 and condition code 1 if device is busy */
-    if (dev->busy || IOPENDING(dev))
-    {
-        release_lock (&dev->lock);
-        regs->GR_L(15) = 5;
-        return 1;
-    }
-
-    /* Set the device busy indicator */
-    dev->busy = 1;
-
-    /* Release the device lock */
-    release_lock (&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
     /* Process each entry in the SBILIST */
     for (blkcount = 0; blkcount < sbicount; blkcount++)
@@ -631,8 +629,8 @@ BYTE            skey1, skey2;           /* Storage keys of first and
            or storage-protection override mechanisms, and
            an SBILIST entry cannot cross a page boundary */
         if (sbiaddr > regs->mainlim
-            || ((STORAGE_KEY(sbiaddr, regs) & STORKEY_FETCH)
-                && (STORAGE_KEY(sbiaddr, regs) & STORKEY_KEY) != ioparm.akey
+            || ((ARCH_DEP( get_storage_key )( sbiaddr ) & STORKEY_FETCH)
+                && (ARCH_DEP( get_storage_key )( sbiaddr ) & STORKEY_KEY) != ioparm.akey
                 && ioparm.akey != 0))
         {
             regs->GR_L(15) = 10;
@@ -643,7 +641,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
         blknum = ARCH_DEP(fetch_fullword_absolute)(sbiaddr, regs);
         absadr = ARCH_DEP(fetch_fullword_absolute)(sbiaddr+4, regs);
 
-        if (dev->ccwtrace || dev->ccwstep)
+        if (dev->ccwtrace)
         {
             WRMSG(HHC01952, "I",
                     LCSS_DEVNUM,
@@ -664,8 +662,8 @@ BYTE            skey1, skey2;           /* Storage keys of first and
            pages, and the access is not subject to fetch-protection
            override, storage-protection override, or low-address
            protection */
-        skey1 = STORAGE_KEY(absadr, regs);
-        skey2 = STORAGE_KEY(absadr + blksize - 1, regs);
+        skey1 = ARCH_DEP( get_storage_key )( absadr );
+        skey2 = ARCH_DEP( get_storage_key )( absadr + blksize - 1 );
         if (ioparm.akey != 0
             && (
                    ((skey1 & STORKEY_KEY) != ioparm.akey
@@ -835,33 +833,31 @@ BYTE            chanstat = 0;           /* Subchannel status         */
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
     }
 
-    /* Obtain the interrupt lock */
-    obtain_lock (&dev->lock);
-
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
-    /* Return code 5 and condition code 1 if status pending */
-    if ((dev->scsw.flag3 & SCSW3_SC_PEND)
-        || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
+    OBTAIN_DEVLOCK( dev );
     {
-        release_lock (&dev->lock);
-        regs->GR_L(15) = 5;
-        return 1;
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+        /* Return code 5 and condition code 1 if status pending */
+        if ((dev->scsw.flag3 & SCSW3_SC_PEND)
+            || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
+        {
+            RELEASE_DEVLOCK( dev );
+            regs->GR_L(15) = 5;
+            return 1;
+        }
+#endif
+
+        /* Return code 5 and condition code 1 if device is busy */
+        if (dev->busy || IOPENDING(dev))
+        {
+            RELEASE_DEVLOCK( dev );
+            regs->GR_L(15) = 5;
+            return 1;
+        }
+
+        /* Set the device busy indicator */
+        dev->busy = 1;
     }
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
-
-    /* Return code 5 and condition code 1 if device is busy */
-    if (dev->busy || IOPENDING(dev))
-    {
-        release_lock (&dev->lock);
-        regs->GR_L(15) = 5;
-        return 1;
-    }
-
-    /* Set the device busy indicator */
-    dev->busy = 1;
-
-    /* Release the device lock */
-    release_lock (&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
     /* Build the operation request block */
     memset (&dev->orb, 0, sizeof(ORB));
@@ -883,11 +879,13 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     residual = (dev->scsw.count[0] << 8) | dev->scsw.count[1];
 
     /* Clear the interrupt pending and device busy conditions */
-    obtain_lock (&dev->lock);
-    dev->busy = dev->pending = 0;
-    dev->scsw.flag2 = 0;
-    dev->scsw.flag3 = 0;
-    release_lock (&dev->lock);
+    OBTAIN_DEVLOCK( dev );
+    {
+        dev->busy = dev->pending = 0;
+        dev->scsw.flag2 = 0;
+        dev->scsw.flag3 = 0;
+    }
+    RELEASE_DEVLOCK( dev );
 
     /* Store the last CCW address in the parameter list */
     ioparm.lastccw[0] = (lastccw >> 24) & 0xFF;
@@ -1000,7 +998,7 @@ BYTE       c;                           /* Character work area       */
     for (i = 0; i < 8; i++)
     {
         c = (*puser == '\0' ? SPACE : *(puser++));
-        buf[16+i] = host_to_guest(toupper(c));
+        buf[16+i] = host_to_guest(toupper((unsigned char)c));
     }
 
     /* Bytes 24-31 contain the program product bitmap */
@@ -1155,7 +1153,7 @@ int     freeresp;                       /* Flag to free resp         */
         /* Issue the command and capture the response */
         if (cmdflags & CMDFLAGS_RESPONSE)
         {
-            panel_command_capture( cmd, &resp );
+            panel_command_capture( cmd, &resp, false );
 
             if (resp)
                 freeresp = 1;
@@ -1475,7 +1473,7 @@ S64     stglen;                        /* Storage extent area length */
              ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
          }
 
-         /* Convert real addres to absolute address */
+         /* Convert real address to absolute address */
          stgarea=APPLY_PREFIXING(stgarea,regs->PX );
 
          /* Check to ensure extent information can be stored */
@@ -1655,12 +1653,14 @@ BYTE    func;                           /* Function code...          */
         /* Obtain key from R2 register bits 24-28 */
         skey = regs->GR_L(r2) & (STORKEY_KEY | STORKEY_FETCH);
 
-        /* Set storage key for each frame within specified range */
+        /* Set storage key for each frame within specified range
+           without changing existing reference and change bits.
+        */
         for (abs = start; abs <= end; abs += STORAGE_KEY_PAGESIZE)
         {
-            STORAGE_KEY(abs, regs) &= ~(STORKEY_KEY | STORKEY_FETCH);
-            STORAGE_KEY(abs, regs) |= skey;
-        } /* end for(abs) */
+            BYTE refchg = ARCH_DEP( get_storage_key )( abs ) & (STORKEY_REF | STORKEY_CHANGE);
+            ARCH_DEP( put_storage_key )( abs, skey | refchg );
+        }
 
         break;
 
@@ -1686,13 +1686,14 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
+
 #if defined(FEATURE_ECPSVM)
     if(ecpsvm_doiucv(regs,b2,effective_addr2)==0)
     {
         return;
     }
 #endif
-
 
     /* Program check if in problem state,
        the IUCV instruction generates an operation exception
@@ -1707,7 +1708,6 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Set condition code to indicate IUCV not available */
     regs->psw.cc = 3;
-
 }
 
 #endif /*FEATURE_EMULATE_VM*/

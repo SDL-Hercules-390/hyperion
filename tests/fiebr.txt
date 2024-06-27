@@ -10,16 +10,16 @@ r 20E=41000004     # LA R0,4           R0=Number of test data
 r 212=41100320     # LA R1,TEST1       R1=>Test data table
 r 216=41E00400     # LA R14,EXPECT1    R14=>Expected result table
 r 21A=41F00500     # LA R15,ACTUAL1    R15=>Actual result table
-r 21E=78101000     #A LE F1,0(,R1)     Load FPR1=test data     
+r 21E=78101000     #A LE F1,0(,R1)     Load FPR1=test data
 r 222=41200004     # LA R2,4           R2=Number of BRM tests
 r 226=A7390000     # LGHI R3,0         R3=BRM 0
 r 22A=B2993000     #B SRNM 0(R3)       Set BFP rounding mode from R3
 r 22E=B3570001     # FIEBR F0,0,F1     Load FPR0=INT(FPR1)
 r 232=7000F000     # STE F0,0(,R15)    Store actual result
-r 236=ED00E0000009 # CEB F0,0(,R14)    Compare with expected result       
+r 236=ED00E0000009 # CEB F0,0(,R14)    Compare with expected result
 r 23C=A7840005     # BRE *+10          Skip if equal
 r 240=EB010318006A # ASI COUNT,1       Add 1 to error counter
-r 246=41E0E004     # LA R14,4(,R14)    R14=>next EXPECTn              
+r 246=41E0E004     # LA R14,4(,R14)    R14=>next EXPECTn
 r 24A=41F0F004     # LA R15,4(,R15)    R15=>next ACTUALn
 r 24E=41303001     # LA R3,1(,R3)      R3=>Next BRM
 r 252=4620022A     # BCT R2,B          Loop thru BRM 0-3
@@ -31,12 +31,12 @@ r 268=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 2F0=B2B201D0     # DIE LPSWE PGMNPSW Load disabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
+r 314=00000000     # FPCREG            Floating point control register
 r 318=00000000     # COUNT             Error counter
-r 320=40200000                         # TEST1 DC EB'2.5'        
-r 324=40600000                         # TEST2 DC EB'3.5'        
-r 328=C0200000                         # TEST3 DC EB'-2.5'        
-r 32C=C0600000                         # TEST4 DC EB'-3.5'        
+r 320=40200000                         # TEST1 DC EB'2.5'
+r 324=40600000                         # TEST2 DC EB'3.5'
+r 328=C0200000                         # TEST3 DC EB'-2.5'
+r 32C=C0600000                         # TEST4 DC EB'-3.5'
 r 400=40000000400000004040000040000000 # EXPECT1 DC EB'2,2,3,2'
 r 410=40800000404000004080000040400000 # EXPECT2 DC EB'4,3,4,3'
 r 420=C0000000C0000000C0000000C0400000 # EXPECT3 DC EB'-2,-2,-2,-3'
@@ -45,7 +45,7 @@ pgmtrace +7
 restart
 pause 1
 * Display test data
-r 320.10 
+r 320.10
 * Display expected results
 r 400.40
 * Display actual results

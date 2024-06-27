@@ -5,12 +5,12 @@ sysclear
 archmode esame
 r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
-r 200=41000002     # LA R0,X'02'       R0->function code 2 
+r 200=41000002     # LA R0,X'02'       R0->function code 2
 r 204=41100508     # LA R1,PB          R1->parameter block address
 r 208=B9280000     # PCKMO             Encrypt DEA Key
 r 20C=58000400     # LA R0,X'0A'       R0->function code 10 encrypt
 r 210=41100500     # LA R1,PB          R1->parameter block address
-r 214=41200600     # LA R2,FO          R2->first operand 
+r 214=41200600     # LA R2,FO          R2->first operand
 r 218=41400700     # LA R4,SO          R4->second operand
 r 21C=41500008     # LA R5,SOL         R5->second operand length
 r 220=B92B0024     # KMO R2,R4         Cipher message with output feedback

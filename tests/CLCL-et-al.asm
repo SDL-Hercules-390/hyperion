@@ -26,14 +26,9 @@
 *
 *     loadcore    "$(testpath)/CLCL-et-al.core"
 *
-*     runtest     2         # (NON-timing test duration)
 *     ##r           21fd=ff   # (enable timing tests too!)
 *     ##runtest     150       # (TIMING too test duration)
-*
-*     *Compare
-*     r 21fe.2
-*
-*     *Want  "Ending test/subtest number"   9510
+*     runtest     1         # (NON-timing test duration)
 *
 *     *Done
 *
@@ -84,13 +79,13 @@ CLCLetal ASALOAD  REGION=CODE
 *   R15      Secondary Subroutine call or work
 *
 ***********************************************************************
-                                                                SPACE 2
+                                                                SPACE
          USING  ASA,R0          Low core addressability
          USING  BEGIN,R2        FIRST Base Register
          USING  BEGIN+4096,R9   SECOND Base Register
          USING  IOCB,R3         SATK Device I/O Control Block
          USING  ORB,R8          ESA/390 Operation Request Block
-                                                                SPACE 2
+                                                                SPACE
 BEGIN    BALR  R2,0             Initalize FIRST base register
          BCTR  R2,0             Initalize FIRST base register
          BCTR  R2,0             Initalize FIRST base register
@@ -113,8 +108,21 @@ BEGIN    BALR  R2,0             Initalize FIRST base register
          BAL   R14,TEST94       Time TRT   instruction  (speed test)
 *
          BAL   R14,TEST95       Test CLCL page fault handling
-*
-         B     EOJ              Normal completion
+                                                                EJECT
+***********************************************************************
+*         Test for normal or unexpected test completion...
+***********************************************************************
+                                                                SPACE
+         CLI   TIMEOPT,X'00'    Normal (non-timing) run?
+         BNE   EOJ              No, timing run; just go end normally
+                                                                SPACE
+         CLI   TESTNUM,X'95'    Did we end on expected test?
+         BNE   FAILTEST         No?! Then FAIL the test!
+                                                                SPACE
+         CLI   SUBTEST,X'10'    Did we end on expected SUB-test?
+         BNE   FAILTEST         No?! Then FAIL the test!
+                                                                SPACE
+         B     EOJ              Yes, then normal completion!
                                                                 EJECT
 ***********************************************************************
 *        TEST01                 Test CLC instruction
@@ -1293,7 +1301,7 @@ MYPGMNEW MVC   PGMNPSW,SVPGMNEW   Restore original Program New PSW
          SRL   R0,12
          SLL   R0,12
                                                                 SPACE
-         SRL   R6,12              Where Page Fault is expected 
+         SRL   R6,12              Where Page Fault is expected
          SLL   R6,12
                                                                 SPACE
          CLR   R0,R6              Page Fault occur on expected Page?

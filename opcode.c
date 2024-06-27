@@ -1,6 +1,7 @@
 /* OPCODE.C     (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              (C) Copyright Roger Bowler, 2010-2011                */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2013-2023                             */
 /*              Instruction decoding functions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -574,6 +575,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( perform_processor_assist );
 #endif
 
+#if !defined( FEATURE_050_CONSTR_TRANSACT_FACILITY )
+ UNDEF_INST( transaction_begin_constrained )
+#endif
+
 #if !defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
  UNDEF_INST( load_halfword_high_immediate_on_condition );
  UNDEF_INST( load_halfword_immediate_on_condition );
@@ -587,6 +592,36 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( load_and_zero_rightmost_byte_grande );
  UNDEF_INST( load_logical_and_zero_rightmost_byte );
  UNDEF_INST( load_and_zero_rightmost_byte );
+#endif
+
+#if !defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+ UNDEF_INST( branch_indirect_on_condition )
+ UNDEF_INST( add_long_halfword )
+ UNDEF_INST( subtract_long_halfword )
+ UNDEF_INST( multiply_long_register )
+ UNDEF_INST( multiply_long )
+ UNDEF_INST( multiply_long_halfword )
+ UNDEF_INST( multiply_single_register_cc )
+ UNDEF_INST( multiply_single_cc )
+ UNDEF_INST( multiply_single_long_register_cc )
+ UNDEF_INST( multiply_single_long_cc )
+#endif
+
+#if !defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+ UNDEF_INST( and_register_with_complement )
+ UNDEF_INST( and_register_long_with_complement )
+ UNDEF_INST( nand_register )
+ UNDEF_INST( nand_register_long )
+ UNDEF_INST( not_xor_register )
+ UNDEF_INST( not_xor_register_long )
+ UNDEF_INST( nor_register )
+ UNDEF_INST( nor_register_long )
+ UNDEF_INST( or_register_with_complement )
+ UNDEF_INST( or_register_long_with_complement )
+ UNDEF_INST( select_register )
+ UNDEF_INST( select_register_long )
+ UNDEF_INST( select_fullword_high_register )
+ UNDEF_INST( move_right_to_left )
 #endif
 
 #if !defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
@@ -609,6 +644,18 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( query_sampling_information )
 #endif
 
+#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY)
+  UNDEF_INST( transaction_begin )
+  UNDEF_INST( transaction_abort )
+  UNDEF_INST( transaction_end )
+  UNDEF_INST( nontransactional_store )
+  UNDEF_INST( extract_transaction_nesting_depth )
+#endif
+
+#if !defined( FEATURE_074_STORE_HYPER_INFO_FACILITY )
+ UNDEF_INST( store_hypervisor_information )
+#endif
+
 #if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) || defined( DYNINST_076_MSA_EXTENSION_FACILITY_3 )
  UNDEF_INST( perform_cryptographic_key_management_operation )
 #endif
@@ -618,6 +665,23 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( cipher_message_with_output_feedback )
  UNDEF_INST( cipher_message_with_counter )
  UNDEF_INST( perform_cryptographic_computation )
+#endif
+
+#if !defined( FEATURE_080_DFP_PACK_CONV_FACILITY )
+ UNDEF_INST(convert_packed_to_dfp_long)
+ UNDEF_INST(convert_packed_to_dfp_ext)
+ UNDEF_INST(convert_dfp_long_to_packed)
+ UNDEF_INST(convert_dfp_ext_to_packed)
+#endif
+
+#if !defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
+ UNDEF_INST( insert_reference_bits_multiple )
+#endif
+
+#if !defined( FEATURE_193_BEAR_ENH_FACILITY )
+ UNDEF_INST( load_bear )
+ UNDEF_INST( store_bear )
+ UNDEF_INST( load_program_status_word_extended_y )
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -976,7 +1040,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( test_under_mask_low )
 #endif /*!defined( FEATURE_IMMEDIATE_AND_RELATIVE )*/
 
-#if !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if !defined( FEATURE_SIE )
  UNDEF_INST( start_interpretive_execution )
 #endif
 
@@ -1254,6 +1318,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( tcpip )
 #endif
 
+#if !defined( FEATURE_ZVM_ESSA )
+ UNDEF_INST( extract_and_set_storage_attributes )
+#endif
+
 /*----------------------------------------------------------------------------*/
 /*      Non-standard Extended Opcode intermediate jump "instructions"         */
 /*----------------------------------------------------------------------------*/
@@ -1348,6 +1416,359 @@ DEF_INST( operation_exception )
 }
 
 /*-------------------------------------------------------------------*/
+/*  (functions/declarations needed by below ARCH_DEP opcode table)   */
+/*-------------------------------------------------------------------*/
+#ifndef COMPILE_THIS_ONLY_ONCE
+#define COMPILE_THIS_ONLY_ONCE
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP Operation Exception function used in opcode tables  */
+/*-------------------------------------------------------------------*/
+static void ( ATTR_REGPARM(2) operation_exception )( BYTE inst[], REGS* regs )
+{
+    INST_UPDATE_PSW( regs, ILC( inst[0] ), ILC( inst[0] ));
+    regs->program_interrupt( regs, PGM_OPERATION_EXCEPTION );
+}
+
+/*-------------------------------------------------------------------*/
+/*  Forward references to instruction tracing functions needed       */
+/*  by the below ARCH_DEP master opcode table(s).                    */
+/*-------------------------------------------------------------------*/
+#define FWD_REF_IPRINT_FUNC( _asmfmt )  \
+  static int iprint_ ## _asmfmt( REGS* regs, BYTE inst[], char mnemonic[], char* prtbuf )
+
+FWD_REF_IPRINT_FUNC( ASMFMT_none );
+FWD_REF_IPRINT_FUNC( ASMFMT_E );
+FWD_REF_IPRINT_FUNC( ASMFMT_IE );
+FWD_REF_IPRINT_FUNC( ASMFMT_MII_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_RR );
+FWD_REF_IPRINT_FUNC( ASMFMT_RR_R1 );
+FWD_REF_IPRINT_FUNC( ASMFMT_RR_SVC );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRE );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRE_R1 );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRF_R );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRF_M );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRF_M3 );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRF_M4 );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRF_MM );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRF_RM );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRR );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRF_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_RX );
+FWD_REF_IPRINT_FUNC( ASMFMT_RXE );
+FWD_REF_IPRINT_FUNC( ASMFMT_RXY );
+FWD_REF_IPRINT_FUNC( ASMFMT_RXF );
+FWD_REF_IPRINT_FUNC( ASMFMT_RS );
+FWD_REF_IPRINT_FUNC( ASMFMT_RS_R1D2B2 );
+FWD_REF_IPRINT_FUNC( ASMFMT_RSY );
+FWD_REF_IPRINT_FUNC( ASMFMT_RSY_M3 );
+FWD_REF_IPRINT_FUNC( ASMFMT_RSL );
+FWD_REF_IPRINT_FUNC( ASMFMT_RSL_RM );
+FWD_REF_IPRINT_FUNC( ASMFMT_RSI );
+FWD_REF_IPRINT_FUNC( ASMFMT_RI );
+FWD_REF_IPRINT_FUNC( ASMFMT_RI_B );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIE );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIE_G );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIE_RRI );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIE_RIM );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIE_RRIM );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIE_RMII );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIE_RRIII );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIL );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIL_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_RIS );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRS );
+FWD_REF_IPRINT_FUNC( ASMFMT_SI );
+FWD_REF_IPRINT_FUNC( ASMFMT_SIY );
+FWD_REF_IPRINT_FUNC( ASMFMT_SIL );
+FWD_REF_IPRINT_FUNC( ASMFMT_SMI_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_S );
+FWD_REF_IPRINT_FUNC( ASMFMT_SS );
+FWD_REF_IPRINT_FUNC( ASMFMT_SS_L );
+FWD_REF_IPRINT_FUNC( ASMFMT_SS_L2 );
+FWD_REF_IPRINT_FUNC( ASMFMT_SS_R );
+FWD_REF_IPRINT_FUNC( ASMFMT_SS_R3 );
+FWD_REF_IPRINT_FUNC( ASMFMT_SS_RSRS );
+FWD_REF_IPRINT_FUNC( ASMFMT_SS_I );
+FWD_REF_IPRINT_FUNC( ASMFMT_SSE );
+FWD_REF_IPRINT_FUNC( ASMFMT_SSF );
+FWD_REF_IPRINT_FUNC( ASMFMT_SSF_RSS );
+FWD_REF_IPRINT_FUNC( ASMFMT_VS );
+
+#endif // COMPILE_THIS_ONLY_ONCE
+
+/*----------------------------------------------------------------------------*/
+/*        *ARCH_DEP*  master opcode table(s)  (compiled multiple times)       */
+/*----------------------------------------------------------------------------*/
+static INSTR_FUNC ARCH_DEP( gen_opcode_b2xx )[256][NUM_INSTR_TAB_PTRS] =
+{
+#if __GEN_ARCH == 370
+ /*B200*/ AD_GENx370x___x___ ( "CONCS"     , S    , ASMFMT_S       , connect_channel_set                     ),
+ /*B201*/ AD_GENx370x___x___ ( "DISCS"     , S    , ASMFMT_S       , disconnect_channel_set                  ),
+#elif __GEN_ARCH == 390
+ /*B200*/ AD_GENx___x___x___ ,
+ /*B201*/ AD_GENx___x___x___ ,
+#else // __GEN_ARCH == 900
+ /*B200*/ AD_GENx___x___x900 ( "LBEAR"     , S    , ASMFMT_S       , load_bear                               ),
+ /*B201*/ AD_GENx___x___x900 ( "STBEAR"    , S    , ASMFMT_S       , store_bear                              ),
+#endif
+ /*B202*/ AD_GENx370x390x900 ( "STIDP"     , S    , ASMFMT_S       , store_cpu_id                            ),
+ /*B203*/ AD_GENx370x___x___ ( "STIDC"     , S    , ASMFMT_S       , store_channel_id                        ),
+ /*B204*/ AD_GENx370x390x900 ( "SCK"       , S    , ASMFMT_S       , set_clock                               ),
+ /*B205*/ AD_GENx370x390x900 ( "STCK"      , S    , ASMFMT_S       , store_clock                             ),
+ /*B206*/ AD_GENx370x390x900 ( "SCKC"      , S    , ASMFMT_S       , set_clock_comparator                    ),
+ /*B207*/ AD_GENx370x390x900 ( "STCKC"     , S    , ASMFMT_S       , store_clock_comparator                  ),
+ /*B208*/ AD_GENx370x390x900 ( "SPT"       , S    , ASMFMT_S       , set_cpu_timer                           ),
+ /*B209*/ AD_GENx370x390x900 ( "STPT"      , S    , ASMFMT_S       , store_cpu_timer                         ),
+ /*B20A*/ AD_GENx370x390x900 ( "SPKA"      , S    , ASMFMT_S       , set_psw_key_from_address                ),
+ /*B20B*/ AD_GENx370x390x900 ( "IPK"       , S    , ASMFMT_none    , insert_psw_key                          ),
+ /*B20C*/ AD_GENx___x___x___ ,
+ /*B20D*/ AD_GENx370x390x900 ( "PTLB"      , S    , ASMFMT_none    , purge_translation_lookaside_buffer      ),
+ /*B20E*/ AD_GENx___x___x___ ,
+ /*B20F*/ AD_GENx___x___x___ ,
+ /*B210*/ AD_GENx370x390x900 ( "SPX"       , S    , ASMFMT_S       , set_prefix                              ),
+ /*B211*/ AD_GENx370x390x900 ( "STPX"      , S    , ASMFMT_S       , store_prefix                            ),
+ /*B212*/ AD_GENx370x390x900 ( "STAP"      , S    , ASMFMT_S       , store_cpu_address                       ),
+ /*B213*/ AD_GENx370x___x___ ( "RRB"       , S    , ASMFMT_S       , reset_reference_bit                     ),
+ /*B214*/ AD_GENx___x390x900 ( "SIE"       , S    , ASMFMT_S       , start_interpretive_execution            ),
+ /*B215*/ AD_GENx___x___x___ ,
+ /*B216*/ AD_GENx___x___x___ , /*%SETR /SSYN  */
+ /*B217*/ AD_GENx___x___x___ , /*%STETR/STSYN */
+ /*B218*/ AD_GENx370x390x900 ( "PC"        , S    , ASMFMT_S       , program_call                            ),
+ /*B219*/ AD_GENx370x390x900 ( "SAC"       , S    , ASMFMT_S       , set_address_space_control               ),
+ /*B21A*/ AD_GENx37Xx390x900 ( "CFC"       , S    , ASMFMT_S       , compare_and_form_codeword               ),
+ /*B21B*/ AD_GENx___x___x___ ,
+ /*B21C*/ AD_GENx___x___x___ ,
+ /*B21D*/ AD_GENx___x___x___ ,
+ /*B21E*/ AD_GENx___x___x___ ,
+ /*B21F*/ AD_GENx___x___x___ ,
+ /*B220*/ AD_GENx___x390x900 ( "SERVC"     , RRE  , ASMFMT_RRE     , service_call                            ),
+ /*B221*/ AD_GENx370x390x900 ( "IPTE"      , RRF_a, ASMFMT_RRR     , invalidate_page_table_entry             ),
+ /*B222*/ AD_GENx370x390x900 ( "IPM"       , RRE  , ASMFMT_RRE_R1  , insert_program_mask                     ),
+ /*B223*/ AD_GENx370x390x900 ( "IVSK"      , RRE  , ASMFMT_RRE     , insert_virtual_storage_key              ),
+ /*B224*/ AD_GENx370x390x900 ( "IAC"       , RRE  , ASMFMT_RRE_R1  , insert_address_space_control            ),
+ /*B225*/ AD_GENx370x390x900 ( "SSAR"      , RRE  , ASMFMT_RRE_R1  , set_secondary_asn                       ),
+ /*B226*/ AD_GENx370x390x900 ( "EPAR"      , RRE  , ASMFMT_RRE_R1  , extract_primary_asn                     ),
+ /*B227*/ AD_GENx370x390x900 ( "ESAR"      , RRE  , ASMFMT_RRE_R1  , extract_secondary_asn                   ),
+ /*B228*/ AD_GENx370x390x900 ( "PT"        , RRE  , ASMFMT_RRE     , program_transfer                        ),
+ /*B229*/ AD_GENx370x390x900 ( "ISKE"      , RRE  , ASMFMT_RRE     , insert_storage_key_extended             ),
+ /*B22A*/ AD_GENx370x390x900 ( "RRBE"      , RRE  , ASMFMT_RRE     , reset_reference_bit_extended            ),
+ /*B22B*/ AD_GENx370x390x900 ( "SSKE"      , RRF_c, ASMFMT_RRF_M   , set_storage_key_extended                ),
+ /*B22C*/ AD_GENx370x390x900 ( "TB"        , RRE  , ASMFMT_RRE     , test_block                              ),
+ /*B22D*/ AD_GENx370x390x900 ( "DXR"       , RRE  , ASMFMT_RRE     , divide_float_ext_reg                    ),
+ /*B22E*/ AD_GENx___x390x900 ( "PGIN"      , RRE  , ASMFMT_RRE     , page_in                                 ),
+ /*B22F*/ AD_GENx___x390x900 ( "PGOUT"     , RRE  , ASMFMT_RRE     , page_out                                ),
+ /*B230*/ AD_GENx___x390x900 ( "CSCH"      , S    , ASMFMT_none    , clear_subchannel                        ),
+ /*B231*/ AD_GENx___x390x900 ( "HSCH"      , S    , ASMFMT_none    , halt_subchannel                         ),
+ /*B232*/ AD_GENx___x390x900 ( "MSCH"      , S    , ASMFMT_S       , modify_subchannel                       ),
+ /*B233*/ AD_GENx___x390x900 ( "SSCH"      , S    , ASMFMT_S       , start_subchannel                        ),
+ /*B234*/ AD_GENx___x390x900 ( "STSCH"     , S    , ASMFMT_S       , store_subchannel                        ),
+ /*B235*/ AD_GENx___x390x900 ( "TSCH"      , S    , ASMFMT_S       , test_subchannel                         ),
+ /*B236*/ AD_GENx___x390x900 ( "TPI"       , S    , ASMFMT_S       , test_pending_interruption               ),
+ /*B237*/ AD_GENx___x390x900 ( "SAL"       , S    , ASMFMT_none    , set_address_limit                       ),
+ /*B238*/ AD_GENx___x390x900 ( "RSCH"      , S    , ASMFMT_none    , resume_subchannel                       ),
+ /*B239*/ AD_GENx___x390x900 ( "STCRW"     , S    , ASMFMT_S       , store_channel_report_word               ),
+ /*B23A*/ AD_GENx___x390x900 ( "STCPS"     , S    , ASMFMT_S       , store_channel_path_status               ),
+ /*B23B*/ AD_GENx___x390x900 ( "RCHP"      , S    , ASMFMT_none    , reset_channel_path                      ),
+ /*B23C*/ AD_GENx___x390x900 ( "SCHM"      , S    , ASMFMT_none    , set_channel_monitor                     ),
+ /*B23D*/ AD_GENx___x390x900 ( "STZP"      , S    , ASMFMT_S       , store_zone_parameter                    ),
+ /*B23E*/ AD_GENx___x390x900 ( "SZP"       , S    , ASMFMT_S       , set_zone_parameter                      ),
+ /*B23F*/ AD_GENx___x390x900 ( "TPZI"      , S    , ASMFMT_S       , test_pending_zone_interrupt             ),
+ /*B240*/ AD_GENx___x390x900 ( "BAKR"      , RRE  , ASMFMT_RRE     , branch_and_stack                        ),
+ /*B241*/ AD_GENx37Xx390x900 ( "CKSM"      , RRE  , ASMFMT_RRE     , checksum                                ),
+ /*B242*/ AD_GENx370x___x___ ( "Assist"    , SSE  , ASMFMT_RRE     , add_frr                                             ),
+ /*B243*/ AD_GENx___x___x___ , /*#MA      */
+ /*B244*/ AD_GENx37Xx390x900 ( "SQDR"      , RRE  , ASMFMT_RRE     , squareroot_float_long_reg               ),
+ /*B245*/ AD_GENx37Xx390x900 ( "SQER"      , RRE  , ASMFMT_RRE     , squareroot_float_short_reg              ),
+ /*B246*/ AD_GENx___x390x900 ( "STURA"     , RRE  , ASMFMT_RRE     , store_using_real_address                ),
+ /*B247*/ AD_GENx___x390x900 ( "MSTA"      , RRE  , ASMFMT_RRE_R1  , modify_stacked_state                    ),
+ /*B248*/ AD_GENx___x390x900 ( "PALB"      , RRE  , ASMFMT_none    , purge_accesslist_lookaside_buffer       ),
+ /*B249*/ AD_GENx___x390x900 ( "EREG"      , RRE  , ASMFMT_RRE     , extract_stacked_registers               ),
+ /*B24A*/ AD_GENx___x390x900 ( "ESTA"      , RRE  , ASMFMT_RRE     , extract_stacked_state                   ),
+ /*B24B*/ AD_GENx___x390x900 ( "LURA"      , RRE  , ASMFMT_RRE     , load_using_real_address                 ),
+ /*B24C*/ AD_GENx___x390x900 ( "TAR"       , RRE  , ASMFMT_RRE     , test_access                             ),
+ /*B24D*/ AD_GENx___x390x900 ( "CPYA"      , RRE  , ASMFMT_RRE     , copy_access                             ),
+ /*B24E*/ AD_GENx___x390x900 ( "SAR"       , RRE  , ASMFMT_RRE     , set_access_register                     ),
+ /*B24F*/ AD_GENx___x390x900 ( "EAR"       , RRE  , ASMFMT_RRE     , extract_access_register                 ),
+ /*B250*/ AD_GENx___x390x900 ( "CSP"       , RRE  , ASMFMT_RRE     , compare_and_swap_and_purge              ),
+ /*B251*/ AD_GENx___x___x___ ,
+ /*B252*/ AD_GENx37Xx390x900 ( "MSR"       , RRE  , ASMFMT_RRE     , multiply_single_register                ),
+ /*B253*/ AD_GENx___x___x___ ,
+ /*B254*/ AD_GENx___x390x900 ( "MVPG"      , RRE  , ASMFMT_RRE     , move_page                               ),
+ /*B255*/ AD_GENx37Xx390x900 ( "MVST"      , RRE  , ASMFMT_RRE     , move_string                             ),
+ /*B256*/ AD_GENx___x___x900 ( "STHYI"     , RRE  , ASMFMT_RRE     , store_hypervisor_information            ),
+ /*B257*/ AD_GENx37Xx390x900 ( "CUSE"      , RRE  , ASMFMT_RRE     , compare_until_substring_equal           ),
+ /*B258*/ AD_GENx___x390x900 ( "BSG"       , RRE  , ASMFMT_RRE     , branch_in_subspace_group                ),
+ /*B259*/ AD_GENx___x390x900 ( "IESBE"     , RRE  , ASMFMT_RRE     , invalidate_expanded_storage_block_entry ),
+ /*B25A*/ AD_GENx___x390x900 ( "BSA"       , RRE  , ASMFMT_RRE     , branch_and_set_authority                ),
+ /*B25B*/ AD_GENx___x___x___ , /*%PGXIN  */
+ /*B25C*/ AD_GENx___x___x___ , /*%PGXOUT */
+ /*B25D*/ AD_GENx37Xx390x900 ( "CLST"      , RRE  , ASMFMT_RRE     , compare_logical_string                  ),
+ /*B25E*/ AD_GENx37Xx390x900 ( "SRST"      , RRE  , ASMFMT_RRE     , search_string                           ),
+ /*B25F*/ AD_GENx___x390x900 ( "CHSC"      , RRE  , ASMFMT_RRE     , channel_subsystem_call                  ),
+ /*B260*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B261*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B262*/ AD_GENx___x390x900 ( "LKPG"      , RRE  , ASMFMT_RRE     , lock_page                               ),
+ /*B263*/ AD_GENx37Xx390x900 ( "CMPSC"     , RRE  , ASMFMT_RRE     , cmpsc_2012                              ),
+ /*B264*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B265*/ AD_GENx___x___x900 ( "SVS"       , RRE  , ASMFMT_RRE     , set_vector_summary                      ),
+ /*B266*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B267*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B268*/ AD_GENx___x___x___ , /* Sysplex */ /* DV - Define Vector */
+ /*B269*/ AD_GENx___x___x___ , /* Crypto  */
+ /*B26A*/ AD_GENx___x___x___ , /* Crypto  */
+ /*B26B*/ AD_GENx___x___x___ , /* Crypto  */
+ /*B26C*/ AD_GENx___x___x___ , /* Crypto  */
+ /*B26D*/ AD_GENx___x___x___ , /* Crypto  */
+ /*B26E*/ AD_GENx___x___x___ , /* Crypto  */
+ /*B26F*/ AD_GENx___x___x___ , /* Crypto  */
+ /*B270*/ AD_GENx___x___x___ , /*%SPCS    */
+ /*B271*/ AD_GENx___x___x___ , /*%STPCS   */
+ /*B272*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B273*/ AD_GENx___x___x___ ,
+ /*B274*/ AD_GENx___x390x900 ( "SIGA"      , S    , ASMFMT_S       , signal_adapter                          ),
+ /*B275*/ AD_GENx___x___x___ ,
+ /*B276*/ AD_GENx___x390x900 ( "XSCH"      , S    , ASMFMT_none    , cancel_subchannel                       ),
+ /*B277*/ AD_GENx___x390x900 ( "RP"        , S    , ASMFMT_S       , resume_program                          ),
+ /*B278*/ AD_GENx___x390x900 ( "STCKE"     , S    , ASMFMT_S       , store_clock_extended                    ),
+ /*B279*/ AD_GENx___x390x900 ( "SACF"      , S    , ASMFMT_S       , set_address_space_control               ),
+ /*B27A*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B27B*/ AD_GENx___x___x___ , /* TFF/Sysplx */
+ /*B27C*/ AD_GENx___x___x900 ( "STCKF"     , S    , ASMFMT_S       , store_clock                             ),
+ /*B27D*/ AD_GENx370x390x900 ( "STSI"      , S    , ASMFMT_S       , store_system_information                ),
+ /*B27E*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B27F*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B280*/ AD_GENx___x___x900 ( "LPP"       , S    , ASMFMT_S       , load_program_parameter                  ),
+ /*B281*/ AD_GENx___x___x___ , /*#LN S  */
+ /*B282*/ AD_GENx___x___x___ , /*#EXP L */
+ /*B283*/ AD_GENx___x___x___ , /*#EXP S */
+ /*B284*/ AD_GENx___x___x___ ,
+ /*B285*/ AD_GENx___x___x___ ,
+ /*B286*/ AD_GENx___x___x___ ,
+ /*B287*/ AD_GENx___x___x___ ,
+ /*B288*/ AD_GENx___x___x___ , /*#SIN L */
+ /*B289*/ AD_GENx___x___x___ , /*#SIN S */
+ /*B28A*/ AD_GENx___x___x___ , /*#COS L */
+ /*B28B*/ AD_GENx___x___x___ , /*#COS S */
+ /*B28C*/ AD_GENx___x___x___ ,
+ /*B28D*/ AD_GENx___x___x___ ,
+ /*B28E*/ AD_GENx___x___x___ ,
+ /*B28F*/ AD_GENx___x___x___ ,
+ /*B290*/ AD_GENx___x___x___ ,
+ /*B291*/ AD_GENx___x___x___ ,
+ /*B292*/ AD_GENx___x___x___ ,
+ /*B293*/ AD_GENx___x___x___ ,
+ /*B294*/ AD_GENx___x___x___ , /*#ARCTAN L */
+ /*B295*/ AD_GENx___x___x___ , /*#ARCTAN S */
+ /*B296*/ AD_GENx___x___x___ ,
+ /*B297*/ AD_GENx___x___x___ ,
+ /*B298*/ AD_GENx___x___x___ ,
+ /*B299*/ AD_GENx37Xx390x900 ( "SRNM"      , S    , ASMFMT_S       , set_bfp_rounding_mode_2bit              ),
+ /*B29A*/ AD_GENx___x___x___ ,
+ /*B29B*/ AD_GENx___x___x___ ,
+ /*B29C*/ AD_GENx37Xx390x900 ( "STFPC"     , S    , ASMFMT_S       , store_fpc                               ),
+ /*B29D*/ AD_GENx37Xx390x900 ( "LFPC"      , S    , ASMFMT_S       , load_fpc                                ),
+ /*B29E*/ AD_GENx___x___x___ ,
+ /*B29F*/ AD_GENx___x___x___ ,
+ /*B2A0*/ AD_GENx___x___x___ ,
+ /*B2A1*/ AD_GENx___x___x___ ,
+ /*B2A2*/ AD_GENx___x___x___ ,
+ /*B2A3*/ AD_GENx___x___x___ ,
+ /*B2A4*/ AD_GENx___x___x___ , /*Sysplex*/ /* MCBDM - Move Channel Buffer Data Multiple */
+ /*B2A5*/ AD_GENx37Xx390x900 ( "TRE"       , RRE  , ASMFMT_RRE     , translate_extended                      ),
+ /*B2A6*/ AD_GENx37Xx390x900 ( "CU21"      , RRF_c, ASMFMT_RRF_M3  , convert_utf16_to_utf8                   ),
+ /*B2A7*/ AD_GENx37Xx390x900 ( "CU12"      , RRF_c, ASMFMT_RRF_M3  , convert_utf8_to_utf16                   ),
+ /*B2A8*/ AD_GENx___x___x___ ,                                     /* Sysplex   */
+ /*B2A9*/ AD_GENx___x___x___ ,
+ /*B2AA*/ AD_GENx___x___x___ ,
+ /*B2AB*/ AD_GENx___x___x___ ,
+ /*B2AC*/ AD_GENx___x___x___ ,
+ /*B2AD*/ AD_GENx___x___x___ ,
+ /*B2AE*/ AD_GENx___x___x___ ,
+ /*B2AF*/ AD_GENx___x___x___ ,
+ /*B2B0*/ AD_GENx___x390x900 ( "STFLE"     , S    , ASMFMT_S       , store_facility_list_extended            ), /*!SARCH */
+ /*B2B1*/ AD_GENx___x390x900 ( "STFL"      , S    , ASMFMT_S       , store_facility_list                     ),
+ /*B2B2*/ AD_GENx___x___x900 ( "LPSWE"     , S    , ASMFMT_S       , load_program_status_word_extended       ),
+ /*B2B3*/ AD_GENx___x___x___ , /* STEAI - Store ETR Attachment Information */
+ /*B2B4*/ AD_GENx___x___x___ ,
+ /*B2B5*/ AD_GENx___x___x___ ,
+ /*B2B6*/ AD_GENx___x___x___ ,
+ /*B2B7*/ AD_GENx___x___x___ ,
+ /*B2B8*/ AD_GENx37Xx390x900 ( "SRNMB"     , S    , ASMFMT_S       , set_bfp_rounding_mode_3bit              ),
+ /*B2B9*/ AD_GENx___x390x900 ( "SRNMT"     , S    , ASMFMT_S       , set_dfp_rounding_mode                   ),
+ /*B2BA*/ AD_GENx___x___x___ ,
+ /*B2BB*/ AD_GENx___x___x___ ,
+ /*B2BC*/ AD_GENx___x___x___ ,
+ /*B2BD*/ AD_GENx37Xx390x900 ( "LFAS"      , S    , ASMFMT_S       , load_fpc_and_signal                     ),
+ /*B2BE*/ AD_GENx___x___x___ ,
+ /*B2BF*/ AD_GENx___x___x___ ,
+ /*B2C0*/ AD_GENx___x___x___ , /*$ADRN */
+ /*B2C1*/ AD_GENx___x___x___ , /*$AERN */
+ /*B2C2*/ AD_GENx___x___x___ , /*$SDRN */
+ /*B2C3*/ AD_GENx___x___x___ , /*$SERN */
+ /*B2C4*/ AD_GENx___x___x___ , /*$MDRN */
+ /*B2C5*/ AD_GENx___x___x___ , /*$MERN */
+ /*B2C6*/ AD_GENx___x___x___ , /*$DDRN */
+ /*B2C7*/ AD_GENx___x___x___ , /*$DERN */
+ /*B2C8*/ AD_GENx___x___x___ , /*$LERN */
+ /*B2C9*/ AD_GENx___x___x___ ,
+ /*B2CA*/ AD_GENx___x___x___ ,
+ /*B2CB*/ AD_GENx___x___x___ ,
+ /*B2CC*/ AD_GENx___x___x___ ,
+ /*B2CD*/ AD_GENx___x___x___ ,
+ /*B2CE*/ AD_GENx___x___x___ ,
+ /*B2CF*/ AD_GENx___x___x___ ,
+ /*B2D0*/ AD_GENx___x___x___ , /*$AACDR */
+ /*B2D1*/ AD_GENx___x___x___ , /*$AACER */
+ /*B2D2*/ AD_GENx___x___x___ , /*$SACDR */
+ /*B2D3*/ AD_GENx___x___x___ , /*$SACER */
+ /*B2D4*/ AD_GENx___x___x___ , /*$MACD  */
+ /*B2D5*/ AD_GENx___x___x___ ,
+ /*B2D6*/ AD_GENx___x___x___ , /*$RACD  */
+ /*B2D7*/ AD_GENx___x___x___ , /*$RACE  */
+ /*B2D8*/ AD_GENx___x___x___ , /*$AACAC */
+ /*B2D9*/ AD_GENx___x___x___ , /*$SACAC */
+ /*B2DA*/ AD_GENx___x___x___ , /*$CLAC  */
+ /*B2DB*/ AD_GENx___x___x___ ,
+ /*B2DC*/ AD_GENx___x___x___ ,
+ /*B2DD*/ AD_GENx___x___x___ ,
+ /*B2DE*/ AD_GENx___x___x___ ,
+ /*B2DF*/ AD_GENx___x___x___ ,
+ /*B2E0*/ AD_GENx___x___x___ ,
+ /*B2E1*/ AD_GENx___x___x___ ,
+ /*B2E2*/ AD_GENx___x___x___ ,
+ /*B2E3*/ AD_GENx___x___x___ ,
+ /*B2E4*/ AD_GENx___x___x___ ,
+ /*B2E5*/ AD_GENx___x___x___ ,
+ /*B2E6*/ AD_GENx___x___x___ ,
+ /*B2E7*/ AD_GENx___x___x___ ,
+ /*B2E8*/ AD_GENx___x___x900 ( "PPA"       , RRF_c, ASMFMT_RRF_M   , perform_processor_assist                ),
+ /*B2E9*/ AD_GENx___x___x___ ,
+ /*B2EA*/ AD_GENx___x___x___ ,
+ /*B2EB*/ AD_GENx___x___x___ ,
+ /*B2EC*/ AD_GENx___x___x900 ( "ETND"      , RRE  , ASMFMT_RRE     , extract_transaction_nesting_depth       ),
+ /*B2ED*/ AD_GENx___x___x___ ,
+ /*B2EE*/ AD_GENx___x___x___ ,
+ /*B2EF*/ AD_GENx___x___x___ ,
+ /*B2F0*/ AD_GENx370x390x900 ( "IUCV"      , S    , ASMFMT_S       , inter_user_communication_vehicle        ),
+ /*B2F1*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B2F2*/ AD_GENx___x___x___ ,
+ /*B2F3*/ AD_GENx___x___x___ ,
+ /*B2F4*/ AD_GENx___x___x___ ,
+ /*B2F5*/ AD_GENx___x___x___ ,
+ /*B2F6*/ AD_GENx___x___x___ , /* Sysplex */
+ /*B2F7*/ AD_GENx___x___x___ ,
+ /*B2F8*/ AD_GENx___x___x900 ( "TEND"      , S    , ASMFMT_S       , transaction_end                         ) ,
+ /*B2F9*/ AD_GENx___x___x___ ,
+ /*B2FA*/ AD_GENx___x___x900 ( "NIAI"      , IE   , ASMFMT_IE      , next_instruction_access_intent          ),
+ /*B2FB*/ AD_GENx___x___x___ ,
+ /*B2FC*/ AD_GENx___x___x900 ( "TABORT"    , S    , ASMFMT_S       , transaction_abort                       ),
+ /*B2FD*/ AD_GENx___x___x___ ,
+ /*B2FE*/ AD_GENx___x___x___ ,
+ /*B2FF*/ AD_GENx___x390x900 ( "TRAP4"     , S    , ASMFMT_S       , trap4                                   )
+};
+
+/*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
 
@@ -1399,7 +1820,7 @@ static INSTR_FUNC gen_opcode_table[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_01xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_a5_x[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_a7_x[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC gen_opcode_b2xx[256][NUM_INSTR_TAB_PTRS];
+//static INSTR_FUNC gen_opcode_b2xx[256][NUM_INSTR_TAB_PTRS]; // (ARCH_DEP)
 static INSTR_FUNC gen_opcode_b3xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_c0_x[16][NUM_INSTR_TAB_PTRS];
@@ -1476,24 +1897,26 @@ static INSTR_FUNC gen_opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
 /*    DISASM_xxx functions must come BEFORE the GENx370x390x900 tables.       */
 /*----------------------------------------------------------------------------*/
 
-typedef int IPRTFUNC();         /* instruction printing function type */
+typedef int IPRTFUNC(int arch_mode, BYTE inst[], char unused[], char *prtbuf);
+                                        /* instruction printing function type */
 
 /*----------------------------------------------------------------------------*/
 /*      ROUTE_IPRINT  -  common instruction print routing logic               */
 /*----------------------------------------------------------------------------*/
-#define ROUTE_IPRINT( _opcode_tabname, _opcode_idx )                           \
+#define ROUTE_IPRINT( _arch_mode, _opcode_tabname, _opcode_idx )               \
                                                                                \
-    IPRTFUNC*  iprt_func;       /* Ptr to instruction printing function */     \
-    char*      mnemonic;        /* The instruction's assembler mnemonic */     \
+    IPRTFUNC*  iprt_asmfmt_func;  /* Ptr to instruction printing function */   \
+    char*      iprt_info_string;  /* mnemonic + instruction function name */   \
                                                                                \
     UNREFERENCED( unused );                                                    \
                                                                                \
     /* Extract our parameters directly from the instruction opcode table */    \
                                                                                \
-    iprt_func = (void*) gen_opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 2 ];  \
-    mnemonic  = (void*) gen_opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 1 ];  \
+    iprt_asmfmt_func = (void*) gen_opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 2 ];  \
+    iprt_info_string = (void*) gen_opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 1 ];  \
                                                                                \
-    return iprt_func( inst, mnemonic, prtbuf );   /* (trace this instruction) */
+    /* Trace this instruction */                                               \
+    return iprt_asmfmt_func( (_arch_mode), inst, iprt_info_string, prtbuf );
 
 /*----------------------------------------------------------------------------*/
 /*                           iprint_router_func                               */
@@ -1503,9 +1926,9 @@ typedef int IPRTFUNC();         /* instruction printing function type */
 /* of single opcode instructions or jumps to one of the below IPRINT_ROUT2    */
 /* functions to route the called based on the instruction's extended opcode.  */
 /*----------------------------------------------------------------------------*/
-int iprint_router_func( BYTE inst[], char unused[], char* prtbuf )
+DLL_EXPORT int iprint_router_func( int arch_mode, BYTE inst[], char unused[], char* prtbuf )
 {
-    ROUTE_IPRINT( table, [0] );   /* Route directly or jump thru IPRINT_ROUT2 */
+    ROUTE_IPRINT( arch_mode, table, [0] );   /* Route based on primary opcode [0] */
 }
 /*----------------------------------------------------------------------------*/
 /*   IPRINT_ROUT2 - do second level jump to reach actual printing function    */
@@ -1513,8 +1936,51 @@ int iprint_router_func( BYTE inst[], char unused[], char* prtbuf )
 
 #define IPRINT_ROUT2( _opcode_tabname, _opcode_idx )                           \
                                                                                \
-    int iprint_ASMFMT_ ## _opcode_tabname( BYTE inst[], char unused[], char* prtbuf ) \
-    { ROUTE_IPRINT( _opcode_tabname, _opcode_idx ); }
+    int iprint_ASMFMT_ ## _opcode_tabname( int arch_mode, BYTE inst[], char unused[], char* prtbuf ) \
+    {                                                                          \
+        /* Route based on specified extended opcode */                         \
+        ROUTE_IPRINT( arch_mode, _opcode_tabname, _opcode_idx );                \
+    }
+
+/*----------------------------------------------------------------------------*/
+/*   Second level iprint jump function for ARCH_DEP( gen_opcode_b2xx ) table  */
+/*----------------------------------------------------------------------------*/
+int iprint_ASMFMT_b2xx( int arch_mode, BYTE inst[], char unused[], char* prtbuf )
+{
+    /* This function is designed to be identical to the code generated by
+       the IPRINT_ROUT2 and ROUTE_IPRINT macros, but with additional code
+       necessary to extract its pointers from the opcode table based on
+       the current runtime architecture.
+    */
+    IPRTFUNC*  iprt_asmfmt_func = NULL;  /* Ptr to instr printing function */
+    char*      iprt_info_string = NULL;  /* mnemonic + instr function name */
+
+    UNREFERENCED( unused );
+
+    /* Extract our parameters directly from the instruction opcode table */
+    /* NOTE - we use hard coded 'inst[1]' since this is the 'b2xx' table */
+    /* NOTE - we use a hard coded opcode table name for the same reason  */
+
+    if (ARCH_370_IDX == arch_mode)
+    {
+        iprt_asmfmt_func = (void*) s370_gen_opcode_b2xx [ inst[1] ][ NUM_INSTR_TAB_PTRS - 2 ];
+        iprt_info_string = (void*) s370_gen_opcode_b2xx [ inst[1] ][ NUM_INSTR_TAB_PTRS - 1 ];
+    }
+    else if (ARCH_390_IDX == arch_mode)
+    {
+        iprt_asmfmt_func = (void*) s390_gen_opcode_b2xx [ inst[1] ][ NUM_INSTR_TAB_PTRS - 2 ];
+        iprt_info_string = (void*) s390_gen_opcode_b2xx [ inst[1] ][ NUM_INSTR_TAB_PTRS - 1 ];
+    }
+    else if (ARCH_900_IDX == arch_mode)
+    {
+        iprt_asmfmt_func = (void*) z900_gen_opcode_b2xx [ inst[1] ][ NUM_INSTR_TAB_PTRS - 2 ];
+        iprt_info_string = (void*) z900_gen_opcode_b2xx [ inst[1] ][ NUM_INSTR_TAB_PTRS - 1 ];
+    }
+    else CRASH();
+
+    /* Trace this instruction */
+    return iprt_asmfmt_func( arch_mode, inst, iprt_info_string, prtbuf );
+}
 
 /*----------------------------------------------------------------------------*/
 /*         The second level instruction printing routing functions            */
@@ -1523,7 +1989,7 @@ int iprint_router_func( BYTE inst[], char unused[], char* prtbuf )
 IPRINT_ROUT2( 01xx, [1] )
 IPRINT_ROUT2( a5_x, [1] & 0x0F )
 IPRINT_ROUT2( a7_x, [1] & 0x0F )
-IPRINT_ROUT2( b2xx, [1] )
+//IPRINT_ROUT2( b2xx, [1] )         // (see 'iprint_ASMFMT_b2xx' function)
 IPRINT_ROUT2( b3xx, [1] )
 IPRINT_ROUT2( b9xx, [1] )
 IPRINT_ROUT2( c0_x, [1] & 0x0F )
@@ -1567,7 +2033,7 @@ IPRINT_ROUT2( edxx, [5] )
 
 #define IPRINT_FUNC( _asmfmt ) /* FIRST PART OF INSTRUCTION PRINT FUNCTION */ \
                                                                               \
-static int iprint_ ## _asmfmt( BYTE inst[], char mnemonic[], char* prtbuf )   \
+static int iprint_ ## _asmfmt( REGS* regs, BYTE inst[], char mnemonic[], char* prtbuf )   \
 {                                                                             \
     char* iname;               /* Pointer to instruction's function name  */  \
     char  opers[64]            /* Buffer to format its assembler operands */
@@ -1582,7 +2048,7 @@ static int iprint_ ## _asmfmt( BYTE inst[], char mnemonic[], char* prtbuf )   \
     while (*iname++);       /* Find start of instruction's name   */          \
                                                                               \
     /* Format the instruction's assembler operands */                         \
-    snprintf( opers, sizeof( opers ), ## __VA_ARGS__ );                       \
+    MSGBUF (opers, ## __VA_ARGS__ );                                          \
                                                                               \
     /* Print assembler mnemonic + operands and full name of instruction */    \
     return sprintf( prtbuf, "%-5s %-19s    %s", mnemonic, opers, iname );     \
@@ -1599,22 +2065,26 @@ static int iprint_ ## _asmfmt( BYTE inst[], char mnemonic[], char* prtbuf )   \
 /*----------------------------------------------------------------------------*/
 
 IPRINT_FUNC( ASMFMT_none );
-  UNREFERENCED(inst);
-  IPRINT_PRINT("%c",',')
+    UNREFERENCED( regs );
+    UNREFERENCED(inst);
+    IPRINT_PRINT("%c",',')
 
 IPRINT_FUNC( ASMFMT_E );
+    UNREFERENCED( regs );
     UNREFERENCED(inst);
     IPRINT_PRINT("%c",',')
 
 IPRINT_FUNC( ASMFMT_IE );
-int i1, i2;
+    int i1, i2;
+    UNREFERENCED( regs );
     i1 = inst[3] >> 4;
     i2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d,%d",i1,i2)
 
 IPRINT_FUNC( ASMFMT_MII_A );
-int m1,i2,i3;
+    int m1,i2,i3;
     const S64 Two_S64=2;
+    UNREFERENCED( regs );
     m1 = inst[1] >> 4;
     i2 = (S32)(((U32)inst[1] << 8) | (U32)inst[2]);
     i3 = (S32)(((U32)inst[3] << 16) | ((U32)inst[4] << 8)
@@ -1622,7 +2092,8 @@ int m1,i2,i3;
     IPRINT_PRINT("%d,*%+"I64_FMT"d,*%+"I64_FMT"d",m1,i2*Two_S64,i3*Two_S64)
 
 IPRINT_FUNC( ASMFMT_RR );
-int r1, r2;
+    int r1, r2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     IPRINT_PRINT("%d,%d",r1,r2)
@@ -1630,55 +2101,64 @@ int r1, r2;
 
 // "Mnemonic   R1"
 IPRINT_FUNC( ASMFMT_RR_R1 );
-int r1;
+    int r1;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     IPRINT_PRINT("%d",r1)
 
 IPRINT_FUNC( ASMFMT_RR_SVC );
+    UNREFERENCED( regs );
     IPRINT_PRINT("%d",inst[1])
 
 IPRINT_FUNC( ASMFMT_RRE );
-int r1, r2;
+    int r1, r2;
+    UNREFERENCED( regs );
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d,%d",r1,r2)
 
 // "Mnemonic   R1"
 IPRINT_FUNC( ASMFMT_RRE_R1 );
-int r1;
+    int r1;
+    UNREFERENCED( regs );
     r1 = inst[3] >> 4;
     IPRINT_PRINT("%d",r1)
 
 IPRINT_FUNC( ASMFMT_RRF_R );
-int r1,r3,r2;
+    int r1,r3,r2;
+    UNREFERENCED( regs );
     r1 = inst[2] >> 4;
     r3 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d,%d,%d",r1,r3,r2)
 
 IPRINT_FUNC( ASMFMT_RRF_M );
-int m3,r1,r2;
+    int m3,r1,r2;
+    UNREFERENCED( regs );
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d,%d,%d",r1,m3,r2)
 
 IPRINT_FUNC( ASMFMT_RRF_M3 );
-int m3,r1,r2;
+    int m3,r1,r2;
+    UNREFERENCED( regs );
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d,%d,%d",r1,r2,m3)
 
 IPRINT_FUNC( ASMFMT_RRF_M4 );
-int m4,r1,r2;
+    int m4,r1,r2;
+    UNREFERENCED( regs );
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d,%d,%d",r1,r2,m4)
 
 IPRINT_FUNC( ASMFMT_RRF_MM );
-int m3,m4,r1,r2;
+    int m3,m4,r1,r2;
+    UNREFERENCED( regs );
     m3 = inst[2] >> 4;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
@@ -1686,7 +2166,8 @@ int m3,m4,r1,r2;
     IPRINT_PRINT("%d,%d,%d,%d",r1,m3,r2,m4)
 
 IPRINT_FUNC( ASMFMT_RRF_RM );
-int r3,m4,r1,r2;
+    int r3,m4,r1,r2;
+    UNREFERENCED( regs );
     r3 = inst[2] >> 4;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
@@ -1694,14 +2175,25 @@ int r3,m4,r1,r2;
     IPRINT_PRINT("%d,%d,%d,%d",r1,r3,r2,m4)
 
 IPRINT_FUNC( ASMFMT_RRR );
-int r1,r2,r3;
+    int r1,r2,r3;
+    UNREFERENCED( regs );
     r3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d,%d,%d",r1,r2,r3)
 
+IPRINT_FUNC( ASMFMT_RRF_A );
+    int r3,m4,r1,r2;
+    UNREFERENCED( regs );
+    r3 = inst[2] >> 4;
+    m4 = inst[2] & 0x0F;
+    r1 = inst[3] >> 4;
+    r2 = inst[3] & 0x0F;
+    IPRINT_PRINT("%d,%d,%d,%d",r1,r2,r3,m4)
+
 IPRINT_FUNC( ASMFMT_RX );
-int r1,x2,b2,d2;
+    int r1,x2,b2,d2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
@@ -1709,7 +2201,8 @@ int r1,x2,b2,d2;
     IPRINT_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
 IPRINT_FUNC( ASMFMT_RXE );
-int r1,x2,b2,d2;
+    int r1,x2,b2,d2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
@@ -1717,7 +2210,8 @@ int r1,x2,b2,d2;
     IPRINT_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
 IPRINT_FUNC( ASMFMT_RXY );
-int r1,x2,b2,d2;
+    int r1,x2,b2,d2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
@@ -1725,7 +2219,8 @@ int r1,x2,b2,d2;
     IPRINT_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
 IPRINT_FUNC( ASMFMT_RXF );
-int r1,r3,x2,b2,d2;
+    int r1,r3,x2,b2,d2;
+    UNREFERENCED( regs );
     r1 = inst[4] >> 4;
     r3 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
@@ -1734,7 +2229,8 @@ int r1,r3,x2,b2,d2;
     IPRINT_PRINT("%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2)
 
 IPRINT_FUNC( ASMFMT_RS );
-int r1,r3,b2,d2;
+    int r1,r3,b2,d2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
@@ -1743,14 +2239,16 @@ int r1,r3,b2,d2;
 
 // "Mnemonic   R1,D2(B2)"
 IPRINT_FUNC( ASMFMT_RS_R1D2B2 );
-int r1,b2,d2;
+    int r1,b2,d2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     IPRINT_PRINT("%d,%d(%d)",r1,d2,b2)
 
 IPRINT_FUNC( ASMFMT_RSY );
-int r1,r3,b2,d2;
+    int r1,r3,b2,d2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
@@ -1758,7 +2256,8 @@ int r1,r3,b2,d2;
     IPRINT_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
 
 IPRINT_FUNC( ASMFMT_RSY_M3 );
-int r1,b2,d2,m3;
+    int r1,b2,d2,m3;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
@@ -1766,14 +2265,16 @@ int r1,b2,d2,m3;
     IPRINT_PRINT("%d,%d(%d),%d",r1,d2,b2,m3)
 
 IPRINT_FUNC( ASMFMT_RSL );
-int l1,b1,d1;
+    int l1,b1,d1;
+    UNREFERENCED( regs );
     l1 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     IPRINT_PRINT("%d(%d,%d)",d1,l1+1,b1)
 
 IPRINT_FUNC( ASMFMT_RSL_RM );
-int r1,l2,b2,d2,m3;
+    int r1,l2,b2,d2,m3;
+    UNREFERENCED( regs );
     l2 = inst[1];
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
@@ -1782,54 +2283,62 @@ int r1,l2,b2,d2,m3;
     IPRINT_PRINT("%d,%d(%d,%d),%d",r1,d2,l2+1,b2,m3)
 
 IPRINT_FUNC( ASMFMT_RSI );
-int r1,r3,i2;
+    int r1,r3,i2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     IPRINT_PRINT("%d,%d,*%+d",r1,r3,i2*2)
 
 IPRINT_FUNC( ASMFMT_RI );
-int r1,i2;
+    int r1,i2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     IPRINT_PRINT("%d,%d",r1,i2)
 
 IPRINT_FUNC( ASMFMT_RI_B );
-int r1,i2;
+    int r1,i2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     IPRINT_PRINT("%d,*%+d",r1,i2*2)
 
 IPRINT_FUNC( ASMFMT_RIE );
-int r1,r3,i2;
+    int r1,r3,i2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     IPRINT_PRINT("%d,%d,*%+d",r1,r3,i2*2)
 
 IPRINT_FUNC( ASMFMT_RIE_G );
-int r1,i2, m3;
+    int r1,i2, m3;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     IPRINT_PRINT("%d,%d,%d",r1,i2,m3)
 
 IPRINT_FUNC( ASMFMT_RIE_RRI );
-int r1,r3,i2;
+    int r1,r3,i2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     IPRINT_PRINT("%d,%d,%d",r1,r3,i2)
 
 IPRINT_FUNC( ASMFMT_RIE_RIM );
-int r1,i2,m3;
+    int r1,i2,m3;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
     IPRINT_PRINT("%d,%d,%d",r1,i2,m3)
 
 IPRINT_FUNC( ASMFMT_RIE_RRIM );
-int r1,r2,i4,m3;
+    int r1,r2,i4,m3;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
@@ -1837,7 +2346,8 @@ int r1,r2,i4,m3;
     IPRINT_PRINT("%d,%d,%d,*%+d",r1,r2,m3,i4*2)
 
 IPRINT_FUNC( ASMFMT_RIE_RMII );
-int r1,m3,i4,i2;
+    int r1,m3,i4,i2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
@@ -1845,7 +2355,8 @@ int r1,m3,i4,i2;
     IPRINT_PRINT("%d,%d,%d,*%+d",r1,i2,m3,i4*2)
 
 IPRINT_FUNC( ASMFMT_RIE_RRIII );
-int r1,r2,i3,i4,i5;
+    int r1,r2,i3,i4,i5;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     i3 = inst[2];
@@ -1854,22 +2365,25 @@ int r1,r2,i3,i4,i5;
     IPRINT_PRINT("%d,%d,%d,%d,%d",r1,r2,i3,i4,i5)
 
 IPRINT_FUNC( ASMFMT_RIL );
-int r1,i2;
+    int r1,i2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
     IPRINT_PRINT("%d,%"PRId32,r1,i2)
 
 IPRINT_FUNC( ASMFMT_RIL_A );
-int r1,i2;
+    int r1,i2;
     const S64 Two_S64=2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
     IPRINT_PRINT("%d,*%+"PRId64,r1,i2*Two_S64)
 
 IPRINT_FUNC( ASMFMT_RIS );
-int r1,i2,m3,b4,d4;
+    int r1,i2,m3,b4,d4;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     b4 = inst[2] >> 4;
@@ -1878,7 +2392,8 @@ int r1,i2,m3,b4,d4;
     IPRINT_PRINT("%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4)
 
 IPRINT_FUNC( ASMFMT_RRS );
-int r1,r2,m3,b4,d4;
+    int r1,r2,m3,b4,d4;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     b4 = inst[2] >> 4;
@@ -1887,29 +2402,33 @@ int r1,r2,m3,b4,d4;
     IPRINT_PRINT("%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4)
 
 IPRINT_FUNC( ASMFMT_SI );
-int i2,b1,d1;
+    int i2,b1,d1;
+    UNREFERENCED( regs );
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     IPRINT_PRINT("%d(%d),%d",d1,b1,i2)
 
 IPRINT_FUNC( ASMFMT_SIY );
-int i2,b1,d1;
+    int i2,b1,d1;
+    UNREFERENCED( regs );
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
     IPRINT_PRINT("%d(%d),%d",d1,b1,i2)
 
 IPRINT_FUNC( ASMFMT_SIL );
-int b1,d1,i2;
+    int b1,d1,i2;
+    UNREFERENCED( regs );
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = (S16)(((U16)inst[4] << 8) | inst[5]);
     IPRINT_PRINT("%d(%d),%d",d1,b1,i2)
 
 IPRINT_FUNC( ASMFMT_SMI_A );
-int m1,i2,b3,d3;
+    int m1,i2,b3,d3;
     const S64 Two_S64=2;
+    UNREFERENCED( regs );
     m1 = inst[1] >> 4;
     b3 = inst[2] >> 4;
     d3 = (inst[2] & 0x0F) << 8 | inst[3];
@@ -1917,13 +2436,15 @@ int m1,i2,b3,d3;
     IPRINT_PRINT("%d,*%+"I64_FMT"d,%d(%d)",m1,i2*Two_S64,d3,b3)
 
 IPRINT_FUNC( ASMFMT_S );
-int d2,b2;
+    int d2,b2;
+    UNREFERENCED( regs );
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     IPRINT_PRINT("%d(%d)",d2,b2)
 
 IPRINT_FUNC( ASMFMT_SS );
-int l1,l2,b1,d1,b2,d2;
+    int l1,l2,b1,d1,b2,d2;
+    UNREFERENCED( regs );
     l1 = inst[1] >> 4;
     l2 = inst[1] & 0x0F;
     b1 = inst[2] >> 4;
@@ -1933,7 +2454,8 @@ int l1,l2,b1,d1,b2,d2;
     IPRINT_PRINT("%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2)
 
 IPRINT_FUNC( ASMFMT_SS_L );
-int l1,b1,d1,b2,d2;
+    int l1,b1,d1,b2,d2;
+    UNREFERENCED( regs );
     l1 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
@@ -1943,7 +2465,8 @@ int l1,b1,d1,b2,d2;
 
 // "Mnemonic   D1(B1),D2(L2,B2)"
 IPRINT_FUNC( ASMFMT_SS_L2 );
-int l2,b1,d1,b2,d2;
+    int l2,b1,d1,b2,d2;
+    UNREFERENCED( regs );
     l2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
@@ -1952,7 +2475,8 @@ int l2,b1,d1,b2,d2;
     IPRINT_PRINT("%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2)
 
 IPRINT_FUNC( ASMFMT_SS_R );
-int r1,r3,b2,d2,b4,d4;
+    int r1,r3,b2,d2,b4,d4;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
@@ -1963,7 +2487,8 @@ int r1,r3,b2,d2,b4,d4;
 
 // "Mnemonic   D1(R1,B1),D2(B2),R3"
 IPRINT_FUNC( ASMFMT_SS_R3 );
-int r1,r3,b1,d1,b2,d2;
+    int r1,r3,b1,d1,b2,d2;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b1 = inst[2] >> 4;
@@ -1974,7 +2499,8 @@ int r1,r3,b1,d1,b2,d2;
 
 // "Mnemonic   R1,D2(B2),R3,D4(B4)"
 IPRINT_FUNC( ASMFMT_SS_RSRS );
-int r1,r3,b2,d2,b4,d4;
+    int r1,r3,b2,d2,b4,d4;
+    UNREFERENCED( regs );
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
@@ -1985,7 +2511,8 @@ int r1,r3,b2,d2,b4,d4;
 
 // "Mnemonic   D1(L1,B1),D2(B2),I3"
 IPRINT_FUNC( ASMFMT_SS_I );
-int l1,i3,b1,d1,b2,d2;
+    int l1,i3,b1,d1,b2,d2;
+    UNREFERENCED( regs );
     l1 = inst[1] >> 4;
     i3 = inst[1] & 0x0F;
     b1 = inst[2] >> 4;
@@ -1995,7 +2522,8 @@ int l1,i3,b1,d1,b2,d2;
     IPRINT_PRINT("%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3)
 
 IPRINT_FUNC( ASMFMT_SSE );
-int b1,d1,b2,d2;
+    int b1,d1,b2,d2;
+    UNREFERENCED( regs );
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
@@ -2003,7 +2531,8 @@ int b1,d1,b2,d2;
     IPRINT_PRINT("%d(%d),%d(%d)",d1,b1,d2,b2)
 
 IPRINT_FUNC( ASMFMT_SSF );
-int r3,b1,d1,b2,d2;
+    int r3,b1,d1,b2,d2;
+    UNREFERENCED( regs );
     r3 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
@@ -2012,7 +2541,8 @@ int r3,b1,d1,b2,d2;
     IPRINT_PRINT("%d(%d),%d(%d),%d",d1,b1,d2,b2,r3)
 
 IPRINT_FUNC( ASMFMT_SSF_RSS );
-int r3,b1,d1,b2,d2;
+    int r3,b1,d1,b2,d2;
+    UNREFERENCED( regs );
     r3 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
@@ -2021,7 +2551,8 @@ int r3,b1,d1,b2,d2;
     IPRINT_PRINT("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2)
 
 IPRINT_FUNC( ASMFMT_VS );
-int rs2;
+    int rs2;
+    UNREFERENCED( regs );
     rs2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d",rs2)
 
@@ -2191,10 +2722,10 @@ static INSTR_FUNC gen_opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*99*/   GENx___x390x900 ( "TRACE"     , RS_a , ASMFMT_RS       , trace                                               ),
  /*9A*/   GENx___x390x900 ( "LAM"       , RS_a , ASMFMT_RS       , load_access_multiple                                ),
  /*9B*/   GENx___x390x900 ( "STAM"      , RS_a , ASMFMT_RS       , store_access_multiple                               ),
- /*9C*/   GENx370x390x900 ( "SIO"       , S    , ASMFMT_S        , start_io                                            ),
- /*9D*/   GENx370x390x900 ( "TIO"       , S    , ASMFMT_S        , test_io                                             ),
- /*9E*/   GENx370x390x900 ( "HIO"       , S    , ASMFMT_S        , halt_io                                             ),
- /*9F*/   GENx370x390x900 ( "TCH"       , S    , ASMFMT_S        , test_channel                                        ),
+ /*9C*/   GENx370x___x___ ( "SIO"       , S    , ASMFMT_S        , start_io                                            ),
+ /*9D*/   GENx370x___x___ ( "TIO"       , S    , ASMFMT_S        , test_io                                             ),
+ /*9E*/   GENx370x___x___ ( "HIO"       , S    , ASMFMT_S        , halt_io                                             ),
+ /*9F*/   GENx370x___x___ ( "TCH"       , S    , ASMFMT_S        , test_channel                                        ),
  /*A0*/   GENx___x___x___ ,
  /*A1*/   GENx___x___x___ ,
  /*A2*/   GENx___x___x___ ,
@@ -2593,266 +3124,6 @@ static INSTR_FUNC gen_opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
  /*A7xF*/ GENx___x___x900 ( "CGHI"      , RI_a , ASMFMT_RI       , compare_long_halfword_immediate                     )
 };
 
-static INSTR_FUNC gen_opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
-{
- /*B200*/ GENx370x390x900 ( "CONCS"     , S    , ASMFMT_S        , connect_channel_set                                 ),
- /*B201*/ GENx370x390x900 ( "DISCS"     , S    , ASMFMT_S        , disconnect_channel_set                              ),
- /*B202*/ GENx370x390x900 ( "STIDP"     , S    , ASMFMT_S        , store_cpu_id                                        ),
- /*B203*/ GENx370x390x900 ( "STIDC"     , S    , ASMFMT_S        , store_channel_id                                    ),
- /*B204*/ GENx370x390x900 ( "SCK"       , S    , ASMFMT_S        , set_clock                                           ),
- /*B205*/ GENx370x390x900 ( "STCK"      , S    , ASMFMT_S        , store_clock                                         ),
- /*B206*/ GENx370x390x900 ( "SCKC"      , S    , ASMFMT_S        , set_clock_comparator                                ),
- /*B207*/ GENx370x390x900 ( "STCKC"     , S    , ASMFMT_S        , store_clock_comparator                              ),
- /*B208*/ GENx370x390x900 ( "SPT"       , S    , ASMFMT_S        , set_cpu_timer                                       ),
- /*B209*/ GENx370x390x900 ( "STPT"      , S    , ASMFMT_S        , store_cpu_timer                                     ),
- /*B20A*/ GENx370x390x900 ( "SPKA"      , S    , ASMFMT_S        , set_psw_key_from_address                            ),
- /*B20B*/ GENx370x390x900 ( "IPK"       , S    , ASMFMT_none     , insert_psw_key                                      ),
- /*B20C*/ GENx___x___x___ ,
- /*B20D*/ GENx370x390x900 ( "PTLB"      , S    , ASMFMT_none     , purge_translation_lookaside_buffer                  ),
- /*B20E*/ GENx___x___x___ ,
- /*B20F*/ GENx___x___x___ ,
- /*B210*/ GENx370x390x900 ( "SPX"       , S    , ASMFMT_S        , set_prefix                                          ),
- /*B211*/ GENx370x390x900 ( "STPX"      , S    , ASMFMT_S        , store_prefix                                        ),
- /*B212*/ GENx370x390x900 ( "STAP"      , S    , ASMFMT_S        , store_cpu_address                                   ),
- /*B213*/ GENx370x___x___ ( "RRB"       , S    , ASMFMT_S        , reset_reference_bit                                 ),
- /*B214*/ GENx___x390x900 ( "SIE"       , S    , ASMFMT_S        , start_interpretive_execution                        ),
- /*B215*/ GENx___x___x___ ,
- /*B216*/ GENx___x___x___ , /*%SETR /SSYN  */
- /*B217*/ GENx___x___x___ , /*%STETR/STSYN */
- /*B218*/ GENx370x390x900 ( "PC"        , S    , ASMFMT_S        , program_call                                        ),
- /*B219*/ GENx370x390x900 ( "SAC"       , S    , ASMFMT_S        , set_address_space_control                           ),
- /*B21A*/ GENx37Xx390x900 ( "CFC"       , S    , ASMFMT_S        , compare_and_form_codeword                           ),
- /*B21B*/ GENx___x___x___ ,
- /*B21C*/ GENx___x___x___ ,
- /*B21D*/ GENx___x___x___ ,
- /*B21E*/ GENx___x___x___ ,
- /*B21F*/ GENx___x___x___ ,
- /*B220*/ GENx___x390x900 ( "SERVC"     , RRE  , ASMFMT_RRE      , service_call                                        ),
- /*B221*/ GENx370x390x900 ( "IPTE"      , RRF_a, ASMFMT_RRR      , invalidate_page_table_entry                         ),
- /*B222*/ GENx370x390x900 ( "IPM"       , RRE  , ASMFMT_RRE_R1   , insert_program_mask                                 ),
- /*B223*/ GENx370x390x900 ( "IVSK"      , RRE  , ASMFMT_RRE      , insert_virtual_storage_key                          ),
- /*B224*/ GENx370x390x900 ( "IAC"       , RRE  , ASMFMT_RRE_R1   , insert_address_space_control                        ),
- /*B225*/ GENx370x390x900 ( "SSAR"      , RRE  , ASMFMT_RRE_R1   , set_secondary_asn                                   ),
- /*B226*/ GENx370x390x900 ( "EPAR"      , RRE  , ASMFMT_RRE_R1   , extract_primary_asn                                 ),
- /*B227*/ GENx370x390x900 ( "ESAR"      , RRE  , ASMFMT_RRE_R1   , extract_secondary_asn                               ),
- /*B228*/ GENx370x390x900 ( "PT"        , RRE  , ASMFMT_RRE      , program_transfer                                    ),
- /*B229*/ GENx370x390x900 ( "ISKE"      , RRE  , ASMFMT_RRE      , insert_storage_key_extended                         ),
- /*B22A*/ GENx370x390x900 ( "RRBE"      , RRE  , ASMFMT_RRE      , reset_reference_bit_extended                        ),
- /*B22B*/ GENx370x390x900 ( "SSKE"      , RRF_c, ASMFMT_RRF_M    , set_storage_key_extended                            ),
- /*B22C*/ GENx370x390x900 ( "TB"        , RRE  , ASMFMT_RRE      , test_block                                          ),
- /*B22D*/ GENx370x390x900 ( "DXR"       , RRE  , ASMFMT_RRE      , divide_float_ext_reg                                ),
- /*B22E*/ GENx___x390x900 ( "PGIN"      , RRE  , ASMFMT_RRE      , page_in                                             ),
- /*B22F*/ GENx___x390x900 ( "PGOUT"     , RRE  , ASMFMT_RRE      , page_out                                            ),
- /*B230*/ GENx___x390x900 ( "CSCH"      , S    , ASMFMT_none     , clear_subchannel                                    ),
- /*B231*/ GENx___x390x900 ( "HSCH"      , S    , ASMFMT_none     , halt_subchannel                                     ),
- /*B232*/ GENx___x390x900 ( "MSCH"      , S    , ASMFMT_S        , modify_subchannel                                   ),
- /*B233*/ GENx___x390x900 ( "SSCH"      , S    , ASMFMT_S        , start_subchannel                                    ),
- /*B234*/ GENx___x390x900 ( "STSCH"     , S    , ASMFMT_S        , store_subchannel                                    ),
- /*B235*/ GENx___x390x900 ( "TSCH"      , S    , ASMFMT_S        , test_subchannel                                     ),
- /*B236*/ GENx___x390x900 ( "TPI"       , S    , ASMFMT_S        , test_pending_interruption                           ),
- /*B237*/ GENx___x390x900 ( "SAL"       , S    , ASMFMT_none     , set_address_limit                                   ),
- /*B238*/ GENx___x390x900 ( "RSCH"      , S    , ASMFMT_none     , resume_subchannel                                   ),
- /*B239*/ GENx___x390x900 ( "STCRW"     , S    , ASMFMT_S        , store_channel_report_word                           ),
- /*B23A*/ GENx___x390x900 ( "STCPS"     , S    , ASMFMT_S        , store_channel_path_status                           ),
- /*B23B*/ GENx___x390x900 ( "RCHP"      , S    , ASMFMT_none     , reset_channel_path                                  ),
- /*B23C*/ GENx___x390x900 ( "SCHM"      , S    , ASMFMT_none     , set_channel_monitor                                 ),
- /*B23D*/ GENx___x390x900 ( "STZP"      , S    , ASMFMT_S        , store_zone_parameter                                ),
- /*B23E*/ GENx___x390x900 ( "SZP"       , S    , ASMFMT_S        , set_zone_parameter                                  ),
- /*B23F*/ GENx___x390x900 ( "TPZI"      , S    , ASMFMT_S        , test_pending_zone_interrupt                         ),
- /*B240*/ GENx___x390x900 ( "BAKR"      , RRE  , ASMFMT_RRE      , branch_and_stack                                    ),
- /*B241*/ GENx37Xx390x900 ( "CKSM"      , RRE  , ASMFMT_RRE      , checksum                                            ),
- /*B242*/ GENx___x___x___ , /**Add FRR */
- /*B243*/ GENx___x___x___ , /*#MA      */
- /*B244*/ GENx37Xx390x900 ( "SQDR"      , RRE  , ASMFMT_RRE      , squareroot_float_long_reg                           ),
- /*B245*/ GENx37Xx390x900 ( "SQER"      , RRE  , ASMFMT_RRE      , squareroot_float_short_reg                          ),
- /*B246*/ GENx___x390x900 ( "STURA"     , RRE  , ASMFMT_RRE      , store_using_real_address                            ),
- /*B247*/ GENx___x390x900 ( "MSTA"      , RRE  , ASMFMT_RRE_R1   , modify_stacked_state                                ),
- /*B248*/ GENx___x390x900 ( "PALB"      , RRE  , ASMFMT_none     , purge_accesslist_lookaside_buffer                   ),
- /*B249*/ GENx___x390x900 ( "EREG"      , RRE  , ASMFMT_RRE      , extract_stacked_registers                           ),
- /*B24A*/ GENx___x390x900 ( "ESTA"      , RRE  , ASMFMT_RRE      , extract_stacked_state                               ),
- /*B24B*/ GENx___x390x900 ( "LURA"      , RRE  , ASMFMT_RRE      , load_using_real_address                             ),
- /*B24C*/ GENx___x390x900 ( "TAR"       , RRE  , ASMFMT_RRE      , test_access                                         ),
- /*B24D*/ GENx___x390x900 ( "CPYA"      , RRE  , ASMFMT_RRE      , copy_access                                         ),
- /*B24E*/ GENx___x390x900 ( "SAR"       , RRE  , ASMFMT_RRE      , set_access_register                                 ),
- /*B24F*/ GENx___x390x900 ( "EAR"       , RRE  , ASMFMT_RRE      , extract_access_register                             ),
- /*B250*/ GENx___x390x900 ( "CSP"       , RRE  , ASMFMT_RRE      , compare_and_swap_and_purge                          ),
- /*B251*/ GENx___x___x___ ,
- /*B252*/ GENx37Xx390x900 ( "MSR"       , RRE  , ASMFMT_RRE      , multiply_single_register                            ),
- /*B253*/ GENx___x___x___ ,
- /*B254*/ GENx___x390x900 ( "MVPG"      , RRE  , ASMFMT_RRE      , move_page                                           ),
- /*B255*/ GENx37Xx390x900 ( "MVST"      , RRE  , ASMFMT_RRE      , move_string                                         ),
- /*B256*/ GENx___x___x___ ,
- /*B257*/ GENx37Xx390x900 ( "CUSE"      , RRE  , ASMFMT_RRE      , compare_until_substring_equal                       ),
- /*B258*/ GENx___x390x900 ( "BSG"       , RRE  , ASMFMT_RRE      , branch_in_subspace_group                            ),
- /*B259*/ GENx___x390x900 ( "IESBE"     , RRE  , ASMFMT_RRE      , invalidate_expanded_storage_block_entry             ),
- /*B25A*/ GENx___x390x900 ( "BSA"       , RRE  , ASMFMT_RRE      , branch_and_set_authority                            ),
- /*B25B*/ GENx___x___x___ , /*%PGXIN  */
- /*B25C*/ GENx___x___x___ , /*%PGXOUT */
- /*B25D*/ GENx37Xx390x900 ( "CLST"      , RRE  , ASMFMT_RRE      , compare_logical_string                              ),
- /*B25E*/ GENx37Xx390x900 ( "SRST"      , RRE  , ASMFMT_RRE      , search_string                                       ),
- /*B25F*/ GENx___x390x900 ( "CHSC"      , RRE  , ASMFMT_RRE      , channel_subsystem_call                              ),
- /*B260*/ GENx___x___x___ , /* Sysplex */
- /*B261*/ GENx___x___x___ , /* Sysplex */
- /*B262*/ GENx___x390x900 ( "LKPG"      , RRE  , ASMFMT_RRE      , lock_page                                           ),
- /*B263*/ GENx37Xx390x900 ( "CMPSC"     , RRE  , ASMFMT_RRE      , cmpsc_2012                                          ),
- /*B264*/ GENx___x___x___ , /* Sysplex */
- /*B265*/ GENx___x___x900 ( "SVS"       , RRE  , ASMFMT_RRE      , set_vector_summary                                  ),
- /*B266*/ GENx___x___x___ , /* Sysplex */
- /*B267*/ GENx___x___x___ , /* Sysplex */
- /*B268*/ GENx___x___x___ , /* Sysplex */ /* DV - Define Vector */
- /*B269*/ GENx___x___x___ , /* Crypto  */
- /*B26A*/ GENx___x___x___ , /* Crypto  */
- /*B26B*/ GENx___x___x___ , /* Crypto  */
- /*B26C*/ GENx___x___x___ , /* Crypto  */
- /*B26D*/ GENx___x___x___ , /* Crypto  */
- /*B26E*/ GENx___x___x___ , /* Crypto  */
- /*B26F*/ GENx___x___x___ , /* Crypto  */
- /*B270*/ GENx___x___x___ , /*%SPCS    */
- /*B271*/ GENx___x___x___ , /*%STPCS   */
- /*B272*/ GENx___x___x___ , /* Sysplex */
- /*B273*/ GENx___x___x___ ,
- /*B274*/ GENx___x390x900 ( "SIGA"      , S    , ASMFMT_S        , signal_adapter                                      ),
- /*B275*/ GENx___x___x___ ,
- /*B276*/ GENx___x390x900 ( "XSCH"      , S    , ASMFMT_none     , cancel_subchannel                                   ),
- /*B277*/ GENx___x390x900 ( "RP"        , S    , ASMFMT_S        , resume_program                                      ),
- /*B278*/ GENx___x390x900 ( "STCKE"     , S    , ASMFMT_S        , store_clock_extended                                ),
- /*B279*/ GENx___x390x900 ( "SACF"      , S    , ASMFMT_S        , set_address_space_control                           ),
- /*B27A*/ GENx___x___x___ , /* Sysplex */
- /*B27B*/ GENx___x___x___ , /* TFF/Sysplx */
- /*B27C*/ GENx___x___x900 ( "STCKF"     , S    , ASMFMT_S        , store_clock                                         ),
- /*B27D*/ GENx370x390x900 ( "STSI"      , S    , ASMFMT_S        , store_system_information                            ),
- /*B27E*/ GENx___x___x___ , /* Sysplex */
- /*B27F*/ GENx___x___x___ , /* Sysplex */
- /*B280*/ GENx___x___x900 ( "LPP"       , S    , ASMFMT_S        , load_program_parameter                              ),
- /*B281*/ GENx___x___x___ , /*#LN S  */
- /*B282*/ GENx___x___x___ , /*#EXP L */
- /*B283*/ GENx___x___x___ , /*#EXP S */
- /*B284*/ GENx___x___x___ ,
- /*B285*/ GENx___x___x___ ,
- /*B286*/ GENx___x___x___ ,
- /*B287*/ GENx___x___x___ ,
- /*B288*/ GENx___x___x___ , /*#SIN L */
- /*B289*/ GENx___x___x___ , /*#SIN S */
- /*B28A*/ GENx___x___x___ , /*#COS L */
- /*B28B*/ GENx___x___x___ , /*#COS S */
- /*B28C*/ GENx___x___x___ ,
- /*B28D*/ GENx___x___x___ ,
- /*B28E*/ GENx___x___x___ ,
- /*B28F*/ GENx___x___x___ ,
- /*B290*/ GENx___x___x___ ,
- /*B291*/ GENx___x___x___ ,
- /*B292*/ GENx___x___x___ ,
- /*B293*/ GENx___x___x___ ,
- /*B294*/ GENx___x___x___ , /*#ARCTAN L */
- /*B295*/ GENx___x___x___ , /*#ARCTAN S */
- /*B296*/ GENx___x___x___ ,
- /*B297*/ GENx___x___x___ ,
- /*B298*/ GENx___x___x___ ,
- /*B299*/ GENx37Xx390x900 ( "SRNM"      , S    , ASMFMT_S        , set_bfp_rounding_mode_2bit                          ),
- /*B29A*/ GENx___x___x___ ,
- /*B29B*/ GENx___x___x___ ,
- /*B29C*/ GENx37Xx390x900 ( "STFPC"     , S    , ASMFMT_S        , store_fpc                                           ),
- /*B29D*/ GENx37Xx390x900 ( "LFPC"      , S    , ASMFMT_S        , load_fpc                                            ),
- /*B29E*/ GENx___x___x___ ,
- /*B29F*/ GENx___x___x___ ,
- /*B2A0*/ GENx___x___x___ ,
- /*B2A1*/ GENx___x___x___ ,
- /*B2A2*/ GENx___x___x___ ,
- /*B2A3*/ GENx___x___x___ ,
- /*B2A4*/ GENx___x___x___ , /*Sysplex*/ /* MCBDM - Move Channel Buffer Data Multiple */
- /*B2A5*/ GENx37Xx390x900 ( "TRE"       , RRE  , ASMFMT_RRE      , translate_extended                                  ),
- /*B2A6*/ GENx37Xx390x900 ( "CU21"      , RRF_c, ASMFMT_RRF_M3   , convert_utf16_to_utf8                               ),
- /*B2A7*/ GENx37Xx390x900 ( "CU12"      , RRF_c, ASMFMT_RRF_M3   , convert_utf8_to_utf16                               ),
- /*B2A8*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B2A9*/ GENx___x___x___ ,
- /*B2AA*/ GENx___x___x___ ,
- /*B2AB*/ GENx___x___x___ ,
- /*B2AC*/ GENx___x___x___ ,
- /*B2AD*/ GENx___x___x___ ,
- /*B2AE*/ GENx___x___x___ ,
- /*B2AF*/ GENx___x___x___ ,
- /*B2B0*/ GENx___x390x900 ( "STFLE"     , S    , ASMFMT_S        , store_facility_list_extended                        ), /*!SARCH */
- /*B2B1*/ GENx___x390x900 ( "STFL"      , S    , ASMFMT_S        , store_facility_list                                 ),
- /*B2B2*/ GENx___x___x900 ( "LPSWE"     , S    , ASMFMT_S        , load_program_status_word_extended                   ),
- /*B2B3*/ GENx___x___x___ , /* STEAI - Store ETR Attachment Information */
- /*B2B4*/ GENx___x___x___ ,
- /*B2B5*/ GENx___x___x___ ,
- /*B2B6*/ GENx___x___x___ ,
- /*B2B7*/ GENx___x___x___ ,
- /*B2B8*/ GENx37Xx390x900 ( "SRNMB"     , S    , ASMFMT_S        , set_bfp_rounding_mode_3bit                          ),
- /*B2B9*/ GENx___x390x900 ( "SRNMT"     , S    , ASMFMT_S        , set_dfp_rounding_mode                               ),
- /*B2BA*/ GENx___x___x___ ,
- /*B2BB*/ GENx___x___x___ ,
- /*B2BC*/ GENx___x___x___ ,
- /*B2BD*/ GENx37Xx390x900 ( "LFAS"      , S    , ASMFMT_S        , load_fpc_and_signal                                 ),
- /*B2BE*/ GENx___x___x___ ,
- /*B2BF*/ GENx___x___x___ ,
- /*B2C0*/ GENx___x___x___ , /*$ADRN */
- /*B2C1*/ GENx___x___x___ , /*$AERN */
- /*B2C2*/ GENx___x___x___ , /*$SDRN */
- /*B2C3*/ GENx___x___x___ , /*$SERN */
- /*B2C4*/ GENx___x___x___ , /*$MDRN */
- /*B2C5*/ GENx___x___x___ , /*$MERN */
- /*B2C6*/ GENx___x___x___ , /*$DDRN */
- /*B2C7*/ GENx___x___x___ , /*$DERN */
- /*B2C8*/ GENx___x___x___ , /*$LERN */
- /*B2C9*/ GENx___x___x___ ,
- /*B2CA*/ GENx___x___x___ ,
- /*B2CB*/ GENx___x___x___ ,
- /*B2CC*/ GENx___x___x___ ,
- /*B2CD*/ GENx___x___x___ ,
- /*B2CE*/ GENx___x___x___ ,
- /*B2CF*/ GENx___x___x___ ,
- /*B2D0*/ GENx___x___x___ , /*$AACDR */
- /*B2D1*/ GENx___x___x___ , /*$AACER */
- /*B2D2*/ GENx___x___x___ , /*$SACDR */
- /*B2D3*/ GENx___x___x___ , /*$SACER */
- /*B2D4*/ GENx___x___x___ , /*$MACD  */
- /*B2D5*/ GENx___x___x___ ,
- /*B2D6*/ GENx___x___x___ , /*$RACD  */
- /*B2D7*/ GENx___x___x___ , /*$RACE  */
- /*B2D8*/ GENx___x___x___ , /*$AACAC */
- /*B2D9*/ GENx___x___x___ , /*$SACAC */
- /*B2DA*/ GENx___x___x___ , /*$CLAC  */
- /*B2DB*/ GENx___x___x___ ,
- /*B2DC*/ GENx___x___x___ ,
- /*B2DD*/ GENx___x___x___ ,
- /*B2DE*/ GENx___x___x___ ,
- /*B2DF*/ GENx___x___x___ ,
- /*B2E0*/ GENx___x___x___ ,
- /*B2E1*/ GENx___x___x___ ,
- /*B2E2*/ GENx___x___x___ ,
- /*B2E3*/ GENx___x___x___ ,
- /*B2E4*/ GENx___x___x___ ,
- /*B2E5*/ GENx___x___x___ ,
- /*B2E6*/ GENx___x___x___ ,
- /*B2E7*/ GENx___x___x___ ,
- /*B2E8*/ GENx___x___x900 ( "PPA"       , RRF_c, ASMFMT_RRF_M    , perform_processor_assist                            ),
- /*B2E9*/ GENx___x___x___ ,
- /*B2EA*/ GENx___x___x___ ,
- /*B2EB*/ GENx___x___x___ ,
- /*B2EC*/ GENx___x___x___ ,
- /*B2ED*/ GENx___x___x___ ,
- /*B2EE*/ GENx___x___x___ ,
- /*B2EF*/ GENx___x___x___ ,
- /*B2F0*/ GENx370x390x900 ( "IUCV"      , S    , ASMFMT_S        , inter_user_communication_vehicle                    ),
- /*B2F1*/ GENx___x___x___ , /* Sysplex */
- /*B2F2*/ GENx___x___x___ ,
- /*B2F3*/ GENx___x___x___ ,
- /*B2F4*/ GENx___x___x___ ,
- /*B2F5*/ GENx___x___x___ ,
- /*B2F6*/ GENx___x___x___ , /* Sysplex */
- /*B2F7*/ GENx___x___x___ ,
- /*B2F8*/ GENx___x___x___ ,
- /*B2F9*/ GENx___x___x___ ,
- /*B2FA*/ GENx___x___x900 ( "NIAI"      , IE   , ASMFMT_IE       , next_instruction_access_intent                      ),
- /*B2FB*/ GENx___x___x___ ,
- /*B2FC*/ GENx___x___x___ ,
- /*B2FD*/ GENx___x___x___ ,
- /*B2FE*/ GENx___x___x___ ,
- /*B2FF*/ GENx___x390x900 ( "TRAP4"     , S    , ASMFMT_S        , trap4                                               )
-};
-
 static INSTR_FUNC gen_opcode_b3xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*B300*/ GENx37Xx390x900 ( "LPEBR"     , RRE  , ASMFMT_RRE      , load_positive_bfp_short_reg                         ),
@@ -3215,10 +3486,10 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B961*/ GENx___x___x900 ( "CLGRT"     , RRF_c, ASMFMT_RRF_M3   , compare_logical_and_trap_long_register              ),
  /*B962*/ GENx___x___x___ ,
  /*B963*/ GENx___x___x___ ,
- /*B964*/ GENx___x___x___ ,
- /*B965*/ GENx___x___x___ ,
- /*B966*/ GENx___x___x___ ,
- /*B967*/ GENx___x___x___ ,
+ /*B964*/ GENx___x___x900 ( "NNGRK"     , RRF_a, ASMFMT_RRR      , nand_register_long                                  ),
+ /*B965*/ GENx___x___x900 ( "OCGRK"     , RRF_a, ASMFMT_RRR      , or_register_long_with_complement                    ),
+ /*B966*/ GENx___x___x900 ( "NOGRK"     , RRF_a, ASMFMT_RRR      , nor_register_long                                   ),
+ /*B967*/ GENx___x___x900 ( "NXGRK"     , RRF_a, ASMFMT_RRR      , not_xor_register_long                               ),
  /*B968*/ GENx___x___x___ ,
  /*B969*/ GENx___x___x___ ,
  /*B96A*/ GENx___x___x___ ,
@@ -3231,10 +3502,10 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B971*/ GENx___x___x___ ,
  /*B972*/ GENx37Xx390x900 ( "CRT"       , RRF_c, ASMFMT_RRF_M3   , compare_and_trap_register                           ),
  /*B973*/ GENx37Xx390x900 ( "CLRT"      , RRF_c, ASMFMT_RRF_M3   , compare_logical_and_trap_register                   ),
- /*B974*/ GENx___x___x___ ,
- /*B975*/ GENx___x___x___ ,
- /*B976*/ GENx___x___x___ ,
- /*B977*/ GENx___x___x___ ,
+ /*B974*/ GENx___x___x900 ( "NNRK"      , RRF_a, ASMFMT_RRR      , nand_register                                       ),
+ /*B975*/ GENx___x___x900 ( "OCRK"      , RRF_a, ASMFMT_RRR      , or_register_with_complement                         ),
+ /*B976*/ GENx___x___x900 ( "NORK"      , RRF_a, ASMFMT_RRR      , nor_register                                        ),
+ /*B977*/ GENx___x___x900 ( "NXRK"      , RRF_a, ASMFMT_RRR      , not_xor_register                                    ),
  /*B978*/ GENx___x___x___ ,
  /*B979*/ GENx___x___x___ ,
  /*B97A*/ GENx___x___x___ ,
@@ -3286,8 +3557,8 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9A8*/ GENx___x___x___ ,
  /*B9A9*/ GENx___x___x___ ,
  /*B9AA*/ GENx___x___x900 ( "LPTEA"     , RRF_b, ASMFMT_RRF_RM   , load_page_table_entry_address                       ),
- /*B9AB*/ GENx___x___x___ , /* ESSA - Extract and Set Storage Attributes */
- /*B9AC*/ GENx___x___x___ ,
+ /*B9AB*/ GENx___x___x900 ( "ESSA "     , RRF_c, ASMFMT_RRF_M    , extract_and_set_storage_attributes                  ),
+ /*B9AC*/ GENx___x___x900 ( "IRBM"      , RRE  , ASMFMT_RRE      , insert_reference_bits_multiple                      ),
  /*B9AD*/ GENx___x___x___ ,
  /*B9AE*/ GENx___x___x900 ( "RRBM"      , RRE  , ASMFMT_RRE      , reset_reference_bits_multiple                       ),
  /*B9AF*/ GENx___x___x900 ( "PFMF"      , RRE  , ASMFMT_RRE      , perform_frame_management_function                   ),
@@ -3307,7 +3578,7 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9BD*/ GENx37Xx390x900 ( "TRTRE"     , RRF_c, ASMFMT_RRF_M3   , translate_and_test_reverse_extended                 ),
  /*B9BE*/ GENx37Xx390x900 ( "SRSTU"     , RRE  , ASMFMT_RRE      , search_string_unicode                               ),
  /*B9BF*/ GENx37Xx390x900 ( "TRTE"      , RRF_c, ASMFMT_RRF_M3   , translate_and_test_extended                         ),
- /*B9C0*/ GENx___x___x___ ,
+ /*B9C0*/ GENx___x___x900 ( "SELFHR"    , RRF_a, ASMFMT_RRF_A    , select_fullword_high_register                       ),
  /*B9C1*/ GENx___x___x___ ,
  /*B9C2*/ GENx___x___x___ ,
  /*B9C3*/ GENx___x___x___ ,
@@ -3342,25 +3613,25 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9E0*/ GENx___x___x900 ( "LOCFHR"    , RRF_c, ASMFMT_RRF_M3   , load_high_on_condition_register                     ),
  /*B9E1*/ GENx___x___x900 ( "POPCNT"    , RRF_c, ASMFMT_RRE      , population_count                                    ),
  /*B9E2*/ GENx___x___x900 ( "LOCGR"     , RRF_c, ASMFMT_RRF_M3   , load_on_condition_long_register                     ),
- /*B9E3*/ GENx___x___x___ ,
+ /*B9E3*/ GENx___x___x900 ( "SELGR"     , RRF_a, ASMFMT_RRF_A    , select_register_long                                ),
  /*B9E4*/ GENx___x___x900 ( "NGRK"      , RRF_a, ASMFMT_RRR      , and_distinct_long_register                          ),
- /*B9E5*/ GENx___x___x___ ,
+ /*B9E5*/ GENx___x___x900 ( "NCGRK"     , RRF_a, ASMFMT_RRR      , and_register_long_with_complement                                ),
  /*B9E6*/ GENx___x___x900 ( "OGRK"      , RRF_a, ASMFMT_RRR      , or_distinct_long_register                           ),
  /*B9E7*/ GENx___x___x900 ( "XGRK"      , RRF_a, ASMFMT_RRR      , exclusive_or_distinct_long_register                 ),
  /*B9E8*/ GENx___x___x900 ( "AGRK"      , RRF_a, ASMFMT_RRR      , add_distinct_long_register                          ),
  /*B9E9*/ GENx___x___x900 ( "SGRK"      , RRF_a, ASMFMT_RRR      , subtract_distinct_long_register                     ),
  /*B9EA*/ GENx___x___x900 ( "ALGRK"     , RRF_a, ASMFMT_RRR      , add_logical_distinct_long_register                  ),
  /*B9EB*/ GENx___x___x900 ( "SLGRK"     , RRF_a, ASMFMT_RRR      , subtract_logical_distinct_long_register             ),
- /*B9EC*/ GENx___x___x___ ,
- /*B9ED*/ GENx___x___x___ ,
+ /*B9EC*/ GENx___x___x900 ( "MGRK"      , RRF_a, ASMFMT_RRR      , multiply_long_register                              ),
+ /*B9ED*/ GENx___x___x900 ( "MSGRKC"    , RRF_a, ASMFMT_RRR      , multiply_single_long_register_cc                    ),
  /*B9EE*/ GENx___x___x___ ,
  /*B9EF*/ GENx___x___x___ ,
- /*B9F0*/ GENx___x___x___ ,
+ /*B9F0*/ GENx___x___x900 ( "SELR"      , RRF_a, ASMFMT_RRF_A    , select_register                                     ),
  /*B9F1*/ GENx___x___x___ ,
  /*B9F2*/ GENx37Xx390x900 ( "LOCR"      , RRF_c, ASMFMT_RRF_M3   , load_on_condition_register                          ),
  /*B9F3*/ GENx___x___x___ ,
  /*B9F4*/ GENx37Xx390x900 ( "NRK"       , RRF_a, ASMFMT_RRR      , and_distinct_register                               ),
- /*B9F5*/ GENx___x___x___ ,
+ /*B9F5*/ GENx___x___x900 ( "NCRK"      , RRF_a, ASMFMT_RRR      , and_register_with_complement                        ),
  /*B9F6*/ GENx37Xx390x900 ( "ORK"       , RRF_a, ASMFMT_RRR      , or_distinct_register                                ),
  /*B9F7*/ GENx37Xx390x900 ( "XRK"       , RRF_a, ASMFMT_RRR      , exclusive_or_distinct_register                      ),
  /*B9F8*/ GENx37Xx390x900 ( "ARK"       , RRF_a, ASMFMT_RRR      , add_distinct_register                               ),
@@ -3368,7 +3639,7 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9FA*/ GENx37Xx390x900 ( "ALRK"      , RRF_a, ASMFMT_RRR      , add_logical_distinct_register                       ),
  /*B9FB*/ GENx37Xx390x900 ( "SLRK"      , RRF_a, ASMFMT_RRR      , subtract_logical_distinct_register                  ),
  /*B9FC*/ GENx___x___x___ ,
- /*B9FD*/ GENx___x___x___ ,
+ /*B9FD*/ GENx___x___x900 ( "MSRKC"     , RRF_a, ASMFMT_RRR      , multiply_single_register_cc                         ),
  /*B9FE*/ GENx___x___x___ ,
  /*B9FF*/ GENx___x___x___
 };
@@ -3532,7 +3803,7 @@ static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E322*/ GENx___x___x___ ,
  /*E323*/ GENx___x___x___ ,
  /*E324*/ GENx___x___x900 ( "STG"       , RXY_a, ASMFMT_RXY      , store_long                                          ),
- /*E325*/ GENx___x___x___ ,
+ /*E325*/ GENx___x___x900 ( "NTSTG"     , RXY_a, ASMFMT_RXY      , nontransactional_store                              ),
  /*E326*/ GENx37Xx___x900 ( "CVDY"      , RXY_a, ASMFMT_RXY      , convert_to_decimal_y                                ),
  /*E327*/ GENx___x___x___ ,
  /*E328*/ GENx___x___x___ ,
@@ -3551,11 +3822,11 @@ static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E335*/ GENx___x___x___ ,
  /*E336*/ GENx37Xx390x900 ( "PFD"       , RXY_b, ASMFMT_RXY      , prefetch_data                                       ),
  /*E337*/ GENx___x___x___ ,
- /*E338*/ GENx___x___x___ ,
- /*E339*/ GENx___x___x___ ,
+ /*E338*/ GENx___x___x900 ( "AGH"       , RXY_a, ASMFMT_RXY      , add_long_halfword                                   ),
+ /*E339*/ GENx___x___x900 ( "SGH"       , RXY_a, ASMFMT_RXY      , subtract_long_halfword                              ),
  /*E33A*/ GENx___x___x900 ( "LLZRGF"    , RXY_a, ASMFMT_RXY      , load_logical_and_zero_rightmost_byte                ),
  /*E33B*/ GENx___x___x900 ( "LZRF"      , RXY_a, ASMFMT_RXY      , load_and_zero_rightmost_byte                        ),
- /*E33C*/ GENx___x___x___ ,
+ /*E33C*/ GENx___x___x900 ( "MGH"       , RXY_a, ASMFMT_RXY      , multiply_long_halfword                              ),
  /*E33D*/ GENx___x___x___ ,
  /*E33E*/ GENx37Xx390x900 ( "STRV"      , RXY_a, ASMFMT_RXY      , store_reversed                                      ),
  /*E33F*/ GENx37Xx390x900 ( "STRVH"     , RXY_a, ASMFMT_RXY      , store_reversed_half                                 ),
@@ -3566,7 +3837,7 @@ static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E344*/ GENx___x___x___ ,
  /*E345*/ GENx___x___x___ ,
  /*E346*/ GENx___x___x900 ( "BCTG"      , RXY_a, ASMFMT_RXY      , branch_on_count_long                                ),
- /*E347*/ GENx___x___x___ ,
+ /*E347*/ GENx___x___x900 ( "BIC"       , RXY_b, ASMFMT_RXY      , branch_indirect_on_condition                        ),
  /*E348*/ GENx___x___x___ ,
  /*E349*/ GENx___x___x___ ,
  /*E34A*/ GENx___x___x___ ,
@@ -3578,7 +3849,7 @@ static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E350*/ GENx37Xx___x900 ( "STY"       , RXY_a, ASMFMT_RXY      , store_y                                             ),
  /*E351*/ GENx37Xx___x900 ( "MSY"       , RXY_a, ASMFMT_RXY      , multiply_single_y                                   ),
  /*E352*/ GENx___x___x___ ,
- /*E353*/ GENx___x___x___ ,
+ /*E353*/ GENx___x___x900 ( "MSC"       , RXY_a, ASMFMT_RXY      , multiply_single_cc                                  ),
  /*E354*/ GENx37Xx___x900 ( "NY"        , RXY_a, ASMFMT_RXY      , and_y                                               ),
  /*E355*/ GENx37Xx___x900 ( "CLY"       , RXY_a, ASMFMT_RXY      , compare_logical_y                                   ),
  /*E356*/ GENx37Xx___x900 ( "OY"        , RXY_a, ASMFMT_RXY      , or_y                                                ),
@@ -3626,8 +3897,8 @@ static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E380*/ GENx___x___x900 ( "NG"        , RXY_a, ASMFMT_RXY      , and_long                                            ),
  /*E381*/ GENx___x___x900 ( "OG"        , RXY_a, ASMFMT_RXY      , or_long                                             ),
  /*E382*/ GENx___x___x900 ( "XG"        , RXY_a, ASMFMT_RXY      , exclusive_or_long                                   ),
- /*E383*/ GENx___x___x___ ,
- /*E384*/ GENx___x___x___ ,
+ /*E383*/ GENx___x___x900 ( "MSGC"      , RXY_a, ASMFMT_RXY      , multiply_single_long_cc                             ),
+ /*E384*/ GENx___x___x900 ( "MG"        , RXY_a, ASMFMT_RXY      , multiply_long                                       ),
  /*E385*/ GENx___x___x900 ( "LGAT"      , RXY_a, ASMFMT_RXY      , load_long_and_trap                                  ),
  /*E386*/ GENx___x___x900 ( "MLG"       , RXY_a, ASMFMT_RXY      , multiply_logical_long                               ),
  /*E387*/ GENx___x___x900 ( "DLG"       , RXY_a, ASMFMT_RXY      , divide_logical_long                                 ),
@@ -3758,6 +4029,8 @@ static INSTR_FUNC gen_opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
  /*E500*/ GENx370x390x900 ( "LASP"      , SSE  , ASMFMT_SSE      , load_address_space_parameters                       ),
  /*E501*/ GENx370x390x900 ( "TPROT"     , SSE  , ASMFMT_SSE      , test_protection                                     ),
 
+
+
 /*-------------------------------------------------------------------*/
 /*       The following opcode has been re-used in z/Arch             */
 /*-------------------------------------------------------------------*/
@@ -3768,6 +4041,8 @@ static INSTR_FUNC gen_opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
 
 /*-------------------------------------------------------------------*/
 
+
+
  /*E503*/ GENx370x390x900 ( "Assist"    , SSE  , ASMFMT_SSE      , svc_assist                                          ),
  /*E504*/ GENx370x390x900 ( "Assist"    , SSE  , ASMFMT_SSE      , obtain_local_lock                                   ),
  /*E505*/ GENx370x390x900 ( "Assist"    , SSE  , ASMFMT_SSE      , release_local_lock                                  ),
@@ -3775,7 +4050,21 @@ static INSTR_FUNC gen_opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
  /*E507*/ GENx370x390x900 ( "Assist"    , SSE  , ASMFMT_SSE      , release_cms_lock                                    ),
  /*E508*/ GENx370x___x___ ( "Assist"    , SSE  , ASMFMT_SSE      , trace_svc_interruption                              ),
  /*E509*/ GENx370x___x___ ( "Assist"    , SSE  , ASMFMT_SSE      , trace_program_interruption                          ),
- /*E50A*/ GENx370x___x___ ( "Assist"    , SSE  , ASMFMT_SSE      , trace_initial_srb_dispatch                          ),
+
+
+
+/*-------------------------------------------------------------------*/
+/*       The following opcode has been re-used in z/Arch             */
+/*-------------------------------------------------------------------*/
+
+#define s370_move_right_to_left     s370_trace_initial_srb_dispatch
+
+ /*E50A*/ GENx370x___x900 ( "MVCRL"     , SSE  , ASMFMT_SSE      , move_right_to_left                                  ),
+
+/*-------------------------------------------------------------------*/
+
+
+
  /*E50B*/ GENx370x___x___ ( "Assist"    , SSE  , ASMFMT_SSE      , trace_io_interruption                               ),
  /*E50C*/ GENx370x___x___ ( "Assist"    , SSE  , ASMFMT_SSE      , trace_task_dispatch                                 ),
  /*E50D*/ GENx370x___x___ ( "Assist"    , SSE  , ASMFMT_SSE      , trace_svc_return                                    ),
@@ -3861,8 +4150,8 @@ static INSTR_FUNC gen_opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
  /*E55D*/ GENx37Xx390x900 ( "CLFHSI"    , SIL  , ASMFMT_SIL      , compare_logical_immediate_fullword_storage          ),
  /*E55E*/ GENx___x___x___ ,
  /*E55F*/ GENx___x___x___ ,
- /*E560*/ GENx___x___x___ ,
- /*E561*/ GENx___x___x___ ,
+ /*E560*/ GENx___x___x900 ( "TBEGIN"    , SIL  , ASMFMT_SIL      , transaction_begin                                   ),
+ /*E561*/ GENx___x___x900 ( "TBEGINC"   , SIL  , ASMFMT_SIL      , transaction_begin_constrained                       ),
  /*E562*/ GENx___x___x___ ,
  /*E563*/ GENx___x___x___ ,
  /*E564*/ GENx___x___x___ ,
@@ -4398,7 +4687,7 @@ static INSTR_FUNC gen_opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
  /*EB6E*/ GENx37Xx390x900 ( "ALSI"      , SIY  , ASMFMT_SIY      , add_logical_with_signed_immediate                   ),
  /*EB6F*/ GENx___x___x___ ,
  /*EB70*/ GENx___x___x___ ,
- /*EB71*/ GENx___x___x___ ,
+ /*EB71*/ GENx___x___x900 ( "LPSWEY"    , SIY  , ASMFMT_SIY      , load_program_status_word_extended_y                 ),
  /*EB72*/ GENx___x___x___ ,
  /*EB73*/ GENx___x___x___ ,
  /*EB74*/ GENx___x___x___ ,
@@ -4977,10 +5266,10 @@ static INSTR_FUNC gen_opcode_edxx[256][NUM_INSTR_TAB_PTRS] =
  /*EDA9*/ GENx___x___x900 ( "CZXT"      , RSL_b, ASMFMT_RSL_RM   , convert_dfp_ext_to_zoned                            ),
  /*EDAA*/ GENx___x___x900 ( "CDZT"      , RSL_b, ASMFMT_RSL_RM   , convert_zoned_to_dfp_long                           ),
  /*EDAB*/ GENx___x___x900 ( "CXZT"      , RSL_b, ASMFMT_RSL_RM   , convert_zoned_to_dfp_ext                            ),
- /*EDAC*/ GENx___x___x___ ,
- /*EDAD*/ GENx___x___x___ ,
- /*EDAE*/ GENx___x___x___ ,
- /*EDAF*/ GENx___x___x___ ,
+ /*EDAC*/ GENx___x___x900 ( "CPDT"      , RSL_b, ASMFMT_RSL_RM   , convert_dfp_long_to_packed                          ),
+ /*EDAD*/ GENx___x___x900 ( "CPXT"      , RSL_b, ASMFMT_RSL_RM   , convert_dfp_ext_to_packed                           ),
+ /*EDAE*/ GENx___x___x900 ( "CDPT"      , RSL_b, ASMFMT_RSL_RM   , convert_packed_to_dfp_long                          ),
+ /*EDAF*/ GENx___x___x900 ( "CXPT"      , RSL_b, ASMFMT_RSL_RM   , convert_packed_to_dfp_ext                           ),
  /*EDB0*/ GENx___x___x___ ,
  /*EDB1*/ GENx___x___x___ ,
  /*EDB2*/ GENx___x___x___ ,
@@ -6729,7 +7018,14 @@ void init_runtime_opcode_tables()
         replace_opcode_xxxx(arch, gen_v_opcode_a6xx[i][arch], 0xa6, i);
       }
 
-      replace_opcode_xxxx(arch, gen_opcode_b2xx[i][arch], 0xb2, i);
+      // b2xx opcode table is ARCH_DEP!
+
+           if (ARCH_370_IDX == arch) replace_opcode_xxxx( arch, s370_gen_opcode_b2xx[i][arch], 0xb2, i );
+      else if (ARCH_390_IDX == arch) replace_opcode_xxxx( arch, s390_gen_opcode_b2xx[i][arch], 0xb2, i );
+      else if (ARCH_900_IDX == arch) replace_opcode_xxxx( arch, z900_gen_opcode_b2xx[i][arch], 0xb2, i );
+      else
+          CRASH();
+
       replace_opcode_xxxx(arch, gen_opcode_b3xx[i][arch], 0xb3, i);
       replace_opcode_xxxx(arch, gen_opcode_b9xx[i][arch], 0xb9, i);
       replace_opcode_xx________xx(arch, gen_opcode_e3xx[i][arch], 0xe3, i);

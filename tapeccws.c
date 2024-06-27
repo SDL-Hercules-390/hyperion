@@ -518,6 +518,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         default:    /* Should NOT occur! */
 
             ASSERT(0);  // (fall thru to case 0 = unsupported)
+            /* FALLTHRU */
 
         case 0:     /* Unsupported CCW code for given device-type */
 
@@ -1044,7 +1045,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         {
             TID dummy_tid;
             char thread_name[64];
-            snprintf(thread_name,sizeof(thread_name),
+            MSGBUF(thread_name,
                 "autoload wait for %4.4X tapemount thread",
                 dev->devnum);
             thread_name[sizeof(thread_name)-1] = 0;
@@ -1626,7 +1627,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             STRLCPY( newfile, TAPE_UNLOADED );
 
         /* Obtain the device lock */
-        obtain_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
 
         /* Validate the given path... */
         if ( strcmp( newfile, TAPE_UNLOADED ) != 0 )
@@ -1640,7 +1641,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             { \
                 WRMSG(HHC00205, "E", LCSS_DEVNUM, _file, TTYPSTR(dev->tapedevt), "auto-mount", _reason); \
                 build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code); \
-                release_lock (&dev->lock); \
+                RELEASE_DEVLOCK( dev ); \
                 break; \
             }
 
@@ -1699,7 +1700,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         {
             WRMSG(HHC00214, "E", LCSS_DEVNUM, newfile, TTYPSTR(dev->tapedevt));
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
-            release_lock (&dev->lock);
+            RELEASE_DEVLOCK( dev );
             break;
         }
 
@@ -1766,7 +1767,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         }
 
         /* Release the device lock and exit function... */
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
         break;
 
     } /* End case 0x4B: SET DIAGNOSE */
@@ -1891,7 +1892,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         RESIDUAL_CALC( sizeof(locblock) );
 
         /* Informative message if tracing */
-        if ( dev->ccwtrace || dev->ccwstep )
+        if (dev->ccwtrace)
             WRMSG(HHC00217, "I", LCSS_DEVNUM
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
                 ,TTYPSTR(dev->tapedevt)
@@ -3446,7 +3447,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
             STRLCPY( dev->tapemsg1, msg1 );
 
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
         }
 
@@ -3471,7 +3472,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
             STRLCPY( dev->tapemsg1, msg1 );
 
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
         }
 
@@ -3523,7 +3524,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedisptype  = TAPEDISPTYP_UMOUNTMOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00219, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1, dev->tapemsg2 );
         }
         else
@@ -3531,7 +3532,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedisptype  = TAPEDISPTYP_MOUNT;
             dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg2 );
         }
 

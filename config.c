@@ -1,4 +1,5 @@
 /* CONFIG.C     (C) Copyright Jan Jaeger, 2000-2012                  */
+/*              (C) and others 2013-2023                             */
 /*              Device and Storage configuration functions           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -166,53 +167,53 @@ U64 adjust_mainsize( int archnum, U64 mainsize )
     {
 #if defined(       _ARCH_NUM_0 )
   #if       370 == _ARCH_NUM_0
-      { MIN_370_MAINSIZE_BYTES,
-        MAX_370_MAINSIZE_BYTES },
+      { MIN_370_MAINSIZE_BYTES,     // (MIN_ARCH_MAINSIZE_BYTES)
+        MAX_370_MAINSIZE_BYTES },   // (MAX_ARCH_MAINSIZE_BYTES)
 
   #elif     390 == _ARCH_NUM_0
-      { MIN_390_MAINSIZE_BYTES,
-        MAX_390_MAINSIZE_BYTES },
+      { MIN_390_MAINSIZE_BYTES,     // etc...
+        MAX_390_MAINSIZE_BYTES },   // etc...
 
   #else //  900 == _ARCH_NUM_0
-      { MIN_900_MAINSIZE_BYTES,
-        MAX_900_MAINSIZE_BYTES },
+      { MIN_900_MAINSIZE_BYTES,     // etc...
+        MAX_900_MAINSIZE_BYTES },   // etc...
   #endif
 #endif
 #if defined(       _ARCH_NUM_1 )
   #if       370 == _ARCH_NUM_1
-      { MIN_370_MAINSIZE_BYTES,
-        MAX_370_MAINSIZE_BYTES },
+      { MIN_370_MAINSIZE_BYTES,     // etc...
+        MAX_370_MAINSIZE_BYTES },   // etc...
 
   #elif     390 == _ARCH_NUM_1
-      { MIN_390_MAINSIZE_BYTES,
-        MAX_390_MAINSIZE_BYTES },
+      { MIN_390_MAINSIZE_BYTES,     // etc...
+        MAX_390_MAINSIZE_BYTES },   // etc...
 
   #else //  900 == _ARCH_NUM_1
-      { MIN_900_MAINSIZE_BYTES,
-        MAX_900_MAINSIZE_BYTES },
+      { MIN_900_MAINSIZE_BYTES,     // etc...
+        MAX_900_MAINSIZE_BYTES },   // etc...
   #endif
 #endif
 #if defined(       _ARCH_NUM_2 )
   #if       370 == _ARCH_NUM_2
-      { MIN_370_MAINSIZE_BYTES,
-        MAX_370_MAINSIZE_BYTES },
+      { MIN_370_MAINSIZE_BYTES,     // etc...
+        MAX_370_MAINSIZE_BYTES },   // etc...
 
   #elif     390 == _ARCH_NUM_2
-      { MIN_390_MAINSIZE_BYTES,
-        MAX_390_MAINSIZE_BYTES },
+      { MIN_390_MAINSIZE_BYTES,     // etc...
+        MAX_390_MAINSIZE_BYTES },   // etc...
 
   #else //  900 == _ARCH_NUM_2
-      { MIN_900_MAINSIZE_BYTES,
-        MAX_900_MAINSIZE_BYTES },
+      { MIN_900_MAINSIZE_BYTES,     // etc...
+        MAX_900_MAINSIZE_BYTES },   // etc...
   #endif
 #endif
     };
 
-    if (mainsize < minmax_mainsize[ archnum ][0])
-        mainsize = minmax_mainsize[ archnum ][0];
+    if (mainsize < minmax_mainsize[ archnum ][ MIN_ARCH_MAINSIZE_BYTES ])
+        mainsize = minmax_mainsize[ archnum ][ MIN_ARCH_MAINSIZE_BYTES ];
 
-    if (mainsize > minmax_mainsize[ archnum ][1])
-        mainsize = minmax_mainsize[ archnum ][1];
+    if (mainsize > minmax_mainsize[ archnum ][ MAX_ARCH_MAINSIZE_BYTES ])
+        mainsize = minmax_mainsize[ archnum ][ MAX_ARCH_MAINSIZE_BYTES ];
 
     /* Special case: if no CPUs then no storage is needed */
     if (sysblk.maxcpu <= 0)
@@ -392,7 +393,7 @@ int configure_storage( U64 mainsize /* number of 4K pages */ )
 
 #endif
 
-#if 1 // The below is a kludge that will need to be cleaned up at some point in time
+#if 1 // FIXME: The below is a kludge that will need to be cleaned up at some point in time
 
     /* Initialize dummy regs.
      * Dummy regs are used by the panel or gui when the target cpu
@@ -622,7 +623,7 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 /*                        get_devblk                                 */
 /*-------------------------------------------------------------------*/
 
-/* NOTE: also does obtain_lock(&dev->lock); */
+/* NOTE: also does OBTAIN_DEVLOCK( dev ); */
 
 static DEVBLK *get_devblk(U16 lcss, U16 devnum)
 {
@@ -678,7 +679,7 @@ char      buf[32];
     }
 
     /* Obtain the device lock. Caller will release it. */
-    obtain_lock (&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
     dev->group = NULL;
     dev->member = 0;
@@ -746,7 +747,7 @@ char      buf[32];
 /*                        ret_devblk                                 */
 /*-------------------------------------------------------------------*/
 
-/* NOTE: also does release_lock(&dev->lock);*/
+/* NOTE: also does RELEASE_DEVLOCK( dev );*/
 
 static void ret_devblk(DEVBLK *dev)
 {
@@ -760,7 +761,7 @@ static void ret_devblk(DEVBLK *dev)
     /* Mark device invalid */
     dev->allocated = 0;
     dev->pmcw.flag5 &= ~PMCW5_V;
-    release_lock(&dev->lock);
+    RELEASE_DEVLOCK( dev );
 }
 
 /*-------------------------------------------------------------------*/
@@ -786,14 +787,14 @@ int     i;                              /* Loop index                */
 
     /* Obtain the device lock. ret_devblk will release it */
     if (!locked)
-        obtain_lock(&dev->lock);
+        OBTAIN_DEVLOCK( dev );
 
     DelSubchanFastLookup(dev->ssid, dev->subchan);
     if(dev->pmcw.flag5 & PMCW5_V)
         DelDevnumFastLookup(LCSS_DEVNUM);
 
     /* Close file or socket */
-    if ((dev->fd > 2) || dev->console)
+    if ((dev->fd >= 0) || dev->console)
         /* Call the device close handler */
         (dev->hnd->close)(dev);
 
@@ -829,7 +830,7 @@ int     i;                              /* Loop index                */
     free(dev->typname);
 
     /* Release lock and return the device to the DEVBLK pool */
-    ret_devblk( dev ); /* also does release_lock(&dev->lock);*/
+    ret_devblk( dev ); /* also does RELEASE_DEVLOCK( dev );*/
 
     return 0;
 } /* end function detach_devblk */
@@ -904,10 +905,12 @@ int     cpu;
         }
 
     /* Terminate device threads */
-    obtain_lock (&sysblk.ioqlock);
-    sysblk.devtwait=0;
-    broadcast_condition (&sysblk.ioqcond);
-    release_lock (&sysblk.ioqlock);
+    OBTAIN_IOQLOCK();
+    {
+        sysblk.devtwait = 0;
+        broadcast_condition( &sysblk.ioqcond );
+    }
+    RELEASE_IOQLOCK();
 
     /* release storage          */
     sysblk.lock_mainstor = 0;
@@ -999,7 +1002,7 @@ int configure_shrdport( U16 shrdport )
 /*-------------------------------------------------------------------*/
 /* Check if we're a CPU thread or not.       (boolean function)      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT BYTE are_cpu_thread( int* cpunum )
+DLL_EXPORT bool are_cpu_thread( int* cpunum )
 {
     TID  tid  = thread_id();
     int  i;
@@ -1010,30 +1013,34 @@ DLL_EXPORT BYTE are_cpu_thread( int* cpunum )
         {
             if (cpunum)
                 *cpunum = i;
-            return TRUE;
+            return true;        // (we ARE a CPU thread)
         }
     }
-    return FALSE;
+
+    if (cpunum)
+        *cpunum = -1;
+
+    return false;               // (we are NOT a CPU thead)
 }
 
 /*-------------------------------------------------------------------*/
 /* Check if we're a CPU executing diagnose   (boolean function)      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT BYTE is_diag_instr()
+DLL_EXPORT bool is_diag_instr()
 {
     REGS* regs;
-    BYTE  arecpu;
+    bool  arecpu;
     int   ourcpu;
 
     /* Find out if we are a cpu thread */
     if (!(arecpu = are_cpu_thread( &ourcpu )))
-        return FALSE;
+        return false;
 
     /* Point to our REGS structure */
     regs = sysblk.regs[ ourcpu ];
 
     /* Return TRUE/FALSE boolean as appropriate */
-    return regs->diagnose ? TRUE : FALSE;
+    return regs->diagnose ? true : false;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1047,7 +1054,7 @@ int configure_cpu( int target_cpu )
     {
         int   rc;
         char  thread_name[32];
-        BYTE  arecpu;
+        bool  arecpu;
         int   ourcpu;
 
         /* If no more CPUs are permitted, exit */
@@ -1071,7 +1078,7 @@ int configure_cpu( int target_cpu )
         /* provided the _POSIX_THREAD_CPUTIME is supported.                       */
         pthread_getcpuclockid( sysblk.cputid[ target_cpu ], &sysblk.cpuclockid[ target_cpu ]);
         if (!sysblk.hhc_111_112)
-            WRMSG( HHC00111, "I", _POSIX_THREAD_CPUTIME );
+            WRMSG( HHC00111, "I", (long int)_POSIX_THREAD_CPUTIME );
 #else
         /* When not supported, we zero the cpuclockid, which will trigger a       */
         /* different approach to obtain the thread CPU time in clock.c            */
@@ -1085,18 +1092,23 @@ int configure_cpu( int target_cpu )
         arecpu = are_cpu_thread( &ourcpu );
 
         if (arecpu)
-            sysblk.regs[ ourcpu ]->intwait = 1;
+            sysblk.regs[ ourcpu ]->intwait = true;
 
         /* Wait for CPU thread to initialize */
         while (!IS_CPU_ONLINE( target_cpu ))
-           wait_condition( &sysblk.cpucond, &sysblk.intlock );
+            wait_condition( &sysblk.cpucond, &sysblk.intlock );
+
+        /* Now wait for it to reach its STOPPED state */
+        while (sysblk.regs[ target_cpu ]->cpustate != CPUSTATE_STOPPED)
+            wait_condition( &sysblk.cpucond, &sysblk.intlock );
 
         if (arecpu)
-            sysblk.regs[ ourcpu ]->intwait = 0;
+            sysblk.regs[ ourcpu ]->intwait = false;
 
 #if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
         /* Set topology-change-report-pending condition */
-        sysblk.topchnge = 1;
+        if (FACILITY_ENABLED( 011_CONFIG_TOPOLOGY, sysblk.regs[ target_cpu ]))
+            sysblk.topchnge = 1;
 #endif
     }
 
@@ -1113,11 +1125,14 @@ int deconfigure_cpu( int target_cpu )
     if (IS_CPU_ONLINE( target_cpu ))
     {
         int   ourcpu;
-        BYTE  arecpu  = are_cpu_thread( &ourcpu );
+        bool  arecpu  = are_cpu_thread( &ourcpu );
 
-        /* If we're NOT trying to deconfigure ourselves */
-        if (target_cpu != ourcpu)
+        if (!arecpu || target_cpu != ourcpu)  // NORMAL CASE
         {
+            /* We're either not a CPU thread, or if we are,
+               we're not attempting to deconfigure ourself.
+            */
+
             /* Deconfigure CPU */
             sysblk.regs[ target_cpu ]->configured = 0;
             sysblk.regs[ target_cpu ]->cpustate = CPUSTATE_STOPPING;
@@ -1128,7 +1143,7 @@ int deconfigure_cpu( int target_cpu )
 
             /* (if we're a cpu thread) */
             if (arecpu)
-                sysblk.regs[ ourcpu ]->intwait = 1;
+                sysblk.regs[ ourcpu ]->intwait = true;
 
             /* Wait for CPU thread to terminate */
             while (IS_CPU_ONLINE( target_cpu ))
@@ -1136,10 +1151,13 @@ int deconfigure_cpu( int target_cpu )
 
             /* (if we're a cpu thread) */
             if (arecpu)
-                sysblk.regs[ ourcpu ]->intwait = 0;
+                sysblk.regs[ ourcpu ]->intwait = false;
 
+            /* Wait for cpu_thread to completely exit */
             join_thread( sysblk.cputid[ target_cpu ], NULL );
-            detach_thread( sysblk.cputid[ target_cpu ]);
+#if defined( OPTION_FTHREADS )
+            detach_thread( sysblk.cputid[ target_cpu ]);    // only needed for Fish threads
+#endif
 
             /*-----------------------------------------------------------*/
             /* Note: While this is the logical place to cleanup and to   */
@@ -1147,9 +1165,14 @@ int deconfigure_cpu( int target_cpu )
             /*       post-processing that is done by various callers.    */
             /*-----------------------------------------------------------*/
         }
-        else
+        else // (arecpu && target_cpu == ourcpu)    HIGHLY UNUSUAL!
         {
-            /* Else we ARE trying to deconfigure ourselves */
+            /* We ARE a cpu thread *AND* we're trying to deconfigure
+               ourself! This can only happen if B220 SERVC instruction
+               is executed to deconfigure its own CPU, or else the CPU
+               issues a Hercules command via the diagnose-8 interface
+               to deconfigure its own CPU (i.e. itself).
+            */
             sysblk.regs[ target_cpu ]->configured = 0;
             sysblk.regs[ target_cpu ]->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT( sysblk.regs[ target_cpu ]);
@@ -1160,7 +1183,15 @@ int deconfigure_cpu( int target_cpu )
 
 #if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
         /* Set topology-change-report-pending condition */
-        sysblk.topchnge = 1;
+
+        /* PROGRAMMING NOTE: because the CPU has been deconfigured,
+           the REGS pointer in sysblk (i.e. sysblk.regs[ <cpunum> ])
+           could now possibly be NULL so to be safe we will use the
+           FACILITY_ENABLED_DEV macro instead as "sysblk.arch_mode"
+           should ALWAYS be valid.
+        */
+        if (FACILITY_ENABLED_DEV( 011_CONFIG_TOPOLOGY ))
+            sysblk.topchnge = 1;
 #endif
     }
 
@@ -1198,9 +1229,6 @@ static int configure_numcpu_intlock_held( int numcpu )
             configure_cpu( cpu );
     }
 
-    /* Make sure we did that right */
-    ASSERT( sysblk.cpus == numcpu && numcpu <= sysblk.maxcpu );
-
     return 0;
 }
 
@@ -1233,7 +1261,7 @@ int configure_maxcpu( int maxcpu )
     OBTAIN_INTLOCK( NULL );
     {
         /* Requested maxumim must be <= absolute maximum possible */
-        if (maxcpu > MAX_CPU_ENGINES)
+        if (maxcpu > MAX_CPU_ENGS)
         {
             RELEASE_INTLOCK( NULL );
             return HERRCPUOFF;  /* CPU offline; number > maximum */
@@ -1284,7 +1312,7 @@ int     i;                              /* Loop index                */
     }
 
     /* Obtain device block from our DEVBLK pool and lock the device. */
-    dev = get_devblk(lcss, devnum); /* does obtain_lock(&dev->lock); */
+    dev = get_devblk(lcss, devnum); /* does OBTAIN_DEVLOCK( dev ); */
 
     // PROGRAMMING NOTE: the rule is, once a DEVBLK has been obtained
     // from the pool it can be returned back to the pool via a simple
@@ -1297,7 +1325,7 @@ int     i;                              /* Loop index                */
     {
         // "%1d:%04X devtype %s not recognized"
         WRMSG (HHC01462, "E", lcss, devnum, type);
-        ret_devblk(dev); /* also does release_lock(&dev->lock);*/
+        ret_devblk(dev); /* also does RELEASE_DEVLOCK( dev );*/
         release_lock(&sysblk.config);
         return 1;
     }
@@ -1367,7 +1395,7 @@ int     i;                              /* Loop index                */
     }
 
     /* Release device lock */
-    release_lock(&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Build Channel Report */
@@ -1464,7 +1492,7 @@ DEVBLK *dev;                            /* -> Device block           */
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Obtain the device lock */
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
     /* Update the device number in the DEVBLK */
     dev->devnum = newdevn;
@@ -1477,7 +1505,7 @@ DEVBLK *dev;                            /* -> Device block           */
     AddDevnumFastLookup(dev,lcss,newdevn);
 
     /* Release device lock */
-    release_lock(&dev->lock);
+    RELEASE_DEVLOCK( dev );
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Build Channel Report */
@@ -1792,9 +1820,9 @@ static int parse_lcss( const char* spec, char** rest, int verbose )
 }
 
 /*-------------------------------------------------------------------*/
-/*               parse_single_devnum__INTERNAL                       */
+/*               parse_single_devnum_INTERNAL                       */
 /*-------------------------------------------------------------------*/
-static int parse_single_devnum__INTERNAL
+static int parse_single_devnum_INTERNAL
 (
     const char*  spec,
     U16*         p_lcss,
@@ -1811,6 +1839,15 @@ static int parse_single_devnum__INTERNAL
         return -1;
 
     lcss = rc;
+
+    if (str_caseless_eq( r, "sysg" ))
+    {
+        *p_devnum = 0;
+        *p_lcss   = lcss;
+        free( r );
+        return 0;
+    }
+
     rc = strtoul( r, &strptr, 16 );
 
     if (0
@@ -1854,6 +1891,7 @@ static int parse_single_devnum__INTERNAL
     *p_devnum = rc;
     *p_lcss   = lcss;
 
+    free( r );
     return 0;
 }
 
@@ -1863,7 +1901,7 @@ static int parse_single_devnum__INTERNAL
 DLL_EXPORT int parse_single_devnum( const char* spec, U16* lcss, U16* devnum )
 {
     int verbose = TRUE;
-    return parse_single_devnum__INTERNAL( spec, lcss, devnum, verbose );
+    return parse_single_devnum_INTERNAL( spec, lcss, devnum, verbose );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1872,7 +1910,7 @@ DLL_EXPORT int parse_single_devnum( const char* spec, U16* lcss, U16* devnum )
 int parse_single_devnum_silent( const char* spec, U16* lcss, U16* devnum )
 {
     int verbose = FALSE;
-    return parse_single_devnum__INTERNAL( spec, lcss, devnum, verbose );
+    return parse_single_devnum_INTERNAL( spec, lcss, devnum, verbose );
 }
 
 /*-------------------------------------------------------------------*/
@@ -2127,7 +2165,7 @@ int parse_and_attach_devices(const char *sdevnum,
                    orig_newargv[j]=newargv[j]=resolve_symbol_string(addargv[j]);
                }
                /* Build the device configuration block */
-               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, newargv, numconfdev);
+               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, newargv, devnum - da[i].cuu1 + 1);
                for(j=0;j<addargc;j++)
                {
                    free(orig_newargv[j]);
@@ -2136,18 +2174,12 @@ int parse_and_attach_devices(const char *sdevnum,
                if(rc!=0)
                {
                    baddev=1;
-                   break;
                }
-            }
-            if(baddev)
-            {
-                break;
             }
         }
 
         free(newargv);
         free(orig_newargv);
-
         free(dnd.da);
         return baddev?-1:0;
 }

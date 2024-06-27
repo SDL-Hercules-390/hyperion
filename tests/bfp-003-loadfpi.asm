@@ -1,22 +1,35 @@
-  TITLE 'bfp-003-loadfpi.asm: Test IEEE Load FP Integer'
+  TITLE 'bfp-003-loadfpi: Test IEEE Load FP Integer'
 ***********************************************************************
 *
 *Testcase IEEE LOAD FP INTEGER
-*  Test case capability includes IEEE exceptions trappable and 
-*  otherwise. Test results, FPCR flags, and any DXC are saved for all 
+*  Test case capability includes IEEE exceptions trappable and
+*  otherwise. Test results, FPCR flags, and any DXC are saved for all
 *  tests.  Load FP Integer does not set the condition code.
+*
+*
+*                      ********************
+*                      **   IMPORTANT!   **
+*                      ********************
+*
+*        This test uses the Hercules Diagnose X'008' interface
+*        to display messages and thus your .tst runtest script
+*        MUST contain a "DIAG8CMD ENABLE" statement within it!
+*
 *
 ***********************************************************************
          SPACE 2
 ***********************************************************************
 *
-*                       bfp-003-loadfpi.asm 
+*                       bfp-003-loadfpi.asm
 *
 *        This assembly-language source file is part of the
-*        Hercules Binary Floating Point Validation Package 
+*        Hercules Binary Floating Point Validation Package
 *                        by Stephen R. Orso
 *
 * Copyright 2016 by Stephen R Orso.
+* Runtest *Compare dependency removed by Fish on 2022-03-08
+* PADCSECT macro/usage removed by Fish on 2022-03-08
+*
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions
 * are met:
@@ -51,16 +64,16 @@
 *
 * Tests the following three conversion instructions
 *   LOAD FP INTEGER (short BFP, RRE)
-*   LOAD FP INTEGER (long BFP, RRE) 
-*   LOAD FP INTEGER (extended BFP, RRE)  
+*   LOAD FP INTEGER (long BFP, RRE)
+*   LOAD FP INTEGER (extended BFP, RRE)
 *   LOAD FP INTEGER (short BFP, RRF-e)
-*   LOAD FP INTEGER (long BFP, RRF-e) 
-*   LOAD FP INTEGER (extended BFP, RRF-e)  
-* 
+*   LOAD FP INTEGER (long BFP, RRF-e)
+*   LOAD FP INTEGER (extended BFP, RRF-e)
+*
 * Test data is compiled into this program.  The test script that runs
-* this program can provide alternative test data through Hercules R 
+* this program can provide alternative test data through Hercules R
 * commands.
-* 
+*
 * Test Case Order
 * 1) Short BFP inexact masking/trapping & SNaN/QNaN tests
 * 2) Short BFP rounding mode tests
@@ -70,15 +83,15 @@
 * 6) Extended BFP rounding mode tests
 *
 * Provided test data is 1, 1.5, SNaN, and QNaN.
-*   The second value will trigger an inexact exception when LOAD FP 
-*   INTEGER is executed.  The final value will trigger an invalid 
-*   exception.  
-* Provided test data for rounding tests is 
+*   The second value will trigger an inexact exception when LOAD FP
+*   INTEGER is executed.  The final value will trigger an invalid
+*   exception.
+* Provided test data for rounding tests is
 *      -9.5, -5.5, -2.5, -1.5, -0.5, +0.5, +1.5, +2.5, +5.5, +9.5
 *   This data is taken from Table 9-11 on page 9-16 of SA22-7832-10.
 *
 * Three input test data sets are provided, one each for short, long,
-*   and extended precision BFP inputs.  
+*   and extended precision BFP inputs.
 *
 * Also tests the following floating point support instructions
 *   LOAD  (Short)
@@ -91,32 +104,10 @@
 *   STFPC (Store Floating Point Control Register)
 *
 ***********************************************************************
-         SPACE 2
-          MACRO
-         PADCSECT &ENDLABL
-.*
-.*  Macro to pad the CSECT to include result data areas if this test
-.*  program is not being assembled using asma.  asma generates a core
-.*  image that is loaded by the loadcore command, and because the 
-.*  core image is a binary stored in Github, it makes sense to make
-.*  this small effort to keep the core image small.  
-.*
-         AIF   (D'&ENDLABL).GOODPAD
-         MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
-         MNOTE *,'No CSECT padding performed'  
-         MEXIT
-.*
-.GOODPAD ANOP            Label valid.  See if we're on asma
-         AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
-         ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
-         MEXIT
-.*
-.NOPAD   ANOP
-         MNOTE *,'asma detected; no CSECT padding performed'  
-         MEND
+         EJECT
 *
 *  Note: for compatibility with the z/CMS test rig, do not change
-*  or use R11, R14, or R15.  Everything else is fair game.  
+*  or use R11, R14, or R15.  Everything else is fair game.
 *
 BFPLDFPI START 0
 R0       EQU   0                   Work register for cc extraction
@@ -156,10 +147,12 @@ FPR14    EQU   14
 FPR15    EQU   15
 *
          USING *,R15
-* Above works on real iron (R15=0 after sysclear) 
+         USING HELPERS,R12
+*
+* Above works on real iron (R15=0 after sysclear)
 * and in z/CMS (R15 points to start of load module)
 *
-         SPACE 2 
+         SPACE 2
 ***********************************************************************
 *
 * Low core definitions, Restart PSW, and Program Check Routine.
@@ -172,24 +165,34 @@ PCINTCD  DS    H
 PCOLDPSW EQU   BFPLDFPI+X'150'     z/Arch Program check old PSW
 *
          ORG   BFPLDFPI+X'1A0'     z/Arch Restart PSW
-         DC    X'0000000180000000',AD(START)   
+         DC    X'0000000180000000',AD(START)
 *
-         ORG   BFPLDFPI+X'1D0'     z/Arch Program check old PSW
+         ORG   BFPLDFPI+X'1D0'     z/Arch Program check NEW PSW
          DC    X'0000000000000000',AD(PROGCHK)
-* 
+*
 * Program check routine.  If Data Exception, continue execution at
 * the instruction following the program check.  Otherwise, hard wait.
 * No need to collect data.  All interesting DXC stuff is captured
 * in the FPCR.
 *
+         ORG   BFPLDFPI+X'200'
 PROGCHK  DS    0H             Program check occured...
          CLI   PCINTCD+1,X'07'  Data Exception?
          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
          LPSWE PCOLDPSW       ..yes, resume program execution
-PCNOTDTA DS    0H
+                                                                SPACE
+PCNOTDTA STM   R0,R15,SAVEREGS  Save registers
+         L     R12,AHELPERS     Get address of helper subroutines
+         BAS   R13,PGMCK        Report this unexpected program check
+         LM    R0,R15,SAVEREGS  Restore registers
+                                                                SPACE
          LTR   R14,R14        Return address provided?
-         BNZR  R14            Yes, return to z/CMS test rig.  
-         LPSWE HARDWAIT       Not data exception, enter disabled wait.
+         BNZR  R14            Yes, return to z/CMS test rig.
+         LPSWE PROGPSW        Not data exception, enter disabled wait
+PROGPSW  DC    0D'0',X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+FAIL     LPSWE FAILPSW        Not data exception, enter disabled wait
+SAVEREGS DC    16F'0'         Registers save area
+AHELPERS DC    A(HELPERS)     Address of helper subroutines
          EJECT
 ***********************************************************************
 *
@@ -217,25 +220,30 @@ START    DS    0H
          LA    R10,RMEXTDS   Point to extended BFP rounding test data
          BAS   R13,FIXBRA    Convert using all rounding mode options
 *
-         LTR   R14,R14       Return address provided?
-         BNZR  R14           ..Yes, return to z/CMS test rig.  
-         LPSWE WAITPSW       All done
+***********************************************************************
+*                   Verify test results...
+***********************************************************************
 *
-         DS    0D            Ensure correct alignment for psw
-WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
-HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+         L     R12,AHELPERS     Get address of helper subroutines
+         BAS   R13,VERISUB      Go verify results
+         LTR   R14,R14          Was return address provided?
+         BNZR  R14              Yes, return to z/CMS test rig.
+         LPSWE GOODPSW          Load SUCCESS PSW
+                                                                EJECT
+         DS    0D            Ensure correct alignment for PSW
+GOODPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+FAILPSW  DC    X'0002000000000000',XL6'00',X'0BAD' Abnormal end
 *
 CTLR0    DS    F
 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
 *
-* Input values parameter list, four fullwords: 
-*      1) Count, 
-*      2) Address of inputs, 
+* Input values parameter list, four fullwords:
+*      1) Count,
+*      2) Address of inputs,
 *      3) Address to place results, and
-*      4) Address to place DXC/Flags/cc values.  
+*      4) Address to place DXC/Flags/cc values.
 *
-         ORG   BFPLDFPI+X'300'
 SHORTS   DS    0F            Inputs for short BFP testing
          DC    A(SBFPCT/4)
          DC    A(SBFPIN)
@@ -274,8 +282,8 @@ RMEXTDS  DS    0F            Inputs for extd BFP rounding testing
          EJECT
 ***********************************************************************
 *
-* Round short BFP inputs to integer short BFP.  A pair of results is 
-* generated for each input: one with all exceptions non-trappable, and 
+* Round short BFP inputs to integer short BFP.  A pair of results is
+* generated for each input: one with all exceptions non-trappable, and
 * the second with all exceptions trappable.   The FPCR is stored for
 * each result.
 *
@@ -303,7 +311,7 @@ FIEBR    DS    0H            Round short BFP inputs to integer BFP
          LA    R3,4(,R3)     Point to next input value
          LA    R7,8(,R7)     Point to next rounded rusult value pair
          LA    R8,8(,R8)     Point to next FPCR result area
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
          BR    R13           All converted; return.
          EJECT
 ***********************************************************************
@@ -315,13 +323,13 @@ FIEBR    DS    0H            Round short BFP inputs to integer BFP
 * The first four tests use rounding modes specified in the FPCR with
 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for
 * the first two FPCR-controlled tests and SRNMB (3-bit) is used for
-* the last two To get full coverage of that instruction pair.  
+* the last two To get full coverage of that instruction pair.
 *
-* The next six results use instruction-specified rounding modes.  
+* The next six results use instruction-specified rounding modes.
 *
 * The default rounding mode (0 for RNTE) is not tested in this section;
 * prior tests used the default rounding mode.  RNTE is tested
-* explicitly as a rounding mode in this section.  
+* explicitly as a rounding mode in this section.
 *
 ***********************************************************************
          SPACE 2
@@ -336,7 +344,7 @@ FIEBRA   LM    R2,R3,0(R10)  Get count and address of test input values
 * Test cases using rounding mode specified in the FPCR
 *
          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
-         SRNM  1             SET FPCR to RZ, towards zero.  
+         SRNM  1             SET FPCR to RZ, towards zero.
          FIEBRA FPR1,0,FPR0,B'0100' FPCR ctl'd rounding, inexact masked
          STE   FPR1,0*4(,R7) Store integer BFP result
          STFPC 0(R8)         Store resulting FPCR flags and DXC
@@ -394,15 +402,15 @@ FIEBRA   LM    R2,R3,0(R10)  Get count and address of test input values
          LA    R3,4(,R3)     Point to next input values
          LA    R7,12*4(,R7)  Point to next short BFP converted values
          LA    R8,12*4(,R8)  Point to next FPCR/CC result area
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
          BR    R13           All converted; return.
          EJECT
 ***********************************************************************
 *
-* Round long BFP inputs to integer long BFP.  A pair of results is 
-* generated for each input: one with all exceptions non-trappable, and 
-* the second with all exceptions trappable.   The FPCR is stored for 
-* each result.  
+* Round long BFP inputs to integer long BFP.  A pair of results is
+* generated for each input: one with all exceptions non-trappable, and
+* the second with all exceptions trappable.   The FPCR is stored for
+* each result.
 *
 ***********************************************************************
          SPACE 2
@@ -427,25 +435,25 @@ FIDBR    LM    R2,R3,0(R10)  Get count and address of test input values
          LA    R3,8(,R3)     Point to next input value
          LA    R7,16(,R7)    Point to next rounded long BFP result pair
          LA    R8,8(,R8)     Point to next FPCR result area
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
          BR    R13           All converted; return.
          EJECT
 ***********************************************************************
 *
-* Convert long BFP to integers using each possible rounding mode. 
+* Convert long BFP to integers using each possible rounding mode.
 * Ten test results are generated for each input.  A 48-byte test result
 * section is used to keep results sets aligned on a quad-double word.
 *
 * The first four tests use rounding modes specified in the FPCR with
 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for
 * the first two FPCR-controlled tests and SRNMB (3-bit) is used for
-* the last two To get full coverage of that instruction pair.  
+* the last two To get full coverage of that instruction pair.
 *
-* The next six results use instruction-specified rounding modes.  
+* The next six results use instruction-specified rounding modes.
 *
 * The default rounding mode (0 for RNTE) is not tested in this section;
 * prior tests used the default rounding mode.  RNTE is tested
-* explicitly as a rounding mode in this section.  
+* explicitly as a rounding mode in this section.
 *
 ***********************************************************************
          SPACE 2
@@ -460,7 +468,7 @@ FIDBRA   LM    R2,R3,0(R10)  Get count and address of test input values
 * Test cases using rounding mode specified in the FPCR
 *
          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
-         SRNM  1             SET FPCR to RZ, towards zero.  
+         SRNM  1             SET FPCR to RZ, towards zero.
          FIDBRA FPR1,0,FPR0,B'0100' FPCR ctl'd rounding, inexact masked
          STD   FPR1,0*8(,R7) Store integer BFP result
          STFPC 0(R8)         Store resulting FPCR flags and DXC
@@ -518,13 +526,13 @@ FIDBRA   LM    R2,R3,0(R10)  Get count and address of test input values
          LA    R3,8(,R3)     Point to next input values
          LA    R7,10*8(,R7)  Point to next long BFP converted values
          LA    R8,12*4(,R8)  Point to next FPCR/CC result area
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
          BR    R13           All converted; return.
          EJECT
 ***********************************************************************
 *
-* Round extended BFP to integer extended BFP.  A pair of results is 
-* generated for each input: one with all exceptions non-trappable, and 
+* Round extended BFP to integer extended BFP.  A pair of results is
+* generated for each input: one with all exceptions non-trappable, and
 * the second with all exceptions trappable.   The FPCR is stored for
 * each result.
 *
@@ -554,7 +562,7 @@ FIXBR    LM    R2,R3,0(R10)  Get count and address of test input values
          LA    R3,16(,R3)    Point to next extended BFP input value
          LA    R7,32(,R7)    Point to next extd BFP rounded result pair
          LA    R8,8(,R8)     Point to next FPCR/CC result area
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
          BR    R13           All converted; return.
          EJECT
 ***********************************************************************
@@ -566,13 +574,13 @@ FIXBR    LM    R2,R3,0(R10)  Get count and address of test input values
 * The first four tests use rounding modes specified in the FPCR with
 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for
 * the first two FPCR-controlled tests and SRNMB (3-bit) is used for
-* the last two To get full coverage of that instruction pair.  
+* the last two To get full coverage of that instruction pair.
 *
-* The next six results use instruction-specified rounding modes.  
+* The next six results use instruction-specified rounding modes.
 *
 * The default rounding mode (0 for RNTE) is not tested in this section;
 * prior tests used the default rounding mode.  RNTE is tested
-* explicitly as a rounding mode in this section.  
+* explicitly as a rounding mode in this section.
 *
 ***********************************************************************
          SPACE 2
@@ -588,7 +596,7 @@ FIXBRA   LM    R2,R3,0(R10)  Get count and address of test input values
 * Test cases using rounding mode specified in the FPCR
 *
          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
-         SRNM  1             SET FPCR to RZ, towards zero.  
+         SRNM  1             SET FPCR to RZ, towards zero.
          FIXBRA FPR1,0,FPR0,B'0100' FPCR ctl'd rounding, inexact masked
          STD   FPR1,0*16(,R7)      Store integer BFP result part 1
          STD   FPR3,(0*16)+8(,R7)  Store integer BFP result part 2
@@ -656,13 +664,13 @@ FIXBRA   LM    R2,R3,0(R10)  Get count and address of test input values
          LA    R3,16(,R3)    Point to next input value
          LA    R7,10*16(,R7) Point to next long BFP converted values
          LA    R8,12*4(,R8)  Point to next FPCR/CC result area
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
          BR    R13           All converted; return.
          EJECT
 ***********************************************************************
 *
-* Short integer inputs for Load FP Integer testing.  The same 
-* values are used for short, long, and extended formats.  
+* Short integer inputs for Load FP Integer testing.  The same
+* values are used for short, long, and extended formats.
 *
 ***********************************************************************
          SPACE 2
@@ -740,20 +748,25 @@ XBFPINRM DS    0D
          DC    X'3FFE8000000000000000000000000000'         +0.75
          DC    X'BFFD0000000000000000000000000000'         -0.25
 XBFPRMCT EQU   *-XBFPINRM   Count of extended BFP rounding tests * 16
+         EJECT
+***********************************************************************
+*                 ACTUAL results saved here
+***********************************************************************
 *
-*  Locations for results
+*               Locations for ACTUAL results
+*
 *
 SBFPOUT  EQU   BFPLDFPI+X'1000'    Integer short BFP rounded results
 *                                  ..7 used, room for 16
 SBFPFLGS EQU   BFPLDFPI+X'1080'    FPCR flags and DXC from short BFP
-*                                  ..7 used, room for 16 
+*                                  ..7 used, room for 16
 SBFPRMO  EQU   BFPLDFPI+X'1100'    Short BFP rounding mode test results
 *                                  ..12 used, room for 16
 SBFPRMOF EQU   BFPLDFPI+X'1400'    Short BFP rounding mode FPCR results
 *                                  ..12 used
 *
 LBFPOUT  EQU   BFPLDFPI+X'2000'    Integer long BFP rounded results
-*                                  ..7 used, room for 16 
+*                                  ..7 used, room for 16
 LBFPFLGS EQU   BFPLDFPI+X'2100'    FPCR flags and DXC from long BFP
 *                                  ..7 used, room for 32
 LBFPRMO  EQU   BFPLDFPI+X'2200'    Long BFP rounding mode test results
@@ -769,9 +782,1043 @@ XBFPRMO  EQU   BFPLDFPI+X'3300'    Extd BFP rounding mode test results
 *                                  ..12 used, room for 16
 XBFPRMOF EQU   BFPLDFPI+X'3F00'    Extd BFP rounding mode FPCR results
 *                                  ..12 used
+         EJECT
+***********************************************************************
+*                    EXPECTED results
+***********************************************************************
+*
+         ORG   BFPLDFPI+X'5000'   (past end of actual results)
+*
+SBFPOUT_GOOD EQU *
+ DC CL48'CFEBR result pairs 1-2'
+ DC XL16'3F8000003F800000C0000000C0000000'
+ DC CL48'CFEBR result pairs 3-4'
+ DC XL16'40000000400000007FC1000000000000'
+ DC CL48'CFEBR result pair 5-6'
+ DC XL16'7FC100007FC100003F8000003F800000'
+ DC CL48'CFEBR result pair 7'
+ DC XL16'80000000800000000000000000000000'
+SBFPOUT_NUM EQU (*-SBFPOUT_GOOD)/64
 *
 *
-ENDLABL  EQU   BFPLDFPI+X'4800'
-*  Pad CSECT if not running on ASMA for a stand-alone environment
-         PADCSECT ENDLABL
+SBFPFLGS_GOOD EQU *
+ DC CL48'CFEBR FPC pairs 1-2'
+ DC XL16'00000000F800000000080000F8000C00'
+ DC CL48'CFEBR FPC pairs 3-4'
+ DC XL16'00080000F800080000800000F8008000'
+ DC CL48'CFEBR FPC pair 5-6'
+ DC XL16'00000000F800000000080000F8000C00'
+ DC CL48'CFEBR FPC pair 7'
+ DC XL16'00080000F80008000000000000000000'
+SBFPFLGS_NUM EQU (*-SBFPFLGS_GOOD)/64
+*
+*
+SBFPRMO_GOOD EQU *
+ DC CL48'CFEBRA -9.5 FPC modes 1-3, 7'
+ DC XL16'C1100000C1100000C1200000C1100000'
+ DC CL48'CFEBRA -9.5 M3 modes 1, 3-5'
+ DC XL16'C1200000C1100000C1200000C1100000'
+ DC CL48'CFEBRA -9.5 M3 modes 6, 7'
+ DC XL16'C1100000C12000000000000000000000'
+ DC CL48'CFEBRA -5.5 FPC modes 1-3, 7'
+ DC XL16'C0A00000C0A00000C0C00000C0A00000'
+ DC CL48'CFEBRA -5.5 M3 modes 1, 3-5'
+ DC XL16'C0C00000C0A00000C0C00000C0A00000'
+ DC CL48'CFEBRA -5.5 M3 modes 6, 7'
+ DC XL16'C0A00000C0C000000000000000000000'
+ DC CL48'CFEBRA -2.5 FPC modes 1-3, 7'
+ DC XL16'C0000000C0000000C0400000C0400000'
+ DC CL48'CFEBRA -2.5 M3 modes 1, 3-5'
+ DC XL16'C0400000C0400000C0000000C0000000'
+ DC CL48'CFEBRA -2.5 M3 modes 6, 7'
+ DC XL16'C0000000C04000000000000000000000'
+ DC CL48'CFEBRA -1.5 FPC modes 1-3, 7'
+ DC XL16'BF800000BF800000C0000000BF800000'
+ DC CL48'CFEBRA -1.5 M3 modes 1, 3-5'
+ DC XL16'C0000000BF800000C0000000BF800000'
+ DC CL48'CFEBRA -1.5 M3 modes 6, 7'
+ DC XL16'BF800000C00000000000000000000000'
+ DC CL48'CFEBRA -0.5 FPC modes 1-3, 7'
+ DC XL16'8000000080000000BF800000BF800000'
+ DC CL48'CFEBRA -0.5 M3 modes 1, 3-5'
+ DC XL16'BF800000BF8000008000000080000000'
+ DC CL48'CFEBRA -0.5 M3 modes 6, 7'
+ DC XL16'80000000BF8000000000000000000000'
+ DC CL48'CFEBRA 0.5 FPC modes 1-3, 7'
+ DC XL16'000000003F800000000000003F800000'
+ DC CL48'CFEBRA 0.5 M3 modes 1, 3-5'
+ DC XL16'3F8000003F8000000000000000000000'
+ DC CL48'CFEBRA 0.5 M3 modes 6, 7'
+ DC XL16'3F800000000000000000000000000000'
+ DC CL48'CFEBRA 1.5 FPC modes 1-3, 7'
+ DC XL16'3F800000400000003F8000003F800000'
+ DC CL48'CFEBRA 1.5 M3 modes 1, 3-5'
+ DC XL16'400000003F800000400000003F800000'
+ DC CL48'CFEBRA 1.5 M3 modes 6, 7'
+ DC XL16'400000003F8000000000000000000000'
+ DC CL48'CFEBRA 2.5 FPC modes 1-3, 7'
+ DC XL16'40000000404000004000000040400000'
+ DC CL48'CFEBRA 2.5 M3 modes 1, 3-5'
+ DC XL16'40400000404000004000000040000000'
+ DC CL48'CFEBRA 2.5 M3 modes 6, 7'
+ DC XL16'40400000400000000000000000000000'
+ DC CL48'CFEBRA 5.5 FPC modes 1-3, 7'
+ DC XL16'40A0000040C0000040A0000040A00000'
+ DC CL48'CFEBRA 5.5 M3 modes 1, 3-5'
+ DC XL16'40C0000040A0000040C0000040A00000'
+ DC CL48'CFEBRA 5.5 M3 modes 6, 7'
+ DC XL16'40C0000040A000000000000000000000'
+ DC CL48'CFEBRA 9.5 FPC modes 1-3, 7'
+ DC XL16'41100000412000004110000041100000'
+ DC CL48'CFEBRA 9.5 M3 modes 1, 3-5'
+ DC XL16'41200000411000004120000041100000'
+ DC CL48'CFEBRA 9.5 M3 modes 6, 7'
+ DC XL16'41200000411000000000000000000000'
+ DC CL48'CFEBRA +0.75 FPC modes 1-3, 7'
+ DC XL16'000000003F800000000000003F800000'
+ DC CL48'CFEBRA +0.75 M3 modes 1, 3-5'
+ DC XL16'3F8000003F8000003F80000000000000'
+ DC CL48'CFEBRA +0.75 M3 modes 6, 7'
+ DC XL16'3F800000000000000000000000000000'
+ DC CL48'CFEBRA -0.25 FPC modes 1-3, 7'
+ DC XL16'8000000080000000BF800000BF800000'
+ DC CL48'CFEBRA -0.25 M3 modes 1, 3-5'
+ DC XL16'80000000BF8000008000000080000000'
+ DC CL48'CFEBRA -0.25 M3 modes 6, 7'
+ DC XL16'80000000BF8000000000000000000000'
+SBFPRMO_NUM EQU (*-SBFPRMO_GOOD)/64
+*
+*
+SBFPRMOF_GOOD EQU *
+ DC CL48'CFEBRA -9.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA -9.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA -9.5 M3 modes 5-7 - FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA -5.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA -5.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA -5.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA -2.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA -2.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA -2.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA -1.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA -1.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA -1.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA -0.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA -0.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA -0.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA +0.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA +0.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA +0.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA +1.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA +1.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA +1.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA +2.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA +2.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA +2.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA +5.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA +5.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA +5.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA +9.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA +9.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA +9.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA +0.75 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA +0.75 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA +0.75 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFEBRA -0.25 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFEBRA -0.25 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFEBRA -0.25 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+SBFPRMOF_NUM EQU (*-SBFPRMOF_GOOD)/64
+*
+*
+LBFPOUT_GOOD EQU *
+ DC CL48'CFDBR result pair 1'
+ DC XL16'3FF00000000000003FF0000000000000'
+ DC CL48'CFDBR result pair 2'
+ DC XL16'C000000000000000C000000000000000'
+ DC CL48'CFDBR result pair 3'
+ DC XL16'40000000000000004000000000000000'
+ DC CL48'CFDBR result pair 4'
+ DC XL16'7FF81000000000000000000000000000'
+ DC CL48'CFDBR result pair 5'
+ DC XL16'7FF81000000000007FF8100000000000'
+ DC CL48'CFDBR result pair 6'
+ DC XL16'3FF00000000000003FF0000000000000'
+ DC CL48'CFDBR result pair 7'
+ DC XL16'80000000000000008000000000000000'
+LBFPOUT_NUM EQU (*-LBFPOUT_GOOD)/64
+*
+*
+LBFPFLGS_GOOD EQU *
+ DC CL48'CFDBR FPC pairs 1-2'
+ DC XL16'00000000F800000000080000F8000C00'
+ DC CL48'CFDBR FPC pairs 3-4'
+ DC XL16'00080000F800080000800000F8008000'
+ DC CL48'CFDBR FPC pairs 5-6'
+ DC XL16'00000000F800000000080000F8000C00'
+ DC CL48'CFDBR FPC pair 7'
+ DC XL16'00080000F80008000000000000000000'
+LBFPFLGS_NUM EQU (*-LBFPFLGS_GOOD)/64
+*
+*
+LBFPRMO_GOOD EQU *
+ DC CL48'CFDBRA -9.5 FPC modes 1, 2'
+ DC XL16'C022000000000000C022000000000000'
+ DC CL48'CFDBRA -9.5 FPC modes 3, 7'
+ DC XL16'C024000000000000C022000000000000'
+ DC CL48'CFDBRA -9.5 M3 modes 1, 3'
+ DC XL16'C024000000000000C022000000000000'
+ DC CL48'CFDBRA -9.5 M3 modes 4, 5'
+ DC XL16'C024000000000000C022000000000000'
+ DC CL48'CFDBRA -9.5 M3 modes 6, 7'
+ DC XL16'C022000000000000C024000000000000'
+ DC CL48'CFDBRA -5.5 FPC modes 1, 2'
+ DC XL16'C014000000000000C014000000000000'
+ DC CL48'CFDBRA -5.5 FPC modes 3, 7'
+ DC XL16'C018000000000000C014000000000000'
+ DC CL48'CFDBRA -5.5 M3 modes 1, 3'
+ DC XL16'C018000000000000C014000000000000'
+ DC CL48'CFDBRA -5.5 M3 modes 4, 5'
+ DC XL16'C018000000000000C014000000000000'
+ DC CL48'CFDBRA -5.5 M3 modes 6, 7'
+ DC XL16'C014000000000000C018000000000000'
+ DC CL48'CFDBRA -2.5 FPC modes 1, 2'
+ DC XL16'C000000000000000C000000000000000'
+ DC CL48'CFDBRA -2.5 FPC modes 3, 7'
+ DC XL16'C008000000000000C008000000000000'
+ DC CL48'CFDBRA -2.5 M3 modes 1, 3'
+ DC XL16'C008000000000000C008000000000000'
+ DC CL48'CFDBRA -2.5 M3 modes 4, 5'
+ DC XL16'C000000000000000C000000000000000'
+ DC CL48'CFDBRA -2.5 M3 modes 6, 7'
+ DC XL16'C000000000000000C008000000000000'
+ DC CL48'CFDBRA -1.5 FPC modes 1, 2'
+ DC XL16'BFF0000000000000BFF0000000000000'
+ DC CL48'CFDBRA -1.5 FPC modes 3, 7'
+ DC XL16'C000000000000000BFF0000000000000'
+ DC CL48'CFDBRA -1.5 M3 modes 1, 3'
+ DC XL16'C000000000000000BFF0000000000000'
+ DC CL48'CFDBRA -1.5 M3 modes 4, 5'
+ DC XL16'C000000000000000BFF0000000000000'
+ DC CL48'CFDBRA -1.5 M3 modes 6, 7'
+ DC XL16'BFF0000000000000C000000000000000'
+ DC CL48'CFDBRA -0.5 FPC modes 1, 2'
+ DC XL16'80000000000000008000000000000000'
+ DC CL48'CFDBRA -0.5 FPC modes 3, 7'
+ DC XL16'BFF0000000000000BFF0000000000000'
+ DC CL48'CFDBRA -0.5 M3 modes 1, 3'
+ DC XL16'BFF0000000000000BFF0000000000000'
+ DC CL48'CFDBRA -0.5 M3 modes 4, 5'
+ DC XL16'80000000000000008000000000000000'
+ DC CL48'CFDBRA -0.5 M3 modes 6, 7'
+ DC XL16'8000000000000000BFF0000000000000'
+ DC CL48'CFDBRA 0.5 FPC modes 1, 2'
+ DC XL16'00000000000000003FF0000000000000'
+ DC CL48'CFDBRA 0.5 FPC modes 3, 7'
+ DC XL16'00000000000000003FF0000000000000'
+ DC CL48'CFDBRA 0.5 M3 modes 1, 3'
+ DC XL16'3FF00000000000003FF0000000000000'
+ DC CL48'CFDBRA 0.5 M3 modes 4, 5'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFDBRA 0.5 M3 modes 6, 7'
+ DC XL16'3FF00000000000000000000000000000'
+ DC CL48'CFDBRA 1.5 FPC modes 1, 2'
+ DC XL16'3FF00000000000004000000000000000'
+ DC CL48'CFDBRA 1.5 FPC modes 3, 7'
+ DC XL16'3FF00000000000003FF0000000000000'
+ DC CL48'CFDBRA 1.5 M3 modes 1, 3'
+ DC XL16'40000000000000003FF0000000000000'
+ DC CL48'CFDBRA 1.5 M3 modes 4, 5'
+ DC XL16'40000000000000003FF0000000000000'
+ DC CL48'CFDBRA 1.5 M3 modes 6, 7'
+ DC XL16'40000000000000003FF0000000000000'
+ DC CL48'CFDBRA 2.5 FPC modes 1, 2'
+ DC XL16'40000000000000004008000000000000'
+ DC CL48'CFDBRA 2.5 FPC modes 3, 7'
+ DC XL16'40000000000000004008000000000000'
+ DC CL48'CFDBRA 2.5 M3 modes 1, 3'
+ DC XL16'40080000000000004008000000000000'
+ DC CL48'CFDBRA 2.5 M3 modes 4, 5'
+ DC XL16'40000000000000004000000000000000'
+ DC CL48'CFDBRA 2.5 M3 modes 6, 7'
+ DC XL16'40080000000000004000000000000000'
+ DC CL48'CFDBRA 5.5 FPC modes 1, 2'
+ DC XL16'40140000000000004018000000000000'
+ DC CL48'CFDBRA 5.5 FPC modes 3, 7'
+ DC XL16'40140000000000004014000000000000'
+ DC CL48'CFDBRA 5.5 M3 modes 1, 3'
+ DC XL16'40180000000000004014000000000000'
+ DC CL48'CFDBRA 5.5 M3 modes 4, 5'
+ DC XL16'40180000000000004014000000000000'
+ DC CL48'CFDBRA 5.5 M3 modes 6, 7'
+ DC XL16'40180000000000004014000000000000'
+ DC CL48'CFDBRA 9.5 FPC modes 1, 2'
+ DC XL16'40220000000000004024000000000000'
+ DC CL48'CFDBRA 9.5 FPC modes 3, 7'
+ DC XL16'40220000000000004022000000000000'
+ DC CL48'CFDBRA 9.5 M3 modes 1, 3'
+ DC XL16'40240000000000004022000000000000'
+ DC CL48'CFDBRA 9.5 M3 modes 4, 5'
+ DC XL16'40240000000000004022000000000000'
+ DC CL48'CFDBRA 9.5 M3 modes 6, 7'
+ DC XL16'40240000000000004022000000000000'
+ DC CL48'CFDBRA +0.75 FPC modes 1, 2'
+ DC XL16'00000000000000003FF0000000000000'
+ DC CL48'CFDBRA +0.75 FPC modes 3, 7'
+ DC XL16'00000000000000003FF0000000000000'
+ DC CL48'CFDBRA +0.75 M3 modes 1, 3'
+ DC XL16'3FF00000000000003FF0000000000000'
+ DC CL48'CFDBRA +0.75 M3 modes 4, 5'
+ DC XL16'3FF00000000000000000000000000000'
+ DC CL48'CFDBRA +0.75 M3 modes 6, 7'
+ DC XL16'3FF00000000000000000000000000000'
+ DC CL48'CFDBRA -0.25 FPC modes 1, 2'
+ DC XL16'80000000000000008000000000000000'
+ DC CL48'CFDBRA -0.25 FPC modes 3, 7'
+ DC XL16'BFF0000000000000BFF0000000000000'
+ DC CL48'CFDBRA -0.25 M3 modes 1, 3'
+ DC XL16'8000000000000000BFF0000000000000'
+ DC CL48'CFDBRA -0.25 M3 modes 4, 5'
+ DC XL16'80000000000000008000000000000000'
+ DC CL48'CFDBRA -0.25 M3 modes 6, 7'
+ DC XL16'8000000000000000BFF0000000000000'
+LBFPRMO_NUM EQU (*-LBFPRMO_GOOD)/64
+*
+*
+LBFPRMOF_GOOD EQU *
+ DC CL48'CFDBRA -9.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA -9.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA -9.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA -5.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA -5.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA -5.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA -2.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA -2.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA -2.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA -1.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA -1.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA -1.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA -0.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA -0.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA -0.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA +0.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA +0.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA +0.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA +1.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA +1.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA +1.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA +2.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA +2.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA +2.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA +5.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA +5.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA +5.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA +9.5 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA +9.5 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA +9.5 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA +0.75 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA +0.75 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA +0.75 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFDBRA -0.25 FPC modes 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFDBRA -0.25 M3 modes 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFDBRA -0.25 M3 modes 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+LBFPRMOF_NUM EQU (*-LBFPRMOF_GOOD)/64
+*
+*
+XBFPOUT_GOOD EQU *
+ DC CL48'CFXBR result pair 1a'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBR result pair 1b'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBR result pair 2a'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBR result pair 2b'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBR result pair 3a'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBR result pair 3b'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBR result pair 4a'
+ DC XL16'7FFF8100000000000000000000000000'
+ DC CL48'CFXBR result pair 4b'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBR result pair 5a'
+ DC XL16'7FFF8100000000000000000000000000'
+ DC CL48'CFXBR result pair 5b'
+ DC XL16'7FFF8100000000000000000000000000'
+ DC CL48'CFXBR result pair 6a'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBR result pair 6b'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBR result pair 7a'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBR result pair 7b'
+ DC XL16'80000000000000000000000000000000'
+XBFPOUT_NUM EQU (*-XBFPOUT_GOOD)/64
+*
+*
+XBFPFLGS_GOOD EQU *
+ DC CL48'CFXBR FPC pairs 1-2'
+ DC XL16'00000000F800000000080000F8000C00'
+ DC CL48'CFXBR FPC pairs 3-4'
+ DC XL16'00080000F800080000800000F8008000'
+ DC CL48'CFXBR FPC pairs 5-6'
+ DC XL16'00000000F800000000080000F8000C00'
+ DC CL48'CFXBR FPC pair 7'
+ DC XL16'00080000F80008000000000000000000'
+XBFPFLGS_NUM EQU (*-XBFPFLGS_GOOD)/64
+*
+*
+XBFPRMO_GOOD EQU *
+ DC CL48'CFXBRA -9.5 FPC mode 1'
+ DC XL16'C0022000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 FPC mode 2'
+ DC XL16'C0022000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 FPC mode 3'
+ DC XL16'C0024000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 FPC mode 7'
+ DC XL16'C0022000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 M3 mode 1'
+ DC XL16'C0024000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 M3 mode 3'
+ DC XL16'C0022000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 M3 mode 4'
+ DC XL16'C0024000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 M3 mode 5'
+ DC XL16'C0022000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 M3 mode 6'
+ DC XL16'C0022000000000000000000000000000'
+ DC CL48'CFXBRA -9.5 M3 mode 7'
+ DC XL16'C0024000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 FPC mode 1'
+ DC XL16'C0014000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 FPC mode 2'
+ DC XL16'C0014000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 FPC mode 3'
+ DC XL16'C0018000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 FPC mode 7'
+ DC XL16'C0014000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 M3 mode 1'
+ DC XL16'C0018000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 M3 mode 3'
+ DC XL16'C0014000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 M3 mode 4'
+ DC XL16'C0018000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 M3 mode 5'
+ DC XL16'C0014000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 M3 mode 6'
+ DC XL16'C0014000000000000000000000000000'
+ DC CL48'CFXBRA -5.5 M3 mode 7'
+ DC XL16'C0018000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 FPC mode 1'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 FPC mode 2'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 FPC mode 3'
+ DC XL16'C0008000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 FPC mode 7'
+ DC XL16'C0008000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 M3 mode 1'
+ DC XL16'C0008000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 M3 mode 3'
+ DC XL16'C0008000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 M3 mode 4'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 M3 mode 5'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 M3 mode 6'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -2.5 M3 mode 7'
+ DC XL16'C0008000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 FPC mode 1'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 FPC mode 2'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 FPC mode 3'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 FPC mode 7'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 M3 mode 1'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 M3 mode 3'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 M3 mode 4'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 M3 mode 5'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 M3 mode 6'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -1.5 M3 mode 7'
+ DC XL16'C0000000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 FPC mode 1'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 FPC mode 2'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 FPC mode 3'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 FPC mode 7'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 M3 mode 1'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 M3 mode 3'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 M3 mode 4'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 M3 mode 5'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 M3 mode 6'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.5 M3 mode 7'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 FPC mode 1'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 FPC mode 2'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 FPC mode 3'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 FPC mode 7'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 M3 mode 1'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 M3 mode 3'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 M3 mode 4'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 M3 mode 5'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 M3 mode 6'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 0.5 M3 mode 7'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 FPC mode 1'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 FPC mode 2'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 FPC mode 3'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 FPC mode 7'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 M3 mode 1'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 M3 mode 3'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 M3 mode 4'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 M3 mode 5'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 M3 mode 6'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 1.5 M3 mode 7'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 FPC mode 1'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 FPC mode 2'
+ DC XL16'40008000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 FPC mode 3'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 FPC mode 7'
+ DC XL16'40008000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 M3 mode 1'
+ DC XL16'40008000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 M3 mode  3'
+ DC XL16'40008000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 M3 mode 4'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 M3 mode 5'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 M3 mode 6'
+ DC XL16'40008000000000000000000000000000'
+ DC CL48'CFXBRA 2.5 M3 mode 7'
+ DC XL16'40000000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 FPC mode 1'
+ DC XL16'40014000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 FPC mode 2'
+ DC XL16'40018000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 FPC mode 3'
+ DC XL16'40014000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 FPC mode 7'
+ DC XL16'40014000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 M3 mode 1'
+ DC XL16'40018000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 M3 mode 3'
+ DC XL16'40014000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 M3 mode 4'
+ DC XL16'40018000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 M3 mode 5'
+ DC XL16'40014000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 M3 mode 6'
+ DC XL16'40018000000000000000000000000000'
+ DC CL48'CFXBRA 5.5 M3 mode 7'
+ DC XL16'40014000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 FPC mode 1'
+ DC XL16'40022000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 FPC mode 2'
+ DC XL16'40024000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 FPC mode 3'
+ DC XL16'40022000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 FPC mode 7'
+ DC XL16'40022000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 M3 mode 1'
+ DC XL16'40024000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 M3 mode 3'
+ DC XL16'40022000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 M3 mode 4'
+ DC XL16'40024000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 M3 mode 5'
+ DC XL16'40022000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 M3 mode 6'
+ DC XL16'40024000000000000000000000000000'
+ DC CL48'CFXBRA 9.5 M3 mode 7'
+ DC XL16'40022000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 FPC mode 1'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 FPC mode 2'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 FPC mode 3'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 FPC mode 7'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 M3 mode 1'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 M3 mode 3'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 M3 mode 4'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 M3 mode 5'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 M3 mode 6'
+ DC XL16'3FFF0000000000000000000000000000'
+ DC CL48'CFXBRA +0.75 M3 mode 7'
+ DC XL16'00000000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 FPC mode 1'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 FPC mode 2'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 FPC mode 3'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 FPC mode 7'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 M3 mode 1'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 M3 mode 3'
+ DC XL16'BFFF0000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 M3 mode 4'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 M3 mode 5'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 M3 mode 6'
+ DC XL16'80000000000000000000000000000000'
+ DC CL48'CFXBRA -0.25 M3 mode 7'
+ DC XL16'BFFF0000000000000000000000000000'
+XBFPRMO_NUM EQU (*-XBFPRMO_GOOD)/64
+*
+*
+XBFPRMOF_GOOD EQU *
+ DC CL48'CFXBRA -9.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA -9.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA -9.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA -5.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA -5.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA -5.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA -2.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA -2.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA -2.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA -1.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA -1.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA -1.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA -0.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA -0.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA -0.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA +0.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA +0.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA +0.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA +1.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA +1.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA +1.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA +2.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA +2.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA +2.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA +5.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA +5.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA +5.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA +9.5 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA +9.5 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA +9.5 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA +0.75 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA +0.75 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA +0.75 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+ DC CL48'CFXBRA -0.25 FPC mode 1-3, 7 FCPR'
+ DC XL16'00000001000000020000000300000007'
+ DC CL48'CFXBRA -0.25 M3 mode 1, 3-5 FPCR'
+ DC XL16'00080000000800000008000000080000'
+ DC CL48'CFXBRA -0.25 M3 mode 6, 7 FCPR'
+ DC XL16'00080000000800000000000000000000'
+XBFPRMOF_NUM EQU (*-XBFPRMOF_GOOD)/64
+                                                                EJECT
+HELPERS  DS    0H       (R12 base of helper subroutines)
+                                                                SPACE
+***********************************************************************
+*               REPORT UNEXPECTED PROGRAM CHECK
+***********************************************************************
+                                                                SPACE
+PGMCK    DS    0H
+         UNPK  PROGCODE(L'PROGCODE+1),PCINTCD(L'PCINTCD+1)
+         MVI   PGMCOMMA,C','
+         TR    PROGCODE,HEXTRTAB
+                                                                SPACE
+         UNPK  PGMPSW+(0*9)(9),PCOLDPSW+(0*4)(5)
+         MVI   PGMPSW+(0*9)+8,C' '
+         TR    PGMPSW+(0*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  PGMPSW+(1*9)(9),PCOLDPSW+(1*4)(5)
+         MVI   PGMPSW+(1*9)+8,C' '
+         TR    PGMPSW+(1*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  PGMPSW+(2*9)(9),PCOLDPSW+(2*4)(5)
+         MVI   PGMPSW+(2*9)+8,C' '
+         TR    PGMPSW+(2*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  PGMPSW+(3*9)(9),PCOLDPSW+(3*4)(5)
+         MVI   PGMPSW+(3*9)+8,C' '
+         TR    PGMPSW+(3*9)(8),HEXTRTAB
+                                                                SPACE
+         LA    R0,L'PROGMSG     R0 <== length of message
+         LA    R1,PROGMSG       R1 --> the message text itself
+         BAL   R2,MSG           Go display this message
+
+         BR    R13              Return to caller
+                                                                SPACE 4
+PROGMSG  DS   0CL66
+         DC    CL20'PROGRAM CHECK! CODE '
+PROGCODE DC    CL4'hhhh'
+PGMCOMMA DC    CL1','
+         DC    CL5' PSW '
+PGMPSW   DC    CL36'hhhhhhhh hhhhhhhh hhhhhhhh hhhhhhhh '
+                                                                EJECT
+***********************************************************************
+*                    VERIFICATION ROUTINE
+***********************************************************************
+                                                                SPACE
+VERISUB  DS    0H
+*
+**       Loop through the VERIFY TABLE...
+*
+                                                                SPACE
+         LA    R1,VERIFTAB      R1 --> Verify table
+         LA    R2,VERIFLEN      R2 <== Number of entries
+         BASR  R3,0             Set top of loop
+                                                                SPACE
+         LM    R4,R6,0(R1)      Load verify table values
+         BAS   R7,VERIFY        Verify results
+         LA    R1,12(,R1)       Next verify table entry
+         BCTR  R2,R3            Loop through verify table
+                                                                SPACE
+         CLI   FAILFLAG,X'00'   Did all tests verify okay?
+         BER   R13              Yes, return to caller
+         B     FAIL             No, load FAILURE disabled wait PSW
+                                                                SPACE 6
+*
+**       Loop through the ACTUAL / EXPECTED results...
+*
+                                                                SPACE
+VERIFY   BASR  R8,0             Set top of loop
+                                                                SPACE
+         CLC   0(16,R4),48(R5)  Actual results == Expected results?
+         BNE   VERIFAIL         No, show failure
+VERINEXT LA    R4,16(,R4)       Next actual result
+         LA    R5,64(,R5)       Next expected result
+         BCTR  R6,R8            Loop through results
+                                                                SPACE
+         BR    R7               Return to caller
+                                                                EJECT
+***********************************************************************
+*                    Report the failure...
+***********************************************************************
+                                                                SPACE
+VERIFAIL STM   R0,R5,SAVER0R5   Save registers
+         MVI   FAILFLAG,X'FF'   Remember verification failure
+*
+**       First, show them the description...
+*
+         MVC   FAILDESC,0(R5)   Save results/test description
+         LA    R0,L'FAILMSG1    R0 <== length of message
+         LA    R1,FAILMSG1      R1 --> the message text itself
+         BAL   R2,MSG           Go display this message
+*
+**       Save address of actual and expected results
+*
+         ST    R4,AACTUAL       Save A(actual results)
+         LA    R5,48(,R5)       R5 ==> expected results
+         ST    R5,AEXPECT       Save A(expected results)
+*
+**       Format and show them the EXPECTED ("Want") results...
+*
+         MVC   WANTGOT,=CL6'Want: '
+         UNPK  FAILADR(L'FAILADR+1),AEXPECT(L'AEXPECT+1)
+         MVI   BLANKEQ,C' '
+         TR    FAILADR,HEXTRTAB
+                                                                SPACE
+         UNPK  FAILVALS+(0*9)(9),(0*4)(5,R5)
+         MVI   FAILVALS+(0*9)+8,C' '
+         TR    FAILVALS+(0*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  FAILVALS+(1*9)(9),(1*4)(5,R5)
+         MVI   FAILVALS+(1*9)+8,C' '
+         TR    FAILVALS+(1*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  FAILVALS+(2*9)(9),(2*4)(5,R5)
+         MVI   FAILVALS+(2*9)+8,C' '
+         TR    FAILVALS+(2*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  FAILVALS+(3*9)(9),(3*4)(5,R5)
+         MVI   FAILVALS+(3*9)+8,C' '
+         TR    FAILVALS+(3*9)(8),HEXTRTAB
+                                                                SPACE
+         LA    R0,L'FAILMSG2    R0 <== length of message
+         LA    R1,FAILMSG2      R1 --> the message text itself
+         BAL   R2,MSG           Go display this message
+                                                                EJECT
+*
+**       Format and show them the ACTUAL ("Got") results...
+*
+         MVC   WANTGOT,=CL6'Got:  '
+         UNPK  FAILADR(L'FAILADR+1),AACTUAL(L'AACTUAL+1)
+         MVI   BLANKEQ,C' '
+         TR    FAILADR,HEXTRTAB
+                                                                SPACE
+         UNPK  FAILVALS+(0*9)(9),(0*4)(5,R4)
+         MVI   FAILVALS+(0*9)+8,C' '
+         TR    FAILVALS+(0*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  FAILVALS+(1*9)(9),(1*4)(5,R4)
+         MVI   FAILVALS+(1*9)+8,C' '
+         TR    FAILVALS+(1*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  FAILVALS+(2*9)(9),(2*4)(5,R4)
+         MVI   FAILVALS+(2*9)+8,C' '
+         TR    FAILVALS+(2*9)(8),HEXTRTAB
+                                                                SPACE
+         UNPK  FAILVALS+(3*9)(9),(3*4)(5,R4)
+         MVI   FAILVALS+(3*9)+8,C' '
+         TR    FAILVALS+(3*9)(8),HEXTRTAB
+                                                                SPACE
+         LA    R0,L'FAILMSG2    R0 <== length of message
+         LA    R1,FAILMSG2      R1 --> the message text itself
+         BAL   R2,MSG           Go display this message
+                                                                SPACE
+         LM    R0,R5,SAVER0R5   Restore registers
+         B     VERINEXT         Continue with verification...
+                                                                SPACE 3
+FAILMSG1 DS   0CL68
+         DC    CL20'COMPARISON FAILURE! '
+FAILDESC DC    CL48'(description)'
+                                                                SPACE 2
+FAILMSG2 DS   0CL53
+WANTGOT  DC    CL6' '           'Want: ' -or- 'Got:  '
+FAILADR  DC    CL8'AAAAAAAA'
+BLANKEQ  DC    CL3' = '
+FAILVALS DC    CL36'hhhhhhhh hhhhhhhh hhhhhhhh hhhhhhhh '
+                                                                SPACE 2
+AEXPECT  DC    F'0'             ==> Expected ("Want") results
+AACTUAL  DC    F'0'             ==> Actual ("Got") results
+SAVER0R5 DC    6F'0'            Registers R0 - R5 save area
+CHARHEX  DC    CL16'0123456789ABCDEF'
+HEXTRTAB EQU   CHARHEX-X'F0'    Hexadecimal translation table
+FAILFLAG DC    X'00'            FF = Fail, 00 = Success
+                                                                EJECT
+***********************************************************************
+*        Issue HERCULES MESSAGE pointed to by R1, length in R0
+***********************************************************************
+                                                                SPACE
+MSG      CH    R0,=H'0'               Do we even HAVE a message?
+         BNHR  R2                     No, ignore
+                                                                SPACE
+         STM   R0,R2,MSGSAVE          Save registers
+                                                                SPACE
+         CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+         BNH   MSGOK                  Yes, continue
+         LA    R0,L'MSGMSG            No, set to maximum
+                                                                SPACE
+MSGOK    LR    R2,R0                  Copy length to work register
+         BCTR  R2,0                   Minus-1 for execute
+         EX    R2,MSGMVC              Copy message to O/P buffer
+                                                                SPACE
+         LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+         LA    R1,MSGCMD              Point to true command
+                                                                SPACE
+         DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+         BZ    MSGRET                 Return if successful
+         DC    H'0'                   CRASH for debugging purposes
+                                                                SPACE
+MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+         BR    R2                     Return to caller
+                                                                SPACE 6
+MSGSAVE  DC    3F'0'                  Registers save area
+MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+                                                                SPACE 2
+MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+MSGMSG   DC    CL95' '                The message text to be displayed
+                                                                EJECT
+***********************************************************************
+*                         VERIFY TABLE
+***********************************************************************
+*
+*        A(actual results), A(expected results), A(#of results)
+*
+***********************************************************************
+                                                                SPACE
+VERIFTAB DC    0F'0'
+         DC    A(SBFPOUT)
+         DC    A(SBFPOUT_GOOD)
+         DC    A(SBFPOUT_NUM)
+*
+         DC    A(SBFPFLGS)
+         DC    A(SBFPFLGS_GOOD)
+         DC    A(SBFPFLGS_NUM)
+*
+         DC    A(SBFPRMO)
+         DC    A(SBFPRMO_GOOD)
+         DC    A(SBFPRMO_NUM)
+*
+         DC    A(SBFPRMOF)
+         DC    A(SBFPRMOF_GOOD)
+         DC    A(SBFPRMOF_NUM)
+*
+         DC    A(LBFPOUT)
+         DC    A(LBFPOUT_GOOD)
+         DC    A(LBFPOUT_NUM)
+*
+         DC    A(LBFPFLGS)
+         DC    A(LBFPFLGS_GOOD)
+         DC    A(LBFPFLGS_NUM)
+*
+         DC    A(LBFPRMO)
+         DC    A(LBFPRMO_GOOD)
+         DC    A(LBFPRMO_NUM)
+*
+         DC    A(LBFPRMOF)
+         DC    A(LBFPRMOF_GOOD)
+         DC    A(LBFPRMOF_NUM)
+*
+         DC    A(XBFPOUT)
+         DC    A(XBFPOUT_GOOD)
+         DC    A(XBFPOUT_NUM)
+*
+         DC    A(XBFPFLGS)
+         DC    A(XBFPFLGS_GOOD)
+         DC    A(XBFPFLGS_NUM)
+*
+         DC    A(XBFPRMO)
+         DC    A(XBFPRMO_GOOD)
+         DC    A(XBFPRMO_NUM)
+*
+         DC    A(XBFPRMOF)
+         DC    A(XBFPRMOF_GOOD)
+         DC    A(XBFPRMOF_NUM)
+*
+VERIFLEN EQU   (*-VERIFTAB)/12    #of entries in verify table
+                                                                EJECT
          END

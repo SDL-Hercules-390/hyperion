@@ -13,7 +13,9 @@
 #define _PTTHREAD_H_
 
 /*-------------------------------------------------------------------*/
-/*                     PTT Trace Classes                             */
+/*                    PTT TRACE CLASSES                              */
+/*-------------------------------------------------------------------*/
+/*                    (System Classes)                               */
 /*-------------------------------------------------------------------*/
 #define PTT_CL_LOG   0x0000000000000001 /* Logger records            */
 #define PTT_CL_TMR   0x0000000000000002 /* Timer/Clock records       */
@@ -25,16 +27,23 @@
 #define PTT_CL_SIE   0x0000000000000080 /* Interpretive Execution    */
 #define PTT_CL_SIG   0x0000000000000100 /* SIGP signalling           */
 #define PTT_CL_IO    0x0000000000000200 /* IO                        */
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+#define PTT_CL_TXF   0x0000000000000400 /* Transact. Exec. Facility  */
+#else
 //efine PTT_CL_XXX   0x0000000000000400 /* System class 11           */
+#endif
 //efine PTT_CL_XXX   0x0000000000000800 /* System class 12           */
 //efine PTT_CL_XXX   0x0000000000001000 /* System class 13           */
 //efine PTT_CL_XXX   0x0000000000002000 /* System class 14           */
 //efine PTT_CL_XXX   0x0000000000004000 /* System class 15           */
 //efine PTT_CL_XXX   0x0000000000008000 /* System class 16           */
+/*-------------------------------------------------------------------*/
+/*                     (User Classes)                                */
+/*-------------------------------------------------------------------*/
 #define PTT_CL_LCS1  0x0000000000010000 /* LCS Timing Debug          */
 #define PTT_CL_LCS2  0x0000000000020000 /* LCS General Debugging     */
 #define PTT_CL_QETH  0x0000000000040000 /* QETH General Debugging    */
-//efine PTT_CL_ZZZ   0x0000000000080000 /* User class 4              */
+#define PTT_CL_XXX   0x0000000000080000 /* Undefined/generic/custom  */
 //efine PTT_CL_ZZZ   0x0000000000100000 /* User class 5              */
 //efine PTT_CL_ZZZ   0x0000000000200000 /* User class 6              */
 //efine PTT_CL_ZZZ   0x0000000000400000 /* User class 7              */
@@ -89,7 +98,7 @@ do {                                                                 \
     ptt_pthread_trace( (_class), (_msg),(void*)(uintptr_t)(_data1),  \
                                          (void*)(uintptr_t)(_data2), \
                                          PTT_LOC,                    \
-                                         (int)(_rc),NULL);           \
+                                         (S64)(_rc),NULL);           \
 } while(0)
 
 /*-------------------------------------------------------------------*/
@@ -105,9 +114,15 @@ do {                                                                 \
 #define PTT_SIE(   m, d1, d2, rc )  PTT( PTT_CL_SIE,   m, d1, d2, rc )
 #define PTT_SIG(   m, d1, d2, rc )  PTT( PTT_CL_SIG,   m, d1, d2, rc )
 #define PTT_IO(    m, d1, d2, rc )  PTT( PTT_CL_IO,    m, d1, d2, rc )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+#define PTT_TXF(   m, d1, d2, rc )  PTT( PTT_CL_TXF,   m, d1, d2, rc )
+#else
+#define PTT_TXF(   m, d1, d2, rc )  // (nothing)
+#endif
 #define PTT_LCS1(  m, d1, d2, rc )  PTT( PTT_CL_LCS1,  m, d1, d2, rc )
 #define PTT_LCS2(  m, d1, d2, rc )  PTT( PTT_CL_LCS2,  m, d1, d2, rc )
 #define PTT_QETH(  m, d1, d2, rc )  PTT( PTT_CL_QETH,  m, d1, d2, rc )
+#define PTT_XXX(   m, d1, d2, rc )  PTT( PTT_CL_XXX,   m, d1, d2, rc )
 
 /*-------------------------------------------------------------------*/
 /*           Shorter name than 'struct timeval'                      */
@@ -121,7 +136,7 @@ do {                                                                 \
 /*-------------------------------------------------------------------*/
 PTT_DLL_IMPORT void ptt_trace_init    ( int nTableSize, BOOL init );
 PTT_DLL_IMPORT int  ptt_cmd           ( int argc, char* argv[], char* cmdline );
-PTT_DLL_IMPORT void ptt_pthread_trace ( U64, const char*, const void*, const void*, const char*, int, TIMEVAL* );
+PTT_DLL_IMPORT void ptt_pthread_trace ( U64, const char*, const void*, const void*, const char*, S64, TIMEVAL* );
 PTT_DLL_IMPORT int  ptt_pthread_print ();/* rc = #of entries printed */
 PTT_DLL_IMPORT U64  pttclass;
 PTT_DLL_IMPORT bool ptt_dtax(); // Dump Table At Exit

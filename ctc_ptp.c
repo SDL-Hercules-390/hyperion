@@ -1,4 +1,5 @@
 /* CTC_PTP.C    (C) Copyright Ian Shorter, 2011-2012                  */
+/*              (C) and others 2013-2021                             */
 /*              MPC Point-To-Point (PTP)                              */
 /*                                                                    */
 /*   Released under "The Q Public License Version 1"                  */
@@ -25,7 +26,10 @@
 #include "herc_getopt.h"    /* getopt dynamic linking kludge */
 
 #if !defined( OPTION_W32_CTCI )
-#include <ifaddrs.h>
+  #include <ifaddrs.h>
+  #if defined( __sun__ )
+    #include <sys/sockio.h>
+  #endif
 #endif
 
 DISABLE_GCC_UNUSED_SET_WARNING;
@@ -114,7 +118,7 @@ static int      raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay );
 
 static void*    ptp_unsol_int_thread( void* arg /* PTPINT* pPTPINT */ );
 
-static void     get_tod_clock( BYTE* TodClock );
+static void     ptp_get_tod_clock( BYTE* TodClock );
 
 static void     get_subarea_address( BYTE* SAaddress );
 
@@ -445,12 +449,12 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     //       xActMTU = 14336 (0x3800) when iMaxBfru = 5
     //       xActMTU = 59392 (0xE800) when iMaxBfru = 16
 
-    get_tod_clock( pPTPBLK->xStartTime );        // x-sides start time
+    ptp_get_tod_clock( pPTPBLK->xStartTime );    // x-side's start time
 
     for( i = 0; i <= 7; i++ )
         pPTPBLK->xFirstCsvSID2[i] = pPTPBLK->xStartTime[i] ^ 0xAA;
 
-    get_subarea_address( pPTPBLK->xSAaddress );  // x-sides subarea address
+    get_subarea_address( pPTPBLK->xSAaddress );  // x-side's subarea address
 
     // Initialize locking and event mechanisms in the PTPBLK and the PTPATHs.
     initialize_lock( &pPTPBLK->ReadBufferLock );
@@ -855,10 +859,10 @@ int  ptp_close( DEVBLK* pDEVBLK )
 
         TID tid = pPTPBLK->tid;
         pPTPBLK->fCloseInProgress = 1;  // (ask read thread to exit)
-#if defined(_MSVC_)
         join_thread( tid, NULL );       // (wait for thread to end)
-#endif
+#if defined( OPTION_FTHREADS )
         detach_thread( tid );           // (wait for thread to end)
+#endif
     }
 
     pDEVBLK->fd = -1;           // indicate we're now closed
@@ -1531,9 +1535,9 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
     struct timeval  now;
     BYTE       haltorclear = FALSE;
 
-    if (pPTPATH->bDLCtype == DLCTYPE_READ)     // Read from the y-sides Read path?
+    if (pPTPATH->bDLCtype == DLCTYPE_READ)     // Read from the y-side's Read path?
     {
-        // The read is from the y-sides Read path.
+        // The read is from the y-side's Read path.
         for (;;)
         {
             // Return the data from a chain buffer to the guest OS.
@@ -1607,7 +1611,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
             // check for halt condition
             if (haltorclear)
             {
-                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+                if (pDEVBLK->ccwtrace)
                 {
                     // HHC00904 "%1d:%04X %s: halt or clear recognized"
                     WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
@@ -1620,8 +1624,8 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
     }
     else
     {
-        // The read is from the y-sides Write path. There should only
-        // ever be reads from the y-sides Write path while the XID2
+        // The read is from the y-side's Write path. There should only
+        // ever be reads from the y-side's Write path while the XID2
         // exchange is in progress during handshaking.
 
         // Remove first buffer from chain.
@@ -1939,11 +1943,9 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
             rc = raise_unsol_int( pDEVBLK, CSW_ATTN, 1000 );
             if (rc)
             {
-                // Report the bad news.
-                // HHC00102 "Error in function create_thread(): %s"
-                WRMSG(HHC00102, "E", strerror(rc));
+                // Any bad news has already been reported.
                 // Hmm... the Attention interrupt to the y-side will not be
-                // raised. The y-sides VTAM will timeout in 90 seconds.
+                // raised. The y-side's VTAM will timeout in 90 seconds.
             }
             pPTPATH->fHandshakeFin |= HANDSHAKE_ONE;     // Handshake one finished
         }
@@ -2013,7 +2015,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
 //       12              49148 (0xBFFC)        43008 (0xA800)
 //       16              65532 (0xFFFC)        59392 (0xE800)
 //
-// Suppose the x-side reports to the y-side that the x-sides maximum
+// Suppose the x-side reports to the y-side that the x-side's maximum
 // read length is 20476 (0x4FFC) bytes, the y-side will calculate
 // that the actual MTU is 14336 (0x3800) bytes. If the y-side has a
 // route statement that specifies an MTU of, for example, 24576
@@ -2205,7 +2207,7 @@ void*  ptp_read_thread( void* arg )
                 break;
             }
 
-            // Check whether the IP packet is larger than y-sides actual MTU.
+            // Check whether the IP packet is larger than y-side's actual MTU.
             // If it is then it is dropped.
             if (iLength > pPTPBLK->yActMTU)
             {
@@ -2261,7 +2263,7 @@ void*  ptp_read_thread( void* arg )
                 // Don't use schedyield() here; use an actual non-dispatchable
                 // delay instead so as to allow another [possibly lower priority]
                 // thread to 'read' (remove) the packet(s) from the read buffer.
-                usleep( PTP_DELAY_USECS );  // (wait a bit before retrying...)
+                USLEEP( PTP_DELAY_USECS );  // (wait a bit before retrying...)
 
                 continue;
 
@@ -2725,13 +2727,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             // from which the y-side will calculate an actual MTU value
             // of 14336. The MTU value that will be used for packets
             // sent from the y-side to this side will depend on the MTU
-            // value specified on the y-sides route statement(s). If the
-            // y-sides route statement(s) pecify an MTU value greater
+            // value specified on the y-side's route statement(s). If the
+            // y-side's route statement(s) pecify an MTU value greater
             // than the actual MTU value the route statement value is
-            // ignored and the actual MTU value is used. If the y-sides
+            // ignored and the actual MTU value is used. If the y-side's
             // route statement(s) specify an MTU value less than or equal
             // to the actual MTU value the route statement MTU value is
-            // used. Hopefully the y-sides route statement(s) will match
+            // used. Hopefully the y-side's route statement(s) will match
             // the MTU value specified here!
 
             iMTU = atoi( optarg );
@@ -2964,7 +2966,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
          */
         char* s = pPTPBLK->szTUNIfName + strlen( pPTPBLK->szTUNIfName );
 
-        while (isdigit( s[-1] ))
+        while (isdigit( (unsigned char)s[-1] ))
             s--;
 
         STRLCAT( pPTPBLK->szTUNCharDevName, s );
@@ -3091,7 +3093,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 // Hmm... the Guest IPv4 address was specified with a prefix size.
                 {
                   char    tmp[256];
-                  snprintf( (char*)tmp, 256, "Prefix size specification moved from guest to drive" );
+                  MSGBUF( tmp, "Prefix size specification moved from guest to drive" );
                   WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, tmp );
                 }
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
@@ -3294,9 +3296,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         mac[0] &= 0xFE;  /* Clear multicast bit. */
         mac[0] |= 0x02;  /* Set local assignment bit. */
 
-        snprintf
+        MSGBUF
         (
-            pPTPBLK->szMACAddress,  sizeof(pPTPBLK->szMACAddress),
+            pPTPBLK->szMACAddress,
             "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]
         );
@@ -3798,7 +3800,13 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
     {
         pPTPINT = alloc_storage( pDEVBLK, (int)sizeof(PTPINT) );
         if (!pPTPINT)                                  // If there is no storage
+        {
+            // Report the bad news.
+            // HHC00102 "Error in function create_thread(): %s"
+            WRMSG(HHC00102, "E", "No storage available!");
+            // Hmm... the interrupt to the y-side will not be raised.
             return -1;
+        }
     }
 
     // Initialize the PTPINT.
@@ -3941,21 +3949,23 @@ void*  ptp_unsol_int_thread( void* arg )
 
 
 /* ------------------------------------------------------------------ */
-/* get_tod_clock()                                                    */
+/* ptp_get_tod_clock()                                                */
 /* ------------------------------------------------------------------ */
 // Note: the returned TodClock (8-bytes) is in network byte order.
 
-void     get_tod_clock( BYTE* TodClock )
+void     ptp_get_tod_clock( BYTE* TodClock )
 {
     REGS    *regs;
     ETOD    ETOD;
     TOD     tod;
 
-    obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
-    regs = sysblk.regs[sysblk.pcpu];
-    etod_clock(regs, &ETOD, ETOD_standard);
-    tod = ETOD2TOD(ETOD);
-    release_lock(&sysblk.cpulock[sysblk.pcpu]);
+    obtain_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+    {
+        regs = sysblk.regs[ sysblk.pcpu ];
+        etod_clock( regs, &ETOD, ETOD_standard );
+        tod = ETOD2TOD( ETOD );
+    }
+    release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
 
     STORE_DW( TodClock, tod );
 
@@ -4278,7 +4288,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
 
             obtain_lock( &pPTPBLK->UpdateLock );
 
-            if (pPTPHX2wr->DLCtype != pPTPATH->bDLCtype )  // XID2 from expected y-sides path?
+            if (pPTPHX2wr->DLCtype != pPTPATH->bDLCtype )  // XID2 from expected y-side's path?
             {
                 // HHC03917 "%1d:%04X PTP: Guest read and write paths mis-configured"
                 WRMSG(HHC03917, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
@@ -4296,11 +4306,11 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
 
             }
 
-            if (pPTPHX2wr->DLCtype == DLCTYPE_READ)              // XID2 from y-sides Read path?
+            if (pPTPHX2wr->DLCtype == DLCTYPE_READ)              // XID2 from y-side's Read path?
             {
                 // Extract the data lengths from the XID2.
-                FETCH_HW( uDataLen1, pPTPHX2wr->DataLen1 );      // Get y-sides data length one
-                FETCH_HW( uMaxReadLen, pPTPHX2wr->MaxReadLen );  // Get y-sides maximum read length
+                FETCH_HW( uDataLen1, pPTPHX2wr->DataLen1 );      // Get y-side's data length one
+                FETCH_HW( uMaxReadLen, pPTPHX2wr->MaxReadLen );  // Get y-side's maximum read length
 
                 // Obtain the read buffer lock.
                 obtain_lock( &pPTPBLK->ReadBufferLock );
@@ -4312,7 +4322,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
                 // Replace the existing read buffer if necessary.
                 // (This is the buffer into which we place packets
                 // received from the TUN interface, and from which
-                // the y-sides read path reads the packets.)
+                // the y-side's read path reads the packets.)
                 if (pPTPBLK->yMaxReadLen != uMaxReadLen)
                 {
                     // Free the existing read buffer, if there is one.
@@ -4373,10 +4383,10 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
                 // An MPCPTP/MPCPTP6 connection uses an MTU that is the  smaller of
                 // a) the MTU specified on a route statement, or b) the MTU calculated
                 // from the maximum read length reported by the other side during
-                // handshaking. For example, if the x-sides TRLE definition is using
+                // handshaking. For example, if the x-side's TRLE definition is using
                 // the default MAXBFRU value of 5, the maximum read length reported
                 // by the x-side to the y-side will be 20476 (0x4FFC) bytes, from
-                // which the both sides will calculate an MTU of 14336 (0x3800) bytes.
+                // which both sides will calculate an MTU of 14336 (0x3800) bytes.
                 // If the y-side has a route statement that specifies an MTU of 24576
                 // (0x6000) bytes, the specified MTU is ignored and the calculated MTU
                 // will be used. Depending on the values specified for MAXBFRU and for
@@ -4460,16 +4470,16 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
         {
             pPTPHX2re->CLstatus = 0x07;
         }
-        if (pPTPATH->bDLCtype == DLCTYPE_WRITE)         // Destined for the y-sides Write path?
+        if (pPTPATH->bDLCtype == DLCTYPE_WRITE)         // Destined for the y-side's Write path?
         {
-            pPTPHX2re->DLCtype = DLCTYPE_READ;          // This XID2 is from x-sides Read path
+            pPTPHX2re->DLCtype = DLCTYPE_READ;          // This XID2 is from x-side's Read path
         }
         else
         {
-            pPTPHX2re->DLCtype = DLCTYPE_WRITE;         // This XID2 is from x-sides Write path
+            pPTPHX2re->DLCtype = DLCTYPE_WRITE;         // This XID2 is from x-side's Write path
         }
         if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE &&  // The first exchange of handshaking and
-            pPTPATH->bDLCtype == DLCTYPE_WRITE)         // destined for the y-sides Write path?
+            pPTPATH->bDLCtype == DLCTYPE_WRITE)         // destined for the y-side's Write path?
         {
             STORE_HW( pPTPHX2re->DataLen1, pPTPBLK->xDataLen1 );
             STORE_HW( pPTPHX2re->MaxReadLen, pPTPBLK->xMaxReadLen );
@@ -4490,7 +4500,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
         pPTPHSVre->Key = CSV_KEY;
         pPTPHSVre->LenSIDs = sizeof(pPTPHSVre->LenSIDs) +
                               sizeof(pPTPHSVre->SID1) + sizeof(pPTPHSVre->SID2);
-        memcpy( pPTPHSVre->SID1, &pPTPBLK->xStartTime, 8 );  // x-sides start time
+        memcpy( pPTPHSVre->SID1, &pPTPBLK->xStartTime, 8 );  // x-side's start time
         if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE)
         {
             memcpy( pPTPHSVre->SID2, &pPTPBLK->xFirstCsvSID2, 8 );
@@ -5150,7 +5160,7 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     STORE_HW( pMPC_PUSre[1]->length, SIZE_PUS_02_A );
     pMPC_PUSre[1]->what = PUS_WHAT_04;
     pMPC_PUSre[1]->type = PUS_TYPE_02;
-    get_tod_clock( pMPC_PUSre[1]->vc.pus_02.a.clock );   // x-sides time
+    ptp_get_tod_clock( pMPC_PUSre[1]->vc.pus_02.a.clock ); // x-side's time
 
     // Prepare third MPC_PUSre
     STORE_HW( pMPC_PUSre[2]->length, SIZE_PUS_0C );
@@ -5187,9 +5197,9 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
         // equal to the tod clock in the message we recently received.
         // Perhaps Hercules hasn't updated the tod clock for ages, though
         // that seems unlikely, so assume it was manipulated somehow.
-        FETCH_DW( uTod, pMPC_PUSre[1]->vc.pus_02.a.clock );  // get x-sides time
+        FETCH_DW( uTod, pMPC_PUSre[1]->vc.pus_02.a.clock );  // get x-side's time
         uTod += 0x0000000000000001;                          // Add a tiny amount
-        STORE_DW( pMPC_PUSre[1]->vc.pus_02.a.clock, uTod );  // set x-sides time
+        STORE_DW( pMPC_PUSre[1]->vc.pus_02.a.clock, uTod );  // set x-side's time
         *fxSideWins = TRUE;                                  // the x-side wins
     }
 
@@ -5532,15 +5542,15 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
         // Both sides are using the same variety of IP address.
         rc = memcmp( &pMPC_PUSwr->vc.pus_02.b.ipaddr, &pMPC_PUSre[1]->vc.pus_02.b.ipaddr, 16 );
         if (rc < 0)
-            // The y-sides IP address is lower than the x-sides.
+            // The y-side's IP address is lower than the x-side's.
             *fxSideWins = TRUE;     // i.e. the x-side wins
         else if (rc > 0)
-            // The y-sides IP address is higher than the x-sides.
+            // The y-side's IP address is higher than the x-side's.
             *fxSideWins = FALSE;    // i.e. the y-side wins
         else
             // This shouldn't happen; the y-side and the x-side have the
             // same IP address! Empirical evidence suggests that in
-            // these circumstances each sides believe that it has the
+            // these circumstances each side believes that it has the
             // lower address. As a result communication between them
             // stalls, with each side waiting for the other side to send
             // the next message. Presumably the VTAM coders didn't think
@@ -5557,7 +5567,7 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
         // This is normal behaviour when one side is starting both the
         // IPv4 and IPv6 connections, and the other is only starting the
         // IPv6 connection. The side that is using the IPv4 address is
-        // the winner. Check the y-sides variety of IP address.
+        // the winner. Check the y-side's variety of IP address.
         if (( pMPC_PUSwr->vc.pus_02.b.flags & 0x08 ) == 0x08)
             *fxSideWins = TRUE;     // i.e. the x-side wins, it's using IPv4
         else
@@ -6385,7 +6395,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 // We are using a pre-configured TUN interface that didn't
                 // specify the guest IPv4 address. Hooray, the y-side has
                 // told us his IPv4 address, something we didn't know, but
-                // need to. Copy the y-sides IPv4 address.
+                // need to. Copy the y-side's IPv4 address.
                 memcpy( &pPTPBLK->iaGuestIPAddr4, &pMPC_PIXwr->ipaddr,
                         sizeof(pPTPBLK->iaGuestIPAddr4) );
                 hinet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, pPTPBLK->szGuestIPAddr4,
@@ -6538,7 +6548,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                   // We are using a pre-configured TUN interface. Hooray, the
                   // y-side has told us his IPv6 address, something we didn't
-                  // know but need to. Copy the y-sides IPv6 address.
+                  // know but need to. Copy the y-side's IPv6 address.
                   memcpy( &pPTPBLK->iaGuestIPAddr6, &pMPC_PIXwr->ipaddr,
                           sizeof(pPTPBLK->iaGuestIPAddr6) );
                   hinet_ntop( AF_INET6, &pMPC_PIXwr->ipaddr, pPTPBLK->szGuestIPAddr6,
@@ -6586,7 +6596,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // Remember the activation status.
             pPTPBLK->bActivateLL6 |= HETOLDMEHIS_ADDRESS;
 
-            // Copy the y-sides Link Local address.
+            // Copy the y-side's Link Local address.
             memcpy( &pPTPBLK->iaGuestLLAddr6, pMPC_PIXwr->ipaddr, 16 );
             hinet_ntop( AF_INET6, &pPTPBLK->iaGuestLLAddr6,
                                   pPTPBLK->szGuestLLAddr6,
@@ -9623,7 +9633,6 @@ HDL_RESOLVER_SECTION;
    #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
      #undef sysblk
      HDL_RESOLVE_SYMPTR( psysblk, sysblk );
-     HDL_RESOLVE( tod_clock );
      HDL_RESOLVE( etod_clock );
      HDL_RESOLVE( device_attention );
    #else

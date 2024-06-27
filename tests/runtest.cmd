@@ -153,6 +153,7 @@
   set "hlp="
 
   set "tool1=rexx.exe"
+  set "tool2=datetime.rexx"
 
   set "tdir="
   set "tname="
@@ -195,11 +196,16 @@
   set "file_ext=%~2"
   set "%var_name%="
   set "@="
-  for /f "delims=/ tokens=1-3" %%a in ("%date:~4%") do (
-    for /f "delims=:. tokens=1-4" %%d in ("%time: =0%") do (
-      set "@=TMP%%c%%a%%b%%d%%e%%f%%g%random%%file_ext%"
-    )
-  )
+
+  :: Use Rexx to prevent difficulties manually parsing date and time
+  :: strings for different countries where each use their own format
+  :: as well as field separators too. Using Rexx provides consistent
+  :: results for all countries and nationalities.
+
+  pushd "%~dp0"
+  for /f "tokens=1" %%d in ('rexx datetime.rexx') do set @=TMP%%d%random%%file_ext%
+  popd
+
   endlocal && set "%var_name%=%@%"
   %return%
 
@@ -246,6 +252,7 @@
   set    "formula=(((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) / 1000000.0 / %msto%)"
 
   call   :tempfn                            calc_mttof_rexx    .rexx
+
   echo   PARSE ARG '"' formula '"'     >   %calc_mttof_rexx%
   echo   INTERPRET 'mttof = 'formula   >>  %calc_mttof_rexx%
   echo   SAY FORMAT(mttof,,1)          >>  %calc_mttof_rexx%
@@ -266,6 +273,12 @@
     set /a "rc=1"
   )
 
+  call :findtool "%tool2%"
+  if not defined # (
+    echo ERROR: required tool "%tool2%" not found. 1>&2
+    set /a "rc=1"
+  )
+
   %return%
 
 
@@ -275,7 +288,7 @@
 :findtool
 
   set "@=%path%"
-  set "path=.;%path%"
+  set "path=.;%path%;%~dp0"
   set "#=%~$PATH:1"
   set "path=%@%"
   %return%
@@ -858,7 +871,7 @@
   if not defined ttof %skip%
 
   :: Use Rexx to prevent antivirus issues with .vbs files
-  
+
   call :tempfn                                 check_mttof_rexx    .rexx
   echo Parse Arg ttof mttof               >   %check_mttof_rexx%
   echo say ttof ^>= 1 ^& ttof ^<= mttof   >>  %check_mttof_rexx%

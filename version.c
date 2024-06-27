@@ -1,4 +1,5 @@
 /* VERSION.C    (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2021                             */
 /*              Hercules Version Display Module                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -166,8 +167,12 @@ static const char *build_info[] = {
      "Visual Studio 2013"
 #elif _MSC_VER == VS2015
      "Visual Studio 2015"
-#elif _MSC_VER >= VS2017  && _MSC_VER <= VS2017_5
+#elif _MSC_VER >= VS2017  && _MSC_VER < VS2019
      "Visual Studio 2017"
+#elif _MSC_VER >= VS2019  && _MSC_VER < VS2022
+     "Visual Studio 2019"
+#elif _MSC_VER >= VS2022
+     "Visual Studio 2022"
 #else
      "Visual C"
 #endif
@@ -405,6 +410,8 @@ static const char *build_info[] = {
     "Interix Environment"
 #elif defined(sgi) || defined(__sgi)
     "IRIX"
+#elif defined(__linux__)    // non-GNU-based Linuxes do exist
+    "Linux"
 #elif defined(__Lynx__)
     "LynxOS"
 #elif defined(macintosh) || defined(Macintosh) ||                       \
@@ -542,7 +549,7 @@ static const char *build_info[] = {
 #endif
     ,
 
-    "Max CPU Engines: " QSTR(MAX_CPU_ENGINES),
+    "Max CPU Engines: " QSTR( MAX_CPU_ENGS ),
 
 /*-------------------------------------------------------------------*/
 /*                            Using:                                 */
@@ -684,6 +691,50 @@ static const char *build_info[] = {
     "Without National Language Support",
     "With    CCKD64 Support",
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    "With    Transactional-Execution Facility support",
+#else
+    "Without Transactional-Execution Facility support",
+#endif
+
+#if defined( OPTION_OPTINST )
+    "With    \"Optimized\" instructions",
+#else
+    "Without \"Optimized\" instructions",
+#endif
+
+
+
+
+//---------------------------------------------------------------------
+// Fishtest:  log 'featall.h' Research/Workaround build options
+
+#if defined( OPTION_USE_SKAIP_AS_LOCK )         // Use SKAIP as lock, not RCP
+    "With    OPTION_USE_SKAIP_AS_LOCK",
+#endif
+#if defined( OPTION_SIE2BK_FLD_COPY )           // SIE2BK 'fld' is NOT a mask
+    "With    OPTION_SIE2BK_FLD_COPY",
+#endif
+#if defined( OPTION_IODELAY_KLUDGE )            // IODELAY kludge for Linux
+    "With    OPTION_IODELAY_KLUDGE",
+#endif
+#if defined( OPTION_MVS_TELNET_WORKAROUND )     // Handle non-std MVS telnet
+    "With    OPTION_MVS_TELNET_WORKAROUND",
+#endif
+#if defined( OPTION_SIE_PURGE_DAT_ALWAYS )      // Ivan 2016-07-30: purge DAT
+    "With    OPTION_SIE_PURGE_DAT_ALWAYS",
+#endif
+#if defined( OPTION_NOASYNC_SF_CMDS )           // Bypass bug in cache logic
+    "With    OPTION_NOASYNC_SF_CMDS",           // (see GitHub Issue #618!)
+#endif
+
+//---------------------------------------------------------------------
+
+
+
+
+
+
 /*-------------------------------------------------------------------*/
 /*                 Machine dependent assists:                        */
 /*-------------------------------------------------------------------*/
@@ -780,7 +831,7 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, const char* prog )
     if (prog)  // called from e.g. "cgibin_debug_version_info()"?
     {
         char buf[256];
-        MSGBUF( buf, MSG( HHC01413, "I", prog, VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+        MSGBUF( buf, MSG( HHC01413, "I", prog, VERSION ));
         display_str( f, httpfd, RTRIM( buf ));
         ++p; // (skip past first str)
     }
@@ -853,7 +904,7 @@ static void init_hercver_strings( const char* prog )
 
     // prog = Utility (HHC02499), NULL = Hercules (HHC01413).
     if (prog) MSGBUF( buf, MSG( HHC02499, "I",   prog,     VERSION ));
-    else      MSGBUF( buf, MSG( HHC01413, "I", "Hercules", VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+    else      MSGBUF( buf, MSG( HHC01413, "I", "Hercules", VERSION ));
 
     APPEND_STR( strdup( RTRIM( buf )));
 

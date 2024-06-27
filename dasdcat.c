@@ -288,7 +288,12 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
                 {
                     /* Delete any existing o/p file contents */
                     rewind( stdout );
-                    ftruncate( fileno( stdout ), 0 );
+                    if (ftruncate( fileno( stdout ), 0 ) < 0)
+                    {
+                        // "Error in function %s: %s"
+                        FWRMSG( stderr, HHC02408, "E", "ftruncate", strerror( errno ));
+                        return -1;
+                    }
                 }
 
                 rc = process_member(cif, noext, extent, dirent->pds2ttrp, optflags, dsname, memname);

@@ -29,18 +29,159 @@
 #ifndef COMPILE_THIS_ONLY_ONCE
 #define COMPILE_THIS_ONLY_ONCE
 
+#undef ATTRIBUTE_PACKED
+#if defined(_MSVC_)
+ #pragma pack(push)
+ #pragma pack(1)
+ #define ATTRIBUTE_PACKED
+#else
+ #define ATTRIBUTE_PACKED __attribute__((packed))
+#endif
+
+/* Start of headers and defines copied from S390-tools-2.14.0 include/boot/ipl.h */
+/* The copied headers have been modified */
+
+/* IPL Parameter List header */
+struct ipl_pl_hdr {
+  uint32_t len;
+  uint8_t  flags;
+  uint8_t  reserved1[2];
+  uint8_t  version;
+} ATTRIBUTE_PACKED;
+#define IPL_FLAG_SECURE    0x40
+#define IPL_MAX_SUPPORTED_VERSION 0
+
+//  /* IPL Parameter Block header */
+//  struct ipl_pb_hdr {
+//    uint32_t len;
+//    uint8_t  pbt;
+//  } ATTRIBUTE_PACKED;
+
+/* IPL Parameter Block 0 with common fields */
+struct ipl_pb0_common {
+  uint32_t len;
+  uint8_t  pbt;
+  uint8_t  flags;
+  uint8_t  reserved1[2];
+  uint8_t  loadparm[8];
+  uint8_t  reserved2[84];
+} ATTRIBUTE_PACKED;
+#define IPL_RB_COMPONENT_FLAG_SIGNED  0x80
+#define IPL_RB_COMPONENT_FLAG_VERIFIED  0x40
+/* Following define values copied from linux-5.8.17 arch/s390/include/uapi/asmi/ipl.h */
+#define IPL_TYPE_UNKNOWN    1
+#define IPL_TYPE_CCW        2
+#define IPL_TYPE_FCP        4
+#define IPL_TYPE_FCP_DUMP   8
+#define IPL_TYPE_NSS       16
+#define IPL_TYPE_NVME      32
+/* Following define value copied from S390-tools-2.14.0 include/boot/ipl.h */
+#define IPL_TYPE_PV       0x5
+
+/* IPL Parameter Block 0 for CCW */
+struct ipl_pb0_ccw {
+  uint32_t len;
+  uint8_t  pbt;
+  uint8_t  flags;
+  uint8_t  reserved1[2];
+  uint8_t  loadparm[8];
+  uint8_t  reserved2[84];
+  uint8_t  reserved3[1];
+  uint8_t  reserved6 : 5,
+           ssid : 3;
+  uint16_t devno;
+  uint8_t  vm_flags;
+  uint8_t  reserved4[3];
+  uint32_t vm_parm_len;
+  uint8_t  nss_name[8];
+  uint8_t  vm_parm[64];
+  uint8_t  reserved5[8];
+} ATTRIBUTE_PACKED;
+
+//  /* IPL Parameter Block 0 for FCP */
+//  struct ipl_pb0_fcp {
+//    uint32_t len;
+//    uint8_t  pbt;
+//    uint8_t  reserved1[3];
+//    uint8_t  loadparm[8];
+//    uint8_t  reserved2[304];
+//    uint8_t  opt;
+//    uint8_t  reserved3[3];
+//    uint8_t  cssid;
+//    uint8_t  reserved4[1];
+//    uint8_t  devno;
+//    uint8_t  reserved5[4];
+//    uint64_t wwpn;
+//    uint64_t lun;
+//    uint32_t bootprog;
+//    uint8_t  reserved6[12];
+//    uint64_t br_lba;
+//    uint32_t scp_data_len;
+//    uint8_t  reserved7[260];
+//    uint8_t  scp_data[];
+//  } ATTRIBUTE_PACKED;
+
+//  /* Structure must not have any padding */
+//  struct ipl_pb0_pv_comp {
+//    uint64_t tweak_pref;
+//    uint64_t addr;
+//    uint64_t len;
+//  };
+//  STATIC_ASSERT(sizeof(struct ipl_pb0_pv_comp) == 3 * 8)
+
+//  /* IPL Parameter Block 0 for PV */
+//  struct ipl_pb0_pv {
+//    uint32_t len;
+//    uint8_t  pbt;
+//    uint8_t  reserved1[3];
+//    uint8_t  loadparm[8];
+//    uint8_t  reserved2[84];
+//    uint8_t  reserved3[3];
+//    uint8_t  version;
+//    uint8_t  reserved4[4];
+//    uint32_t num_comp;
+//    uint64_t pv_hdr_addr;
+//    uint64_t pv_hdr_size;
+//    struct ipl_pb0_pv_comp components[];
+//  } ATTRIBUTE_PACKED;
+//  #define IPL_PARM_BLOCK_VERSION    0x1
+
+struct ipl_parameter_block {
+  struct ipl_pl_hdr hdr;
+  union {
+//      struct ipl_pb_hdr pb0_hdr;
+    struct ipl_pb0_common common;
+    struct ipl_pb0_ccw ccw;
+//      struct ipl_pb0_fcp fcp;
+//      struct ipl_pb0_pv pv;
+//      char raw[PAGE_SIZE - sizeof(struct ipl_pl_hdr)];
+  };
+} ATTRIBUTE_PACKED;
+
+/* End of headers and defines copied from S390-tools-2.14.0 include/boot/ipl.h */
+
+#if defined(_MSVC_)
+ #pragma pack(pop)
+#endif
+
 /*-------------------------------------------------------------------*/
-/* Internal macro definitions                                        */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 /* Diagnose 308 function subcodes */
-#define DIAG308_IPL_CLEAR       3       /* IPL clear                 */
-#define DIAG308_IPL_NORMAL      4       /* IPL normal/dump           */
-#define DIAG308_SET_PARAM       5       /* Set IPL parameters        */
-#define DIAG308_STORE_PARAM     6       /* Store IPL parameters      */
+#define DIAG308_START_KERNEL       1
+#define DIAG308_REL_HSA            2
+#define DIAG308_LOAD_CLEAR         3
+#define DIAG308_LOAD_NORMAL_DUMP   4
+#define DIAG308_SET                5
+#define DIAG308_STORE              6
+#define DIAG308_LOAD_NORMAL        7
+#define DIAG308_SET_PV             8
+#define DIAG308_UNPACK_PV         10
 
 /* Diagnose 308 return codes */
-#define DIAG308_RC_OK           1
+#define DIAG308_RC_OK        0x0001
+#define DIAG308_RC_NOCONFIG  0x0102
 
 #endif // COMPILE_THIS_ONLY_ONCE
 
@@ -400,21 +541,45 @@ U32   code;
 #endif /*FEATURE_EMULATE_VM*/
 
 
-#ifdef FEATURE_PROGRAM_DIRECTED_REIPL
     case 0x308:
     /*---------------------------------------------------------------*/
     /* Diagnose 308: IPL functions                                   */
     /*---------------------------------------------------------------*/
-        switch(r3)
+        PTT_ERR("*DIAG308",regs->GR_G(r1),regs->GR_G(r3),regs->psw.IA_L);
+
+        switch(regs->GR_L(r3))
         {
+#if defined(FEATURE_PROGRAM_DIRECTED_REIPL)
             TID   tid;                              /* Thread identifier         */
             char *ipltype;                          /* "ipl" or "iplc"           */
             int   rc;
+#endif /*defined(FEATURE_PROGRAM_DIRECTED_REIPL)*/
 
-        case DIAG308_IPL_CLEAR:
+        case DIAG308_START_KERNEL:
+            /*-------------------------------------------------------*/
+            /* Linux for z uses this function code, without a        */
+            /* defined value, in a function named start_kernel (see  */
+            /* ZIPL stage3.c). The Diagnose instruction is DIAG      */
+            /* 1,1,0x308, with GPR 1 containing DIAG308_START_KERNEL */
+            /* (i.e. equal to 1). This author has no idea what       */
+            /* function start_kernel is expecting the Diagnose       */
+            /* instruction to do (other than starting the kernel!),  */
+            /* but the function does not check a return code, or     */
+            /* anything else, and is prepared for the Diagnose       */
+            /* instruction to program check. Fortunately, the        */
+            /* function code DIAG308_START_KERNEL and the return     */
+            /* code DIAG308_RC_OK both have the same value (i.e.     */
+            /* equal to 1), so we'll simply return without doing     */
+            /* anything, letting the function code become the        */
+            /* return code.                                          */
+            /*-------------------------------------------------------*/
+            break;
+
+#if defined(FEATURE_PROGRAM_DIRECTED_REIPL)
+        case DIAG308_LOAD_CLEAR:
             ipltype = "iplc";
             goto diag308_cthread;
-        case DIAG308_IPL_NORMAL:
+        case DIAG308_LOAD_NORMAL:
             ipltype = "ipl";
         diag308_cthread:
             rc = create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl");
@@ -423,20 +588,81 @@ U32   code;
             regs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT(regs);
             break;
-        case DIAG308_SET_PARAM:
+        case DIAG308_SET:
             /* INCOMPLETE */
             regs->GR(1) = DIAG308_RC_OK;
             break;
-        case DIAG308_STORE_PARAM:
-            /* INCOMPLETE */
-            regs->GR(1) = DIAG308_RC_OK;
+#endif /*defined(FEATURE_PROGRAM_DIRECTED_REIPL)*/
+
+        case DIAG308_STORE:
+          {
+            /*-------------------------------------------------------*/
+            /* On entry                                              */
+            /*   Rx    Rx must be an even numbered register          */
+            /*         containing the real address of a 4K page      */
+            /*         aligned storage area into which the IPL       */
+            /*         parameter block will be copied.               */
+            /* On return                                             */
+            /*   Rx+1  Contains the return code.                     */
+            /*-------------------------------------------------------*/
+            RADR    stgarea;            /* Storage area real address */
+            U32     headsize;
+            U32     bodysize;
+            struct ipl_parameter_block  ipb;
+            int     lopasize;
+
+            /* Program check if running problem state. */
+            PRIV_CHECK(regs);
+
+            /* Register Rx contains the real address of the storage area. */
+            if(regs->psw.amode64) {
+              stgarea = regs->GR_G(r1);
+            } else {
+              stgarea = regs->GR_L(r1);
+            }
+
+            /* Program check if Rx is not an even register number or     */
+            /* the address contained in Rx is not on a 4K page boundary. */
+            if (r1 & 1 || stgarea & 0xFFF)
+            {
+                ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+            }
+
+            /* Ensure that the 4K storage area is addressable. */
+            ARCH_DEP(validate_operand) (stgarea, USE_REAL_ADDR, 4095, ACCTYPE_WRITE, regs);
+
+            /* Prepare the IPL parameter block. */
+            memset(&ipb, 0, sizeof(ipb));
+            /* Setup head and body values common to all. */
+            ipb.hdr.version = IPL_MAX_SUPPORTED_VERSION;
+            headsize = sizeof(ipb.hdr);
+            memset(ipb.common.loadparm, 0x40, sizeof(ipb.common.loadparm));  /* EBCDIC spaces */
+            lopasize = strlen(sysblk.loadparm);
+            if (lopasize)
+            {
+                str_host_to_guest(ipb.common.loadparm, sysblk.loadparm, lopasize);
+            }
+            /* Setup head and body values specific to CCW. */
+            bodysize = sizeof(ipb.ccw);
+            STORE_FW(&ipb.hdr.len, (headsize + bodysize));
+            STORE_FW(&ipb.ccw.len, bodysize);
+            ipb.ccw.pbt = IPL_TYPE_CCW;
+            STORE_HW(&ipb.ccw.devno, sysblk.ipldev);
+            STRLCPY(ipb.ccw.vm_parm, "Hercules");  /* just to show its us! */
+
+            /* Store the IPL parameter block in real storage */
+            /* Note: vstorec copies a maximum of 256 bytes.  */
+            ARCH_DEP(vstorec) (&ipb, (headsize+bodysize-1), stgarea, USE_REAL_ADDR, regs);
+
+            /* Successful */
+            regs->GR(r1+1) = DIAG308_RC_OK;
             break;
+          }
+
         default:
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
         } /* end switch(r3) */
         break;
-#endif /*FEATURE_PROGRAM_DIRECTED_REIPL*/
-
 
 #ifdef FEATURE_HERCULES_DIAGCALLS
     case 0xF00:
@@ -449,7 +675,7 @@ U32   code;
         if(!(sysblk.diag8opt & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-        sysblk.inststep = 0;
+        sysblk.instbreak = 0;
         SET_IC_TRACE;
         break;
 
@@ -463,7 +689,7 @@ U32   code;
         if(!(sysblk.diag8opt & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-        sysblk.inststep = 1;
+        sysblk.instbreak = 1;
         SET_IC_TRACE;
         break;
 
@@ -591,9 +817,14 @@ U32   code;
             break;
         }
 
-        /* Update the storage key from R1 register bit 31 */
-        STORAGE_KEY(n, regs) &= ~(STORKEY_BADFRM);
-        STORAGE_KEY(n, regs) |= regs->GR_L(r1) & STORKEY_BADFRM;
+        /* Update bad-frame bit based on low-order bit of R1 register.
+           Note: we must use the internal "_xxx_storage_key" functions
+           to directly set/clear the internal STORKEY_BADFRM bit.
+        */
+        if (regs->GR_L(r1) & STORKEY_BADFRM)
+            ARCH_DEP( _or_storage_key )( n, STORKEY_BADFRM, SKEY_K );
+        else
+            ARCH_DEP( _and_storage_key )( n, STORKEY_BADFRM, SKEY_K );
 
         break;
 
@@ -620,25 +851,41 @@ U32   code;
         break;
 #endif /* defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY) */
 
-#endif /*FEATURE_HERCULES_DIAGCALLS*/
-
     case 0xFF8:
     /*---------------------------------------------------------------*/
-    /* Diagnose FF8: Simulate Loop                                   */
+    /* Diagnose FF8: Hercules Infinite Loop (Malfunctioning CPU)     */
     /*---------------------------------------------------------------*/
-        while(1);
+        while(1);   /* (loop forever)  */
         break;      /* (never reached) */
 
     case 0xFFC:
     /*---------------------------------------------------------------*/
-    /* Diagnose FFC: Simulate Wait                                   */
+    /* Diagnose FFC: Hercules SLOW Instruction (Malfunctioning CPU)  */
     /*---------------------------------------------------------------*/
-        SLEEP(300);
+        SLEEP(300); /* (300 seconds = 5 minutes!) */
         break;
+
+    case 0xFFD:
+    /*---------------------------------------------------------------*/
+    /* Diagnose FFD: Hercules Dummy "Slow(?)" Instruction            */
+    /*---------------------------------------------------------------*/
+    {
+        /* r1 = microseconds */
+        unsigned int secs  = regs->GR_L(r1) / ONE_MILLION;
+        unsigned int usecs = regs->GR_L(r1) % ONE_MILLION;
+        unsigned int i;
+        for (i=0; i < secs; ++i)
+            SLEEP(1);       /* (sleep one second at a time) */
+        if (usecs)
+            USLEEP(usecs);  /* (remaining microseconds, if any) */
+        break;
+    }
+
+#endif /*FEATURE_HERCULES_DIAGCALLS*/
 
     default:
     /*---------------------------------------------------------------*/
-    /* Diagnose xxx: Invalid function code                           */
+    /* Diagnose xxx: Invalid function code or Power-Off diagnose     */
     /*---------------------------------------------------------------*/
 
         if( HDC4(debug_diagnose, code, r1, r3, regs) )

@@ -1,0 +1,532 @@
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *                          TXFPER.ASM
+                                                     4 ***********************************************************************
+                                                     5 *
+                                                     6 *  This program performs a PER instruction trace of TXF transactions.
+                                                     7 *  It enables PER instruction fetch events for a range of instructions
+                                                     8 *  that includes two transactions.
+                                                     9 *
+                                                    10 *  The first transaction, a constrained transaction, and a separate
+                                                    11 *  second transaction being an unconstrained transaction with another
+                                                    12 *  unconstrained transaction nested within it.
+                                                    13 *
+                                                    14 *  Two tests are performed: the first test is performed with both the
+                                                    15 *  Instruction Fetch (IF) and Event-Suppression (ES) PER flags set.
+                                                    16 *  It should trace all instructions except for the instructions that
+                                                    17 *  comprise the actual transactions themselves (i.e. the instructions
+                                                    18 *  from, and including, the outermost TBEGIN/C instruction through
+                                                    19 *  the TEND instruction that ends the transaction, are NOT traced).
+                                                    20 *
+                                                    21 *  The second test adds the IFetch Nullification (IFNUL) and TEND PER
+                                                    22 *  Event flags to the mix. The second test should trace everything
+                                                    23 *  the first test traced, but in addition, should also trace both the
+                                                    24 *  TBEGIN/C and TEND instructions themselves too. This is controlled
+                                                    25 *  by special Program Interrupt handling logic.
+                                                    26 *
+                                                    27 ***********************************************************************
+
+                              00000000  00000657    29 TXFPER   START 0
+00000000                      00000000              30          USING TXFPER,R0
+
+
+
+00000000                      00000000  0000008C    32          ORG   TXFPER+X'8C'         Program interrupt code
+0000008C  00000000                                  33 PGMCODE  DC    F'0'                 Program interrupt code
+                              00000080  00000001    34 PGM_PER_EVENT  EQU  X'80'           PER Event program interrupt code
+                                                    35
+
+00000090                      00000090  00000096    37          ORG   TXFPER+X'96'         PER interrupt fields
+00000096  0000                                      38 PERCODE  DC    XL2'00'              PER interrupt code
+00000098  00000000 00000000                         39 PERADDR  DC    AD(0)                PER interrupt address
+
+
+
+                              00000150  00000000    41 PGMOPSW  EQU   TXFPER+X'150'        z Program Old PSW
+
+000000A0                      000000A0  000001A0    43          ORG   TXFPER+X'1A0'        z Restart New PSW
+000001A0  00000001 80000000                         44          DC    X'0000000180000000'
+000001A8  00000000 00000200                         45          DC    AD(GO)
+
+000001B0                      000001B0  000001D0    47          ORG   TXFPER+X'1D0'        z Program New PSW
+000001D0  00000001 80000000                         48          DC    X'0000000180000000'
+000001D8  00000000 00000394                         49          DC    AD(PGMRUPT)
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    51 ***********************************************************************
+                                                    52 *                  Start of actual program...
+                                                    53 ***********************************************************************
+
+000001E0                      000001E0  00000200    55          ORG   TXFPER+X'200'
+
+                                                    57 ***********************************************************************
+                                                    58 *              Perform basic TXF sanity checks...
+                                                    59 ***********************************************************************
+
+00000200  4100 001F                     0000001F    61 GO       LA    R0,(L'FACLIST/8)-1           Store Facility List
+00000204  B2B0 0520                     00000520    62          STFLE FACLIST
+
+00000208  9120 0520                     00000520    64          TM    FACLIST+ZAFACBYT,ZAFACBIT    z/Arch mode?
+0000020C  A784 020E                     00000628    65          JZ    ZAFAIL
+
+00000210  9140 0526                     00000526    67          TM    FACLIST+PAFACBYT,PAFACBIT    PPA available?
+00000214  A784 020E                     00000630    68          JZ    PAFAIL
+
+00000218  9140 0529                     00000529    70          TM    FACLIST+TXFACBYT,TXFACBIT    TXF available?
+0000021C  A784 0212                     00000640    71          JZ    TXFAIL
+
+00000220  9120 0526                     00000526    73          TM    FACLIST+CTFACBYT,CTFACBIT    Constrained TXF?
+00000224  A784 020A                     00000638    74          JZ    CTFAIL
+
+                                                    76 ***********************************************************************
+                                                    77 *                       Enable TXF
+                                                    78 ***********************************************************************
+
+00000228  EB00 0620 0025                00000620    80          STCTG R0,R0,CTL0         Save CR0
+0000022E  E300 0620 0004                00000620    81          LG    R0,CTL0            Load into GR0
+00000234  A508 0080                                 82          OIHH  R0,CR0TXF          Enable TXF flag
+00000238  E300 0620 0024                00000620    83          STG   R0,CTL0            Save GR0
+0000023E  EB00 0620 002F                00000620    84          LCTLG R0,R0,CTL0         Load CR0
+
+                                                    86 ***********************************************************************
+                                                    87 *                       Begin tests...
+                                                    88 ***********************************************************************
+
+00000244  EB9B 04E0 002F                000004E0    90          LCTLG R9,R11,PERCTL      Init CR9-CR11 PER Control Registers
+0000024A  8000 0518                     00000518    91          SSM   ENPER              Enable Program Event Recording
+0000024E  45E0 0272                     00000272    92          BAL   R14,CTRANS         Execute a Constrained Transaction
+00000252  45E0 028A                     0000028A    93          BAL   R14,UTRANS         Execute an Unconstrained Transaction
+
+00000256  92F2 033C                     0000033C    95          MVI   MSGCMD+14,C'2'     Test #2...
+0000025A  D203 04E4 0648      000004E4  00000648    96          MVC   PERCTL+4(4),=A(CR9_IF+CR9_IFNUL+CR9_SUPPRESS+CR9_TEND)
+00000260  EB9B 04E0 002F                000004E0    97          LCTLG R9,R11,PERCTL      New CR9-CR11 PER Control Registers
+00000266  45E0 0272                     00000272    98          BAL   R14,CTRANS         Execute a Constrained Transaction
+0000026A  45E0 028A                     0000028A    99          BAL   R14,UTRANS         Execute an Unconstrained Transaction
+0000026E  A7F4 0135                     000004D8   100          J     SUCCESS            Done!
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   102 ***********************************************************************
+                                                   103 *              Dummy Transactions to be Traced...
+                                                   104 ***********************************************************************
+
+                              00000272  00000001   106 BEGRANGE EQU   *                  Begin of PER Range
+
+
+
+
+00000272  4111 1001                     00000001   108 CTRANS   LA    R1,1(R1,R1)
+00000276  E561 0000 0000                00000000   109          TBEGINC 0,0              Begin Constrained Transaction
+0000027C  4122 2002                     00000002   110          LA    R2,2(R2,R2)
+00000280  B2F8 0000                                111          TEND  ,                  End of Transaction
+00000284  4133 3003                     00000003   112          LA    R3,3(R3,R3)
+00000288  07FE                                     113          BR    R14                Return to caller
+
+
+
+0000028A  A729 2000                                115 UTRANS   LGHI  R2,X'2000'         R2 --> TDB
+0000028E  1FFF                                     116          SLR   R15,R15            R15 <== failure count = none yet
+00000290  E560 2000 FE00                00000000   117 URETRY   TBEGIN 0(R2),X'FE00'     unconstrained, WITH TDB, save R0-R13
+00000296  A774 0012                     000002BA   118          JNZ   UFAILED            CC != 0: aborted or can't be started
+0000029A  4144 4004                     00000004   119          LA    R4,4(R4,R4)
+0000029E  E560 0000 0000                00000000   120          TBEGIN 0,0               Begin Nested Transaction
+000002A4  4155 5005                     00000005   121          LA    R5,5(R5,R5)
+000002A8  B2F8 0000                                122          TEND  ,                  End of Nested Transaction
+000002AC  4166 6006                     00000006   123          LA    R6,6(R6,R6)
+000002B0  B2F8 0000                                124          TEND  ,                  End of Outermost Transaction
+000002B4  4177 7007                     00000007   125 USKIP    LA    R7,7(R7,R7)
+000002B8  07FE                                     126          BR    R14                Return to caller
+
+
+
+000002BA  A744 000E                     000002D6   128 UFAILED  BRC   CC1,UFAILCC1       Indeterminate condition (unexpected)
+000002BE  A714 0010                     000002DE   129          BRC   CC3,UFAILCC3       Persistent    condition (unexpected)
+
+000002C2  A7FA 0001                                131          AHI   R15,1              Increment temporary failure count
+000002C6  A7FE 0003                                132          CHI   R15,3              Have we reached our maximum retry?
+000002CA  A7B4 FFF5                     000002B4   133          JNL   USKIP              Yes, then do it the hard way
+
+000002CE  B2E8 10F0                                135          PPA   R15,0,1            Otherwise request assistance
+000002D2  A7F4 FFDF                     00000290   136          J     URETRY             And try the transaction again
+
+000002D6  9206 0517                     00000517   138 UFAILCC1 MVI   BADPSW+16-1,6      Unexpected CC1
+000002DA  A7F4 0101                     000004DC   139          J     FAILURE            FAIL test
+000002DE  9207 0517                     00000517   140 UFAILCC3 MVI   BADPSW+16-1,7      Unexpected CC3
+000002E2  A7F4 00FD                     000004DC   141          J     FAILURE            FAIL test
+
+
+
+
+                              000002E6  00000001   143 ENDRANGE EQU   *                  End of PER Range
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   145 ***********************************************************************
+                                                   146 *        Issue Hercules MESSAGE pointed to by R1, length in R0
+                                                   147 ***********************************************************************
+
+000002E6  1200                                     149 MSG      LTR   R0,R0                Do we even HAVE a message?
+000002E8  078F                                     150          BZR   R15                  No, ignore
+
+000002EA  9002 031C                     0000031C   152          STM   R0,R2,MSGSAVE        Save registers
+000002EE  4900 0650                     00000650   153          CH    R0,=AL2(L'MSGMSG)    Message length within limits?
+000002F2  47D0 02FA                     000002FA   154          BNH   MSGOK                Yes, continue
+000002F6  4100 0015                     00000015   155          LA    R0,L'MSGMSG          No, set to maximum
+
+000002FA  1820                                     157 MSGOK    LR    R2,R0                Copy length to work register
+000002FC  0620                                     158          BCTR  R2,0                 Minus-1 for execute
+000002FE  4420 0328                     00000328   159          EX    R2,MSGMVC            Copy message to O/P buffer
+00000302  4120 2012                     00000012   160          LA    R2,1+L'MSGCMD(,R2)   Calculate true command length
+00000306  4110 032E                     0000032E   161          LA    R1,MSGCMD            Point to true command
+
+0000030A  83120008                                 163          DC    X'83',X'12',X'0008'  Issue Hercules Diagnose X'008'
+0000030E  4780 0314                     00000314   164          BZ    MSGRET               Return if successful
+00000312  0000                                     165          DC    H'0'                 ** CRASH ** otherwise!
+
+00000314  9802 031C                     0000031C   167 MSGRET   LM    R0,R2,MSGSAVE        Restore registers
+00000318  07FF                                     168          BR    R15                  Return to caller
+
+0000031C  00000000 00000000                        170 MSGSAVE  DC    3F'0'                Registers save area
+00000328  D200 033F 1000      0000033F  00000000   171 MSGMVC   MVC   MSGMSG(0),0(R1)      Executed instruction
+
+0000032E  D4E2C7D5 D6C8405C                        173 MSGCMD   DC    C'MSGNOH * Test 1: '
+0000033F  F1F2F3F4 F5F6F7F8                        174 MSGMSG   DC    C'12345678 ==> 12345678',C' ' (extra byte for unpk)
+
+
+
+                                                   176 ***********************************************************************
+                                                   177 *        Trace instructions that was either fetched or executed
+                                                   178 ***********************************************************************
+
+00000356  F384 033F 009C      0000033F  0000009C   180 ITRACE   UNPK  MSGMSG(9),PERADDR+4(5)   Address of instruction
+0000035C  9240 0347                     00000347   181          MVI   MSGMSG+8,C' '
+00000360  DC07 033F 0294      0000033F  00000294   182          TR    MSGMSG(8),HEXCHARS-X'F0'
+
+00000366  5810 009C                     0000009C   184          L     R1,PERADDR+4             The instruction itself
+0000036A  F384 034C 1000      0000034C  00000000   185          UNPK  MSGMSG+13(9),0(5,R1)
+00000370  DC07 034C 0294      0000034C  00000294   186          TR    MSGMSG+13(8),HEXCHARS-X'F0'
+
+00000376  4110 033F                     0000033F   188          LA    R1,MSGMSG
+0000037A  4100 0015                     00000015   189          LA    R0,L'MSGMSG
+0000037E  45F0 02E6                     000002E6   190          BAL   R15,MSG                  "Trace" the instruction
+00000382  07FE                                     191          BR    R14
+
+00000384  F0F1F2F3 F4F5F6F7                        193 HEXCHARS DC    CL16'0123456789ABCDEF'
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   195 ***********************************************************************
+                                                   196 *                Program Interrupt Handler...
+                                                   197 ***********************************************************************
+
+00000394  9180 008F                     0000008F   199 PGMRUPT  TM    PGMCODE+3,PGM_PER_EVENT  Expected interrupt?
+00000398  A784 0098                     000004C8   200          JZ    ABORT                    No?! ** ABORT!! **
+0000039C  EB0F 0448 0024                00000448   201          STMG  R0,R15,PGMREGS           Save caller's registers
+
+000003A2  4700 03BA                     000003BA   203 TEST2BR  NOP   PGMTEST2                 Branch ==> Test 2 logic
+000003A6  9101 0096                     00000096   204          TM    PERCODE,X'01'            CR9_IFNUL = Test 2 yet?
+000003AA  4710 03B6                     000003B6   205          BO    BEGTEST2                 Yes, Test 2 has begun
+000003AE  45E0 0356                     00000356   206          BAL   R14,ITRACE               Trace executed instruction
+000003B2  47F0 043C                     0000043C   207          B     PGMRET                   (still Test 1)
+
+000003B6  92F0 03A3                     000003A3   209 BEGTEST2 MVI   TEST2BR+1,X'F0'          Activate Test 2 logic
+000003BA  E310 0098 0004                00000098   210 PGMTEST2 LG    R1,PERADDR               R1 --> instruction
+000003C0  D501 1000 0652      00000000  00000652   211          CLC   0(2,R1),=XL2'E560'       TBEGIN?
+000003C6  4780 0408                     00000408   212          BE    PGMTBEG                  Yes
+000003CA  D501 1000 0654      00000000  00000654   213          CLC   0(2,R1),=XL2'E561'       TBEGINC?
+000003D0  4780 0408                     00000408   214          BE    PGMTBEG                  Yes
+000003D4  9102 0096                     00000096   215          TM    PERCODE,X'02'            TEND PER event?
+000003D8  4710 042C                     0000042C   216          BO    PGMTEND                  Yes
+
+000003DC  9101 0096                     00000096   218          TM    PERCODE,X'01'            CR9_IFNUL event?
+000003E0  4780 03F8                     000003F8   219          BZ    NOTIFNUL                 No, turn it back on
+000003E4  45E0 0356                     00000356   220          BAL   R14,ITRACE               Trace fetched instruction
+000003E8  D203 04E4 064C      000004E4  0000064C   221          MVC   PERCTL+4(4),=A(CR9_IF+CR9_SUPPRESS+CR9_TEND)
+000003EE  EB9B 04E0 002F                000004E0   222          LCTLG R9,R11,PERCTL            Turn off Nullify
+000003F4  47F0 043C                     0000043C   223          B     PGMRET                   Go EXECUTE this instruction
+
+000003F8  D203 04E4 0648      000004E4  00000648   225 NOTIFNUL MVC   PERCTL+4(4),=A(CR9_IF+CR9_IFNUL+CR9_SUPPRESS+CR9_TEND)
+000003FE  EB9B 04E0 002F                000004E0   226          LCTLG R9,R11,PERCTL            Turn Nullify back on again
+00000404  47F0 043C                     0000043C   227          B     PGMRET                   Go TRACE next instruction
+
+00000408  9101 0096                     00000096   229 PGMTBEG  TM    PERCODE,X'01'            CR9_IFNUL event?
+0000040C  4710 0418                     00000418   230          BO    PGMTBEG2                 Yes, expected
+00000410  9299 0517                     00000517   231          MVI   BADPSW+16-1,X'99'        NO!? UNEXPECTED!!
+00000414  A7F4 0064                     000004DC   232          J     FAILURE
+00000418  45E0 0356                     00000356   233 PGMTBEG2 BAL   R14,ITRACE               Trace the TBEGIN...
+0000041C  D203 04E4 064C      000004E4  0000064C   234          MVC   PERCTL+4(4),=A(CR9_IF+CR9_SUPPRESS+CR9_TEND)
+00000422  EB9B 04E0 002F                000004E0   235          LCTLG R9,R11,PERCTL            Switch to TXSUSPEND mode
+00000428  47F0 043C                     0000043C   236          B     PGMRET                   Go execute the transaction
+
+0000042C  45E0 0356                     00000356   238 PGMTEND  BAL   R14,ITRACE               Trace the TEND...
+00000430  D203 04E4 0648      000004E4  00000648   239          MVC   PERCTL+4(4),=A(CR9_IF+CR9_IFNUL+CR9_SUPPRESS+CR9_TEND)
+00000436  EB9B 04E0 002F                000004E0   240          LCTLG R9,R11,PERCTL            Switch back to NULLIFY mode
+                                                   241 *        B     PGMRET                   Go trace next instruction
+
+0000043C  EB0F 0448 0004                00000448   243 PGMRET   LMG   R0,R15,PGMREGS           Restore caller's registers
+00000442  B2B2 0150                     00000150   244          LPSWE PGMOPSW                  Return to caller...
+
+00000448  00000000 00000000                        246 PGMREGS  DC    16D'0'                   Saved GR registers 0 - 15
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   248 ***********************************************************************
+                                                   249 *          ABORT test run due to unexpected program interrupt
+                                                   250 ***********************************************************************
+
+000004C8  D201 0512 0656      00000512  00000656   252 ABORT    MVC   BADPSW+8+2(2),=XL2'DEAD'
+000004CE  D203 0514 008C      00000514  0000008C   253          MVC   BADPSW+16-L'PGMCODE(L'PGMCODE),PGMCODE
+000004D4  A7F4 0004                     000004DC   254          J     FAILURE
+
+
+
+
+
+                                                   256 ***********************************************************************
+                                                   257 *          Successful completion / Abnormal termination
+                                                   258 ***********************************************************************
+
+000004D8  B2B2 04F8                     000004F8   260 SUCCESS  LPSWE    GOODPSW         Load test completed successfully PSW
+000004DC  B2B2 0508                     00000508   261 FAILURE  LPSWE    BADPSW          Load the test FAILED somewhere!! PSW
+
+
+
+
+
+                                                   263 ***********************************************************************
+                                                   264 *                      WORKING STORAGE
+                                                   265 ***********************************************************************
+
+                              40000000  00000001   267 CR9_IF         EQU  X'40000000'   Instruction Fetch PER event
+                              02000000  00000001   268 CR9_TEND       EQU  X'02000000'   TEND Instruction PER event
+                              01000000  00000001   269 CR9_IFNUL      EQU  X'01000000'   IFetch Nullification PER event
+                              00400000  00000001   270 CR9_SUPPRESS   EQU  X'00400000'   TXF Event-Suppression PER event
+
+000004E0  00000000 40400000                        272 PERCTL   DC    AD(CR9_IF+CR9_SUPPRESS)  TEST 1 PER events
+000004E8  00000000 00000272                        273          DC    AD(BEGRANGE)             CR10 = Range begining address
+000004F0  00000000 000002E6                        274          DC    AD(ENDRANGE)             CR11 = Range ending   address
+
+000004F8  00020001 80000000                        276 GOODPSW  DC    XL8'0002000180000000'
+00000500  00000000 00000000                        277          DC    XL4'00000000',A(X'00000000')
+
+00000508  00020001 80000000                        279 BADPSW   DC    XL8'0002000180000000'
+00000510  0000DEAD 000000FF                        280          DC    XL4'0000DEAD',A(X'000000FF')  (FF = Reason for Failure)
+
+00000518  40                                       282 ENPER    DC    B'01000000'              Enable PER bit in PSW
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   284 ***********************************************************************
+                                                   285 *                      WORKING STORAGE
+                                                   286 ***********************************************************************
+
+00000520                                           288          DC    0D'0'              (doubleword boundary)
+00000520  00000000 00000000                        289 FACLIST  DC    XL256'00'          Facility List
+
+00000620  00000000 00000000                        291 CTL0     DC    D'0'               Control Register 0
+                              00000080  00000001   292 CR0TXF   EQU   X'0080'            CR0 bit 8: TXF Control
+                              00000004  00000001   293 CC1      EQU   B'0100'            Condition Code 1
+                              00000001  00000001   294 CC3      EQU   B'0001'            Condition Code 3
+
+                              00000002  00000001   296 ZAFACNUM EQU   2                  z/Arch mode
+                              00000000  00000001   297 ZAFACBYT EQU   X'00'
+                              00000020  00000001   298 ZAFACBIT EQU   X'20'
+00000628  9201 0517                     00000517   299 ZAFAIL   MVI   BADPSW+16-1,1
+0000062C  A7F4 FF58                     000004DC   300          J     FAILURE
+
+                              00000031  00000001   302 PAFACNUM EQU   49                 PPA (Processor-Assist)
+                              00000006  00000001   303 PAFACBYT EQU   X'06'
+                              00000040  00000001   304 PAFACBIT EQU   X'40'
+00000630  9202 0517                     00000517   305 PAFAIL   MVI   BADPSW+16-1,2
+00000634  A7F4 FF54                     000004DC   306          J     FAILURE
+
+                              00000032  00000001   308 CTFACNUM EQU   50                 Constrained TXF
+                              00000006  00000001   309 CTFACBYT EQU   X'06'
+                              00000020  00000001   310 CTFACBIT EQU   X'20'
+00000638  9203 0517                     00000517   311 CTFAIL   MVI   BADPSW+16-1,3
+0000063C  A7F4 FF50                     000004DC   312          J     FAILURE
+
+                              00000049  00000001   314 TXFACNUM EQU   73                 TXF
+                              00000009  00000001   315 TXFACBYT EQU   X'09'
+                              00000040  00000001   316 TXFACBIT EQU   X'40'
+00000640  9204 0517                     00000517   317 TXFAIL   MVI   BADPSW+16-1,4
+00000644  A7F4 FF4C                     000004DC   318          J     FAILURE
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   320 ***********************************************************************
+                                                   321 *        Literals Pool
+                                                   322 ***********************************************************************
+
+00000648                                           324          LTORG ,
+00000648  43400000                                 325                =A(CR9_IF+CR9_IFNUL+CR9_SUPPRESS+CR9_TEND)
+0000064C  42400000                                 326                =A(CR9_IF+CR9_SUPPRESS+CR9_TEND)
+00000650  0015                                     327                =AL2(L'MSGMSG)
+00000652  E560                                     328                =XL2'E560'
+00000654  E561                                     329                =XL2'E561'
+00000656  DEAD                                     330                =XL2'DEAD'
+
+
+
+
+
+                                                   332 ***********************************************************************
+                                                   333 *        Register equates
+                                                   334 ***********************************************************************
+
+
+                              00000000  00000001   336 R0       EQU   0
+                              00000001  00000001   337 R1       EQU   1
+                              00000002  00000001   338 R2       EQU   2
+                              00000003  00000001   339 R3       EQU   3
+                              00000004  00000001   340 R4       EQU   4
+                              00000005  00000001   341 R5       EQU   5
+                              00000006  00000001   342 R6       EQU   6
+                              00000007  00000001   343 R7       EQU   7
+                              00000008  00000001   344 R8       EQU   8
+                              00000009  00000001   345 R9       EQU   9
+                              0000000A  00000001   346 R10      EQU   10
+                              0000000B  00000001   347 R11      EQU   11
+                              0000000C  00000001   348 R12      EQU   12
+                              0000000D  00000001   349 R13      EQU   13
+                              0000000E  00000001   350 R14      EQU   14
+                              0000000F  00000001   351 R15      EQU   15
+
+
+                                                   353          END
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page     9
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+ABORT               I    000004C8           6   252  200
+BADPSW              X    00000508           8   279  138  140  231  252  253  261  299  305  311  317
+BEGRANGE            U    00000272           1   106  273
+BEGTEST2            I    000003B6           4   209  205
+CC1                 U    00000004           1   293  128
+CC3                 U    00000001           1   294  129
+CR0TXF              U    00000080           1   292   82
+CR9_IF              U    40000000           1   267  272   96  221
+CR9_IFNUL           U    01000000           1   269   96
+CR9_SUPPRESS        U    00400000           1   270  272   96  221
+CR9_TEND            U    02000000           1   268   96  221
+CTFACBIT            U    00000020           1   310   73
+CTFACBYT            U    00000006           1   309   73
+CTFACNUM            U    00000032           1   308
+CTFAIL              I    00000638           4   311   74
+CTL0                D    00000620           8   291   80   81   83   84
+CTRANS              I    00000272           4   108   92   98
+ENDRANGE            U    000002E6           1   143  274
+ENPER               B    00000518           1   282   91
+FACLIST             X    00000520         256   289   61   62   64   67   70   73
+FAILURE             I    000004DC           4   261  139  141  232  254  300  306  312  318
+GO                  I    00000200           4    61   45
+GOODPSW             X    000004F8           8   276  260
+HEXCHARS            C    00000384          16   193  182  186
+IMAGE               1    00000000        1624     0
+ITRACE              I    00000356           6   180  206  220  233  238
+MSG                 I    000002E6           2   149  190
+MSGCMD              C    0000032E          17   173   95  160  161
+MSGMSG              C    0000033F          21   174  155  171  180  181  182  185  186  188  189  153
+MSGMVC              I    00000328           6   171  159
+MSGOK               I    000002FA           2   157  154
+MSGRET              I    00000314           4   167  164
+MSGSAVE             F    0000031C           4   170  152  167
+NOTIFNUL            I    000003F8           6   225  219
+PAFACBIT            U    00000040           1   304   67
+PAFACBYT            U    00000006           1   303   67
+PAFACNUM            U    00000031           1   302
+PAFAIL              I    00000630           4   305   68
+PERADDR             A    00000098           8    39  180  184  210
+PERCODE             X    00000096           2    38  204  215  218  229
+PERCTL              A    000004E0           8   272   90   96   97  221  222  225  226  234  235  239  240
+PGMCODE             F    0000008C           4    33  199  253
+PGMOPSW             U    00000150           0    41  244
+PGMREGS             D    00000448           8   246  201  243
+PGMRET              I    0000043C           6   243  207  223  227  236
+PGMRUPT             I    00000394           4   199   49
+PGMTBEG             I    00000408           4   229  212  214
+PGMTBEG2            I    00000418           4   233  230
+PGMTEND             I    0000042C           4   238  216
+PGMTEST2            I    000003BA           6   210  203
+PGM_PER_EVENT       U    00000080           1    34  199
+R0                  U    00000000           1   336   30   61   80   81   82   83   84  149  152  153  155  157  167  189  201
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page    10
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                     243
+R1                  U    00000001           1   337  108  161  171  184  185  188  210  211  213
+R10                 U    0000000A           1   346
+R11                 U    0000000B           1   347   90   97  222  226  235  240
+R12                 U    0000000C           1   348
+R13                 U    0000000D           1   349
+R14                 U    0000000E           1   350   92   93   98   99  113  126  191  206  220  233  238
+R15                 U    0000000F           1   351  116  131  132  135  150  168  190  201  243
+R2                  U    00000002           1   338  110  115  117  152  157  158  159  160  167
+R3                  U    00000003           1   339  112
+R4                  U    00000004           1   340  119
+R5                  U    00000005           1   341  121
+R6                  U    00000006           1   342  123
+R7                  U    00000007           1   343  125
+R8                  U    00000008           1   344
+R9                  U    00000009           1   345   90   97  222  226  235  240
+SUCCESS             I    000004D8           4   260  100
+TEST2BR             I    000003A2           4   203  209
+TXFACBIT            U    00000040           1   316   70
+TXFACBYT            U    00000009           1   315   70
+TXFACNUM            U    00000049           1   314
+TXFAIL              I    00000640           4   317   71
+TXFPER              J    00000000        1624    29   32   37   41   43   47   55   30
+UFAILCC1            I    000002D6           4   138  128
+UFAILCC3            I    000002DE           4   140  129
+UFAILED             I    000002BA           4   128  118
+URETRY              I    00000290           6   117  136
+USKIP               I    000002B4           4   125  133
+UTRANS              I    0000028A           4   115   93   99
+ZAFACBIT            U    00000020           1   298   64
+ZAFACBYT            U    00000000           1   297   64
+ZAFACNUM            U    00000002           1   296
+ZAFAIL              I    00000628           4   299   65
+=A(CR9_IF+CR9_IFNUL+CR9_SUPPRESS+CR9_TEND)
+                    A    00000648           4   325   96  225  239
+=A(CR9_IF+CR9_SUPPRESS+CR9_TEND)
+                    A    0000064C           4   326  221  234
+=AL2(L'MSGMSG)      R    00000650           2   327  153
+=XL2'DEAD'          X    00000656           2   330  252
+=XL2'E560'          X    00000652           2   328  211
+=XL2'E561'          X    00000654           2   329  213
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page    11
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page    12
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   1624  000-657  000-657
+  Region           1624  000-657  000-657
+    CSECT  TXFPER  1624  000-657  000-657
+ASMA Ver. 0.2.1               TXFPER  --  Test PER Tracing of TXF Transactions                      10 Feb 2022 01:49:22  Page    13
+
+   STMT                                         FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\TXFPER\TXFPER.asm
+
+
+** NO ERRORS FOUND **
+
+

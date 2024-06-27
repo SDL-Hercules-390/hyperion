@@ -2,6 +2,7 @@
 /*              (C) Copyright "Fish" (David B. Trout), 2002-2012     */
 /*              (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2013-2023                             */
 /*              Route all Hercules configuration statements          */
 /*              and panel commands to the appropriate functions      */
 /*                                                                   */
@@ -233,7 +234,7 @@ DLL_EXPORT int CallHercCmd ( CMDFUNC_ARGS_PROTO )
 CMDTAB* pCmdTab;
 size_t  cmdlen, matchlen;
 int     rc = HERRINVCMD;             /* Default to invalid command   */
-BYTE    isdiag;
+bool    isdiag;
 
     /* Let 'cscript' command run immediately in any context */
     if (argc >= 1 && strcasecmp( argv[0], "cscript" ) == 0)
@@ -249,7 +250,7 @@ BYTE    isdiag;
         || !argv[0][0]      /* (empty cmd)  */
     )
     {
-        if (sysblk.inststep)
+        if (sysblk.instbreak)
             rc = start_cmd( 0, NULL, NULL );
         else
             rc = 0;         /* ignore [ENTER] */
@@ -334,7 +335,11 @@ BYTE    isdiag;
                     /* Calculate length of the command-line (all arguments
                        except the last one), including intervening blanks. */
                     for (len=0, i=0; i < argc-1; i++ )
+                    {
                         len += (int) strlen( (char*) argv[i] ) + 1;
+                        if (strchr( argv[i], ' ' ))
+                            len += 2; // (surrounding double quotes)
+                    }
 
                     /* Build parameter to pass to background thread */
                     bgcmd = (BGCMD*) malloc( sizeof(BGCMD) + len );
@@ -345,7 +350,14 @@ BYTE    isdiag;
                     for (i=1; i < argc-1; i++)
                     {
                         strlcat( bgcmd->cmdline,  " ",    len );
+
+                        if (strchr( argv[i], ' ' ))
+                            strlcat( bgcmd->cmdline,  "\"", len );
+
                         strlcat( bgcmd->cmdline, argv[i], len );
+
+                        if (strchr( argv[i], ' ' ))
+                            strlcat( bgcmd->cmdline,  "\"", len );
                     }
 
                     /* Process command asynchronously in the background */
@@ -421,7 +433,9 @@ static int DoCallHercCmdLine (char* pszCmdLine, BYTE internal)
 #if defined( _FEATURE_SYSTEM_CONSOLE )
     /* See if maybe it's a command that the guest understands. */
     if ( !internal && sysblk.scpimply && can_send_command() )
-        rc = scp_command( cmdline, FALSE, sysblk.scpecho ? TRUE : FALSE );
+        rc = scp_command( cmdline, false,
+                          sysblk.scpecho ? true : false,
+                          cmdline[0] == '\\' ? true : false );
     else
 #else
         UNREFERENCED( internal );
@@ -747,7 +761,7 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
     */
     hercecho = 1;   // (default)
 
-    while (*pCmdLine && isspace( *pCmdLine ))
+    while (*pCmdLine && isspace( (unsigned char)*pCmdLine ))
         pCmdLine++;
 
     i = 0;
@@ -766,7 +780,7 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
                 pCmdLine++;         /* (skip past the '-' ... */
                                     /* ... and remove blanks) */
 
-                while (*pCmdLine && isspace( *pCmdLine ))
+                while (*pCmdLine && isspace( (unsigned char)*pCmdLine ))
                     pCmdLine++;     /* (get past blank) */
             }
         }
@@ -784,17 +798,22 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
 #if defined( _FEATURE_SYSTEM_CONSOLE )
 
     /* Check if SCP command */
-    if(cmd[0] == '.' || cmd[0] == '!')
+    if (0
+        || cmd[0] == '.'
+        || cmd[0] == '!'
+        || cmd[0] == '\\'
+    )
     {
-        int  priomsg  = cmd[0] == '!'  ? TRUE : FALSE;
-        int  scpecho  = sysblk.scpecho ? TRUE : FALSE;
+        bool  priomsg  = cmd[0] == '!'  ? true : false;
+        bool  scpecho  = sysblk.scpecho ? true : false;
+        bool  mask     = cmd[0] == '\\' ? true : false;
 
         if (!cmd[1]) {      /* (empty command given?) */
             cmd[1] = ' ';   /* (must send something!) */
             cmd[2] = 0;
         }
 
-        rc = scp_command( cmd+1, priomsg, scpecho );
+        rc = scp_command( cmd+1, priomsg, scpecho, mask );
     }
     else
 

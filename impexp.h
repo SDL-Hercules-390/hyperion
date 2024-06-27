@@ -1,4 +1,4 @@
-/* IMPEXP.H     (C) "Fish" (David B. Trout), 2018                    */
+/* IMPEXP.H     (C) "Fish" (David B. Trout), 2018-2021               */
 /*              DLL_IMPORT/DLL_EXPORT/extern control                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -212,6 +212,18 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _CLOCK_C_
+  #ifndef  _HENGINE_DLL_
+    #define CLOCK_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define CLOCK_DLL_IMPORT        extern
+  #endif
+#else
+  #define   CLOCK_DLL_IMPORT        DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _CMDTAB_C_
   #ifndef  _HENGINE_DLL_
     #define CMDT_DLL_IMPORT         DLL_IMPORT
@@ -356,6 +368,24 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _INLINE_C_
+  #ifndef  _HENGINE_DLL_
+    #define INLINE_DLL_IMPORT       DLL_IMPORT
+  #else
+    #define INLINE_DLL_IMPORT       extern
+  #endif
+#else
+  #define   INLINE_DLL_IMPORT       DLL_EXPORT
+#endif
+
+#ifndef    _INLINE_C_
+  #define   INLINE_INL_DLL_IMPORT
+#else
+  #define   INLINE_INL_DLL_IMPORT   extern
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _LOADPARM_C_
   #ifndef  _HENGINE_DLL_
     #define LOADPARM_DLL_IMPORT     DLL_IMPORT
@@ -440,6 +470,36 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _SKEY_C_
+  #ifndef  _HENGINE_DLL_
+    #define SKEY_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define SKEY_DLL_IMPORT         extern
+  #endif
+#else
+  #define   SKEY_DLL_IMPORT         DLL_EXPORT
+#endif
+
+#ifndef    _SKEY_C_
+  #define   SKEY_INL_DLL_IMPORT
+#else
+  #define   SKEY_INL_DLL_IMPORT     extern
+#endif
+
+/*----------------------------------------------------*/
+
+#ifndef    _TRANSACT_C_
+  #ifndef  _HENGINE_DLL_
+    #define TRANS_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define TRANS_DLL_IMPORT        extern
+  #endif
+#else
+  #define   TRANS_DLL_IMPORT        DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _VECTOR_C_
   #ifndef  _HENGINE_DLL_
     #define VECT_DLL_IMPORT         DLL_IMPORT
@@ -448,6 +508,24 @@
   #endif
 #else
   #define   VECT_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
+#ifndef    _VSTORE_C_
+  #ifndef  _HENGINE_DLL_
+    #define VSTORE_DLL_IMPORT       DLL_IMPORT
+  #else
+    #define VSTORE_DLL_IMPORT       extern
+  #endif
+#else
+  #define   VSTORE_DLL_IMPORT       DLL_EXPORT
+#endif
+
+#ifndef    _VSTORE_C_
+  #define   VSTORE_INL_DLL_IMPORT
+#else
+  #define   VSTORE_INL_DLL_IMPORT   extern
 #endif
 
 /*********************************************************************/

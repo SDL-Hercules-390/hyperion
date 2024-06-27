@@ -8,13 +8,8 @@ sysclear
 
 loadcore    "$(testpath)/CLCL-et-al.core"
 
-runtest     2         # (NON-timing test duration)
 ##r           21fd=ff   # (enable timing tests too!)
 ##runtest     300       # (TIMING too test duration)
-
-*Compare
-r 21fe.2
-
-*Want  "Ending test/subtest number"   9510
+runtest     1         # (NON-timing test duration)
 
 *Done

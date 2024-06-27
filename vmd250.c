@@ -6,75 +6,83 @@
 /*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
-/* This module implements DIAGNOSE code X'250'                       */
-/* described in SC24-6084 z/VM 5.4 CP Programming Services.          */
+/* This module implements DIAGNOSE code X'250' as described in:      */
+/* SC24-6084    z/VM 5.4 CP Programming Services                     */
+/* SC24-6179-04 z/VM 6.3 CP Programming Services                     */
+/* SC24-6272-03 z/VM 7.1 CP Programming Services                     */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
 /* Hercules extends the use to System/370 with 4K pages and 2K pages */
 /* with recommended constraints                                      */
-
-/* Unconditional log messages generated */
-/*  - Could not allocate storage for Block I/O environment   */
-/*  - Invalid list processor status code returned            */
-/*  - Error creating asynchronous thread                     */
-/*  - Could not allocate storage for asynchronous I/O request*/
-
-/* Conditional log messages when device tracing is enabled */
-/*  - BLKTAB information used when device tracing is enabled */
-/*  - Established environment when device tracing is enabled */
-/*  - Block I/O owns device                                  */
-/*  - Block I/O returned device                              */
-/*  - BIOE status returned                                   */
-/*  - List processor parameters                              */
-/*  - BIOE operation being performed                         */
-/*  - List processor status code                             */
-/*  - Read/Write I/O operation                               */
-/*  - Syncronous or asynchronous request information         */
-/*  - Address checking results                               */
-/*  - Device driver results                                  */
-/*  - Block I/O environment removed                          */
-/*  - Triggered Block I/O interrupt                          */
-
-
-/* The following structure exists between the different functions     */
-/*                                                                    */
-/* From diagnose.c                                                    */
-/*                                                                    */
-/* AD:vm_blockio                                                      */
-/*    |                                                               */
-/*   INIT:                                                            */
-/*    +---> d250_init32---+                                           */
-/*    |                   +---> d250_init                             */
-/*    +---> d250_init64---+                                           */
-/*    |                                                               */
-/*   IOREQ:                                                           */
-/*    +-> AD:d250_iorq32--+---SYNC----> d250_list32--+                */
-/*    |                   V                   ^      |                */
-/*    |               ASYNC Thread            |      |    d250_read   */
-/*    |                   +-> AD:d250_async32-+      +--> d250_write  */
-/*    |                       d250_bio_interrupt     |    (calls      */
-/*    |                                              |    drivers)    */
-/*    +-> AD:d250_iorq64--+----SYNC---> d250_list64--+                */
-/*    |                   V                   ^                       */
-/*    |               ASYNC Thread            |                       */
-/*    |                   +-> AD:d250_async64-+                       */
-/*    |                       d250_bio_interrupt                      */
-/*   REMOVE:                                                          */
-/*    +---> d250_remove                                               */
-/*                                                                    */
-/*  Function         ARCH_DEP   On CPU   On Async    Owns             */
-/*                              thread    thread     device           */
-/*                                                                    */
-/*  vm_blockio          Yes      Yes        No         No             */
-/*  d250_init32/64      No       Yes        No         No             */
-/*  d250_init           No       Yes        No         No             */
-/*  d250_iorq32/64      Yes      Yes        No         No             */
-/*  d250_async32/64     Yes      No         Yes        No             */
-/*  d250_list32/64      Yes      Yes        Yes       Yes             */
-/*  d250_bio_interrup   No       No         Yes       N/A             */
-/*  d250_read           No       Yes        Yes       Yes             */
-/*  d250_write          No       Yes        Yes       Yes             */
-/*  d250_remove         No       Yes        No         No             */
-/*  d250_addrck         Yes      Yes        Yes        No             */
+/*                                                                   */
+/* Unconditional log messages generated                              */
+/*                                                                   */
+/*  - Could not allocate storage for Block I/O environment           */
+/*  - Invalid list processor status code returned                    */
+/*  - Error creating asynchronous thread                             */
+/*  - Could not allocate storage for asynchronous I/O request        */
+/*                                                                   */
+/* Conditional log messages when device tracing is enabled           */
+/*                                                                   */
+/*  - BLKTAB information used when device tracing is enabled         */
+/*  - Established environment when device tracing is enabled         */
+/*  - Block I/O owns device                                          */
+/*  - Block I/O returned device                                      */
+/*  - BIOE status returned                                           */
+/*  - List processor parameters                                      */
+/*  - BIOE operation being performed                                 */
+/*  - List processor status code                                     */
+/*  - Read/Write I/O operation                                       */
+/*  - Syncronous or asynchronous request information                 */
+/*  - Address checking results                                       */
+/*  - Device driver results                                          */
+/*  - Block I/O environment removed                                  */
+/*  - Triggered Block I/O interrupt                                  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The following structure exists between the different functions    */
+/*                                                                   */
+/* From diagnose.c                                                   */
+/*                                                                   */
+/* AD:vm_blockio                                                     */
+/*    |                                                              */
+/*   INIT:                                                           */
+/*    +---> d250_init32---+                                          */
+/*    |                   +---> d250_init                            */
+/*    +---> d250_init64---+                                          */
+/*    |                                                              */
+/*   IOREQ:                                                          */
+/*    +-> AD:d250_iorq32--+---SYNC----> d250_list32--+               */
+/*    |                   V                   ^      |               */
+/*    |               ASYNC Thread            |      |    d250_read  */
+/*    |                   +-> AD:d250_async32-+      +--> d250_write */
+/*    |                       d250_bio_interrupt     |    (calls     */
+/*    |                                              |    drivers)   */
+/*    +-> AD:d250_iorq64--+----SYNC---> d250_list64--+               */
+/*    |                   V                   ^                      */
+/*    |               ASYNC Thread            |                      */
+/*    |                   +-> AD:d250_async64-+                      */
+/*    |                       d250_bio_interrupt                     */
+/*   REMOVE:                                                         */
+/*    +---> d250_remove                                              */
+/*                                                                   */
+/*  Function         ARCH_DEP   On CPU   On Async    Owns            */
+/*                              thread    thread     device          */
+/*                                                                   */
+/*  vm_blockio          Yes      Yes        No         No            */
+/*  d250_init32/64      No       Yes        No         No            */
+/*  d250_init           No       Yes        No         No            */
+/*  d250_iorq32/64      Yes      Yes        No         No            */
+/*  d250_async32/64     Yes      No         Yes        No            */
+/*  d250_list32/64      Yes      Yes        Yes       Yes            */
+/*  d250_bio_interrup   No       No         Yes       N/A            */
+/*  d250_read           No       Yes        Yes       Yes            */
+/*  d250_write          No       Yes        Yes       Yes            */
+/*  d250_remove         No       Yes        No         No            */
+/*  d250_addrck         Yes      Yes        Yes        No            */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 
@@ -617,13 +625,13 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
 
    /* Attach the environment to the DEVBLK */
    /* Lock the DEVBLK in case another thread wants it */
-   obtain_lock (&dev->lock);
+   OBTAIN_DEVLOCK( dev );
    if (dev->vmd250env == NULL)
    {
        /* If an environment does not exist, establish it */
        dev->vmd250env = bioenv ;
        /* No need to hold the device lock now, environment is set */
-       release_lock (&dev->lock);
+       RELEASE_DEVLOCK( dev );
 
        /* Set the appropriate successful return and condition codes */
        if (isRO)
@@ -644,7 +652,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
        /*   3. Reset the retuned environment to NULL and         */
        /*   4. Reset return and condition codes to reflect       */
        /*      the error condition                               */
-       release_lock (&dev->lock);
+       RELEASE_DEVLOCK( dev );
        free(bioenv);
        bioenv = NULL ;
        *rc = RC_STATERR;
@@ -683,7 +691,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
 /* enhancement.                                                    */
 static void d250_preserve(DEVBLK *dev)
 {
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Wait for the device to become available      */
@@ -709,12 +717,12 @@ static void d250_preserve(DEVBLK *dev)
     dev->reserved = 1;
     if (dev->hnd->reserve)
     {
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
        (dev->hnd->reserve)(dev);
     }
     else
     {
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
     }
 }
 
@@ -724,29 +732,36 @@ static void d250_preserve(DEVBLK *dev)
 /* WARNING: This function MUST not be called with the device lock held */
 static void d250_restore(DEVBLK *dev)
 {
-    obtain_lock(&dev->lock);
-    if (dev->hnd->release)
+    OBTAIN_DEVLOCK( dev );
     {
-       release_lock(&dev->lock);
-       (dev->hnd->release)(dev);
-       obtain_lock(&dev->lock);
-    }
-    /* Both fbadasd.c and ckddasd.c reset the local reserved flag     */
-    /* after calling the shared device client                         */
-    dev->reserved = 0;
-    if (dev->sns_pending)
-    {
-       /* Restore the pending sense */
-       memcpy(&dev->sense,&dev->vmd250env->sense,sizeof(dev->sense));
-       if (dev->ccwtrace)
-       {  WRMSG (HHC01920, "I", dev->devnum);
-       }
-    }
+        if (dev->hnd->release)
+        {
+            RELEASE_DEVLOCK( dev );
+            {
+                (dev->hnd->release)( dev );
+            }
+            OBTAIN_DEVLOCK( dev );
+        }
+
+        /* Both fbadasd.c and ckddasd.c reset the local reserved flag     */
+        /* after calling the shared device client                         */
+        dev->reserved = 0;
+
+        if (dev->sns_pending)
+        {
+            /* Restore the pending sense */
+            memcpy(&dev->sense,&dev->vmd250env->sense,sizeof(dev->sense));
+
+            if (dev->ccwtrace)
+                // %04X d250_restore pending sense restored"
+                WRMSG (HHC01920, "I", dev->devnum);
+        }
 #if defined( OPTION_SHARED_DEVICES )
-    dev->shioactive = DEV_SYS_NONE;
-#endif // defined( OPTION_SHARED_DEVICES )
-    dev->busy = 0;
-    release_lock(&dev->lock);
+        dev->shioactive = DEV_SYS_NONE;
+#endif
+        dev->busy = 0;
+    }
+    RELEASE_DEVLOCK( dev );
 }
 
 /*-------------------------------------------------------------------*/
@@ -777,14 +792,14 @@ int       cc;                        /* Condition code to return     */
 
    /* Attach the environment to the DEVBLK */
    /* Lock the DEVBLK in case another CPU is trying something */
-   obtain_lock (&dev->lock);
+   OBTAIN_DEVLOCK( dev );
    bioenv=dev->vmd250env;
    if (dev->vmd250env == NULL)
    {
        /* If an environment does not exist, it should be */
        /* Return the environment state error return code */
        /* and failed condition code                      */
-       release_lock (&dev->lock);
+       RELEASE_DEVLOCK( dev );
        *rc = RC_STATERR;
        cc = CC_FAILED;
    }
@@ -803,7 +818,7 @@ int       cc;                        /* Condition code to return     */
        }
        dev->vmd250env = NULL ;
        /* No need to hold the device lock while freeing the environment */
-       release_lock (&dev->lock);
+       RELEASE_DEVLOCK( dev );
        free(bioenv);
        if (dev->ccwtrace)
        {
@@ -825,7 +840,7 @@ U32  residual;     /* Residual byte count */
 
 /* Note: Not called with device lock held */
 
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
     if (dev->ccwtrace)
     {
        WRMSG(HHC01922, "I", dev->devnum, blksize, pblknum);
@@ -833,7 +848,7 @@ U32  residual;     /* Residual byte count */
 
     if (dev->vmd250env->isCKD)
     {
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
        /* Do CKD I/O */
 
        /* CKD to be supplied */
@@ -862,7 +877,7 @@ U32  residual;     /* Residual byte count */
        /* Call the I/O end exit */
        if (dev->hnd->end) (dev->hnd->end) (dev);
 
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
     }
     /* If an I/O error occurred, return status of I/O Error */
     if ( unitstat != ( CSW_CE | CSW_DE ) )
@@ -889,7 +904,7 @@ static int d250_write(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
 BYTE unitstat;     /* Device unit status */
 U32  residual;     /* Residual byte count */
 
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
     if (dev->ccwtrace)
     {
        WRMSG(HHC01922, "I", dev->devnum, blksize, pblknum);
@@ -897,12 +912,12 @@ U32  residual;     /* Residual byte count */
 
     if (!dev->vmd250env)
     {
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
        return BIOE_ABORTED;
     }
     if (dev->vmd250env->isCKD)
     {
-        release_lock(&dev->lock);
+        RELEASE_DEVLOCK( dev );
         /* Do CKD I/O */
 
         /* CKD to be supplied */
@@ -930,7 +945,7 @@ U32  residual;     /* Residual byte count */
        /* Call the I/O end exit */
        if (dev->hnd->end) (dev->hnd->end) (dev);
 
-       release_lock(&dev->lock);
+       RELEASE_DEVLOCK( dev );
     }
 
     /* If an I/O error occurred, return status of 1 */
@@ -1263,14 +1278,14 @@ int     rc2;
        memcpy(asyncp,&ioctl,sizeof(IOCTL32));
 
        /* Launch the asynchronous request on a separate thread */
-       snprintf(tname,sizeof(tname),"d250_async %4.4X",dev->devnum);
+       MSGBUF(tname,"d250_async %4.4X",dev->devnum);
        tname[sizeof(tname)-1]=0;
        rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async32),
                asyncp, tname);
        if(rc2)
        {
           WRMSG (HHC00102, "E", strerror(rc2));
-          release_lock (&dev->lock);
+          RELEASE_DEVLOCK( dev );
           *rc = RC_ERROR;
           return CC_FAILED;
        }
@@ -1412,8 +1427,8 @@ RADR   bufend;    /* Last byte read or written                 */
 
       /* Fetch the BIOE from storage */
       memcpy(&bioe,ioctl->regs->mainstor+bioebeg,sizeof(BIOE32));
-      STORAGE_KEY(bioebeg, ioctl->regs) |= (STORKEY_REF);
-      STORAGE_KEY(bioeend, ioctl->regs) |= (STORKEY_REF);
+      ARCH_DEP( or_storage_key )( bioebeg, STORKEY_REF );
+      ARCH_DEP( or_storage_key )( bioeend, STORKEY_REF );
 
       /* Process a single BIOE */
       do
@@ -1500,12 +1515,13 @@ RADR   bufend;    /* Last byte read or written                 */
             /* Set I/O storage key references if successful */
             if (!status)
             {
-               STORAGE_KEY(bufbeg, ioctl->regs) |= (STORKEY_REF);
-               STORAGE_KEY(bufend, ioctl->regs) |= (STORKEY_REF);
+               ARCH_DEP( or_storage_key )( bufbeg, STORKEY_REF );
+               ARCH_DEP( or_storage_key )( bufend, STORKEY_REF );
+
 #if defined(FEATURE_2K_STORAGE_KEYS)
                if ( ioctl->dev->vmd250env->blksiz == 4096 )
                {
-                  STORAGE_KEY(bufbeg+2048, ioctl->regs) |= (STORKEY_REF);
+                  ARCH_DEP( or_storage_key )( bufbeg+2048, STORKEY_REF );
                }
 #endif
             }
@@ -1549,15 +1565,12 @@ RADR   bufend;    /* Last byte read or written                 */
                /* Set I/O storage key references if good I/O */
                if (!status)
                {
-                  STORAGE_KEY(bufbeg, ioctl->regs)
-                           |= (STORKEY_REF | STORKEY_CHANGE);
-                  STORAGE_KEY(bufend, ioctl->regs)
-                           |= (STORKEY_REF | STORKEY_CHANGE);
+                  ARCH_DEP( or_storage_key )( bufbeg, (STORKEY_REF | STORKEY_CHANGE) );
+                  ARCH_DEP( or_storage_key )( bufend, (STORKEY_REF | STORKEY_CHANGE) );
 #if defined(FEATURE_2K_STORAGE_KEYS)
                   if ( ioctl->dev->vmd250env->blksiz == 4096 )
                   {
-                  STORAGE_KEY(bufbeg+2048, ioctl->regs)
-                             |= (STORKEY_REF | STORKEY_CHANGE);
+                     ARCH_DEP( or_storage_key )( bufbeg+2048, (STORKEY_REF | STORKEY_CHANGE) );
                   }
 #endif
                }
@@ -1592,8 +1605,7 @@ RADR   bufend;    /* Last byte read or written                 */
       memcpy(ioctl->regs->mainstor+bioebeg+1,&status,1);
 
       /* Set the storage key change bit */
-      STORAGE_KEY(bioebeg+1, ioctl->regs)
-                 |= (STORKEY_REF | STORKEY_CHANGE);
+      ARCH_DEP( or_storage_key )( bioebeg+1, (STORKEY_REF | STORKEY_CHANGE) );
 
       if (ioctl->dev->ccwtrace)
       {
@@ -1691,13 +1703,13 @@ BYTE   skmid;    /* Storage key of middle byte of area        */
        return 0;
     }
 
-    sk1=STORAGE_KEY(beg,regs);
-    sk2=STORAGE_KEY(end,regs);
+    sk1 = ARCH_DEP( get_storage_key )( beg );
+    sk2 = ARCH_DEP( get_storage_key )( end );
 
 #if defined(FEATURE_2K_STORAGE_KEYS)
     if ( ( end - beg ) > 2048 )
     {
-       skmid=STORAGE_KEY(beg + 2048,regs);
+       skmid = ARCH_DEP( get_storage_key )( beg + 2048 );
     }
     else
     {
@@ -1873,14 +1885,14 @@ int     rc2;
        memcpy(asyncp,&ioctl,sizeof(IOCTL64));
 
        /* Launch the asynchronous request on a separate thread */
-       snprintf(tname,sizeof(tname),"d250_async %4.4X",dev->devnum);
+       MSGBUF(tname,"d250_async %4.4X",dev->devnum);
        tname[sizeof(tname)-1]=0;
        rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async64),
                asyncp, tname);
        if(rc2)
        {
           WRMSG (HHC00102, "E", strerror(rc2));
-          release_lock (&dev->lock);
+          RELEASE_DEVLOCK( dev );
           *rc = RC_ERROR;
           return CC_FAILED;
        }
@@ -2003,8 +2015,8 @@ RADR   bufend;    /* Last byte read or written                 */
 
       /* Fetch the BIOE from storage */
       memcpy(&bioe,ioctl->regs->mainstor+bioebeg,sizeof(BIOE64));
-      STORAGE_KEY(bioebeg, ioctl->regs) |= (STORKEY_REF);
-      STORAGE_KEY(bioeend, ioctl->regs) |= (STORKEY_REF);
+      ARCH_DEP( or_storage_key )( bioebeg, STORKEY_REF );
+      ARCH_DEP( or_storage_key )( bioeend, STORKEY_REF );
 
       /* Process a single BIOE */
       do
@@ -2091,8 +2103,8 @@ RADR   bufend;    /* Last byte read or written                 */
             /* Set I/O storage key references if successful */
             if (!status)
             {
-               STORAGE_KEY(bufbeg, ioctl->regs) |= (STORKEY_REF);
-               STORAGE_KEY(bufend, ioctl->regs) |= (STORKEY_REF);
+               ARCH_DEP( or_storage_key )( bufbeg, STORKEY_REF );
+               ARCH_DEP( or_storage_key )( bufend, STORKEY_REF );
             }
 
             continue;
@@ -2133,10 +2145,8 @@ RADR   bufend;    /* Last byte read or written                 */
                /* Set I/O storage key references if good I/O */
                if (!status)
                {
-                  STORAGE_KEY(bufbeg, ioctl->regs)
-                           |= (STORKEY_REF | STORKEY_CHANGE);
-                  STORAGE_KEY(bufend, ioctl->regs)
-                           |= (STORKEY_REF | STORKEY_CHANGE);
+                  ARCH_DEP( or_storage_key )( bufbeg, (STORKEY_REF | STORKEY_CHANGE) );
+                  ARCH_DEP( or_storage_key )( bufend, (STORKEY_REF | STORKEY_CHANGE) );
                }
                continue;
             } /* end of if BIOE_WRITE */
@@ -2167,8 +2177,7 @@ RADR   bufend;    /* Last byte read or written                 */
       memcpy(ioctl->regs->mainstor+bioebeg+1,&status,1);
 
       /* Set the storage key change bit */
-      STORAGE_KEY(bioebeg+1, ioctl->regs)
-                 |= (STORKEY_REF | STORKEY_CHANGE);
+      ARCH_DEP( or_storage_key )( bioebeg+1, (STORKEY_REF | STORKEY_CHANGE) );
 
       if (ioctl->dev->ccwtrace)
       {

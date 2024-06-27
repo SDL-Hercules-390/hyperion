@@ -4,7 +4,7 @@ archmode esame
 r 1a0=00000000800000000000000000000200 # z/Arch restart PSW
 r 1d0=0002000080000000000000000000DEAD # z/Arch pgm new PSW
 r 200=41000001     # LA R0,1           Load R0 = 1
-r 204=A7F40004     # BRC 15,*+8        Branch around test data    
+r 204=A7F40004     # BRC 15,*+8        Branch around test data
 r 208=00000000     # DATA DC F'0'      Test data
 r 20C=C40FFFFFFFFE # STRL R0,*-2       Store R0 as test data
 r 212=EBF10208006E # ALSI DATA,X'F1'   Add logical signed immediate

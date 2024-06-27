@@ -119,7 +119,7 @@ void __cdecl tt32_output_debug_string( const char* debug_string )
         *p2 && (nl2 = nl = strchr( p2, '\n' )); p2 = nl+1)
     {
         // Remove trailing whitespace to conform to Hercules logmsg format.
-        for (; nl2 >= p2 && isspace(*nl2); --nl2)
+        for (; nl2 >= p2 && isspace((unsigned char)*nl2); --nl2)
             *nl2 = 0;
         if (*p2)
             // "DBG: %s"
@@ -134,7 +134,7 @@ BOOL tt32_loaddll(); // (fwd ref)
 bool  enable_tt32_debug_tracing( int enable )
 {
     // Pass to TunTap32 DLL a pointer to the function it can use to
-    // display debug messages with. This function of our's (that we
+    // display debug messages with. This function of ours (that we
     // are passing it a pointer to) will then display its debugging
     // message (string) on the Hercules console so we can see it.
 

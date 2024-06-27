@@ -309,9 +309,9 @@ packet_trace( BYTE* pAddr, int iLen )
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
 
-                if( isprint( e ) )
+                if( isprint( (unsigned char)e ) )
                     print_ebcdic[i] = e;
-                if( isprint( c ) )
+                if( isprint( (unsigned char)c ) )
                     print_ascii[i] = c;
             }
             else
@@ -723,13 +723,13 @@ char                    group[16];      /* Console group             */
     /* Build connection message for client */
 
     if ( cons_hostinfo.num_procs > 1 )
-        snprintf( num_procs, sizeof(num_procs), "MP=%d", cons_hostinfo.num_procs );
+        MSGBUF( num_procs,  "MP=%d", cons_hostinfo.num_procs );
     else
         STRLCPY( num_procs, "UP" );
 
-    snprintf
+    MSGBUF
     (
-        hostmsg, sizeof(hostmsg),
+        hostmsg,
 
         "running on %s (%s-%s.%s %s %s)"
 
@@ -740,12 +740,12 @@ char                    group[16];      /* Console group             */
         ,cons_hostinfo.machine
         ,num_procs
     );
-    snprintf (conmsg, sizeof(conmsg),
+    MSGBUF (conmsg,
                 "Hercules version %s built on %s %s",
                 VERSION, __DATE__, __TIME__);
 
     {
-        snprintf (devmsg, sizeof(devmsg), "Connected to device %4.4X",
+        MSGBUF (devmsg, "Connected to device %4.4X",
                   0);
     }
 
@@ -754,7 +754,7 @@ char                    group[16];      /* Console group             */
     /* Send connection message to client */
     if (class != 'K')
     {
-        len = snprintf (buf, sizeof(buf),
+        len = MSGBUF (buf,
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
                     "\x11\xC1\x50\x1D\x60%s"
                     "\x11\xC2\x60\x1D\x60%s",
@@ -782,7 +782,7 @@ char                    group[16];      /* Console group             */
     }
     else
     {
-        len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n",
+        len = MSGBUF (buf, "%s\r\n%s\r\n%s\r\n",
                         conmsg, hostmsg, devmsg);
     }
 
@@ -1158,7 +1158,7 @@ static void *telnet_thread(void *vca)
         ca->hangup = 0;
         for (;;)
         {
-            usleep(50000);
+            USLEEP(50000);
             if (ca->hangup)
                 break;
             /* read_socket has changed from 3.04 to 3.06 - we need old way */
@@ -1224,7 +1224,7 @@ static void *commadpt_thread(void *vca)
         release_lock(&ca->lock);
         if(ca->ackspeed == 0) delay = 50000 + (ca->unack_attn_count * 100000);         /* Max's reliable algorithm      */
         else delay = (ca->unack_attn_count * ca->unack_attn_count + 1) * ca->ackspeed; /* much faster but TCAM hates it */
-        usleep(min(1000000,delay));                                                    /* go to sleep, max. 1 second    */
+        USLEEP(min((int)(ONE_MILLION-1),delay));                                       /* go to sleep, max. 1 second    */
         obtain_lock(&ca->lock);
         make_sna_requests2(ca);
         make_sna_requests3(ca);
@@ -1442,7 +1442,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     /* Start the telnet worker thread */
 
     /* Set thread-name for debugging purposes */
-    snprintf(thread_name2,sizeof(thread_name2),
+    MSGBUF(thread_name2,
         "commadpt %1d:%04X thread2",dev->ssid,dev->devnum);
     thread_name2[sizeof(thread_name2)-1]=0;
 
@@ -1457,7 +1457,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     /* Start the async worker thread */
 
     /* Set thread-name for debugging purposes */
-    snprintf(thread_name,sizeof(thread_name),
+    MSGBUF(thread_name,
         "commadpt %1d:%04X thread",dev->ssid,dev->devnum);
     thread_name[sizeof(thread_name)-1]=0;
 
@@ -1470,6 +1470,8 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     }
     dev->commadpt->have_cthread=1;
 
+    /* Indicate things need to be closed */
+    dev->fd = 3705;     // too high an FD to be normally used
     /* Release the CA lock */
     release_lock(&dev->commadpt->lock);
     /* Indicate succesfull completion */

@@ -28,7 +28,7 @@ r 500=EB00000060000001      # UCS Gate Load
 r 508=FB000000200000F0      # Load UCS Buffer
 
 t+00E                       # (trace device I/O)
-runtest   0.05              # (PLENTY of time)
+runtest   1                 # (PLENTY of time)
 
 *Compare                    # (expected result?)
 r 44.4

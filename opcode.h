@@ -1,4 +1,5 @@
 /* OPCODE.H     (C) Copyright Jan Jaeger, 2000-2012                  */
+/*              (C) and others 2013-2023                             */
 /*              Instruction decoding macros and prototypes           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -11,13 +12,16 @@
 #ifndef _OPCODE_H
 #define _OPCODE_H
 
-#include "hercules.h"
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/*               Architecture INDEPENDENT macros                     */
+/*               Architecture *INDEPENDENT* macros                   */
 /*-------------------------------------------------------------------*/
-/*  The following macros are defined ONE TIME                        */
-/*  and thus are the same for all build architectures.               */
+/*  The following macros are defined ONE TIME (due to the above      */
+/*  "#ifndef _OPCODE_H" guard) and thus are the same for ALL         */
+/*   build architectures.                                            */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -43,8 +47,36 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*              Macros for defining opcode table entries             */
+/*            Macros for defining opcode table entries               */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The below GENx...macros are used to define the NON-archdep master */
+/* opcode table entries in opcode.c. Each entry defines a separate   */
+/* pointer to an architecture DEPENDENT instruction function for all */
+/* three of our supported build architectures, as well as a common   */
+/* instruction tracing function (based on the instruction's format)  */
+/* and a string used during tracing containing the instruction's     */
+/* mnemonic and instruction function's name, because each opcode is  */
+/* expected to define the same instruction for each architecture if  */
+/* that opcode is defined in the given architecture.                 */
+/*                                                                   */
+/* That is to say, using the below macros, it is NOT possible to de- */
+/* fine a table entry for a given opcode for an instruction that is  */
+/* completely different in one architecture than it is in the other  */
+/* architectures. Opcode 'D2' for example, is expected to be the op- */
+/* code for the "MVC" instruction in all three architectures.        */
+/*                                                                   */
+/* With later versions of z/Architecture however, this is not neces- */
+/* sarily always true. In later versions of z/Architecture, IBM has  */
+/* begun re-using opcodes for older S/370-only instructions. In such */
+/* type of situations you need to define an architecture DEPENDENT   */
+/* opcode table instead, using the new 'AD_GENx...' macros defined   */
+/* further below in the architecture-DEPENDENT section of opcode.h   */
+/* (which immediately follows the "#endif" for _OPCODE_H).           */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                      PROGRAMMING NOTE                             */
 /*                                                                   */
 /* PROGRAMMING NOTE: the '_ifmt' argument in the below "GENx" macros */
 /* is currently ignored since it is not being used for anything at   */
@@ -70,9 +102,9 @@
 
 #define GENx___x___x___                                     \
     {                                                       \
-        _GEN370( operation_exception )                      \
-        _GEN390( operation_exception )                      \
-        _GEN900( operation_exception )                      \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
         (void*) &iprint_ASMFMT_none,                        \
         (void*) &"?????" "\0" "?"                           \
     }
@@ -80,17 +112,17 @@
 #define GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
         _GEN370( _ifunc_name )                              \
-        _GEN390( operation_exception )                      \
-        _GEN900( operation_exception )                      \
+                &operation_exception,                       \
+                &operation_exception,                       \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
 #define GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
-        _GEN370( operation_exception )                      \
+                &operation_exception,                       \
         _GEN390( _ifunc_name )                              \
-        _GEN900( operation_exception )                      \
+                &operation_exception,                       \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
     }
@@ -99,15 +131,15 @@
     {                                                       \
         _GEN370( _ifunc_name )                              \
         _GEN390( _ifunc_name )                              \
-        _GEN900( operation_exception )                      \
+                &operation_exception,                       \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
 #define GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
-        _GEN370( operation_exception )                      \
-        _GEN390( operation_exception )                      \
+                &operation_exception,                       \
+                &operation_exception,                       \
         _GEN900( _ifunc_name )                              \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
@@ -116,7 +148,7 @@
 #define GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
         _GEN370( _ifunc_name )                              \
-        _GEN390( operation_exception )                      \
+                &operation_exception,                       \
         _GEN900( _ifunc_name )                              \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
@@ -124,7 +156,7 @@
 
 #define GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
-        _GEN370( operation_exception )                      \
+                &operation_exception,                       \
         _GEN390( _ifunc_name )                              \
         _GEN900( _ifunc_name )                              \
         (void*) &iprint_ ## _asmfmt,                        \
@@ -158,12 +190,16 @@
 /* When the facility is disabled (default), all such instructions    */
 /* will properly Program Check (Operation Exception) when attempted  */
 /* to be executed in S/370 mode.  When the facility enabled however, */
-/* then all such 37X instructions are instead allowed to execute.    */
+/* then all such "37X" instructions are instead allowed to execute.  */
 /*-------------------------------------------------------------------*/
 
-#define GENx37Xx390x___     GENx370x390x___
-#define GENx37Xx___x900     GENx370x___x900
-#define GENx37Xx390x900     GENx370x390x900
+#define    GENx37Xx390x___     GENx370x390x___
+#define    GENx37Xx___x900     GENx370x___x900
+#define    GENx37Xx390x900     GENx370x390x900
+
+#define AD_GENx37Xx390x___  AD_GENx370x390x___
+#define AD_GENx37Xx___x900  AD_GENx370x___x900
+#define AD_GENx37Xx390x900  AD_GENx370x390x900
 
 /*-------------------------------------------------------------------*/
 
@@ -172,88 +208,95 @@
 #define REAL_ILC(_regs) \
  (likely(!(_regs)->execflag) ? (_regs)->psw.ilc : (_regs)->exrl ? 6 : 4)
 
+#define ILC_FROM_PIID( piid )    (((piid) & 0x00070000) >> 16)
+#define CODE_FROM_PIID( piid )   (((piid) & 0x0000FFFF)      )
+
 /*-------------------------------------------------------------------*/
 /*  Instruction tracing helper function to print the instruction     */
 /*-------------------------------------------------------------------*/
 
-#define PRINT_INST( _inst, _prtbuf )            \
-                                                \
-           iprint_router_func( (_inst), 0, (_prtbuf) )
+#define PRINT_INST( _arch_mode, _inst, _prtbuf )     \
+                                                     \
+           iprint_router_func( (_arch_mode), (_inst), 0, (_prtbuf) )
 
-extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
+OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemonic[], char* prtbuf );
 
 /*-------------------------------------------------------------------*/
 /*               Individual instruction counting                     */
 /*-------------------------------------------------------------------*/
 
-#if defined( OPTION_INSTRUCTION_COUNTING )
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
 
-#define ICOUNT_INST( _inst, _regs )                                 \
+#define BEG_COUNT_INSTR( _inst, _regs )                             \
     do                                                              \
     {                                                               \
         if (sysblk.icount)                                          \
         {                                                           \
-            int used;                                               \
+            U64 used;                                               \
+            gettimeofday(&sysblk.start_time, NULL);                 \
             switch ((_inst)[0]) {                                   \
             case 0x01:                                              \
-                used = sysblk.imap01[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imap01[(_inst)[1]]++;           \
                 break;                                              \
             case 0xA4:                                              \
-                used = sysblk.imapa4[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapa4[(_inst)[1]]++;           \
                 break;                                              \
             case 0xA5:                                              \
-                used = sysblk.imapa5[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapa5[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xA6:                                              \
-                used = sysblk.imapa6[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapa6[(_inst)[1]]++;           \
                 break;                                              \
             case 0xA7:                                              \
-                used = sysblk.imapa7[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapa7[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xB2:                                              \
-                used = sysblk.imapb2[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapb2[(_inst)[1]]++;           \
                 break;                                              \
             case 0xB3:                                              \
-                used = sysblk.imapb3[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapb3[(_inst)[1]]++;           \
                 break;                                              \
             case 0xB9:                                              \
-                used = sysblk.imapb9[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imapb9[(_inst)[1]]++;           \
                 break;                                              \
             case 0xC0:                                              \
-                used = sysblk.imapc0[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc0[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xC2:                                              \
-                used = sysblk.imapc2[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc2[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xC4:                                              \
-                used = sysblk.imapc4[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc4[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xC6:                                              \
-                used = sysblk.imapc6[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc6[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xC8:                                              \
-                used = sysblk.imapc8[(_inst)[1] & 0x0F]++;          \
+                used = sysblk.imaps.imapc8[(_inst)[1] & 0x0F]++;    \
                 break;                                              \
             case 0xE3:                                              \
-                used = sysblk.imape3[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imape3[(_inst)[5]]++;           \
                 break;                                              \
             case 0xE4:                                              \
-                used = sysblk.imape4[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imape4[(_inst)[1]]++;           \
                 break;                                              \
             case 0xE5:                                              \
-                used = sysblk.imape5[(_inst)[1]]++;                 \
+                used = sysblk.imaps.imape5[(_inst)[1]]++;           \
+                break;                                              \
+            case 0xE7:                                              \
+                used = sysblk.imaps.imape7[(_inst)[5]]++;           \
                 break;                                              \
             case 0xEB:                                              \
-                used = sysblk.imapeb[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imapeb[(_inst)[5]]++;           \
                 break;                                              \
             case 0xEC:                                              \
-                used = sysblk.imapec[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imapec[(_inst)[5]]++;           \
                 break;                                              \
             case 0xED:                                              \
-                used = sysblk.imaped[(_inst)[5]]++;                 \
+                used = sysblk.imaps.imaped[(_inst)[5]]++;           \
                 break;                                              \
             default:                                                \
-                used = sysblk.imapxx[(_inst)[0]]++;                 \
+                used = sysblk.imaps.imapxx[(_inst)[0]]++;           \
             }                                                       \
                                                                     \
             if (!used)                                              \
@@ -265,11 +308,102 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
         }                                                           \
     } while (0)
 
-#else // !defined( OPTION_INSTRUCTION_COUNTING )
+#else // !defined( OPTION_INSTR_COUNT_AND_TIME )
 
-#define ICOUNT_INST(_inst, _regs)
+#define BEG_COUNT_INSTR(_inst, _regs)
 
-#endif // defined( OPTION_INSTRUCTION_COUNTING )
+#endif // defined( OPTION_INSTR_COUNT_AND_TIME )
+
+#if defined( OPTION_INSTR_COUNT_AND_TIME )
+
+#define END_COUNT_INSTR(_inst, _regs)                               \
+    do                                                              \
+    {                                                               \
+        if (sysblk.icount)                                          \
+        {                                                           \
+            struct timeval end_time;                                \
+            struct timeval dur;                                     \
+            U64 elapsed_usecs;                                      \
+                                                                    \
+            gettimeofday(&end_time, NULL);                          \
+            timeval_subtract(&sysblk.start_time, &end_time, &dur);  \
+            elapsed_usecs = (dur.tv_sec * 1000000) + dur.tv_usec;   \
+                                                                    \
+            switch ((_inst)[0]) {                                   \
+            case 0x01:                                              \
+                sysblk.imaps.imap01T[(_inst)[1]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xA4:                                              \
+                sysblk.imaps.imapa4T[(_inst)[1]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xA5:                                              \
+                sysblk.imaps.imapa5T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                break;                                              \
+            case 0xA6:                                              \
+                sysblk.imaps.imapa6T[(_inst)[1]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xA7:                                              \
+                sysblk.imaps.imapa7T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                break;                                              \
+            case 0xB2:                                              \
+                sysblk.imaps.imapb2T[(_inst)[1]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xB3:                                              \
+                sysblk.imaps.imapb3T[(_inst)[1]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xB9:                                              \
+                sysblk.imaps.imapb9T[(_inst)[1]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xC0:                                              \
+                sysblk.imaps.imapc0T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                break;                                              \
+            case 0xC2:                                              \
+                sysblk.imaps.imapc2T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                break;                                              \
+            case 0xC4:                                              \
+                sysblk.imaps.imapc4T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                break;                                              \
+            case 0xC6:                                              \
+                sysblk.imaps.imapc6T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                break;                                              \
+            case 0xC8:                                              \
+                sysblk.imaps.imapc8T[(_inst)[1] & 0x0F]+=elapsed_usecs;   \
+                break;                                              \
+            case 0xE3:                                              \
+                sysblk.imaps.imape3T[(_inst)[5]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xE4:                                              \
+                sysblk.imaps.imape4T[(_inst)[1]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xE5:                                              \
+                sysblk.imaps.imape5T[(_inst)[1]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xE7:                                              \
+                sysblk.imaps.imape7T[(_inst)[5]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xEB:                                              \
+                sysblk.imaps.imapebT[(_inst)[5]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xEC:                                              \
+                sysblk.imaps.imapecT[(_inst)[5]]+=elapsed_usecs;    \
+                break;                                              \
+            case 0xED:                                              \
+                sysblk.imaps.imapedT[(_inst)[5]]+=elapsed_usecs;    \
+                break;                                              \
+            default:                                                \
+                sysblk.imaps.imapxxT[(_inst)[0]]+=elapsed_usecs;    \
+            }                                                       \
+        }                                                           \
+    } while (0)
+
+
+#else // !defined( OPTION_INSTR_COUNT_AND_TIME )
+#define END_COUNT_INSTR(_inst, _regs)
+#endif // defined( OPTION_INSTR_COUNT_AND_TIME )
+
+
+
+
 
 /*-------------------------------------------------------------------*/
 /*                         SIE macros                                */
@@ -278,26 +412,78 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
 
 #if defined( _FEATURE_SIE )
 
-  #define SIE_MODE( _register_context ) unlikely((_register_context)->sie_mode)
-  #define SIE_STATE(_register_context ) ((_register_context)->sie_state)
+  #define SIE_MODE( _regs )         ((_regs)->sie_mode)
+  #define SIE_STATE( _regs )        ((_regs)->sie_state)
 
-  #define SIE_FEATB( _regs, _feat_byte, _feat_name ) \
-          (((_regs)->siebk->SIE_ ## _feat_byte) & (SIE_ ## _feat_byte ## _ ## _feat_name))
+  #define SIE_FEAT_BIT_ON(   _regs, _byte, _bit )   ((_regs)->siebk->SIE_ ## _byte & SIE_ ## _byte ## _ ## _bit)
+  #define SIE_EC_BIT_ON(     _regs, _byte, _bit )   ((_regs)->siebk->SIE_ ## _byte & SIE_ ## _byte ## _ ## _bit)
 
-  #define SIE_STATB( _regs, _feat_byte, _feat_name ) \
-          (SIE_MODE((_regs)) && SIE_FEATB( (_regs), _feat_byte, _feat_name ))
+  #define SIE_FEAT_BIT_OFF(  _regs, _byte, _bit )   !SIE_FEAT_BIT_ON( _regs, _byte, _bit )
+  #define SIE_EC_BIT_OFF(    _regs, _byte, _bit )   !SIE_EC_BIT_ON(   _regs, _byte, _bit )
 
-  #define SIE_STATNB( _regs, _feat_byte, _feat_name ) \
-          (SIE_MODE((_regs)) && !SIE_FEATB( (_regs), _feat_byte, _feat_name ))
+  #define SIE_STATE_BIT_ON(  _regs, _byte, _bit )   (SIE_MODE((_regs)) && SIE_FEAT_BIT_ON(  (_regs), _byte, _bit ))
+  #define SIE_STATE_BIT_OFF( _regs, _byte, _bit )   (SIE_MODE((_regs)) && SIE_FEAT_BIT_OFF( (_regs), _byte, _bit ))
+
+
+  #define TXF_SIE_INTERCEPT( _regs, _name )                     \
+    do                                                          \
+    {                                                           \
+        /* Only allow direct execution of TXF instructions      \
+           if the z/VM host says to allow it. Otherwise let     \
+           the z/VM host intercept this instruction so it       \
+           can simulate it, throw a PIC001, or at least be      \
+           informed that we are executing this instruction.     \
+        */                                                      \
+        if (1                                                   \
+            && SIE_MODE( (_regs) )                              \
+            && SIE_EC_BIT_OFF( (_regs), ECB0, TXF )             \
+        )                                                       \
+        {                                                       \
+            if (TXF_TRACING())                                  \
+            {                                                   \
+                /* "TXF: %s%02X: SIE: Intercepting              \
+                         %s instruction" */                     \
+                WRMSG( HHC17715, "D",                           \
+                    TXF_CPUAD( _regs ), #_name );               \
+            }                                                   \
+            longjmp( (_regs)->progjmp, SIE_INTERCEPT_INST );    \
+        }                                                       \
+    }                                                           \
+    while (0)
 
 #else // !defined( _FEATURE_SIE )
 
-  #define SIE_MODE(  _register_context )                          (0)
-  #define SIE_STATE( _register_context )                          (0)
-  #define SIE_FEATB( _register_context, _feat_byte, _feat_name )  (0)
-  #define SIE_STATB( _register_context, _feat_byte, _feat_name )  (0)
+  #define SIE_MODE(          _regs )                (0)
+  #define SIE_STATE(         _regs )                (0)
+
+  #define SIE_FEAT_BIT_ON(   _regs, _byte, _bit )   (0)
+  #define SIE_EC_BIT_ON(     _regs, _byte, _bit )   (0)
+  #define SIE_STATE_BIT_ON(  _regs, _byte, _bit )   (0)
+
+  #define SIE_FEAT_BIT_OFF(  _regs, _byte, _bit )   (1)
+  #define SIE_EC_BIT_OFF(    _regs, _byte, _bit )   (1)
+  #define SIE_STATE_BIT_OFF( _regs, _byte, _bit )   (1)
+
+  #define TXF_SIE_INTERCEPT( _regs, _name )  /* (do nothing) */
 
 #endif // defined( _FEATURE_SIE )
+
+#if defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
+  #undef              MULTIPLE_CONTROLLED_DATA_SPACE
+  #define             MULTIPLE_CONTROLLED_DATA_SPACE( _regs )   \
+      (SIE_FEAT_BIT_ON( (_regs), MX, XC ) && AR_BIT( &(_regs)->psw ))
+#else
+  #undef  MULTIPLE_CONTROLLED_DATA_SPACE
+  #define MULTIPLE_CONTROLLED_DATA_SPACE( _regs )   (0)
+#endif
+
+#if defined( FEATURE_SIE )
+  #undef  SIE_ACTIVE
+  #define SIE_ACTIVE( _regs )     ((_regs)->sie_active)
+#else
+  #undef  SIE_ACTIVE
+  #define SIE_ACTIVE( _regs )     (0)
+#endif
 
 /*-------------------------------------------------------------------*/
 /*                   Instruction "FOOTPRINT"                         */
@@ -321,223 +507,129 @@ do { \
 #endif
 
 /*-------------------------------------------------------------------*/
-/*             PSW Instruction Address manipulation                  */
-/*-------------------------------------------------------------------*/
-
-#define _PSW_IA(_regs, _n) \
- (VADR)((_regs)->AIV + ((intptr_t)(_regs)->ip - (intptr_t)(_regs)->aip) + (_n))
-
-#define PSW_IA(_regs, _n) \
- (_PSW_IA((_regs), (_n)) & ADDRESS_MAXWRAP((_regs)))
-
-#define SET_PSW_IA(_regs) \
-do { \
-  if ((_regs)->aie) (_regs)->psw.IA = PSW_IA((_regs), 0); \
-} while (0)
-
-#define UPD_PSW_IA(_regs, _addr) \
-do { \
-  (_regs)->psw.IA = (_addr) & ADDRESS_MAXWRAP(_regs); \
-  if (likely((_regs)->aie != NULL)) { \
-    if (likely((_regs)->AIV == ((_regs)->psw.IA & (PAGEFRAME_PAGEMASK|1)))) \
-      (_regs)->ip = _PSW_IA_MAIN((_regs), (_regs)->psw.IA); \
-    else \
-      (_regs)->aie = NULL; \
-  } \
-} while (0)
-
-/*
- * The next three macros are used by branch-and-link type instructions
- * where the addressing mode is known.
- * Note that wrap is not performed for PSW_IA64 and for PSW_IA31.
- * For the latter, we expect branch-and-link code to `or' the hi bit
- * on so there is no need to `and' it off.
- */
-#define PSW_IA64(_regs, _n) \
-  ((_regs)->AIV \
-   + (((uintptr_t)(_regs)->ip + (unsigned int)(_n)) - (uintptr_t)(_regs)->aip))
-
-#define PSW_IA31(_regs, _n) \
-  ((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
-   - (uintptr_t)(_regs)->aip)
-
-#define PSW_IA24(_regs, _n) \
- (((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
-   - (uintptr_t)(_regs)->aip) & AMASK24)
-
-/* Accelerator for instruction addresses */
-
-#define INVALIDATE_AIA(_regs) \
-do { \
-  if ((_regs)->aie) { \
-    (_regs)->psw.IA = PSW_IA((_regs), 0); \
-    (_regs)->aie = NULL; \
-  } \
-} while (0)
-
-#define INVALIDATE_AIA_MAIN(_regs, _main) \
-do { \
-  if ((_main) == (_regs)->aip && (_regs)->aie) { \
-    (_regs)->psw.IA = PSW_IA((_regs), 0); \
-    (_regs)->aie = NULL; \
-  } \
-} while (0)
-
-#define _PSW_IA_MAIN(_regs, _addr) \
- ((BYTE *)((uintptr_t)(_regs)->aip | (uintptr_t)((_addr) & PAGEFRAME_BYTEMASK)))
-
-#define _VALID_IP(_regs, _exec) \
-( \
-    ( !(_exec) && (_regs)->ip <  (_regs)->aie ) \
- || \
-    ( (_exec) && ((_regs)->ET & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV \
-   && _PSW_IA_MAIN((_regs), (_regs)->ET) < (_regs)->aie \
-    ) \
-)
-
-/*-------------------------------------------------------------------*/
-/*                     Instruction fetching                          */
-/*-------------------------------------------------------------------*/
-
-#define INSTRUCTION_FETCH(_regs, _exec) \
-  likely(_VALID_IP((_regs),(_exec))) \
-  ? ((_exec) ? _PSW_IA_MAIN((_regs), (_regs)->ET) : (_regs)->ip) \
-  : ARCH_DEP( instfetch ) ((_regs), (_exec))
-
-/*-------------------------------------------------------------------*/
-/*                   Instruction execution                           */
-/*-------------------------------------------------------------------*/
-
-#define EXECUTE_INSTRUCTION(_oct, _ip, _regs) \
-do { \
-    FOOTPRINT ((_ip), (_regs)); \
-    ICOUNT_INST ((_ip), (_regs)); \
-    (_oct)[fetch_hw((_ip))]((_ip), (_regs)); \
-} while(0)
-
-#define UNROLLED_EXECUTE(_oct, _regs) \
- if ((_regs)->ip >= (_regs)->aie) break; \
- EXECUTE_INSTRUCTION((_oct), (_regs)->ip, (_regs))
-
-/*-------------------------------------------------------------------*/
-/*                        Branching                                  */
-/*-------------------------------------------------------------------*/
-
-#define SUCCESSFUL_BRANCH(_regs, _addr, _len) \
-do { \
-  VADR _newia; \
-  UPDATE_BEAR((_regs), 0); \
-  _newia = (_addr) & ADDRESS_MAXWRAP((_regs)); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_newia & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV)) { \
-    (_regs)->ip = (BYTE *)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
-    return; \
-  } else { \
-    if (unlikely((_regs)->execflag)) \
-      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
-    (_regs)->psw.IA = _newia; \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-
-#define SUCCESSFUL_RELATIVE_BRANCH(_regs, _offset, _len) \
-do { \
-  UPDATE_BEAR((_regs), 0); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
-   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
-    (_regs)->ip += (_offset); \
-    return; \
-  } else { \
-    if (likely(!(_regs)->execflag)) \
-      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
-    else { \
-      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
-      (_regs)->psw.IA = (_regs)->ET + (_offset); \
-      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-    } \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-
-/* BRCL, BRASL can branch +/- 4G.  This is problematic on a 32 bit host */
-#define SUCCESSFUL_RELATIVE_BRANCH_LONG(_regs, _offset) \
-do { \
-  UPDATE_BEAR((_regs), 0); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_offset) > -4096) \
-   && likely((_offset) <  4096) \
-   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
-   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
-    (_regs)->ip += (_offset); \
-    return; \
-  } else { \
-    if (likely(!(_regs)->execflag)) \
-      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
-    else { \
-      UPDATE_BEAR((_regs), 6 - ((_regs)->exrl ? 6 : 4)); \
-      (_regs)->psw.IA = (_regs)->ET + (_offset); \
-      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-    } \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-
-/*-------------------------------------------------------------------*/
 /*                  CPU Stepping or Tracing                          */
 /*-------------------------------------------------------------------*/
 
-#define CPU_STEPPING(_regs, _ilc) \
-  ( \
-      sysblk.inststep \
-   && ( \
-        (sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0) \
-     || (sysblk.stepaddr[0] <= sysblk.stepaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[0] \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[1] \
-        ) \
-     || (sysblk.stepaddr[0] > sysblk.stepaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[0] \
-        ) \
-      ) \
+#define TXF_INSTR_TRACING()                                           \
+  (sysblk.txf_tracing & TXF_TR_INSTR)
+
+
+#define TXF_CONSTRAINED_TRANS_INSTR( _regs )                          \
+  ((sysblk.txf_tracing & TXF_TR_C)                                    \
+    && (_regs)->txf_tnd && (_regs)->txf_contran)
+
+
+#define TXF_UNCONSTRAINED_TRANS_INSTR( _regs )                        \
+  ((sysblk.txf_tracing & TXF_TR_U)                                    \
+    && (_regs)->txf_tnd && !(_regs)->txf_contran)
+
+
+#define TXF_TRACE_THIS_INSTR( _regs )                                 \
+  (1                                                                  \
+   && TXF_TRACE_CPU( _regs )                                          \
+   && TXF_TRACE_TND( _regs )                                          \
+   && (0                                                              \
+       || TXF_CONSTRAINED_TRANS_INSTR( _regs )                        \
+       || TXF_UNCONSTRAINED_TRANS_INSTR( _regs )                      \
+      )                                                               \
   )
 
-#define CPU_TRACING(_regs, _ilc) \
-  ( \
-      sysblk.insttrace \
-   && ( \
-        (sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0) \
-     || (sysblk.traceaddr[0] <= sysblk.traceaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[0] \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[1] \
-        ) \
-     || (sysblk.traceaddr[0] > sysblk.traceaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[0] \
-        ) \
-      ) \
+
+#define _CPU_STEP_OR_TRACE(_breakaddr_or_traceaddr, _regs, _ilc)      \
+   (0                                                                 \
+       || !TXF_INSTR_TRACING()                                        \
+       ||  TXF_TRACE_THIS_INSTR( _regs )                              \
+   )                                                                  \
+   &&                                                                 \
+   (                                                                  \
+        (sysblk._breakaddr_or_traceaddr[0] == 0 &&                    \
+         sysblk._breakaddr_or_traceaddr[1] == 0)                      \
+                                                                      \
+     || (sysblk._breakaddr_or_traceaddr[0] <=                         \
+         sysblk._breakaddr_or_traceaddr[1]                            \
+                                                                      \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) >=                       \
+            sysblk._breakaddr_or_traceaddr[0]                         \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) <=                       \
+            sysblk._breakaddr_or_traceaddr[1]                         \
+        )                                                             \
+                                                                      \
+     || (sysblk._breakaddr_or_traceaddr[0] >                          \
+         sysblk._breakaddr_or_traceaddr[1]                            \
+                                                                      \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) >=                       \
+            sysblk._breakaddr_or_traceaddr[1]                         \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) <=                       \
+            sysblk._breakaddr_or_traceaddr[0]                         \
+        )                                                             \
+   )                                                                  \
+
+
+#define CPU_STEPPING(_regs, _ilc)                                     \
+  (sysblk.instbreak  && _CPU_STEP_OR_TRACE(breakaddr,(_regs),(_ilc)))
+
+
+#define CPU_TRACING(_regs, _ilc)                                      \
+  (1                                                                  \
+   && sysblk.insttrace                                                \
+   && (_regs)->insttrace                                              \
+   && _CPU_STEP_OR_TRACE( traceaddr, (_regs), (_ilc) )                \
   )
 
-#define CPU_STEPPING_OR_TRACING(_regs, _ilc) \
-  ( unlikely((_regs)->tracing) && \
-    (CPU_STEPPING((_regs), (_ilc)) || CPU_TRACING((_regs), (_ilc))) \
+
+#define CPU_STEPPING_OR_TRACING(_regs, _ilc)                          \
+  ( unlikely((_regs)->breakortrace) &&                                \
+    (CPU_STEPPING((_regs), (_ilc)) || CPU_TRACING((_regs), (_ilc)))   \
   )
 
-#define CPU_TRACING_ALL \
-  (sysblk.insttrace && sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0)
 
-#define CPU_STEPPING_ALL \
-  (sysblk.inststep && sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)
-
-#define CPU_STEPPING_OR_TRACING_ALL \
-  ( CPU_TRACING_ALL || CPU_STEPPING_ALL )
+#define _CPU_TRACE_ALL                                                \
+   (sysblk.traceaddr[0] == 0 &&                                       \
+    sysblk.traceaddr[1] == 0 &&                                       \
+  /*sysblk.insttrace*/ insttrace_all())
 
 
-#define RETURN_INTCHECK(_regs) \
+#define _CPU_STEP_ALL                                                 \
+  (sysblk.breakaddr[0] == 0 &&                                        \
+   sysblk.breakaddr[1] == 0 &&                                        \
+   sysblk.instbreak)
+
+
+#define CPU_STEPPING_OR_TRACING_ALL  (_CPU_STEP_ALL || _CPU_TRACE_ALL)
+
+
+#define PROCESS_TRACE( _regs, _ip, _goto )                            \
+  do                                                                  \
+  {                                                                   \
+    /* If stepping or tracing, trace this instruction */              \
+    if ((_regs)->breakortrace)                                        \
+    {                                                                 \
+      ARCH_DEP( process_trace )( (_regs), (_ip) );                    \
+                                                                      \
+      /* If the aie was invalidated, re-fetch the instruction.        \
+         Another CPU executing e.g. a IPTE instruction during         \
+         instruction stepping while process_trace was waiting         \
+         for the user to press the enter key can allow this to        \
+         occur. Otherwise it is impossible to occur. */               \
+      if (1                                                           \
+          && (_regs)->stepping                                        \
+          && !VALID_AIE( _regs )                                      \
+      )                                                               \
+      {                                                               \
+        /* "Processor %s%02X: aie invalidated; instruction refetched" */    \
+        WRMSG( HHC00835, "W", PTYPSTR( (_regs)->cpuad ), (_regs)->cpuad );  \
+        goto _goto;                                                   \
+      }                                                               \
+    }                                                                 \
+  }                                                                   \
+  while (0)
+
+/*-------------------------------------------------------------------*/
+/*         Simple helper macro that instructions can use             */
+/*         to force an immediate check for interrupts.               */
+/*-------------------------------------------------------------------*/
+
+#define RETURN_INTCHECK(_regs)                                        \
         longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
 
 /*-------------------------------------------------------------------*/
@@ -678,8 +770,8 @@ do { \
 /*-------------------------------------------------------------------*/
 /*                   Byte swapping macros                            */
 /*-------------------------------------------------------------------*/
-/* The "CSWAPxx()" macros CONDITIONALLY swap the endianess of the    */
-/* given argument depending on the endianess of the current host,    */
+/* The "CSWAPxx()" macros CONDITIONALLY swap the endianness of the   */
+/* given argument depending on the endianness of the current host,   */
 /* much like the "htonl()" networking API functions. If this build   */
 /* of Hercules is for running on a big endian host, then CSWAPxx()   */
 /* will do absolutely nothing since the argument should already be   */
@@ -688,17 +780,17 @@ do { \
 /* so that the result is a big endian value (since z/Architecture    */
 /* is big endian).                                                   */
 /*                                                                   */
-/* The "SWAPxx()" macros however, UNCONDITIONALLY swap the endianess */
-/* of the specified value *regardless* of the endianess Hercules was */
-/* built for or the endianess of the host it is running on. It is    */
+/* The SWAPxx() macros however, UNCONDITIONALLY swap the endianness  */
+/* of the specified value REGARDLESS of the endianness Hercules was  */
+/* built for or the endianness of the host it is running on. It is   */
 /* designed for situations such as what might exist when a number    */
 /* is read or written to/from disk in a format different from the    */
 /* format of the Hercules build or the host it is running on (such   */
 /* as what occurs with Hercules's emulated dasd files). In such a    */
-/* situation the device driver detects the endianess of the system   */
-/* it is running on differs from the endianess that the DASD file    */
+/* situation the device driver detects the endianness of the system  */
+/* it is running on differs from the endianness that the DASD file   */
 /* was written in, thereby requiring it to *UNCONDITIONALLY* swap    */
-/* the value that was read from disk, REGARDLESS of the endianess    */
+/* the value that was read from disk, REGARDLESS of the endianness   */
 /* of the Hercules build or the host it is currently running on.     */
 /*-------------------------------------------------------------------*/
 
@@ -727,7 +819,7 @@ do { \
 /* (via the "CSWAPxx()" macro) to ensure the value placed into guest */
 /* storage is always big endian or that the local work variable is   */
 /* always in the expected big or little endian format (depending on  */
-/* which endianess Hercules was built for).                          */
+/* which endianness Hercules was built for).                         */
 /*-------------------------------------------------------------------*/
 
 #define FETCH_HW( _val, _stor )     (_val) = fetch_hw( _stor )
@@ -762,224 +854,835 @@ do { \
 
 #include "machdep.h"
 
-#endif /*!defined( _OPCODE_H )*/
+#endif /* !defined( _OPCODE_H ) */
 
 /*-------------------------------------------------------------------*/
-/*               Architecture DEPENDENT macros                       */
-/*-------------------------------------------------------------------*/
-/* The following macros are undef'ed and then re-defined differently */
-/* for each subsequent new build architecture.                       */
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
 
+/*-------------------------------------------------------------------*/
+/*               Architecture *DEPENDENT* macros                     */
+/*-------------------------------------------------------------------*/
+/*  The below macros (due to being outside of the above "#endif"     */
+/*  for "_OPCODE_H") are undef'ed and then re-defined differently    */
+/*  for each subsequent new build architecture.                      */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*    Macros for defining ARCH_DEP master opcode table entries       */
+/*-------------------------------------------------------------------*/
+
+#undef AD_GENx___x___x___
+#undef AD_GENx370x___x___
+#undef AD_GENx___x390x___
+#undef AD_GENx370x390x___
+#undef AD_GENx___x___x900
+#undef AD_GENx370x___x900
+#undef AD_GENx___x390x900
+#undef AD_GENx370x390x900
+
+#if   __GEN_ARCH == 370
+
+#define AD_GENx___x___x___                                  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ASMFMT_none,                        \
+        (void*) &"?????" "\0" "?"                           \
+    }
+
+#define AD_GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#elif __GEN_ARCH == 390
+
+#define AD_GENx___x___x___                                  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ASMFMT_none,                        \
+        (void*) &"?????" "\0" "?"                           \
+    }
+
+#define AD_GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+        _GEN390( _ifunc_name )                              \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+        _GEN390( _ifunc_name )                              \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+        _GEN390( _ifunc_name )                              \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+        _GEN390( _ifunc_name )                              \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#elif __GEN_ARCH == 900
+
+#define AD_GENx___x___x___                                  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ASMFMT_none,                        \
+        (void*) &"?????" "\0" "?"                           \
+    }
+
+#define AD_GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#else
+#error HUH?!
+#endif
+
+/*-------------------------------------------------------------------*/
+/*               PSW Instruction Address macros                      */
+/*-------------------------------------------------------------------*/
+// The _IA_FROM_IP primary helper macro returns a raw virtual PSW
+// 'IA' value corresponding to where an offset mainstor 'ip' points,
+// i.e. psw.ia <== aiv + ((ip + offset) - aip).
+
+#undef  _IA_FROM_IP
+#define _IA_FROM_IP( _aiv, _regs, _offset )                           \
+  (                                                                   \
+    (_regs)->_aiv                                                     \
+    + ((uintptr_t)(_regs)->ip - (uintptr_t)(_regs)->aip)              \
+    + (_offset)                                                       \
+  )
+
+//---------------------------------------------------------------------
+// The generic PSW_IA_FROM_IP macro returns a PSW 'IA' as VADR value
+// corresponding to where regs 'ip' is pointing plus a passed offset,
+// with the resulting PSW 'IA' value masked with ADDRESS_MAXWRAP.
+
+#undef  PSW_IA_FROM_IP
+#define PSW_IA_FROM_IP( _regs, _offset )                              \
+                                                                      \
+ ((VADR)(_IA_FROM_IP( AIV, (_regs), (_offset)) & ADDRESS_MAXWRAP( _regs )))
+
+//---------------------------------------------------------------------
+// The next three macros are minor architectural variations of the
+// above PSW_IA_FROM_IP macro that return a PSW 'IA' value matching
+// where 'ip' plus a passed offset is pointing. The only difference is
+// each are specific to the implied architecture, none of them cast
+// the result to VADR, and only PSW_IA24 applies an addressing mask.
+
+#undef  PSW_IA64
+#define PSW_IA64( _regs, _offset )                                    \
+                                                                      \
+      (_IA_FROM_IP( AIV_G, (_regs), (_offset)))
+
+#undef  PSW_IA31
+#define PSW_IA31( _regs, _offset )                                    \
+                                                                      \
+      (_IA_FROM_IP( AIV_L, (_regs), (_offset)))
+
+#undef  PSW_IA24
+#define PSW_IA24( _regs, _offset )                                    \
+                                                                      \
+      (_IA_FROM_IP( AIV_L, (_regs), (_offset)) & AMASK24)
+
+//---------------------------------------------------------------------
+// The PSEUDO_INVALID_AIE value is used whenever you wish to force
+// a break in normal instruction processing and cause the 'instfetch'
+// function to be called to perform a full address translation and
+// fetch of the next instruction. It is mostly used by instruction
+// stepping and tracing logic as well as by the SUCCESS_BRANCH macro
+// when the target of the branch is in a different mainstor page.
+// The "INVALID_AIE" value is used only by the INVALIDATE_AIA and
+// INVALIDATE_AIA_MAIN macros to ALSO to prevent any unwanted PSW
+// updating by short circuiting both the MAYBE_SET_PSW_IA_FROM_IP and
+// SET_PSW_IA_AND_MAYBE_IP macros. The "PSEUDO_INVALID_AIE" value
+// also forces instfetch to be called but additionally allows both
+// the MAYBE_SET_PSW_IA_FROM_IP and SET_PSW_IA_AND_MAYBE_IP macros
+// to continue behaving normally.
+
+#define INVALID_AIE             (NULL)
+#define PSEUDO_INVALID_AIE      ((BYTE*) 1)
+
+#undef  VALID_AIE
+#define VALID_AIE( _regs )      ((_regs)->aie != INVALID_AIE)
+
+//---------------------------------------------------------------------
+// The MAYBE_SET_PSW_IA_FROM_IP macro (notice the 'MAYBE' and 'SET'
+// in its name) CONDITIONALLY sets the virtual psw 'IA' value to point
+// to the same corresponding place as where the current mainstor 'ip'
+// currently points (with no offset), but does so IF AND ONLY IF the
+// 'aie' value is still valid. Otherwise it does absolutely nothing.
+
+#undef  MAYBE_SET_PSW_IA_FROM_IP
+#define MAYBE_SET_PSW_IA_FROM_IP( _regs )                             \
+  do                                                                  \
+  {                                                                   \
+    if (VALID_AIE( _regs ))                                           \
+      (_regs)->psw.IA = PSW_IA_FROM_IP( (_regs), 0 );                 \
+  }                                                                   \
+  while (0)
+
+//---------------------------------------------------------------------
+// The SET_PSW_IA_AND_MAYBE_IP macro (notice the 'MAYBE' in its name)
+// performs the opposite of the above MAYBE_SET_PSW_IA_FROM_IP macro:
+// it sets the mainstor 'ip' to the same corresponding place as where
+// the passed virtual psw 'IA' value points. It first UNCONDITIONALLY
+// SETS the PSW IA to the passed value and then MAYBE also sets the
+// 'ip' to the same corresponding place in mainstor, but it ONLY does
+// so IF AND ONLY IF the updated 'ia' value still points within the
+// same virtual page. If it doesn't, then the 'aie' value is set to
+// NULL to force a full 'instfetch' which then calculates a new 'ip',
+// 'aie' and 'aip' value on the next instruction fetch.
+
+#undef  SET_PSW_IA_AND_MAYBE_IP
+#define SET_PSW_IA_AND_MAYBE_IP( _regs, _ia )                         \
+  do                                                                  \
+  {                                                                   \
+    (_regs)->psw.IA = (_ia) & ADDRESS_MAXWRAP( _regs );               \
+                                                                      \
+    if (VALID_AIE( _regs ))                                           \
+    {                                                                 \
+      if ((_regs)->AIV == ((_regs)->psw.IA & (PAGEFRAME_PAGEMASK|1))) \
+        (_regs)->ip = _PSW_IA_MAIN( (_regs), (_regs)->psw.IA );       \
+      else                                                            \
+        (_regs)->aie = INVALID_AIE;                                   \
+    }                                                                 \
+  }                                                                   \
+  while (0)
+
+//---------------------------------------------------------------------
+// The INST_UPDATE_PSW macro sets the psw ILC to the passed value and
+// bumps the regs->ip instruction pointer by the passed _len value,
+// BUT ONLY IF the passed value is non-zero.
+//
+// It is typically used by the instruction decoder macros to set the
+// ilc for the instruction just decoded and to then bump the 'ip' to
+// the next sequential instruction.
+//
+// Normally '_len' and '_ilc' are the same value (being the length
+// of the instruction being decoded). The reason they are passed as
+// separate values however is to allow for branch instructions to
+// set the ilc value while at the same time NOT bumping the 'ip'
+// since they don't know yet if the branch will be taken or not.
+// If it is, they call the SUCCESSFUL_BRANCH macro. If not, they
+// call the INST_UPDATE_PSW to go on to the next instruction.
+
+#undef  INST_UPDATE_PSW
+#define INST_UPDATE_PSW( _regs, _len, _ilc )                          \
+  do                                                                  \
+  {                                                                   \
+    (_regs)->ip += (_len);                                            \
+    if (_ilc)                                                         \
+      (_regs)->psw.ilc = (_ilc);                                      \
+  }                                                                   \
+  while(0)
+
+/*-------------------------------------------------------------------*/
+/*             Accelerator for Instruction Addresses                 */
+/*-------------------------------------------------------------------*/
+/* The AIA is a term used to refer to the set of REGS fields that    */
+/* together control instruction execution. It consists if the 'ip',  */
+/* 'aip', 'aie' and 'aiv' fields. The 'ip' field of course is the    */
+/* mainstor instruction pointer. The 'aip' is the page address of    */
+/* the mainstor page associated with the 'ip'. The 'aiv' field is    */
+/* the guest virtual address of the page corresponding to the aip.   */
+/* The 'aie' is the "logical end" of the 'aip'. It is the highest    */
+/* mainstor 'ip' address that we can safely DIRECTLY fetch the next  */
+/* instruction from. Once the 'ip' reaches the 'aie', instruction    */
+/* fetching is forced to do a call to the "instfetch" function to    */
+/* perform full translation of the address of the next instruction,  */
+/* recalculating new 'ip', 'aip', 'aiv' and 'aie' values which can   */
+/* then be used again for DIRECT instruction fetching. This allows   */
+/* us to "accelerate" instruction fetching since we don't have to    */
+/* go through full address translation for each instruction fetch.   */
+/* We only need to do so when the instruction being fetched crosses  */
+/* over into a new page. That's the 'aie'. It is set to the end of   */
+/* the 'aip' page minus 5 bytes. As long as 'ip' is LESS than aie,   */
+/* we know we can safely fetch the next instruction from that same   */
+/* mainstor page. Otherwise we need to do a full instfetch.          */
+/*-------------------------------------------------------------------*/
+
+// The INVALIDATE_AIA macro essentially renders all AIA fields as
+// being invalid, thereby forcing a full instfetch to be performed.
+// It first ensures that the IA (address of the next instruction)
+// in the guest PSW structure matches where the current regs 'ip'
+// instruction pointer is pointing, and then "invalidates" all AIA
+// fields by setting the 'aie' value to NULL, thereby forcing the
+// next instruction fetch to call the 'instfetch' function.
+
+#undef  INVALIDATE_AIA
+#define INVALIDATE_AIA( _regs )                                       \
+  do                                                                  \
+  {                                                                   \
+    if (VALID_AIE( _regs ))                                           \
+    {                                                                 \
+      (_regs)->psw.IA = PSW_IA_FROM_IP( (_regs), 0 );                 \
+      (_regs)->aie = INVALID_AIE;                                     \
+    }                                                                 \
+  }                                                                   \
+  while (0)
+
+//---------------------------------------------------------------------
+// The INVALIDATE_AIA_MAIN macro performs a conditional invalidation
+// of the AIA, but if and ONLY if the passed mainstor address matches
+// the 'aip'. It is used (e.g. the "invalidate_tlbe" function called
+// by the STORKEY_INVALIDATE macro) to invalidate the AIA whenever a
+// DAT page table entry is invalidated that happens to correspond to
+// the mainstor page we're currently fetching instructions from. It
+// first updates the psw IA to match the current instruction address
+// and then sets the 'aie' to NULL to force a full instruction fetch.
+
+#undef  INVALIDATE_AIA_MAIN
+#define INVALIDATE_AIA_MAIN( _regs, _main )                           \
+  do                                                                  \
+  {                                                                   \
+    if (VALID_AIE( _regs ) &&                                         \
+        (((uintptr_t)(_main)) & PAGEFRAME_PAGEMASK) ==                \
+         ((uintptr_t)(_regs)->aip)                                    \
+    )                                                                 \
+    {                                                                 \
+      (_regs)->psw.IA = PSW_IA_FROM_IP( (_regs), 0 );                 \
+      (_regs)->aie = INVALID_AIE;                                     \
+    }                                                                 \
+  }                                                                   \
+  while (0)
+
+//---------------------------------------------------------------------
+// The _PSW_IA_MAIN helper macro returns the mainstor address
+// corresponding to a given guest virtual address. NOTE CAREFULLY
+// that it PRESUMES the virtual address that is passed is within the
+// same mainstor page as we're currently fetching instructions from!
+
+#undef  _PSW_IA_MAIN
+#define _PSW_IA_MAIN( _regs, _addr )                                  \
+  (                                                                   \
+    (BYTE*)                                                           \
+    (                                                                 \
+        (uintptr_t)(_regs)->aip                                       \
+        |                                                             \
+        (uintptr_t)((_addr) & PAGEFRAME_BYTEMASK)                     \
+    )                                                                 \
+  )
+
+/*-------------------------------------------------------------------*/
+/*                     Instruction fetching                          */
+/*-------------------------------------------------------------------*/
+
+// The _VALID_IP helper macro is used only by the INSTRUCTION_FETCH
+// macro and returns either true/false indicating whether the current
+// instruction pointer is still valid or not (so INSTRUCTION_FETCH
+// can know whether to call the instfetch' function or not). It does
+// this by verifying regs->ip is either still less than regs->aie,
+// or for the 'exec' case, that the mainstor address corresponding
+// to regs->ET (the target of the execute instruction) is still less
+// than regs->aie. It determines the mainstor address of regs->ET
+// via the _PSW_IA_MAIN helper macro.
+
+#undef  _VALID_IP
+#define _VALID_IP( _regs, _exec )                                     \
+  (                                                                   \
+      /* Instr NOT being EXecuted and instr ptr in same page */       \
+      (1                                                              \
+        && !(_exec)                                                   \
+        &&  (_regs)->ip < (_regs)->aie                                \
+      )                                                               \
+  ||                                                                  \
+      /* Instr IS being EXecuted and instr ptr in same page */        \
+      (1                                                              \
+        && (_exec)                                                    \
+        /* Execute target in same virtual page? */                    \
+        && ((_regs)->ET & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV  \
+        /* Execute target in same mainstor page? */                   \
+        && _PSW_IA_MAIN( (_regs), (_regs)->ET ) < (_regs)->aie        \
+      )                                                               \
+  )
+
+//---------------------------------------------------------------------
+// The INSTRUCTION_FETCH macro returns a mainstor 'ip' pointer
+// pointing to the next instruction to be executed. It either
+// returns regs->ip directly (or for the 'exec' case, the
+// corresponding mainstor address of the instruction being
+// executed), or else calls the 'instfetch' function to calculate
+// a new set of AIA values (ip, aie, aip and aiv).
+
+#undef  INSTRUCTION_FETCH
+#define INSTRUCTION_FETCH( _regs, _exec )                             \
+                                                                      \
+  /* If ip still valid, use current ip or target of executed instr */ \
+  likely( _VALID_IP( (_regs), (_exec) )) ?                            \
+  (                                                                   \
+    (_exec) ?                                                         \
+      _PSW_IA_MAIN( (_regs), (_regs)->ET )                            \
+      :                                                               \
+      (_regs)->ip                                                     \
+  )                                                                   \
+  /* Else do a full instruction fetch (which updates the AIA too) */  \
+  : ARCH_DEP( instfetch )( (_regs), (_exec) )
+
+/*-------------------------------------------------------------------*/
+/*                   Instruction execution                           */
+/*-------------------------------------------------------------------*/
+
+#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+  #undef  ABORT_TRANS                                   /* (nothing) */
+  #define ABORT_TRANS( _regs, _retry, _tac )            /* (nothing) */
+
+  #undef  TXF_INSTRADDR_CONSTRAINT                      /* (nothing) */
+  #define TXF_INSTRADDR_CONSTRAINT( _regs )             /* (nothing) */
+
+  #undef  TXF_INSTRCOUNT_CONSTRAINT                     /* (nothing) */
+  #define TXF_INSTRCOUNT_CONSTRAINT( _ip, _regs )       /* (nothing) */
+
+  #undef  TXF_RAND_ABORT_CONSTRAINT                     /* (nothing) */
+  #define TXF_RAND_ABORT_CONSTRAINT( _regs )            /* (nothing) */
+
+  #undef  CHECK_TXF_CONSTRAINTS                         /* (nothing) */
+  #define CHECK_TXF_CONSTRAINTS( _ip, _regs )           /* (nothing) */
+
+#else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+  #undef  ABORT_TRANS
+  #define ABORT_TRANS( _regs, _retry, _tac )                          \
+    ARCH_DEP( abort_transaction )( (_regs), (_retry), (_tac), PTT_LOC )
+
+  #undef  TXF_INSTRADDR_CONSTRAINT
+  #define TXF_INSTRADDR_CONSTRAINT( _regs )                           \
+  do {                                                                \
+    if (1                                                             \
+      && (_regs)->txf_contran                                         \
+      && (_regs)->ip >= (_regs)->txf_aie                              \
+    )                                                                 \
+    {                                                                 \
+      (_regs)->txf_why |= TXF_WHY_INSTRADDR;                          \
+      ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );         \
+    }                                                                 \
+  } while (0)
+
+  #undef  TXF_INSTRCOUNT_CONSTRAINT
+  #define TXF_INSTRCOUNT_CONSTRAINT( _ip, _regs )                     \
+  do {                                                                \
+    if (1                                                             \
+      && (_regs)->txf_contran                                         \
+      && (_regs)->txf_instctr > MAX_TXF_CONTRAN_INSTR                 \
+      && memcmp( (_ip), "\xb2\xf8", 2 ) != 0                          \
+    )                                                                 \
+    {                                                                 \
+      (_regs)->txf_why |= TXF_WHY_INSTRCOUNT;                         \
+      ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );         \
+    }                                                                 \
+  } while (0)
+
+  #undef  TXF_RAND_ABORT_CONSTRAINT
+  #define TXF_RAND_ABORT_CONSTRAINT( _regs )                          \
+  do {                                                                \
+    if (1                                                             \
+      && (_regs)->txf_abortctr                                        \
+      && (_regs)->txf_instctr >= (_regs)->txf_abortctr                \
+    )                                                                 \
+    {                                                                 \
+      (_regs)->txf_why |= TXF_WHY_RAND_ABORT;                         \
+      ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK,                      \
+        (_regs)->txf_random_tac );                                    \
+    }                                                                 \
+  } while (0)
+
+  #undef  CHECK_TXF_CONSTRAINTS
+  #define CHECK_TXF_CONSTRAINTS( _ip, _regs )                         \
+  do {                                                                \
+    if ((_regs)->txf_tnd)                                             \
+    {                                                                 \
+      TXF_INSTRADDR_CONSTRAINT( (_regs) );                            \
+      (_regs)->txf_instctr++;                                         \
+      TXF_INSTRCOUNT_CONSTRAINT( (_ip), (_regs) );                    \
+      TXF_RAND_ABORT_CONSTRAINT( (_regs) );                           \
+    }                                                                 \
+  } while (0)
+
+#endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+#undef  EXECUTE_INSTRUCTION
+#define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                       \
+do {                                                                  \
+    FOOTPRINT( (_ip), (_regs) );                                      \
+    BEG_COUNT_INSTR( (_ip), (_regs) );                                \
+    (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                     \
+    END_COUNT_INSTR( (_ip), (_regs) );                                \
+} while (0)
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+  #undef  TXF_EXECUTE_INSTRUCTION
+  #define TXF_EXECUTE_INSTRUCTION( _oct, _ip, _regs )                 \
+  do {                                                                \
+      CHECK_TXF_CONSTRAINTS( (_ip), (_regs) );                        \
+      FOOTPRINT( (_ip), (_regs) );                                    \
+      BEG_COUNT_INSTR( (_ip), (_regs) );                              \
+      (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                   \
+      END_COUNT_INSTR( (_ip), (_regs) );                              \
+  } while (0)
+
+  #undef  TXF_UNROLLED_EXECUTE
+  #define TXF_UNROLLED_EXECUTE( _oct, _regs )                         \
+    if ((_regs)->ip >= (_regs)->aie) break;                           \
+    TXF_EXECUTE_INSTRUCTION( (_oct), (_regs)->ip, (_regs) )
+
+#endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+#undef  UNROLLED_EXECUTE
+#define UNROLLED_EXECUTE( _oct, _regs )                               \
+  if ((_regs)->ip >= (_regs)->aie) break;                             \
+  EXECUTE_INSTRUCTION( (_oct), (_regs)->ip, (_regs) )
+
+/*-------------------------------------------------------------------*/
+/*                        Branching                                  */
+/*-------------------------------------------------------------------*/
+
+#undef  SUCCESSFUL_BRANCH
+#define SUCCESSFUL_BRANCH( _regs, _addr )                             \
+                                                                      \
+    ARCH_DEP( SuccessfulBranch )( (_regs), (_addr) )
+
+#undef  SUCCESSFUL_RELATIVE_BRANCH
+#define SUCCESSFUL_RELATIVE_BRANCH( _regs, _offset )                  \
+                                                                      \
+    ARCH_DEP( SuccessfulRelativeBranch )( (_regs), (_offset) )
 
 /*-------------------------------------------------------------------*/
 /*                         (other)                                   */
 /*-------------------------------------------------------------------*/
 
 /* Program check if fpc is not valid contents for FPC register */
-
-#undef FPC_BRM
-#undef FPC_CHECK
-
-#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
-
-  #define FPC_BRM     FPC_BRM_3BIT
-
-  #define FPC_CHECK( _fpc, _regs )                  \
-                                                    \
-    if (0                                           \
-        || ((_fpc) & FPC_RESV_FPX)                  \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4     \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5     \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6     \
-    )                                               \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
-
-#else /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
-
-  #define FPC_BRM     FPC_BRM_2BIT
-
-  #define FPC_CHECK( _fpc, _regs )                  \
-                                                    \
-    if ((_fpc) & FPC_RESERVED)                      \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
-
-#endif /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
+#undef  FPC_CHECK
+#define FPC_CHECK( _fpc, _regs )    ARCH_DEP( FPC_check )( (_regs), (_fpc) )
 
 /*-------------------------------------------------------------------*/
-/*                         SIE macros                                */
-/*                  (architecture DEPENDENT)                         */
+/*        PER 1 GRA (General Register Alteration) support            */
 /*-------------------------------------------------------------------*/
 
-#undef   SIE_ACTIVE
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
- #define SIE_ACTIVE(_regs)  ((_regs)->sie_active)
-#else
- #define SIE_ACTIVE(_regs)  (0)
-#endif
+#undef PER_GRA_MASK
+#undef PER_GRA_MASK2
+#undef PER_GRA_MASK4
+#undef PER_GRA_CHECK
 
-#undef   MULTIPLE_CONTROLLED_DATA_SPACE
-#if defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
- #define MULTIPLE_CONTROLLED_DATA_SPACE(_regs) \
-      ( SIE_FEATB((_regs), MX, XC) && AR_BIT(&(_regs)->psw) )
-#else
- #define MULTIPLE_CONTROLLED_DATA_SPACE(_regs) (0)
-#endif
+#if defined( FEATURE_PER1 )
 
-#undef SIE_TRANSLATE_ADDR
-#undef SIE_LOGICAL_TO_ABS
-#undef SIE_INTERCEPT
-#undef SIE_TRANSLATE
+  #define PER_GRA_MASK(  _r1 )                  (0x8000 >> (_r1))
+  #define PER_GRA_MASK2( _r1, _r2 )             (PER_GRA_MASK(  _r1 )      | PER_GRA_MASK(  _r2 ))
+  #define PER_GRA_MASK4( _r1, _r2, _r3, _r4 )   (PER_GRA_MASK2( _r1, _r2 ) | PER_GRA_MASK2( _r3, _r4 ))
+  #define PER_GRA_CHECK( _regs, _mask )                               \
+    do                                                                \
+    {                                                                 \
+      if (1                                                           \
+          && EN_IC_PER_GRA( _regs )                                   \
+          && (_mask) & ((_regs)->CR(9) & CR9_GRMASK)                  \
+      )                                                               \
+        ARCH_DEP( per1_gra )( _regs );                                \
+    }                                                                 \
+    while (0)
 
-#if defined( _FEATURE_SIE )
+#else /* !defined( FEATURE_PER1 ) */
 
-#define SIE_SET_VI(_who, _when, _why, _regs) \
-    { \
-        (_regs)->siebk->vi_who = (_who); \
-        (_regs)->siebk->vi_when = (_when); \
-        STORE_HW((_regs)->siebk->vi_why, (_why)); \
-        memset((_regs)->siebk->vi_zero, 0, 6); \
-    }
+  #define PER_GRA_MASK(  _r1 )
+  #define PER_GRA_MASK2( _r1, _r2 )
+  #define PER_GRA_MASK4( _r1, _r2, _r3, _r4 )
+  #define PER_GRA_CHECK( _regs, _mask )
 
-#if __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined( _FEATURE_ZSIE ))
-
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype) \
-    ARCH_DEP( translate_addr )((_addr), (_arn), (_regs), (_acctype))
-
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-  ( \
-    ARCH_DEP( logical_to_main )((_addr), (_arn), (_regs), (_acctype), (_akey)), \
-    (_regs)->dat.aaddr \
-  )
-
-#elif __GEN_ARCH == 370 && defined( _FEATURE_SIE )
-
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)   \
-    s390_translate_addr((_addr), (_arn), (_regs), (_acctype))
-
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-  ( \
-    s390_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey)), \
-    (_regs)->dat.aaddr \
-  )
-
-#else /* __GEN_ARCH == 390 && defined( _FEATURE_ZSIE ) */
-
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)   \
-    ( ((_regs)->arch_mode == ARCH_390_IDX) ?            \
-    s390_translate_addr((_addr), (_arn), (_regs), (_acctype)) : \
-    z900_translate_addr((_addr), (_arn), (_regs), (_acctype)) )
-
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-  ( \
-    (((_regs)->arch_mode == ARCH_390_IDX) \
-    ? s390_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey)) \
-    : z900_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey))), \
-    (_regs)->dat.aaddr \
-  )
-
-#endif // __GEN_ARCH == nnn ... etc
-
-#define SIE_INTERCEPT(_regs) \
-do { \
-    if(SIE_MODE((_regs))) \
-    longjmp((_regs)->progjmp, SIE_INTERCEPT_INST); \
-} while(0)
-
-#define SIE_TRANSLATE(_addr, _acctype, _regs) \
-do { \
-    if(SIE_MODE((_regs)) && !(_regs)->sie_pref) \
-    *(_addr) = SIE_LOGICAL_TO_ABS ((_regs)->sie_mso + *(_addr), \
-      USE_PRIMARY_SPACE, (_regs)->hostregs, (_acctype), 0); \
-} while(0)
-
-#else /* !defined( _FEATURE_SIE ) */
-
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey)
-#define SIE_INTERCEPT(_regs)
-#define SIE_TRANSLATE(_addr, _acctype, _regs)
-
-#endif /* !defined( _FEATURE_SIE ) */
-
-#undef SIE_XC_INTERCEPT
-#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
-  #define SIE_XC_INTERCEPT(_regs) \
-    if(SIE_STATB((_regs), MX, XC)) \
-       SIE_INTERCEPT((_regs))
-#else
-  #define SIE_XC_INTERCEPT(_regs)
-#endif
+#endif /* defined( FEATURE_PER1 ) */
 
 /*-------------------------------------------------------------------*/
-/*                 370/390 Vector Facility macros                    */
+/*          PER3 Breaking-Event-Address Register (BEAR)              */
 /*-------------------------------------------------------------------*/
 
-#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
-
-#if !defined( _VFDEFS )
-
-#define _VFDEFS
-
-#define VOP_CHECK(_regs) \
-    if(!((_regs)->CR(0) & CR0_VOP) || !(_regs)->vf->online) \
-        (_regs)->program_interrupt((_regs), PGM_VECTOR_OPERATION_EXCEPTION)
-
-#define VR_INUSE(_vr, _regs) \
-    ((_regs)->vf->vsr & (VSR_VIU0 >> ((_vr) >> 1)))
-
-#define VR_CHANGED(_vr, _regs) \
-    ((_regs)->vf->vsr & (VSR_VCH0 >> ((_vr) >> 1)))
-
-#define SET_VR_INUSE(_vr, _regs) \
-    (_regs)->vf->vsr |= (VSR_VIU0 >> ((_vr) >> 1))
-
-#define SET_VR_CHANGED(_vr, _regs) \
-    (_regs)->vf->vsr |= (VSR_VCH0 >> ((_vr) >> 1))
-
-#define RESET_VR_INUSE(_vr, _regs) \
-    (_regs)->vf->vsr &= ~(VSR_VIU0 >> ((_vr) >> 1))
-
-#define RESET_VR_CHANGED(_vr, _regs) \
-    (_regs)->vf->vsr &= ~(VSR_VCH0 >> ((_vr) >> 1))
-
-#define VMR_SET(_section, _regs) \
-    ((_regs)->vf->vmr[(_section) >> 3] & (0x80 >> ((_section) & 7)))
-
-#define MASK_MODE(_regs) \
-    ((_regs)->vf->vsr & VSR_M)
-
-#define VECTOR_COUNT(_regs) \
-        (((_regs)->vf->vsr & VSR_VCT) >> 32)
-
-#define VECTOR_IX(_regs) \
-        (((_regs)->vf->vsr & VSR_VIX) >> 16)
-
-#endif /*!defined( _VFDEFS )*/
-
-#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
-
-/*-------------------------------------------------------------------*/
-/*          PER3 Breaking Event Address Recording (BEAR)             */
-/*-------------------------------------------------------------------*/
-
-#undef UPDATE_BEAR
 #undef SET_BEAR_REG
+#undef SET_BEAR_EX_REG
 
 #if defined( FEATURE_PER3 )
- #define UPDATE_BEAR(_regs, _n)     (_regs)->bear_ip = (_regs)->ip + (_n)
- #define SET_BEAR_REG(_regs, _ip) \
-  do { \
-    if ((_ip)) { \
-        (_regs)->bear = (_regs)->AIV \
-                      + (intptr_t)((_ip) - (_regs)->aip); \
-        (_regs)->bear &= ADDRESS_MAXWRAP((_regs)); \
-        regs->bear_ip = NULL; \
-    } \
-  } while (0)
+
+  #define SET_BEAR_REG( _regs, _ip )                                  \
+    ARCH_DEP( Set_BEAR_Reg )( &(_regs)->bear,    (_regs), (_ip) )
+
+  #define SET_BEAR_EX_REG( _regs, _ip )                               \
+    ARCH_DEP( Set_BEAR_Reg )( &(_regs)->bear_ex, (_regs), (_ip) )
+
 #else
-#define UPDATE_BEAR(_regs, _n)     do{}while(0)
-#define SET_BEAR_REG(_regs, _ip)   do{}while(0)
+
+  #define SET_BEAR_REG(    _regs, _ip )
+  #define SET_BEAR_EX_REG( _regs, _ip )
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                 PER3 Event Suppression                            */
+/*-------------------------------------------------------------------*/
+
+#undef  IS_PER_SUPRESS
+
+#if defined( FEATURE_PER3 )
+
+  #define IS_PER_SUPRESS( _regs, _event )                             \
+    ARCH_DEP( is_per3_event_suppressed )( (_regs), (_event) )
+
+#else
+
+  #define IS_PER_SUPRESS( _regs, _event )                             \
+    false
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*            PER3 Zero-Address Detection Facility                   */
+/*-------------------------------------------------------------------*/
+
+#undef  PER_ZEROADDR_CHECK
+#undef  PER_ZEROADDR_CHECK2
+
+#undef  PER_ZEROADDR_LCHECK
+#undef  PER_ZEROADDR_LCHECK2
+
+#undef  PER_ZEROADDR_L24CHECK
+#undef  PER_ZEROADDR_L24CHECK2
+
+#undef  PER_ZEROADDR_XCHECK
+#undef  PER_ZEROADDR_XCHECK2
+
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+
+  // The CHECK macros are designed for instructions where the operand
+  // address is specified in a register but the operand length is not
+  // (or is otherwise implied, perhaps by a function code in another
+  // operand register for example), and/or for instructions where it
+  // is otherwise unpredictable whether operand data will actually be
+  // accessed or not. Thus the only thing we can check is whether the
+  // register holding the address of the operand is zero or not.
+
+  #define PER_ZEROADDR_CHECK(   _regs,  _r1 )                         \
+   ARCH_DEP( per3_zero_check )((_regs),(_r1))
+
+  #define PER_ZEROADDR_CHECK2(   _regs,  _r1,  _r2 )                  \
+   ARCH_DEP( per3_zero_check2 )((_regs),(_r1),(_r2))
+
+  // The LCHECK macros are designed for RR and RRE and similar format
+  // type instructions where a PER Zero-Address event does NOT occur
+  // when the operand length (specified in another register) is zero,
+  // thus causing that operand's storage to never be accessed. Note
+  // that all 32 (or 64) bits of the length register are checked.
+
+  #define PER_ZEROADDR_LCHECK(   _regs,  _r1,  _l1 )                  \
+   ARCH_DEP( per3_zero_lcheck )((_regs),(_r1),(_l1))
+
+  #define PER_ZEROADDR_LCHECK2(   _regs,  _r1,  _l1,  _r2,  _l2 )     \
+   ARCH_DEP( per3_zero_lcheck2 )((_regs),(_r1),(_l1),(_r2),(_l2))
+
+  // The L24CHECK macros are identical to the LCHECK macros except
+  // for the operand length check: instead of checking all 32 or 64
+  // bits of the register containing the operand length, we instead
+  // check only the low-order 24 bits of the length register via the
+  // GR_LA24 macro. They are designed for MVCL and CLCL and other
+  // similar type instructions.
+
+  #define PER_ZEROADDR_L24CHECK(   _regs,  _r1,  _l1 )                \
+   ARCH_DEP( per3_zero_l24check )((_regs),(_r1),(_l1))
+
+  #define PER_ZEROADDR_L24CHECK2(   _regs,  _r1,  _l1,  _r2,  _l2 )   \
+   ARCH_DEP( per3_zero_l24check2 )((_regs),(_r1),(_l1),(_r2),(_l2))
+
+  // The XCHECK macros are designed for RS/RX/S and similar format
+  // type instructions where a PER Zero-Address event does NOT occur
+  // unless the specified base or index register number is non-zero.
+  // When the base or index register number is specified as zero, it
+  // is not used in effective address calculations and thus PER Zero
+  // Address Detection does not apply for that register.
+
+  #define PER_ZEROADDR_XCHECK(   _regs,  _b1 )                        \
+   ARCH_DEP( per3_zero_xcheck )((_regs),(_b1))
+
+  #define PER_ZEROADDR_XCHECK2(   _regs,  _x2,  _b2 )                 \
+   ARCH_DEP( per3_zero_xcheck2 )((_regs),(_x2),(_b2))
+
+#else
+
+  #define PER_ZEROADDR_CHECK(  _regs, _r1 )
+  #define PER_ZEROADDR_CHECK2( _regs, _r1, _r2 )
+
+  #define PER_ZEROADDR_LCHECK(  _regs, _r1, _l1 )
+  #define PER_ZEROADDR_LCHECK2( _regs, _r1, _l1, _r2, _l2 )
+
+  #define PER_ZEROADDR_L24CHECK(  _regs, _r1, _l1 )
+  #define PER_ZEROADDR_L24CHECK2( _regs, _r1, _l1, _r2, _l2 )
+
+  #define PER_ZEROADDR_XCHECK(  _regs, _b1 )
+  #define PER_ZEROADDR_XCHECK2( _regs, _x2, _b2 )
+
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -1021,172 +1724,399 @@ do { \
 
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
+
+/*-------------------------------------------------------------------*/
+/*                 Floating-point helper macros                      */
+/*-------------------------------------------------------------------*/
+
+// Plain vanilla S/370 mode macros...
+
+#undef _370_HFPREG_CHECK
+#undef _370_HFPREG2_CHECK
+#undef _370_HFPODD_CHECK
+#undef _370_HFPODD2_CHECK
+
+/* Program check if r1 is not 0, 2, 4, or 6 */
+#define _370_HFPREG_CHECK(_r, _regs)                                        \
+                                                                            \
+  if ((_r) & 9)                                                             \
+      (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+/* Program check if r1 and r2 are not 0, 2, 4, or 6 */
+#define _370_HFPREG2_CHECK(_r1, _r2, _regs)                                 \
+                                                                            \
+  if (0                                                                     \
+      || ((_r1) & 9)                                                        \
+      || ((_r2) & 9)                                                        \
+  )                                                                         \
+      (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+/* Program check if r1 is not 0 or 4 */
+#define _370_HFPODD_CHECK(_r, _regs)                                        \
+                                                                            \
+  if ((_r) & 11)                                                            \
+      (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+/* Program check if r1 and r2 are not 0 or 4 */
+#define _370_HFPODD2_CHECK(_r1, _r2, _regs)                                 \
+                                                                            \
+  if (0                                                                     \
+      || ((_r1) & 11)                                                       \
+      || ((_r2) & 11)                                                       \
+  )                                                                         \
+      (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+
+// Macros for 390 or z/Arch mode, -OR for 370 mode
+// with HERC_370_EXTENSION *maybe* enabled or not...
+
 #undef HFPREG_CHECK
 #undef HFPREG2_CHECK
 #undef HFPODD_CHECK
 #undef HFPODD2_CHECK
+
+#if !defined( FEATURE_BASIC_FP_EXTENSIONS )
+
+  // Plain vanilla S/370 mode macros...
+
+  #define HFPREG_CHECK(_r,_regs)        _370_HFPREG_CHECK((_r),(_regs))
+  #define HFPREG2_CHECK(_r1,_r2,_regs)  _370_HFPREG2_CHECK((_r1),(_r2),(_regs))
+  #define HFPODD_CHECK(_r,_regs)        _370_HFPODD_CHECK((_r),(_regs))
+  #define HFPODD2_CHECK(_r1,_r2,_regs)  _370_HFPODD2_CHECK((_r1),(_r2),(_regs))
+
+#else /* defined( FEATURE_BASIC_FP_EXTENSIONS ) */
+
+  #if defined( _FEATURE_SIE )
+
+    /* Program check if DFP instruction is executed when AFP control is zero */
+    #define DFPINST_CHECK(_regs)                                                    \
+                                                                                    \
+        if (0                                                                       \
+            || !((_regs)->CR(0) & CR0_AFP)                                          \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))               \
+        )                                                                           \
+        {                                                                           \
+            (_regs)->dxc = DXC_DFP_INSTRUCTION;                                     \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );              \
+        }
+
+    /* Program check if BFP instruction is executed when AFP control is zero */
+    #define BFPINST_CHECK(_regs)                                                    \
+                                                                                    \
+        if (0                                                                       \
+            || !((_regs)->CR(0) & CR0_AFP)                                          \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))               \
+        )                                                                           \
+        {                                                                           \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION;                                     \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );              \
+        }
+
+    /* Program check if r1 is not 0, 2, 4, or 6 */
+    #define HFPREG_CHECK(_r, _regs)                                                 \
+                                                                                    \
+        if (0                                                                       \
+            || !((_regs)->CR(0) & CR0_AFP)                                          \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))               \
+        )                                                                           \
+        {                                                                           \
+            if (1                                                                   \
+                && ARCH_370_IDX == sysblk.arch_mode                                 \
+                && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )       \
+            )                                                                       \
+            {                                                                       \
+                /* Normal 370 case: HERC_370_EXTENSION not enabled */               \
+                _370_HFPREG_CHECK((_r),(_regs));                                    \
+            }                                                                       \
+            else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */       \
+            {                                                                       \
+                if ((_r) & 9)                                                       \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
+        }
+
+    /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
+    #define HFPREG2_CHECK(_r1, _r2, _regs)                                          \
+                                                                                    \
+        if (0                                                                       \
+            || !((_regs)->CR(0) & CR0_AFP)                                          \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))               \
+        )                                                                           \
+        {                                                                           \
+            if (1                                                                   \
+                && ARCH_370_IDX == sysblk.arch_mode                                 \
+                && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )       \
+            )                                                                       \
+            {                                                                       \
+                /* Normal 370 case: HERC_370_EXTENSION not enabled */               \
+                _370_HFPREG2_CHECK((_r1),(_r2),(_regs));                            \
+            }                                                                       \
+            else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */       \
+            {                                                                       \
+                if (0                                                               \
+                    || ((_r1) & 9)                                                  \
+                    || ((_r2) & 9)                                                  \
+                )                                                                   \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
+        }
+
+    /* Program check if r1 is not 0 or 4 */
+    #define HFPODD_CHECK(_r, _regs)                                                 \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPODD_CHECK((_r),(_regs));                                        \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if ((_r) & 2)                                                           \
+            {                                                                       \
+                (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+            }                                                                       \
+            else if (0                                                              \
+                || !((_regs)->CR(0) & CR0_AFP)                                      \
+                || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+            )                                                                       \
+            {                                                                       \
+                if ((_r) & 9)                                                       \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
+        }
+
+    /* Program check if r1 and r2 are not 0 or 4 */
+    #define HFPODD2_CHECK(_r1, _r2, _regs)                                          \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPODD2_CHECK((_r1),(_r2),(_regs));                                \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if (0                                                                   \
+                || ((_r1) & 2)                                                      \
+                || ((_r2) & 2)                                                      \
+            )                                                                       \
+            {                                                                       \
+                (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+            }                                                                       \
+            else if (0                                                              \
+                || !((_regs)->CR(0) & CR0_AFP)                                      \
+                || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP))           \
+            )                                                                       \
+            {                                                                       \
+                if (0                                                               \
+                    || ((_r1) & 9)                                                  \
+                    || ((_r2) & 9)                                                  \
+                )                                                                   \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
+        }
+
+  #else /* !defined( _FEATURE_SIE ) */
+
+    /* Program check if DFP instruction is executed when AFP control is zero */
+    #define DFPINST_CHECK(_regs)                                                    \
+                                                                                    \
+        if (!((_regs)->CR(0) & CR0_AFP))                                            \
+        {                                                                           \
+            (_regs)->dxc = DXC_DFP_INSTRUCTION;                                     \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );              \
+        }
+
+    /* Program check if BFP instruction is executed when AFP control is zero */
+    #define BFPINST_CHECK(_regs)                                                    \
+                                                                                    \
+        if (!((_regs)->CR(0) & CR0_AFP))                                            \
+        {                                                                           \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION;                                     \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );              \
+        }
+
+    /* Program check if r1 is not 0, 2, 4, or 6 */
+    #define HFPREG_CHECK(_r,_regs)                                                  \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPREG_CHECK((_r),(_regs));                                        \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if (!((_regs)->CR(0) & CR0_AFP))                                        \
+            {                                                                       \
+                if ((_r) & 9)                                                       \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
+        }
+
+    /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
+    #define HFPREG2_CHECK(_r1,_r2,_regs)                                            \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPREG2_CHECK((_r1),(_r2),(_regs));                                \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if (!((_regs)->CR(0) & CR0_AFP) )                                       \
+            {                                                                       \
+                if (0                                                               \
+                    || ((_r1) & 9)                                                  \
+                    || ((_r2) & 9)                                                  \
+                )                                                                   \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
+        }
+
+    /* Program check if r1 is not 0 or 4 */
+    #define HFPODD_CHECK(_r,_regs)                                                  \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPODD_CHECK((_r),(_regs));                                        \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if ((_r) & 2)                                                           \
+            {                                                                       \
+                (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+            }                                                                       \
+            else if (!((_regs)->CR(0) & CR0_AFP) )                                  \
+            {                                                                       \
+                if ((_r) & 9)                                                       \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
+        }
+
+    /* Program check if r1 and r2 are not 0 or 4 */
+    #define HFPODD2_CHECK(_r1,_r2,_regs)                                            \
+                                                                                    \
+        if (1                                                                       \
+            && ARCH_370_IDX == sysblk.arch_mode                                     \
+            && !FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )           \
+        )                                                                           \
+        {                                                                           \
+            /* Normal 370 case: HERC_370_EXTENSION not enabled */                   \
+            _370_HFPODD2_CHECK((_r1),(_r2),(_regs));                                \
+        }                                                                           \
+        else /* 390 or zArch, -OR- 370 with HERC_370_EXTENSION enabled */           \
+        {                                                                           \
+            if (0                                                                   \
+                || ((_r1) & 2)                                                      \
+                || ((_r2) & 2)                                                      \
+            )                                                                       \
+            {                                                                       \
+                (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION ); \
+            }                                                                       \
+            else if (!((_regs)->CR(0) & CR0_AFP) )                                  \
+            {                                                                       \
+                if (0                                                               \
+                    || ((_r1) & 9)                                                  \
+                    || ((_r2) & 9)                                                  \
+                )                                                                   \
+                {                                                                   \
+                    (_regs)->dxc = DXC_AFP_REGISTER;                                \
+                    (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION );      \
+                }                                                                   \
+            }                                                                       \
+        }
+
+  #endif /* !defined( _FEATURE_SIE ) */
+
+#endif /* !defined( FEATURE_BASIC_FP_EXTENSIONS ) */
+
+/*-------------------------------------------------------------------*/
+/*               (end floating-point helper macros)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*        Special FPR2I/FPREX handling for HERC_370_EXTENSION        */
+/*-------------------------------------------------------------------*/
 #undef FPR2I
 #undef FPREX
-
 #if defined( FEATURE_BASIC_FP_EXTENSIONS )
-#if defined( _FEATURE_SIE )
 
-    /* Program check if BFP instruction is executed when AFP control is zero */
-#define BFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
-            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        }
+  // 390 or zArch -OR- 370 with the "FEATURE_370_EXTENSION" BUILD
+  // option #defined, which causes the "FEATURE_BASIC_FP_EXTENSIONS"
+  // BUILD to necessarily ALSO be #defined, forcing us to check if
+  // the "HERC_370_EXTENSION" facility is enabled or not.
+  //
+  // PLEASE NOTE that enabling the "HERC_370_EXTENSION" facility
+  // causes nonconformant/incorrect S/370 floating point behavior!
 
-    /* Program check if DFP instruction is executed when AFP control is zero */
-#define DFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
-            (_regs)->dxc = DXC_DFP_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        }
+  #define FPR2I(_r)     /* Convert fpr to index */                    \
+  ((0                                                                 \
+      || ARCH_370_IDX != sysblk.arch_mode                             \
+      || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
+  )                                                                   \
+  ? ((_r) << 1) : (_r))
 
-    /* Program check if r1 is not 0, 2, 4, or 6 */
-#define HFPREG_CHECK(_r, _regs) \
-    if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
-        if( (_r) & 9 ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+  #define FPREX         /* Offset of extended register */             \
+  ((0                                                                 \
+      || ARCH_370_IDX != sysblk.arch_mode                             \
+      || FACILITY_ENABLED_ARCH( HERC_370_EXTENSION, ARCH_370_IDX )    \
+  )                                                                   \
+  ? 4 : 2 )
 
-    /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-#define HFPREG2_CHECK(_r1, _r2, _regs) \
-    if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
-        if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+#else // !defined( FEATURE_BASIC_FP_EXTENSIONS )
 
-    /* Program check if r1 is not 0 or 4 */
-#define HFPODD_CHECK(_r, _regs) \
-    if( (_r) & 2 ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
-    else if( !((_regs)->CR(0) & CR0_AFP) \
-               || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
-        if( (_r) & 9 ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
+  // S/370 without the "FEATURE_370_EXTENSION" BUILD option defined,
+  // which causes the "FEATURE_BASIC_FP_EXTENSIONS" BUILD option to
+  // NOT be #defined, which provides normal S/370 behavior.
 
-    /* Program check if r1 and r2 are not 0 or 4 */
-#define HFPODD2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 2) || ((_r2) & 2) ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
-    else if( !((_regs)->CR(0) & CR0_AFP) \
-                || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
-        if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
-#else /* !defined( _FEATURE_SIE ) */
+  #define FPR2I(_r)     (_r)        /* Convert fpr to index */
+  #define FPREX           2         /* Offset of extended register */
 
-    /* Program check if BFP instruction is executed when AFP control is zero */
-#define BFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) ) { \
-            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        }
-
-    /* Program check if DFP instruction is executed when AFP control is zero */
-#define DFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) ) { \
-            (_regs)->dxc = DXC_DFP_INSTRUCTION; \
-            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        }
+#endif // defined( FEATURE_BASIC_FP_EXTENSIONS)
+/*-------------------------------------------------------------------*/
+/*     (end special fpr2i/fprex handling for herc_370_extension)     */
+/*-------------------------------------------------------------------*/
 
 
-    /* Program check if r1 is not 0, 2, 4, or 6 */
-#define HFPREG_CHECK(_r, _regs) \
-    if( !((_regs)->CR(0) & CR0_AFP) ) { \
-        if( (_r) & 9 ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
-
-    /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-#define HFPREG2_CHECK(_r1, _r2, _regs) \
-    if( !((_regs)->CR(0) & CR0_AFP) ) { \
-        if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
-
-    /* Program check if r1 is not 0 or 4 */
-#define HFPODD_CHECK(_r, _regs) \
-    if( (_r) & 2 ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
-    else if( !((_regs)->CR(0) & CR0_AFP) ) { \
-        if( (_r) & 9 ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
-
-    /* Program check if r1 and r2 are not 0 or 4 */
-#define HFPODD2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 2) || ((_r2) & 2) ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
-    else if( !((_regs)->CR(0) & CR0_AFP) ) { \
-        if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                (_regs)->dxc = DXC_AFP_REGISTER; \
-        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
-        } \
-    }
-
-#endif /* !defined( _FEATURE_SIE ) */
-
-
-    /* Convert fpr to index */
-#define FPR2I(_r) \
-    ((_r) << 1)
-
-    /* Offset of extended register */
-#define FPREX 4
-
-#else /*!defined( FEATURE_BASIC_FP_EXTENSIONS )*/
-
-    /* Program check if r1 is not 0, 2, 4, or 6 */
-#define HFPREG_CHECK(_r, _regs) \
-    if( (_r) & 9 ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-
-    /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
-#define HFPREG2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 9) || ((_r2) & 9) ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-
-    /* Program check if r1 is not 0 or 4 */
-#define HFPODD_CHECK(_r, _regs) \
-    if( (_r) & 11 ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-
-    /* Program check if r1 and r2 are not 0 or 4 */
-#define HFPODD2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 11) || ((_r2) & 11) ) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-
-    /* Convert fpr to index */
-#define FPR2I(_r) \
-    (_r)
-
-    /* Offset of extended register */
-#define FPREX 2
-
-#endif /*!defined( FEATURE_BASIC_FP_EXTENSIONS )*/
 
 #define TLBIX(_addr) (((VADR_L)(_addr) >> TLB_PAGESHIFT) & TLB_MASK)
 
@@ -1198,38 +2128,103 @@ do { \
          + (uintptr_t)(_aaddr)) \
          ^ (uintptr_t)((_addr) & TLB_PAGEMASK))
 
-/* Perform invalidation after storage key update.
- * If the REF or CHANGE bit is turned off for an absolute
- * address then we need to invalidate any cached entries
- * for that address on *all* CPUs.
- * FIXME: Synchronization, esp for the CHANGE bit, should
- * be tighter than what is provided here.
- */
-#define STORKEY_INVALIDATE(_regs, _n) \
- do { \
-   BYTE *mn; \
-   mn = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK); \
-   ARCH_DEP( invalidate_tlbe )((_regs), mn); \
-   if (sysblk.cpus > 1) { \
-     int i; \
-     OBTAIN_INTLOCK ((_regs)); \
-     for (i = 0; i < sysblk.hicpu; i++) { \
-       if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
-         if ( sysblk.waiting_mask & CPU_BIT(i) ) \
-           ARCH_DEP( invalidate_tlbe )(sysblk.regs[i], mn); \
-         else { \
-           ON_IC_INTERRUPT(sysblk.regs[i]); \
-           if (!sysblk.regs[i]->invalidate) { \
-             sysblk.regs[i]->invalidate = 1; \
-             sysblk.regs[i]->invalidate_main = mn; \
-           } else \
-             sysblk.regs[i]->invalidate_main = NULL; \
-         } \
-       } \
-     } \
-     RELEASE_INTLOCK((_regs)); \
-   } \
- } while (0)
+#define MAIN_TO_ABS(_main)  ((U64)((BYTE*)(_main) - sysblk.mainstor))
+
+
+/*-------------------------------------------------------------------*/
+/*        Perform invalidation after storage key update...           */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  If the REF or CHANGE bit is turned off for an absolute address,  */
+/*  then we need to invalidate any cached entries for that address   */
+/*  on *ALL* CPUs.                                                   */
+/*                                                                   */
+/*  FIXME: Synchronization, esp. for the CHANGE bit, should be       */
+/*  tighter than what is provided here.                              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+#define STORKEY_INVALIDATE_LOCKED( _regs, _n )                          \
+                                                                        \
+ do                                                                     \
+ {                                                                      \
+   BYTE* abs = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK);         \
+                                                                        \
+   /* Do it for the current CPU first */                                \
+   ARCH_DEP( invalidate_tlbe )( (_regs), abs );                         \
+                                                                        \
+   if (sysblk.cpus > 1)                                                 \
+   {                                                                    \
+     int cpu;        /* CPU being examined */                           \
+     REGS* cregs;    /* register context for CPU being examined */      \
+                                                                        \
+     /* Do invalidate for all of the other online CPUs too */           \
+     for (cpu=0; cpu < sysblk.hicpu; cpu++)                             \
+     {                                                                  \
+       /* Skip our own CPU and CPUs which aren't online */              \
+       if (IS_CPU_ONLINE( cpu ) && cpu != (_regs)->cpuad)               \
+       {                                                                \
+         cregs = sysblk.regs[cpu];                                      \
+                                                                        \
+         /* Is this CPU waiting for an interrupt? */                    \
+         if (sysblk.waiting_mask & CPU_BIT( cpu ))                      \
+         {                                                              \
+           /* Yes, then we can do the invalidate right now... */        \
+           switch (cregs->arch_mode)                                    \
+           {                                                            \
+             case ARCH_370_IDX:                                         \
+             {                                                          \
+               abs = cregs->mainstor + ((_n) & PAGEFRAME_370_PAGEMASK); \
+               s370_invalidate_tlbe( cregs, abs );                      \
+               break;                                                   \
+             }                                                          \
+             case ARCH_390_IDX:                                         \
+             {                                                          \
+               abs = cregs->mainstor + ((_n) & PAGEFRAME_390_PAGEMASK); \
+               s390_invalidate_tlbe( cregs, abs );                      \
+               break;                                                   \
+             }                                                          \
+             case ARCH_900_IDX:                                         \
+             {                                                          \
+               abs = cregs->mainstor + ((_n) & PAGEFRAME_900_PAGEMASK); \
+               z900_invalidate_tlbe( cregs, abs );                      \
+               break;                                                   \
+             }                                                          \
+             default:                                                   \
+             {                                                          \
+               CRASH();                                                 \
+             }                                                          \
+           }                                                            \
+         }                                                              \
+         else /* Otherwise we need to schedule it ... */                \
+         {                                                              \
+           ON_IC_INTERRUPT( cregs );                                    \
+                                                                        \
+           if (!cregs->invalidate)                                      \
+           {                                                            \
+             cregs->invalidate = 1;                                     \
+             cregs->invalidate_main = abs;                              \
+           }                                                            \
+           else                                                         \
+           {                                                            \
+             cregs->invalidate_main = NULL;                             \
+           }                                                            \
+         }                                                              \
+       }                                                                \
+     }                                                                  \
+   }                                                                    \
+ }                                                                      \
+ while (0)
+
+#define STORKEY_INVALIDATE( _regs, _n )                                 \
+ do                                                                     \
+ {                                                                      \
+   OBTAIN_INTLOCK( (_regs) );                                           \
+   {                                                                    \
+      STORKEY_INVALIDATE_LOCKED( (_regs), (_n) );                       \
+   }                                                                    \
+   RELEASE_INTLOCK( (_regs) );                                          \
+ }                                                                      \
+ while (0)
 
 #if defined( INLINE_STORE_FETCH_ADDR_CHECK )
  #define FETCH_MAIN_ABSOLUTE(_addr, _regs, _len) \
@@ -1239,25 +2234,395 @@ do { \
   ARCH_DEP( fetch_main_absolute )((_addr), (_regs))
 #endif
 
-#define INST_UPDATE_PSW(_regs, _len, _ilc) \
-     do { \
-            if (_len) (_regs)->ip += (_len); \
-            if (_ilc) (_regs)->psw.ilc = (_ilc); \
-        } while(0)
+/*-------------------------------------------------------------------*/
+/*      Transactional-Execution Facility (TXF) support macros        */
+/*-------------------------------------------------------------------*/
 
+#undef TXFC_INSTR_CHECK                     /* 'TXFC' == Constrained */
+#undef TXFC_INSTR_CHECK_IP                  /* 'TXFC' == Constrained */
+#undef TXFC_BRANCH_CHECK_IP                 /* 'TXFC' == Constrained */
+#undef TXFC_RELATIVE_BRANCH_CHECK_IP        /* 'TXFC' == Constrained */
+
+#undef TXF_INSTR_CHECK
+#undef TXF_FLOAT_INSTR_CHECK
+#undef TXF_ACCESS_INSTR_CHECK
+#undef TXF_NONRELATIVE_BRANCH_CHECK_IP
+#undef TXF_BRANCH_SET_MODE_CHECK_IP
+#undef TXF_SET_ADDRESSING_MODE_CHECK
+#undef TXF_MISC_INSTR_CHECK
+#undef TXF_EXECUTE_INSTR_CHECK
+#undef TXF_ALLOCMAP
+#undef TXF_FREEMAP
+#undef TXF_MADDRL
+
+#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+  #define TXFC_INSTR_CHECK( _regs )
+  #define TXFC_INSTR_CHECK_IP( _regs )
+  #define TXFC_BRANCH_CHECK_IP( _regs, _m3, _i4 )
+  #define TXFC_RELATIVE_BRANCH_CHECK_IP( _regs )
+
+  #define TXF_INSTR_CHECK( _regs )
+  #define TXF_FLOAT_INSTR_CHECK( _regs )
+  #define TXF_ACCESS_INSTR_CHECK( _regs )
+  #define TXF_MISC_INSTR_CHECK( _regs )
+  #define TXF_NONRELATIVE_BRANCH_CHECK_IP( _regs, _r )
+  #define TXF_BRANCH_SET_MODE_CHECK_IP( _regs, _r2 )
+  #define TXF_SET_ADDRESSING_MODE_CHECK( _regs )
+  #define TXF_EXECUTE_INSTR_CHECK( _regs )
+  #define TXF_ALLOCMAP( _regs )
+  #define TXF_FREEMAP( _regs )
+
+  #define TXF_MADDRL( _vaddr, _len, _arn, _regs, _acctype, _maddr ) \
+    /* Return the very same address as what was passed */ (_maddr)
+
+#else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+  #define TXFC_INSTR_CHECK( _regs )                                                     \
+    /* Restricted instruction in CONSTRAINED transaction mode */                        \
+    do {                                                                                \
+      if ((_regs)->txf_contran)                                                         \
+      {                                                                                 \
+        (_regs)->txf_why |= TXF_WHY_CONTRAN_INSTR;                                      \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+      }                                                                                 \
+    } while (0)
+
+  #define TXFC_INSTR_CHECK_IP( _regs )                                                  \
+    /* Restricted instruction in CONSTRAINED transaction mode */                        \
+    do {                                                                                \
+      if ((_regs)->txf_contran)                                                         \
+      {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
+        (_regs)->txf_why |= TXF_WHY_CONTRAN_INSTR;                                      \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
+      }                                                                                 \
+    } while (0)
+
+  #define TXFC_BRANCH_CHECK_IP( _regs, _m3, _i4 )                                       \
+    /* Branches restricted in CONSTRAINED mode if mask zero or offset negative */       \
+    do {                                                                                \
+      if ((_regs)->txf_contran &&                                                       \
+      (0                                                                                \
+        || (_m3) == 0x00            /* zero mask (nop)   not allowed */                 \
+        || (_i4) < 0                /* backward branches not allowed */                 \
+      ))                                                                                \
+      {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
+        (_regs)->txf_why |= TXF_WHY_CONTRAN_BRANCH;                                     \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
+      }                                                                                 \
+    } while (0)
+
+  #define TXFC_RELATIVE_BRANCH_CHECK_IP( _regs )                                        \
+    /* Relative branches restricted in CONSTRAINED mode */                              \
+    /* if the mask is zero or the offset is negative    */                              \
+    do {                                                                                \
+      if ((_regs)->txf_contran &&                                                       \
+      (0                                                                                \
+        || (inst[1] & 0xf0) == 0x00                                                     \
+        || (inst[2] & 0x80)                                                             \
+      ))                                                                                \
+      {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
+        (_regs)->txf_why |= TXF_WHY_CONTRAN_RELATIVE_BRANCH;                            \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_INSTR_CHECK( _regs )                                                      \
+    /* Restricted instruction in any transaction mode */                                \
+    do {                                                                                \
+      if ((_regs)->txf_tnd)                                                             \
+      {                                                                                 \
+        (_regs)->txf_why |= TXF_WHY_TRAN_INSTR;                                         \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_FLOAT_INSTR_CHECK( _regs )                                                \
+    /* Restricted instruction if CONSTRAINED mode or float bit zero */                  \
+    do {                                                                                \
+      if (1                                                                             \
+        && (_regs)->txf_tnd                                                             \
+        && (0                                                                           \
+          || (_regs)->txf_contran                                                       \
+          || !((_regs)->txf_ctlflag & TXF_CTL_FLOAT)                                    \
+        )                                                                               \
+      )                                                                                 \
+      {                                                                                 \
+        (_regs)->txf_why |= TXF_WHY_TRAN_FLOAT_INSTR;                                   \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_ACCESS_INSTR_CHECK( _regs )                                               \
+    /* Restricted instruction if access control bit zero */                             \
+    do {                                                                                \
+      if (1                                                                             \
+        && (_regs)->txf_tnd                                                             \
+        && !((_regs)->txf_ctlflag & TXF_CTL_AR)                                         \
+      )                                                                                 \
+      {                                                                                 \
+        (_regs)->txf_why |= TXF_WHY_TRAN_ACCESS_INSTR;                                  \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_NONRELATIVE_BRANCH_CHECK_IP( _regs, _r )                                  \
+    /* BALR/BASR/BASSM are restricted when the branch     */                            \
+    /* register is non-zero and BRANCH tracing is enabled */                            \
+    do {                                                                                \
+      if (1                                                                             \
+          && (_regs)->txf_tnd                                                           \
+          && ((_r) != 0 && ((_regs)->CR(12) & CR12_BRTRACE))                            \
+      )                                                                                 \
+      {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
+        (_regs)->txf_why |= TXF_WHY_TRAN_NONRELATIVE_BRANCH;                            \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_BRANCH_SET_MODE_CHECK_IP( _regs, _r2 )                                    \
+    /* BASSM/BSM are restricted if the r2 field */                                      \
+    /* is non-zero and MODE tracing is enabled. */                                      \
+    do {                                                                                \
+      if (1                                                                             \
+          && (_regs)->txf_tnd                                                           \
+          && ((_r2) != 0 && ((_regs)->CR(12) & CR12_MTRACE))                            \
+      )                                                                                 \
+      {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
+        (_regs)->txf_why |= TXF_WHY_TRAN_BRANCH_SET_MODE;                               \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_SET_ADDRESSING_MODE_CHECK( _regs )                                        \
+    /* SAM24/31/64 is restricted if mode tracing is enabled. */                         \
+    do {                                                                                \
+      if (1                                                                             \
+          &&  (_regs)->txf_tnd                                                          \
+          && ((_regs)->CR(12) & CR12_MTRACE)                                            \
+      )                                                                                 \
+      {                                                                                 \
+        (_regs)->txf_why |= TXF_WHY_TRAN_SET_ADDRESSING_MODE;                           \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_MISC_INSTR_CHECK( _regs )                                                 \
+    /* Restricted instruction in any transaction mode */                                \
+    do {                                                                                \
+      if ((_regs)->txf_tnd)                                                             \
+      {                                                                                 \
+        (_regs)->txf_why |= TXF_WHY_TRAN_MISC_INSTR;                                    \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_MISC );                           \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_EXECUTE_INSTR_CHECK( _regs )                                              \
+    /* Most all TXF instructions cannot be executed */                                  \
+    do {                                                                                \
+      if ((_regs)->execflag)                                                            \
+      {                                                                                 \
+        ARCH_DEP( program_interrupt )( (_regs), PGM_EXECUTE_EXCEPTION );                \
+      }                                                                                 \
+    } while (0)
+
+  #define TXF_MADDRL(   _vaddr,   _len,   _arn,   _regs,   _acctype,   _maddr  )        \
+          txf_maddr_l( (_vaddr), (_len), (_arn), (_regs), (_acctype), (_maddr) )
+
+  #define TXF_ALLOCMAP( _regs )     alloc_txfmap( _regs )
+  #define TXF_FREEMAP( _regs )      free_txfmap( _regs )
+
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
 /*                     Instruction decoders                          */
 /*-------------------------------------------------------------------*/
-#include "instfmts.h"       /* (moved to separate #include header)   */
-/*-------------------------------------------------------------------*/
 
-
-#define PERFORM_SERIALIZATION(_regs)    do{}while(0)
-#define PERFORM_CHKPT_SYNC(_regs)       do{}while(0)
+#include "instfmts.h"     // (moved into separate #include header)
 
 /*-------------------------------------------------------------------*/
-/*               external function declarations                      */
+/*                 SIE address translation macros                    */
+/*-------------------------------------------------------------------*/
+
+#undef SIE_LOGICAL_TO_ABS
+#undef SIE_TRANSLATE_ADDR
+#undef SIE_TRANSLATE
+
+#if defined( _FEATURE_SIE )
+
+  //-------------------------------------------------------------------
+  //   SIE_LOGICAL_TO_ABS:   SIE host virt  -->  SIE host abs
+  //   SIE_TRANSLATE_ADDR:   SIE host virt  -->  SIE host real; rc
+  //-------------------------------------------------------------------
+
+  // --------------------------------------------------------------------------------
+  //          z/Arch running under z/VM, or ESA/390 running under VM/ESA
+  // --------------------------------------------------------------------------------
+
+  #if __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined( _FEATURE_ZSIE ))
+
+    #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
+      (                                                                                 \
+        ARCH_DEP( logical_to_main_l )( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 ), \
+        (_regs)->dat.aaddr   /* THIS IS THE ACTUAL VALUE THE MACRO RETURNS! */          \
+      )
+
+    #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
+                                                                                        \
+        ARCH_DEP( translate_addr )( (_addr), (_arn), (_regs), (_acctype) )
+
+  // --------------------------------------------------------------------------------
+  //                      S/370 running under VM/ESA
+  // --------------------------------------------------------------------------------
+
+  #elif __GEN_ARCH == 370 && defined( _FEATURE_SIE )
+
+    #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
+      (                                                                                 \
+        s390_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 ),     \
+        (_regs)->dat.aaddr   /* THIS IS THE ACTUAL VALUE THE MACRO RETURNS! */          \
+      )
+
+    #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
+                                                                                        \
+        s390_translate_addr( (_addr), (_arn), (_regs), (_acctype) )
+
+  // --------------------------------------------------------------------------------
+  //                      ESA/390 running under z/VM
+  // --------------------------------------------------------------------------------
+
+  #else /* __GEN_ARCH == 390 && defined( _FEATURE_ZSIE ) */
+
+    #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
+      (                                                                                 \
+        ((ARCH_390_IDX == (_regs)->arch_mode)                                           \
+        ? s390_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 )    \
+        : z900_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 )),  \
+        (_regs)->dat.aaddr   /* THIS IS THE ACTUAL VALUE THE MACRO RETURNS! */          \
+      )
+
+    #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
+      (                                                                                 \
+        (ARCH_390_IDX == (_regs)->arch_mode)                                            \
+        ? s390_translate_addr( (_addr), (_arn), (_regs), (_acctype) )                   \
+        : z900_translate_addr( (_addr), (_arn), (_regs), (_acctype) )                   \
+      )
+
+  #endif // __GEN_ARCH == ...
+
+  // --------------------------------------------------------------------------------
+  //  SIE_TRANSLATE:  SIE guest abs  -->  SIE host abs   (or nop if not in SIE mode)
+  // --------------------------------------------------------------------------------
+
+  #define SIE_TRANSLATE( _addr, _acctype, _regs )                     \
+                                                                      \
+    do {                                                              \
+      if (SIE_MODE( (_regs) ) && !(_regs)->sie_pref) /* SIE mode? */  \
+        *(_addr) = SIE_LOGICAL_TO_ABS(  /* host virt --> host abs */  \
+           (_regs)->sie_mso + *(_addr), /* guest abs is host virt */  \
+           USE_PRIMARY_SPACE,           /* host primary virtual   */  \
+           HOST(_regs),                 /* host register context  */  \
+           (_acctype), 0 );             /* access type and skey   */  \
+    } while (0)
+
+#else // !defined( _FEATURE_SIE )
+
+  #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )
+  #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )
+  #define SIE_TRANSLATE( _addr, _acctype, _regs )
+
+#endif // defined( _FEATURE_SIE )
+
+/*-------------------------------------------------------------------*/
+/*                     other SIE helper macros                       */
+/*-------------------------------------------------------------------*/
+
+#undef  SIE_INTERCEPT
+#undef  SIE_XC_INTERCEPT
+#undef  SIE_SET_VI
+
+#if defined( _FEATURE_SIE )
+
+  /*---------------------------------------------*/
+  /*      SIE intercept if SIE mode              */
+  /*---------------------------------------------*/
+  #define SIE_INTERCEPT( _regs )                                      \
+                                                                      \
+    do {                                                              \
+      if (SIE_MODE( _regs ))                                          \
+        longjmp( (_regs)->progjmp, SIE_INTERCEPT_INST );              \
+    }                                                                 \
+    while (0)
+
+  /*---------------------------------------------*/
+  /*        SIE intercept if XC mode guest       */
+  /*---------------------------------------------*/
+  #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
+    #define SIE_XC_INTERCEPT( _regs )                                 \
+                                                                      \
+      do {                                                            \
+        if (SIE_MODE( _regs ) && SIE_STATE_BIT_ON( (_regs), MX, XC )) \
+          longjmp( (_regs)->progjmp, SIE_INTERCEPT_INST );            \
+      }                                                               \
+      while (0)
+  #else
+    #define SIE_XC_INTERCEPT( _regs )
+  #endif
+
+  /*---------------------------------------------*/
+  /*     Set SIE Validity Intercept fields       */
+  /*---------------------------------------------*/
+  #define SIE_SET_VI( _who, _when, _why, _regs )                      \
+    do {                                                              \
+                   (_regs)->siebk->vi_who  = (_who);                  \
+                   (_regs)->siebk->vi_when = (_when);                 \
+        STORE_HW(  (_regs)->siebk->vi_why,   (_why)   );              \
+        memset(    (_regs)->siebk->vi_zero, 0, 6 );                   \
+    }                                                                 \
+    while (0)
+
+#else // !defined( _FEATURE_SIE )
+
+  #define SIE_INTERCEPT( _regs )
+  #define SIE_XC_INTERCEPT( _regs )
+  #define SIE_SET_VI( _who, _when, _why, _regs )
+
+#endif // defined( _FEATURE_SIE )
+
+/*-------------------------------------------------------------------*/
+/*                  Instruction serialization                        */
+/*-------------------------------------------------------------------*/
+
+#if defined( OPTION_HARDWARE_SYNC_ALL )
+  #define PERFORM_SERIALIZATION( _regs )    HARDWARE_SYNC()
+  #define PERFORM_CHKPT_SYNC( _regs )       do{}while(0)
+#else
+  #define PERFORM_SERIALIZATION( _regs )    do{}while(0)
+  #define PERFORM_CHKPT_SYNC( _regs )       do{}while(0)
+#endif
+
+/*-------------------------------------------------------------------*/
+/*               External function declarations                      */
 /*-------------------------------------------------------------------*/
 
 /* Functions in module channel.c */
@@ -1292,36 +2657,37 @@ void channelset_reset(REGS *regs);
 #if defined( _370 )
 void s370_store_psw (REGS *regs, BYTE *addr);
 int  s370_load_psw (REGS *regs, BYTE *addr);
-void s370_process_trace (REGS *regs);
+void s370_process_trace( REGS* regs, BYTE* dest );
 #endif
 
 #if defined( _390 )
 int  s390_load_psw (REGS *regs, BYTE *addr);
 void s390_store_psw (REGS *regs, BYTE *addr);
-void s390_process_trace (REGS *regs);
+void s390_process_trace( REGS* regs, BYTE* dest );
 #endif
 
 #if defined( _900 )
 int  z900_load_psw (REGS *regs, BYTE *addr);
 void z900_store_psw (REGS *regs, BYTE *addr);
-void z900_process_trace (REGS *regs);
+void z900_process_trace( REGS* regs, BYTE* dest );
 #endif
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP( perform_io_interrupt ) (REGS *regs);
-void ARCH_DEP( checkstop_config )(void);
+void ARCH_DEP( checkstop_all_cpus )( REGS* regs );
+U64 make_psw64( REGS* regs, int arch /*370/390/900*/, bool bc );
 
-#if defined( _FEATURE_SIE )
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int code);
+#if defined( FEATURE_PER3 )
+CPU_DLL_IMPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip );
 #endif
 
-#if defined( _FEATURE_ZSIE )
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int code);
-#endif
+CPU_DLL_IMPORT void ARCH_DEP( SuccessfulBranch          )( REGS* regs, VADR vaddr );
+CPU_DLL_IMPORT void ARCH_DEP( SuccessfulRelativeBranch  )( REGS* regs, S64 offset );
+CPU_DLL_IMPORT int  ARCH_DEP( fix_program_interrupt_PSW )( REGS* regs );
+CPU_DLL_IMPORT void ARCH_DEP( trace_program_interrupt   )( REGS* regs, int pcode, int ilc );
 
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt )) (REGS *regs, int code);
 void *cpu_thread (void *cpu);
-DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
+CPU_DLL_IMPORT void copy_psw (REGS *regs, BYTE *addr);
 int   display_psw(                 REGS* regs, char* buf, int buflen );
 char* str_psw(                     REGS* regs, char* buf, int buflen );
 char* str_arch_psw( int arch_mode, REGS* regs, char* buf, int buflen );
@@ -1329,6 +2695,8 @@ char* str_arch_psw( int arch_mode, REGS* regs, char* buf, int buflen );
 #define DISPLAY_PSW(         _regs, _buf ) display_psw  (          (_regs), (_buf), (int) sizeof( _buf ))
 #define STR_PSW(             _regs, _buf ) str_psw      (          (_regs), (_buf), (int) sizeof( _buf ))
 #define STR_ARCH_PSW( _arch, _regs, _buf ) str_arch_psw ( (_arch), (_regs), (_buf), (int) sizeof( _buf ))
+
+#define DO_AUTOMATIC_TRACING() if (sysblk.auto_trace_amt) do_automatic_tracing();
 void do_automatic_tracing();
 
 
@@ -1438,9 +2806,9 @@ void init_runtime_opcode_tables();
 void init_regs_runtime_opcode_pointers( REGS* regs );
 
 
-/* Functions in module panel.c */
-void ARCH_DEP( display_inst ) (REGS *regs, BYTE *inst);
-void display_inst (REGS *regs, BYTE *inst);
+/* Functions in module hscmisc.c */
+void ARCH_DEP( display_inst )       ( REGS* regs, BYTE* inst );
+void ARCH_DEP( display_pgmint_inst )( REGS* regs, BYTE* inst );
 
 
 /* Functions in module sie.c */
@@ -2085,6 +3453,10 @@ DEF_INST( rotate_then_insert_selected_bits_long_reg_n );
 DEF_INST( perform_processor_assist );
 #endif
 
+#if defined( FEATURE_050_CONSTR_TRANSACT_FACILITY )
+DEF_INST( transaction_begin_constrained );
+#endif
+
 #if defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
 DEF_INST( load_halfword_high_immediate_on_condition );
 DEF_INST( load_halfword_immediate_on_condition );
@@ -2098,6 +3470,36 @@ DEF_INST( store_high_on_condition );
 DEF_INST( load_and_zero_rightmost_byte_grande );
 DEF_INST( load_logical_and_zero_rightmost_byte );
 DEF_INST( load_and_zero_rightmost_byte );
+#endif
+
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+DEF_INST( branch_indirect_on_condition );
+DEF_INST( add_long_halfword );
+DEF_INST( subtract_long_halfword );
+DEF_INST( multiply_long_register );
+DEF_INST( multiply_long );
+DEF_INST( multiply_long_halfword );
+DEF_INST( multiply_single_register_cc );
+DEF_INST( multiply_single_cc );
+DEF_INST( multiply_single_long_register_cc );
+DEF_INST( multiply_single_long_cc );
+#endif
+
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+DEF_INST( and_register_with_complement );
+DEF_INST( and_register_long_with_complement );
+DEF_INST( nand_register );
+DEF_INST( nand_register_long );
+DEF_INST( not_xor_register );
+DEF_INST( not_xor_register_long );
+DEF_INST( nor_register );
+DEF_INST( nor_register_long );
+DEF_INST( or_register_with_complement );
+DEF_INST( or_register_long_with_complement );
+DEF_INST( select_register );
+DEF_INST( select_register_long );
+DEF_INST( select_fullword_high_register );
+DEF_INST( move_right_to_left );
 #endif
 
 #if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
@@ -2120,6 +3522,18 @@ DEF_INST( load_sampling_controls );
 DEF_INST( query_sampling_information );
 #endif
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY)
+DEF_INST( transaction_end );
+DEF_INST( extract_transaction_nesting_depth );
+DEF_INST( transaction_abort );
+DEF_INST( nontransactional_store );
+DEF_INST( transaction_begin );
+#endif
+
+#if defined( FEATURE_074_STORE_HYPER_INFO_FACILITY )
+DEF_INST( store_hypervisor_information );
+#endif
+
 #if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
 DEF_INST( perform_cryptographic_key_management_operation );
 #endif
@@ -2129,6 +3543,23 @@ DEF_INST( perform_cryptographic_computation );
 DEF_INST( cipher_message_with_cipher_feedback );
 DEF_INST( cipher_message_with_output_feedback );
 DEF_INST( cipher_message_with_counter );
+#endif
+
+#if defined( FEATURE_080_DFP_PACK_CONV_FACILITY )
+DEF_INST(convert_packed_to_dfp_ext);
+DEF_INST(convert_packed_to_dfp_long);
+DEF_INST(convert_dfp_ext_to_packed);
+DEF_INST(convert_dfp_long_to_packed);
+#endif
+
+#if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
+DEF_INST( insert_reference_bits_multiple );
+#endif
+
+#if defined( FEATURE_193_BEAR_ENH_FACILITY )
+DEF_INST( load_bear );
+DEF_INST( store_bear );
+DEF_INST( load_program_status_word_extended_y );
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -2484,7 +3915,7 @@ DEF_INST( test_under_mask_high );
 DEF_INST( test_under_mask_low );
 #endif
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
 DEF_INST( start_interpretive_execution );
 #endif
 
@@ -2743,6 +4174,10 @@ DEF_INST( branch_in_subspace_group );
 DEF_INST( tcpip );
 #endif
 
+#if defined( FEATURE_ZVM_ESSA )
+DEF_INST( extract_and_set_storage_attributes );
+#endif
+
 /*-------------------------------------------------------------------*/
 /*   Instructions NOT associated with ANY facility or feature        */
 /*-------------------------------------------------------------------*/
@@ -2754,6 +4189,7 @@ DEF_INST( execute_ed________xx );
 
 DEF_INST( add );
 DEF_INST( add_decimal );
+DEF_INST( add_frr );
 DEF_INST( add_halfword );
 DEF_INST( add_logical );
 DEF_INST( add_logical_register );

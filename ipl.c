@@ -1,4 +1,5 @@
 /* IPL.C        (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2021                             */
 /*              ESA/390 Initial Program Loader                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -225,7 +226,7 @@ int ARCH_DEP( system_reset )( const int target_mode, const bool clear,
                     /* Release intlock, take a nap, and re-acquire */
                     RELEASE_INTLOCK( NULL );
                     {
-                        usleep( 10000 );  // (wait 10 milliseconds)
+                        USLEEP( 10000 );  // (wait 10 milliseconds)
                     }
                     OBTAIN_INTLOCK( NULL );
                 }
@@ -462,7 +463,7 @@ int rc;
     }
 
     /* Set Main Storage Reference and Update bits */
-    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( regs->PX, (STORKEY_REF | STORKEY_CHANGE) );
     sysblk.main_clear = sysblk.xpnd_clear = 0;
 
     /* Build the IPL CCW at location 0 */
@@ -491,11 +492,14 @@ int rc;
     OBTAIN_INTLOCK(NULL);
 
     /* Clear the interrupt pending and device busy conditions */
-    obtain_lock (&sysblk.iointqlk);
-    DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
-    DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
-    DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->attnioint);
-    release_lock(&sysblk.iointqlk);
+    OBTAIN_IOINTQLK();
+    {
+        DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
+        DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
+        DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->attnioint);
+    }
+    RELEASE_IOINTQLK();
+
     dev->busy = 0;
     dev->scsw.flag2 = 0;
     dev->scsw.flag3 = 0;
@@ -620,6 +624,14 @@ int i, rc = 0;                          /* Array subscript           */
     regs->checkstop = 0;
     regs->sigp_reset = 0;
     regs->extccpu = 0;
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    PTT_TXF( "TXF CPURES", 0, 0, regs->txf_tnd );
+    /* EXIT SILENTLY from transactional execution mode */
+    regs->txf_tnd = 0;
+    regs->txf_aborts = 0;
+    regs->txf_contran = false;
+    regs->txf_UPGM_abort = false;
+#endif
     for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
     regs->instinvalid = 1;
@@ -651,22 +663,23 @@ int i, rc = 0;                          /* Array subscript           */
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-    ARCH_DEP(store_int_timer_nolock) (regs);
+    ARCH_DEP( store_int_timer_locked )( regs );
 #endif
 
-   if(regs->host && regs->guestregs)
-   {
-        rc = ARCH_DEP(cpu_reset)(regs->guestregs);
+    if (regs->host && GUESTREGS)
+    {
+        rc = cpu_reset( GUESTREGS );
+
         /* CPU state of SIE copy cannot be controlled */
-        regs->guestregs->opinterv = 0;
-        regs->guestregs->cpustate = CPUSTATE_STARTED;
-   }
+        GUESTREGS->opinterv = 0;
+        GUESTREGS->cpustate = CPUSTATE_STARTED;
+    }
 
     /* Re-initialize the facilities list for this CPU */
     init_cpu_facilities( regs );
 
     /* Ensure CPU ID is accurate in case archmode changed */
-    setCpuIdregs( regs, -1, -1, -1, -1 );
+    setCpuIdregs( regs, -1, -1, -1, -1, true );
 
    return rc;
 } /* end function cpu_reset */
@@ -676,19 +689,15 @@ int i, rc = 0;                          /* Array subscript           */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 {
-    int rc1 = 0, rc;
+    int rc = 0;
 
     /* Clear reset pending indicators */
     regs->sigp_ini_reset = regs->sigp_reset = 0;
 
     /* Clear the registers */
-    memset ( &regs->psw,           0, sizeof(regs->psw)           );
-    memset ( &regs->captured_zpsw, 0, sizeof(regs->captured_zpsw) );
-#if !defined( NOCHECK_AEA_ARRAY_BOUNDS )
-    memset ( &regs->cr_struct,     0, sizeof(regs->cr_struct)     );
-#else
-    memset ( &regs->cr,            0, sizeof(regs->cr)            );
-#endif
+    memset ( &regs->psw,           0, sizeof( regs->psw           ));
+    memset ( &regs->captured_zpsw, 0, sizeof( regs->captured_zpsw ));
+    memset ( &regs->cr_struct,     0, sizeof( regs->cr_struct     ));
     regs->fpc    = 0;
     regs->PX     = 0;
     regs->psw.AMASK_G = AMASK24;
@@ -700,10 +709,18 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->psa      = (PSA_3XX*)regs->mainstor;
 
     /* Perform a CPU reset (after setting PSA) */
-    rc1 = ARCH_DEP( cpu_reset )( regs );
+    rc = ARCH_DEP( cpu_reset )( regs );
 
     regs->todpr  = 0;
     regs->clkc   = 0;
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    PTT_TXF( "TXF ICPURES", 0, 0, regs->txf_tnd );
+    /* EXIT SILENTLY from transactional execution mode */
+    regs->txf_tnd = 0;
+    regs->txf_aborts = 0;
+    regs->txf_contran = false;
+    regs->txf_UPGM_abort = false;
+#endif
     set_cpu_timer( regs, 0 );
 #if defined( _FEATURE_INTERVAL_TIMER )
     set_int_timer( regs, 0 );
@@ -718,7 +735,10 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 
 #if defined( FEATURE_S370_CHANNEL ) && !defined( FEATURE_ACCESS_REGISTERS )
     /* For S/370 initialize the channel masks in CR2 */
-    regs->CR(2) = 0xFFFFFFFF;
+    regs->CR(2) = (U32)0xFFFFFFFFF;
+#endif
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    regs->CR(2) &= ~(CR2_TDS | CR2_TDC);
 #endif
 
     regs->chanset =
@@ -735,11 +755,14 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->CR(15) = 512;
 #endif
 
-    if (regs->host && regs->guestregs)
-        if ((rc = ARCH_DEP( initial_cpu_reset )( regs->guestregs )) != 0)
-            rc1 = rc;
+    if (regs->host && GUESTREGS)
+    {
+        int rc2 = initial_cpu_reset( GUESTREGS );
+        if (rc2 != 0)
+            rc = rc2;
+    }
 
-    return rc1;
+    return rc;
 } /* end function initial_cpu_reset */
 
 /*-------------------------------------------------------------------*/
@@ -812,7 +835,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 
 int load_ipl( U16 lcss, U16 devnum, int cpu, int clear )
 {
-    int rc;
+    int rc = 0;
 
     switch ( sysblk.arch_mode )
     {
@@ -826,7 +849,7 @@ int load_ipl( U16 lcss, U16 devnum, int cpu, int clear )
         /* NOTE: z/Arch always starts out in ESA390 mode */
         case ARCH_900_IDX: rc = s390_load_ipl( lcss, devnum, cpu, clear ); break;
 #endif
-        default: rc = -1; break;
+        default: CRASH();
     }
 
     return rc;
@@ -858,7 +881,7 @@ void initial_cpu_reset_all()
 /*-------------------------------------------------------------------*/
 int initial_cpu_reset( REGS* regs )
 {
-    int rc;
+    int rc = 0;
 
     switch ( regs->arch_mode )
     {
@@ -871,7 +894,7 @@ int initial_cpu_reset( REGS* regs )
 #if defined(_900)
         case ARCH_900_IDX: rc = z900_initial_cpu_reset( regs ); break;
 #endif
-        default: rc = -1; break;
+        default: CRASH();
     }
 
     return rc;
@@ -882,7 +905,7 @@ int initial_cpu_reset( REGS* regs )
 /*-------------------------------------------------------------------*/
 int system_reset( const int target_mode, const bool clear, const bool ipl, const int cpu )
 {
-    int rc;
+    int rc = 0;
 
     switch ( sysblk.arch_mode )
     {
@@ -895,7 +918,7 @@ int system_reset( const int target_mode, const bool clear, const bool ipl, const
 #if defined( _900 )
         case ARCH_900_IDX: rc = z900_system_reset( target_mode, clear, ipl, cpu ); break;
 #endif
-        default: rc = -1; break;
+        default: CRASH();
     }
 
     return rc;
@@ -906,7 +929,7 @@ int system_reset( const int target_mode, const bool clear, const bool ipl, const
 /*-------------------------------------------------------------------*/
 int cpu_reset (REGS *regs)
 {
-    int rc;
+    int rc = 0;
 
     switch (regs->arch_mode)
     {
@@ -925,9 +948,7 @@ int cpu_reset (REGS *regs)
             rc = z900_cpu_reset (regs);
             break;
 #endif
-        default:
-            rc = -1;
-            break;
+        default: CRASH();
     }
 
     return (rc);

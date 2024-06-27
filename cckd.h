@@ -1,4 +1,4 @@
-/* CCKD.H      (C) Copyright "Fish" (David B. Trout), 2018-2019      */
+/* CCKD.H      (C) Copyright "Fish" (David B. Trout), 2018-2022      */
 /*              CCKD dasd struct and type definitions                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -164,9 +164,11 @@ struct CCKD_FREEBLK {                   /* Free block (file)         */
 
 /* NOTE: all fields are numeric and always in LITTLE endian format.  */
 
-        U32              fb_offnxt;     /* Offset to next free blk   */
-        U32              fb_len;        /* Length this free blk      */
+        U32              fb_offnxt;     /* Offset to NEXT free blk   */
+        U32              fb_len;        /* Length of THIS free blk   */
 };
+
+#define fb_offset   fb_offnxt  // (see cckd_read_fsp/cckd_write_fsp!)
 
 struct CCKD_IFREEBLK {                  /* Free block (internal)     */
 
@@ -176,8 +178,8 @@ struct CCKD_IFREEBLK {                  /* Free block (internal)     */
 /* in *HOST* endian format (little endian on little endian hosts     */
 /* and big endian on big endian hosts).                              */
 
-        U32              ifb_offnxt;    /* Offset to next free blk   */
-        U32              ifb_len;       /* Length this free blk      */
+        U32              ifb_offnxt;    /* Offset to NEXT free blk   */
+        U32              ifb_len;       /* Length of THIS free blk   */
         int              ifb_idxprv;    /* Index to prev free blk    */
         int              ifb_idxnxt;    /* Index to next free blk    */
         int              ifb_pending;   /* 1=Free pending (don't use)*/
@@ -242,7 +244,7 @@ typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 #define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
 
 #define CCKD_MIN_GCINT         0        /* Min collection interval   */
-#define CCKD_DEF_GCINT         10       /* Def collection interval   */
+#define CCKD_DEF_GCINT         0        /* Def collection interval   */
 #define CCKD_MAX_GCINT         60       /* Max collection interval   */
 
 #define CCKD_MIN_GCPARM       -8        /* Min gcol adjustment parm  */
@@ -266,7 +268,8 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
                          debug:1,       /* 1=CCW trace debug msgs    */
                          dtax:1,        /* 1=Dump Table At Exit      */
                          sfmerge:1,     /* 1=sf-* merge              */
-                         sfforce:1;     /* 1=sf-* force              */
+                         sfforce:1,     /* 1=sf-* force              */
+                         termwr:1;      /* 1=terminate wr threads    */
         int              sflevel;       /* sfk xxxx level            */
         int              batchml;       /* message level for batch ops  */
 
@@ -310,6 +313,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              devwaiters;    /* Number of waiters         */
 
         int              freepend;      /* Number freepend cycles    */
+        int              gcmsgs;        /* Garbage collector msgs    */
         int              nosfd;         /* 1=No stats rpt at close   */
         int              nostress;      /* 1=No stress writes        */
         int              linuxnull;     /* 1=Always check nulltrk    */
@@ -456,6 +460,7 @@ struct SPCTAB
 #define SPCTAB_L2LOWER         9        /* Space is L2 lower bound   */
 #define SPCTAB_L2UPPER        10        /* Space is L2 upper bound   */
 #define SPCTAB_DATA           11        /* Space is track/block data */
+#define SPCTAB_UNKNOWN        12        /* Unknown space             */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for sense data format codes and message codes         */

@@ -642,6 +642,7 @@ static int tape_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
+/* NOTE: always called with dev->lock held                           */
 /*-------------------------------------------------------------------*/
 static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
@@ -672,7 +673,7 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
                 ASSERT( dev->tmh && dev->tmh->tapeloaded );
                 if (dev->tmh->tapeloaded( dev, NULL, 0 ))
                 {
-                    release_lock( &dev->lock );
+                    // "%1d:%04X reinit rejected; drive not empty"
                     WRMSG( HHC02243, "E", LCSS_DEVNUM );
                     return -1;
                 }
@@ -870,11 +871,11 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
     {
         TRACE( "+++ CALLING device_attention( 0x%04.4X, CSW_DE )\n", dev->devnum );
 
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         {
             rc = device_attention( dev, CSW_DE );
         }
-        obtain_lock( &dev->lock );
+        OBTAIN_DEVLOCK( dev );
     }
 
     return rc;
@@ -1325,12 +1326,24 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     char        msg[80];
     int         i;                      /* Loop control              */
     int         rc, optrc;              /* various rtns return codes */
+    bool        lock_obtained = false;  /* true if WE obtained lock  */
 
     union {                                 /* Parser results        */
         U32  num;                           /* Parser results        */
         BYTE str[ MAX_PARSER_STRLEN + 1 ];  /* Parser results        */
     } res;                                  /* Parser results        */
 
+    /* Acquire the device lock before proceeding */
+    if (!(lock_obtained = ((rc = try_obtain_lock( &dev->lock )) == 0)))
+    {
+        /* If some other thread (not us) owns it, then wait for it */
+        if (rc != EBUSY)
+        {
+            OBTAIN_DEVLOCK( dev );
+            lock_obtained = true; /* (so we know to release it) */
+        }
+        /* (else: presume we already owned it) */
+    }
 
     /* Release the previous OMA descriptor array if allocated */
     if (dev->omadesc != NULL)
@@ -1514,7 +1527,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 }
                 else if ( rc == 2 )
                 {
-                    switch (toupper(f))
+                    switch (toupper((unsigned char)f))
                     {
                         case 'K':
                             maxsize <<= SHIFT_KIBIBYTE;
@@ -1577,7 +1590,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 }
                 else if ( rc == 2 )
                 {
-                    switch (toupper(f))
+                    switch (toupper((unsigned char)f))
                     {
                         case 'K':
                             eotmargin <<= SHIFT_KIBIBYTE;
@@ -1721,7 +1734,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     } // end for (i = 1; i < argc; i++)
 
     if (0 != rc)
+    {
+        if (lock_obtained) // (release lock only if WE obtained it)
+            RELEASE_DEVLOCK( dev );
         return -1;
+    }
 
 #if defined(OPTION_SCSI_TAPE)
     if (dev->tapedevt == TAPEDEVT_SCSITAPE)
@@ -1752,8 +1769,13 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             dev->tapedisptype = TAPEDISPTYP_IDLE;
         }
     }
+
+    if (lock_obtained) // (release lock only if WE obtained it)
+        RELEASE_DEVLOCK( dev );
+
     UpdateDisplay(dev);
     rc = ReqAutoMount(dev);
+
     return rc;
 
 } /* end function mountnewtape */
@@ -2630,7 +2652,7 @@ void *autoload_wait_for_tapemount_thread(void *db)
 int      rc   =  -1;
 DEVBLK  *dev  =  (DEVBLK*) db;
 
-    obtain_lock(&dev->lock);
+    OBTAIN_DEVLOCK( dev );
     {
         while
         (
@@ -2639,12 +2661,14 @@ DEVBLK  *dev  =  (DEVBLK*) db;
             (rc = autoload_mount_next( dev )) != 0
         )
         {
-            release_lock( &dev->lock );
-            SLEEP(AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS);
-            obtain_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
+            {
+                SLEEP( AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS );
+            }
+            OBTAIN_DEVLOCK( dev );
         }
     }
-    release_lock(&dev->lock);
+    RELEASE_DEVLOCK( dev );
     if ( rc == 0 )
         device_attention(dev,CSW_DE);
     return NULL;
@@ -2821,6 +2845,7 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
     // NOTE: 'blockid' passed in host (little-endian) format...
 
     int rc;
+    bool is_het = (dev->tmh == &tmh_het);
 
     /* Do it the hard way: rewind to load-point and then
        keep doing fsb, fsb, fsb... until we find our block
@@ -2828,17 +2853,69 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
     if ((rc = dev->tmh->rewind( dev, unitstat, code)) >= 0)
     {
         /* Reset position counters to start of file */
-
         dev->curfilen   =  1;
         dev->nxtblkpos  =  0;
         dev->prvblkpos  = -1;
         dev->blockid    =  0;
 
-        /* Do it the hard way */
+        /* Keep doing fsb until we find our block... */
+        if (!is_het)
+        {
+            while (dev->blockid < blockid && (rc >= 0))
+                rc = dev->tmh->fsb( dev, unitstat, code );
+        }
+        else // (special handling for .HET files...)
+        {
+            while (1)
+            {
+                // PROGRAMMING NOTE: We need dev->lock to prevent
+                // "dev->hetb" from going NULL while we're looping
+                // (see GitHub Issue #515 for details), BUT... we
+                // also need to also provide a brief window of
+                // opportunity for I/O instructions to acquire
+                // dev->lock themselves too if they need to, by
+                // periodically releasing dev->lock while we loop.
+                // Inefficient, yes, but it's the only sure way
+                // to prevent GitHub Issue #518 from occurring.
 
-        while ( dev->blockid < blockid && ( rc >= 0 ) )
-            rc = dev->tmh->fsb( dev, unitstat, code );
-    }
+                OBTAIN_DEVLOCK( dev );
+                {
+                    /* Check for exit condition */
+                    if (0
+                        || (rc < 0)                 // (error)
+                        || !dev->hetb               // (ERROR!!)
+                        || dev->blockid >= blockid  // (block located)
+                    )
+                    {
+                        // 'hetb' SHOULDN'T suddenly disappear but
+                        // apparently sometimes occassionally does!
+                        // See GitHub Issue #515!
+
+                        if (dev->blockid < blockid && !dev->hetb)
+                            rc = -1; // (hetb disappeared!)
+
+                        RELEASE_DEVLOCK( dev );
+                        break; // (block located or error occurred)
+                    }
+                }
+                RELEASE_DEVLOCK( dev );
+
+                // Between the above release and the below obtain is
+                // the window of opportunity for I/O instructions to
+                // acquire dev->lock for themselves if they need to.
+
+                OBTAIN_DEVLOCK( dev );
+                {
+                    if (!dev->hetb)
+                        rc = -1;
+                    else
+                        rc = dev->tmh->fsb( dev, unitstat, code );
+                }
+                RELEASE_DEVLOCK( dev );
+
+            } // end while
+        } // end if special .HET file handling
+    } // end if rewind success
 
     return rc;
 }

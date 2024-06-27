@@ -8,7 +8,7 @@ r 1D0=0000000180000000000000000000030A # z/Arch pgm new PSW
 r 200=41100000     # LA R1,0
 r 204=C610000000FE # EXRL R1,*+196     Should load R2 with A(C1)
 r 20A=44000212     # EX1 EX 0,BR1      Should branch to C1
-r 20E=47F00300     # B DIE             Should not occur    
+r 20E=47F00300     # B DIE             Should not occur
 r 212=0542         # BR1 BALR R4,R2    Executed instruction
 r 288=C0100000000A # C1 LARL R1,C2     Addr to resume after PIC
 r 28E=E31001D80024 # STG R2,PGMNPSW+8  Update pgm new PSW
@@ -18,12 +18,12 @@ r 29C=D50701100410 # C2 CLC PSABEAR,=A(EX1) Test the BEAR
 r 2A2=47700300     # BNE DIE           Br if BEAR is wrong
 r 2A6=A7F40004     # B *+8             Br around executed instr
 r 2AA=47F002B8     # BR3 B C3          Executed instruction
-r 2AE=C610FFFFFFFE # EX2 EXRL R1,BR3   Should branch to C3      
-r 2B4=47F00300     # B DIE             Should not occur    
+r 2AE=C610FFFFFFFE # EX2 EXRL R1,BR3   Should branch to C3
+r 2B4=47F00300     # B DIE             Should not occur
 r 2B8=C0100000000B # C3 LARL R1,C4     Addr to resume after PIC
 r 2BE=E31001D80024 # STG R2,PGMNPSW+8  Update pgm new PSW
 r 2C4=C61000000000 # EXRL R1,*+0       Should cause PIC=0003
-r 2CA=47F00300     # B DIE             Should not occur    
+r 2CA=47F00300     # B DIE             Should not occur
 r 2CE=D50701100420 # C4 CLC PSABEAR,=A(EX2) Test the BEAR
 r 2D4=47700300     # BNE DIE           Br if BEAR is wrong
 r 2D8=B2B20310     # LPSWE WAITPSW     Load enabled wait PSW

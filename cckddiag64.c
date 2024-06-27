@@ -476,7 +476,7 @@ static U64 offtify(char *s)
     {
         s = s + 2;
 
-        for (v = 0; isxdigit(*s); ++s)
+        for (v = 0; isxdigit((unsigned char)*s); ++s)
             v = (v << 4) + xv[ strchr( xd, *s ) - xd ];
 
         if (debug)
@@ -545,8 +545,8 @@ U64             L2taboff     = 0;       /* offset to assoc. L2 table */
 U64             trkhdroff    = 0;       /* offset to assoc. trk hdr  */
 
 bool            ckddasd = false;        /* true=CKD dasd, false=FBA  */
-bool            swapend = false;        /* 1 = New endianess doesn't
-                                             match machine endianess */
+bool            swapend = false;        /* 1 = New endianness doesn't
+                                            match machine endianness */
 int             num_L1tab;              /* Number of L1tab entries   */
 char            pathname[ MAX_PATH ];   /* file path in host format  */
 

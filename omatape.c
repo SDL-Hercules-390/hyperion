@@ -75,17 +75,23 @@ BYTE            c;                      /* Work area for sscanf      */
         if (filecount != 0)     /* If not first record */
             continue;           /* then just count it  */
 
-        /* Check that the first record is a @TDF header */
+        /* Check that the first record is a @TDF header...
+           Note: The OMA/2 specification defines several optional fields
+           for the "@TDF" entry: "DEN1600", "DEN6250", "SIZE" and a type
+           of comment introduced by a ";" character. Hercules allows for,
+           but does not support, any of these.
+        */
         if (0
             || memcmp( str, "@TDF", 4 ) != 0
-            || (1
-                && str[4] != '\r'
-                && str[4] != '\n'
-               )
+//          || (1
+//              && str[4] != '\r'
+//              && str[4] != '\n'
+//             )
         )
         {
-            // "%1d:%04X Tape file %s, type %s: not a valid @TDF file"
-            WRMSG( HHC00206, "E", LCSS_DEVNUM, dev->filename, "OMA" );
+            // "%1d:%04X Tape file %s, type %s: not a valid @TDF file: %s"
+            WRMSG( HHC00206, "E", LCSS_DEVNUM, dev->filename, "OMA",
+                "Missing or invalid @TDF header." );
             fclose( oma );
             return -1;
         }
@@ -103,8 +109,9 @@ BYTE            c;                      /* Work area for sscanf      */
     /* Check for empty file or file with only @TDF statement */
     if (filecount < 2)
     {
-        // "%1d:%04X Tape file %s, type %s: not a valid @TDF file"
-        WRMSG( HHC00206, "E", LCSS_DEVNUM, dev->filename, "OMA" );
+        // "%1d:%04X Tape file %s, type %s: not a valid @TDF file: %s"
+        WRMSG( HHC00206, "E", LCSS_DEVNUM, dev->filename, "OMA",
+            "Descriptor contains zero control records." );
         fclose( oma );
         return -1;
     }

@@ -1,5 +1,7 @@
 #------------------------------------------------------------------------------
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
+# (C) Copyright Roger Bowler, 1999-2012
+# (C) and others 2013-2023
 # Process this file with 'automake' to produce Makefile.in
 #------------------------------------------------------------------------------
 
@@ -14,10 +16,12 @@ lns            = @LN_S@
 ldadd          = @LIBS@
 
 #------------------------------------------------------------------------------
+# Note! Backslash line continuation is disallowed by newer versions of aclocal
+#------------------------------------------------------------------------------
 
-ACLOCAL_AMFLAGS =   \
-  -I autoconf       \
-  -I m4
+ACLOCAL_AMFLAGS = -I autoconf -I m4
+
+#------------------------------------------------------------------------------
 
 AM_CPPFLAGS =       \
   -I $(top_srcdir)  \
@@ -26,7 +30,7 @@ AM_CPPFLAGS =       \
 AM_CPPFLAGS += $(extpkg_incdirs)
 
 #------------------------------------------------------------------------------
-# NOte! Due to inter-module dependencies the sequence
+# Note! Due to inter-module dependencies the sequence
 #       (ordering) of the SUBDIRS list is important!
 #------------------------------------------------------------------------------
 
@@ -144,7 +148,6 @@ dyndev_SRC =  \
 
 XSTATIC =
 DYNSRC  =
-LTDL    =  ltdl.c
 
 DYNMOD_LD_FLAGS =   \
   -module           \
@@ -246,6 +249,9 @@ bin_PROGRAMS = \
   tapecopy     \
   tapemap      \
   tapesplt     \
+  tfprint      \
+  tfswap       \
+  txt2card     \
   vmfplc2      \
   $(HERCIFC)   \
   $(HERCLIN)
@@ -309,7 +315,7 @@ hdt3505_la_SOURCES  = cardrdr.c sockdev.c
 hdt3505_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3505_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-hdt3525_la_SOURCES  = cardpch.c
+hdt3525_la_SOURCES  = cardpch.c sockdev.c
 hdt3525_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3525_la_LIBADD   = $(DYNMOD_LD_ADD)
 
@@ -397,12 +403,13 @@ libhercu_la_SOURCES = \
   hthreads.c          \
   logger.c            \
   logmsg.c            \
+  machdep.c           \
   memrchr.c           \
   parser.c            \
   pttrace.c           \
   version.c           \
-  $(FTHREADS)         \
-  $(LTDL)
+  $(FTHREADS)
+
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 libhercu_la_LIBADD =  \
   $(extpkg_ldadd)     \
@@ -467,6 +474,7 @@ libherc_la_SOURCES = \
   general2.c         \
   general3.c         \
   hao.c              \
+  hbyteswp.c         \
   hconsole.c         \
   hdiagf18.c         \
   history.c          \
@@ -481,12 +489,14 @@ libherc_la_SOURCES = \
   httpserv.c         \
   ieee.c             \
   impl.c             \
+  inline.c           \
   io.c               \
   ipl.c              \
   loadmem.c          \
   loadparm.c         \
   losc.c             \
   machchk.c          \
+  machdep.c          \
   opcode.c           \
   panel.c            \
   pfpo.c             \
@@ -497,6 +507,7 @@ libherc_la_SOURCES = \
   script.c           \
   service.c          \
   sie.c              \
+  skey.c             \
   sr.c               \
   stack.c            \
   strsignal.c        \
@@ -507,12 +518,12 @@ libherc_la_SOURCES = \
   vector.c           \
   vm.c               \
   vmd250.c           \
+  vstore.c           \
   x75.c              \
   xstore.c           \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
-  ltdl.c             \
   memrchr.c          \
   $(dynamic_SRC)     \
   $(dyndev_SRC)      \
@@ -594,11 +605,11 @@ dasdisup_SOURCES   = dasdisup.c
 dasdisup_LDADD     = $(tools_ADDLIBS)
 dasdisup_LDFLAGS   = $(tools_LD_FLAGS)
 
-dasdload_SOURCES   = dasdload.c
+dasdload_SOURCES   = dasdload.c dasdload2.h
 dasdload_LDADD     = $(tools_ADDLIBS)
 dasdload_LDFLAGS   = $(tools_LD_FLAGS)
 
-dasdload64_SOURCES = dasdload64.c
+dasdload64_SOURCES = dasdload64.c dasdload2.h
 dasdload64_LDADD   = $(tools_ADDLIBS)
 dasdload64_LDFLAGS = $(tools_LD_FLAGS)
 
@@ -719,16 +730,36 @@ vmfplc2_SOURCES    = vmfplc2.c
 vmfplc2_LDADD      = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
 
+tfprint_SOURCES    = tfprint.c
+tfprint_LDADD      = $(tools_ADDLIBS)
+tfprint_LDFLAGS    = $(tools_LD_FLAGS)
+
+tfswap_SOURCES     = tfswap.c
+tfswap_LDADD       = $(tools_ADDLIBS)
+tfswap_LDFLAGS     = $(tools_LD_FLAGS)
+
+txt2card_SOURCES   = txt2card.c
+txt2card_LDADD     = $(tools_ADDLIBS)
+txt2card_LDFLAGS   = $(tools_LD_FLAGS)
+
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se
 # Also contains some WIN32 only source files
 #------------------------------------------------------------------------------
 
 EXTRA_DIST =                  \
+  .gitattributes              \
+  .gitignore                  \
+  .travis.yml                 \
   _dynamic_version            \
   _dynamic_version.cmd        \
   _TODO.txt                   \
   all-all.jobs                \
+  all-all.msbuild.jobs        \
+  CODEOWNERS                  \
+  debug-all.msbuild.jobs      \
+  retail-all.msbuild.jobs     \
+  vstools.cmd                 \
   autoconf/config.guess       \
   autoconf/config.rpath       \
   autoconf/config.sub         \
@@ -736,8 +767,13 @@ EXTRA_DIST =                  \
   autoconf/hercules.m4        \
   autoconf/install-sh         \
   autoconf/libtool.m4         \
+  autoconf/ltargz.m4          \
   autoconf/ltdl.m4            \
   autoconf/ltmain.sh          \
+  autoconf/ltoptions.m4       \
+  autoconf/ltsugar.m4         \
+  autoconf/ltversion.m4       \
+  autoconf/lt~obsolete.m4     \
   autoconf/missing            \
   autoconf/mkinstalldirs      \
   autoconf/README             \
@@ -775,6 +811,9 @@ EXTRA_DIST =                  \
   Hercules_VS2019.sln              \
   Hercules_VS2019.vcxproj          \
   Hercules_VS2019.vcxproj.filters  \
+  Hercules_VS2022.sln              \
+  Hercules_VS2022.vcxproj          \
+  Hercules_VS2022.vcxproj.filters  \
   hercver.rc2                 \
   INSTALL                     \
   license_dyn76.txt           \
@@ -813,6 +852,7 @@ EXTRA_DIST =                  \
   msvc.makefile.includes/REXX_RULES.msvc      \
   README.md                       \
   readme/images/herclogo.jpg      \
+  readme/images/httpsrvr.jpg      \
   readme/images/image_header_herculeshyperionSDL.png  \
   readme/README.ADDING.md         \
   readme/README.AIX.md            \
@@ -821,6 +861,7 @@ EXTRA_DIST =                  \
   readme/README.CCKD64.md         \
   readme/README.CMPSC.md          \
   readme/README.COMMADPT.md       \
+  readme/README.DAEMON.md         \
   readme/README.DYNMOD.md         \
   readme/README.ECPSVM.md         \
   readme/README.EXTPKG.md         \
@@ -830,8 +871,8 @@ EXTRA_DIST =                  \
   readme/README.HERCLOGO.md       \
   readme/README.HQA.md            \
   readme/README.HRAF.md           \
-  readme/README.IOARCH.md         \
   readme/README.ISSUES.md         \
+  readme/README.MAKETAPE.md       \
   readme/README.MINGW.md          \
   readme/README.MSVC.md           \
   readme/README.NETWORKING.md     \
@@ -842,16 +883,19 @@ EXTRA_DIST =                  \
   readme/README.RXVT4APL.md       \
   readme/README.S37X.md           \
   readme/README.SETUID.md         \
+  readme/README.SNA.md            \
   readme/README.SUN.md            \
   readme/README.TAPE.md           \
   readme/README.TCPIP.md          \
   readme/README.TCPNJE.md         \
+  readme/README.TRACEFILE.md      \
   readme/README.VMFPLC2.md        \
   readme/README.WIN64.md          \
   RELEASE.NOTES               \
   retail-all.jobs             \
   scripts/cmpsc.cnf           \
   scripts/cmpsc.rexx          \
+  scripts/hbasics             \
   scripts/hbasic1.rexx        \
   scripts/hbasic2.rex         \
   scripts/hbasic3.cmd         \
@@ -861,7 +905,87 @@ EXTRA_DIST =                  \
   scripts/hexecio.rexx        \
   scripts/hlinein.rexx        \
   scripts/hrecurs.rexx        \
-  util/CMPSC.txt              \
+  crypto/crypto.LICENSE.txt               \
+  crypto/crypto.README.txt                \
+  crypto/include/crypto.h                 \
+  crypto/include/crypto_version.h         \
+  crypto/include/rijndael.h               \
+  crypto/include/sha1.h                   \
+  crypto/include/sha2.h                   \
+  crypto/include/sshdes.h                 \
+  crypto/lib/crypto32.lib                 \
+  crypto/lib/crypto32.pdb                 \
+  crypto/lib/crypto32d.lib                \
+  crypto/lib/crypto32d.pdb                \
+  crypto/lib/crypto64.lib                 \
+  crypto/lib/crypto64.pdb                 \
+  crypto/lib/crypto64d.lib                \
+  crypto/lib/crypto64d.pdb                \
+  crypto/lib/libcrypto32.a                \
+  crypto/lib/libcrypto32d.a               \
+  crypto/lib/libcrypto64.a                \
+  crypto/lib/libcrypto64d.a               \
+  decNumber/decnumber.ERRATA              \
+  decNumber/decnumber.ICU-license.html    \
+  decNumber/decnumber.pdf                 \
+  decNumber/decnumber.readme.txt          \
+  decNumber/include/decContext.h          \
+  decNumber/include/decNumber.h           \
+  decNumber/include/decPacked.h           \
+  decNumber/include/decQuad.h             \
+  decNumber/include/decimal128.h          \
+  decNumber/include/decimal32.h           \
+  decNumber/include/decimal64.h           \
+  decNumber/include/decnumber_version.h   \
+  decNumber/lib/decNumber32.lib           \
+  decNumber/lib/decNumber32.pdb           \
+  decNumber/lib/decNumber32d.lib          \
+  decNumber/lib/decNumber32d.pdb          \
+  decNumber/lib/decNumber64.lib           \
+  decNumber/lib/decNumber64.pdb           \
+  decNumber/lib/decNumber64d.lib          \
+  decNumber/lib/decNumber64d.pdb          \
+  decNumber/lib/libdecNumber32.a          \
+  decNumber/lib/libdecNumber32d.a         \
+  decNumber/lib/libdecNumber64.a          \
+  decNumber/lib/libdecNumber64d.a         \
+  SoftFloat/doc/SoftFloat-history.html    \
+  SoftFloat/doc/SoftFloat-source.html     \
+  SoftFloat/doc/SoftFloat.html            \
+  SoftFloat/include/softfloat.h           \
+  SoftFloat/include/softfloat_types.h     \
+  SoftFloat/include/softfloat_version.h   \
+  SoftFloat/lib/SoftFloat32.lib           \
+  SoftFloat/lib/SoftFloat32.pdb           \
+  SoftFloat/lib/SoftFloat32d.lib          \
+  SoftFloat/lib/SoftFloat32d.pdb          \
+  SoftFloat/lib/SoftFloat64.lib           \
+  SoftFloat/lib/SoftFloat64.pdb           \
+  SoftFloat/lib/SoftFloat64d.lib          \
+  SoftFloat/lib/SoftFloat64d.pdb          \
+  SoftFloat/lib/libSoftFloat32.a          \
+  SoftFloat/lib/libSoftFloat32d.a         \
+  SoftFloat/lib/libSoftFloat64.a          \
+  SoftFloat/lib/libSoftFloat64d.a         \
+  SoftFloat/softfloat.LICENSE.txt         \
+  SoftFloat/softfloat.README.html         \
+  SoftFloat/softfloat.README.txt          \
+  telnet/include/telnet.h                 \
+  telnet/include/telnet_version.h         \
+  telnet/lib/libtelnet32.a                \
+  telnet/lib/libtelnet32d.a               \
+  telnet/lib/libtelnet64.a                \
+  telnet/lib/libtelnet64d.a               \
+  telnet/lib/telnet32.lib                 \
+  telnet/lib/telnet32.pdb                 \
+  telnet/lib/telnet32d.lib                \
+  telnet/lib/telnet32d.pdb                \
+  telnet/lib/telnet64.lib                 \
+  telnet/lib/telnet64.pdb                 \
+  telnet/lib/telnet64d.lib                \
+  telnet/lib/telnet64d.pdb                \
+  telnet/telnet.LICENSE.txt               \
+  telnet/telnet.README.txt                \
   $(extpkg_headers)
 
 #------------------------------------------------------------------------------
@@ -877,7 +1001,6 @@ noinst_HEADERS =          \
   cckddasd.h              \
   ccnowarn.h              \
   ccwarn.h                \
-  chain.h                 \
   chsc.h                  \
   clock.h                 \
   cmdtab.h                \
@@ -956,7 +1079,6 @@ noinst_HEADERS =          \
   instfmts.h              \
   linklist.h              \
   logger.h                \
-  ltdl.h                  \
   machdep.h               \
   memrchr.h               \
   mpc.h                   \
@@ -973,6 +1095,8 @@ noinst_HEADERS =          \
   scsiutil.h              \
   service.h               \
   shared.h                \
+  sie.h                   \
+  skey.h                  \
   sllib.h                 \
   sockdev.h               \
   sr.h                    \
@@ -980,16 +1104,21 @@ noinst_HEADERS =          \
   tapedev.h               \
   targetver.h             \
   tcpip.h                 \
+  transact.h              \
   tt32api.h               \
   tt32if.h                \
   tuntap.h                \
   version.h               \
   vmd250.h                \
   vstore.h                \
+  vsvers.h                \
+  w32ctca.c               \
   w32ctca.h               \
   w32dl.h                 \
   w32mtio.h               \
+  w32stape.c              \
   w32stape.h              \
+  w32util.c               \
   w32util.h               \
   x75.h                   \
   zfcp.h
@@ -1104,3 +1233,106 @@ uninstall-hook:
 
 check:
 	$(top_srcdir)/tests/runtest  $(top_srcdir)/tests
+
+.PHONY: diagnostic diagnostic-sysinfo diagnostic-tools diagnostic-dirs diagnostic-vars
+
+diagnostic: diagnostic-sysinfo diagnostic-tools diagnostic-dirs diagnostic-vars
+
+diagnostic-sysinfo:
+	@echo 'System information'
+	@echo '  /etc/os-release     ' `cat /etc/os-release 2>&1`
+	@echo '  uname -a            ' `uname -a`
+	@echo '  uname -m            ' `uname -m`
+	@echo '  uname -p            ' `uname -p`
+	@echo '  uname -s            ' `uname -s`
+	@echo ' '
+
+diagnostic-tools:
+	@echo 'Build tools versions'
+	@echo '  autoconf            ' `autoconf --version 2>&1 | head -n 1`
+	@echo '  automake            ' `automake --version 2>&1 | head -n 1`
+	@echo '  m4                  ' `m4 --version 2>&1 | head -n 1 | sed "s/.*illegal option.*/BSD version of m4"/`
+	@echo '  make                ' `make --version 2>&1 | head -n 1 | sed "s/^usage: make.*/BSD version of make/"`
+	@echo '  compiler            ' `$(CC) --version 2>&1 | head -n 1`
+	@echo '  linker              ' `$(LD) --version 2>&1 | head -n 1`
+	@echo ' '
+
+diagnostic-dirs:
+	@echo 'Build directories'
+	@echo '  source             ' `(cd $(top_srcdir) && pwd || echo $(top_srcdir))`
+	@echo '  build              ' `pwd`
+	@echo 'Install directories'
+	@echo '  prefix              $(prefix)'
+	@echo '    exec_prefix       $(exec_prefix)'
+	@echo '      bindir          $(bindir)'
+	@echo '      libdir          $(libdir)'
+	@echo '    includedir        $(includedir)'
+	@echo '    datarootdir       $(datarootdir)'
+	@echo '      datadir         $(datadir)'
+	@echo '      mandir          $(mandir)'
+	@echo '      infodir         $(infodir)'
+	@echo '      docdir          $(docdir)'
+	@echo ' '
+
+diagnostic-vars:
+	@echo 'Values from automake'
+if BUILD_HERCIFC
+	@echo '  BUILD_HERCIFC        Defined'
+else
+	@echo '  BUILD_HERCIFC        Undefined'
+endif
+if BUILD_FTHREADS
+	@echo '  BUILD_FTHREADS       Defined'
+else
+	@echo '  BUILD_FTHREADS       Undefined'
+endif
+# if BUILD_SHARED
+# 	@echo '  BUILD_SHARED         Defined'
+# else
+# 	@echo '  BUILD_SHARED         Undefined'
+# endif
+# if OPTION_DYNAMIC_LOAD
+# 	@echo '  OPTION_DYNAMIC_LOAD  Defined'
+# else
+# 	@echo '  OPTION_DYNAMIC_LOAD  Undefined'
+# endif
+	@echo ' '
+	@echo 'Values from make'
+	@echo '  $$CC                 $(CC)'
+	@echo '  $$CFLAGS             $(CFLAGS)'
+	@echo '  $$CXX                $(CXX)'
+	@echo '  $$CXXFLAG            $(CXXFLAGS)'
+	@echo '  $$LDFLAGS            $(LDFLAGS)'
+	@echo '  $$CPPFLAGS           $(CPPFLAGS)'
+	@echo ' '
+	@echo 'Values from configure'
+	@echo '  $$LIBS               @LIBS@'
+	@echo '  $$S3FH_INC           @S3FH_INC@'
+	@echo '  $$S3FH_LIB           @S3FH_LIB@     (future use)'
+	@echo '  $$HQA_INC            @HQA_INC@'
+	@echo ' '
+	@echo 'Values generated by Makefile.am'
+	@echo '  $$AM_CPPFLAGS         $(AM_CPPFLAGS)'
+	@echo '  $$DYNAMIC_VERISON     $(DYNAMIC_VERSION)'
+	@echo '  $$DYNMOD_LD_ADD       $(DYNMOD_LD_ADD)'
+	@echo '  $$DYNMOD_LD_FLAGS     $(DYNMOD_LD_FLAGS)'
+	@echo '  $$FTHREADS            $(FTHREADS)'
+	@echo '  $$HDEPS               $(HDEPS)'
+	@echo '  $$HDLFLAGS            $(HDLFLAGS)'
+	@echo '  $$HERCIFC             $(HERCIFC)'
+	@echo '  $$HERCLIBS            $(HERCLIBS)'
+	@echo '  $$HERCLIBS2           $(HERCLIBS2)'
+	@echo '  $$HERCLIN             $(HERCLIN)'
+	@echo '  $$LDADD               $(LDADD)'
+	@echo '  $$LIB_LD_FLAGS        $(LIB_LD_FLAGS)'
+	@echo '  $$LTDL                $(LTDL)'
+	@echo '  $$tools_ADDLIBS       $(tools_ADDLIBS)'
+	@echo '  $$disktools_ADDLIBS   $(disktools_ADDLIBS)'
+	@echo '  $$tapetools_ADDLIBS   $(tapetools_ADDLIBS)'
+	@echo '  $$tools_LD_FLAGS      $(tools_LD_FLAGS)'
+	@echo '  $$XSTATIC             $(XSTATIC)'
+
+
+
+
+

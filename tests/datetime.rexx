@@ -1,0 +1,1 @@
+/* Rexx */ say date('S')time('S')

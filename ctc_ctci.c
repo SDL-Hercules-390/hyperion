@@ -208,20 +208,20 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     // New format has only one device statement for both addresses
     // We need to dynamically allocate the read device block
 
-    pDevCTCBLK->pDEVBLK[0] = pDEVBLK->group->memdev[0];
-    pDevCTCBLK->pDEVBLK[1] = pDEVBLK->group->memdev[1];
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ] = pDEVBLK->group->memdev[0];
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ] = pDEVBLK->group->memdev[1];
 
-    pDevCTCBLK->pDEVBLK[0]->dev_data = pDevCTCBLK;
-    pDevCTCBLK->pDEVBLK[1]->dev_data = pDevCTCBLK;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->dev_data = pDevCTCBLK;
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->dev_data = pDevCTCBLK;
 
-    SetSIDInfo( pDevCTCBLK->pDEVBLK[0], 0x3088, 0x08, 0x3088, 0x01 );
-    SetSIDInfo( pDevCTCBLK->pDEVBLK[1], 0x3088, 0x08, 0x3088, 0x01 );
+    SetSIDInfo( pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ], 0x3088, 0x08, 0x3088, 0x01 );
+    SetSIDInfo( pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ], 0x3088, 0x08, 0x3088, 0x01 );
 
-    pDevCTCBLK->pDEVBLK[0]->ctctype  = CTC_CTCI;
-    pDevCTCBLK->pDEVBLK[0]->ctcxmode = 1;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->ctctype  = CTC_CTCI;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->ctcxmode = 1;
 
-    pDevCTCBLK->pDEVBLK[1]->ctctype  = CTC_CTCI;
-    pDevCTCBLK->pDEVBLK[1]->ctcxmode = 1;
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->ctctype  = CTC_CTCI;
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->ctcxmode = 1;
 
     pDevCTCBLK->sMTU                = atoi( pDevCTCBLK->szMTU );
     pDevCTCBLK->iMaxFrameBufferSize = sizeof(pDevCTCBLK->bFrameBuffer);
@@ -232,8 +232,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     // Give both Herc devices a reasonable name...
 
-    STRLCPY( pDevCTCBLK->pDEVBLK[0]->filename, pDevCTCBLK->szTUNCharDevName );
-    STRLCPY( pDevCTCBLK->pDEVBLK[1]->filename, pDevCTCBLK->szTUNCharDevName );
+    STRLCPY( pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->filename, pDevCTCBLK->szTUNCharDevName );
+    STRLCPY( pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->filename, pDevCTCBLK->szTUNCharDevName );
 
     /* It  might  be  tempting  to  add IFF_TUN_EXCL to the flags to */
     /* avoid  a  race,  but it does not work like open exclusive; it */
@@ -250,8 +250,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     if( rc < 0 ) return -1;
 
     // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
-    WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-                         pDevCTCBLK->pDEVBLK[0]->typname,
+    WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->ssid), pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->devnum,
+                         pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->typname,
                          pDevCTCBLK->szTUNIfName, "TUN");
 
     if (!pDevCTCBLK->fPreconfigured)
@@ -269,8 +269,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
             {
                 // "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
-                WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-                      pDevCTCBLK->pDEVBLK[0]->typname,
+                WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->ssid), pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->devnum,
+                      pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->typname,
                       "TT32SDEVBUFF", pDevCTCBLK->szTUNIfName, strerror( errno ) );
             }
 
@@ -278,8 +278,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
             {
                 // "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
-                WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-                      pDevCTCBLK->pDEVBLK[0]->typname,
+                WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->ssid), pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->devnum,
+                      pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->typname,
                       "TT32SIOBUFF", pDevCTCBLK->szTUNIfName, strerror( errno ) );
             }
         }
@@ -309,7 +309,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         (
             "** CTCI_Init: %4.4X (%s): IP \"%s\"  -->  default MAC \"%s\"\n"
 
-            ,pDevCTCBLK->pDEVBLK[0]->devnum
+            ,pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->devnum
             ,pDevCTCBLK->szTUNIfName
             ,pDevCTCBLK->szGuestIPAddr
             ,pDevCTCBLK->szMACAddress
@@ -338,8 +338,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     }
 
     // Copy the fd to make panel.c happy
-    pDevCTCBLK->pDEVBLK[0]->fd =
-    pDevCTCBLK->pDEVBLK[1]->fd = pDevCTCBLK->fd;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->fd =
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->fd = pDevCTCBLK->fd;
 
     MSGBUF(thread_name, "CTCI %4.4X ReadThread", pDEVBLK->devnum);
     rc = create_thread( &pDevCTCBLK->tid, JOINABLE, CTCI_ReadThread, pDevCTCBLK, thread_name );
@@ -349,8 +349,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
        WRMSG(HHC00102, "E", strerror(rc));
     }
 
-    pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
-    pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->tid = pDevCTCBLK->tid;
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->tid = pDevCTCBLK->tid;
 
     return 0;
 }
@@ -607,10 +607,10 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 
         TID tid = pCTCBLK->tid;
         pCTCBLK->fCloseInProgress = 1;  // (ask read thread to exit)
-#if defined(_MSVC_)
         join_thread( tid, NULL );       // (wait for thread to end)
+#if defined( OPTION_FTHREADS )
+        detach_thread( tid );           // only needed for Fish threads
 #endif
-        detach_thread( tid );           // (wait for thread to end)
     }
 
     pDEVBLK->fd = -1;           // indicate we're now closed
@@ -751,7 +751,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U32   sCount,
             // check for halt condition
             if (haltorclear)
             {
-                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+                if (pDEVBLK->ccwtrace)
                 {
                     // "%1d:%04X %s: halt or clear recognized"
                     WRMSG( HHC00904, "I", SSID_TO_LCSS( pDEVBLK->ssid ),
@@ -844,6 +844,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
     int        rc;                      // Return code
     BYTE       szStackID[33];           // VSE IP stack identity
     U32        iStackCmd;               // VSE IP stack command
+    U16        hwType;                  // Ethernet packet type
 
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
@@ -857,6 +858,14 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
         return;
     }
 
+    //
+    if( pCTCBLK->fDebug )
+    {
+        // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
+        WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname, (int)sCount );
+        net_data_trace( pDEVBLK, pIOBuf, (int)sCount, '<', 'D', "data", 0 );
+    }
+
     // Fix-up frame pointer
     pFrame = (PCTCIHDR)pIOBuf;
 
@@ -864,26 +873,38 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
     FETCH_HW( sOffset, pFrame->hwOffset );
 
     // Check for special VSE TCP/IP stack command packet
-    if( sOffset == 0 && sCount == 40 )
+    // The following example is from a VSE 5.1 system
+    //   +0000  00280026 C9E5E2C5 C3E3C3C1 F0F14BF0   ....IVSECTCA01.0
+    //   +0010  F540C640 F0F261F2 F661F0F8 F1F84BF2   5 F 02/26/0818.2
+    //   +0020  F4404040 09010001                     4   ....
+    if( sCount == 40 )
     {
-        // Extract the 32-byte stack identity string
-        for( i = 0;
-             i < sizeof( szStackID ) - 1 && i < sCount - 4;
-             i++)
-            szStackID[i] = guest_to_host( pIOBuf[i+4] );
-        szStackID[i] = '\0';
+        if( sOffset == 0 || sOffset == 40 )
+        {
+            pSegment = (PCTCISEG)(pIOBuf + sizeof( CTCIHDR ));
+            FETCH_HW( hwType, pSegment->hwType );
+            if (hwType != ETH_TYPE_IP)
+            {
+                // Extract the 32-byte stack identity string
+                for( i = 0;
+                     i < sizeof( szStackID ) - 1 && i < sCount - 4;
+                     i++)
+                    szStackID[i] = guest_to_host( pIOBuf[i+4] );
+                szStackID[i] = '\0';
 
-        // Extract the stack command word
-        FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
+                // Extract the stack command word
+                FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
 
-        // Display stack command and discard the packet
-        // "%1d:%04X CTC: interface command: '%s' %8.8X"
-        WRMSG(HHC00907, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, szStackID, iStackCmd );
+                // Display stack command and discard the packet
+                // "%1d:%04X CTC: interface command: '%s' %8.8X"
+                WRMSG(HHC00907, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, szStackID, iStackCmd );
 
-        *pUnitStat = CSW_CE | CSW_DE;
-        *pResidual = 0;
+                *pUnitStat = CSW_CE | CSW_DE;
+                *pResidual = 0;
 
-        return;
+                return;
+            }
+        }
     }
 
     // Check for special L/390 initialization packet
@@ -1013,7 +1034,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
 static void*  CTCI_ReadThread( void* arg )
 {
     PCTCBLK  pCTCBLK = (PCTCBLK) arg;
-    DEVBLK*  pDEVBLK = pCTCBLK->pDEVBLK[0];
+    DEVBLK*  pDEVBLK = pCTCBLK->pDEVBLK[CTC_READ_SUBCHANN];
     int      iLength;
     BYTE     szBuff[2048];
 
@@ -1071,7 +1092,7 @@ static void*  CTCI_ReadThread( void* arg )
             // Don't use sched_yield() here; use an actual non-dispatchable
             // delay instead so as to allow another [possibly lower priority]
             // thread to 'read' (remove) some packet(s) from our frame buffer.
-            usleep( CTC_DELAY_USECS );  // (wait a bit before retrying...)
+            USLEEP( CTC_DELAY_USECS );  // (wait a bit before retrying...)
         }
     }
 
@@ -1215,7 +1236,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
         return -1;
     }
-    // Compatability with old format configuration files needs to be
+    // Compatibility with old format configuration files needs to be
     // maintained. Old format statements have the tun character device
     // name as the second argument on Linux.
     if (strncasecmp( argv[0], "/", 1 ) == 0)
@@ -1515,7 +1536,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
             char * s = pCTCBLK->szTUNIfName + strlen(pCTCBLK->szTUNIfName);
 
-            while(isdigit(s[- 1])) s--;
+            while(isdigit((unsigned char)s[- 1])) s--;
             STRLCAT( pCTCBLK->szTUNCharDevName, s );
         }
 #endif

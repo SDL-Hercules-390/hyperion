@@ -27,7 +27,7 @@
   echo.
   echo     OPTIONS
   echo.
-  echo         /?         Display this help information
+  echo         (NONE)
   echo.
   echo     NOTES
   echo.
@@ -303,10 +303,13 @@
   ::  VERS_INT=n and VERS_MIN=n statements.
   :: -------------------------------------------------------------------
 
-  for /f "delims==# tokens=1-3" %%a in ('type %configure_ac% ^| find /i "VERS_"') do (
+  :: (Workaround for VS2019 pipe bug)
+@REM  /f "delims==# tokens=1-3" %%a in ('type %configure_ac% ^| find /i "VERS_"') do (
+  for /f "delims==# tokens=1-3" %%a in ('type %configure_ac%'                   ) do (
     if /i "%%a" == "VERS_MAJ" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_MAJ=%%n"
     if /i "%%a" == "VERS_INT" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_INT=%%n"
     if /i "%%a" == "VERS_MIN" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_MIN=%%n"
+    if /i "%%a" == "VERS_DEV" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_DEV=%%n"
    )
 
   %TRACE%.
@@ -315,16 +318,25 @@
   %TRACE% VERS_MAJ         = %VERS_MAJ%
   %TRACE% VERS_INT         = %VERS_INT%
   %TRACE% VERS_MIN         = %VERS_MIN%
+  %TRACE% VERS_DEV         = %VERS_DEV%
   %TRACE%.
 
-  if not defined VERS_MAJ (
-    set "VERS_MAJ=0"
-    set "VERS_INT=0"
-    set "VERS_MIN=0"
-  ) else (
-    call :isnum "%VERS_MIN%"
-    if not defined isnum set "VERS_MIN=0"
-  )
+  if not defined VERS_MAJ set "VERS_MAJ=0"
+  if not defined VERS_INT set "VERS_INT=0"
+  if not defined VERS_MIN set "VERS_MIN=0"
+  if not defined VERS_DEV set "VERS_DEV=0"
+
+  call :isnum "%VERS_MAJ%"
+  if not defined isnum set "VERS_MAJ=0"
+
+  call :isnum "%VERS_INT%"
+  if not defined isnum set "VERS_INT=0"
+
+  call :isnum "%VERS_MIN%"
+  if not defined isnum set "VERS_MIN=0"
+
+  call :isnum "%VERS_DEV%"
+  if not defined isnum set "VERS_DEV=0"
 
   %TRACE%.
   %TRACE%   Before calling :remlead0
@@ -332,11 +344,13 @@
   %TRACE% VERS_MAJ         = %VERS_MAJ%
   %TRACE% VERS_INT         = %VERS_INT%
   %TRACE% VERS_MIN         = %VERS_MIN%
+  %TRACE% VERS_DEV         = %VERS_DEV%
   %TRACE%.
 
   call :remlead0  "%VERS_MAJ%"  VERS_MAJ
   call :remlead0  "%VERS_INT%"  VERS_INT
   call :remlead0  "%VERS_MIN%"  VERS_MIN
+  call :remlead0  "%VERS_DEV%"  VERS_DEV
 
   %TRACE%.
   %TRACE%   After calling :remlead0
@@ -344,7 +358,14 @@
   %TRACE% VERS_MAJ         = %VERS_MAJ%
   %TRACE% VERS_INT         = %VERS_INT%
   %TRACE% VERS_MIN         = %VERS_MIN%
+  %TRACE% VERS_DEV         = %VERS_DEV%
   %TRACE%.
+
+  if "%VERS_DEV%" == "0" (
+    set "dev_string="
+  ) else (
+    set "dev_string=-DEV"
+  )
 
   @REM ----------------------------------------------------------------
   @REM   Now to calulate a NUMERIC value for 'VERS_BLD' based on the
@@ -577,6 +598,8 @@
 ::-----------------------------------------------------------------------------
 :set_VERSION_do_set
 
+  if not defined VERS_BLD set "VERS_BLD=0"
+
   %TRACE%.
   %TRACE%     set_VERSION_do_set
   %TRACE%.
@@ -584,37 +607,19 @@
   %TRACE% VERS_INT         = %VERS_INT%
   %TRACE% VERS_MIN         = %VERS_MIN%
   %TRACE% VERS_BLD         = %VERS_BLD%
+  %TRACE% VERS_DEV         = %VERS_DEV%
+  %TRACE% dev_string       = %dev_string%
   %TRACE% modified_str     = %modified_str%
   %TRACE% VERSION          = %VERSION%
   %TRACE%.
 
-  if not defined VERS_MAJ set "VERS_MAJ=0"
-  if not defined VERS_INT set "VERS_INT=0"
-  if not defined VERS_MIN set "VERS_MIN=0"
-  if not defined VERS_BLD set "VERS_BLD=0"
-
   ::--------------------------------------------------------------
-  ::  Make it PAINFULLY CLEAR this is a *SOFTDEVLABS* version
-  ::  of 4.x Hyperion and not the original 4.0 Hyperion version,
-  ::  by appending the string "-SDL" to the end of the "VERSION".
+  ::  Make it clear this Hercules is NOT any of the other ones
+  ::  by embedding "-SDL" into the "VERSION" string. Same idea
+  ::  for "-DEV" indicating a development version.
   ::--------------------------------------------------------------
 
-  set VERSION="%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%-SDL%modified_str%"
-
-  goto :set_VERSION_done
-
-:set_VERSION_done
-
-  %TRACE%.
-  %TRACE%     set_VERSION_done
-  %TRACE%.
-  %TRACE% VERS_MAJ         = %VERS_MAJ%
-  %TRACE% VERS_INT         = %VERS_INT%
-  %TRACE% VERS_MIN         = %VERS_MIN%
-  %TRACE% VERS_BLD         = %VERS_BLD%
-  %TRACE% modified_str     = %modified_str%
-  %TRACE% VERSION          = %VERSION%
-  %TRACE%.
+  set VERSION="%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%-SDL%dev_string%%modified_str%"
 
   %exit%
 

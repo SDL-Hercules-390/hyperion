@@ -32,6 +32,7 @@
 /*-------------------------------------------------------------------*/
 
 CCKD_DLL_IMPORT  CCKDBLK  cckdblk;
+CCKD_DLL_IMPORT  int      gctab[5];
 
 extern char*         compname   [];
 extern CCKD_L2ENT    empty_l2   [ CKD_NULLTRK_FMTMAX + 1 ][256];
@@ -41,7 +42,7 @@ extern CCKD64_L2ENT  empty64_l2 [ CKD_NULLTRK_FMTMAX + 1 ][256];
 /* Internal functions                                                */
 /*-------------------------------------------------------------------*/
 int     cckd_dasd_init(int argc, BYTE *argv[]);
-int     cckd_dasd_term();
+void    cckd_dasd_term_if_appropriate();
 /*-------------------------------------------------------------------*/
 int     cckd_dasd_init_handler( DEVBLK *dev, int argc, char *argv[] );
 int     cckd_dasd_close_device(DEVBLK *dev);
@@ -138,7 +139,9 @@ void    cckd_unlock_devchain();
 void    cckd_gcstart();
 void*   cckd_gcol(void* arg);
 void    cckd_gcol_dev( DEVBLK* dev, struct timeval* tv_now );
-int     cckd_gc_percolate(DEVBLK *dev, unsigned int size);
+int     cckd_gc_state( DEVBLK* dev );
+void    cckd_gc_rpt_state( DEVBLK* dev );
+int     cckd_gc_percolate( DEVBLK* dev, U64 size );
 int     cckd_gc_l2(DEVBLK *dev, BYTE *buf);
 DEVBLK *cckd_find_device_by_devnum (U16 devnum);
 /*-------------------------------------------------------------------*/
@@ -190,7 +193,9 @@ int     cckd64_sf_new(DEVBLK *dev);
 void    cckd64_gcstart();
 //id*   cckd64_gcol(void* arg);
 void    cckd64_gcol_dev( DEVBLK* dev, struct timeval* tv_now );
-int     cckd64_gc_percolate(DEVBLK *dev, unsigned int size);
+int     cckd64_gc_state( DEVBLK* dev );
+void    cckd64_gc_rpt_state( DEVBLK* dev );
+int     cckd64_gc_percolate( DEVBLK* dev, U64 size );
 int     cckd64_gc_l2(DEVBLK *dev, BYTE *buf);
 //VBLK *cckd64_find_device_by_devnum (U16 devnum);
 /*-------------------------------------------------------------------*/
@@ -231,6 +236,7 @@ CCKD_DLL_IMPORT   void   *cckd_sf_remove(void *data);
 CCKD_DLL_IMPORT   void   *cckd_sf_comp(void *data);
 CCKD_DLL_IMPORT   void   *cckd_sf_chk(void *data);
 CCKD_DLL_IMPORT   void   *cckd_sf_stats(void *data);
+CCKD_DLL_IMPORT   void    cckd_gc_rpt_states();
 /*-------------------------------------------------------------------*/
 CCKD64_DLL_IMPORT void   *cckd64_sf_add(void *data);
 CCKD64_DLL_IMPORT void   *cckd64_sf_remove(void *data);

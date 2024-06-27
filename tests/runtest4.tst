@@ -1,6 +1,5 @@
 
 msglvl +verbose +emsgloc
-msglvl +time +usecs
 
 * ----------------------------------------------------------------------------
 *Testcase runtest4: all cpus 1-4 seconds

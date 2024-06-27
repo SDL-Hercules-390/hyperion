@@ -1,4 +1,5 @@
 /* QETH.C       (C) Copyright Jan Jaeger,   1999-2012                */
+/*              (C) and others 2013-2021                             */
 /*              OSA Express                                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -119,13 +120,15 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "ctcadpt.h"
 #include "hercifc.h"
 #include "qeth.h"
+#include "opcode.h"
+#include "inline.h"
 
 
 /*-------------------------------------------------------------------*/
 /* QETH Debugging                                                    */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
+//#define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
 #define QETH_PTT_TRACING        // #define to enable PTT debug tracing
 #define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
@@ -395,14 +398,16 @@ static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc
   if((key & 0Xf0)==0x60) return 0; /* Special case for key 6 ? */
 
   /* Key match check if keys match we're good */
-  if((STORAGE_KEY(addr,dev) & STORKEY_KEY) == key) return 0;
+  if((ARCH_DEP( get_dev_4K_storage_key )( dev, addr ) & STORKEY_KEY) == key) return 0;
 
-  /* Ok for fetch when key mismatches */
-  if(!((STORAGE_KEY(addr,dev)) & STORKEY_FETCH) && acc==STORKEY_FETCH) return 0;
+  /* Ok for fetch (i.e. ref) when key mismatches */
+  /* (as long as not fetch-protected) */
+  if(!((ARCH_DEP( get_dev_4K_storage_key )( dev, addr )) & STORKEY_FETCH) && acc==STORKEY_REF) return 0;
 
-  /* Ok for write or fetch when write allowed even on key mismatch */
-  if(((STORAGE_KEY(addr,dev)) & STORKEY_CHANGE)) return 0;
-  DBGTRC(dev,"Key mismatch protection exception : requested key : %x, storage key : %x access type %x",key,STORAGE_KEY(addr,dev),acc);
+  /* Ok for write (i.e. chg) or fetch (i.e. ref) when write allowed even on key mismatch */
+  /* (i.e. when storage already changed we presume writes are allowed?) */
+  if(((ARCH_DEP( get_dev_4K_storage_key )( dev, addr )) & STORKEY_CHANGE)) return 0;
+  DBGTRC(dev,"Key mismatch protection exception : requested key : %x, storage key : %x access type %x",key,ARCH_DEP( get_dev_4K_storage_key )( dev, addr ),acc);
 
   return CSW_PROTC;
 }
@@ -415,7 +420,7 @@ static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int 
   if(rc==0)
   {
     /* Update the REF/CHANGE flag in the storage key */
-    STORAGE_KEY(addr,dev)|=(acc & (STORKEY_FETCH | STORKEY_CHANGE));
+    ARCH_DEP( or_dev_4K_storage_key )( dev, addr, (acc & (STORKEY_REF | STORKEY_CHANGE)) );
   }
   return rc;
 }
@@ -427,16 +432,18 @@ static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int 
 /*-------------------------------------------------------------------*/
 /* Set Adapter Local Summary Indicator bits                          */
 /*-------------------------------------------------------------------*/
-static inline void set_alsi(DEVBLK *dev, BYTE bits)
+static inline void set_alsi( DEVBLK* dev, BYTE bits )
 {
-    if(dev->qdio.alsi)
+    if (dev->qdio.alsi)
     {
-    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
+        BYTE* alsi = dev->mainstor + dev->qdio.alsi;
 
-        obtain_lock(&sysblk.mainlock);
-        *alsi |= bits;
-        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        release_lock(&sysblk.mainlock);
+        obtain_lock( &sysblk.mainlock );
+        {
+            *alsi |= bits;
+            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.alsi, (STORKEY_REF | STORKEY_CHANGE) );
+        }
+        release_lock( &sysblk.mainlock );
     }
 }
 
@@ -446,19 +453,22 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
 /*-------------------------------------------------------------------*/
 /* Set Device State Change Indicator bits                            */
 /*-------------------------------------------------------------------*/
-static inline void set_dsci(DEVBLK *dev, BYTE bits)
+static inline void set_dsci( DEVBLK* dev, BYTE bits )
 {
-    if(dev->qdio.dsci)
+    if (dev->qdio.dsci)
     {
-    BYTE *dsci = dev->mainstor + dev->qdio.dsci;
-    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
+        BYTE* dsci = dev->mainstor + dev->qdio.dsci;
+        BYTE* alsi = dev->mainstor + dev->qdio.alsi;
 
-        obtain_lock(&sysblk.mainlock);
-        *dsci |= bits;
-        STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        *alsi |= bits;
-        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        release_lock(&sysblk.mainlock);
+        obtain_lock( &sysblk.mainlock );
+        {
+            *dsci |= bits;
+            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.dsci, (STORKEY_REF | STORKEY_CHANGE) );
+
+            *alsi |= bits;
+            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.alsi, (STORKEY_REF | STORKEY_CHANGE) );
+        }
+        release_lock( &sysblk.mainlock );
     }
 }
 #define SET_DSCI(_dev,_bits)    set_dsci((_dev),(_bits))
@@ -499,7 +509,7 @@ char charmac[24];
         {
             memcpy(grp->mac[i].addr, mac, IFHWADDRLEN);
             grp->mac[i].type = type;
-            snprintf( charmac, sizeof(charmac),
+            MSGBUF( charmac,
                       "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
             // HHC03801 "%1d:%04X %s: %s: Register guest MAC address %s"
@@ -509,7 +519,7 @@ char charmac[24];
         }
     }
     /* Oh dear, the MAC address table is full. */
-    snprintf( charmac, sizeof(charmac),
+    MSGBUF( charmac,
               "%02x:%02x:%02x:%02x:%02x:%02x",
               mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
     // HHC03802 "%1d:%04X %s: %s: Cannot register guest MAC address %s"
@@ -537,7 +547,7 @@ UNREFERENCED(type);
         {
             grp->mac[i].type = MAC_TYPE_NONE;
             memset(grp->mac[i].addr, 0, IFHWADDRLEN);
-            snprintf( charmac, sizeof(charmac),
+            MSGBUF( charmac,
                       "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
             // HHC03803 "%1d:%04X %s: %s: Unregistered guest MAC address %s"
@@ -549,7 +559,7 @@ UNREFERENCED(type);
     /* Oh dear, the MAC address wasn't registered. */
     if (warnmsg)
     {
-        snprintf( charmac, sizeof(charmac),
+        MSGBUF( charmac,
                   "%02x:%02x:%02x:%02x:%02x:%02x",
                   mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
         // HHC03804 "%1d:%04X %s: %s: Cannot unregister guest MAC address %s"
@@ -1852,7 +1862,7 @@ U16 offph;
                     FETCH_FW(ano,ipa_sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,ipa_sas->hdr.cmd);    /* Command code */
                     FETCH_HW(len,ipa_sas->hdr.len);    /* Length */
-                    snprintf(anoc, sizeof(anoc), " 0x%08X", ano);
+                    MSGBUF(anoc, " 0x%08X", ano);      /* Assist number in hex character */
 
                     strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );                   /* Prepare the contentstring */
@@ -1881,10 +1891,14 @@ U16 offph;
                         strcat( dev->dev_data, ": CMD_0006" );         /* Prepare the contentstring */
                         strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
+                    case IPA_SAS_CMD_0008:       /* 0x0008 */
+                        strcat( dev->dev_data, ": CMD_0008" );         /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
+                        break;
                     default:
                         {
                         char not_supp[12];
-                            snprintf( not_supp, sizeof(not_supp), " (0x%04X)", cmd );
+                            MSGBUF( not_supp, " (0x%04X)", cmd );
                             strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
                             strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
                         }
@@ -1933,6 +1947,7 @@ U16 offph;
                     case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
+                    case IPA_SAS_CMD_0008:       /* 0x0008 */
                         STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
@@ -2092,7 +2107,7 @@ U16 offph;
                             default:
                                 {
                                 char not_supp[16];
-                                    snprintf( not_supp, sizeof(not_supp), " (0x%08X)", cmd );
+                                    MSGBUF( not_supp, " (0x%08X)", cmd );
                                     strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
                                     strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
                                 }
@@ -2138,7 +2153,7 @@ U16 offph;
                     default:
                         {
                         char not_supp[16];
-                            snprintf( not_supp, sizeof(not_supp), " (0x%08X)", cmd );
+                            MSGBUF( not_supp, " (0x%08X)", cmd );
                             strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
                             strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
                         }
@@ -2279,7 +2294,7 @@ U16 offph;
                 {
                 char cmd_not_supp[10];
 
-                    snprintf( cmd_not_supp, sizeof(cmd_not_supp), " (0x%02X)", ipa->cmd );
+                    MSGBUF( cmd_not_supp, " (0x%02X)", ipa->cmd );
                     strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, cmd_not_supp );       /* Prepare the contentstring */
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -2507,7 +2522,7 @@ static void raise_adapter_interrupt( DEVBLK* dev )
         if (TRY_OBTAIN_INTLOCK( NULL ) == 0)
         {
             /* Interrupt lock obtained; queue the interrupt */
-            obtain_lock( &dev->lock );
+            OBTAIN_DEVLOCK( dev );
             {
                 if (grp->debugmask & DBGQETHINTRUPT)
                     DBGTRC( dev, "Adapter Interrupt" );
@@ -2516,14 +2531,14 @@ static void raise_adapter_interrupt( DEVBLK* dev )
                 dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
                 dev->pciscsw.chanstat = CSW_PCI;
 
-                obtain_lock( &sysblk.iointqlk );
+                OBTAIN_IOINTQLK();
                 {
                     QUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint, FALSE );
                     UPDATE_IC_IOPENDING_QLOCKED();
                 }
-                release_lock( &sysblk.iointqlk );
+                RELEASE_IOINTQLK();
             }
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
 
             RELEASE_INTLOCK( NULL );
             return;
@@ -2589,7 +2604,7 @@ static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 /*-------------------------------------------------------------------*/
 #define SBALE_ERROR(_qrc,_dev,_sbal,_sbalk,_sb)                     \
     SBALE_Error( "** " #_qrc " **: SBAL(%d) @ %llx [%02X]:"         \
-        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X",            \
+        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X",              \
         (_qrc), (_dev), (_sbal), (_sbalk), (_sb))
 
 
@@ -3416,11 +3431,12 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
             o3hdr = (OSA_HDR3*)hdr;
             if (o3hdr->flags & HDR3_FLAGS_PASSTHRU)
             {
+                eth = (ETHFRM*)pkt;
+                FETCH_HW( hwEthernetType, eth->hwEthernetType );
+                /* */
                 if (!(o3hdr->flags & HDR3_FLAGS_IPV6))
                 {
                     /* It probably is an L2 Ethernet Frame! */
-                    eth = (ETHFRM*)pkt;
-                    FETCH_HW( hwEthernetType, eth->hwEthernetType );
                     if (hwEthernetType != ETH_TYPE_IP)
                     {
                         /* Can't write L2 Ethernet frame to L3 tun device! */
@@ -3446,6 +3462,12 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                 /* Bump past L2 Ethernet header to actual L3 IP packet */
                 pkt += sizeof(ETHFRM);
                 pktlen -= sizeof(ETHFRM);
+                /* Bump past 802.1Q header to actual L3 IP packet */
+                if (hwEthernetType == ETH_TYPE_VLANTAG)
+                {
+                    pkt += 4;
+                    pktlen -= 4;
+                }
             }
         }
 
@@ -3585,7 +3607,7 @@ int did_read = 0;                       /* Indicates some data read  */
                                 DBGTRC(dev, "Input Queue(%d) Buffer(%d)", qn, bn);
 
                             slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
-                            STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.i_slsbla[qn], (STORKEY_REF | STORKEY_CHANGE) );
                             SET_DSCI(dev,DSCI_IOCOMP);
                             grp->iqPCI = TRUE;
                             PTT_QETH_TRACE( "prinq OK", qn,bn,qrc );
@@ -3606,7 +3628,7 @@ int did_read = 0;                       /* Indicates some data read  */
                     if (qrc < 0)
                     {
                         slsb->slsbe[bn] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.i_slsbla[qn], (STORKEY_REF | STORKEY_CHANGE) );
                         SET_ALSI(dev,ALSI_ERROR);
                         grp->iqPCI = TRUE;
                         PTT_QETH_TRACE( "*prcinq ERR", qn,bn,qrc );
@@ -3718,7 +3740,7 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
                     }
 
                     /* Packets written or an error has ocurred */
-                    STORAGE_KEY(dev->qdio.o_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                    ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.o_slsbla[qn], (STORKEY_REF | STORKEY_CHANGE) );
 
                     /* Handle errors */
                     if (qrc < 0)
@@ -3806,7 +3828,7 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 /*                  QETH Halt or Clear Subchannel                    */
 /*-------------------------------------------------------------------*/
-/* This function is called by channelc. in response to a HSCH (Halt  */
+/* This function is called by channel.c in response to a HSCH (Halt  */
 /* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
 /* both INTLOCK (sysblk.intlock) and dev->lock are held.             */
 /*-------------------------------------------------------------------*/
@@ -3884,6 +3906,10 @@ U32 mask4;
     {
         /* This code is executed for each device in the group. */
 
+
+        memset( dev->sense,        0,       sizeof( dev->sense     ));
+        memcpy( dev->devid, sense_id_bytes, sizeof( sense_id_bytes ));
+
         dev->rcd         =  &qeth_read_configuration_data;
         dev->numsense    =  32;
         dev->numdevid    =  sizeof( sense_id_bytes );
@@ -3891,9 +3917,6 @@ U32 mask4;
         dev->chptype[0]  =  CHP_TYPE_OSD;
         dev->pmcw.flag4 |=  PMCW4_Q;
         dev->fd          =  -1;
-
-        memset( dev->sense,        0,       sizeof( dev->sense     ));
-        memcpy( dev->devid, sense_id_bytes, sizeof( sense_id_bytes ));
 
         /* Setting dev->bufsize = 0xFFFF causes, on return to attach_device */
         /* in config.c, storage of size 0xFFFF bytes to be obtained, and    */
@@ -4266,7 +4289,7 @@ U32 mask4;
         {
             // Check whether a numeric prefix in the range 1 to 128 has been specified.
             work_rc = 0;
-            for (p = grp->ttpfxlen6; isdigit(*p); p++) { }
+            for (p = grp->ttpfxlen6; isdigit((unsigned char)*p); p++) { }
             if (*p != '\0' || !strlen(grp->ttpfxlen6))
                 work_rc = -1;
             pfxlen = atoi(grp->ttpfxlen6);
@@ -4372,7 +4395,7 @@ OSA_GRP *grp;
         if (grp->debugmask & DBGQETHDROP)
             MSGBUF( dropped, " dr[%u]", dev->qdio.dropcnt );
 
-        snprintf( qdiostat, sizeof(qdiostat), "%stx[%u] rx[%u]%s "
+        MSGBUF( qdiostat, "%stx[%u] rx[%u]%s "
             , ttifname
             , dev->qdio.txcnt
             , dev->qdio.rxcnt
@@ -4420,7 +4443,7 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
             else if (QTYPE_DATA == group->memdev[i]->qtype)
                 qeth_halt_data_device( group->memdev[i], grp );
         }
-        usleep( OSA_TIMEOUTUS ); /* give it time to exit */
+        USLEEP( OSA_TIMEOUTUS ); /* give it time to exit */
         PTT_QETH_TRACE( "af clos halt", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos ttfd", 0,0,0 );
@@ -4592,9 +4615,9 @@ U32 num;                                /* Number of bytes to move   */
     /* Display various information, maybe */
     if (grp->debugmask & DBGQETHCCW)
     {
-        // "%1d:%04X %s: Code %02X: Flags %02X: Chained %02X: Count %08X: PrevCode %02X: CCWseq %d"
+        // "%1d:%04X %s: Code %02X: Flags %02X: Count %08X: Chained %02X: PrevCode %02X: CCWseq %d"
         WRMSG( HHC03992, "D", LCSS_DEVNUM,
-            dev->typname, code, flags, chained, count, prevcode, ccwseq );
+            dev->typname, code, flags, count, chained, prevcode, ccwseq );
     }
 
     /* Process depending on CCW opcode */
@@ -5063,35 +5086,37 @@ U32 num;                                /* Number of bytes to move   */
 
         for(i = 0; i < dev->qdio.i_qcnt; i++)
         {
-            FETCH_DW(dev->qdio.i_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qdio.i_sla[i],qdes->sla);
-            FETCH_DW(dev->qdio.i_slsbla[i],qdes->slsba);
-            dev->qdio.i_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qdio.i_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qdio.i_sbalk[i] = qdes->keyp2 & 0xF0;
+            FETCH_DW( dev->qdio.i_sliba[i],  qdes->sliba );
+            FETCH_DW( dev->qdio.i_sla[i],    qdes->sla   );
+            FETCH_DW( dev->qdio.i_slsbla[i], qdes->slsba );
+
+            dev->qdio.i_slibk[i]  = (qdes->keyp1)      & 0xF0;
+            dev->qdio.i_slk[i]    = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.i_sbalk[i]  = (qdes->keyp2)      & 0xF0;
             dev->qdio.i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.i_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.i_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.i_sla[i],sizeof(QDIO_SL)-1,dev->qdio.i_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK( dev->qdio.i_slsbla[i], sizeof(QDIO_SLSB) - 1, dev->qdio.i_slsblk[i], STORKEY_CHANGE, dev );
+            accerr |= STORCHK( dev->qdio.i_sla[i],    sizeof(QDIO_SL)   - 1, dev->qdio.i_slk[i],    STORKEY_REF,    dev );
 
-            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
+            qdes = (QDIO_QDES0*) ((BYTE*)qdes+(qdr->iqdsz << 2));
         }
 
         /* Check output Queue Descriptor Entry storage */
         for(i = 0; i < dev->qdio.o_qcnt; i++)
         {
-            FETCH_DW(dev->qdio.o_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qdio.o_sla[i],qdes->sla);
-            FETCH_DW(dev->qdio.o_slsbla[i],qdes->slsba);
-            dev->qdio.o_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qdio.o_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qdio.o_sbalk[i] = qdes->keyp2 & 0xF0;
+            FETCH_DW( dev->qdio.o_sliba[i],  qdes->sliba );
+            FETCH_DW( dev->qdio.o_sla[i],    qdes->sla   );
+            FETCH_DW( dev->qdio.o_slsbla[i], qdes->slsba );
+
+            dev->qdio.o_slibk[i]  = (qdes->keyp1)      & 0xF0;
+            dev->qdio.o_slk[i]    = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.o_sbalk[i]  = (qdes->keyp2)      & 0xF0;
             dev->qdio.o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.o_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.o_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.o_sla[i],sizeof(QDIO_SL)-1,dev->qdio.o_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK( dev->qdio.o_slsbla[i], sizeof(QDIO_SLSB) - 1, dev->qdio.o_slsblk[i], STORKEY_CHANGE, dev );
+            accerr |= STORCHK( dev->qdio.o_sla[i],    sizeof(QDIO_SL)   - 1, dev->qdio.o_slk[i],    STORKEY_REF,    dev );
 
-            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
+            qdes = (QDIO_QDES0*) ((BYTE*)qdes+(qdr->oqdsz << 2));
         }
 
         /* Initialize All Queues */
@@ -5277,9 +5302,9 @@ U32 num;                                /* Number of bytes to move   */
     /* Display various information, maybe */
     if (grp->debugmask & DBGQETHCCW)
     {
-        // "%1d:%04X %s: More %02X: Status %02X: Residual %08X"
+        // "%1d:%04X %s: Status %02X: Residual %08X: More %02X"
         WRMSG( HHC03993, "D", LCSS_DEVNUM,
-            dev->typname, *more, *unitstat, *residual );
+            dev->typname, *unitstat, *residual, *more );
     }
 
 } /* end function qeth_execute_ccw */
@@ -6423,7 +6448,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         iMAC[0] &= 0xFE;  /* Clear multicast bit. */
         iMAC[0] |= 0x02;  /* Set local assignment bit. */
         memcpy( grp->iaDriveMACAddr, iMAC, IFHWADDRLEN );
-        snprintf( grp->szDriveMACAddr, sizeof(grp->szDriveMACAddr),
+        MSGBUF( grp->szDriveMACAddr,
                   "%02x:%02x:%02x:%02x:%02x:%02x",
                   iMAC[0], iMAC[1], iMAC[2], iMAC[3], iMAC[4], iMAC[5] );
         /* Create a Driver Link Local address from the Driver MAC address */
@@ -6483,7 +6508,7 @@ static int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
 {
     U32 netmask, mask;
     int pfxlen;
-    char cbuf[8];
+    char cbuf[16];
     netmask = ntohl( inet_addr( ttnetmask ));
     if (netmask == ntohl( INADDR_NONE ) &&
         strcmp( ttnetmask, "255.255.255.255" ) != 0)
@@ -6493,7 +6518,7 @@ static int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
     /* we don't support discontiguous subnets */
     if (netmask != (0xFFFFFFFF << (32-pfxlen)))
         return -1;
-    MSGBUF( cbuf, "%u", pfxlen );
+    MSGBUF( cbuf, "%d", pfxlen );
     free( *ttpfxlen );
     *ttpfxlen = strdup( cbuf );
     return 0;
@@ -6510,7 +6535,7 @@ static int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
     char* p;
     int pfxlen;
     /* make sure it's a number from 0 to 32 */
-    for (p = ttpfxlen; isdigit(*p); p++) { }
+    for (p = ttpfxlen; isdigit((unsigned char)*p); p++) { }
     if (*p || !ttpfxlen[0] || (pfxlen = atoi(ttpfxlen)) > 32)
         return -1;
     addr4.s_addr = ~makepfxmask4( ttpfxlen );

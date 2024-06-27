@@ -1,4 +1,5 @@
 /* CCKDUTIL64.C (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2022                             */
 /*              CCKD64 (Compressed CKD64) Common routines            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -33,7 +34,7 @@ static int  cdsk_build_free_space64(SPCTAB64 *spctab, int s);
 #define  gui_fprintf        if (extgui) fprintf
 
 /*-------------------------------------------------------------------*/
-/* Toggle the endianess of a compressed file                         */
+/* Toggle the endianness of a compressed file                        */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd64_swapend (DEVBLK *dev)
 {
@@ -407,7 +408,7 @@ comp_restart:
         goto comp_read_error;
 
     /*---------------------------------------------------------------
-     * Check the endianess of the file
+     * Check the endianness of the file
      *---------------------------------------------------------------*/
     if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_def_opt_bigend())
     {
@@ -735,13 +736,15 @@ comp_restart:
     /*---------------------------------------------------------------
      * Update the device header
      *---------------------------------------------------------------*/
-    cdevhdr.cdh_size =
-    cdevhdr.cdh_used = spctab[s-1].spc_off;
-    cdevhdr.free_off =
-    cdevhdr.free_total =
+    cdevhdr.cdh_size     =
+    cdevhdr.cdh_used     = spctab[s-1].spc_off;
+
+    cdevhdr.free_off     =
+    cdevhdr.free_total   =
     cdevhdr.free_largest =
-    cdevhdr.free_num =
-    cdevhdr.free_imbed = 0;
+    cdevhdr.free_num     =
+    cdevhdr.free_imbed   = 0;
+
     cdevhdr.cdh_vrm[0] = CCKD_VERSION;
     cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
     cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
@@ -1220,6 +1223,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (!ro && level < 2 && (cdevhdr.cdh_opts & CCKD_OPT_SPERRS))
     {
         level = 2;
+        // "%1d:%04X CCKD file %s: forcing check level %d"
         if(dev->batch)
             FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level );
         else
@@ -1228,7 +1232,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* cdevhdr inconsistencies check */
     hdrerr  = 0;
-    hdrerr |= (U64)fst.st_size != cdevhdr.cdh_size && cdevhdr.cdh_size != cdevhdr.free_off ? 0x0001 : 0;
+    hdrerr |= (U64)fst.st_size != cdevhdr.cdh_size && cdevhdr.cdh_size != cdevhdr.free_off   ? 0x0001 : 0;
     hdrerr |= cdevhdr.cdh_size !=      cdevhdr.free_total  +  cdevhdr.cdh_used               ? 0x0002 : 0;
     hdrerr |= cdevhdr.free_largest  >  cdevhdr.free_total  -  cdevhdr.free_imbed             ? 0x0004 : 0;
     hdrerr |= cdevhdr.free_off == 0 && cdevhdr.free_num    != 0                              ? 0x0008 : 0;
@@ -1242,6 +1246,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* Additional checking if header errors */
     if (hdrerr != 0)
     {
+        // "%1d:%04X CCKD file %s: cdevhdr inconsistencies found, code %4.4X"
         if(dev->batch)
             FWRMSG( stdout, HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr );
         else
@@ -1249,6 +1254,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         if (level < 1)
         {
             level = 1;
+            // "%1d:%04X CCKD file %s: forcing check level %d"
             if(dev->batch)
                 FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level );
             else
@@ -1260,6 +1266,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (level < 1 && (cdevhdr.cdh_opts & CCKD_OPT_OPENED))
     {
         level = 1;
+        // "%1d:%04X CCKD file %s: forcing check level %d"
         if(dev->batch)
             FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level );
         else
@@ -1584,6 +1591,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* overlaps are serious */
     if (recovery && level < 3)
     {
+        // "%1d:%04X CCKD file %s: forcing check level %d"
         level = 3;
         if(dev->batch)
             FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level );
@@ -1693,6 +1701,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     if (fsperr)
     {
+        // "%1d:%04X CCKD file %s: free space errors detected"
         if(dev->batch)
             FWRMSG( stdout, HHC00368, "W", LCSS_DEVNUM, dev->filename );
         else
@@ -1748,6 +1757,7 @@ cdsk_space_check:
                 if (level < 3)
                 {
                     level = 3;
+                    // "%1d:%04X CCKD file %s: forcing check level %d"
                     if(dev->batch)
                         FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM,
                                 dev->filename, level );
@@ -2566,22 +2576,29 @@ cdsk_fsperr_retry:
         cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
         cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
-        cdevhdr.cdh_size        = cdevhdr.cdh_used         = cdevhdr.free_off =
-        cdevhdr.free_total  = cdevhdr.free_largest =
-        cdevhdr.free_num = cdevhdr.free_imbed   = 0;
+        cdevhdr.cdh_size     =
+        cdevhdr.cdh_used     =
+        cdevhdr.free_off     =
+        cdevhdr.free_total   =
+        cdevhdr.free_largest =
+        cdevhdr.free_num     =
+        cdevhdr.free_imbed   = 0;
+
         for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
             if (spctab[i].spc_typ == SPCTAB_FREE)
             {
                 cdevhdr.cdh_size += spctab[i].spc_siz;
+
                 if (spctab[i].spc_siz > cdevhdr.free_largest)
                     cdevhdr.free_largest = spctab[i].spc_siz;
+
                 cdevhdr.free_total += spctab[i].spc_siz;
                 cdevhdr.free_num++;
             }
             else
             {
-                cdevhdr.cdh_size += spctab[i].spc_siz;
-                cdevhdr.cdh_used += spctab[i].spc_len;
+                cdevhdr.cdh_size   += spctab[i].spc_siz;
+                cdevhdr.cdh_used   += spctab[i].spc_len;
                 cdevhdr.free_total += spctab[i].spc_siz - spctab[i].spc_len;
                 cdevhdr.free_imbed += spctab[i].spc_siz - spctab[i].spc_len;
              }
@@ -2802,7 +2819,7 @@ cdsk_error:
     rc = -1;
     goto cdsk_return;
 
-} /* end function cckd_chkdsk */
+} /* end function cckd64_chkdsk */
 
 /*-------------------------------------------------------------------
  * cckd64_chkdsk() space table sort

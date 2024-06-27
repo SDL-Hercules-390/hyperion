@@ -163,15 +163,19 @@
 #define SR_SYS_MBK              0xace10011
 #define SR_SYS_MBM              0xace10012
 #define SR_SYS_MBD              0xace10013
+
 #define SR_SYS_IOINTQ           0xace10020
 #define SR_SYS_IOPENDING        0xace10021
 #define SR_SYS_PCIPENDING       0xace10022
 #define SR_SYS_ATTNPENDING      0xace10023
+
 #define SR_SYS_IPLED            0xace10030
 #define SR_SYS_CRWCOUNT         0xace10031
 #define SR_SYS_CRWARRAY         0xace10032
 #define SR_SYS_CRWINDEX         0xace10033
 #define SR_SYS_CRWENDIAN        0xace10034
+#define SR_SYS_SFCMD            0xace10035
+
 #define SR_SYS_SERVPARM         0xace10040
 #define SR_SYS_SIGINTREQ        0xace10041
 #define SR_SYS_VMACTIVE         0xace10042
@@ -218,6 +222,7 @@
 #define SR_CPU_GR_13            0xace2002d
 #define SR_CPU_GR_14            0xace2002e
 #define SR_CPU_GR_15            0xace2002f
+
 #define SR_CPU_CR               0xace20040
 #define SR_CPU_CR_0             0xace20040
 #define SR_CPU_CR_1             0xace20041
@@ -235,6 +240,7 @@
 #define SR_CPU_CR_13            0xace2004d
 #define SR_CPU_CR_14            0xace2004e
 #define SR_CPU_CR_15            0xace2004f
+
 #define SR_CPU_AR               0xace20060
 #define SR_CPU_AR_0             0xace20060
 #define SR_CPU_AR_1             0xace20061
@@ -252,6 +258,7 @@
 #define SR_CPU_AR_13            0xace2006d
 #define SR_CPU_AR_14            0xace2006e
 #define SR_CPU_AR_15            0xace2006f
+
 #define SR_CPU_FPR              0xace20080
 #define SR_CPU_FPR_0            0xace20080
 #define SR_CPU_FPR_1            0xace20081
@@ -285,6 +292,7 @@
 #define SR_CPU_FPR_29           0xace2009d
 #define SR_CPU_FPR_30           0xace2009e
 #define SR_CPU_FPR_31           0xace2009f
+
 #define SR_CPU_FPC              0xace20100
 #define SR_CPU_DXC              0xace20101
 #define SR_CPU_MC               0xace20102
@@ -299,6 +307,7 @@
 #define SR_CPU_INTS_MASK        0xace2010b
 #define SR_CPU_EXTCCPU          0xace2010c
 #define SR_CPU_BEAR             0xace2010d
+
 #define SR_CPU_OPNDRID          0xace20110
 #define SR_CPU_CHECKSTOP        0xace20111
 #define SR_CPU_HOSTINT          0xace20112
@@ -312,6 +321,7 @@
 #define SR_CPU_SIGP_INI_RESET   0xace2011a
 #define SR_CPU_VTIMERINT        0xace2011b
 #define SR_CPU_RTIMERINT        0xace2011c
+
 #define SR_CPU_MALFCPU          0xace20120
 #define SR_CPU_MALFCPU_0        0xace20120
 #define SR_CPU_MALFCPU_1        0xace20121
@@ -389,6 +399,7 @@
   * Channel subsystem support
   */
 #define SR_DEV_LCSS             0xace30005
+
 #define SR_DEV_ORB              0xace30010
 #define SR_DEV_PMCW             0xace30011
 #define SR_DEV_SCSW             0xace30012

@@ -280,8 +280,8 @@ W32_DLL_IMPORT void   w32_set_thread_name( TID tid, const char* name );
 
 W32_DLL_IMPORT unsigned long  w32_hpagesize();
 
-W32_DLL_IMPORT int   w32_mlock   (const void *addr, size_t len);
-W32_DLL_IMPORT int   w32_munlock (const void *addr, size_t len);
+W32_DLL_IMPORT int   w32_mlock   ( void *addr, size_t len );
+W32_DLL_IMPORT int   w32_munlock ( void *addr, size_t len ); 
 
 // Hercules low-level file open...
 W32_DLL_IMPORT int    w32_hopen ( const char* path, int oflag, ... );
@@ -294,8 +294,6 @@ W32_DLL_IMPORT char*  w32_dirname( const char* path );
 
 W32_DLL_IMPORT char*  w32_strcasestr( const char* haystack, const char* needle );
 
-#endif // defined(_MSVC_)
-
 //////////////////////////////////////////////////////////////////////////////////////////
 // Support for disabling of CRT Invalid Parameter Handler...
 
@@ -306,5 +304,14 @@ W32_DLL_IMPORT  void  DisableInvalidParameterHandling();
 W32_DLL_IMPORT  void  EnableInvalidParameterHandling();
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// w32_GetWinVersInfo -- replacement for GetVersionEx that works properly
+// for ANY version of Windows regardless of build target. (GetVersionEx
+// has been deprecated and returns INACCURATE information for any version
+// of Windows newer than Windows 8. It essentially LIES! Thanks Microsuck!)
 
+W32_DLL_IMPORT void w32_GetWinVersInfo( OSVERSIONINFOEX* pOSVersInfoEx );
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+#endif // defined(_MSVC_)
 #endif // _W32UTIL_H

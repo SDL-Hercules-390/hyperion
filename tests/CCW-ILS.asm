@@ -114,8 +114,8 @@ BEGIN    BALR  R2,0             Initalize Base Register
 **       Run the tests...
 *
          BAL   R14,TEST01       Format-0
-         BAL   R14,TEST02       Format-1, without ORB ILS flag 
-         BAL   R14,TEST03       Format-1, with    ORB ILS flag 
+         BAL   R14,TEST02       Format-1, without ORB ILS flag
+         BAL   R14,TEST03       Format-1, with    ORB ILS flag
 *
          B     EOJ              Normal completion
                                                                 EJECT
@@ -144,7 +144,7 @@ TEST01   MVI   TESTNUM,X'01'          Initialize test number
          BR    R14                    Yes, test SUCCESS
                                                                 EJECT
 ***********************************************************************
-*        TEST02:          Format-1, without ORB ILS flag 
+*        TEST02:          Format-1, without ORB ILS flag
 ***********************************************************************
                                                                 SPACE
 TEST02   MVI   TESTNUM,X'02'          Initialize test number
@@ -168,7 +168,7 @@ TEST02   MVI   TESTNUM,X'02'          Initialize test number
          BR    R14                    Yes, test SUCCESS
                                                                 EJECT
 ***********************************************************************
-*        TEST03:          Format-1, with ORB ILS flag 
+*        TEST03:          Format-1, with ORB ILS flag
 ***********************************************************************
                                                                 SPACE
 TEST03   MVI   TESTNUM,X'03'          Initialize test number

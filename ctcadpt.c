@@ -2,6 +2,7 @@
 /*              (C) Copyright Roger Bowler, 2000-2012                */
 /*              (c) Copyright Vic Cross, 2001-2009                   */
 /*              (C) Copyright Peter J. Jansen, 2014-2020             */
+/*              (C) and others 2013-2021                             */
 /*              Hercules Channel-to-Channel Emulation Support        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -592,7 +593,7 @@ static const CTCE_FSM_CELL CTCE_Fsm[16][8] = {
 /* dev->ctce_trace_cntr > 0 causes temporary tracing until the counter   */
 /* is decremented reaching zero.                                         */
 #define CTCE_CCWTRACE( dev )                                                \
-        ( dev->ccwtrace || dev->ccwstep ||                                  \
+        ( dev->ccwtrace ||                                                  \
         ( dev->ctce_trace_cntr == CTCE_TRACE_ON  ) ||                       \
         ( ( dev->ctce_trace_cntr >  0 ) && ( dev->ctce_trace_cntr-- ) ) )
 #define CTCE_RESTART_CCWTRACE( dev )     ( ( dev->ctce_trace_cntr >= 0 ) && \
@@ -1175,7 +1176,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         arg = malloc( sizeof( CTCG_PARMBLK ) );
         memcpy( arg, &parm, sizeof( parm ) );
         arg->dev = dev;
-        snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",dev->devnum);
+        MSGBUF(str, "CTCT %4.4X ListenThread",dev->devnum);
         str[sizeof(str)-1]=0;
         rc = create_thread( &tid, JOINABLE, CTCT_ListenThread, arg, str );
         if(rc)
@@ -1189,7 +1190,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
     // for cosmetics, since we are successfully connected or serving,
     // fill in some details for the panel.
-    snprintf( dev->filename, sizeof(dev->filename), "%s:%s", remaddr, remotep );
+    MSGBUF( dev->filename, "%s:%s", remaddr, remotep );
     dev->filename[sizeof(dev->filename)-1] = '\0';
     return 0;
 }
@@ -1301,7 +1302,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   CCWC  sCount,
         sDataLen = sSegLen - sizeof( CTCISEG );
 
         // Trace the IP packet before sending
-        if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+        if (pDEVBLK->ccwtrace)
         {
             WRMSG(HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
             if( pDEVBLK->ccwtrace )
@@ -1400,7 +1401,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   CCWC  sCount,
     }
 
     // Trace the packet received from the TUN device
-    if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+    if (pDEVBLK->ccwtrace)
     {
         // "%1d:%04X %s: receive%s packet of size %d bytes from device %s"
         WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTC",
@@ -1733,7 +1734,7 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
     // Changes to DEVBLK are lock protected as the CTCE_RecvThread
     // might update as well.
-    obtain_lock( &pDEVBLK->lock );
+    OBTAIN_DEVLOCK( pDEVBLK );
 
     // The CCW Flags Command Chaining indicator being set indicates
     // that a CCW Program is in progress.  The last CCW in the chain
@@ -1893,7 +1894,7 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
             CTCE_SND_NS ) ) ), &CTCE_Info, pUnitStat );
     }
 
-    release_lock( &pDEVBLK->lock );
+    RELEASE_DEVLOCK( pDEVBLK );
 
 } // CTCE_ExecuteCCW
 
@@ -1926,9 +1927,11 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
         if( dev->fd < 0 )
         {
             dev->allocated = 0;
-            release_lock( &dev->lock );
-            usleep(700000);
-            obtain_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
+            {
+                USLEEP( 700000 );
+            }
+            OBTAIN_DEVLOCK( dev );
             dev->allocated = 1;
         }
         else
@@ -2041,6 +2044,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
                     CTCX_DEVNUM( dev ), dev->ctce_rccuu );
                 return -1;
             }
+            dev->ctce_rccuu += dev->numconfdev - 1;
         }
 
         // Remote CCUU addresses < 256 are not supported, but such values
@@ -2186,7 +2190,7 @@ static int  CTCE_Start_Listen_Connect_Threads( DEVBLK* dev )
     // fill in some details for the panel.
     strcpy( address, inet_ntoa( dev->ctce_ipaddr ) );
     remaddr = address;
-    sprintf( rccuu_addr_rport, "%1d:%04X=%s:%d/*",
+    MSGBUF( rccuu_addr_rport, "%1d:%04X=%s:%d/*",
         SSID_TO_LCSS( dev->ssid ), dev->ctce_rccuu, remaddr, dev->ctce_rport );
     strcpy(  dev->filename, rccuu_addr_rport );
 
@@ -2230,7 +2234,7 @@ static int  CTCE_Start_Listen_Connect_Threads( DEVBLK* dev )
                 arg = malloc( sizeof( CTCE_PARMBLK ) );
                 memcpy( arg, &parm_listen, sizeof( parm_listen ) );
                 arg->dev = dev;
-                snprintf( str, sizeof( str ), "CTCE %4.4X ListenThread", dev->devnum );
+                MSGBUF( str, "CTCE %4.4X ListenThread", dev->devnum );
                 str[sizeof( str ) - 1] = 0;
                 if ( create_thread( &dev->ctce_listen_tid, DETACHED, CTCE_ListenThread, arg, str ) == 0 )
                 {
@@ -2270,6 +2274,9 @@ static int  CTCE_Start_Listen_Connect_Threads( DEVBLK* dev )
 // ---------------------------------------------------------------------
 // CTCE_ListenThread
 // ---------------------------------------------------------------------
+
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_UNUSED_SET_WARNING; // (because rc only referenced if full keepalive)
 
 static void*  CTCE_ListenThread( void* argp )
 {
@@ -2329,13 +2336,14 @@ static void*  CTCE_ListenThread( void* argp )
                             && dev->allocated
                             && dev->ctctype == CTC_CTCE
                             && dev->ctce_ipaddr.s_addr == parm_listen.addr.sin_addr.s_addr
+                            && dev->ctce_rport == pSokBuf->ctce_lport
                             &&  ( 0
-                                || ( ( dev->ctce_rccuu == 0 ) && ( dev->ctce_rport == pSokBuf->ctce_lport ) )
+                                ||   ( dev->ctce_rccuu == 0 )
                                 || ( ( dev->ctce_rccuu != 0 ) && ( dev->ctce_rccuu == pSokBuf->devnum     ) )
                                 )
                             )
                         {
-                            obtain_lock( &dev->lock );
+                            OBTAIN_DEVLOCK( dev );
 
                             // We might need to re-initialise our TID following a CTCE recovery.
                             dev->ctce_listen_tid = hthread_self();
@@ -2364,7 +2372,7 @@ static void*  CTCE_ListenThread( void* argp )
                             // Show the actual remote listening and connecting ports in filename.
                             strcpy( address, inet_ntoa( dev->ctce_ipaddr ) );
                             remaddr = address;
-                            sprintf( dev->filename, "%1d:%04X=%s:%d/%d", CTCE_DEVNUM( pSokBuf ),
+                            MSGBUF( dev->filename, "%1d:%04X=%s:%d/%d", CTCE_DEVNUM( pSokBuf ),
                                 remaddr, pSokBuf->ctce_lport, ntohs( parm_listen.addr.sin_port ) );
 
                             // In case our side believed we were already connected, the other
@@ -2402,7 +2410,7 @@ static void*  CTCE_ListenThread( void* argp )
 
                             // This side is ready to start receiving and sending so we
                             // start a read thread to do the receiving part;
-                            snprintf( str, sizeof( str ), "CTCE %04X RecvThread", dev->devnum );
+                            MSGBUF( str, "CTCE %04X RecvThread", dev->devnum );
                             str[sizeof( str ) - 1] = 0;
                             if( create_thread( &tid2, DETACHED, CTCE_RecvThread, dev, str ) != 0 )
                             {
@@ -2421,11 +2429,12 @@ static void*  CTCE_ListenThread( void* argp )
                             // then we must re-initiate the CTCE_ConnectThread.
                             if ( ( dev->fd != -1 ) && ( ! ( pSokBuf->ctce_herc & CTCE_HERC_RECV ) ) )
                             {
+                                dev->reinit = 1;
                                 CTCE_Start_ConnectThread( dev ) ;
                             }
 
                             // We break out of the device search loop.
-                            release_lock( &dev->lock );
+                            RELEASE_DEVLOCK( dev );
                             break ;
                         } // matching device found
                     } // device search loop
@@ -2461,6 +2470,8 @@ static void*  CTCE_ListenThread( void* argp )
     UNREACHABLE_CODE( return NULL );
 
 } // CTCE_ListenThread
+
+POP_GCC_WARNINGS()
 
 // ---------------------------------------------------------------------
 // CTCE_Send
@@ -2579,7 +2590,7 @@ static void     CTCE_Send(        DEVBLK*             pDEVBLK,
         }
 
         obtain_lock( &pDEVBLK->ctceEventLock );
-        release_lock( &pDEVBLK->lock );
+        RELEASE_DEVLOCK( pDEVBLK );
 
         pCTCE_Info->wait_rc = timed_wait_condition_relative_usecs(
             &pDEVBLK->ctceEvent,
@@ -2587,7 +2598,7 @@ static void     CTCE_Send(        DEVBLK*             pDEVBLK,
             1000000000,
             NULL );
 
-        obtain_lock( &pDEVBLK->lock );
+        OBTAIN_DEVLOCK( pDEVBLK );
         release_lock( &pDEVBLK->ctceEventLock );
 
         // Trace the non-zero WAIT RC (e.g. timeout, RC=138 (windows) or 110 (unix)).
@@ -2681,7 +2692,7 @@ static void*  CTCE_RecvThread( void* argp )
     int            i = 0;                        // temporary variable
 
     // When the receiver thread is (re-)started, the CTCE devblk is (re-)initialized
-    obtain_lock( &pDEVBLK->lock );
+    OBTAIN_DEVLOCK( pDEVBLK );
 
     // Enhanced CTC adapter intiialization for y-side command register.
     pDEVBLK->ctceyCmd = 0x00;
@@ -2694,7 +2705,7 @@ static void*  CTCE_RecvThread( void* argp )
     pSokBuf = ( CTCE_SOKPFX* ) ( pDEVBLK->buf + ( pDEVBLK->ctce_buf_next_write ? 0 : pDEVBLK->bufsize / 2 ) );
 
     // CTCE DEVBLK (re-)initialisation completed.
-    release_lock( &pDEVBLK->lock );
+    RELEASE_DEVLOCK( pDEVBLK );
 
     // Initialise our CTCE_Info as needed.
     CTCE_Info.de_ready_attn_rc   = 0;
@@ -2715,7 +2726,7 @@ static void*  CTCE_RecvThread( void* argp )
 
         // Commands sent by the other (y-)side most likely cause DEVBLK
         // changes to our (x-)side and thus need to be lock protected.
-        obtain_lock( &pDEVBLK->lock );
+        OBTAIN_DEVLOCK( pDEVBLK );
 
         // An iLength==0 means the other end has closed down the connection,
         // an iLength<0  means a receive error, which in a non-abnormal case
@@ -2747,7 +2758,7 @@ static void*  CTCE_RecvThread( void* argp )
                 (void) CTCE_Recovery( pDEVBLK ) ;
                 CTCE_RESTART_CCWTRACE( pDEVBLK );
             }
-            release_lock( &pDEVBLK->lock );
+            RELEASE_DEVLOCK( pDEVBLK );
             return NULL;    // make compiler happy
         } // if( iLength <= 0 )
 
@@ -2924,17 +2935,19 @@ static void*  CTCE_RecvThread( void* argp )
             // indicating Ready then this has to be presented on this side.
             else if( CTCE_Info.de_ready )
             {
-                release_lock( &pDEVBLK->lock );
-                ctce_recv_mods_UnitStat = CSW_DE;
-
-                // We may receive a de_ready from the other y-side before
-                // our x-side is ready for it, in which case we retry.
-                do
+                RELEASE_DEVLOCK( pDEVBLK );
                 {
-                    CTCE_Info.de_ready_attn_rc = device_attention( pDEVBLK, CSW_DE );
-                } while( ( CTCE_Info.de_ready_attn_rc == 3 ) && ( usleep( 100 ) == 0 ) );
+                    ctce_recv_mods_UnitStat = CSW_DE;
 
-                obtain_lock( &pDEVBLK->lock );
+                    // We may receive a de_ready from the other y-side before
+                    // our x-side is ready for it, in which case we retry.
+                    do
+                    {
+                        CTCE_Info.de_ready_attn_rc = device_attention( pDEVBLK, CSW_DE );
+                    }
+                    while ((CTCE_Info.de_ready_attn_rc == 3) && (USLEEP( 100 ) == 0));
+                }
+                OBTAIN_DEVLOCK( pDEVBLK );
 
                 // Another attention would be harmful and is not needed.
                 CLR_CTCE_ATTN( CTCE_Info.actions );
@@ -2968,7 +2981,7 @@ static void*  CTCE_RecvThread( void* argp )
                 // may have come in between, causing a device busy
                 // and a possible other (y-)side status update. So
                 // we may need to re-try the ATTN if needed at all.
-                release_lock( &pDEVBLK->lock );
+                RELEASE_DEVLOCK( pDEVBLK );
                 CTCE_Info.working_attn_rc = 1;
                 for( CTCE_Info.busy_waits = 0;
                      ( CTCE_Info.working_attn_rc == 1 ) &&
@@ -2982,7 +2995,7 @@ static void*  CTCE_RecvThread( void* argp )
                     // which needs to be configured using the CTCE option ATTNDELAY <nnn>
                     if( pDEVBLK->ctce_attn_delay && CTCE_Info.busy_waits == 0 )
                     {
-                        usleep( pDEVBLK->ctce_attn_delay );
+                        USLEEP( pDEVBLK->ctce_attn_delay );
                     }
 
                     CTCE_Info.working_attn_rc = device_attention( pDEVBLK, CSW_ATTN );
@@ -3001,7 +3014,7 @@ static void*  CTCE_RecvThread( void* argp )
                         {
                             i = i * 2;
                         }
-                        usleep(i);
+                        USLEEP(i);
 
                         // Cancel the ATTN in case a CCW program
                         // has started in the mean time.
@@ -3011,7 +3024,7 @@ static void*  CTCE_RecvThread( void* argp )
                         }
                     }
                 }
-                obtain_lock( &pDEVBLK->lock );
+                OBTAIN_DEVLOCK( pDEVBLK );
 
                 // We will show the ATTN status if it was signalled.
                 if( CTCE_Info.working_attn_rc == 0 )
@@ -3047,7 +3060,7 @@ static void*  CTCE_RecvThread( void* argp )
         CTCE_Info.working_attn_rc  = 0;
         CTCE_Info.busy_waits       = 0;
 
-        release_lock( &pDEVBLK->lock );
+        RELEASE_DEVLOCK( pDEVBLK );
     }
 
 } // CTCE_RecvThread
@@ -3062,7 +3075,7 @@ static void CTCE_Reset( DEVBLK* pDEVBLK )
     CCWC            Residual = 0;           // Only used as CTCE_Send needs it.
     CTCE_INFO       CTCE_Info = { 0 };      // CTCE information (also for tracing)
 
-    // The caller already did an obtain_lock( &pDEVBLK->lock ).
+    // The caller already did an OBTAIN_DEVLOCK( pDEVBLK ).
 
     // Initialise our CTCE_Info previous x- and y-states for CTCE_Trace.
     CTCE_Info.state_x_prev       = pDEVBLK->ctcexState;
@@ -3186,7 +3199,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     char           ctce_trace_stat[24];        // to contain " Stat=.. CC=. w=.,r=."
     char           ctce_trace_xtra[256];       // to contain extra info when tracing
     char           ctce_trace_xtra_temp[256];  // temporary work area for the above
-    char           ctce_devnum[8];             // for ccwstep packet trace information
+    char           ctce_devnum[8];             // for ccwtrace packet trace information
 
     // The source for reporting dependings on the Command X-fer
     // direction.  The CTCE states are reported in lower case,
@@ -3253,17 +3266,17 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
         || ( *pUnitStat != 0 )
         || ( IS_CTCE_MATCH( pCTCE_Info->actions ) ) )
     {
-        snprintf( ctce_trace_stat, sizeof( ctce_trace_stat ),
+        MSGBUF( ctce_trace_stat,
             "Stat=%02X", *pUnitStat );
     }
     else
     {
-        snprintf( ctce_trace_stat, sizeof( ctce_trace_stat ),
+        MSGBUF( ctce_trace_stat,
             "       " );
     }
     if( !IS_CTCE_RST( ctce_Cmd ) )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " CC=%d", pDEVBLK->ctce_ccw_flags_cc );
         STRLCAT( ctce_trace_stat, ctce_trace_xtra_temp );
     }
@@ -3273,7 +3286,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     }
 
     // Report on the alternating device block buffer usage.
-    snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+    MSGBUF( ctce_trace_xtra_temp,
         " w=%d,r=%d", pDEVBLK->ctce_buf_next_write, pDEVBLK->ctce_buf_next_read );
     STRLCAT( ctce_trace_stat, ctce_trace_xtra_temp );
 
@@ -3291,7 +3304,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
         }
         else if( pCTCE_Info->working_attn_rc > -1 )
         {
-            snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+            MSGBUF( ctce_trace_xtra_temp,
                 "->RC=%d", pCTCE_Info->working_attn_rc );
             STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
         }
@@ -3300,7 +3313,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     // The other side's "DE Ready" signalling to be shown.
     if( pCTCE_Info->de_ready )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " DE_READY->RC=%d", pCTCE_Info->de_ready_attn_rc );
         STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
@@ -3334,7 +3347,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     // Report on the SCB returned if applicable.
     if( ( eCTCE_Cmd_Xfr != CTCE_RCV ) && IS_CTCE_CCW_SCB( ctce_Cmd ) )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " SCB=%02X=%s", pCTCE_Info->scb, CTCE_CmdStr[CTCE_CMD( pCTCE_Info->scb )] );
         STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
@@ -3342,7 +3355,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     // Report on the device status.
     if( pCTCE_Info->busy_waits != 0 )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " Busy_Waits=%d", pCTCE_Info->busy_waits );
         STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
@@ -3350,7 +3363,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     // Report on the WAIT RC if needed.
     if( ( eCTCE_Cmd_Xfr == CTCE_SND ) && ( pCTCE_Info->wait_rc != 0 ) )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " WAIT->RC=%d", pCTCE_Info->wait_rc );
         STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
@@ -3358,13 +3371,13 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     // Report on the SENSE byte 1 and 2 if needed.
     if( ( pDEVBLK->sense[0] != 0 ) || ( pDEVBLK->sense[1] != 0 ) )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " SENSE=%02X%02X", pDEVBLK->sense[0], pDEVBLK->sense[1] );
         STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
     else if( IS_CTCE_CCW_SAS( ctce_Cmd ) )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " SENSE=%02X%02X", pCTCE_Info->sas[0], pCTCE_Info->sas[1] );
         STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
@@ -3374,7 +3387,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     if( ( pCTCE_Info->state_new != ctce_state_verify )
         && !( ( !pCTCE_Info->sent ) && ( IS_CTCE_SEND( pCTCE_Info->actions ) ) ) )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " CTCE_STATE MISMATCH %s!=%s(:FSM) !",
             CTCE_StaStr[ctce_state_verify],
             CTCE_StaStr[pCTCE_Info->state_new] );
@@ -3391,7 +3404,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
         &&  ( ( eCTCE_Cmd_Xfr != CTCE_RCV ) || ( *pUnitStat != 0 ) )
         && !( pCTCE_Info->de_ready ) )
     {
-        snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
+        MSGBUF( ctce_trace_xtra_temp,
             " Stat MISMATCH %02X!=%02X(:FSM) !",
             *pUnitStat, pCTCE_Info->x_unit_stat );
         STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
@@ -3433,7 +3446,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     }
 
     // Add an ending dot if this ends a temporarily triggered trace.
-    if( !pDEVBLK->ccwtrace && !pDEVBLK->ccwstep && ( pDEVBLK->ctce_trace_cntr == 0 ) )
+    if( !pDEVBLK->ccwtrace && ( pDEVBLK->ctce_trace_cntr == 0 ) )
     {
         STRLCAT( ctce_trace_xtra, "." );
     }
@@ -3447,7 +3460,7 @@ HHC05079I <src_dev> CTCE: <direction> <dst_dev> <seq#> cmd=<cmd>=<cmd_hex>
 Explanation
         The CTCE device <local_dev> processes a <cmd> (hex value <cmd_hex>).
         The <direction> shows whether it originates locally (the x-side),
-        and if it needs to be send (->) to the remote <remote_dev> device
+        and if it needs to be sent (->) to the remote <remote_dev> device
         (the y-side), or if the command was received (<-) from the y-side.
         The command causes a state transition shown in <x_local><y_local>
         <direction> <x_remote><y_remote>, using single-letter presentations
@@ -3477,9 +3490,9 @@ Action
         ctce_trace_stat,
         CTCE_ACTIONS_PRT( pCTCE_Info->actions ),
         ctce_trace_xtra );
-    if( pDEVBLK->ccwstep )
+    if( pDEVBLK->ccwtrace )
     {
-        snprintf( ctce_devnum, sizeof( ctce_devnum ), "%1d:%04X", CTCE_DEVNUM( pDEVBLK ) );
+        MSGBUF( ctce_devnum, "%1d:%04X", CTCE_DEVNUM( pDEVBLK ) );
         net_data_trace( pDEVBLK, ( BYTE * ) pSokBuf, pSokBuf->SndLen ,
             ( eCTCE_Cmd_Xfr == CTCE_RCV ) ? '<' : '>', 'D', ctce_devnum, 0 );
     }
@@ -3553,7 +3566,7 @@ static int  CTCE_Start_ConnectThread( DEVBLK *dev )
     dev->ctcePktSeq = ((dev->devnum <<  2) & 0xC000) |
                       ((dev->devnum << 12) & 0x3000) ;
 
-    snprintf( str_connect, sizeof( str_connect ), "CTCE %4.4X ConnectThread", dev->devnum);
+    MSGBUF( str_connect, "CTCE %4.4X ConnectThread", dev->devnum);
     str_connect[sizeof( str_connect )-1]=0;
     if( create_thread( &tid_connect, DETACHED, CTCE_ConnectThread, dev, str_connect ) != 0 )
     {
@@ -3593,7 +3606,7 @@ static void*  CTCE_ConnectThread( void* argp )
 
 
     // Obtain a socket to connect to the other end.
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
 
     // We must keep on trying to connect until it is successful,
     // which is why we do this in a separate dedicated thread.
@@ -3601,7 +3614,7 @@ static void*  CTCE_ConnectThread( void* argp )
     {
         if ( ( fd = CTCE_Get_Socket( dev, CTCE_SOK_CON ) ) < 0 )
         {
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return NULL;
         }
 
@@ -3614,14 +3627,14 @@ static void*  CTCE_ConnectThread( void* argp )
         addr.sin_port = htons( dev->ctce_rport );
 
         // During the blocking connect() and a possible retry wait interval we release the device lock.
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         rc = connect( fd, ( struct sockaddr * )&addr, sizeof( addr ) );
         if ( rc < 0 )
         {
             close_socket( fd );
-            usleep(connect_retry_interval * 1000) ;
+            USLEEP(connect_retry_interval * 1000) ;
         }
-        obtain_lock( &dev->lock );
+        OBTAIN_DEVLOCK( dev );
 
         // A successful connect() is immediately followed by a initial write.
         if ( rc == 0 )
@@ -3674,7 +3687,7 @@ static void*  CTCE_ConnectThread( void* argp )
         close_socket( fd );
     }
 
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
     return NULL;
 
 } // CTCE_ConnectThread
@@ -3827,12 +3840,16 @@ static int    CTCE_Recovery( DEVBLK* dev )
     char     *argv[] = { "DEVINIT", ( char* )&devnum };    // to be passed to  devinit_cmd
     int       rc;                                          // Return Code from devinit_cmd
 
-    sprintf( devnum, "%1d:%04X", CTCE_DEVNUM( dev ) );
+    MSGBUF( devnum, "%1d:%04X", CTCE_DEVNUM( dev ) );
+
     WRMSG( HHC05086, "I",  // CTCE: Recovery is about to issue Hercules command: %s %s"
         CTCX_DEVNUM( dev ), argv[0], argv[1] );
-    release_lock( &dev->lock );
-    rc = devinit_cmd( sizeof( argv ) / sizeof( argv[0] ), argv, NULL );
-    obtain_lock( &dev->lock );
+
+    RELEASE_DEVLOCK( dev );
+    {
+        rc = devinit_cmd( sizeof( argv ) / sizeof( argv[0] ), argv, NULL );
+    }
+    OBTAIN_DEVLOCK( dev );
     return rc;
 
 } // CTCE_Recovery

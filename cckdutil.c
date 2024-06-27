@@ -1,4 +1,5 @@
 /* CCKDUTIL.C   (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2023                             */
 /*              CCKD (Compressed CKD) Common routines                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -67,6 +68,7 @@ DLL_EXPORT const char* spc_typ_to_str( BYTE spc_typ )
         "L2LOWER",          //  SPCTAB_L2LOWER    9
         "L2UPPER",          //  SPCTAB_L2UPPER   10
         "data",             //  SPCTAB_DATA      11
+        "unknown",          //  SPCTAB_DATA      12
     };
 
     return (spc_typ < _countof( spc_types )) ?
@@ -74,7 +76,7 @@ DLL_EXPORT const char* spc_typ_to_str( BYTE spc_typ )
 }
 
 /*-------------------------------------------------------------------*/
-/* Toggle the endianess of a compressed file                         */
+/* Toggle the endianness of a compressed file                        */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_swapend (DEVBLK *dev)
 {
@@ -313,9 +315,9 @@ cswp_error:
 /* a little-endian system.                                           */
 /*                                                                   */
 /* The idea here is, the default format for our CCKD dasd images     */
-/* should match the endianess of the system we're running on (i.e.   */
-/* that we were built for), so that we don't need to swap of any     */
-/* of the fields in any of our dasd control blocks (e.g. compressed  */
+/* should match the endianness of the system we're running on (i.e.  */
+/* that we were built for), so that we don't need to swap any of     */
+/* the fields in any of our dasd control blocks (e.g. compressed     */
 /* CCKD device header, L1/L2 tables, etc).  Instead, we can simply   */
 /* use them directly, which is simpler and more efficient.           */
 /*                                                                   */
@@ -477,7 +479,7 @@ comp_restart:
         goto comp_read_error;
 
     /*---------------------------------------------------------------
-     * Check the endianess of the file
+     * Check the endianness of the file
      *---------------------------------------------------------------*/
     if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_def_opt_bigend())
     {
@@ -805,13 +807,15 @@ comp_restart:
     /*---------------------------------------------------------------
      * Update the device header
      *---------------------------------------------------------------*/
-    cdevhdr.cdh_size =
-    cdevhdr.cdh_used = spctab[s-1].spc_off;
-    cdevhdr.free_off =
-    cdevhdr.free_total =
+    cdevhdr.cdh_size     =
+    cdevhdr.cdh_used     = spctab[s-1].spc_off;
+
+    cdevhdr.free_off     =
+    cdevhdr.free_total   =
     cdevhdr.free_largest =
-    cdevhdr.free_num =
-    cdevhdr.free_imbed = 0;
+    cdevhdr.free_num     =
+    cdevhdr.free_imbed   = 0;
+
     cdevhdr.cdh_vrm[0] = CCKD_VERSION;
     cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
     cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
@@ -1290,6 +1294,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (!ro && level < 2 && (cdevhdr.cdh_opts & CCKD_OPT_SPERRS))
     {
         level = 2;
+        // "%1d:%04X CCKD file %s: forcing check level %d"
         if(dev->batch)
             FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
         else
@@ -1312,6 +1317,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* Additional checking if header errors */
     if (hdrerr != 0)
     {
+        // "%1d:%04X CCKD file %s: cdevhdr inconsistencies found, code %4.4X"
         if(dev->batch)
             FWRMSG( stdout, HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr);
         else
@@ -1319,6 +1325,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         if (level < 1)
         {
             level = 1;
+            // "%1d:%04X CCKD file %s: forcing check level %d"
             if(dev->batch)
                 FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
             else
@@ -1330,6 +1337,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (level < 1 && (cdevhdr.cdh_opts & CCKD_OPT_OPENED))
     {
         level = 1;
+        // "%1d:%04X CCKD file %s: forcing check level %d"
         if(dev->batch)
             FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
         else
@@ -1654,6 +1662,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* overlaps are serious */
     if (recovery && level < 3)
     {
+        // "%1d:%04X CCKD file %s: forcing check level %d"
         level = 3;
         if(dev->batch)
             FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
@@ -1763,6 +1772,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     if (fsperr)
     {
+        // "%1d:%04X CCKD file %s: free space errors detected"
         if(dev->batch)
             FWRMSG( stdout, HHC00368, "W", LCSS_DEVNUM, dev->filename);
         else
@@ -1818,6 +1828,7 @@ cdsk_space_check:
                 if (level < 3)
                 {
                     level = 3;
+                    // "%1d:%04X CCKD file %s: forcing check level %d"
                     if(dev->batch)
                         FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM,
                                 dev->filename, level);
@@ -2609,22 +2620,29 @@ cdsk_fsperr_retry:
         cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
         cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
-        cdevhdr.cdh_size        = cdevhdr.cdh_used         = cdevhdr.free_off =
-        cdevhdr.free_total  = cdevhdr.free_largest =
-        cdevhdr.free_num = cdevhdr.free_imbed   = 0;
+        cdevhdr.cdh_size     =
+        cdevhdr.cdh_used     =
+        cdevhdr.free_off     =
+        cdevhdr.free_total   =
+        cdevhdr.free_largest =
+        cdevhdr.free_num     =
+        cdevhdr.free_imbed   = 0;
+
         for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
             if (spctab[i].spc_typ == SPCTAB_FREE)
             {
                 cdevhdr.cdh_size += spctab[i].spc_siz;
+
                 if (spctab[i].spc_siz > cdevhdr.free_largest)
                     cdevhdr.free_largest = spctab[i].spc_siz;
+
                 cdevhdr.free_total += spctab[i].spc_siz;
                 cdevhdr.free_num++;
             }
             else
             {
-                cdevhdr.cdh_size += spctab[i].spc_siz;
-                cdevhdr.cdh_used += spctab[i].spc_len;
+                cdevhdr.cdh_size   += spctab[i].spc_siz;
+                cdevhdr.cdh_used   += spctab[i].spc_len;
                 cdevhdr.free_total += spctab[i].spc_siz - spctab[i].spc_len;
                 cdevhdr.free_imbed += spctab[i].spc_siz - spctab[i].spc_len;
              }

@@ -1,4 +1,5 @@
 /* CCNOWARN.H (C) Copyright "Fish" (David B. Trout), 2011            */
+/*            (C) and others 2013-2023                               */
 /*             Suppress compiler warnings                            */
 /*                                                                   */
 /*             Released under "The Q Public License Version 1"       */
@@ -65,22 +66,22 @@
   /*                       GCC or CLANG                              */
   /*-----------------------------------------------------------------*/
 
-  #if defined(HAVE_GCC_DIAG_PRAGMA)
+  #if defined( HAVE_GCC_DIAG_PRAGMA )
 
     #define DISABLE_GCC_WARNING( _str )   QPRAGMA( GCC diagnostic ignored _str )
     #define ENABLE_GCC_WARNING(  _str )   QPRAGMA( GCC diagnostic warning _str )
 
-    #if defined(HAVE_GCC_SET_UNUSED_WARNING)
+    #if defined( HAVE_GCC_SET_UNUSED_WARNING )
       #define DISABLE_GCC_UNUSED_SET_WARNING            \
               DISABLE_GCC_WARNING("-Wunused-but-set-variable")
     #endif
 
-    #if defined(HAVE_GCC_UNUSED_FUNC_WARNING)
+    #if defined( HAVE_GCC_UNUSED_FUNC_WARNING )
       #define DISABLE_GCC_UNUSED_FUNCTION_WARNING       \
               DISABLE_GCC_WARNING("-Wunused-function")
     #endif
 
-    #if defined(HAVE_GCC_DIAG_PUSHPOP)
+    #if defined( HAVE_GCC_DIAG_PUSHPOP )
       #define PUSH_GCC_WARNINGS()         QPRAGMA( GCC diagnostic push )
       #define POP_GCC_WARNINGS()          QPRAGMA( GCC diagnostic pop  )
     #endif
@@ -92,11 +93,11 @@
     #define ENABLE_GCC_WARNING(  _str )              /* (do nothing) */
   #endif
 
-  #if !defined(DISABLE_GCC_UNUSED_SET_WARNING)
+  #ifndef   DISABLE_GCC_UNUSED_SET_WARNING
     #define DISABLE_GCC_UNUSED_SET_WARNING           /* (do nothing) */
   #endif
 
-  #if !defined(DISABLE_GCC_UNUSED_FUNCTION_WARNING)
+  #ifndef   DISABLE_GCC_UNUSED_FUNCTION_WARNING
     #define DISABLE_GCC_UNUSED_FUNCTION_WARNING      /* (do nothing) */
   #endif
 
@@ -109,13 +110,43 @@
   DISABLE_GCC_WARNING( "-Wmissing-field-initializers" )
   DISABLE_GCC_WARNING( "-Wmissing-braces" )
 
-  #if defined( GCC_VERSION ) && GCC_VERSION >= 40800 /* gcc >= 4.8.0 */
   /* Silence warnings about CASSERT macro usage within functions too */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 40800 /* gcc >= 4.8.0 */
   DISABLE_GCC_WARNING( "-Wunused-local-typedefs" )
+  #endif
+
+  #if defined( CLANG_VERSION ) && CLANG_VERSION >= 50000 /* clang >= 5.0.0 */
+  DISABLE_GCC_WARNING( "-Wunused-local-typedef" )
   #endif
 
   // "converts between pointers to integer types with different sign"
   DISABLE_GCC_WARNING( "-Wpointer-sign" )
+
+  /* Mostly annoying bullshit */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 60000 /* gcc >= 6.0.0 */
+  DISABLE_GCC_WARNING( "-Wmisleading-indentation" )
+  #endif
+
+  /* "Output may be truncated writing up to x bytes into a region of size y" */
+  /* (this warning is usually issued for most all uses of our MSGBUF macro)  */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 70100 /* gcc >= 7.1.0 */
+  DISABLE_GCC_WARNING( "-Wformat-truncation" )
+  #endif
+
+  /* Too many false positives on this one */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 80000 /* gcc >= 8.0.0 */
+  DISABLE_GCC_WARNING( "-Wstringop-truncation" )
+  #endif
+
+  /* Almost always false positive bullshit */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 110000 /* gcc >= 11.0.0 */
+  DISABLE_GCC_WARNING( "-Warray-bounds" )
+  #endif
+
+  /* Annoying and NOT a problem */
+  #if defined( CLANG_VERSION ) && CLANG_VERSION >= 120000 /* clang >= 12.0.0 */
+  DISABLE_GCC_WARNING( "-Wundefined-inline" )
+  #endif
 
   /*-----------------------------------------------------------------*/
   /*            define support for other compilers here              */

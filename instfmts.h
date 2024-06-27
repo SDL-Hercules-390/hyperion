@@ -31,21 +31,17 @@
 /* field of the PSW by 2, 4, or 6 bytes, and to set the instruction  */
 /* length code (ILC) field of the PSW in case a program check occurs.*/
 /*                                                                   */
-/* Certain decoders have additional forms with 0 and _B suffixes:    */
+/* Certain decoders have an additional form with a "_B" suffix:      */
 /*                                                                   */
-/*    - The  0 version does not update the PSW ILC.                  */
-/*    - The _B version updates neither the PSW ILC nor the PSW IA.   */
-/*                                                                   */
-/* The 0 versions of the decoders are chosen whenever we know that   */
-/* past this point, no program interrupt will be generated (such as  */
-/* general instructions that do not access any storage), therefore   */
-/* needing much simpler prologue code.                               */
+/*    - The _B version does not update the PSW IA (i.e.'ip')         */
 /*                                                                   */
 /* The _B versions for some of the decoders are intended for branch  */
 /* type instructions where updating the PSW IA to IA+ILC should only */
 /* be done after the branch is deemed impossible. The _B decoders    */
 /* therefore do not have a INST_UPDATE_PSW() macro as part of their  */
-/* definition whereas all other decoders normally do.                */
+/* definition whereas all other decoders normally do. Instead, such  */
+/* instructions manually do the INST_UPDATE_PSW() macro themselves   */
+/* in the actual DEF_INST function for the branch not taken case.    */
 /*                                                                   */
 /* Instruction decoders are DEPENDENT on the build architecture and  */
 /* therefore each decoder macro MUST be undefined and then redefined */
@@ -55,57 +51,45 @@
 /*-------------------------------------------------------------------*/
 
 #undef E
-#undef IE0
-#undef MII_A0
+#undef IE
+#undef MII_A
 #undef RR
-#undef RR0
 #undef RR_B
 #undef RR_SVC
 #undef RRE
-#undef RRE0
 #undef RRE_B
 #undef RRF_M
 #undef RRF_M4
 #undef RRF_RM
 #undef RRF_MM
 #undef RRR
-#undef RRR0
 #undef RX
-#undef RX0
 #undef RX_B
-#undef RXX0_BC
+#undef RXX_BC
 #undef RXX0RX
-#undef RX0X0RX
 #undef RXXx
-#undef RX0Xx
 #undef RXXx_BC
 #undef RX_BC
 #undef RXE
 #undef RXF
 #undef RXY
-#undef RXY0
 #undef RXY_B
-#undef RXYX0
+#undef RXYX
 #undef RS
-#undef RS0
 #undef RS_B
 #undef RSY
-#undef RSY0
 #undef RSY_B
 #undef RSL
 #undef RSL_RM
 #undef RI
-#undef RI0
 #undef RI_B
 #undef RIE
-#undef RIE0
 #undef RIE_B
 #undef RIE_RIM
 #undef RIE_RRIM_B
 #undef RIE_RMII_B
 #undef RIE_RRIII
 #undef RIL
-#undef RIL0
 #undef RIL_B
 #undef RIL_A
 #undef RIS_B
@@ -114,7 +98,7 @@
 #undef SIIX
 #undef SIY
 #undef SIL
-#undef SMI_A0
+#undef SMI_A
 #undef S
 #undef SS
 #undef SS_L
@@ -143,11 +127,11 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*      IE0 - extended op code with two 4-bit immediate fields       */
+/*      IE - extended op code with two 4-bit immediate fields        */
 /*-------------------------------------------------------------------*/
 // This is z/Arch IE format.
 
-#define IE0( _inst, _regs, _i1, _i2 )   IE_DECODER( _inst, _regs, _i1, _i2, 4, 0 )
+#define IE( _inst, _regs, _i1, _i2 )   IE_DECODER( _inst, _regs, _i1, _i2, 4, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -166,11 +150,11 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*    MII_A0 - mask with 12-bit and 24-bit relative address fields   */
+/*    MII_A - mask with 12-bit and 24-bit relative address fields    */
 /*-------------------------------------------------------------------*/
 // This is z/Arch MII format.
 
-#define MII_A0( _inst, _regs, _m1, _addr2, _addr3 )   MII_A_DECODER( _inst, _regs, _m1, _addr2, _addr3, 6, 0 )
+#define MII_A( _inst, _regs, _m1, _addr2, _addr3 )   MII_A_DECODER( _inst, _regs, _m1, _addr2, _addr3, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -192,13 +176,13 @@
     offset = 2LL * (S32) ri2;                                       \
                                                                     \
     (_addr2) = likely( !(_regs)->execflag )                         \
-        ? PSW_IA( (_regs), offset )                                 \
+        ? PSW_IA_FROM_IP( (_regs), offset )                         \
         : ((_regs)->ET + offset) & ADDRESS_MAXWRAP( (_regs) );      \
                                                                     \
     offset = 2LL * (S32) ri3;                                       \
                                                                     \
     (_addr3) = likely( !(_regs)->execflag )                         \
-        ? PSW_IA((_regs), offset)                                   \
+        ? PSW_IA_FROM_IP((_regs), offset)                           \
         : ((_regs)->ET + offset) & ADDRESS_MAXWRAP( (_regs) );      \
                                                                     \
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
@@ -210,8 +194,7 @@
 // This is z/Arch RR format.
 
 #define RR(   _inst, _regs, _r1, _r2 )  RR_DECODER( _inst, _regs, _r1, _r2, 2, 2 )
-#define RR0(  _inst, _regs, _r1, _r2 )  RR_DECODER( _inst, _regs, _r1, _r2, 2, 0 )
-#define RR_B( _inst, _regs, _r1, _r2 )  RR_DECODER( _inst, _regs, _r1, _r2, 0, 0 )
+#define RR_B( _inst, _regs, _r1, _r2 )  RR_DECODER( _inst, _regs, _r1, _r2, 0, 2 )
 
 //  0           1           2
 //  +-----+-----+-----+-----+
@@ -255,8 +238,7 @@
 // This is z/Arch RRE format.
 
 #define RRE(   _inst, _regs, _r1, _r2 )  RRE_DECODER( _inst, _regs, _r1, _r2, 4, 4 )
-#define RRE0(  _inst, _regs, _r1, _r2 )  RRE_DECODER( _inst, _regs, _r1, _r2, 4, 0 )
-#define RRE_B( _inst, _regs, _r1, _r2 )  RRE_DECODER( _inst, _regs, _r1, _r2, 0, 0 )
+#define RRE_B( _inst, _regs, _r1, _r2 )  RRE_DECODER( _inst, _regs, _r1, _r2, 0, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -451,8 +433,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RRF-a and -b format, but without any m4 field.
 
-#define RRR(  _inst, _regs, _r1, _r2, _r3 )  RRR_DECODER( _inst, _regs, _r1, _r2, _r3, 4, 4 )
-#define RRR0( _inst, _regs, _r1, _r2, _r3 )  RRR_DECODER( _inst, _regs, _r1, _r2, _r3, 4, 0 )
+#define RRR( _inst, _regs, _r1, _r2, _r3 )  RRR_DECODER( _inst, _regs, _r1, _r2, _r3, 4, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -477,9 +458,8 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RX-a format.
 
-#define RX(   _inst, _regs, _r1, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 4, 4 )
-#define RX0(  _inst, _regs, _r1, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 4, 0 )
-#define RX_B( _inst, _regs, _r1, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 0, 0 )
+#define RX(   _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 4, 4 )
+#define RX_B( _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 0, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -487,20 +467,20 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28   31
 
-#define RX_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RX_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 16) & 0xf;  /* (actually x2) */   \
+    (_x2)              = (temp >> 16) & 0xf;                        \
     (_r1)              = (temp >> 20) & 0xf;                        \
                                                                     \
-    if (unlikely( _b2 ))                      /* (actually x2) */   \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (unlikely( _x2 ))                                            \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;               /* (the REAL b2) */   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (likely( _b2 ))                        /* (the REAL b2) */   \
+    if (likely( _b2 ))                                              \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     if (( _len ))                                                   \
@@ -514,7 +494,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RX-b format, but without extracting the m1 field.
 
-#define RX_BC( _inst, _regs, _b2, _effective_addr2 )  RX_BC_DECODER( _inst, _regs, _b2, _effective_addr2, 0, 0 )
+#define RX_BC( _inst, _regs, _b2, _effective_addr2 )  RX_BC_DECODER( _inst, _regs, _b2, _effective_addr2, 0, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -544,7 +524,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RX-b format for BRANCHES when x2 known to be ZERO.
 
-#define RXX0_BC( _inst, _regs, _b2, _effective_addr2 )  RXX0_BC_DECODER( _inst, _regs, _b2, _effective_addr2 )
+#define RXX_BC( _inst, _regs, _b2, _effective_addr2 )  RXX0_BC_DECODER( _inst, _regs, _b2, _effective_addr2, 0, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -552,7 +532,7 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28   31
 
-#define RXX0_BC_DECODER( _inst, _regs, _b2, _effective_addr2 )      \
+#define RXX0_BC_DECODER( _inst, _regs, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
@@ -561,6 +541,8 @@
                                                                     \
     if (likely( _b2 ))                                              \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }
 
 /*-------------------------------------------------------------------*/
@@ -569,7 +551,6 @@
 // This is z/Arch RX-a format without r1 when x2 known to be ZERO.
 
 #define RXX0RX(  _inst, _regs, _b2, _effective_addr2 )  RXX0RX_DECODER( _inst, _regs, _b2, _effective_addr2, 4, 4 )
-#define RX0X0RX( _inst, _regs, _b2, _effective_addr2 )  RXX0RX_DECODER( _inst, _regs, _b2, _effective_addr2, 4, 0 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -598,8 +579,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RX-a format when x2 known to be NON-ZERO.
 
-#define RXXx(  _inst, _regs, _r1, _b2, _effective_addr2 )  RXXx_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 4, 4 )
-#define RX0Xx( _inst, _regs, _r1, _b2, _effective_addr2 )  RXXx_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 4, 0 )
+#define RXXx(  _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXXx_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 4, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -607,16 +587,16 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28   31
 
-#define RXXx_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXXx_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_effective_addr2)  = (temp >>  0) & 0xfff;                     \
     (_r1)               = (temp >> 20) & 0xf;                       \
-    (_b2)               = (temp >> 16) & 0xf;  /* (actually x2) */  \
-    (_effective_addr2) += (_regs)->GR(( _b2 ));/* (actually x2) */  \
-    (_b2)               = (temp >> 12) & 0xf;  /* (the REAL b2) */  \
-    if (likely(( _b2 )))                       /* (the REAL b2) */  \
+    (_x2)               = (temp >> 16) & 0xf;                       \
+    (_effective_addr2) += (_regs)->GR(( _x2 ));                     \
+    (_b2)               = (temp >> 12) & 0xf;                       \
+    if (likely(( _b2 )))                                            \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     if (( _len ))                                                   \
@@ -630,7 +610,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RX-b for BRANCHES when x2 known to be NON-ZERO.
 
-#define RXXx_BC( _inst, _regs, _b2, _effective_addr2 )  RXXx_BC_DECODER( _inst, _regs, _b2, _effective_addr2, 0, 0 )
+#define RXXx_BC( _inst, _regs, _b2, _effective_addr2 )  RXXx_BC_DECODER( _inst, _regs, _b2, _effective_addr2, 0, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -656,7 +636,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RXE format, but without extracting the m3 field.
 
-#define RXE( _inst, _regs, _r1, _b2, _effective_addr2 )  RXE_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
+#define RXE( _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXE_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -664,20 +644,20 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXE_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXE_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 16) & 0xf;  /* (actually x2) */   \
+    (_x2)              = (temp >> 16) & 0xf;                        \
     (_r1)              = (temp >> 20) & 0xf;                        \
                                                                     \
-    if (( _b2 ))                              /* (actually x2) */   \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (( _x2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;               /* (the REAL b2) */   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                              /* (the REAL b2) */   \
+    if (( _b2 ))                                                    \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     (_effective_addr2) &= ADDRESS_MAXWRAP(( _regs ));               \
@@ -690,7 +670,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RXF format.
 
-#define RXF( _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RXF_DECODER( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 6 )
+#define RXF( _inst, _regs, _r1, _r3, _x2, _b2, _effective_addr2 )  RXF_DECODER( _inst, _regs, _r1, _r3, _x2, _b2, _effective_addr2, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -698,21 +678,21 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXF_DECODER( _inst, _regs, _r1, _r3, _b2, _effective_addr2, _len, _ilc ) \
+#define RXF_DECODER( _inst, _regs, _r1, _r3, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_r1)              = (_inst)[4] >> 4;                           \
     (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 16) & 0xf;  /* (actually x2) */   \
+    (_x2)              = (temp >> 16) & 0xf;                        \
     (_r3)              = (temp >> 20) & 0xf;                        \
                                                                     \
-    if (( _b2 ))                              /* (actually x2) */   \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (( _x2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;               /* (the REAL b2) */   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                              /* (the REAL b2) */   \
+    if (( _b2 ))                                                    \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     (_effective_addr2) &= ADDRESS_MAXWRAP(( _regs ));               \
@@ -727,15 +707,13 @@
 
 #if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 
-#define RXY(   _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
-#define RXY0(  _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, 6, 0 )
-#define RXY_B( _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, 0, 0 )
+#define RXY(   _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 6, 6 )
+#define RXY_B( _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 0, 6 )
 
 #else /* !defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
-#define RXY(   _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
-#define RXY0(  _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _b2, _effective_addr2, 6, 0 )
-#define RXY_B( _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _b2, _effective_addr2, 0, 0 )
+#define RXY(   _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _x2, _b2, _effective_addr2, 6, 6 )
+#define RXY_B( _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _x2, _b2, _effective_addr2, 0, 6 )
 
 #endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
@@ -747,22 +725,22 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXY_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXY_DECODER_LD( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     S32 disp2; U32 temp = fetch_fw( _inst );                        \
                                                                     \
     (_effective_addr2) = 0;                                         \
                                                                     \
     disp2 = (temp >>  0) & 0xfff;                                   \
-    (_b2) = (temp >> 16) & 0xf;     /* (actually x2) */             \
+    (_x2) = (temp >> 16) & 0xf;                                     \
     (_r1) = (temp >> 20) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                    /* (actually x2) */             \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (( _x2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;     /* (the REAL b2) */             \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                    /* (the REAL b2) */             \
+    if (( _b2 ))                                                    \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     if (unlikely((_inst)[4]))       /* long displacement?  */       \
@@ -789,20 +767,20 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXY_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXY_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 16) & 0xf;  /* (actually x2) */   \
+    (_x2)              = (temp >> 16) & 0xf;                        \
     (_r1)              = (temp >> 20) & 0xf;                        \
                                                                     \
-    if (( _b2 ))                              /* (actually x2) */   \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (( _x2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;               /* (the REAL b2) */   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                              /* (the REAL b2) */   \
+    if (( _b2 ))                                                    \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     if (( _len ))                                                   \
@@ -818,10 +796,10 @@
 // This is z/Arch RXY-a format when x2 is known to be ZERO.
 
 #ifdef FEATURE_018_LONG_DISPL_INST_FACILITY
-  #define RXYX0( _inst, _regs, _r1, _b2, _effective_addr2 )  RXYX0_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
-#else /* !defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
-  #define RXYX0( _inst, _regs, _r1, _b2, _effective_addr2 )  RXYX0_DECODER(    _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
-#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
+  #define RXYX( _inst, _regs, _r1, _b2, _effective_addr2 )  RXYX_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
+#else
+  #define RXYX( _inst, _regs, _r1, _b2, _effective_addr2 )  RXYX_DECODER(    _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
+#endif
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -829,7 +807,7 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXYX0_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXYX_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     S32 disp2; U32 temp = fetch_fw( _inst );                        \
                                                                     \
@@ -864,7 +842,7 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXYX0_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXYX_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
@@ -888,8 +866,7 @@
 // This is z/Arch RS-a and -b formats.
 
 #define RS(   _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RS_DECODER( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 4, 4 )
-#define RS0(  _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RS_DECODER( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 4, 0 )
-#define RS_B( _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RS_DECODER( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 0, 0 )
+#define RS_B( _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RS_DECODER( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 0, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -995,14 +972,12 @@
 #if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 
 #define RSY(   _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RSY_DECODER_LD( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 6 )
-#define RSY0(  _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RSY_DECODER_LD( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 0 )
-#define RSY_B( _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RSY_DECODER_LD( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 0, 0 )
+#define RSY_B( _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RSY_DECODER_LD( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 0, 6 )
 
 #else /* !defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 #define RSY(   _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RSY_DECODER(    _inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 6 )
-#define RSY0(  _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RSY_DECODER(    _inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 0 )
-#define RSY_B( _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RSY_DECODER(    _inst, _regs, _r1, _r3, _b2, _effective_addr2, 0, 0 )
+#define RSY_B( _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RSY_DECODER(    _inst, _regs, _r1, _r3, _b2, _effective_addr2, 0, 6 )
 
 #endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
@@ -1131,37 +1106,12 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*      RSI_B - register and immediate with additional R3 field      */
-/*-------------------------------------------------------------------*/
-// This is z/Arch RSI format.
-
-#define RSI_B( _inst, _regs, _r1, _r3, _ri2 )  RSI_DECODER( _inst, _regs, _r1, _r3, _ri2, 0, 0 )
-
-//  0           1           2           3           4
-//  +-----+-----+-----+-----+-----+-----+-----+-----+
-//  |     OP    | r1  | r3  |          ri2          |       RSI
-//  +-----+-----+-----+-----+-----+-----+-----+-----+
-//  0     4     8     12    16    20    24    28   31
-
-#define RSI_DECODER( _inst, _regs, _r1, _r3, _ri2, _len, _ilc )     \
-{                                                                   \
-    U32 temp = fetch_fw( _inst );                                   \
-                                                                    \
-    (_ri2) = (temp >>  0) & 0xffff;                                 \
-    (_r3)  = (temp >> 16) & 0xf;                                    \
-    (_r1)  = (temp >> 20) & 0xf;                                    \
-                                                                    \
-    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
-}
-
-/*-------------------------------------------------------------------*/
 /*     RI - register and immediate with extended 4-bit op code       */
 /*-------------------------------------------------------------------*/
 // This is z/Arch RI format.
 
 #define RI(   _inst, _regs, _r1, _xop, _i2  )  RI_DECODER( _inst, _regs, _r1, _xop, _i2,  4, 4 )
-#define RI0(  _inst, _regs, _r1, _xop, _ri2 )  RI_DECODER( _inst, _regs, _r1, _xop, _ri2, 4, 0 )
-#define RI_B( _inst, _regs, _r1, _xop, _ri2 )  RI_DECODER( _inst, _regs, _r1, _xop, _ri2, 0, 0 )
+#define RI_B( _inst, _regs, _r1, _xop, _ri2 )  RI_DECODER( _inst, _regs, _r1, _xop, _ri2, 0, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -1190,8 +1140,7 @@
 // This is z/Arch RIE-d, -e, -g formats
 
 #define RIE(   _inst, _regs, _r1, _r3, _i2 )  RIE_DECODER( _inst, _regs, _r1, _r3, _i2, 6, 6 )
-#define RIE0(  _inst, _regs, _r1, _r3, _i2 )  RIE_DECODER( _inst, _regs, _r1, _r3, _i2, 6, 0 )
-#define RIE_B( _inst, _regs, _r1, _r3, _i2 )  RIE_DECODER( _inst, _regs, _r1, _r3, _i2, 0, 0 )
+#define RIE_B( _inst, _regs, _r1, _r3, _i2 )  RIE_DECODER( _inst, _regs, _r1, _r3, _i2, 0, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -1243,7 +1192,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RIE-b format.
 
-#define RIE_RRIM_B( _inst, _regs, _r1, _r2, _ri4, _m3 )  RIE_RRIM_DECODER( _inst, _regs, _r1, _r2, _ri4, _m3, 0, 0 )
+#define RIE_RRIM_B( _inst, _regs, _r1, _r2, _ri4, _m3 )  RIE_RRIM_DECODER( _inst, _regs, _r1, _r2, _ri4, _m3, 0, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -1268,7 +1217,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RIE-c format.
 
-#define RIE_RMII_B( _inst, _regs, _r1, _i2, _m3, _ri4 )  RIE_RMII_DECODER( _inst, _regs, _r1, _i2, _m3, _ri4, 0, 0 )
+#define RIE_RMII_B( _inst, _regs, _r1, _i2, _m3, _ri4 )  RIE_RMII_DECODER( _inst, _regs, _r1, _i2, _m3, _ri4, 0, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -1317,11 +1266,10 @@
 /*-------------------------------------------------------------------*/
 /*  RIL - register and longer immediate with extended 4 bit op code  */
 /*-------------------------------------------------------------------*/
-// This is z/Arch RIL-a format.
+// This is z/Arch RIL-a format or RIL-b/c format for branches.
 
 #define RIL(   _inst, _regs, _r1, _op, _i2 )  RIL_DECODER( _inst, _regs, _r1, _op, _i2, 6, 6 )
-#define RIL0(  _inst, _regs, _r1, _op, _i2 )  RIL_DECODER( _inst, _regs, _r1, _op, _i2, 6, 0 )
-#define RIL_B( _inst, _regs, _r1, _op, _i2 )  RIL_DECODER( _inst, _regs, _r1, _op, _i2, 0, 0 )
+#define RIL_B( _inst, _regs, _r1, _op, _i2 )  RIL_DECODER( _inst, _regs, _r1, _op, _i2, 0, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -1358,7 +1306,7 @@
     S64 offset = 2LL * (S32) (fetch_fw( &(_inst)[2] ));             \
                                                                     \
     (_ri2) = likely( !(_regs)->execflag )                           \
-        ? PSW_IA( (_regs), offset )                                 \
+        ? PSW_IA_FROM_IP( (_regs), offset )                         \
         : ((_regs)->ET + offset) & ADDRESS_MAXWRAP(( _regs ));      \
                                                                     \
     (_r1) = ((_inst)[1] >> 4) & 0xf;                                \
@@ -1371,7 +1319,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RIS format.
 
-#define RIS_B( _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4 )  RIS_DECODER( _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 0, 0 )
+#define RIS_B( _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4 )  RIS_DECODER( _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 0, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -1403,7 +1351,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RRS format.
 
-#define RRS_B( _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4 )  RRS_DECODER( _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 0, 0 )
+#define RRS_B( _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4 )  RRS_DECODER( _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 0, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -1567,11 +1515,11 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*    SMI_A0 - storage with mask and 16-bit relative address         */
+/*    SMI_A - storage with mask and 16-bit relative address          */
 /*-------------------------------------------------------------------*/
 // This is z/Arch SMI format.
 
-#define SMI_A0( _inst, _regs, _m1, _addr2, _b3, _addr3 )  SMI_A_DECODER( _inst, _regs, _m1, _addr2, _b3, _addr3, 6, 0 )
+#define SMI_A( _inst, _regs, _m1, _addr2, _b3, _addr3 )  SMI_A_DECODER( _inst, _regs, _m1, _addr2, _b3, _addr3, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -1598,7 +1546,7 @@
     offset = 2LL * (S32) ri2;                                       \
                                                                     \
     (_addr2) = likely( !(_regs)->execflag )                         \
-            ? PSW_IA( (_regs), offset )                             \
+            ? PSW_IA_FROM_IP( (_regs), offset )                     \
             : ((_regs)->ET + offset) & ADDRESS_MAXWRAP(( _regs ));  \
                                                                     \
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \

@@ -10,7 +10,7 @@ r 20C=41100320     # LA R1,TEST1       R1=>Test data table
 r 210=41F00400     # LA R15,RES1       R15=>Result table
 r 214=E3401000008F #A LPQ R4,0(,R1)    Load R4,R5=TESTn
 r 21A=B3C10044     # LDGR F4,R4        Load FPR4 from R4
-r 21E=B3C10065     # LDGR F6,R5        Load FPR6 from R5          
+r 21E=B3C10065     # LDGR F6,R5        Load FPR6 from R5
 r 222=41200008     # LA R2,8           R2=Number of DRM tests
 r 226=A7390000     # LGHI R3,0         R3=DRM 0
 r 22A=B2B93000     #B SRNMT 0(R3)      Set DFP rounding mode from R3
@@ -26,16 +26,16 @@ r 250=46000214     # BCT R0,A          Loop to end of TEST table
 r 254=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
-r 320=22080000000000000000000000000080 # TEST1 DC LD'100' 
-r 330=2207C000000000000000000000000035 # TEST2 DC LD'3.5' 
+r 314=00000000     # FPCREG            Floating point control register
+r 320=22080000000000000000000000000080 # TEST1 DC LD'100'
+r 330=2207C000000000000000000000000035 # TEST2 DC LD'3.5'
 r 340=A207C000000000000000000000000005 # TEST3 DC LD'-0.5'
-r 350=7EABCDEF01234567890123456789ABCD # TEST4 DC LD'SNAN' 
+r 350=7EABCDEF01234567890123456789ABCD # TEST4 DC LD'SNAN'
 r 360=78123456789ABCDE0123456789ABCDEF # TEST5 DC LD'INF'
 pgmtrace +7
 restart
 pause 1
 * Display test data
-r 320.50 
+r 320.50
 * Display results
 r 400.280

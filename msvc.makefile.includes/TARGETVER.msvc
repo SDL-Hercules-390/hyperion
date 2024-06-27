@@ -4,33 +4,35 @@
 # (c) "Fish" (David B. Trout), 2017
 # --------------------------------------------------------------------------
 #
-#   Set APPVER and TARGETOS makefile target variables for <win32.mak>
-#   VSVERS.msvc must be !INCLUDE beforehand by makefile-dllmod.msvc
-#
-# ***************************************************************************
-#
 #                   TargetVer for makefile projects
 #
-#  The following defines determines the minimum Windows platform on which
-#  the application can run. Set APPVER and TARGETOS as needed and win32.mak
-#  will then define '_WIN32_WINNT' and other associated values accordingly.
+#  Set the APPVER, TARGETOS, _WIN32_IE and NMAKE_WINVER variables
+#  defining the minimum Windows platform on which the application can run.
 #
 # ***************************************************************************
-
 
 # First, define some handy descriptive constants we can use
 
-
-APPVER_XP_2003 = 5.02           # Windows XP, Server 2003
-APPVER_VISTA   = 6.0            # Windows Vista
-APPVER_WIN7    = 6.1            # Windows 7
+APPVER_VISTA = 6.0              # Windows Vista
+APPVER_WIN7  = 6.1              # Windows 7
 
 
 # Now use those constants to set our Windows build target.
-# <win32.mak> will then define _WIN32_WINNT, NTDDI_VERSION,
-# _WIN32_IE and WINVER on the command line (-D xxxx=nnnn)
-# based on our chosen APPVER value.
+
+APPVER = $(APPVER_VISTA)          # Minimum Windows Platform
+TARGETOS = WINNT                  # ALWAYS! (Win9x is dead!)
 
 
-TARGETOS = WINNT                # ALWAYS! (Win9x is dead!)
-APPVER   = $(APPVER_VISTA)      # Minimum Windows Platform
+#-------------------------------------------------------------
+
+!IF "$(APPVER)" == "$(APPVER_VISTA)"
+NMAKE_WINVER = 0x0600           # (same thing as a hex value)
+_WIN32_IE    = 0x0700           # Internet Explorer 7.0
+!ENDIF
+
+!IF "$(APPVER)" == "$(APPVER_WIN7)"
+NMAKE_WINVER = 0x0601           # (same thing as a hex value)
+_WIN32_IE    = 0x0800           # Internet Explorer 8.0
+!ENDIF
+
+#-------------------------------------------------------------

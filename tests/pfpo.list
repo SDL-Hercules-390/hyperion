@@ -1,4 +1,4 @@
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     1
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -6,200 +6,321 @@ ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.              
                                                      3 *                           PFPO.ASM
                                                      4 ***********************************************************************
                                                      5 *
-                                                     6 *   This file was put into the public domain 2016-05-05
-                                                     7 *   by John P. Hartmann. You can use it for anything you like,
-                                                     8 *   as long as this notice remains.
-                                                     9 *
-                                                    10 *   Note that this test runs in problem state. As a result STFL is
-                                                    11 *   not a good idea; nor is LPSW for that matter.
+                                                     6 *   This test converts the number 6.283185307179586476925286766559004
+                                                     7 *   from Extended DFP (Decimal Floating-Point) format to a Long HFP
+                                                     8 *   (Hexadecimal Floating-Point) format in order to confirm that the
+                                                     9 *   bug described in GitHub Issue #407 has indeed been fixed. It does
+                                                    10 *   not do anything else. It does NOT test any other function of the
+                                                    11 *   PFPO instruction.
                                                     12 *
-                                                    13 *   So we terminate by SVC, and we determine architecture mode
-                                                    14 *   by seeing where the Restart Old PSW was stored.
-                                                    15 *
-                                                    16 ***********************************************************************
-                                                    17 *
-                                                    18 *   Temporarily modified by Fish to do NOTHING and test NOTHING!
-                                                    19 *   Temporarily modified by Fish to do NOTHING and test NOTHING!
-                                                    20 *   Temporarily modified by Fish to do NOTHING and test NOTHING!
-                                                    21 *
-                                                    22 ***********************************************************************
+                                                    13 *   Note that the accompanying .tst runtest script tests two different
+                                                    14 *   conversion scenarios: the first confirms that the original bug has
+                                                    15 *   been fixed, and the second test confirms conversions of a shorter
+                                                    16 *   length values also still works (i.e. that our fixed hasn't broken
+                                                    17 *   anything).
+                                                    18 *
+                                                    19 ***********************************************************************
 
 
 
 
 
-                                                    24 ***********************************************************************
-                                                    25 *                       Low Core PSWs...
-                                                    26 ***********************************************************************
+                                                    21 ***********************************************************************
+                                                    22 *                       Low Core PSWs...
+                                                    23 ***********************************************************************
 
 
-                              00000000  00000303    28 PFPO     START 0
-00000000                      00000000              29          USING PFPO,R15
+                              00000000  0000075F    25 PFPO     START 0
+00000000                      00000000              26          USING PFPO,0                 Use absolute addressing
 
-00000000  00090000 00000200                         31          DC    A(X'00090000',GO)    ESA Restart New PSW
-00000008                                            32 ROPSW390 DS    0XL8                 ESA/390 Restart Old PSW
-00000008  FFFFFFFF FFFFFFFF                         33          DC    X'FFFFFFFFFFFFFFFF'  (if not ones then ESA/390 mode)
 
-00000010                      00000010  00000060    35          ORG   PFPO+X'60'           ESA SVC New PSW
-00000060  000A0000 00000000                         36          DC    X'000A0000',A(X'0')  (normal EOJ PSW)
 
-00000068                      00000068  00000068    38          ORG   PFPO+X'68'           ESA Program New PSW
-00000068  000A0000 DEADDEAD                         39          DC    X'000A0000',A(X'DEADDEAD')
+00000000                      00000000  000001A0    28          ORG   PFPO+X'1A0'            z/Arch Restart new PSW
+000001A0  00000001                                  29          DC    XL4'00000001'          z/Arch Restart new PSW
+000001A4  80000000                                  30          DC    XL4'80000000'          z/Arch Restart new PSW
+000001A8  00000000                                  31          DC    XL4'00000000'          z/Arch Restart new PSW
+000001AC  00000200                                  32          DC    A(BEGIN)               z/Arch Restart new PSW
 
-00000070                      00000070  00000120    41          ORG   PFPO+X'120'
-00000120                                            42 ROPSWZ   DS    0XL16                z Restart Old PSW
-00000120  FFFFFFFF FFFFFFFF                         43          DC    16X'FF'              (if not ones then z mode)
 
-00000130                      00000130  000001A0    45          ORG   PFPO+X'1A0'          z Restart New PSW
-000001A0  00010001 80000000                         46          DC    X'0001000180000000',AD(GO)
-
-000001B0                      000001B0  000001C0    48          ORG   PFPO+X'1C0'          z SVC New PSW
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     2
+000001B0                      000001B0  000001D0    34          ORG   PFPO+X'1D0'            z/Arch Program new PSW
+000001D0  00020001                                  35          DC    XL4'00020001'          z/Arch Program new PSW
+000001D4  80000000                                  36          DC    XL4'80000000'          z/Arch Program new PSW
+000001D8  00000000                                  37          DC    XL4'00000000'          z/Arch Program new PSW
+000001DC  0000DEAD                                  38          DC    XL4'0000DEAD'          z/Arch Program new PSW
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-000001C0  00020001 80000000                         49          DC    X'0002000180000000',AD(0)
+                                                    40 ***********************************************************************
+                                                    41 *                           BEGIN
+                                                    42 ***********************************************************************
 
-000001D0                      000001D0  000001D0    51          ORG   PFPO+X'1D0'          z Program New PSW
-000001D0  00020001 80000000                         52          DC    X'0002000180000000',AD(X'DEADDEAD')
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     3
+000001E0                      000001E0  00000200    44          ORG   PFPO+X'200'            Test code entry point
+00000200                                            45 BEGIN    DS    0H
 
-  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+00000200  EB00 0290 002F                00000290    47          LCTLG CR0,CR0,CTL0   Enable AFP-register-control bit
+00000206  B38C 0000                                 48          EFPC  R0             R0 <== FPC
+0000020A  5000 02A0                     000002A0    49          ST    R0,SAVEDFPC    Save FPC
 
-                                                    54 ***********************************************************************
-                                                    55 *                  Start of actual program...
-                                                    56 ***********************************************************************
+                                                    51 *   Load the test values.............
 
+0000020E  E340 0600 0004                00000600    53          LG    R4,DFPIN_F4    R4 = first 64-bits
+00000214  E360 0608 0004                00000608    54          LG    R6,DFPIN_F6    R6 = second 64-bits
 
-000001E0                      000001E0  00000200    58          ORG   PFPO+X'200'
-00000200                                            59 GO       DS    0H
+0000021A  B3C1 0044                                 56          LDGR  FR4,R4         Move to floating point register
+0000021E  B3C1 0066                                 57          LDGR  FR6,R6         Move to floating point register
 
-00000200  95FF F008                     00000008    61          CLI   ROPSW390,X'FF'       Running in ESA/390 mode?
-00000204  4770 F21C                     0000021C    62          BNE   EOJ                  Yes, quick EOJ (no PFPO support!)
-                                                    63
-                                                    64
-                                                    65
-                                                    66
-                                                    67
-                                                    68
-                                                    69
-                                                    70 ***********************************************************************
-                                                    71 ***********************************************************************
-                                                    72 **
-                                                    73 **                       PROGRAMMING NOTE
-                                                    74 **
-                                                    75 **    Until such time as we can code a PROPER test for this
-                                                    76 **    instruction, this test has been purposely neutered.
-                                                    77 **
-                                                    78 **    It currently does NOTHING and tests NOTHING.
-                                                    79 **
-                                                    80 **
-                                                    81 ***********************************************************************
-                                                    82 ***********************************************************************
-                                                    83
-00000208  47F0 F21C                     0000021C    84          B     EOJ                  *** (See PROGRAMMING NOTE) ***
-                                                    85
-                                                    86
-                                                    87
-                                                    88
-                                                    89
-                                                    90
-0000020C  1F33                                      91          SLR   R3,R3                Clear R3 for later CC store
-0000020E  5800 F220                     00000220    92          L     R0,=A(X'80000000')   Test for invalid function
+                                                    59 *   Do the test............ (i.e. perform the conversion)
 
-00000212  010A                                      94          PFPO  ,                    Perform Floating Point Operation
+00000222  E300 0298 0004                00000298    61          LG    R0,PFPO_R0     Extended DFP ==> Long HFP
+00000228  C019 ABCD ABCD                            62          IILF  R1,X'ABCDABCD' Unlikely Return Code Register value
 
-00000214  B222 0030                                 96          IPM   R3                   Collect condition code from PSW
-00000218  5030 F300                     00000300    97          ST    R3,CONDCODE          Save CC
+0000022E  41F0 0003                     00000003    64          LA    R15,3          (set CC3...)
+00000232  89F0 001C                     0000001C    65          SLL   R15,32-4       (shift into proper position)
+00000236  04F0                                      66          SPM   R15            (set Condition Code 3 in PSW)
 
-0000021C                                            99 EOJ      DS    0H
-0000021C  0A00                                     100          SVC   0                    Load hardwait psw
+00000238  010A                                      68          PFPO  ,              Do it!
+0000023A  A714 0025                     00000284    69          JC    B'0001',BADCC  CC=3?!  Impossible!!  FAIL!!
 
+0000023E  1211                                      71          LTR   R1,R1          Check Return Code Register value
+00000240  4770 0288                     00000288    72          BNZ   BADGR1         Not zero? FAIL!
 
+                                                    74 *   Save the results..........
 
-00000220                                           102          LTORG ,
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     4
+00000244  B3CD 0000                                 76          LGDR  R0,FR0         Save actual results (R0 <== FR0)
+00000248  E300 0710 0024                00000710    77          STG   R0,HFPOUT      Save actual results (R0 --> save)
+
+                                                    79 *   Check the results..........
+
+0000024E  E310 0700 0004                00000700    81          LG    R1,HFPOUTOK    R1 <== Expected
+00000254  B920 0001                                 82          CGR   R0,R1          Actual = Expected?
+00000258  4770 0280                     00000280    83          BNE   FAIL           No?! FAIL!
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-00000220  80000000                                 103                =A(X'80000000')
+                                                    85 ***********************************************************************
+                                                    86 *      Try invalid conversion with Test bit set  (should get cc=3)
+                                                    87 ***********************************************************************
 
+0000025C  C009 8109 0900                            89          IILF  R0,X'81090900' Test: Long DFP ==> Long DFP (invalid!)
+00000262  C019 ABCD ABCD                            90          IILF  R1,X'ABCDABCD' Unlikely Return Code Register value
 
+00000268  1FFF                                      92          SLR   R15,R15        (set CC0...)
+0000026A  89F0 001C                     0000001C    93          SLL   R15,32-4       (shift into proper position)
+0000026E  04F0                                      94          SPM   R15            (set Condition Code 0 in PSW)
 
-00000224                      00000224  00000300   105          ORG   PFPO+X'300'          Condition Code save area @ X'300'
-00000300  00000000                                 106 CONDCODE DC    F'0'                 Condition Code from PFPO
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     5
+00000270  010A                                      96          PFPO  ,              Do it!
+00000272  A7E4 0009                     00000284    97          JC    B'1110',BADCC  Not CC=3? FAIL!
+
+00000276  1211                                      99          LTR   R1,R1          Check Return Code Register value
+00000278  4770 0288                     00000288   100          BNZ   BADGR1         Not zero? FAIL!
+
+0000027C  B2B2 0720                     00000720   102          LPSWE GOODPSW        Load success PSW
+00000280  B2B2 0730                     00000730   103 FAIL     LPSWE FAILPSW        Load failure PSW
+00000284  B2B2 0750                     00000750   104 BADCC    LPSWE BADCCPSW       Load failure PSW
+00000288  B2B2 0740                     00000740   105 BADGR1   LPSWE BADRCPSW       Load failure PSW
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                                                   108 ***********************************************************************
-                                                   109 *        Register equates
-                                                   110 ***********************************************************************
+                                                   107 *********************************************************************
+                                                   108 *                      Working storage
+                                                   109 *********************************************************************
+
+0000028C  07000700                                 111          CNOP  0,16   (alignment solely for storage readability)
 
 
-                              00000000  00000001   112 R0       EQU   0
-                              00000001  00000001   113 R1       EQU   1
-                              00000002  00000001   114 R2       EQU   2
-                              00000003  00000001   115 R3       EQU   3
-                              00000004  00000001   116 R4       EQU   4
-                              00000005  00000001   117 R5       EQU   5
-                              00000006  00000001   118 R6       EQU   6
-                              00000007  00000001   119 R7       EQU   7
-                              00000008  00000001   120 R8       EQU   8
-                              00000009  00000001   121 R9       EQU   9
-                              0000000A  00000001   122 R10      EQU   10
-                              0000000B  00000001   123 R11      EQU   11
-                              0000000C  00000001   124 R12      EQU   12
-                              0000000D  00000001   125 R13      EQU   13
-                              0000000E  00000001   126 R14      EQU   14
-                              0000000F  00000001   127 R15      EQU   15
+00000290  00000000 00040000                        113 CTL0     DC    0D'0',XL8'0000000000040000' CR0 AFP-register-control bit
+00000298  00000000 01010A00                        114 PFPO_R0  DC    XL4'00000000',XL4'01010A00'
+000002A0  00000000 00000000                        115 SAVEDFPC DC    F'0',F'0',D'0'
 
 
+000002B0                      000002B0  00000600   117          ORG   PFPO+X'600'      INPUT @ X'600'
 
-                                                   129          END
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     6
+00000600  39FFD2B3 2D873E6E                        119 DFPIN_F4 DC    0D'0',XL8'39FFD2B32D873E6E'    (original input)
+00000608  A9DAAD5A BE6B6404                        120 DFPIN_F6 DC    0D'0',XL8'A9DAAD5ABE6B6404'    (original input)
+
+
+00000610                      00000610  00000700   122          ORG   PFPO+X'700'      EXPECTED OUTPUT @ X'700'
+
+00000700  416487ED 5110B461                        124 HFPOUTOK DC    0D'0',XL8'416487ED5110B461'  (expected output)
+00000708  00000000 00000000                        125          DC    D'0'
+
+
+00000710                      00000710  00000710   127          ORG   PFPO+X'710'      ACTUAL OUTPUT @ X'710'
+
+00000710  00000000 00000000                        129 HFPOUT   DC    0D'0',XL8'00'    (actual output)
+00000718  00000000 00000000                        130          DC    D'0'
+
+
+00000720                                           132 GOODPSW  DC    0D'0'          Failure PSW
+00000720  00020001                                 133          DC    XL4'00020001'  Failure PSW
+00000724  80000000                                 134          DC    XL4'80000000'  Failure PSW
+00000728  00000000                                 135          DC    XL4'00000000'  Failure PSW
+0000072C  00000000                                 136          DC    XL4'00000000'  Failure PSW
+
+00000730                                           138 FAILPSW  DC    0D'0'          Failure PSW
+00000730  00020001                                 139          DC    XL4'00020001'  Failure PSW
+00000734  80000000                                 140          DC    XL4'80000000'  Failure PSW
+00000738  00000000                                 141          DC    XL4'00000000'  Failure PSW
+0000073C  00000BAD                                 142          DC    XL4'00000BAD'  Failure PSW  (general test failure)
+
+00000740                                           144 BADRCPSW DC    0D'0'          Failure PSW
+00000740  00020001                                 145          DC    XL4'00020001'  Failure PSW
+00000744  80000000                                 146          DC    XL4'80000000'  Failure PSW
+00000748  00000000                                 147          DC    XL4'00000000'  Failure PSW
+0000074C  0000BAD1                                 148          DC    XL4'0000BAD1'  Failure PSW  (bad GR1 Return Code value)
+
+00000750                                           150 BADCCPSW DC    0D'0'          Failure PSW
+00000750  00020001                                 151          DC    XL4'00020001'  Failure PSW
+00000754  80000000                                 152          DC    XL4'80000000'  Failure PSW
+00000758  00000000                                 153          DC    XL4'00000000'  Failure PSW
+0000075C  000BADCC                                 154          DC    XL4'000BADCC'  Failure PSW  (bad Condition Code)
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000000  00000001   156 R0       EQU   0        General Purpose Registers...
+                              00000001  00000001   157 R1       EQU   1
+                              00000002  00000001   158 R2       EQU   2
+                              00000003  00000001   159 R3       EQU   3
+                              00000004  00000001   160 R4       EQU   4
+                              00000005  00000001   161 R5       EQU   5
+                              00000006  00000001   162 R6       EQU   6
+                              00000007  00000001   163 R7       EQU   7
+                              00000008  00000001   164 R8       EQU   8
+                              00000009  00000001   165 R9       EQU   9
+                              0000000A  00000001   166 R10      EQU   10
+                              0000000B  00000001   167 R11      EQU   11
+                              0000000C  00000001   168 R12      EQU   12
+                              0000000D  00000001   169 R13      EQU   13
+                              0000000E  00000001   170 R14      EQU   14
+                              0000000F  00000001   171 R15      EQU   15
+                                                   172
+                              00000000  00000001   173 FR0      EQU   0        Floating-Point Registers...
+                              00000001  00000001   174 FR1      EQU   1
+                              00000002  00000001   175 FR2      EQU   2
+                              00000003  00000001   176 FR3      EQU   3
+                              00000004  00000001   177 FR4      EQU   4
+                              00000005  00000001   178 FR5      EQU   5
+                              00000006  00000001   179 FR6      EQU   6
+                              00000007  00000001   180 FR7      EQU   7
+                              00000008  00000001   181 FR8      EQU   8
+                              00000009  00000001   182 FR9      EQU   9
+                              0000000A  00000001   183 FR10     EQU   10
+                              0000000B  00000001   184 FR11     EQU   11
+                              0000000C  00000001   185 FR12     EQU   12
+                              0000000D  00000001   186 FR13     EQU   13
+                              0000000E  00000001   187 FR14     EQU   14
+                              0000000F  00000001   188 FR15     EQU   15
+                                                   189
+                              00000000  00000001   190 CR0      EQU   0        Control Registers...
+                              00000001  00000001   191 CR1      EQU   1
+                              00000002  00000001   192 CR2      EQU   2
+                              00000003  00000001   193 CR3      EQU   3
+                              00000004  00000001   194 CR4      EQU   4
+                              00000005  00000001   195 CR5      EQU   5
+                              00000006  00000001   196 CR6      EQU   6
+                              00000007  00000001   197 CR7      EQU   7
+                              00000008  00000001   198 CR8      EQU   8
+                              00000009  00000001   199 CR9      EQU   9
+                              0000000A  00000001   200 CR10     EQU   10
+                              0000000B  00000001   201 CR11     EQU   11
+                              0000000C  00000001   202 CR12     EQU   12
+                              0000000D  00000001   203 CR13     EQU   13
+                              0000000E  00000001   204 CR14     EQU   14
+                              0000000F  00000001   205 CR15     EQU   15
+
+                                                   207          END
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     6
 
      SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
 
-CONDCODE            F    000300       4   106   97
-EOJ                 H    00021C       2    99   62   84
-GO                  H    000200       2    59   31   46
-IMAGE               1    000000     772     0
-PFPO                J    000000     772    28   35   38   41   45   48   51   58  105   29
-R0                  U    000000       1   112   92
-R1                  U    000001       1   113
-R10                 U    00000A       1   122
-R11                 U    00000B       1   123
-R12                 U    00000C       1   124
-R13                 U    00000D       1   125
-R14                 U    00000E       1   126
-R15                 U    00000F       1   127   29
-R2                  U    000002       1   114
-R3                  U    000003       1   115   91   96   97
-R4                  U    000004       1   116
-R5                  U    000005       1   117
-R6                  U    000006       1   118
-R7                  U    000007       1   119
-R8                  U    000008       1   120
-R9                  U    000009       1   121
-ROPSW390            X    000008       8    32   61
-ROPSWZ              X    000120      16    42
-=A(X'80000000')     A    000220       4   103   92
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     7
+BADCC               I    000284       4   104   69   97
+BADCCPSW            D    000750       8   150  104
+BADGR1              I    000288       4   105   72  100
+BADRCPSW            D    000740       8   144  105
+BEGIN               H    000200       2    45   32
+CR0                 U    000000       1   190   47
+CR1                 U    000001       1   191
+CR10                U    00000A       1   200
+CR11                U    00000B       1   201
+CR12                U    00000C       1   202
+CR13                U    00000D       1   203
+CR14                U    00000E       1   204
+CR15                U    00000F       1   205
+CR2                 U    000002       1   192
+CR3                 U    000003       1   193
+CR4                 U    000004       1   194
+CR5                 U    000005       1   195
+CR6                 U    000006       1   196
+CR7                 U    000007       1   197
+CR8                 U    000008       1   198
+CR9                 U    000009       1   199
+CTL0                D    000290       8   113   47
+DFPIN_F4            D    000600       8   119   53
+DFPIN_F6            D    000608       8   120   54
+FAIL                I    000280       4   103   83
+FAILPSW             D    000730       8   138  103
+FR0                 U    000000       1   173   76
+FR1                 U    000001       1   174
+FR10                U    00000A       1   183
+FR11                U    00000B       1   184
+FR12                U    00000C       1   185
+FR13                U    00000D       1   186
+FR14                U    00000E       1   187
+FR15                U    00000F       1   188
+FR2                 U    000002       1   175
+FR3                 U    000003       1   176
+FR4                 U    000004       1   177   56
+FR5                 U    000005       1   178
+FR6                 U    000006       1   179   57
+FR7                 U    000007       1   180
+FR8                 U    000008       1   181
+FR9                 U    000009       1   182
+GOODPSW             D    000720       8   132  102
+HFPOUT              D    000710       8   129   77
+HFPOUTOK            D    000700       8   124   81
+IMAGE               1    000000    1888     0
+PFPO                J    000000    1888    25   28   34   44  117  122  127   26
+PFPO_R0             X    000298       4   114   61
+R0                  U    000000       1   156   48   49   61   76   77   82   89
+R1                  U    000001       1   157   62   71   81   82   90   99
+R10                 U    00000A       1   166
+R11                 U    00000B       1   167
+R12                 U    00000C       1   168
+R13                 U    00000D       1   169
+R14                 U    00000E       1   170
+R15                 U    00000F       1   171   64   65   66   92   93   94
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     7
 
-MACRO   DEFN  REFERENCES
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R2                  U    000002       1   158
+R3                  U    000003       1   159
+R4                  U    000004       1   160   53   56
+R5                  U    000005       1   161
+R6                  U    000006       1   162   54   57
+R7                  U    000007       1   163
+R8                  U    000008       1   164
+R9                  U    000009       1   165
+SAVEDFPC            F    0002A0       4   115   49
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     8
+
+MACRO  DEFN  REFERENCES
 
 No defined macros
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     8
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page     9
 
    DESC    SYMBOL  SIZE    POS      ADDR
 
 Entry: 0
 
-Image      IMAGE    772  000-303  000-303
-  Region            772  000-303  000-303
-    CSECT  PFPO     772  000-303  000-303
-ASMA Ver. 0.2.0  Perform floating point operation. ESA and z mode.                                  03 Jan 2019 20:25:47  Page     9
+Image      IMAGE   1888  000-75F  000-75F
+  Region           1888  000-75F  000-75F
+    CSECT  PFPO    1888  000-75F  000-75F
+ASMA Ver. 0.2.1  Quick PFPO DFP to HFP Conversion Test (GitHub Issue #407)                          13 Dec 2022 00:35:52  Page    10
 
    STMT                                       FILE NAME
 

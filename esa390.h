@@ -1,4 +1,5 @@
 /* ESA390.H     (C) Copyright Roger Bowler, 1994-2012                */
+/*              (C) and others 2013-2021                             */
 /*              ESA/390 Data Areas                                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7,6 +8,17 @@
 
 /* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
+
+/* Format-1 State Descriptor Block (SIE1BK) documented in:           */
+/*  SA22-7095-00 System-370 XA Interpretive Execution                */
+
+/* Format-2 State Descriptor Block (SIE2BK) documented at:           */
+/*  http://www.vm.ibm.com/pubs/cp710/SIEBK.HTML                      */
+
+/* The RCP (Reference and Change Preservation) table is documented   */
+/* on page 541 of "IBM Journal of Research and Development" vol. 27, */
+/* no. 6 (November 1983) article "System/370 Extended Architecture:  */
+/* Facilities for Virtual Machines", by P.H.Gum                      */
 
 #ifndef _ESA390_H
 #define _ESA390_H
@@ -89,6 +101,7 @@ struct  PSW
 
     BYTE     zerobyte;          /* Zeroes                  (24 - 31) */
                                 /* or (esame)              (24 - 30) */
+    BYTE     unused1;           /* (struct alignment)                */
 
     u_int                       /* Addressing mode         (31 - 32) */
              amode64:1,         /* 64-bit addressing       (31)      */
@@ -102,7 +115,7 @@ struct  PSW
     DW       amask;             /* Address wraparound mask           */
     U16      intcode;           /* Interruption code                 */
     BYTE     ilc;               /* Instruction length count          */
-    BYTE     unused;
+    BYTE     unused2[5];        /* (struct alignment)                */
 };
 typedef struct PSW  PSW;
 
@@ -198,7 +211,7 @@ typedef struct PSW  PSW;
 /*                                                                   */
 /*      asd, vaddr, pte, id, common and protect.                     */
 /*                                                                   */
-/*  Fields set by logical_to_main() are:                             */
+/*  Fields set by logical_to_main_l() are:                           */
 /*                                                                   */
 /*      main, storkey, skey, read and write,                         */
 /*      and are used for accelerated address lookup (formerly AEA).  */
@@ -254,10 +267,37 @@ struct DAT
 typedef struct DAT  DAT;
 
 /*-------------------------------------------------------------------*/
+/* MVPG instruction General Purpose Register 0 bit definitions       */
+/* (Note: only Move Page Facility 2 is supported by Hercules)        */
+
+#define GR0_MVPG_DRI            0x00000200      /* bit 22 or 54      */
+#define GR0_MVPG_CCO            0x00000100      /* bit 23 or 55      */
+
+#define GR0_MVPG_RSRVD          0x0000F000      /* bits 16-19        */
+#define GR0_MVPG_FIRST          0x00000800      /* bit  20           */
+#define GR0_MVPG_SECOND         0x00000400      /* bit  21           */
+#define GR0_MVPG_KEY            0x000000F0      /* bits 24-27        */
+
+/* The below bit definitions are only used when the Move-Page-and-   */
+/* -Set-Key Facility (149_MOVEPAGE_SETKEY) is installed.             */
+
+#define GR0_MVPG_149_RSRVD      0x0000E000      /* bits 48-50        */
+#define GR0_MVPG_149_KFC        0x00001C00      /* bits 51-53        */
+#define GR0_MVPG_149_KEY        0x000000FE      /* bits 56-62        */
+
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 0 */
 
 #define CR0_MCX_AUTH    0x0001000000000000ULL   /* Measurement Counter
                                                    Extraction Authority       */
+
+#define CR0_TXC         0x0080000000000000ULL   /* Tranactional-Execution
+                                                   Control                    */
+
+#define CR0_PIFO        0x0040000000000000ULL   /* Tranactional-Execution
+                                                   Program-Interruption-
+                                                   Filtering Overide          */
+
 #define CR0_TRACE_TOD           0x80000000      /* TRACE TOD-clock control    */
 #define CR0_BMPX                0x80000000      /* Block multiplex ctl  S/370 */
 #define CR0_SSM_SUPP            0x40000000      /* SSM suppression control    */
@@ -297,8 +337,11 @@ typedef struct DAT  DAT;
 #define CR0_CRYPTO              0x00000004      /* Crypto control       ESAME */
 #define CR0_IUCV                0x00000002      /* IUCV interrupt mask        */
 
-#define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
+/*-------------------------------------------------------------------*/
+/* Service signal parameter masks */
+
 #define SERVSIG_ADDR    0xFFFFFFF8      /* Parameter address         */
+#define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 1 */
@@ -307,6 +350,14 @@ typedef struct DAT  DAT;
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 2 */
+
+#define CR2_TDS         0x0000000000000004ULL /* Tranaction Diagnostic Scope   */
+#define CR2_TDC         0x0000000000000003ULL /* Tranaction Diagnostic Control */
+
+#define TDC_NORMAL          0     /* Normal operation                */
+#define TDC_ALWAYS_RANDOM   1     /* Abort all transactions randomly */
+#define TDC_MAYBE_RANDOM    2     /* Randomly abort transactions     */
+#define TDC_RESERVED        3     /* (reserved)                      */
 
 #define CR2_DUCTO       0x7FFFFFC0      /* DUCT origin               */
 /* For S/370, CR2 contains channel masks for channels 0-31 */
@@ -355,15 +406,30 @@ typedef struct DAT  DAT;
 /*-------------------------------------------------------------------*/
 /* Bit definitions for PER */
 
-#define CR9_SB          0x80000000      /* Successful Branching      */
-#define CR9_IF          0x40000000      /* Instruction Fetch         */
-#define CR9_SA          0x20000000      /* Storage Alteration        */
-#define CR9_GRA         0x10000000      /* General Register Alt.     */
-#define CR9_STURA       0x08000000      /* Store using real addr     */
-#define CR9_IFNUL       0x01000000      /* IF nullification     @PER3*/
-#define CR9_GRMASK      0x0000FFFF      /* GR mask bits              */
-#define CR9_BAC         0x00800000      /* Br addr control PER2 only */
-#define CR9_SAC         0x00200000      /* Stor. alter. c. PER2 only */
+#define CR9_SB          0x80000000      /* 32 Successful Branching  1*/
+#define CR9_IF          0x40000000      /* 33 Instruction Fetch     1*/
+#define CR9_SA          0x20000000      /* 34 Storage Alteration    1*/
+#define CR9_GRA         0x10000000      /* 35 General Register      1*/
+#define CR9_STOREKEY    0x10000000      /* 35 Storage-Key           3*/
+#define CR9_STURA       0x08000000      /* 36 Store using real addr 2*/
+#define CR9_ZEROADDR    0x04000000      /* 37 Zero-address-detect.  3*/
+#define CR9_TEND        0x02000000      /* 38 TEND instruction      3*/
+#define CR9_IFNUL       0x01000000      /* 39 I-Fetch nullification 3*/
+#define CR9_BAC         0x00800000      /* 40 Branch address        2*/
+#define CR9_SUPPRESS    0x00400000      /* 41 Event suppression     3*/
+#define CR9_SAC         0x00200000      /* 42 Storage Alteration    2*/
+//efine CR9_xxxxxxxx    0x001F0000      /* 43-47 (unassigned)        */
+#define CR9_GRMASK      0x0000FFFF      /* 48-63 GR mask bits       1*/
+
+#define CR9_SUPPRESSABLE    \
+     (0                     \
+      | CR9_SB              \
+      | CR9_IF              \
+      | CR9_SA              \
+      | CR9_STURA           \
+      | CR9_ZEROADDR        \
+      | CR9_IFNUL           \
+     )
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 12 */
@@ -782,7 +848,8 @@ typedef struct LSED LSED;
 #define SIGP_SENSE_RUNNING_STATE 0x15   /* Sense Running State       */
 
 #define MAX_SIGPORDER            0x15   /* Maximum SIGP order value  */
-#define LOG_SIGPORDER            0x03   /* Log any SIGP > this value */
+#define LOG_SIGPORDER    SIGP_RESTART   /* Log any SIGP > this value
+                                          except Sense Running State */
 
 /*-------------------------------------------------------------------*/
 /* SIGP status codes */
@@ -923,7 +990,7 @@ struct PSA_900
 /*0100*/ DBLWRD cao;                    /* Enh Mon Counter Array Orig*/
 /*0108*/ FWORD  cal;                    /* Enh Mon Counter Array Len */
 /*010C*/ FWORD  ec;                     /* Enh Mon Exception Count   */
-/*0110*/ DBLWRD bea;                    /* Breaking event address @Z9*/
+/*0110*/ DBLWRD bea;                    /* Breaking-Event Address    */
 /*0118*/ DBLWRD resv0118;               /* Reserved                  */
 /*0120*/ QWORD  rstold;                 /* Restart old PSW           */
 /*0130*/ QWORD  extold;                 /* External old PSW          */
@@ -939,6 +1006,7 @@ struct PSA_900
 /*01E0*/ QWORD  mcknew;                 /* Machine check new PSW     */
 /*01F0*/ QWORD  iopnew;                 /* I/O new PSW               */
 /*0200*/ BYTE   resv0200[4096];         /* Reserved                  */
+/*-------------------------------------------------------------------*/
 /*1200*/ FWORD  storefpr[32];           /* FP register save area     */
 /*1280*/ DBLWRD storegpr[16];           /* General register save area*/
 /*1300*/ QWORD  storepsw;               /* Store status PSW save area*/
@@ -949,7 +1017,7 @@ struct PSA_900
 /*1324*/ FWORD  storetpr;               /* TOD prog reg save area    */
 /*1328*/ DBLWRD storeptmr;              /* CPU timer save area       */
 /*1330*/ DBLWRD storeclkc;              /* Clock comparator save area*/
-/*1338*/ DBLWRD resv1338;               /* Reserved                  */
+/*1338*/ DBLWRD bear;                   /* Breaking-Event Address    */
 /*1340*/ FWORD  storear[16];            /* Access register save area */
 /*1380*/ DBLWRD storecr[16];            /* Control register save area*/
 };
@@ -1081,7 +1149,9 @@ typedef struct PSA_900  PSA_900;
 #define PGM_OPERAND_EXCEPTION                           0x0015
 #define PGM_TRACE_TABLE_EXCEPTION                       0x0016
 #define PGM_ASN_TRANSLATION_SPECIFICATION_EXCEPTION     0x0017
+#define PGM_TRANSACTION_CONSTRAINT_EXCEPTION            0x0018
 #define PGM_VECTOR_OPERATION_EXCEPTION                  0x0019
+#define PGM_VECTOR_PROCESSING_EXCEPTION                 0x001B
 #define PGM_SPACE_SWITCH_EVENT                          0x001C
 #define PGM_SQUARE_ROOT_EXCEPTION                       0x001D
 #define PGM_UNNORMALIZED_OPERAND_EXCEPTION              0x001E
@@ -1114,6 +1184,7 @@ typedef struct PSA_900  PSA_900;
 #define PGM_MONITOR_EVENT                               0x0040
 #define PGM_PER_EVENT                                   0x0080
 #define PGM_CRYPTO_OPERATION_EXCEPTION                  0x0119
+#define PGM_TXF_EVENT                                   0x0200
 
 /*-------------------------------------------------------------------*/
 /* External interrupt codes */
@@ -1147,6 +1218,7 @@ typedef struct PSA_900  PSA_900;
 #define IS_CCW_SENSE(c)         (((c)&0x0F)==0x04)
 #define IS_CCW_TIC(c)           (((c)&0x0F)==0x08)
 #define IS_CCW_RDBACK(c)        (((c)&0x0F)==0x0C)
+#define IS_CCW_MTRACK(c)        (((c)&0x80))
 
 /*-------------------------------------------------------------------*/
 /*       Operation-Request Block (ORB) structure definition          */
@@ -1586,20 +1658,33 @@ typedef struct MBK  MBK;
 /*-------------------------------------------------------------------*/
 /* Perform Frame Management Function definitions */
 
-#define PFMF_FMFI            0x000f0000
-#define PFMF_FMFI_RESV       0x000c0000 /* Reserved must be zero     */
+#define PFMF_RESV            0xFFF00000 /* Reserved must be zero     */
+#define PFMF_FMFI            0x000F0000 /* Frame Mgmt. Function Ind. */
+#define PFMF_FMFI_RESV       0x000C0000 /* Reserved must be zero     */
 #define PFMF_FMFI_SK         0x00020000 /* Set-Key Control           */
 #define PFMF_FMFI_CF         0x00010000 /* Clear-Frame Control       */
-#define PFMF_FMFI_UI         0x00008000 /* Usage Indication          */
-#define PFMF_FMFI_FSC        0x00007000 /* Frame-Size Code           */
-#define PFMF_FMFI_FSC_4K     0x00000000 /* 4K                        */
-#define PFMF_FMFI_FSC_1M     0x00001000 /* 1M                        */
-#define PFMF_FMFI_FSC_RESV   0x00006000 /* Reserved                  */
-#define PFMF_FMFI_NQ         0x00000800 /* Quiesce (SK must be one)  */
-#define PFMF_FMFI_MR         0x00000400 /* Reference Bit Update Mask */
-#define PFMF_FMFI_MC         0x00000200 /* Change Bit Update Mask    */
-#define PFMF_FMFI_KEY        0x000000F7 /* Storage Key               */
-#define PFMF_RESERVED        0xFFF00101 /* Reserved                  */
+#define PFMF_UI              0x00008000 /* Usage Indication          */
+#define PFMF_FSC             0x00007000 /* Frame-Size Code           */
+#define PFMF_FSC_4K          (0 << 12)  /* 4K Frame                  */
+#define PFMF_FSC_1M          (1 << 12)  /* 1M Frame                  */
+#define PFMF_FSC_2G          (2 << 12)  /* 2G Frame                  */
+/*                           (3 << 12)     Reserved                  */
+/*                           (4 << 12)     Reserved                  */
+/*                           (5 << 12)     Reserved                  */
+/*                           (6 << 12)     Reserved                  */
+/*                           (7 << 12)     Reserved                  */
+#define PFMF_M3_NQ           0x00000800 /* Ignored or Reserved       */
+#define PFMF_M3_MR           0x00000400 /* Reference-Bit-Update Mask */
+#define PFMF_M3_MC           0x00000200 /* Change-Bit-Update Mask    */
+#define PFMF_M3_RESV         0x00000100 /* Reserved must be zero     */
+#define PFMF_KEY             0x000000F7 /* Storage Key Bits          */
+#define PFMF_KEY_RESV        0x00000001 /* Reserved must be zero     */
+#define PFMF_RESERVED       (0          /* All PFMF Reserved Bits */  \
+                             | PFMF_RESV                              \
+                             | PFMF_FMFI_RESV                         \
+                             | PFMF_M3_RESV                           \
+                             | PFMF_KEY_RESV                          \
+                            )
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for the Vector Facility */
@@ -1616,6 +1701,7 @@ typedef struct MBK  MBK;
 
 /*-------------------------------------------------------------------*/
 /*     SIE Format 1 State Descriptor Block (SIE1BK) structure        */
+/*          https://www.vm.ibm.com/pubs/cp240/SIEBK.HTML             */
 /*-------------------------------------------------------------------*/
 struct SIE1BK
 {
@@ -1683,6 +1769,7 @@ struct SIE1BK
 #define SIE_LCTL0_CR5   0x04            /* Intercept LCTL 5          */
 #define SIE_LCTL0_CR6   0x02            /* Intercept LCTL 6          */
 #define SIE_LCTL0_CR7   0x01            /* Intercept LCTL 7          */
+
 #define SIE_LCTL1       lctl_ctl[1]
 #define SIE_LCTL1_CR8   0x80            /* Intercept LCTL 8          */
 #define SIE_LCTL1_CR9   0x40            /* Intercept LCTL 9          */
@@ -1700,11 +1787,11 @@ struct SIE1BK
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
 #define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
-#define SIE_IC0_STFL    0x10            /* Intercept STFL/STFLE      */
 #define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
 #define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
 #define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
 #define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE or CSP     */
+
 #define SIE_IC1         ic[1]
 #define SIE_IC1_LPSW    0x40            /* Intercept LPSW            */
 #define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
@@ -1713,15 +1800,17 @@ struct SIE1BK
 #define SIE_IC1_STCTL   0x04            /* Intercept STCTL           */
 #define SIE_IC1_STNSM   0x02            /* Intercept STNSM           */
 #define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
+
 #define SIE_IC2         ic[2]
 #define SIE_IC2_STCK    0x80            /* Intercept STCK            */
-#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE        */
+#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE/IRBM   */
 #define SIE_IC2_SSKE    0x20            /* Intercept SSK/SSKE        */
-#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE        */
+#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE/RRBM   */
 #define SIE_IC2_PC      0x08            /* Intercept PC              */
 #define SIE_IC2_PT      0x04            /* Intercept PT              */
 #define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
 #define SIE_IC2_LASP    0x01            /* Intercept LASP            */
+
 #define SIE_IC3         ic[3]
 #define SIE_IC3_VACSV   0x80            /* Intercept VACSV           */
 #define SIE_IC3_SPT     0x40            /* Intercept SPT and STPT    */
@@ -1741,13 +1830,14 @@ struct SIE1BK
 #define SIE_EC0_ALERT   0x08            /* Alert Monitoring          */
 #define SIE_EC0_IOA     0x04            /* I/O Assist                */
 #define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+
 #define SIE_EC1         ec[1]
 #define SIE_EC1_EC370   0x20            /* 370 I/O Assist            */
 #define SIE_EC1_VFONL   0x04            /* Virtual VF online         */
+
 #define SIE_EC2         ec[2]
 #define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
 #define SIE_EC3         ec[3]
-#define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
 
 /*050*/ BYTE  c;                        /* Interception Code         */
 
@@ -1769,7 +1859,6 @@ struct SIE1BK
 /*051*/ BYTE  f;                        /* Interception Status       */
 
 #define SIE_F           f
-#define SIE_F_IN        0x80            /* Intercept format 2        */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
 
@@ -1778,15 +1867,20 @@ struct SIE1BK
 /*056*/ HWORD ipa;                      /* Instruction parameter A   */
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD ipc;                      /* Instruction parameter C   */
-/*060*/ FWORD rcpo;                     /* RCP area origin           */
-
+/*060*/ FWORD rcpo;                     /* RCP area origin (but only
+                                           if high-order 80 "Assist
+                                           is enabled" flag is off)  */
 #define SIE_RCPO0       rcpo[0]
-#define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
+#define SIE_RCPO0_ASIST 0x80            /* An assist is enabled      */
+#define SIE_RCPO0_SKA   0x80            /* Storage Key Assist Enabled*/
 #define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
+
 #define SIE_RCPO2       rcpo[2]
-#define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+#define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass (don't use RCP)*/
 
 /*064*/ FWORD scao;                     /* SCA area origin           */
+#define SIEISCAM        0XFFFFFFF0      /* SCA address mask          */
+
 /*068*/ FWORD subchtabo;                /* Subchannel table origin   */
 /*06C*/ FWORD resv6Cf;
 /*070*/ HWORD tch_ctl;                  /* Test Channel control      */
@@ -1795,27 +1889,23 @@ struct SIE1BK
 /*075*/ BYTE  resv075;
 /*076*/ BYTE  tschds;                   /* TSCH device status        */
 /*077*/ BYTE  tschsc;                   /* TSCH subchannel status    */
-/*078*/ BYTE  xslim[3];                 /* Extended stor upper lim   */
+/*078*/ BYTE  xslim[3];                 /* Extended Storage Upper-   */
+                                        /* Limit Block Address       */
 /*07B*/ BYTE  resv7Bb;
 /*07C*/ FWORD resv7Cf;
 /*080*/ FWORD cr[16];                   /* Guest Control registers   */
 /*0C0*/ BYTE  ip[34];                   /* Interruption parameters   */
-
-#define SIE_IP_PSA_OFFSET   0x40        /* Offset of the IP field
-                                           relative to the ipfields
-                                           in the PSA                */
-#define SIE_II_PSA_OFFSET   0x30        /* Offset of the IP field
-                                           relative to the I/O fields
-                                           in the PSA for ESAME guest*/
-
 /*0E2*/ BYTE  xso[3];                   /* Expanded storage origin   */
 /*0E5*/ BYTE  xsl[3];                   /* Expanded storage limit    */
 /*0E8*/ BYTE  resvE8b[24];
 };
 typedef struct SIE1BK   SIE1BK;
 
+CASSERT( sizeof( SIE1BK ) == 256, esa390_h );
+
 /*-------------------------------------------------------------------*/
 /*     SIE Format 2 State Descriptor Block (SIE2BK) structure        */
+/*          http://www.vm.ibm.com/pubs/cp710/SIEBK.HTML              */
 /*-------------------------------------------------------------------*/
 struct SIE2BK
 {
@@ -1831,7 +1921,8 @@ struct SIE2BK
 /*001*/ BYTE  s;                        /* State controls            */
 
 #define SIE_S           s
-#define SIE_S_T         0x80            /* Interval timer irpt pend  */
+#define SIE_S_RUNNING   0x80            /* SIE Running (indicates    */
+                                        /* guest CPU is running)     */
 #define SIE_S_RETENTION 0x40            /* SIE State retained        */
 #define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
 #define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
@@ -1840,18 +1931,13 @@ struct SIE2BK
 
 #define SIE_MX          mx
 #define SIE_MX_RRF      0x80            /* Region Relocate Installed */
-#define SIE_MX_XC       0x01            /* XC mode guest             */
 #define SIE_MX_ESAME    0x08            /* ESAME mode guest          */
 
 /*003*/ BYTE  m;                        /* Mode controls             */
 
 #define SIE_M           m
-#define SIE_M_VCC       0x40            /* Vector change control     */
-#define SIE_M_XA        0x20            /* XA mode guest             */
-#define SIE_M_370       0x10            /* 370 mode guest            */
 #define SIE_M_VR        0x08            /* V=R mode guest            */
-#define SIE_M_ITMOF     0x04            /* Guest ival timer disabled */
-#define SIE_M_GPE       0x01            /* Guest per enhancement     */
+#define SIE_M_GPE       0x01            /* Guest PER enhancement     */
 
 /*004*/ FWORD  prefix;                  /* Guest prefix register     */
 /*008*/ FWORD  resv008f;
@@ -1881,6 +1967,7 @@ struct SIE2BK
 #define SIE_LCTL0_CR5   0x04            /* Intercept LCTL 5          */
 #define SIE_LCTL0_CR6   0x02            /* Intercept LCTL 6          */
 #define SIE_LCTL0_CR7   0x01            /* Intercept LCTL 7          */
+
 #define SIE_LCTL1       lctl_ctl[1]
 #define SIE_LCTL1_CR8   0x80            /* Intercept LCTL 8          */
 #define SIE_LCTL1_CR9   0x40            /* Intercept LCTL 9          */
@@ -1898,10 +1985,11 @@ struct SIE2BK
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
 #define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
-#define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
-#define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
-#define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
-#define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE or CSP     */
+#define SIE_IC0_ICFII   0x10            /* Intercept Facility Indi-  */
+                                        /* cating Instructions (e.g. */
+                                        /* STFL and STFLE)           */
+#define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE/CSP/CSPG   */
+
 #define SIE_IC1         ic[1]
 #define SIE_IC1_LPSW    0x40            /* Intercept LPSW/LPSWE      */
 #define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
@@ -1910,20 +1998,20 @@ struct SIE2BK
 #define SIE_IC1_STCTL   0x04            /* Intercept STCTL           */
 #define SIE_IC1_STNSM   0x02            /* Intercept STNSM           */
 #define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
+
 #define SIE_IC2         ic[2]
 #define SIE_IC2_STCK    0x80            /* Intercept STCK            */
-#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE        */
+#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE/IRBM   */
 #define SIE_IC2_SSKE    0x20            /* Intercept SSK/SSKE        */
-#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE        */
+#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE/RRBM   */
 #define SIE_IC2_PC      0x08            /* Intercept PC              */
 #define SIE_IC2_PT      0x04            /* Intercept PT              */
 #define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
 #define SIE_IC2_LASP    0x01            /* Intercept LASP            */
+
 #define SIE_IC3         ic[3]
-#define SIE_IC3_VACSV   0x80            /* Intercept VACSV           */
 #define SIE_IC3_SPT     0x40            /* Intercept SPT and STPT    */
 #define SIE_IC3_SCKC    0x20            /* Intercept SCKC and STCKC  */
-#define SIE_IC3_VACRS   0x10            /* Intercept VACRS           */
 #define SIE_IC3_PR      0x08            /* Intercept PR              */
 #define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
 #define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
@@ -1938,19 +2026,19 @@ struct SIE2BK
 #define SIE_EC0_ALERT   0x08            /* Alert Monitoring          */
 #define SIE_EC0_IOA     0x04            /* I/O Assist                */
 #define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+
 #define SIE_EC1         ec[1]
-#define SIE_EC1_EC370   0x20            /* 370 I/O Assist            */
-#define SIE_EC1_VFONL   0x04            /* Virtual VF online         */
+#define SIE_EC1_VEC     0x02            /* Vector Facility Enabled   */
+
 #define SIE_EC2         ec[2]
-#define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
 #define SIE_EC3         ec[3]
-#define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
+#define SIE_EC3_SIGA    0x04            /* SIGA Assist               */
 
 /*050*/ BYTE  c;                        /* Interception Code         */
 
 #define SIE_C_INST         4            /* Instruction interception  */
 #define SIE_C_PGMINT       8            /* Program interruption      */
-#define SIE_C_PGMINST     12            /* Program/instruction int   */
+#define SIE_C_BOTH        12            /* Both (program and instr.) */
 #define SIE_C_EXTREQ      16            /* External request          */
 #define SIE_C_EXTINT      20            /* External interruption     */
 #define SIE_C_IOREQ       24            /* I/O request               */
@@ -1958,6 +2046,8 @@ struct SIE2BK
 #define SIE_C_VALIDITY    32            /* Validity                  */
 #define SIE_C_STOPREQ     40            /* Stop request              */
 #define SIE_C_OPEREXC     44            /* Operation Exception       */
+#define SIE_C_ALT         48            /* Alert                     */
+#define SIE_C_PIX         56            /* Partial Instr. Execution  */
 #define SIE_C_IOINT       60            /* I/O Interruption          */
 #define SIE_C_IOINST      64            /* I/O Instruction           */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
@@ -1967,6 +2057,7 @@ struct SIE2BK
 
 #define SIE_F           f
 #define SIE_F_IN        0x80            /* Intercept format 2        */
+#define SIE_F_EXL       0x60            /* ILC of EX/EXRL instr      */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
 
@@ -1981,24 +2072,33 @@ struct SIE2BK
 
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD scaoh;                    /* SCAO high word            */
-/*060*/ FWORD rcpo;                     /* RCP area origin           */
+/*060*/ FWORD rcpo;                     /* RCP area origin (but only
+                                           if high-order 80 "Assist
+                                           is enabled" flag is off)  */
 
-#define SIE_RCPO0       rcpo[0]
-#define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
-#define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
-#define SIE_RCPO2       rcpo[2]
-#define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+#define SIE_RCPO0       rcpo[0]         /*  (See SIE1BK for flags)   */
+//efine SIE_RCPO0_ASIST 0x80            /* An assist is enabled      */
+//efine SIE_RCPO0_SKA   0x80            /* Storage Key Assist Enabled*/
+//efine SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
 
-/*064*/ FWORD  scao;                    /* SCA area origin           */
+#define SIE_ECB0        rcpo[1]         /* Exec. Controls 'B' Byte 0 */
+#define SIE_ECB0_QEBSM  0x80            /* QEBSM Interpretation Act. */
+#define SIE_ECB0_GSF    0x40            /* Guard.Stor.Facil.     133 */
+#define SIE_ECB0_TXF    0x10            /* Trans.Exec.Facil.     073 */
+
+#define SIE_ECB1        rcpo[2]         /* Exec. Controls 'B' Byte 1 */
+#define SIE_ECB1_IEP    0x20            /* Inst.Exe.Prot.Facil.  130 */
+
+/*064*/ FWORD  scao;                    /* SCA area origin low word  */
 /*068*/ FWORD  resv068f;
 /*06C*/ HWORD  todpfh;                  /* TOD pf high half          */
 /*06E*/ HWORD  todpf;                   /* TOD programmable field    */
-/*070*/ HWORD  tch_ctl;                 /* Test Channel control      */
+/*070*/ HWORD  gisa;                    /* GISA Absolute Adress      */
 /*072*/ HWORD  resv72h;
 /*074*/ BYTE   zone;                    /* Zone Number               */
 /*075*/ BYTE   resv075;
-/*076*/ BYTE   tschds;                  /* TSCH device status        */
-/*077*/ BYTE   tschsc;                  /* TSCH subchannel status    */
+/*076*/ BYTE   irb_dvst;                /* IRB Device status byte    */
+/*077*/ BYTE   irb_scst;                /* IRB Subchann. status byte */
 /*078*/ FWORD  resv078f;
 /*07C*/ FWORD  resv07cf;
 /*080*/ DBLWRD mso;                     /* Main Storage Origin       */
@@ -2008,10 +2108,12 @@ struct SIE2BK
 #define SIE2_MS_MASK    0xFFFFFFFFFFF00000ULL
 
 /*090*/ QWORD  psw;                     /* Guest PSW                 */
+
 /*0A0*/ DBLWRD gr14;                    /* Guest gr 14               */
 /*0A8*/ DBLWRD gr15;                    /* Guest gr 15               */
 /*0B0*/ DBLWRD recv0b0d;
-/*0B8*/ HWORD  recv0b8h;
+/*0B8*/ BYTE   hstid;                   /* Host Program Id           */
+/*0B9*/ BYTE   recv0b9b;
 /*0BA*/ BYTE   xso[3];                  /* Expanded storage origin   */
 /*0BD*/ BYTE   xsl[3];                  /* Expanded storage limit    */
 /*0C0*/ BYTE   ip[52];                  /* Interruption parameters   */
@@ -2022,18 +2124,26 @@ struct SIE2BK
 #define SIE_II_PSA_OFFSET       0x30    /* Offset of the IP field
                                            relative to the I/O fields
                                            in the PSA for ESAME guest*/
-
-/*0CE   HWORD  iprcc;                                                */
 /*0F4*/ BYTE   resv0f4b[6];
+
 /*0FA*/ HWORD  ief;                     /* Migration Emulation cnlt  */
 /*0FC*/ FWORD  resv0fcf;
+
 /*100*/ DBLWRD cr[16];                  /* Control registers         */
-/*180*/ DBLWRD gbea;
+/*180*/ DBLWRD bear;                    /* Breaking-Event-Address Reg*/
+
 /*188*/ BYTE   resv188b[24];
+
 /*1A0*/ FWORD  fld;                     /* Facility List Designation */
-/*1A4*/ BYTE   resv1a4b[92];
+                                        /* --> STFLE bits for guest  */
+/*1A4*/ BYTE   resv1a4b[68];
+/*1E8*/ DBLWRD itdba;                   /* Interception TDB address  */
+/*1F0*/ BYTE   resv1f0b[8];
+/*1F8*/ DBLWRD vrd;                     /* Vector Regs. Designation  */
 };
 typedef struct SIE2BK   SIE2BK;
+
+CASSERT( sizeof( SIE2BK ) == 512, esa390_h );
 
 /*-------------------------------------------------------------------*/
 /*                            WHO                                    */
@@ -2296,18 +2406,18 @@ struct SYSIB122                         /* Basic Machine CPUs        */
     HWORD   confcpu;                    /* Configured CPU count      */
     HWORD   sbcpu;                      /* Standby CPU count         */
     HWORD   resvcpu;                    /* Reserved CPU count        */
-    HWORD   mpfact[MAX_CPU_ENGINES-1];  /* MP factors                */
+    HWORD   mpfact[ MAX_CPU_ENGS - 1];  /* MP factors                */
 
 
-#if ((MAX_CPU_ENGINES-1) % 2)           /* if prev is odd #of HWORDs */
+#if ((MAX_CPU_ENGS - 1) % 2)            /* if prev is odd #of HWORDs */
     HWORD   resv3;                      /* then need some alignment  */
 #endif
 
     FWORD   accap;                      /* Alternate CPU Capability  */
-    HWORD   ampfact[MAX_CPU_ENGINES-1]; /* Alternate MP factors      */
+    HWORD   ampfact[ MAX_CPU_ENGS - 1]; /* Alternate MP factors      */
 
 
-#if ((MAX_CPU_ENGINES-1) % 2)           /* if prev is odd #of HWORDs */
+#if ((MAX_CPU_ENGS - 1) % 2)            /* if prev is odd #of HWORDs */
     HWORD   resv4;                      /* then need some alignment  */
 #endif
 };
@@ -2434,26 +2544,32 @@ struct SYSIBVMDB                        /* Virtual Machine Desc Block*/
 typedef struct SYSIBVMDB SYSIBVMDB;
 
 /*-------------------------------------------------------------------*/
+/*           PTFF  -- Perform Timing Facility Function               */
+/*-------------------------------------------------------------------*/
 
 #define PTFF_GPR0_RESV          0x00000080
 #define PTFF_GPR0_FC_MASK       0x0000007F
-#define PTFF_GPR0_FC_QAF        0x00
-#define PTFF_GPR0_FC_QTO        0x01
-#define PTFF_GPR0_FC_QSI        0x02
-#define PTFF_GPR0_FC_QPT        0x03
-#define PTFF_GPR0_FC_ATO        0x40
-#define PTFF_GPR0_FC_STO        0x41
-#define PTFF_GPR0_FC_SFS        0x42
-#define PTFF_GPR0_FC_SGS        0x43
 
-/*-------------------------------------------------------------------*/
-/*                          PTFFQAF                                  */
-/*-------------------------------------------------------------------*/
-struct PTFFQAF                          /* Query Available Functions */
-{
-    FWORD   sb[4];                      /* Status Bits words         */
-};
-typedef struct PTFFQAF PTFFQAF;
+#define PTFF_GPR0_FC_QAF        0   /* Query Available Functions     */
+#define PTFF_GPR0_FC_QTO        1   /* Query TOD Offset              */
+#define PTFF_GPR0_FC_QSI        2   /* Query Steering Information    */
+#define PTFF_GPR0_FC_QPT        3   /* Query Physical Clock          */
+#define PTFF_GPR0_FC_QUI        4   /* Query UTC Information         */
+#define PTFF_GPR0_FC_QTOU       5   /* Query TOD Offset User         */
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+#define PTFF_GPR0_FC_QSIE      10   /* Query Steering Info Extended  */
+#define PTFF_GPR0_FC_QTOUE     13   /* Query TOD Offset User Extended*/
+#endif
+
+#define PTFF_GPR0_FC_ATO       64   /* Adjust TOD Offset             */
+#define PTFF_GPR0_FC_STO       65   /* Set TOD Offset                */
+#define PTFF_GPR0_FC_SFS       66   /* Set Fine-Steering Rate        */
+#define PTFF_GPR0_FC_SGS       67   /* Set Gross-Steering Rate       */
+#define PTFF_GPR0_FC_STOU      69   /* Set TOD Offset User           */
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+#define PTFF_GPR0_FC_STOE      73   /* Set TOD Offset Extended       */
+#define PTFF_GPR0_FC_STOUE     77   /* Set TOD Offset User Extended  */
+#endif
 
 /*-------------------------------------------------------------------*/
 /*                          PTFFQTO                                  */
@@ -2497,42 +2613,76 @@ typedef struct PTFFQSI PTFFQSI;
                                                Token instead of SSID */
 
 /*-------------------------------------------------------------------*/
+/* Macros to extract bit fields from PFPO General Purpose Register 0 */
+
+#define U81     0x01
+#define U82     0x03
+#define U83     0x07
+#define U84     0x0F
+#define U85     0x1F
+#define U86     0x3F
+#define U87     0x7F
+#define U88     0xFF
+
+#define GR0_BITFIELD( _regs, _start, _width )                         \
+                                                                      \
+  (((_regs)->GR_G(0) >> (64-(_start)-(_width))) & U8 ## _width)
+
+#define GR0_T( _regs )        GR0_BITFIELD( (_regs), 32, 1)
+#define GR0_OTC( _regs )      GR0_BITFIELD( (_regs), 33, 7)
+#define GR0_OFC1( _regs )     GR0_BITFIELD( (_regs), 40, 8)
+#define GR0_OFC2( _regs )     GR0_BITFIELD( (_regs), 48, 8)
+
+/*-------------------------------------------------------------------*/
 /* Bit definitions for floating-point-control register */
 
-#define FPC_MASK        0xF8000000
-#define FPC_MASK_IMI    0x80000000
-#define FPC_MASK_IMZ    0x40000000
-#define FPC_MASK_IMO    0x20000000
-#define FPC_MASK_IMU    0x10000000
-#define FPC_MASK_IMX    0x08000000
-#define FPC_FLAG        0x00F80000
-#define FPC_FLAG_SFI    0x00800000
-#define FPC_FLAG_SFZ    0x00400000
-#define FPC_FLAG_SFO    0x00200000
-#define FPC_FLAG_SFU    0x00100000
-#define FPC_FLAG_SFX    0x00080000
+#define FPC_FPX_MASKS   0xFC000000      // (FP-Ext fac installed)
+#define FPC_MASKS       0xF8000000      // (FP-Ext fac NOT installed)
+#define FPC_MASK_IMI    0x80000000      // "Invalid Operation"
+#define FPC_MASK_IMZ    0x40000000      // "Division by Zero"
+#define FPC_MASK_IMO    0x20000000      // "Overflow"
+#define FPC_MASK_IMU    0x10000000      // "Underflow"
+#define FPC_MASK_IMX    0x08000000      // "Inexact"
+#define FPC_MASK_IMQ    0x04000000      // "Quantum" (FPX only)
+
+#define FPC_FPX_FLAGS   0x00FC0000      // (FP-Ext fac installed)
+#define FPC_FLAGS       0x00F80000      // (FP-Ext fac NOT installed)
+#define FPC_FLAG_SFI    0x00800000      // "Invalid Operation"
+#define FPC_FLAG_SFZ    0x00400000      // "Division by Zero"
+#define FPC_FLAG_SFO    0x00200000      // "Overflow"
+#define FPC_FLAG_SFU    0x00100000      // "Underflow"
+#define FPC_FLAG_SFX    0x00080000      // "Inexact"
+#define FPC_FLAG_SFQ    0x00040000      // "Quantum" (FPX only)
+
 #define FPC_DXC         0x0000FF00
-#define FPC_DXC_I       0x00008000
-#define FPC_DXC_Z       0x00004000
-#define FPC_DXC_O       0x00002000
-#define FPC_DXC_U       0x00001000
-#define FPC_DXC_X       0x00000800
-#define FPC_DXC_Y       0x00000400
-#define FPC_DRM         0x00000070
-#define FPC_BRM_3BIT    0x00000007
+#define FPC_DXC_I       0x00008000      // "Invalid Operation"
+#define FPC_DXC_Z       0x00004000      // "Division by Zero"
+#define FPC_DXC_O       0x00002000      // "Overflow"
+#define FPC_DXC_U       0x00001000      // "Underflow"
+#define FPC_DXC_X       0x00000800      // "Inexact"
+#define FPC_DXC_YQ      0x00000400      // (dual meaning; see doc)
+
+#define FPC_DRM         0x00000070      // Decimal rounding mode
+#define FPC_BRM_3BIT    0x00000007      // Binary rounding mode
+
 #define FPC_BIT29       0x00000004
 #define FPC_BRM_2BIT    0x00000003
-#define FPC_RESV_FPX    0x03030088
-#define FPC_RESERVED    0x0707008C
+
+#define FPC_RESV_FPX    0x03030088      // (FP-Ext fac installed)
+#define FPC_RESERVED    0x0707008C      // (FP-Ext fac NOT installed)
 
 /*-------------------------------------------------------------------*/
 /* Shift counts to allow alignment of each field in the FPC register */
 
-#define FPC_MASK_SHIFT  27
-#define FPC_FLAG_SHIFT  19
-#define FPC_DXC_SHIFT   8
-#define FPC_DRM_SHIFT   4
-#define FPC_BRM_SHIFT   0
+#define FPC_MASK_SHIFT      27          // (FP-Ext fac NOT installed)
+#define FPC_FLAG_SHIFT      19          // (FP-Ext fac NOT installed)
+
+#define FPC_FPX_MASK_SHIFT  26          // (FP-Ext fac installed)
+#define FPC_FPX_FLAG_SHIFT  18          // (FP-Ext fac installed)
+
+#define FPC_DXC_SHIFT        8
+#define FPC_DRM_SHIFT        4
+#define FPC_BRM_SHIFT        0
 
 /*-------------------------------------------------------------------*/
 /* Data exception codes */
@@ -2541,25 +2691,35 @@ typedef struct PTFFQSI PTFFQSI;
 #define DXC_AFP_REGISTER        0x01    /* AFP register exception    */
 #define DXC_BFP_INSTRUCTION     0x02    /* BFP instruction exception */
 #define DXC_DFP_INSTRUCTION     0x03    /* DFP instruction exception */
+#define DXC_DFP_QUANTUM         0x04    /* DFP quantum exception     */
+#define DXC_DFP_SIM_QUANTUM     0x07    /* DFP simulated quantum exc */
+
 #define DXC_IEEE_INEXACT_TRUNC  0x08    /* IEEE inexact, truncated   */
-#define DXC_IEEE_INEXACT_IISE   0x0B    /* IEEE inexact (IISE)    DFP*/
+#define DXC_IEEE_INEXACT_IISE   0x0B    /* IEEE inexact (IISE*)   DFP*/
 #define DXC_IEEE_INEXACT_INCR   0x0C    /* IEEE inexact, incremented */
+
 #define DXC_IEEE_UF_EXACT       0x10    /* IEEE underflow. exact     */
 #define DXC_IEEE_UF_EXACT_IISE  0x13    /* IEEE u/flow,exact(IISE)DFP*/
 #define DXC_IEEE_UF_INEX_TRUNC  0x18    /* IEEE u/flow,inexact,trunc */
-#define DXC_IEEE_UF_INEX_IISE   0x1B    /* IEEE u/flow,inex(IISE) DFP*/
+#define DXC_IEEE_UF_INEX_IISE   0x1B    /* IEEE u/flow,inex(IISE*)DFP*/
 #define DXC_IEEE_UF_INEX_INCR   0x1C    /* IEEE u/flow,inexact,incr  */
+
 #define DXC_IEEE_OF_EXACT       0x20    /* IEEE overflow. exact      */
 #define DXC_IEEE_OF_EXACT_IISE  0x23    /* IEEE o/flow,exact(IISE)DFP*/
 #define DXC_IEEE_OF_INEX_TRUNC  0x28    /* IEEE o/flow,inexact,trunc */
-#define DXC_IEEE_OF_INEX_IISE   0x2B    /* IEEE o/flow,inex(IISE) DFP*/
+#define DXC_IEEE_OF_INEX_IISE   0x2B    /* IEEE o/flow,inex(IISE*)DFP*/
 #define DXC_IEEE_OF_INEX_INCR   0x2C    /* IEEE o/flow,inexact,incr  */
+
 #define DXC_IEEE_DIV_ZERO       0x40    /* IEEE division by zero     */
-#define DXC_IEEE_DIV_ZERO_IISE  0x43    /* IEEE div by zero(IISE) DFP*/
+#define DXC_IEEE_DIV_ZERO_IISE  0x43    /* IEEE div by zero(IISE*)DFP*/
+
 #define DXC_IEEE_INVALID_OP     0x80    /* IEEE invalid operation    */
-#define DXC_IEEE_INV_OP_IISE    0x83    /* IEEE invalid op (IISE) DFP*/
+#define DXC_IEEE_INV_OP_IISE    0x83    /* IEEE invalid op (IISE*)DFP*/
+
+#define DXC_VECTOR_INSTRUCTION  0xFE    /* Vector instruction        */
 #define DXC_COMPARE_AND_TRAP    0xFF    /* Compare-and-trap exception*/
-/* Note: IISE = IEEE-interruption-simulation event */
+
+/*       (*) "IISE" = "IEEE-interruption-simulation event"           */
 
 /*-------------------------------------------------------------------*/
 /* Decimal rounding modes */

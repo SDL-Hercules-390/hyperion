@@ -1,4 +1,5 @@
-/* HERCLIN.C     (C) Copyright Roger Bowler, 2005-2012               */
+/* HERCLIN.C    (C) Copyright Roger Bowler, 2005-2012                */
+/*              (C) and others 2013-2021                             */
 /*              Hercules Interface Control Program                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -27,7 +28,7 @@
 /* might be invoked from a separate thread    */
 /**********************************************/
 
-int hercules_has_exited = 0;
+bool hercules_has_exited = false;
 
 void log_callback( const char* msg, size_t msglen )
 {
@@ -35,7 +36,7 @@ void log_callback( const char* msg, size_t msglen )
 
     if (!msglen)
     {
-        hercules_has_exited = 1;
+        hercules_has_exited = true;
         return;
     }
 
@@ -43,6 +44,45 @@ void log_callback( const char* msg, size_t msglen )
     fwrite( msg, 1, msglen, stdout );
     fflush( stdout );
     fflush( stderr );
+}
+
+/**********************************************/
+/* Keyboard thread responsible for reading    */
+/* user input from the keyboard. It's a sep-  */
+/* arate thread because 'fgets' blocks until  */
+/* the user enters a command and presses      */
+/* the enter key.                             */
+/**********************************************/
+
+LOCK  kb_lock;      // keyboard lock
+COND  kb_read_cond; // keyboard read requested
+COND  kb_data_cond; // keyboard data available
+TID   kb_tid;       // keyboard thread id
+char *cmdbuf, *cmd; // keyboard variables
+
+#define CMDBUFSIZ  1024
+
+void* kb_thread( void* argp )
+{
+    UNREFERENCED( argp );
+
+    while (1)
+    {
+        if ((cmd = fgets( cmdbuf, CMDBUFSIZ, stdin )))
+        {
+            obtain_lock( &kb_lock );
+            {
+                /* (remove newline) */
+                cmd[ strlen( cmd ) - 1 ] = 0;
+
+                broadcast_condition( &kb_data_cond );
+                wait_condition( &kb_read_cond, &kb_lock );
+            }
+            release_lock( &kb_lock );
+        }
+    }
+
+    UNREACHABLE_CODE( return NULL );
 }
 
 int main( int argc, char* argv[] )
@@ -58,8 +98,6 @@ int main( int argc, char* argv[] )
     /*****************************************/
 
     COMMANDHANDLER  process_command;
-
-    char *cmdbuf, *cmd;
 
 #if defined( HDL_USE_LIBTOOL )
     /* LTDL Preloaded symbols for HDL using libtool */
@@ -86,22 +124,65 @@ int main( int argc, char* argv[] )
         process_command = getCommandHandler();
 
         /******************************************/
-        /* Read STDIN and pass to Command Handler */
+        /* Create locks, conditions and buffers   */
+        /* needed by the keyboard thread...       */
         /******************************************/
-#define CMDBUFSIZ  1024
+
+        initialize_lock( &kb_lock );
+        initialize_condition( &kb_read_cond );
+        initialize_condition( &kb_data_cond );
+
         cmdbuf = (char*) malloc( CMDBUFSIZ );
 
-        do
-        {
-            if ((cmd = fgets( cmdbuf, CMDBUFSIZ, stdin )))
-            {
-                /* (remove newline) */
-                cmd[ strlen( cmd ) - 1 ] = 0;
+        /******************************************/
+        /* Create a worker thread to read from    */
+        /* the keyboard so we don't block forever */
+        /* waiting for keyboard during shutdown.  */
+        /******************************************/
 
-                process_command( cmd );
+        rc = create_thread( &kb_tid, DETACHED,
+             kb_thread, NULL, HERCLIN_KB_THREAD );
+        if (rc)
+        {
+            // "Error in function create_thread(): %s"
+            WRMSG( HHC00102, "S", strerror( rc ));
+            return -1;
+        }
+
+        /******************************************/
+        /* Read keyboard, pass to Command Handler */
+        /******************************************/
+
+        obtain_lock( &kb_lock );
+        {
+            while (!hercules_has_exited)
+            {
+                /* Request more keyboard data */
+                broadcast_condition( &kb_read_cond );
+
+                /* Wait for data to arrive */
+                while
+                (1
+                    && !hercules_has_exited
+                    && timed_wait_condition_relative_usecs
+                       (
+                           &kb_data_cond,
+                           &kb_lock,
+                           PANEL_REFRESH_RATE_FAST * 1000,
+                           NULL
+                       )
+                       != 0
+                )
+                {
+                    ;  // (do nothing! keep waiting!)
+                }
+
+                /* Process keyboard data */
+                if (!hercules_has_exited)
+                    process_command( cmd );
             }
         }
-        while (!hercules_has_exited);
+        release_lock( &kb_lock );
 
         sysblk.panel_init = 0;
     }

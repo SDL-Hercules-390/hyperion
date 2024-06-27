@@ -77,7 +77,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         char *p;
         for (p = rmtdev + 1; *p && *p != ':'; p++)
         {
-            if (!isdigit(*p))  /* (port numbers are always numeric) */
+            if (!isdigit((unsigned char)*p))  /* (port numbers are always numeric) */
             {
                 /* Not a port number ==> not really a remote device */
                 rmtdev = NULL;
@@ -354,6 +354,7 @@ int             argc=0;                 /*  device open              */
 /*      start    Starting cylinder number for this file              */
 /*      end      Ending cylinder number for this file                */
 /*      volcyls  Total number of cylinders on volume                 */
+/*      serial   Physical serial number                              */
 /*      volser   Volume serial number                                */
 /*      comp     Compression algorithm for a compressed device.      */
 /*               Will be 0xff if device is not to be compressed.     */
@@ -370,7 +371,7 @@ int             argc=0;                 /*  device open              */
 static int
 create_ckd64_file (char *fname, BYTE fseqn, U16 devtype, U32 heads,
                   U32 trksize, BYTE *buf, U32 start, U32 end,
-                  U32 volcyls, char *volser, BYTE comp, BYTE dasdcopy,
+                  U32 volcyls, const char* serial, char *volser, BYTE comp, BYTE dasdcopy,
                   BYTE nullfmt, BYTE rawflag,
                   BYTE flagECmode, BYTE flagMachinecheck)
 {
@@ -454,7 +455,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the device header */
     memset( &devhdr, 0, CKD_DEVHDR_SIZE );
-    gen_dasd_serial( devhdr.dh_serial );
+    memcpy( devhdr.dh_serial, serial, sizeof( devhdr.dh_serial ));
 
     if (comp == 0xff) memcpy( devhdr.dh_devid, dh_devid_str( CKD_P064_TYP ), 8 );
     else              memcpy( devhdr.dh_devid, dh_devid_str( CKD_C064_TYP ), 8 );
@@ -946,6 +947,7 @@ U32             maxcyls;                /* Maximum cylinder count    */
 U32             maxcpif;                /* Maximum number of cylinders
                                            in each CKD image file    */
 U32             trksize;                /* DASD image track length   */
+char            serial[ sizeof_member( CKD_DEVHDR, dh_serial ) + 1 ] = {0};
 
     /* Compute the DASD image track length */
     trksize = CKD_TRKHDR_SIZE
@@ -1057,6 +1059,9 @@ U32             trksize;                /* DASD image track length   */
         }
     }
 
+    /* Generate a random serial number for this new dasd */
+    gen_dasd_serial( serial );
+
     /* Create the DASD image files */
     for (cyl = 0, fileseq = 1; cyl < volcyls;
             cyl += maxcpif, fileseq++)
@@ -1078,7 +1083,7 @@ U32             trksize;                /* DASD image track length   */
 
         /* Create a CKD DASD image file */
         rc = create_ckd64_file (sfname, fileseq, devtype, heads,
-                    trksize, buf, cyl, endcyl, volcyls, volser,
+                    trksize, buf, cyl, endcyl, volcyls, serial, volser,
                     comp, dasdcopy, nullfmt, rawflag,
                     flagECmode, flagMachinecheck);
         if (rc < 0) return -1;
@@ -1152,7 +1157,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Display progress message */
-    // "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
+    // "%1d:%04X FBA64 file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
     FWRMSG( stdout, HHC00473, "I", 0, 0, fname,
             devtype, rawflag ? "" : volser, sectors, sectsz );
 
@@ -1317,7 +1322,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Display progress message */
-    // "%1d:%04X CKD64 file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+    // "%1d:%04X FBA64 file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
     FWRMSG( stdout, HHC00474, "I", 0, 0, fname,
         devtype, rawflag ? "" : volser, sectors, sectsz );
 

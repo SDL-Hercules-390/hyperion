@@ -1,4 +1,5 @@
 /* CNSLLOGO.H   (c)Copyright Roger Bowler, 1999-2012                 */
+/*              (C) and others 2013-2023                             */
 /*              Hercules Console Logo                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -106,7 +107,7 @@ static char *herclogo[]={
 "",
 "",
 "         The Hercules S/370, ESA/390 and z/Architecture Emulator",
-"                 Software Development Laboratories",
+"                          SDL 4.x Hyperion",
 "           _    _                            _",
 "          | |  | |                          (_)",
 "          | |__| | _   _  _ __    ___  _ __  _   ___   _ __",
@@ -118,7 +119,7 @@ static char *herclogo[]={
 "",
 "                   My PC thinks it's a MAINFRAME!",
 "",
-"       Copyright (C) 1999-2020 Roger Bowler, Jan Jaeger, and others"
+"       Copyright (C) 1999-2024 Roger Bowler, Jan Jaeger, and others"
 };
 
 #endif /* #ifndef _CNSLLOGO_H_ */

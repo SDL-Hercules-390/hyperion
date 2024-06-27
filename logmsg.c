@@ -99,8 +99,9 @@ typedef struct CAPTCTL          // message capturing control entry
 }
 CAPTCTL;
 
-static CAPTCTL  captctl_tab     [ MAX_CPU_ENGINES + 4 ]   = {0};
+static CAPTCTL  captctl_tab     [ MAX_CPU_ENGS + 4 ]   = {0};
 static LOCK     captctl_lock;
+static bool     wrmsg_quiet = false; // suppress panel output if true
 
 #define  lock_capture()         obtain_lock(  &captctl_lock )
 #define  unlock_capture()       release_lock( &captctl_lock );
@@ -199,13 +200,15 @@ static void capture_message( const char* msg, CAPTMSGS* pCAPTMSGS )
 /*-------------------------------------------------------------------*/
 /*            Issue panel command and capture results                */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int panel_command_capture( char* cmd, char** resp )
+DLL_EXPORT int panel_command_capture( char* cmd, char** resp, bool quiet )
 {
     int rc;
     CAPTCTL*  pCAPTCTL;             // ptr to capturing control entry
     CAPTMSGS  captmsgs  = {0};      // captured messages structure
 
     /* Start capturing */
+    wrmsg_quiet = quiet;            // caller can suppress panel output
+                                    // by setting quiet to true
     pCAPTCTL = start_capturing( &captmsgs );
 
     /* Execute the Hercules panel command and save the return code */
@@ -216,9 +219,47 @@ DLL_EXPORT int panel_command_capture( char* cmd, char** resp )
 
     /* Stop capturing */
     stop_capturing( pCAPTCTL );
+    wrmsg_quiet = false;            // reinstate panel output
 
     /* Return to caller */
     return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/*               _flog_write_pipe  helper function                   */
+/*-------------------------------------------------------------------*/
+/* logger is non-blocking to prevent stalls so we try for a short    */
+/* time to get the data through. Strictly log writes are atomic as   */
+/* they should be < PIPE_BUF bytes (see pipe(7) but we do try and    */
+/* handle the case where we are passed more data                     */
+/*-------------------------------------------------------------------*/
+static int do_write_pipe( int fd, const char *msg, int len)
+{
+    // Note: logger write fd is non-blocking
+    int retry = 5;
+    int written = 0;
+    int rc;
+    while ((rc = write_pipe( fd, msg, len )) != len && retry--)
+    {
+        if (rc == -1)
+        {
+            if (errno == EAGAIN)
+            {
+                // logger is backlogged; wait a bit before retrying
+                USLEEP(10000);
+                continue;
+            }
+            break;
+        }
+        if (rc < len)
+        {
+            // Short write (may occur if write >= PIPE_BUF)
+            len -= rc;
+            msg += rc;
+            written += rc;
+        }
+    }
+    return rc == -1 ? -1 : written + len;
 }
 
 /*-------------------------------------------------------------------*/
@@ -237,26 +278,35 @@ static void _flog_write_pipe( FILE* f, const char* msg )
         || sysblk.shutdown
         || stdout != f
         || !logger_syslogfd[ LOG_WRITE ]
-        || (rc = write_pipe( logger_syslogfd[ LOG_WRITE ], msg, len )) < 0
+        || (rc = do_write_pipe( logger_syslogfd[ LOG_WRITE ], msg, len )) < 0
     )
     {
+        // Something went wrong or we're shutting down.
+        // Write the message to the screen instead...
+
         fprintf( f, "%s", msg );   /* (write msg to screen) */
 
-        if (1
-            && sysblk.shutdown
+        // PROGRAMMING NOTE: the external GUI receives messages
+        // not only via its logfile stream but also via its stderr
+        // stream too, so if there's an external gui, we skip the
+        // logfile write in order to prevent duplicate messages.
+        //
+        // If no external GUI exists however, then we need to
+        // write the message to the logfile WITH a timstamp.
 
-            // PROGRAMMING NOTE: the external GUI receives messages
-            // not only via its logfile stream but also via its
-            // stderr stream as well, so we skip the logfile write
-            // in order to prevent duplicate messages.
-            && !extgui
+        if (1
+            && sysblk.shutdown      // (shutting down?)
+            && !extgui              // (no external gui?)
         )
         {
-            // Note: call does nothing if no logfile exists.
+            // (then we need to timestamp the logmsg...)
+            // (note: call does nothing if no logfile exists!)
+
             logger_timestamped_logfile_write( msg, len );
         }
     }
 }
+
 
 /*-------------------------------------------------------------------*/
 /*                           flog_write                              */
@@ -305,7 +355,7 @@ static void flog_write( int panel, FILE* f, const char* msg )
     }
 
     /* If write to panel wanted, send message through logmsg pipe */
-    if (panel & WRMSG_PANEL)
+    if ((panel & WRMSG_PANEL) && !wrmsg_quiet)
         _flog_write_pipe( f, msg );
 
     /* Capture this message if capturing is active for this thread */
@@ -317,7 +367,7 @@ static void flog_write( int panel, FILE* f, const char* msg )
 /*                     writemsg functions                            */
 /*-------------------------------------------------------------------*/
 /* The writemsg function is the primary 'WRMSG' macro function that  */
-/* is responsible for formatting messages wich, once formatted, are  */
+/* is responsible for formatting messages which, once formatted, are */
 /* then handed off to the flog_write function to be eventually shown */
 /* to the user or captured or both, according to the 'panel' option. */
 /*                                                                   */

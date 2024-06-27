@@ -779,7 +779,7 @@ struct mtop opblk;
         return 0;
     }
 
-    /* Bona fide forward space block error ... */
+    /* Bonafide forward space block error ... */
 
     save_errno = errno;
     {
@@ -914,7 +914,7 @@ struct mtget starting_mtget;
     ** the supposed i/o error. If the file# is one less than it was
     ** before and the block# is -1, then a tapemark was simply spaced
     ** over. If the file# and block# is anything else however, then
-    ** the originally reported error was a bona-fide i/o error (i.e.
+    ** the originally reported error was a bonafide i/o error (i.e.
     ** the original backspace-block (MTBSR) actually *failed*).
     **
     ** I say "semi-reliable" because comments seem to indicate that
@@ -924,7 +924,7 @@ struct mtget starting_mtget;
     ** for now, we're going to rely on their accuracy since without
     ** them there's really no way whatsoever to distingish between
     ** a normal backspacing over a tapemark unit exception condition
-    ** and a bona-fide i/o error (other than doing our own SCSI i/o
+    ** and a bonafide i/o error (other than doing our own SCSI i/o
     ** of course (which we don't support (yet))). -- Fish, May 2008
     */
     if ( EIO == errno )
@@ -957,7 +957,7 @@ struct mtget starting_mtget;
         }
     }
 
-    /* Bona fide backspace block i/o error ... */
+    /* Bonafide backspace block i/o error ... */
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
@@ -1208,7 +1208,7 @@ struct mtop opblk;
     {
         dev->fenced = 0;
 
-        if ( dev->ccwtrace || dev->ccwstep )
+        if (dev->ccwtrace)
             // "%1d:%04X Tape file %s, type %s: tape unloaded"
             WRMSG (HHC00210, "I", LCSS_DEVNUM, dev->filename, "scsi");
 
@@ -1379,7 +1379,7 @@ int readblkid_scsitape ( DEVBLK* dev, BYTE* logical, BYTE* physical )
         int save_errno = errno;
         {
             // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC90205, "D"
                     ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
@@ -1444,7 +1444,7 @@ int locateblk_scsitape ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
         int save_errno = errno;
         {
             // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00205, "W"
                     ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
@@ -1701,6 +1701,7 @@ static void* get_stape_status_thread( void* notused )
     DEVBLK*       dev = NULL;
     struct mtget  mtget;
     int           timeout;
+    int           rc;
 
     UNREFERENCED( notused );
 
@@ -1721,7 +1722,8 @@ static void* get_stape_status_thread( void* notused )
     // in order to prevent their wait from timing out. We ensure this
     // by setting our own priority HIGHER than theirs.
 
-    set_thread_priority( sysblk.devprio + 1 );
+    SET_THREAD_PRIORITY( sysblk.devprio + 1, sysblk.qos_user_interactive );
+    UNREFERENCED(rc);
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
     LOG_THREAD_BEGIN( SCSISTAT_THREAD_NAME  );
@@ -1993,7 +1995,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only )
         while (ETIMEDOUT == (rc = int_scsi_status_wait( dev,
             MAX_GSTAT_FREQ_USECS + (2 * SLOW_UPDATE_STATUS_TIMEOUT) )))
         {
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
             {
                 // "%1d:%04X Tape status retrieval timeout"
                 WRMSG( HHC00243, "W", LCSS_DEVNUM );
@@ -2013,7 +2015,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only )
     create_automount_thread( dev );     // (in case status changed)
 
     /* Display tape status if tracing is active */
-    if (unlikely( dev->ccwtrace || dev->ccwstep ))
+    if (unlikely( dev->ccwtrace ))
     {
         char sstat_str[ 384 ] = {0};
         gstat2str( (U32) dev->sstat, sstat_str, sizeof( sstat_str ));

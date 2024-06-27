@@ -1,4 +1,5 @@
 /* HERCULES.H   (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2023                             */
 /*              Hercules Header Files                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -62,7 +63,6 @@
 #include "hmacros.h"      /* Hercules-wide #define macros            */
 #include "hmalloc.h"      /* Hercules malloc/free functions          */
 #include "herror.h"       /* Hercules-wide error definitions         */
-#include "chain.h"        /* Chain and queue macros/inlines          */
 #include "extstring.h"    /* Extended string handling routines       */
 
 #if !defined( HAVE_BYTESWAP_H ) || defined( NO_ASM_BYTESWAP )

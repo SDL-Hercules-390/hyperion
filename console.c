@@ -792,11 +792,11 @@ static void  finish_console_close( DEVBLK* dev )
 
     if (!console_cnslcnt)
     {
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         {
             join_thread( sysblk.cnsltid, NULL);
         }
-        obtain_lock (&dev->lock );
+        OBTAIN_DEVLOCK( dev );
 
         sysblk.cnsltid = 0;
     }
@@ -874,14 +874,14 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
     /* Extra initialisation for the SYSG console */
     if (strcasecmp( dev->typname, "SYSG" ) == 0)
     {
-        dev->pmcw.flag5 &= ~PMCW5_V;  // (not a regular device)
-
         if (sysblk.sysgdev != NULL)
         {
             // "%1d:%04X COMM: duplicate SYSG console definition"
             WRMSG( HHC01025, "E", LCSS_DEVNUM );
             return -1;
         }
+
+        dev->pmcw.flag5 &= ~PMCW5_V;  // (not a regular device)
     }
 #endif
 
@@ -941,10 +941,10 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                 strupper( group, argv[ac] );
 
                 for (i=1, rc=0; i < (int) strlen( group ) && rc == 0; i++)
-                    if (!isalnum( group[i] ))
+                    if (!isalnum( (unsigned char)group[i] ))
                         rc = -1;
 
-                if (rc == 0 && isalpha( group[0] ))
+                if (rc == 0 && isalpha( (unsigned char)group[0] ))
                     STRLCPY( dev->filename, group );
                 else
                 {
@@ -1202,7 +1202,7 @@ static struct sockaddr_in* parse_sockspec( const char* sockspec )
 
     // Convert port to number
 
-    if (isdigit( *port ))
+    if (isdigit( (unsigned char)*port ))
         sin->sin_port = htons( atoi( port ));
     else
     {
@@ -1971,23 +1971,23 @@ static int  loc3270_hsuspend( DEVBLK* dev, void* file )
     SR_WRITE_VALUE( file, SR_DEV_3270_POS, dev->pos3270, sizeof( dev->pos3270 ));
     SR_WRITE_VALUE( file, SR_DEV_3270_EWA, dev->ewa3270, 1);
 
-    obtain_lock( &dev->lock );
-
-    rc = solicit_3270_data( dev, R3270_RB );
-
-    if (1
-        && rc == 0
-        && dev->rlen3270 > 0
-        && dev->rlen3270 <= sizeof( buf )
-    )
+    OBTAIN_DEVLOCK( dev );
     {
-        len = dev->rlen3270;
-        memcpy( buf, dev->buf, len );
-    }
-    else
-        len = 0;
+        rc = solicit_3270_data( dev, R3270_RB );
 
-    release_lock( &dev->lock );
+        if (1
+            && rc == 0
+            && dev->rlen3270 > 0
+            && dev->rlen3270 <= sizeof( buf )
+        )
+        {
+            len = dev->rlen3270;
+            memcpy( buf, dev->buf, len );
+        }
+        else
+            len = 0;
+    }
+    RELEASE_DEVLOCK( dev );
 
     if (len)
         SR_WRITE_BUF( file, SR_DEV_3270_BUF, buf, (int) len );
@@ -2061,26 +2061,26 @@ static int  loc3270_hresume( DEVBLK* dev, void* file )
         && rbuflen > 3
     )
     {
-        obtain_lock( &dev->lock );
+        OBTAIN_DEVLOCK( dev );
+        {
+            /* Construct buffer to send to the 3270 */
+            len = 0;
+            buf[len++] = dev->ewa3270 ? R3270_EWA : R3270_EW;
+            buf[len++] = 0xC2;
 
-        /* Construct buffer to send to the 3270 */
-        len = 0;
-        buf[len++] = dev->ewa3270 ? R3270_EWA : R3270_EW;
-        buf[len++] = 0xC2;
+            memcpy( &buf[len], &rbuf[3], rbuflen - 3 );
+            len += rbuflen - 3;
 
-        memcpy( &buf[len], &rbuf[3], rbuflen - 3 );
-        len += rbuflen - 3;
+            buf[len++] = O3270_SBA;
+            buf[len++] = rbuf[1];
+            buf[len++] = rbuf[2];
+            buf[len++] = O3270_IC;
 
-        buf[len++] = O3270_SBA;
-        buf[len++] = rbuf[1];
-        buf[len++] = rbuf[2];
-        buf[len++] = O3270_IC;
-
-        /* Restore the 3270 screen */
-        sendto_client( dev->tn, buf, len );
-        dev->pos3270 = (int) pos;
-
-        release_lock( &dev->lock );
+            /* Restore the 3270 screen */
+            sendto_client( dev->tn, buf, len );
+            dev->pos3270 = (int) pos;
+        }
+        RELEASE_DEVLOCK( dev );
     }
 
     if (rbuf)
@@ -2565,6 +2565,8 @@ static void constty_input( TELNET* tn, const BYTE* buffer, U32 size )
 /*       SUBROUTINE TO RECEIVE 3270 DATA FROM THE CLIENT             */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/* The caller MUST hold the device lock.                             */
+/*                                                                   */
 /* This subroutine receives bytes from the client and appends them   */
 /* to any data already in the 3270 receive buffer.                   */
 /*                                                                   */
@@ -2613,8 +2615,14 @@ BYTE    buf[ BUFLEN_3270 ];             /* Temporary recv() buffer   */
         else
             // "%s COMM: recv() failed: %s"
             CONERROR( HHC90507, "D", dev->tn->clientid, strerror( HSO_errno ));
-        dev->sense[0] = SENSE_EC;
-        return (CSW_ATTN | CSW_UC);
+        if (HSO_EAGAIN == HSO_errno)
+            // non blocking call and no data
+            return 0;
+        else
+        {
+            dev->sense[0] = SENSE_EC;
+            return (CSW_ATTN | CSW_UC);
+        }
     }
 
     /* If zero bytes were received then client has closed connection */
@@ -2775,8 +2783,14 @@ BYTE    buf[BUFLEN_1052];               /* Receive buffer            */
         // "%s COMM: recv() failed: %s"
         CONERROR( HHC90507, "D", dev->tn->clientid, strerror( HSO_errno ));
 
-        dev->sense[0] = SENSE_EC;
-        return (CSW_ATTN | CSW_UC);
+        if (HSO_EAGAIN == HSO_errno)
+            // non blocking call and no data
+            return 0;
+        else
+        {
+            dev->sense[0] = SENSE_EC;
+            return (CSW_ATTN | CSW_UC);
+        }
     }
 
     /* If zero bytes were received then client has closed connection */
@@ -2850,7 +2864,7 @@ int                     csock;          /* Client socket             */
 
 int                     rc;             /* Return code               */
 DEVBLK                 *dev;            /* -> Device block           */
-size_t                  len;            /* Data length               */
+size_t                  len = 0;        /* Data length               */
 
 struct sockaddr_in      client;         /* Client address structure  */
 socklen_t               namelen;        /* Length of client structure*/
@@ -2990,6 +3004,17 @@ size_t                  logoheight;     /* Logo file number of lines */
     /* Look for an available console device */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        if (sysblk.sysgport)
+        {
+            /* Loop if they want the SYSG device and this isn't it,
+               or they DON'T want the SYSG device and this IS it. */
+            if (0
+                || ( tn->sysg && dev != sysblk.sysgdev)
+                || (!tn->sysg && dev == sysblk.sysgdev)
+            )
+                continue;
+        }
+
         /* Loop if the device is invalid */
         if ( !dev->allocated )
             continue;
@@ -3019,57 +3044,56 @@ size_t                  logoheight;     /* Logo file number of lines */
                 continue;  /* (not our terminal group) */
         }
 
-        /* Obtain the device lock */
-        obtain_lock( &dev->lock );
-
-        /* Test for available device */
-        if (dev->connected != 0)
+        OBTAIN_DEVLOCK( dev );
         {
-            /* Release the device lock */
-            release_lock (&dev->lock);
-            continue;
+            /* Test for available device */
+            if (dev->connected != 0)
+            {
+                /* Release the device lock */
+                RELEASE_DEVLOCK( dev );
+                continue;
+            }
+
+            /* Check ipaddr mask to see if client allowed on this device */
+            if ((client.sin_addr.s_addr & dev->acc_ipmask) != dev->acc_ipaddr)
+            {
+                RELEASE_DEVLOCK( dev );         /* Release device lock   */
+                if (0xFFFF == tn->devnum )      /* Non-specific devnum?  */
+                    continue;                   /* Then keep looking     */
+                dev = NULL;                     /* Else specific devnum, */
+                break;                          /* but it's unavailable  */
+            }
+
+            /* --- WE FOUND OUR DEVBLK --- */
+
+            /* Claim this device for the client */
+            tn->dev = dev;      /* tn  -->  dev */
+            dev->tn = tn;       /* tn  <--  dev */
+
+            STRLCPY( orig_cid, tn->clientid );
+            MSGBUF( tn->clientid, "%1d:%04X", LCSS_DEVNUM );
+            // "%s COMM: %s negotiations complete; ttype = '%s'"
+            WRMSG( HHC02914, "I", tn->clientid, orig_cid, tn->ttype );
+
+            dev->connected = 1;
+            dev->fd        = csock;
+            dev->ipaddr    = client.sin_addr;
+            dev->mod3270   = tn->model;
+            dev->eab3270   = tn->extatr ? 1 : 0;
+
+            /* Reset the console device */
+            dev->readpending = 0;
+            dev->rlen3270    = 0;
+            dev->keybdrem    = 0;
+            dev->tn->got_eor = FALSE;
+
+            memset( &dev->scsw,    0, sizeof(SCSW) );
+            memset( &dev->pciscsw, 0, sizeof(SCSW) );
+
+            dev->busy = dev->reserved = dev->suspended =
+            dev->pending = dev->pcipending = dev->attnpending = 0;
         }
-
-        /* Check ipaddr mask to see if client allowed on this device */
-        if ((client.sin_addr.s_addr & dev->acc_ipmask) != dev->acc_ipaddr)
-        {
-            release_lock( &dev->lock );     /* Release device lock   */
-            if (0xFFFF == tn->devnum )      /* Non-specific devnum?  */
-                continue;                   /* Then keep looking     */
-            dev = NULL;                     /* Else specific devnum, */
-            break;                          /* but it's unavailable  */
-        }
-
-        /* --- WE FOUND OUR DEVBLK --- */
-
-        /* Claim this device for the client */
-        tn->dev = dev;      /* tn  -->  dev */
-        dev->tn = tn;       /* tn  <--  dev */
-
-        STRLCPY( orig_cid, tn->clientid );
-        MSGBUF( tn->clientid, "%1d:%04X", LCSS_DEVNUM );
-        // "%s COMM: %s negotiations complete; ttype = '%s'"
-        WRMSG( HHC02914, "I", tn->clientid, orig_cid, tn->ttype );
-
-        dev->connected = 1;
-        dev->fd        = csock;
-        dev->ipaddr    = client.sin_addr;
-        dev->mod3270   = tn->model;
-        dev->eab3270   = tn->extatr ? 1 : 0;
-
-        /* Reset the console device */
-        dev->readpending = 0;
-        dev->rlen3270    = 0;
-        dev->keybdrem    = 0;
-        dev->tn->got_eor = FALSE;
-
-        memset( &dev->scsw,    0, sizeof(SCSW) );
-        memset( &dev->pciscsw, 0, sizeof(SCSW) );
-
-        dev->busy = dev->reserved = dev->suspended =
-        dev->pending = dev->pcipending = dev->attnpending = 0;
-
-        release_lock( &dev->lock );
+        RELEASE_DEVLOCK( dev );
         break;
 
     } /* end for(dev) */
@@ -3179,7 +3203,7 @@ size_t                  logoheight;     /* Logo file number of lines */
 
 #if defined( _FEATURE_INTEGRATED_3270_CONSOLE )
         if  (dev == sysblk.sysgdev)
-            strncpy( (char*) buf, "SYSG", sizeof( buf ));
+            STRLCPY( buf, "SYSG" );
         else
 #endif
         MSGBUF( buf, "%4.4X", dev->devnum );           set_symbol( "DEVN",    buf );
@@ -3273,40 +3297,14 @@ static void consto()    // (select timeout)
 }
 
 /*-------------------------------------------------------------------*/
-/*        CONSOLE CONNECTION AND ATTENTION HANDLER THREAD            */
+/*      Obtain a new console_connection_handler listening socket     */
 /*-------------------------------------------------------------------*/
-static void* console_connection_handler( void* arg )
+static int get_listening_socket( const char* stmt, const char* typ, const char* port )
 {
 int                    rc = 0;          /* Return code               */
 int                    lsock;           /* Socket for listening      */
-int                    csock;           /* Socket for conversation   */
-struct sockaddr_in    *server;          /* Server address structure  */
-fd_set                 readset;         /* Read bit map for pselect  */
-int                    maxfd;           /* Highest fd for pselect    */
 int                    optval;          /* Argument for setsockopt   */
-int                    scan_complete;   /* DEVBLK scan complete      */
-int                    scan_retries;    /* DEVBLK scan retries       */
-TID                    tidneg;          /* Negotiation thread id     */
-DEVBLK                *dev;             /* -> Device block           */
-BYTE                   unitstat;        /* Status after receive data */
-TELNET                *tn;              /* Telnet Control Block      */
-
-int prev_rlen3270;
-
-    UNREFERENCED( arg );
-
-    /* Set server thread priority; ignore any errors */
-    set_thread_priority( sysblk.srvprio );
-
-    // "Thread id "TIDPAT", prio %2d, name %s started"
-    LOG_THREAD_BEGIN( CON_CONN_THREAD_NAME  );
-
-    /* Get information about this system */
-    init_hostinfo( NULL );
-
-    /* If logo hasn't been built yet, build it now */
-    if (sysblk.herclogo == NULL)
-        init_logo();
+struct sockaddr_in    *server;          /* Server address structure  */
 
     /* Obtain a socket */
     lsock = socket( AF_INET, SOCK_STREAM, 0 );
@@ -3315,7 +3313,7 @@ int prev_rlen3270;
     {
         // "COMM: error in function %s: %s"
         WRMSG( HHC01034, "E", "socket()", strerror( HSO_errno ));
-        return NULL;
+        return -1;
     }
 
     /* Allow previous instance of socket to be reused */
@@ -3326,17 +3324,19 @@ int prev_rlen3270;
     {
         // "COMM: error in function %s: %s"
         WRMSG( HHC01034, "E", "setsockopt()", strerror( HSO_errno ));
-        return NULL;
+        close_socket( lsock );
+        return -1;
     }
 
     /* Prepare the sockaddr structure for the bind */
-    if (!(server = parse_sockspec( sysblk.cnslport )))
+    if (!(server = parse_sockspec( port )))
     {
         char msgbuf[64];
-        MSGBUF( msgbuf, "%s = %s", "CNSLPORT", sysblk.cnslport );
+        MSGBUF( msgbuf, "%s = %s", stmt, port );
         // "COMM: invalid parameter %s"
         WRMSG( HHC01017, "E", msgbuf );
-        return NULL;
+        close_socket( lsock );
+        return -1;
     }
 
     /* Attempt to bind the socket to the port */
@@ -3350,7 +3350,7 @@ int prev_rlen3270;
 
         // "Waiting for port %u to become free for console connections"
         WRMSG( HHC01023, "W", ntohs( server->sin_port ));
-        SLEEP(10);
+        SLEEP( 10 );
     }
     while (console_cnslcnt > 0);
 
@@ -3359,7 +3359,8 @@ int prev_rlen3270;
         // "COMM: error in function %s: %s"
         WRMSG( HHC01034, "E", "bind()", strerror( HSO_errno ));
         free( server );
-        return NULL;
+        close_socket( lsock );
+        return -1;
     }
 
     /* Put the socket into listening state */
@@ -3368,17 +3369,97 @@ int prev_rlen3270;
         // "COMM: error in function %s: %s"
         WRMSG( HHC01034, "E", "listen()", strerror( HSO_errno ));
         free( server );
-        return NULL;
+        close_socket( lsock );
+        return -1;
     }
 
-    // "Waiting for console connections on port %u"
-    WRMSG( HHC01024, "I", ntohs( server->sin_port ));
+    // "Waiting for %sconsole connections on port %u"
+    WRMSG( HHC01024, "I", typ, ntohs( server->sin_port ));
     free( server );
-    server = NULL;
+    return lsock;
+}
+
+/*-------------------------------------------------------------------*/
+/*        CONSOLE CONNECTION AND ATTENTION HANDLER THREAD            */
+/*-------------------------------------------------------------------*/
+static void* console_connection_handler( void* arg )
+{
+int           rc = 0;                   /* Return code               */
+int           lsock;                    /* Console listening socket  */
+int           lsock2 = 0;               /* SYSG listening socket     */
+int           csock;                    /* Socket for conversation   */
+bool          sysg = false;             /* SYSG port connection      */
+fd_set        readset;                  /* Read bit map for pselect  */
+int           maxfd;                    /* Highest fd for pselect    */
+int           scan_complete;            /* DEVBLK scan complete      */
+int           scan_retries;             /* DEVBLK scan retries       */
+TID           tidneg;                   /* Negotiation thread id     */
+DEVBLK*       dev;                      /* -> Device block           */
+BYTE          unitstat;                 /* Status after receive data */
+TELNET*       tn;                       /* Telnet Control Block      */
+const char*   curr_cnslport;            /* Current sysblk.cnslport   */
+const char*   curr_sysgport = NULL;     /* Current sysblk.sysgport   */
+
+int prev_rlen3270;
+
+    UNREFERENCED( arg );
+
+    /* Set server thread priority; ignore any errors */
+    SET_THREAD_PRIORITY( sysblk.srvprio, sysblk.qos_user_interactive );
+
+    // "Thread id "TIDPAT", prio %2d, name %s started"
+    LOG_THREAD_BEGIN( CON_CONN_THREAD_NAME  );
+
+    /* Get information about this system */
+    init_hostinfo( NULL );
+
+    /* If logo hasn't been built yet, build it now */
+    if (sysblk.herclogo == NULL)
+        init_logo();
+
+    /* Save starting sysblk.cnslport value
+       and create starting listening socket */
+    curr_cnslport = strdup( sysblk.cnslport );
+    lsock = get_listening_socket( "CNSLPORT", "", sysblk.cnslport );
+
+    if (sysblk.sysgport)
+    {
+        /* Save starting sysblk.sysgport value
+           and create starting listening socket */
+        curr_sysgport = strdup( sysblk.sysgport );
+        lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
+    }
 
     /* Handle connection requests and attention interrupts */
     while (console_cnslcnt > 0)
     {
+        /* Did they set a new CNSLPORT value? */
+        if (strcmp( curr_cnslport, sysblk.cnslport ) != 0)
+        {
+            /* Close the current listening socket, save
+               the new CNSLPORT value and obtain a fresh
+               listening socket. */
+            close_socket( lsock );
+            free( curr_cnslport );
+            curr_cnslport = strdup( sysblk.cnslport );
+            lsock = get_listening_socket( "CNSLPORT", "", sysblk.cnslport );
+        }
+
+        /* Did they set a new SYSGPORT value? */
+        if (0
+            || (sysblk.sysgport && !curr_sysgport)
+            || (sysblk.sysgport && strcmp( curr_sysgport, sysblk.sysgport ) != 0)
+        )
+        {
+            /* Close the current listening socket, save
+               the new SYSGPORT value and obtain a fresh
+               listening socket. */
+            if (lsock2) close_socket( lsock2 );
+            free( curr_sysgport );
+            curr_sysgport  = strdup( sysblk.sysgport );
+            lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
+        }
+
         /* Initialize scan flags */
         scan_complete = TRUE;
         scan_retries = 0;
@@ -3388,8 +3469,16 @@ int prev_rlen3270;
         {
             /* Initialize the pselect parameters */
             FD_ZERO( &readset );
-            FD_SET( lsock, &readset );
-            maxfd = lsock;
+
+            FD_SET( lsock, &readset );  // (normal local 3270 devices)
+            maxfd = lsock;              // (normal local 3270 devices)
+
+            /* If SYSGPORT defined and SYSG not connected yet... */
+            if (lsock2 && sysblk.sysgdev && !sysblk.sysgdev->connected)
+            {
+                FD_SET( lsock2, &readset );     // (add SYSG port too)
+                maxfd = MAX( lsock, lsock2 );   // (then adjust maxfd)
+            }
 
             SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, &readset );
 
@@ -3428,7 +3517,7 @@ int prev_rlen3270;
                        Do a normal obtain_lock to wait forever for the
                        lock to be acquired.
                     */
-                    obtain_lock( &dev->lock );
+                    OBTAIN_DEVLOCK( dev );
                 }
 
                 if (dev->console && dev->connected)
@@ -3451,7 +3540,7 @@ int prev_rlen3270;
 
                 } /* end if connected console */
 
-                release_lock( &dev->lock );
+                RELEASE_DEVLOCK( dev );
 
             } /* end scan DEVBLK chain */
 
@@ -3543,17 +3632,29 @@ int prev_rlen3270;
             {
                 // "COMM: pselect() failed: %s"
                 CONERROR( HHC90508, "D", strerror( select_errno ));
-                usleep( 50000 ); // (wait a bit; maybe it'll fix itself??)
+                USLEEP( 50000 ); // (wait a bit; maybe it'll fix itself??)
             }
             continue;
 
         } /* end log pselect error */
 
         /* Accept incoming client connections */
-        if (FD_ISSET( lsock, &readset ))
+        if (0
+            || (lsock2 && FD_ISSET( lsock2, &readset ))
+            || FD_ISSET( lsock,  &readset )
+        )
         {
             /* Accept a connection and create conversation socket */
-            csock = accept( lsock, NULL, NULL );
+            if (lsock2 && FD_ISSET( lsock2, &readset ))
+            {
+                csock = accept( lsock2, NULL, NULL );
+                sysg = true;
+            }
+            else
+            {
+                csock = accept( lsock,  NULL, NULL );
+                sysg = false;
+            }
 
             if (csock < 0)
             {
@@ -3595,7 +3696,7 @@ int prev_rlen3270;
                 {
                     // "COMM: accept() failed: %s"
                     CONERROR( HHC90509, "D", strerror( accept_errno ));
-                    usleep( 50000 ); // (wait a bit; maybe it'll fix itself??)
+                    USLEEP( 50000 ); // (wait a bit; maybe it'll fix itself??)
                 }
                 continue;
             }
@@ -3611,6 +3712,7 @@ int prev_rlen3270;
             {
                 static U32 clid = 0;
                 tn->csock = csock;
+                tn->sysg  = sysg;
                 MSGBUF( tn->clientid, "client %u", clid++ );
 
                 /* Initialize libtelnet package */
@@ -3688,7 +3790,7 @@ int prev_rlen3270;
                        Do a normal obtain_lock to wait forever for the
                        lock to be acquired.
                     */
-                    obtain_lock( &dev->lock );
+                    OBTAIN_DEVLOCK( dev );
                 }
 
                 /* Test for valid connected console with data available.
@@ -3705,13 +3807,21 @@ int prev_rlen3270;
                     || sysblk.cnslpipe_flag
                 )
                 {
-                    release_lock( &dev->lock );
+                    RELEASE_DEVLOCK( dev );
                     continue;
                 }
 
                 consio();
 
                 /* Receive console input data from the client */
+
+                /* Make the first call to recv below non-blocking
+                   in case pselect lied to us and there isn't any
+                   data available.  If we do multiple recv's then
+                   the subsequent ones are blocking. See the linux
+                   man page for select(2) for more info.
+                */
+                socket_set_blocking_mode( dev->fd, 0 );
                 if ((dev->devtype == 0x3270) ||
                     (dev->devtype == 0x3287))
                 {
@@ -3723,24 +3833,30 @@ int prev_rlen3270;
                             // "%s COMM: recv_3270_data: %d bytes received"
                             CONDEBUG2( HHC90502, "D", dev->tn->clientid,
                                 dev->rlen3270 - prev_rlen3270 );
+                            /* If we do another recv, make it blocking.
+                               Otherwise we might just spin. */
+                            socket_set_blocking_mode( dev->fd, 1 );
                         }
                         while ((unitstat == 0) && dev->rlen3270);
 
                     dev->readpending = 3;
                 }
                 else
+                {
                     unitstat = recv_1052_data( dev );
+                    socket_set_blocking_mode( dev->fd, 1 );
+                }
 
                 /* Close the connection if an error occurred */
                 if (unitstat & CSW_UC)
                 {
                     disconnect_console_device( dev );
-                    release_lock( &dev->lock );
+                    RELEASE_DEVLOCK( dev );
                     continue;
                 }
 
                 /* Release the device lock */
-                release_lock( &dev->lock );
+                RELEASE_DEVLOCK( dev );
 
                 if ((dev->devtype != 0x3270) &&
                     (dev->devtype != 0x3287))
@@ -3771,6 +3887,9 @@ int prev_rlen3270;
         } /* end for(;;) check connected consoles for available data */
 
     } /* end while (console_cnslcnt > 0) */
+
+    free( curr_cnslport );
+    free( curr_sysgport );
 
     /* Initialize scan flags */
     scan_complete = TRUE;
@@ -3810,7 +3929,7 @@ int prev_rlen3270;
                    Do a normal obtain_lock to wait forever for the
                    lock to be acquired.
                 */
-                obtain_lock( &dev->lock );
+                OBTAIN_DEVLOCK( dev );
             }
 
             /* Close console if still connected */
@@ -3822,7 +3941,7 @@ int prev_rlen3270;
                 disconnect_console_device( dev );
 
             /* Release the device lock */
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
 
         } /* end scan DEVBLK chain */
 
@@ -3839,8 +3958,9 @@ int prev_rlen3270;
 
     } /* end close all connected consoles */
 
-    /* Close the listening socket */
-    close_socket( lsock );
+    /* Close the listening sockets */
+    close_socket( lsock  );
+    if (lsock2) close_socket( lsock2 );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
     LOG_THREAD_END( CON_CONN_THREAD_NAME  );
@@ -4062,92 +4182,91 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /*---------------------------------------------------------------*/
     /* READ BUFFER                                                   */
     /*---------------------------------------------------------------*/
-        /* Obtain the device lock */
-        obtain_lock (&dev->lock);
 
-        /* AID is only present during the first read */
-        aid = dev->readpending != 2;
-        if (dev->readpending == 3)
+        OBTAIN_DEVLOCK( dev );
         {
-            dev->readpending = 1;
-            aid = 3;
-        }
-        /* Receive buffer data from client if not data chained */
-        if (!(chained & CCW_FLAGS_CD))
-        {
-            /* Send read buffer command to client and await response */
-            rc = solicit_3270_data (dev, R3270_RB);
-            if (rc & CSW_UC)
+            /* AID is only present during the first read */
+            aid = dev->readpending != 2;
+            if (dev->readpending == 3)
             {
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                release_lock (&dev->lock);
-                break;
+                dev->readpending = 1;
+                aid = 3;
+            }
+            /* Receive buffer data from client if not data chained */
+            if (!(chained & CCW_FLAGS_CD))
+            {
+                /* Send read buffer command to client and await response */
+                rc = solicit_3270_data (dev, R3270_RB);
+                if (rc & CSW_UC)
+                {
+                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                    RELEASE_DEVLOCK( dev );
+                    break;
+                }
+
+                /* Set AID in buffer flag */
+                aid = 1;
+
+                /* Save the AID of the current inbound transmission */
+                dev->aid3270 = dev->buf[0];
+
+                if (dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+                {
+                    /* Find offset in buffer of current screen position */
+                    off = pos_to_buff_offset( dev->pos3270,
+                        dev->buf, dev->rlen3270 );
+
+                    /* Shift out unwanted characters from buffer */
+                    num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
+                    memmove (dev->buf + 3, dev->buf + off, num);
+                    dev->rlen3270 = 3 + num;
+                }
             }
 
-            /* Set AID in buffer flag */
-            aid = 1;
+            else aid = 0;
 
-            /* Save the AID of the current inbound transmission */
-            dev->aid3270 = dev->buf[0];
+            /* Calculate number of bytes to move and residual byte count */
+            len = dev->rlen3270;
+            num = (count < len) ? count : len;
+            *residual = count - num;
+            if (count < len) *more = 1;
 
-            if (dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+            /*  Save the screen position at completion of the read.
+               This is necessary in case a Read Buffer command is chained
+               from another write or read.
+            */
+            if (dev->aid3270 != SF3270_AID)
             {
-                /* Find offset in buffer of current screen position */
-                off = pos_to_buff_offset( dev->pos3270,
-                    dev->buf, dev->rlen3270 );
-
-                /* Shift out unwanted characters from buffer */
-                num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
-                memmove (dev->buf + 3, dev->buf + off, num);
-                dev->rlen3270 = 3 + num;
+                dev->pos3270 = end_of_buf_pos( dev->pos3270,
+                    //    (aid)        (!aid)
+                    aid ? dev->buf+3 : dev->buf,
+                    aid ? num-3      : num
+                );
             }
+
+            /* Indicate that the AID bytes have been skipped */
+            if (dev->readpending == 1)
+                dev->readpending = 2;
+
+            /* Copy data from device buffer to channel buffer */
+            memcpy (iobuf, dev->buf, num);
+
+            /* If data chaining is specified, save remaining data */
+            if ((flags & CCW_FLAGS_CD) && len > count)
+            {
+                memmove (dev->buf, dev->buf + count, len - count);
+                dev->rlen3270 = len - count;
+            }
+            else
+            {
+                dev->rlen3270 = 0;
+                dev->readpending = 0;
+            }
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
         }
-
-        else aid = 0;
-
-        /* Calculate number of bytes to move and residual byte count */
-        len = dev->rlen3270;
-        num = (count < len) ? count : len;
-        *residual = count - num;
-        if (count < len) *more = 1;
-
-        /*  Save the screen position at completion of the read.
-           This is necessary in case a Read Buffer command is chained
-           from another write or read.
-        */
-        if (dev->aid3270 != SF3270_AID)
-        {
-            dev->pos3270 = end_of_buf_pos( dev->pos3270,
-                //    (aid)        (!aid)
-                aid ? dev->buf+3 : dev->buf,
-                aid ? num-3      : num
-            );
-        }
-
-        /* Indicate that the AID bytes have been skipped */
-        if (dev->readpending == 1)
-            dev->readpending = 2;
-
-        /* Copy data from device buffer to channel buffer */
-        memcpy (iobuf, dev->buf, num);
-
-        /* If data chaining is specified, save remaining data */
-        if ((flags & CCW_FLAGS_CD) && len > count)
-        {
-            memmove (dev->buf, dev->buf + count, len - count);
-            dev->rlen3270 = len - count;
-        }
-        else
-        {
-            dev->rlen3270 = 0;
-            dev->readpending = 0;
-        }
-
-        /* Return normal status */
-        *unitstat = CSW_CE | CSW_DE;
-
-        /* Release the device lock */
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
 
         /* Signal connection thread to redrive its pselect loop */
         SIGNAL_CONSOLE_THREAD();
@@ -4158,97 +4277,96 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /*---------------------------------------------------------------*/
     /* READ MODIFIED                                                 */
     /*---------------------------------------------------------------*/
-        /* Obtain the device lock */
-        obtain_lock (&dev->lock);
 
-        /* AID is only present during the first read */
-        aid = dev->readpending != 2;
-        if (dev->readpending == 3)
+        OBTAIN_DEVLOCK( dev );
         {
-            dev->readpending = 1;
-            aid = 3;
-        }
-
-        /* If not data chained from previous Read Modified CCW,
-           and if the connection thread has not already accumulated
-           a complete Read Modified record in the inbound buffer,
-           then solicit a Read Modified operation at the client
-        */
-        if ((chained & CCW_FLAGS_CD) == 0
-            && !dev->readpending)
-        {
-            /* Send read modified command to client, await response */
-            rc = solicit_3270_data (dev, R3270_RM);
-            if (rc & CSW_UC)
+            /* AID is only present during the first read */
+            aid = dev->readpending != 2;
+            if (dev->readpending == 3)
             {
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                release_lock (&dev->lock);
-                break;
+                dev->readpending = 1;
+                aid = 3;
             }
 
-            /* Set AID in buffer flag */
-            aid = 1;
-
-            dev->aid3270 = dev->buf[0];
-
-            if (dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+            /* If not data chained from previous Read Modified CCW,
+               and if the connection thread has not already accumulated
+               a complete Read Modified record in the inbound buffer,
+               then solicit a Read Modified operation at the client
+            */
+            if ((chained & CCW_FLAGS_CD) == 0
+                && !dev->readpending)
             {
-                /* Find offset in buffer of current screen position */
-                off = pos_to_buff_offset( dev->pos3270,
-                    dev->buf, dev->rlen3270 );
+                /* Send read modified command to client, await response */
+                rc = solicit_3270_data (dev, R3270_RM);
+                if (rc & CSW_UC)
+                {
+                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                    RELEASE_DEVLOCK( dev );
+                    break;
+                }
 
-                /* Shift out unwanted characters from buffer */
-                num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
-                memmove (dev->buf + 3, dev->buf + off, num);
-                dev->rlen3270 = 3 + num;
+                /* Set AID in buffer flag */
+                aid = 1;
+
+                dev->aid3270 = dev->buf[0];
+
+                if (dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+                {
+                    /* Find offset in buffer of current screen position */
+                    off = pos_to_buff_offset( dev->pos3270,
+                        dev->buf, dev->rlen3270 );
+
+                    /* Shift out unwanted characters from buffer */
+                    num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
+                    memmove (dev->buf + 3, dev->buf + off, num);
+                    dev->rlen3270 = 3 + num;
+                }
             }
+
+            else aid = 0;
+
+            /* Calculate number of bytes to move and residual byte count */
+            len = dev->rlen3270;
+            num = (count < len) ? count : len;
+            *residual = count - num;
+            if (count < len) *more = 1;
+
+            /*  Save the screen position at completion of the read.
+               This is necessary in case a Read Buffer command is chained
+               from another write or read.
+            */
+            if (dev->aid3270 != SF3270_AID)
+            {
+                dev->pos3270 = end_of_buf_pos( dev->pos3270,
+                    //    (aid)        (!aid)
+                    aid ? dev->buf+3 : dev->buf,
+                    aid ? num-3      : num
+                );
+            }
+
+            /* Indicate that the AID bytes have been skipped */
+            if (dev->readpending == 1)
+                dev->readpending = 2;
+
+            /* Copy data from device buffer to channel buffer */
+            memcpy (iobuf, dev->buf, num);
+
+            /* If data chaining is specified, save remaining data */
+            if ((flags & CCW_FLAGS_CD) && len > count)
+            {
+                memmove (dev->buf, dev->buf + count, len - count);
+                dev->rlen3270 = len - count;
+            }
+            else
+            {
+                dev->rlen3270 = 0;
+                dev->readpending = 0;
+            }
+
+            /* Set normal status */
+            *unitstat = CSW_CE | CSW_DE;
         }
-
-        else aid = 0;
-
-        /* Calculate number of bytes to move and residual byte count */
-        len = dev->rlen3270;
-        num = (count < len) ? count : len;
-        *residual = count - num;
-        if (count < len) *more = 1;
-
-        /*  Save the screen position at completion of the read.
-           This is necessary in case a Read Buffer command is chained
-           from another write or read.
-        */
-        if (dev->aid3270 != SF3270_AID)
-        {
-            dev->pos3270 = end_of_buf_pos( dev->pos3270,
-                //    (aid)        (!aid)
-                aid ? dev->buf+3 : dev->buf,
-                aid ? num-3      : num
-            );
-        }
-
-        /* Indicate that the AID bytes have been skipped */
-        if (dev->readpending == 1)
-            dev->readpending = 2;
-
-        /* Copy data from device buffer to channel buffer */
-        memcpy (iobuf, dev->buf, num);
-
-        /* If data chaining is specified, save remaining data */
-        if ((flags & CCW_FLAGS_CD) && len > count)
-        {
-            memmove (dev->buf, dev->buf + count, len - count);
-            dev->rlen3270 = len - count;
-        }
-        else
-        {
-            dev->rlen3270 = 0;
-            dev->readpending = 0;
-        }
-
-        /* Set normal status */
-        *unitstat = CSW_CE | CSW_DE;
-
-        /* Release the device lock */
-        release_lock (&dev->lock);
+        RELEASE_DEVLOCK( dev );
 
         /* Signal connection thread to redrive its pselect loop */
         SIGNAL_CONSOLE_THREAD();

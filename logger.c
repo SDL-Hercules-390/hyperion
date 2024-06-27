@@ -29,6 +29,7 @@
 
 static COND  logger_cond;
 static LOCK  logger_lock;
+static LOCK  stamp_lock;
 
 static int   logger_init_flg = FALSE;   /* reset by logger_init()    */
 
@@ -41,8 +42,9 @@ static int   logger_wrapped;            /* msg buffer has wrapped    */
 static int   logger_active = 0;         /* set by logger_thread,     */
                                         /* cleared by logger_term    */
 
-static FILE *logger_syslog[2];          /* Syslog read/write pipe    */
-       int   logger_syslogfd[2];        /*   pairs                   */
+static FILE *logger_syslog[2];          /* read/write ...            */
+       int   logger_syslogfd[2] =       /* ... pipe pairs            */
+                            { -1, -1 };
 static FILE *logger_hrdcpy;             /* Hardcopy log or zero      */
 static int   logger_hrdcpyfd;           /* Hardcopt fd or -1         */
 static char  logger_filename[MAX_PATH];
@@ -218,61 +220,6 @@ DLL_EXPORT void logger_unredirect()
 
 #endif // !defined( _MSVC_ )
 
-static void logger_term(void *arg)
-{
-    UNREFERENCED(arg);
-
-    log_wakeup(NULL);
-    usleep(1000);
-
-    /* Flush all pending logger o/p before redirecting?? */
-    fflush(stdout);
-
-    if (logger_active)
-    {
-        /* Redirect all output to stderr */
-        dup2(STDERR_FILENO, STDOUT_FILENO);
-
-        /* Tell logger thread we want it to exit */
-        logger_active = 0;
-        log_wakeup(NULL);
-        usleep(1000);
-
-        if (sysblk.loggertid != 0 && !sysblk.shutdown)
-        {
-            sleep(2);
-            /* Logger is now terminating */
-            obtain_lock(&logger_lock);
-
-            /* Wait for the logger to terminate */
-            join_thread( sysblk.loggertid, NULL );
-            detach_thread( sysblk.loggertid );
-
-            release_lock(&logger_lock);
-
-        }
-
-        /* In external GUI mode, the external GUI will receive this
-           message when the logger_thread writes it to the hardcopy
-           file just before it exits. If we also issued it here too,
-           it would end up receiving the message twice, so we skip
-           issuing it here if we're running in external GUI mode.
-
-           In all OTHER cases however (i.e. if we're NOT running in
-           external GUI mode), it's unimportant to us whether or not
-           it also gets written to the hardcopy file. We ALWAYS need
-           to issue the message here so that it appears on the screen.
-        */
-        if (!daemon_task)
-        {
-            // "Thread id "TIDPAT", prio %2d, name %s ended"
-            FWRMSG( stderr, HHC00101, "I", TID_CAST( thread_id()),
-                get_thread_priority(), LOGGER_THREAD_NAME );
-            fflush( stderr );
-        }
-    }
-}
-
 static void logger_logfile_write( const void* pBuff, size_t nBytes )
 {
     char* pLeft = (char*) pBuff;
@@ -353,8 +300,19 @@ DLL_EXPORT void logger_timestamped_logfile_write( const void* pBuff, size_t nByt
     if (logger_hrdcpy)
     {
         if (STAMPLOG)
-            logger_logfile_timestamp();
-        logger_logfile_write( pBuff, nBytes );
+        {
+            /* during shutdown ensure that timestamp and message are one line */
+            obtain_lock( &stamp_lock );
+            {
+                logger_logfile_timestamp();
+                logger_logfile_write( pBuff, nBytes );
+            }
+            release_lock( &stamp_lock );
+        }
+        else
+        {
+            logger_logfile_write( pBuff, nBytes );
+        }
     }
 }
 
@@ -379,19 +337,20 @@ static void* logger_thread( void* arg )
     }
     release_lock( &logger_lock );
 
-    /* ZZ FIXME:  We must empty the read pipe before we terminate */
-    /* (Couldn't we just loop waiting for a 'select(,&readset,,,timeout)'
-        to return zero?? Or use the 'poll' function similarly?? - Fish) */
-
-    while (logger_active)
+    /* This read causes logger to exit when the write end is closed */
+    while
+    (
+        (bytes_read =
+            read_pipe   // read the maximum amount possible
+            (
+                logger_syslogfd[ LOG_READ ],
+                 (logger_buffer  + logger_currmsg),
+                ((logger_bufsize - logger_currmsg) < LOG_DEFSIZE ?
+                 (logger_bufsize - logger_currmsg) : LOG_DEFSIZE)
+            )
+        )
+    )
     {
-        bytes_read = read_pipe( logger_syslogfd[ LOG_READ ], logger_buffer + logger_currmsg,
-          ((logger_bufsize - logger_currmsg) > LOG_DEFSIZE ?
-            LOG_DEFSIZE : logger_bufsize - logger_currmsg ));
-
-        if (!bytes_read)        /* Has pipe been closed? */
-            break;              /* Yes, then we are done */
-
         if (bytes_read < 0)
         {
             int read_pipe_errno = HSO_errno;
@@ -498,7 +457,28 @@ static void* logger_thread( void* arg )
         }
         release_lock( &logger_lock );
 
-    } /* end while(logger_active) */
+        /* begin shutdown requested
+           - handle all logger pre-shutdown actions
+           - set system shutdown flag
+        */
+        if (sysblk.shutbegin)
+        {
+            obtain_lock( &logger_lock );
+            {
+                if ( !sysblk.shutdown )
+                {
+
+#if !defined( _MSVC_ )
+                    logger_unredirect();
+#endif
+
+                    sysblk.shutdown = TRUE;       // (system shutdown initiated)
+                }
+            }
+            release_lock( &logger_lock );
+        }
+
+    } /* end while (...) */
 
     logger_active = 0;
     sysblk.loggertid = 0;
@@ -535,6 +515,7 @@ DLL_EXPORT void logger_init( void )
 
     initialize_condition( &logger_cond );
     initialize_lock( &logger_lock );
+    initialize_lock( &stamp_lock );
     logger_init_flg = TRUE;
 
     obtain_lock( &logger_lock );
@@ -630,6 +611,7 @@ DLL_EXPORT void logger_init( void )
         fprintf( stderr, MSG( HHC02102, "E", "create_pipe()", strerror( errno )));
         exit(1);  /* Hercules running without syslog */
     }
+    socket_set_blocking_mode(logger_syslogfd[ LOG_WRITE ], O_NONBLOCK);
 
     setvbuf( logger_syslog[ LOG_WRITE ], NULL, _IONBF, 0 );
 
@@ -645,10 +627,6 @@ DLL_EXPORT void logger_init( void )
     wait_condition( &logger_cond, &logger_lock );
 
     release_lock( &logger_lock );
-
-    /* call logger_term on system shutdown */
-    hdl_addshut( "logger_term", logger_term, NULL );
-
 }
 
 DLL_EXPORT char* log_dsphrdcpy( void )

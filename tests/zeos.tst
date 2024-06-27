@@ -2,10 +2,10 @@
 # by text2tst.rexx 11 Dec 2016 12:34:53
 # Treat as object code.  That is, modifications will be lost.
 # assemble and listing files are provided for information only.
-*Testcase zeos                                                                  
-sysclear                                                                        
-mainsize 1m                                                                     
-archmode z                                                                      
+*Testcase zeos
+sysclear
+mainsize 1m
+archmode z
 r    1A0=00000001800000000000000000000244
 r    1C0=00020001800000000000000000000000
 r    1D0=0002000180000000FFFFFFFFDEADDEAD
@@ -14,11 +14,11 @@ r    210=00000000000000000000000000000000
 r    220=00000000000000000000000000000000
 r    230=0000000000000000
 r    238=000000000000000000000000
-*                                                                               
-* This file was put into the public domain 2016-12-07                           
-* by John P. Hartmann.  You can use it for anything you like,                   
-* as long as this notice remains.                                               
-*                                                                               
+*
+* This file was put into the public domain 2016-12-07
+* by John P. Hartmann.  You can use it for anything you like,
+* as long as this notice remains.
+*
 r    244=5890F36812EEA78400064190F3B0A79A
 r    254=F050410000144110F370B92800005800
 r    264=F33041109FB0D20F1000F334D23F1010
@@ -40,19 +40,19 @@ r    340=0C0D0E0F303132333435363738393A3B
 r    350=3C3D3E3F202122232425262728292A2B
 r    360=2C2D2E2F
 r    368=000FF000
-runtest .1                                                                      
-*Compare                                                                        
-r 00000240.00000004                                                             
-*Want 00000000                                                                  
-r 00000200.00000010                                                             
-*Want 866C0230 B823BA9D 9CEF1954 7E50EFC9                                       
-r 00000210.00000010                                                             
-*Want 30313233 34353637 38393A3B 3C3D3E3F                                       
-r 00000220.00000010                                                             
-*Want 9BA94F96 FCBD3CF1 24DEEB3D AC7C85A9                                       
-r 00000230.00000010                                                             
-*Want 30313233 34353637 38393A3B 3C3D3E3F                                       
-*Done                                                                           
+runtest .1
+*Compare
+r 00000240.00000004
+*Want 00000000
+r 00000200.00000010
+*Want 866C0230 B823BA9D 9CEF1954 7E50EFC9
+r 00000210.00000010
+*Want 30313233 34353637 38393A3B 3C3D3E3F
+r 00000220.00000010
+*Want 9BA94F96 FCBD3CF1 24DEEB3D AC7C85A9
+r 00000230.00000010
+*Want 30313233 34353637 38393A3B 3C3D3E3F
+*Done
 r    370=101112131415161718191A1B1C1D1E1F
 r    380=202122232425262728292A2B2C2D2E2F
 r    390=303132333435363738393A3B3C3D3E3F

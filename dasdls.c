@@ -1,12 +1,13 @@
 /* DASDLS.C    (C) Copyright Roger Bowler, 1999-2012                 */
+/*             (C) and others 2013-2023                              */
 /*              Hercules DASD Utilities: DASD list program           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/*
- * dasdls
+/*********************************************************************
+ *                          dasdls
  *
  * Copyright 2000-2009 by Malcolm Beattie
  * Based on code copyright by Roger Bowler, 1999-2009
@@ -14,7 +15,9 @@
  * P.E. Havercan's VTOCLIST mainframe utility
  * Copied by Erwin Marschalk from 3.12 to 4.0 release
  * Further tweaks and fixes by Fish
- */
+ * Sorted report by Fish
+ * Support for multiple extents by Ian Shorter
+ *********************************************************************/
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -23,7 +26,9 @@
 #define UTILITY_NAME    "dasdls"
 #define UTILITY_DESC    "List DASD image file contents"
 
-/* function prototypes */
+/*********************************************************************/
+/* function prototypes                                               */
+
 void pdate               (BYTE* value, int runflgs);
 void pdatex              (BYTE* value, int runflgs);
 void pbyte               (BYTE* value);
@@ -32,17 +37,18 @@ int  hword               (HWORD value);
 
 int  extent_size         (DSXTENT *ext, int heads);
 int  extents_array       (DSXTENT extents[], int max, int *count, int heads);
-int  chainf3             (int *size, BYTE *ptr, int *count, char *fname, char *sfname);
+int  chainf3             (int *size, BYTE *ptr, int *count );
 int  ordday_to_calday    (int year, int ordinalday, int *month, int *day);
 
 int  end_of_track        (BYTE *p);
-int  list_contents       (CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char *sfname);
-int  do_ls_cif           (CIFBLK *cif, char *fname, char *sfname);
-int  do_ls               (char *file, char *sfile);
+int  list_contents       (CIFBLK *cif, char *sfile, char *volser, DSXTENT *extent );
+int  do_ls_cif           (CIFBLK *cif, char *sfile);
+int  do_ls               (char *file,  char *sfile);
 
-/* globals */
-static CIFBLK *cifx  = NULL;    /* distinct CIF instance for F3 DSCB processing
-                                   else screw up the F1 processing   */
+/*********************************************************************/
+/* globals                                                           */
+
+static CIFBLK* cif   = NULL;
 static int yroffs    = 0;       /* year offset                       */
 #define                DEFAULT_DSNLEN   44
 static int dsnlen    = DEFAULT_DSNLEN;
@@ -53,105 +59,128 @@ static int runflgs   = 0;       /* run flags set from command line   */
 #define rf_refdate   0x04       /*     show last-referenced dates    */
 #define rf_header    0x08       /*     show header                   */
 #define rf_info      0x10       /*     show F1 info                  */
+#define rf_cchh      0x20       /*     show extent cchh info         */
+#define rf_nosort    0x40       /*     do NOT sort results           */
 
-int main( int argc, char **argv )
+/*********************************************************************/
+/* sort by dsname support                                            */
+
+static char** lcchhtab     = NULL;      /* Parts of a full line      */
+static char** lsegstab     = NULL;      /* Parts of a full line      */
+static char** linestab     = NULL;      /* Complete lines            */
+static int    numcchh      = 0;         /* #of segments in lcchhtab  */
+static int    numsegs      = 0;         /* #of segments in lsegstab  */
+static int    numlines     = 0;         /* #of lines in linestab     */
+static char   segbuf[256]  = {0};       /* Line segment buffer       */
+static char   linebuf[256*256] = {0};   /* Full line buffer          */
+
+#define    CCHH_COLHDR  " Ext#  (BEG)      (END)    "
+static int cchh_colhdr_width;
+
+static void prtcchhseg( const char* fmt, ... )
 {
-char           *pgm;            /* less any extension (.ext)         */
-int             rc = 0;
-char           *fn, *sfn;
+    va_list   vl;
+    va_start( vl, fmt );
 
-    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
+    vsnprintf( segbuf, sizeof( segbuf ), fmt, vl );
 
-    if (argc < 2)
-    {
-        // "Usage: %s [-option [-option ... ]] ckdfile [sf=shadow-file-name]%s"
-        WRMSG( HHC02463, "I", pgm );
-        exit(2);
-    }
-
-    /*
-     * If your version of Hercules doesn't have support in its
-     * dasdutil.c for turning off verbose messages, then remove
-     * the following line but you'll have to live with chatty
-     * progress output on stdout.
-     */
-    set_verbose_util(0);                    /* (don't be chatty) */
-
-    while (*++argv)
-    {
-        fn = *argv;
-
-        if (strcmp( fn, "-info" ) == 0)     /* show F1 info */
-        {
-            runflgs |= rf_info;
-            continue;
-        }
-        if (strcmp( fn, "-caldt" ) == 0)    /* calendar date format */
-        {
-            runflgs |= (rf_caldate | rf_info);
-            continue;
-        }
-        if (strcmp( fn, "-expdt" ) == 0)    /* show expiry date */
-        {
-            runflgs |= (rf_expdate | rf_info);
-            continue;
-        }
-        if (strcmp( fn, "-refdt" ) == 0)    /* show last-reference date */
-        {
-            runflgs |= (rf_refdate | rf_info);
-            continue;
-        }
-        if (strcmp( fn, "-hdr" ) == 0)      /* show column headers */
-        {
-            runflgs |= (rf_header | rf_info);
-            continue;
-        }
-        if (1
-            && strlen( *argv )   >    6
-            && !memcmp( fn, "-dsnl=", 6 ))  /* restrict dsname width (custom) */
-        {
-            runflgs |= rf_info;
-            dsnlen = atoi( fn + 6 );
-            continue;
-        }
-        if (strcmp( fn, "-dsnl" ) == 0)     /* restrict dsname width (default) */
-        {
-            runflgs |= rf_info;
-            dsnlen = 26;
-            continue;
-        }
-        if (1
-            && strlen( *argv )   >      8
-            && !memcmp( fn, "-yroffs=", 8 ))/* year offset (custom) */
-        {
-            runflgs |= rf_info;
-            yroffs = atoi( fn + 8 );
-            continue;
-        }
-        if (strcmp( fn, "-yroffs" ) == 0)   /* year offset (default) */
-        {
-            runflgs |= rf_info;
-            yroffs = 28;
-            continue;
-        }
-
-        /* Check for shadow file */
-        if (1
-            &&         *(argv+1)
-            && strlen( *(argv+1) )   >   3
-            && memcmp( *(argv+1), "sf=", 3 ) == 0
-        )
-             sfn = *++argv;
-        else sfn = NULL;
-
-        if (do_ls( fn, sfn ))
-            rc = 1;
-    }
-
-    printf("\nEnd of %s; rc=%d\n", UTILITY_NAME, rc );
-    return rc;
+    lcchhtab = realloc( lcchhtab, (numcchh + 1) * sizeof( char* ));
+    lcchhtab[ numcchh++ ] = strdup( segbuf );
 }
 
+static void prtseg( const char* fmt, ... )
+{
+    va_list   vl;
+    va_start( vl, fmt );
+
+    vsnprintf( segbuf, sizeof( segbuf ), fmt, vl );
+
+    lsegstab = realloc( lsegstab, (numsegs + 1) * sizeof( char* ));
+    lsegstab[ numsegs++ ] = strdup( segbuf );
+}
+
+static void prtline( const char* fmt, ... )
+{
+    va_list   vl;
+    va_start( vl, fmt );
+
+    vsnprintf( linebuf, sizeof( linebuf ), fmt, vl );
+
+    linestab = realloc( linestab, (numlines + 1) * sizeof( char* ));
+    linestab[ numlines++ ] = strdup( linebuf );
+}
+
+static void print_line_from_segs()
+{
+    int  cchhnum, segnum;
+    char buffer[256*256] = {0};
+
+    if (runflgs & rf_cchh)
+    {
+        /* For each extent that the dataset has... */
+        for (cchhnum=0; cchhnum < numcchh; ++cchhnum)
+        {
+            /* Print this extent's BEG/END CCHH */
+            STRLCPY( buffer, lcchhtab[ cchhnum ]);
+            free(            lcchhtab[ cchhnum ]);
+
+            /* Print the remainder of the information... */
+            for (segnum=0; segnum < numsegs; ++segnum)
+            {
+                /* (very first segment is always dsname) */
+                STRLCAT( buffer, lsegstab[ segnum ]);
+
+                /* (if this is extent #2, then we're done) */
+                if (cchhnum > 0)
+                {
+                    STRLCAT( buffer, "\n" );
+                    break;
+                }
+            }
+
+            prtline( "%s", buffer );
+        }
+    }
+    else
+    {
+        /* Print the remainder of the information... */
+        for (segnum=0; segnum < numsegs; ++segnum)
+            STRLCAT( buffer, lsegstab[ segnum ]);
+
+        prtline( "%s", buffer );
+    }
+
+    free( lcchhtab );
+    lcchhtab = NULL;
+    numcchh = 0;
+
+    for (segnum=0; segnum < numsegs; ++segnum)
+        free( lsegstab[ segnum ]);
+
+    free( lsegstab );
+    lsegstab = NULL;
+    numsegs = 0;
+}
+
+static int sort_linestab( const void* a, const void* b )
+{
+    const char* line_a = *(const char**)a;
+    const char* line_b = *(const char**)b;
+
+    // (we always sort by dataset name...)
+
+    if (runflgs & rf_cchh)
+    {
+        int  rc;
+        if ((rc = strncmp( line_a + cchh_colhdr_width,
+                           line_b + cchh_colhdr_width, dsnlen )) != 0)
+            return rc;
+    }
+
+    return strcmp( line_a, line_b );
+}
+
+/*********************************************************************/
 
 int end_of_track( BYTE *p )
 {
@@ -159,7 +188,9 @@ int end_of_track( BYTE *p )
         && p[4] == 0xff && p[5] == 0xff && p[6] == 0xff && p[7] == 0xff;
 }
 
-/* ordinalday is 1..365 (366 in leap year) - often wrongly called Julian day */
+/*********************************************************************/
+/* ordinalday is 1..365 (366 in leap year)                           */
+/* often wrongly called Julian day                                   */
 
 #define JAN_FEB_DAYS    (31 + 28)
 
@@ -213,6 +244,9 @@ int ordday_to_calday( int year, int ordinalday, int *month, int *day )
   return 0;
 }
 
+/*********************************************************************/
+/* printing helper functions                                         */
+
 void pdate( BYTE* value, int runflgs )
 {
     char *fmt;
@@ -235,27 +269,28 @@ void pdate( BYTE* value, int runflgs )
         y %= 100;
         fmt = " %2.2d%s%3.3d";
     }
-    printf( fmt, y, mths[m], d );
+    prtseg( fmt, y, mths[m], d );
 }
 
 void pdatex( BYTE* value, int runflgs )
 {
     (value[0] | value[1] ? pdate( value, runflgs )
-                         : printf( runflgs & rf_caldate ? " ---------"
+                         : prtseg( runflgs & rf_caldate ? " ---------"
                                                         : " -----" ));
 }
 
 void pbyte( BYTE* value )
 {
-    printf(" %3d", value[0]);
+    prtseg(" %3d", value[0]);
 }
 
 void phword( BYTE* value )
 {
-    printf(" %5d", (value[0] << 8) | value[1]);
+    prtseg(" %5d", (value[0] << 8) | value[1]);
 }
 
-/* dataset extent processing */
+/*********************************************************************/
+/* dataset extent processing                                         */
 
 int hword( HWORD value )
 {
@@ -279,6 +314,14 @@ int extents_array( DSXTENT extents[], int max, int *count, int heads )
         {
             size += extent_size( &extents[i], heads );
             *count -= 1;
+
+            if (runflgs & rf_cchh)
+            {
+                prtcchhseg("%3d  %4.4X/%4.4X  %4.4X/%4.4X  ",
+                            numcchh + 1,
+                            hword( extents[i].xtbcyl ), hword( extents[i].xtbtrk ),
+                            hword( extents[i].xtecyl ), hword( extents[i].xtetrk ) );
+            }
         }
         else
         {
@@ -289,7 +332,9 @@ int extents_array( DSXTENT extents[], int max, int *count, int heads )
     return size;
 }
 
-int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
+/*********************************************************************/
+
+int chainf3( int *size, BYTE *ptr, int *count )
 {
     FORMAT3_DSCB *f3dscb = NULL;
     int rc = 0; /* prime for success */
@@ -299,17 +344,7 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
 //*debug*/fprintf(stderr, "*** %d %.2x%.2x %.2x%.2x %.2x\n",
 //*debug*/        *count, ptr[0], ptr[1], ptr[2], ptr[3], ptr[4]);
 
-        if (!cifx)
-        {
-            if (!(cifx = open_ckd_image( fname, sfname,
-                    O_RDONLY | O_BINARY, IMAGE_OPEN_QUIET )))
-            {
-//*debug*/      fprintf(stderr, "*** Open cifx failed\n");
-                return -1; /* open failed */
-            }
-        }
-
-        if (read_block( cifx, hword( &ptr[0] ), hword( &ptr[2] ), ptr[4],
+        if (read_block( cif, hword( &ptr[0] ), hword( &ptr[2] ), ptr[4],
                         (BYTE**) &f3dscb, NULL, NULL, NULL ) == 0)
         {
             switch (f3dscb->ds3fmtid)
@@ -327,8 +362,8 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
                     }
                     else
                     {
-                        *size += extents_array( &f3dscb->ds3extnt[0], 4, count, cifx->heads );
-                        *size += extents_array( &f3dscb->ds3adext[0], 9, count, cifx->heads );
+                        *size += extents_array( &f3dscb->ds3extnt[0], 4, count, cif->heads );
+                        *size += extents_array( &f3dscb->ds3adext[0], 9, count, cif->heads );
                     }
                 }
                 /* Fall through to below 0xf2 case */
@@ -350,21 +385,13 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
 
     } /* end of while loop */
 
-    /* if necessary, close the CIFBLK used for F3 DSCBs */
-    if (cifx)
-    {
-        int rc2 = close_ckd_image( cifx );
-        cifx = NULL;
-        if (rc2)
-            return rc2;
-    }
-
     return rc;
 }
 
-/* list_contents partly based on dasdutil.c:search_key_equal */
+/*********************************************************************/
+/* list_contents partly based on dasdutil.c:search_key_equal         */
 
-int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char *sfname )
+int list_contents( CIFBLK *cif, char *sfile, char *volser, DSXTENT *extent )
 {
     u_int cext  = 0;
     u_int ccyl  = (extent[cext].xtbcyl[0] << 8) | extent[cext].xtbcyl[1];
@@ -374,18 +401,28 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
     EXTGUIMSG( "ETRK=%d\n", (ecyl * cif->heads) + ehead );
 
-    printf( "\nVOLSER:  %-6s    \"%s\"\n\n", volser, cif->fname );
+    if (sfile)
+        LOGMSG( "\nVOLSER:  %-6s    \"%s\" sf=\"%s\"\n\n", volser, cif->fname, &sfile[3] );
+    else
+        LOGMSG( "\nVOLSER:  %-6s    \"%s\"\n\n", volser, cif->fname );
 
     if (runflgs & rf_header)
     {
         /* display column headers allowing for optional columns */
 
-        printf("%*s%s", -dsnlen, "Dsname",
-                                       runflgs & rf_caldate ? "  Created " : " CREDT");
-        printf(runflgs & rf_refdate ? (runflgs & rf_caldate ? " Last Ref." : " REFDT") : "");
-        printf(runflgs & rf_expdate ? (runflgs & rf_caldate ? " Exp. Date" : " EXPDT") : "");
+        char cchhbuf[32];
 
-        printf(" ORG RECFM LRECL BLKSZ Key  Trks%%Use#Ext 2ndry_alloc\n");
+        if (runflgs & rf_cchh)
+            STRLCPY( cchhbuf, CCHH_COLHDR );
+        else
+            cchhbuf[0] = 0;
+
+        LOGMSG("%s%*s%s", cchhbuf, -dsnlen, "Dsname",
+                                       runflgs & rf_caldate ? "  Created " : " CREDT");
+        LOGMSG(runflgs & rf_refdate ? (runflgs & rf_caldate ? " Last Ref." : " REFDT") : "");
+        LOGMSG(runflgs & rf_expdate ? (runflgs & rf_caldate ? " Exp. Date" : " EXPDT") : "");
+
+        LOGMSG(" ORG RECFM LRECL BLKSZ Key  Trks%%Use#Ext 2ndry_alloc\n");
     }
 
     do {
@@ -409,7 +446,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
             FORMAT1_DSCB *f1dscb = (FORMAT1_DSCB*) (ptr + CKD_RECHDR_SIZE);
 
-//*debug*/   printf("F1DSCB\n");
+//*debug*/   LOGMSG("F1DSCB\n");
 //*debug*/   data_dump(f1dscb, sizeof(FORMAT1_DSCB));
 
             char dsname[ sizeof( f1dscb->ds1dsnam ) + 1 ];
@@ -428,11 +465,11 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
             {
                 if (runflgs == 0 && dsnlen == DEFAULT_DSNLEN)
                 {
-                    printf("%s\n", dsname);
+                    prtseg("%s", dsname);
                 }
                 else
                 {
-                    printf("%*s", -dsnlen, dsname);
+                    prtseg("%*s", -dsnlen, dsname);
 
                     if (runflgs & rf_info)
                     {
@@ -441,8 +478,6 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                         pdate( f1dscb->ds1credt, runflgs );
 
                         /* REFDT */
-
-    #define ds1refdt    resv2
 
                         if (runflgs & rf_refdate)
                             pdatex( f1dscb->ds1refdt, runflgs );
@@ -474,7 +509,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                                 default: /* don't change? */  break; /* multiple bits set */
                             }
                         }
-                        printf(" %s%s", tmpstr, f1dscb->ds1dsorg[0] & DSORG_U ? "U" : " ");
+                        prtseg(" %s%s", tmpstr, f1dscb->ds1dsorg[0] & DSORG_U ? "U" : " ");
 
                         /* RECFM */
 
@@ -500,14 +535,14 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
                         if (f1dscb->ds1recfm & RECFM_TRKOFLOW)  STRLCAT( txtrecfm, "T" );
 
-                        printf(" %-5s", txtrecfm);
+                        prtseg(" %-5s", txtrecfm);
 
                         /* LRECL */
 
                         lrecl = (f1dscb->ds1lrecl[0] << 8) | f1dscb->ds1lrecl[1];
 
-                        if (lrecl) printf(" %5d", lrecl);
-                        else       printf("      ");
+                        if (lrecl) prtseg(" %5d", lrecl);
+                        else       prtseg("      ");
 
                         /* BLKSZ, KEYLN */
 
@@ -517,15 +552,15 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                         /* space allocated */
 
                         numext = f1dscb->ds1noepv;
-    //*debug*/           printf("NUMEXT = %5d", numext);
+    //*debug*/           LOGMSG("NUMEXT = %5d", numext);
 
                         space = extents_array( &f1dscb->ds1ext1, 3, &numext, cif->heads );
-    //*debug*/           printf("SPACE nach extents_array = %d", space);
+    //*debug*/           LOGMSG("SPACE nach extents_array = %d", space);
 
-                        chainf3( &space, &f1dscb->ds1ptrds[0], &numext, fname, sfname );
-    //*debug*/           printf("SPACE nach chainf3 = %d", space);
+                        chainf3( &space, &f1dscb->ds1ptrds[0], &numext );
+    //*debug*/           LOGMSG("SPACE nach chainf3 = %d", space);
 
-                        printf(" %5d", space);
+                        prtseg(" %5d", space);
 
                         /* % of allocated spaced used */
 
@@ -536,11 +571,11 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                         value += hword( &f1dscb->ds1lstar[0] );
 
                         if (!space)
-                            printf("    ");
+                            prtseg("    ");
                         else
                         {
                             value = value * 100 / space; /* % space used */
-                            printf(" %3.0f", value);
+                            prtseg(" %3.0f", value);
                         }
 
                         /* Number of extents */
@@ -552,7 +587,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                         if (DS1SCALO_UNITS_ABSTR
                             == (f1dscb->ds1scalo[0] & DS1SCALO_UNITS))
                         {
-                            printf(" %-11s", "ABSTR");
+                            prtseg(" %-11s", "ABSTR");
                         }
                         else
                         {
@@ -564,16 +599,17 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                                 case DS1SCALO_UNITS_TRK: tmpstr = "TRK"; break;
                                 case DS1SCALO_UNITS_CYL:                 break;
                             }
-                            printf(" %3s%8d", tmpstr,
+                            prtseg(" %3s%8d", tmpstr,
                                 (((f1dscb->ds1scalo[1]  << 8) +
                                    f1dscb->ds1scalo[2]) << 8) +
                                    f1dscb->ds1scalo[3]);
                         }
 
                     } /* end if (runflgs & rf_info) */
-
-                    printf("\n");
                 }
+
+                prtseg("\n");
+                print_line_from_segs();
 
             } /* end if (valid_dsname( dsname )) */
 
@@ -591,12 +627,34 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
     } while (ccyl < ecyl || (ccyl == ecyl && chead <= ehead));
 
+    /* If we "printed" any lines... */
+    if (numlines)
+    {
+        int i;
+
+        /* Sort them into ascending sequence by dsname */
+        if (!(runflgs & rf_nosort))
+            qsort( linestab, numlines, sizeof( linestab ), sort_linestab );
+
+        /* NOW actually print them all for real */
+        for (i=0; i < numlines; ++i)
+        {
+            LOGMSG( "%s\n", RTRIM( linestab[i] ));
+            free( (linestab[i]) );
+        }
+
+        free( linestab );
+        linestab = NULL;
+        numlines = 0;
+    }
+
     return 0;
 }
 
-/* do_ls_cif based on dasdutil.c:build_extent_array  */
+/*********************************************************************/
+/* do_ls_cif based on dasdutil.c:build_extent_array                  */
 
-int do_ls_cif( CIFBLK *cif, char *fname, char *sfname )
+int do_ls_cif( CIFBLK *cif, char *sfile )
 {
     int rc;
 
@@ -642,23 +700,145 @@ int do_ls_cif( CIFBLK *cif, char *fname, char *sfname )
         return -1;
     }
 
-    return list_contents( cif, volser, &f4dscb->ds4vtoce, fname, sfname );
+    return list_contents( cif, sfile, volser, &f4dscb->ds4vtoce );
 }
+
+/*********************************************************************/
 
 int do_ls( char *file, char *sfile )
 {
-    CIFBLK* cif;
+    LOGMSG("\n");
 
-    printf("\n");
-
-    cif = open_ckd_image( file, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL );
-
-    if (0
-        || !cif
-        || do_ls_cif( cif, file, sfile )
-        || close_ckd_image( cif )
-    )
+    if (!(cif = open_ckd_image( file, sfile, O_RDONLY | O_BINARY, IMAGE_OPEN_NORMAL )))
         return -1;
 
+    if (do_ls_cif( cif, sfile ) != 0)
+    {
+        close_ckd_image( cif );
+        cif = NULL;
+        return -1;
+    }
+
+    if (close_ckd_image( cif ) != 0)
+    {
+        cif = NULL;
+        return -1;
+    }
+
+    cif = NULL;
     return 0;
 }
+
+/*********************************************************************/
+
+int main( int argc, char **argv )
+{
+char           *pgm;            /* less any extension (.ext)         */
+int             rc = 0;
+char           *fn, *sfn;
+
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
+
+    if (argc < 2)
+    {
+        // "Usage: %s [-option [-option ... ]] ckdfile [sf=shadow-file-name]%s"
+        WRMSG( HHC02463, "I", pgm );
+        exit(2);
+    }
+
+    cchh_colhdr_width = (int) strlen( CCHH_COLHDR );
+
+    /*
+     * If your version of Hercules doesn't have support in its
+     * dasdutil.c for turning off verbose messages, then remove
+     * the following line but you'll have to live with chatty
+     * progress output on stdout.
+     */
+    set_verbose_util(0);                    /* (don't be chatty) */
+
+    while (*++argv)
+    {
+        fn = *argv;
+
+        if (strcmp( fn, "-nosort" ) == 0)   /* do NOT sort results */
+        {
+            runflgs |= rf_nosort;
+            continue;
+        }
+        if (strcmp( fn, "-info" ) == 0)     /* show F1 info */
+        {
+            runflgs |= rf_info;
+            continue;
+        }
+        if (strcmp( fn, "-caldt" ) == 0)    /* calendar date format */
+        {
+            runflgs |= (rf_caldate | rf_info);
+            continue;
+        }
+        if (strcmp( fn, "-expdt" ) == 0)    /* show expiry date */
+        {
+            runflgs |= (rf_expdate | rf_info);
+            continue;
+        }
+        if (strcmp( fn, "-refdt" ) == 0)    /* show last-reference date */
+        {
+            runflgs |= (rf_refdate | rf_info);
+            continue;
+        }
+        if (strcmp( fn, "-hdr" ) == 0)      /* show column headers */
+        {
+            runflgs |= (rf_header | rf_info);
+            continue;
+        }
+        if (strcmp( fn, "-cchh" ) == 0)     /* show extent cchh info */
+        {
+            runflgs |= (rf_cchh | rf_info);
+            continue;
+        }
+        if (1
+            && strlen( *argv )   >    6
+            && !memcmp( fn, "-dsnl=", 6 ))  /* restrict dsname width (custom) */
+        {
+            runflgs |= rf_info;
+            dsnlen = atoi( fn + 6 );
+            continue;
+        }
+        if (strcmp( fn, "-dsnl" ) == 0)     /* restrict dsname width (default) */
+        {
+            runflgs |= rf_info;
+            dsnlen = 26;
+            continue;
+        }
+        if (1
+            && strlen( *argv )   >      8
+            && !memcmp( fn, "-yroffs=", 8 ))/* year offset (custom) */
+        {
+            runflgs |= rf_info;
+            yroffs = atoi( fn + 8 );
+            continue;
+        }
+        if (strcmp( fn, "-yroffs" ) == 0)   /* year offset (default) */
+        {
+            runflgs |= rf_info;
+            yroffs = 28;
+            continue;
+        }
+
+        /* Check for shadow file */
+        if (1
+            &&         *(argv+1)
+            && strlen( *(argv+1) )   >   3
+            && memcmp( *(argv+1), "sf=", 3 ) == 0
+        )
+             sfn = *++argv;
+        else sfn = NULL;
+
+        if (do_ls( fn, sfn ))
+            rc = 1;
+    }
+
+    LOGMSG("\nEnd of %s; rc=%d\n", UTILITY_NAME, rc );
+    return rc;
+}
+
+/*********************************************************************/

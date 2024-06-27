@@ -13,17 +13,270 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 4.3
-&nbsp; &nbsp; <small><i>(in development)</i></small>
+<h2>What's new in Version 4.7
 </h2>
 
-<p>Release date: <i><b>(in development)</b></i>
+<p>Release date: 10 March 2024
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.7">Release_4.7</a>
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.7">Release Notes</a> for important information.</i>
+
+<ul>
+
+<li>Fix EX/EXRL instructions to not cause spurious PIC 3 (Tony Harminc, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/415">#415</a>
+<li>Fix E7 Prefix CCW support (Aaron Finerman, Fish)
+<li>Fix Read Count Suffix bug causing data corruption <a href="https://github.com/SDL-Hercules-390/hyperion/issues/575">#575</a>
+<li>Fix Locate Record Write Track Operation (Aaron Finerman, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/601">#601</a>
+<li>Fix Read Tracks CCW when chained from Prefix (Aaron Finerman, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/603">#603</a>
+<li>Fix various ICKDSF-related CCW handling bugs (Anders Edlund, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/615">#615</a>
+<li>Fix 3705 crash on attach/detach/attach (Jay Maynard)
+<li>Fix usleep/nanosleep excessive host CPU consumption (Peter Jansen, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/589">#589</a>
+<li>Fix '--version' and '--usage' switches (Bill Lewis)
+<li>Fix TDF file emulated tape open bug (Fish)
+<li>Fix maketape utility to not pad binary files (Fish)
+<li>Fix Date/time parsing issue in runtest/make-check (Peter Jansen)
+<li>Fix dasdseq utility Large/Extended dataset truncation (Gregory, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/602">#602</a>
+<li>Fix Multi-device statement failure handling (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/604">#604</a>
+<li>Fix Hang during device detach (Fish)
+<li>Fix Incorrect thread priority handling (Tyler Mitchell)
+<li>Fix Occasional crash on exit (Tyler Mitchell)
+<li>Fix Confusing/unclear shadow file messages (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/616">#616</a>
+<li>Fix cckdmap utility non-33xx dasd-type bug (Fish) 
+<li>Fix Shared devices 10-second-delay bug (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/624">#624</a>
+<li>Fix 'ENGINES' command bug (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/626">#626</a>
+<li>Fix Shutdown/exit logging (James Wekel) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/480">#480</a>, <a href="https://github.com/SDL-Hercules-390/hyperion/issues/634">#634</a>
+<li>Fix Possible crash at CCKD dasd termination (Fish)
+<li>Fix Inaccurate "Running on:" Windows name and version (Bill Lewis, Fish)
+<p>
+<li>New: Improved CU12, CU14 instruction performance (James Wekel) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/623">#623</a>
+<li>New: dasdls utility '-cchh' and '-nosort' options (Ian, Fish)
+<li>New: maketape utility meta-file 'BIN' keyword support (Fish)
+<li>New: dasdseq utility '-record' mode support (Gregory, Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/614">#614</a>
+<li>New: Ability to trace only specific CCW opcodes (Fish) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/576">#576</a>
+<li>New: JSON support in HTTP server <a href="https://github.com/SDL-Hercules-390/hyperion/issues/578">#578</a>
+<li>New: README.DAEMON document
+<li>New: 'iconpfxs' command (Fish)
+<li>New: Support quoted strings in storage alteration commands (Fish)
+<li>New: Add timed statistics to instruction counting (Andrey) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/588">#588</a>
+<li>New: dyngui LCSS devnum support (Fish)
+<li>New: Use performance cores on Apple Silicon (Enrico Sorichetti)
+<li>New: Support 'clang' builds under Windows MSVC (Peter Jansen) <a href="https://github.com/SDL-Hercules-390/hyperion/issues/629">#629</a>
+<li>New: Highlight 'S'evere and 'A'ction messages too (Fish)
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
+<h2>What's new in Version 4.6
+</h2>
+
+<p>Release date: 9 June 2023
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.6">Release_4.6</a>
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.6">Release Notes</a> for important information.</i>
+
+<ul>
+
+<li>SECURITY: New "\reply" SCP command to suppress command echoing of passwords (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/541">#541</a>)
+<p>
+<li>Fix endianness bug in PFPO instruction (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/523">#523</a>)
+<li>Fix some endianness issues in TRTE and TRTRE instructions (James Wekel) (<a href="https://github.com/SDL-Hercules-390/hyperion/pull/529">#529</a>)
+<li>Fix CODEPAGE message corruption in HERCIFC (Bill Lewis) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/525">#525</a>)
+<li>Fix some minor z/Arch Facility related bugs (Fish)
+<li>Fix BZIP2 API bug in hetlib.c (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/535">#535</a>)
+<li>Fix missing last dump line bug in dasdutil trace (Fish)
+<li>Fix crash if "ctc debug" command on unconnected CTCE device (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/536">#536</a>)
+<li>Fix segfault in 370 mode IPL (Bill Lewis) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/538">#538</a>)
+<li>Fix to show version and help if no arguments given (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/540">#540</a>, <a href="https://github.com/SDL-Hercules-390/hyperion/issues/548">#548</a>)
+<li>Fix incorrect NUMCPU/ARCHLVL/etc handling causing occasional hang (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/542">#542</a>)
+<li>Fix branding SNAFU: "SDL" does NOT mean this Hercules is a "SoftDevLabs" product! (Fish)
+<li>Fix bug causing MVT guest to fail (Fish)
+<li>Fix Program check detection if PER trace active (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/560">#560</a>)
+<p>
+<li>New: 'QUITMOUT' command/statement, per user request (Fish)
+<li>New: "Trace to File" support (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/33">#33</a>)
+<li>New "t+CPU [cpuad]" selective instruction tracing by CPU (Fish)
+<li>New: Sockdev socket punch support (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/553">#553</a>)
+<li>New 'txt2card' utility (Fish)
+<p>
+<li>Don't enable STHYI/ESSA by default (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/531">#531</a>)
+<li>Improve PFPO instruction conformance (Fish)
+<li>Add single devnum support to CKD Search Key trace command (Fish)
+<li>Enhance "t?" command to also show active device tracing (Fish)
+<li>Improve CCW tracing (Fish)
+<li>Add "ADDFRR" MVS assist (Jay Maynard) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/537">#537</a>)
+<li>Better HMC message handling for Linux guests (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/534">#534</a>)
+<li>Document MAKETAPE via README (Fish)
+<li>Add support for dasd X'F7' (DSO = Define Subsystem Operation) CCW (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/547">#547</a>)
+<li>DASDLOAD: Increase MAXDSCB and allow cmdline override (Fish) (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/566">#566</a>)
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
+<h2>What's new in Version 4.5
+</h2>
+
+<p>Release date: 27 November 2022
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.5">Release_4.5</a>
+
+<ul>
+
+<li><i><b>Significant</b></i> performance improvements to CLCLE, CUSE, TRE, TRTE, TRTR and TRTRE instructions
+(<a href="https://github.com/SDL-Hercules-390/hyperion/issues/498">#498</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/500">#500</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/510">#510</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/513">#513</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/519">#519</a>,
+<a href="https://github.com/SDL-Hercules-390/hyperion/issues/520">#520</a>)
+<i>(Thank you James Wekel!)</i>
+<p>
+<li>Fix minor bug in STSTU (Search String Unicode) instruction
+<li>Fix minor bug in CMPSC (Compression Call) instruction
+<li>Fix minor bug in PFPO (Perform Floating-Point Operation) instruction (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/407">#407</a>)
+<li>PER 1 GRA (General Register Alteration) support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/87">#87</a>)
+<li>z/VM TXF PER support (i.e. TXSUSPEND = Event Suppression)
+<li>PER SKEY support
+<li>PER Zero-Address Detection support
+<li>BEAR-Enhancement Facility support
+<li>Decimal Floating-Point Packed Conversion Facility support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/496">#496</a>)
+<p>
+<li>Report and ignore oversized LCS outbound SNA messages
+<li>Ensure same serial number on all multi-file images (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/276">#276</a>)
+<li>Fix minor dasdinit negative size parameter bug (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/472">#472</a>)
+<li>Fix minor dasd CCW data-chaining bug
+<li>Improve CCKD handling of unusual/unexpected errors
+<li>Minor corrections to CTCE documentation
+<li>dasdls: sort display by dataset name
+<li>Various minor cckdmap enhancements
+<li>Fix rare bug in .HET locate block logic (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/518">#518</a>)
+<li>Disable CCKD automatic garbage collection (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/504">#504</a>)
+<p>
+<li>Fix hang at exit when MLVL DEBUG is active
+<li>Fix bug causing DASD corruption with s+ tracing
+<li>Fix 'numcpu' handling bug causing crash (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/481">#481</a>)
+<li>Ensure error message when no config file provided (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/483">#483</a>)
+<li>Fix another possible Windows suspend/resume crash (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/489">#489</a>)
+<li>Customized Offerings Driver (COD) support
+<li>New <a href="https://sdl-hercules-390.github.io/html/hercconf.html#SYSGPORT">SYSGPORT</a> config file statement (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/505">#505</a>)
+<li>Various improvements to Linux build scripts (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/454">#454</a>, <a href="https://github.com/SDL-Hercules-390/hyperion/issues/461">#461</a>)
+<li>Many other various minor miscellaneous fixes and improvements to both documentation and code
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
+<h2>What's new in Version 4.4.1
+</h2>
+
+<p>Release date: 7 January 2022
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.4.1">Release_4.4.1</a>
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.4.1">Release Notes</a> for important information.</i>
+
+<ul>
+
+<li> Implement new Version string format
+<li> Return fullword #of cylinders in RDC bytes 60-63 (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/456">#456</a>)
+<li> Also show real address for virtual address during instruction tracing
+<li> Fix possible Hercules crash after resume from suspend (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/458">#458</a>)
+<li> Improved B220 (SERVC) instruction validation (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/460">#460</a>)
+<li> Fix 20 yr. old CCKD compressed dasd bug causing Locate Record to fail (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/464">#464</a>)
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
+<h2>What's new in Version 4.4
+</h2>
+
+<p>Release date: 18 December 2021
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.4">Release_4.4</a>
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.4">Release Notes</a> for important information.</i>
+
+<ul>
+
+<li> Fix many SIE arch-dep violation bugs
+<li> Fix to SIE handling of STFL/STFLE instructions
+<li> Internal and SIE SKA Storage Key handling fixes
+<li> Fix VM/ESA OPERATOR userid looping bug
+<li> Preliminary SIE ESSA/STHYI instructions support
+<li> Fixes to MVS assist support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/391">#391</a>)
+<li> ECPS:VM 1.88 fixes
+<p>
+<li> ISK/ISKE, IVSK, RRB/RRBE, SSK/SSKE, RRBM, PFMF instruction fixes
+<li> Fixes to CSP/CSPG/IDTE/IPTE instructions
+<li> Minor LAA/LAAG (et al.) instructions fix
+<li> RRBM instruction fix
+<li> PTFF instruction support for function codes 04, 05, 69 (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/363">#363</a>)
+<li> Fix DAT bug in MVCOS instruction (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/349">#349</a>)
+<p>
+<li> Local-TLB-Clearing Facility (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/77">#77</a>)
+<li> Nonquiescing Key-Setting Facility (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/77">#77</a>)
+<li> Insert Reference Bits Multiple Facility (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/77">#77</a>)
+<li> Miscellaneous-Instruction-Extensions Facilities 2 and 3 (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/77">#77</a>)
+<li> PPA-in-order facility (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/77">#77</a>)
+<li> Allow modifying "IBM" and undefined facility bits (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/353">#353</a>)
+<p>
+<li> LCS device fixes and improvements
+<li> LCS device SNA support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/348">#348</a>)
+<li> 3270 device connection improvements (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/379">#379</a>)
+<li> CTCE device fixes and improvements (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/369">#369</a>)
+<li> CTCI device fix for VSE (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/446">#446</a>)
+<li> Minor QETH (OSA) device fixes/improvements
+<p>
+<li> CCKDMAP utility CFBA/CFBA64 device support
+<li> Fix to DASDLS utility shadow file logic (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/393">#393</a>)
+<li> CCKDLOAD utility fix (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/374">#374</a>)
+<li> Fix dasd utilities r/o access to r/w images (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/355">#355</a>)
+<li> Minor "faketape" emulated tape format fix
+<li> Fix possible CRASH during compressed dasd attach/detach
+<p>
+<li> PANOPT statement "MSGCOLOR" option
+<li> PANRATE/PANTITLE replaced by PANOPT
+<li> Minor MODEL/PLANT/MANUFACTURER statement fixes
+<li> New -o/--output/--logfile command-line options
+<p>
+<li> Hardware loader fix (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/185">#185</a>, <a href="https://github.com/SDL-Hercules-390/hyperion/issues/337">#337</a>)
+<li> Minor Rexx support fixes and improvements
+<li> Minor External Packages updates
+<li> Fixes to herclin.exe
+<li> Translation Specification PIC 12 fix
+<li> Improved TXF reliability and completeness
+<li> Predefined CPUMODEL $(symbol) values (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/263#issuecomment-664583569">#263</a>)
+<p>
+<li> Improvements to building Hercules on non-Windows platforms
+<li> Improvements to building Hercules on Windows platforms (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/448">#448</a>)
+<li> Many other minor internal/external fixes and improvements
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
+<h2>What's new in Version 4.3
+</h2>
+
+<p>Release date: 28 November 2020
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.3">Release_4.3</a>
-
-<br>Refer to the <a href="hercrnot.html#4.3">Release notes for SDL Hyperion 4.3</a> web page
-<br>for more detailed information regarding changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.3">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -32,14 +285,28 @@ Hercules: What's new
 <li> Fix driver code incompatibility with other Herculeses (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/251">#251</a>)
 <li> Fix issue where thread names are incorrectly set (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/254">#254</a>)
 <li> Fix missing timestamp in daemon mode; add DATESTAMP option (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/259">#259</a>), (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/260">#260</a>)
+<li> Fix CNSLPORT to honor new updated setting (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/318">#318</a>)
 <li> <a href="hercrnot.html#4.3">Watchdog monitoring</a> reinstated.
+<li> New <a href="https://sdl-hercules-390.github.io/html/hercconf.html#PANOPT">PANOPT</a> option MSGCOLOR=DARK/LIGHT
 <li> Fix hang/deadlock in device-attention function (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/277">#277</a>)
 <li> Improved CTCE driver functionality (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/269">#269</a>), (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/273">#273</a>)
 <li> TCPNJE device support. Refer to the <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.TCPNJE.md">README.TCPNJE</a> document for details (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/280">#280</a>)
+<li> TCPNJE Connectivity And Stability Enhancements
+<li> Fix RARP (Reverse ARP) Ethernet frame type constant
 <li> Fix Linux panel high CPU usage (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/289">#289</a>)
+<li> Fix z/VM guest architecture switching (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/295">#295</a>)
+<li> Fix for IPL command without a LOADPARM (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/296">#296</a>)
 <li> Work around VS2019 compiler C4789 Warning bug.
 <li> Fix crash if incomplete network device group defined.
-<li> Various other internal fixes and improvements
+<li> Fix ooRexx v5.0.0. load failure on Apple Mac (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/301">#301</a>)
+<li> Fix crash in CCKD dasd termination logic (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/303">#303</a>)
+<li> Fix KIMD instruction
+<li> Fix VM FixPage assist
+<li> Fix channel prefetch buffer overrun crash (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/319">#319</a>)
+<li> Fix instruction stepping invalidation/refetch bug (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/321">#321</a>)
+<li> New z15 Secure Boot (Secure IPL) Diagnose 0x308 support
+<li> Preliminary <i>(Experimental)</i> Transactional-Execution Facility (TXF) support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/263">#263</a>)
+<li> MANY other internal fixes and improvements
 
 </ul>
 
@@ -47,16 +314,14 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 4.2.1
+<h2>What's new in Version 4.2.1
 </h2>
 
 <p>Release date: 10 September 2019
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.2.1">Release_4.2.1</a>
-
-<br>Refer to the <a href="hercrnot.html#4.2.1">Release notes for SDL Hyperion 4.2.1</a> web page
-<br>for more detailed information regarding changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.2.1">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -80,15 +345,13 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 4.2</h2>
+<h2>What's new in Version 4.2</h2>
 
 <p>Release date: 8 July 2019
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.2">Release_4.2</a>
-
-<br>Refer to the <a href="hercrnot.html#4.2">Release notes for SDL Hyperion 4.2</a> web page
-<br>for more detailed information regarding changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.2">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -129,15 +392,13 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 4.1</h2>
+<h2>What's new in Version 4.1</h2>
 
 <p>Release date: 10 November 2018
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.1">Release_4.1</a>
-
-<br>Refer to the <a href="hercrnot.html#4.1">Release notes for SDL Hyperion 4.1</a> web page
-<br>for more detailed information regarding changes in this release.
+<br><i>Please refer to the <a href="https://sdl-hercules-390.github.io/html/hercrnot.html#4.1">Release Notes</a> for important information.</i>
 
 <ul>
 
@@ -166,7 +427,37 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.11</h2>
+<h2>What's new in release 3.13</h2>
+<p>Release date: 30 September 2017
+<ul>
+<li>CTC corrections (Peter J. Jansen)
+<li>ECPS:VM corrections (Bob Polmanter)
+<li>SIE corrections (Ivan Warren)
+<li>PCC,KM,KMCTR,CUxx,CSST corrections (Juergen Winkelmann)
+<li>Miscellaneous bug fixes (Drew Derbyshire, Doug Wade, Peter Coghlan,
+Peter J. Jansen, Alexei Chmelev, Gert Caers)
+</ul>
+<p>Download
+<a href="http://downloads.hercules-390.eu/hercules-3.13.tar.gz">hercules-3.13.tar.gz</a>
+
+<!-- ---------------------------------------------------------------------------- -->
+
+<h2>What's new in release 3.12</h2>
+<p>Release date: 30 November 2015
+<ul>
+<li>dasdload corrections and support for loading ASCII TEXT files (Roger Bowler)
+<li>comm3705_RU-size+unack_attn_delay patch (Juergen Winkelmann)
+<li>CCKDDUMP/CCKDLOAD support for DSNTYPE=LARGE (Christophe Varlet)
+<li>CMPSC corrections (Bernard van der Helm)
+<li>Miscellaneous bug fixes (Peter Coghlan, Gert Caers, Giuseppe Vitillaro,
+Bill Carlborg, David "Fish" Trout)
+</ul>
+<p>Download
+<a href="http://downloads.hercules-390.eu/hercules-3.12.tar.gz">hercules-3.12.tar.gz</a>
+
+<!-- ---------------------------------------------------------------------------- -->
+
+<h2>What's new in Version 3.11</h2>
 <p>Release date: 15 September 2014
 <ul>
 <li>Floating-Point-Extension Facility (Roger Bowler)
@@ -183,7 +474,7 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.10</h2>
+<h2>What's new in Version 3.10</h2>
 <p>Release date: 1 February 2014
 <ul>
 <li>Fix incorrect PSW IA in SIE mode with PER (Ian Worthington)
@@ -201,7 +492,7 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.09</h2>
+<h2>What's new in Version 3.09</h2>
 <p>Release date: 15 July 2013
 <ul>
 <li>Allow regex replacement variables in HAO commands (Roger Bowler)
@@ -222,7 +513,7 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.08</h2>
+<h2>What's new in Version 3.08</h2>
 <p>Release date: 8 December 2012
 <ul>
 <li>1403 and 3211 FCB support (Enrico Sorichetti)
@@ -268,7 +559,7 @@ Bernard van der Helm, Roger Bowler, Kevin Leonard, Ian Shorter, John P. Hartmann
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.07</h2>
+<h2>What's new in Version 3.07</h2>
 <p>Release date: 10 March 2010
 <ul>
 <li>Fast Synchronous Data Mover Facility (Guy Desbiens)
@@ -300,7 +591,7 @@ Roger Bowler, Jay Maynard)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.06</h2>
+<h2>What's new in Version 3.06</h2>
 <p>Release date: 11 January 2009
 <ul>
 <li>Integrated 3270 (SYSG) console support (Roger Bowler, Jan Jaeger)
@@ -344,7 +635,7 @@ Kevin Leonard, Tony Harminc)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.05</h2>
+<h2>What's new in Version 3.05</h2>
 <p>Release date: 23 June 2007
 <ul>
 <li>Prebuilt Cygwin binary no longer supplied; building Cygwin version from
@@ -376,7 +667,7 @@ Bowler), logopt (Kevin Leonard), cd, pwd, timerint, defsym (David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.04.1</h2>
+<h2>What's new in Version 3.04.1</h2>
 <p>Release date: 25 March 2006
 <ul>
 <li>Fix to allow building for Intel-based Mac OS X (Jay Maynard)
@@ -388,7 +679,7 @@ Version 3.04 is current for all other platforms.
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.04</h2>
+<h2>What's new in Version 3.04</h2>
 <p>Release date: 24 February 2006
 <ul>
 <li>CCKD garbage collection fix (Greg Smith)
@@ -410,7 +701,7 @@ Helm)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.03.1</h2>
+<h2>What's new in Version 3.03.1</h2>
 <p>Release date: 30 December 2005
 <ul>
 <li>Fix translation exception bug that was causing some Linux kernels to
@@ -426,7 +717,7 @@ panic (Fabrizio Calabretta, Greg Smith, Ivan Warren)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.03</h2>
+<h2>What's new in Version 3.03</h2>
 <p>Release date: 20 December 2005
 <ul>
 <li>Native Windows version no longer requires Cygwin (David "Fish" Trout,
@@ -452,7 +743,7 @@ Dilbert, Bernard van der Helm)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.02</h2>
+<h2>What's new in Version 3.02</h2>
 <p>Release date: 11 December 2004
 <ul>
 <li>Significant performance improvements (Jan Jaeger, Greg Smith, Gabor Hoffer)
@@ -479,7 +770,7 @@ Warren)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.01</h2>
+<h2>What's new in Version 3.01</h2>
 <p>Release date: 30 November 2003
 <ul>
 <li>Bypass gcc 2.96 optimizer bug that caused incorrect instruction
@@ -501,7 +792,7 @@ still performing better (David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 3.00</h2>
+<h2>What's new in Version 3.00</h2>
 <p>Release date: 2 October 2003
 <ul>
 <li>Dynamically loaded module support for devices, instructions, and
@@ -533,7 +824,7 @@ Pierson)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.17.1</h2>
+<h2>What's new in Version 2.17.1</h2>
 <p>Release date: 12 February 2003
 <ul>
 <li>Corrected RPM installed files permissions (John Summerfield)
@@ -548,7 +839,7 @@ no file loaded (Jay Maynard)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.17</h2>
+<h2>What's new in Version 2.17</h2>
 <p>Release date: 1 February 2003
 <ul>
 <li>Restructured DASD subsystem: better use of memory,
@@ -572,7 +863,7 @@ Andy Norrie, and David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.16.5</h2>
+<h2>What's new in Version 2.16.5</h2>
 <p>Release date: 8 July 2002
 <ul>
 <li>Correct serious CCKD image file corruption error (Greg Smith)
@@ -583,7 +874,7 @@ Andy Norrie, and David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.16.4</h2>
+<h2>What's new in Version 2.16.4</h2>
 <p>Release date: 3 July 2002
 <ul>
 <li>Read backward support for emulated tape (Volker Bandke)
@@ -594,7 +885,7 @@ Andy Norrie, and David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.16.3</h2>
+<h2>What's new in Version 2.16.3</h2>
 <p>Release date: 2 July 2002
 <ul>
 <li>CTC fix for TurboLinux bug (Jim Pierson)
@@ -613,7 +904,7 @@ Andy Norrie, and David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.16.2</h2>
+<h2>What's new in Version 2.16.2</h2>
 <p>Release date: 20 May 2002
 <ul>
 <li>Fixed 3350 dasdtab entry (Greg Smith)
@@ -625,7 +916,7 @@ Andy Norrie, and David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.16.1</h2>
+<h2>What's new in Version 2.16.1</h2>
 <p>Release date: 4 May 2002
 <ul>
 <li>fthreads locking fixes (David "Fish" Trout)
@@ -639,7 +930,7 @@ Andy Norrie, and David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.16</h2>
+<h2>What's new in Version 2.16</h2>
 <p>Release date: 20 April 2002
 <ul>
 <li>PER support (Jan Jaeger, Paul Leisy)
@@ -662,7 +953,7 @@ Greg Smith, Volker Bandke, Bernard van der Helm, David "Fish" Trout)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.15</h2>
+<h2>What's new in Version 2.15</h2>
 <p>Release date: 04 December 2001
 <ul>
 <li> Autoconf added to ease portability (Matt Zimmerman, Fritz Elfert,
@@ -684,11 +975,11 @@ Willem Konynenberg)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>(There was no release 2.14)</h2>
+<h2>(There was no Version 2.14)</h2>
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.13</h2>
+<h2>What's new in Version 2.13</h2>
 <p>Release date: 05 July 2001
 <ul>
 <li>Restrict TODEPOCH to 1900, 1928, 1960, 1970, or 1988, and
@@ -713,7 +1004,7 @@ Willem Konynenberg)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.12</h2>
+<h2>What's new in Version 2.12</h2>
 <p>Release date: 04 May 2001
 <ul>
 <li>Numerous instruction fixes (Paul Leisy, Jan Jaeger,
@@ -757,7 +1048,7 @@ Willem Konynenberg)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.11</h2>
+<h2>What's new in Version 2.11</h2>
 <p>Release date: 09 February 2001
 <ul>
 <li>Sundry new ESAME instructions and corrections (Jan Jaeger)
@@ -776,7 +1067,7 @@ Willem Konynenberg)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 2.10</h2>
+<h2>What's new in Version 2.10</h2>
 <p>Release date: 02 February 2001
 <ul>
 <li>z/Architecture support (Jan Jaeger)
@@ -806,7 +1097,7 @@ Willem Konynenberg)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.71</h2>
+<h2>What's new in Version 1.71</h2>
 <p>Release date: 18 January 2001
 <ul>
 <li> Compressed CKD DASD support release 2, with improved performance, shadow
@@ -830,7 +1121,7 @@ dasdload (Volker Bandke)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.70</h2>
+<h2>What's new in Version 1.70</h2>
 <p>Release date: 3 December 2000
 <ul>
 <li>New file hercwin32.zip contains build scripts for Win32 version (Volker
@@ -851,7 +1142,7 @@ Bowler, Jay Maynard, and Jan Jaeger)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.69</h2>
+<h2>What's new in Version 1.69</h2>
 <p>Release date: 29 October 2000
 <ul>
 <li>Correct AXR and SXR instruction results when significance exception
@@ -869,7 +1160,7 @@ Bowler, Jay Maynard, and Jan Jaeger)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.68</h2>
+<h2>What's new in Version 1.68</h2>
 <p>Release date: 8 October 2000
 <ul>
 <li>Rewritten and updated FAQ (Dave Morton)
@@ -886,7 +1177,7 @@ Bowler, Jay Maynard, and Jan Jaeger)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.67</h2>
+<h2>What's new in Version 1.67</h2>
 <p>Release date: 4 September 2000
 <ul>
 <li>Win32 portability changes (John Kozak)
@@ -910,7 +1201,7 @@ Maynard, found by Greg Smith)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.66</h2>
+<h2>What's new in Version 1.66</h2>
 <p>Release date: 3 August 2000
 <ul>
 <li>Simplify logmsg and DEVTRACE macro definitions (Jay Maynard)
@@ -937,7 +1228,7 @@ form_stack_entry and unstack_registers (Jan Jaeger)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.65</h2>
+<h2>What's new in Version 1.65</h2>
 <p>Release date: 22 July 2000
 <ul>
 <li> Track overflow processing fixes (by Jay Maynard, suggested by Valery
@@ -964,7 +1255,7 @@ Jaeger)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.64</h2>
+<h2>What's new in Version 1.64</h2>
 <p>Release date: 4 July 2000
 <ul>
 <li> Added track overflow processing for CKD DASD (by Jay Maynard)
@@ -985,7 +1276,7 @@ subdirectory (by Jay Maynard, suggested by Soren Jorvang)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.63</h2>
+<h2>What's new in Version 1.63</h2>
 <p>Release date: 18 June 2000
 <ul>
 <li>3270 CCW processing improvements (by Jan Jaeger)
@@ -1009,7 +1300,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.62</h2>
+<h2>What's new in Version 1.62</h2>
 <p>Release date: 3 June 2000
 <ul>
 <li>Still more multiprocessor improvements (by Jan Jaeger)
@@ -1025,7 +1316,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.61</h2>
+<h2>What's new in Version 1.61</h2>
 <p>Release date: 21 May 2000
 <ul>
 <li>More multiprocessor improvements (by Jan Jaeger)
@@ -1044,7 +1335,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.60</h2>
+<h2>What's new in Version 1.60</h2>
 <p>Release date: 14 May 2000
 <ul>
 <li>Multiprocessor locking improvements (by Jan Jaeger)
@@ -1070,7 +1361,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.59</h2>
+<h2>What's new in Version 1.59</h2>
 <p>Release date: 30 Apr 2000
 <ul>
 <li>Missing interrupt after CSCH instruction
@@ -1091,7 +1382,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.58</h2>
+<h2>What's new in Version 1.58</h2>
 <p>Release date: 22 Apr 2000
 <ul>
 <li>Support for CKD DASD volumes exceeding 2GB such as 3390-3
@@ -1141,7 +1432,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.57</h2>
+<h2>What's new in Version 1.57</h2>
 <p>Release date: 30 Mar 2000
 <ul>
 <li>Fix program check 0032 due to wrong stack entry being updated
@@ -1155,7 +1446,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.56</h2>
+<h2>What's new in Version 1.56</h2>
 <p>Release date: 28 Mar 2000
 <ul>
 <li>Fix incorrect unit exception on SCSI tape FSB/BSB CCW
@@ -1176,7 +1467,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.55</h2>
+<h2>What's new in Version 1.55</h2>
 <p>Release date: 22 Mar 2000
 <ul>
 <li>FBA minidisk support
@@ -1186,7 +1477,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.54</h2>
+<h2>What's new in Version 1.54</h2>
 <p>Release date: 18 Mar 2000
 <ul>
 <li>Address wraparound improvement (contributed by Jan Jaeger)
@@ -1203,7 +1494,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.53</h2>
+<h2>What's new in Version 1.53</h2>
 <p>Release date: 01 Mar 2000
 <ul>
 <li>Add BSF/FSF/BSB/FSB CCW support for tape devices
@@ -1220,7 +1511,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.52</h2>
+<h2>What's new in Version 1.52</h2>
 <p>Release date: 19 Feb 2000
 <ul>
 <li>Prevent incorrect length indication on 3270 Select CCW
@@ -1234,7 +1525,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.51</h2>
+<h2>What's new in Version 1.51</h2>
 <p>Release date: 15 Feb 2000
 <ul>
 <li>3270 read buffer fix for OS/360 NIP
@@ -1248,7 +1539,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.50</h2>
+<h2>What's new in Version 1.50</h2>
 <p>Release date: 10 Feb 2000
 <ul>
 <li>Remove interval timer debugging message
@@ -1265,7 +1556,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.49</h2>
+<h2>What's new in Version 1.49</h2>
 <p>Release date: 05 Feb 2000
 <ul>
 <li>Alternate control panel (contributed by Dutch Owen)
@@ -1281,7 +1572,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.48</h2>
+<h2>What's new in Version 1.48</h2>
 <p>Release date: 31 Jan 2000
 <ul>
 <li>Fix dasdload to handle note lists (prevent 32D abend)
@@ -1293,7 +1584,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.47</h2>
+<h2>What's new in Version 1.47</h2>
 <p>Release date: 23 Jan 2000
 <ul>
 <li>Allow tn3270 or telnet client to connect to specific device number
@@ -1312,7 +1603,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.46</h2>
+<h2>What's new in Version 1.46</h2>
 <p>Release date: 11 Jan 2000
 <ul>
 <li>HSCH instruction
@@ -1326,7 +1617,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.45</h2>
+<h2>What's new in Version 1.45</h2>
 <p>Release date: 08 Jan 2000
 <ul>
 <li>Make MVCL/CLCL interruptible (contributed by Jan Jaeger)
@@ -1345,7 +1636,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.44</h2>
+<h2>What's new in Version 1.44</h2>
 <p>Release date: 01 Jan 2000
 <ul>
 <li>Support for 9336 FBA DASD
@@ -1356,7 +1647,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.43</h2>
+<h2>What's new in Version 1.43</h2>
 <p>Release date: 27 Dec 1999
 <ul>
 <li>New control panel command: devlist
@@ -1383,7 +1674,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.42</h2>
+<h2>What's new in Version 1.42</h2>
 <p>Release date: 16 Dec 1999
 <ul>
 <li>New makefile builds both S/370 and ESA/390 executables:
@@ -1400,7 +1691,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.41</h2>
+<h2>What's new in Version 1.41</h2>
 <p>Release date: 07 Dec 1999
 <ul>
 <li>Set reference and change bits correctly for main storage accesses
@@ -1418,7 +1709,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.40</h2>
+<h2>What's new in Version 1.40</h2>
 <p>Release date: 30 Nov 1999
 <ul>
 <li>New DASDISUP program performs OS/360 IEHIOSUP function
@@ -1435,7 +1726,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.39</h2>
+<h2>What's new in Version 1.39</h2>
 <p>Release date: 24 Nov 1999
 <ul>
 <li>Concurrent sense
@@ -1452,7 +1743,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.38</h2>
+<h2>What's new in Version 1.38</h2>
 <p>Release date: 22 Nov 1999
 <ul>
 <li>New panel commands to allow storage alteration
@@ -1465,7 +1756,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.37</h2>
+<h2>What's new in Version 1.37</h2>
 <p>Release date: 19 Nov 1999
 <ul>
 <li>Storage range display
@@ -1484,7 +1775,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.36</h2>
+<h2>What's new in Version 1.36</h2>
 <p>Release date: 12 Nov 1999
 <ul>
 <li>Clear subchannel instruction
@@ -1493,7 +1784,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.35</h2>
+<h2>What's new in Version 1.35</h2>
 <p>Release date: 09 Nov 1999
 <ul>
 <li>Improved control panel user interface
@@ -1507,7 +1798,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.34</h2>
+<h2>What's new in Version 1.34</h2>
 <p>Release date: 29 Oct 1999
 <ul>
 <li>New DASDLOAD program to create a CKD volume from unloaded PDS files
@@ -1517,7 +1808,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.33</h2>
+<h2>What's new in Version 1.33</h2>
 <p>Release date: 26 Oct 1999
 <ul>
 <li>Write support for SCSI tapes and AWSTAPE files
@@ -1531,7 +1822,7 @@ Beattie)
 
 <!-- ---------------------------------------------------------------------------- -->
 
-<h2>What's new in release 1.32</h2>
+<h2>What's new in Version 1.32</h2>
 <p>Release date: 18 Oct 1999
 <ul>
 <li>Support for virtual tapes in OMA (Optical Media Attach) format

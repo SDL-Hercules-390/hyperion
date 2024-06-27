@@ -13,7 +13,7 @@ r 218=A7390003     # LGHI R3,3         R3=DRM 3 (round down)
 r 21C=B29D0314     #B LFPC FPCREG      Load value into FPC register
 r 220=B2B93000     # SRNMT 0(R3)       Set DFP rounding mode from R3
 r 224=B3D50874     # LEDTR F7,0,F4,8   Load FPR7 from FPR4
-r 228=B38C0090     # EFPC R9           R9=Copy of FPC register  
+r 228=B38C0090     # EFPC R9           R9=Copy of FPC register
 r 22C=7070F000     # STE R7,0(,R15)    Store FPR7 in result table
 r 230=5090F004     # ST R9,4(R15)      Store FPC in table
 r 234=41F0F008     # LA R15,8(,R15)    R15=>next result table
@@ -24,17 +24,17 @@ r 244=46000210     # BCT R0,A          Loop to end of TEST table
 r 248=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
+r 314=00000000     # FPCREG            Floating point control register
 r 320=A234000000000005                 # TEST1 DC DD'-0.5'
 r 328=A238000000000000                 # TEST2 DC DD'-0'
-r 330=2234000000000035                 # TEST3 DC DD'3.5' 
+r 330=2234000000000035                 # TEST3 DC DD'3.5'
 r 338=7823456789ABCDEF                 # TEST4 DC DD'INF'
-r 340=7EABCDEF01234566                 # TEST5 DC DD'SNAN' 
+r 340=7EABCDEF01234566                 # TEST5 DC DD'SNAN'
 ostailor null
 pgmtrace +7
 restart
 pause 1
 * Display test data
-r 320.28 
+r 320.28
 * Display results
-r 400.50 
+r 400.50

@@ -1,9 +1,9 @@
-* This file was put into the public domain 2016-06-05 
-* by John P. Hartmann.  You can use it for anything you like, 
-* as long as this notice remains. 
-* 
-* While some of the constants are rather extreme, this file 
-* may be useful for a source of hexadecimal constants with ASMA 
+* This file was put into the public domain 2016-06-05
+* by John P. Hartmann.  You can use it for anything you like,
+* as long as this notice remains.
+*
+* While some of the constants are rather extreme, this file
+* may be useful for a source of hexadecimal constants with ASMA
                         F50008799CDCBEFF
  DC X'3CB9B888EBFBB6EF  F50008799CDCBEFF'        LB'09388667083711153328546184797976114503588624E-295'
  DC X'FFFFFFFF'                                  eh'-(max)'

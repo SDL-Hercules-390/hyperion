@@ -1,4 +1,5 @@
 /* FBADASD.C    (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2023                             */
 /*              ESA/390 FBA Direct Access Storage Device Handler     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -63,16 +64,17 @@ static int fba_read (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat);
 /*-------------------------------------------------------------------*/
 int fba_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
-int     rc;                             /* Return code               */
-struct  stat statbuf;                   /* File information          */
-int     startblk;                       /* Device origin block number*/
-int     numblks;                        /* Device block count        */
-BYTE    c;                              /* Character work area       */
-char   *cu = NULL;                      /* Specified control unit    */
-int     cfba = 0;                       /* 1 = Compressed fba        */
-int     i;                              /* Loop index                */
-CKD_DEVHDR      devhdr;                 /* Device header             */
-CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
+CKD_DEVHDR   devhdr;                    /* Device header             */
+CCKD_DEVHDR  cdevhdr;                   /* Compressed device header  */
+int          rc;                        /* Return code               */
+struct stat  statbuf;                   /* File information          */
+int          startblk;                  /* Device origin block number*/
+int          numblks;                   /* Device block count        */
+BYTE         c;                         /* Character work area       */
+char        *cu = NULL;                 /* Specified control unit    */
+bool         cfba = false;              /* true = Compressed fba     */
+int          i;                         /* Loop index                */
+char         filename[FILENAME_MAX+3];  /* work area for display     */
 
     /* For re-initialisation, close the existing file, if any */
     if (dev->fd >= 0)
@@ -94,6 +96,11 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
 
     /* Save the file name in the device block */
     hostpath(dev->filename, argv[0], sizeof(dev->filename));
+
+    if (!strchr( dev->filename, SPACE ))
+        MSGBUF( filename, "%s", dev->filename );
+    else
+        MSGBUF( filename, "'%s'", dev->filename );
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Device is shareable */
@@ -151,7 +158,7 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
     {
         dev->cckd64 = 0;
 
-        cfba = 1;
+        cfba = true;
 
         /* Read the compressed device header */
         rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE);
@@ -193,8 +200,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
                 continue;
             }
 
-            // "%1d:%04X FBA file: parameter %s in argument %d is invalid"
-            WRMSG( HHC00503, "E", LCSS_DEVNUM, argv[i], i + 1 );
+            // "%1d:%04X %s file: parameter %s in argument %d is invalid"
+            WRMSG( HHC00503, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), argv[i], i + 1 );
             return -1;
         }
     }
@@ -212,6 +219,14 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
     else
     {
         dev->cckd64 = 0;
+
+        if (dev->dasdsfn || dev->dasdsfx)
+        {
+            // "%1d:%04X %s file %s: shadow files not supported for %s dasd"
+            WRMSG( HHC00469, "E", LCSS_DEVNUM, FBATYP( cfba, dev->cckd64 ),
+                filename, FBATYP( cfba, dev->cckd64 ) );
+            return -1;
+        }
 
         /* Determine the device size */
         rc = fstat (dev->fd, &statbuf);
@@ -259,8 +274,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                // "%1d:%04X FBA file %s: invalid device origin block number %s"
-                WRMSG( HHC00505, "E", LCSS_DEVNUM, dev->filename, argv[1] );
+                // "%1d:%04X %s file %s: invalid device origin block number %s"
+                WRMSG( HHC00505, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), dev->filename, argv[1] );
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -275,8 +290,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                // "%1d:%04X FBA file %s: invalid device block count %s"
-                WRMSG( HHC00506, "E", LCSS_DEVNUM, dev->filename, argv[2] );
+                // "%1d:%04X %s file %s: invalid device block count %s"
+                WRMSG( HHC00506, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), dev->filename, argv[2] );
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -288,8 +303,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
     if (!dev->quiet)
-        // "%1d:%04X FBA file %s: origin %"PRId64", blks %d"
-        WRMSG( HHC00507, "I", LCSS_DEVNUM,
+        // "%1d:%04X %s file %s: origin %"PRId64", blks %d"
+        WRMSG( HHC00507, "I", LCSS_DEVNUM, FBATYP( cfba, 0 ),
                dev->filename, dev->fbaorigin, dev->fbanumblk );
 
     /* Set number of sense bytes */
@@ -299,8 +314,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        // "%1d:%04X FBA file %s: device type %4.4X not found in dasd table"
-        WRMSG( HHC00508, "E", LCSS_DEVNUM, dev->filename, dev->devtype );
+        // "%1d:%04X %s file %s: device type %4.4X not found in dasd table"
+        WRMSG( HHC00508, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), dev->filename, dev->devtype );
         close (dev->fd);
         dev->fd = -1;
         return -1;
@@ -362,14 +377,14 @@ void fba_dasd_query_device (DEVBLK *dev, char **devclass,
 /*-------------------------------------------------------------------*/
 /* Calculate length of an FBA block group                            */
 /*-------------------------------------------------------------------*/
-static int fba_blkgrp_len (DEVBLK *dev, int blkgrp)
+static int fba_blkgrp_len (DEVBLK *dev, S64 blkgrp)
 {
 off_t   offset;                         /* Offset of block group     */
 
     offset = blkgrp *          CFBA_BLKGRP_SIZE;
 
     if (dev->fbaend - offset < CFBA_BLKGRP_SIZE)
-        return (int)(dev->fbaend - offset);
+         return (int)(dev->fbaend - offset);
     else
         return                 CFBA_BLKGRP_SIZE;
 }
@@ -584,8 +599,11 @@ fba_read_blkgrp_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        // "%1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
-        LOGDEVTR( HHC00516, "I", dev->filename, blkgrp, i );
+        // "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0516( dev, blkgrp, i );
+        else
+            LOGDEVTR( HHC00516, "I", dev->filename, blkgrp, i );
 
         dev->cachehits++;
         dev->cache = i;
@@ -601,16 +619,22 @@ fba_read_blkgrp_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        // "%1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
-        LOGDEVTR( HHC00517, "I", dev->filename, blkgrp );
+        // "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0517( dev, blkgrp );
+        else
+            LOGDEVTR( HHC00517, "I", dev->filename, blkgrp );
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto fba_read_blkgrp_retry;
     }
 
     /* Cache miss */
-    // "%1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
-    LOGDEVTR( HHC00518, "I", dev->filename, blkgrp, o );
+    // "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0518( dev, blkgrp, o );
+    else
+        LOGDEVTR( HHC00518, "I", dev->filename, blkgrp, o );
 
     dev->cachemisses++;
 
@@ -625,8 +649,11 @@ fba_read_blkgrp_retry:
     offset = (off_t)((S64)blkgrp * CFBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    // "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
-    LOGDEVTR( HHC00519, "I", dev->filename, blkgrp, offset, fba_blkgrp_len( dev, blkgrp ));
+    // "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
+    if (dev->ccwtrace && sysblk.traceFILE)
+        tf_0519( dev, blkgrp, offset, fba_blkgrp_len( dev, blkgrp ));
+    else
+        LOGDEVTR( HHC00519, "I", dev->filename, blkgrp, offset, fba_blkgrp_len( dev, blkgrp ));
 
     /* Seek to the block group offset */
     offset = lseek (dev->fd, offset, SEEK_SET);
@@ -1084,8 +1111,11 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbalcblk - dev->fbaxfirst
                       ) * dev->fbablksiz;
 
-        // "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
-        LOGDEVTR( HHC00520, "I", dev->filename, dev->fbarba, dev->fbarba );
+        // "Thread "TIDPAT" %1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
+        if (dev->ccwtrace && sysblk.traceFILE)
+            tf_0520( dev );
+        else
+            LOGDEVTR( HHC00520, "I", dev->filename, dev->fbarba, dev->fbarba );
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -1204,9 +1234,11 @@ int     repcnt;                         /* Replication count         */
 
         if (dev->hnd->release) (dev->hnd->release) (dev);
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 0;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 0;
+        }
+        RELEASE_DEVLOCK( dev );
 
         /* Return sense information */
         goto sense;
@@ -1225,9 +1257,11 @@ int     repcnt;                         /* Replication count         */
 
         /* Reserve device to the ID of the active channel program */
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 1;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 1;
+        }
+        RELEASE_DEVLOCK( dev );
 
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
 
@@ -1248,9 +1282,11 @@ int     repcnt;                         /* Replication count         */
 
         /* Reserve device to the ID of the active channel program */
 
-        obtain_lock (&dev->lock);
-        dev->reserved = 1;
-        release_lock (&dev->lock);
+        OBTAIN_DEVLOCK( dev );
+        {
+            dev->reserved = 1;
+        }
+        RELEASE_DEVLOCK( dev );
 
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
 

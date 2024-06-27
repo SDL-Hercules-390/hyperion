@@ -41,8 +41,16 @@ a real System/390.  The configuration file is an ASCII text file.
     #                       <a href="#system_parameters">SYSTEM PARAMETERS</a>
     #------------------------------------------------------------------
 
-    <a href="#ARCHLVL">##ARCHMODE</a>   ESA/390                                  (deprecated)
-    <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated)
+    <a href="#HERCPRIO">##HERCPRIO</a>   0                                        (deprecated; unsupported)
+    <a href="#HERCPRIO">##TODPRIO</a>    -20                                      (deprecated; unsupported)
+    <a href="#HERCPRIO">##DEVPRIO</a>    8                                        (deprecated; unsupported)
+    <a href="#HERCPRIO">##CPUPRIO</a>    0                                        (deprecated; unsupported)
+
+    <a href="#ARCHLVL">##ARCHMODE</a>   ESA/390                                  (deprecated; use ARCHLVL)
+    <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated; use FACILITY)
+
+    <a href="#PANRATE">##PANRATE</a>    FAST                                     (deprecated; use PANOPT)
+    <a href="#PANTITLE">##PANTITLE</a>   "My own private MAINFRAME!"              (deprecated; use PANOPT)
 
     <a href="#ARCHLVL">ARCHLVL</a>    ESA/390
     <a href="#FACILITY">FACILITY</a>   ENABLE 044_PFPO
@@ -84,13 +92,12 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CCKD">CCKD</a>       NOSFD=1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
-    <a href="#PANOPT">PANOPT</a>     NAMEONLY
-    <a href="#PANRATE">PANRATE</a>    FAST
-    <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
+    <a href="#PANOPT">PANOPT</a>     NAMEONLY RATE=FAST MSGCOLOR=DARK "TITLE=My own private MAINFRAME!"
+    <a href="#LOGOPT">LOGOPT</a>     TIMESTAMP NODATESTAMP
 
-    <a href="#LOGOPT">LOGOPT</a>     NODATESTAMP TIMESTAMP
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270
+    <a href="#SYSGPORT">SYSGPORT</a>   3278
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
 
@@ -152,9 +159,11 @@ a real System/390.  The configuration file is an ASCII text file.
     0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
     0420.2    <a href="#CTCI">CTCI</a>    192.168.200.1  192.168.200.2
     0430.2    <a href="#CTCI">CTCI</a>    tun0
+    #0E40      <a href="#LCS">LCS</a>     -e <a href="#SNA">SNA</a>  tap0
     0E40      <a href="#CTCE">CTCE</a>    31880  192.168.1.202  32880
     0E41      <a href="#CTCE">CTCE</a>    31882  192.168.1.202  32882
-    0E42.2    <a href="#CTCE">CTCE</a>         1=192.168.1.202            
+
+    0E42.2    <a href="#CTCE">CTCE</a>         1=192.168.1.202
     0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
     0470.2    <a href="#PTP">PTP</a>     tun0
 
@@ -226,7 +235,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="ASN_AND_LX_REUSE"></a>
-<dt><code>ASN_AND_LX_REUSE &nbsp; <u>ENABLE</u> &#124; DISABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+<dt><code>ASN_AND_LX_REUSE &nbsp; <u>ENABLE</u> &#124; DISABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated; use FACILITY)</i>
 <dd><p>
     Specifies whether the ASN-and-LX-Reuse Facility (ALRF) should be enabled
     or disabled. The default is enabled. This is a z/Architecture-only feature
@@ -356,18 +365,19 @@ a real System/390.  The configuration file is an ASCII text file.
     Facility. It must be a power of 2 value ranging anywhere from 1 to 12.
     <p>
 
-<a name="CNSLPORT"></a>
-<dt><code>CNSLPORT &nbsp; <i>nnnn</i></code> &nbsp; &nbsp; <i>-or-</i> &nbsp; &nbsp;<code><i>host:port</i></code>
+<a  name="CNSLPORT"></a>
+<dt><code>CNSLPORT &nbsp; <i><u>3270</u></i> &nbsp;<i>-or-</i> &nbsp;<i>nnnn</i> &nbsp;<i>-or-</i> &nbsp;<i>host:port</i></code>
 <dd><p>
     Specifies (typically) the port number (in decimal) to which tn3270
     and telnet clients should connect. If an invalid value is specified
-    Hercules defaults to port 3270.
+    Hercules defaults to port number <u>3270</u>.
+    See also the <a href="#SYSGPORT"><code>SYSGPORT</code></a> statement.
     <p>
     The <code>CNSLPORT</code> statement may also be specified as
     <code>host:port</code>, where <code>host</code> identifies the
     IP address of the host interface the telnet console server should
     bind to (listen for connections on). If not specified the server
-    will accept connections from any host interface.
+    will accept connections on the port from any host interface.
     <p>
     See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a telnet or tn3270 client.
@@ -416,10 +426,10 @@ a real System/390.  The configuration file is an ASCII text file.
             <td><center>no</center></td>
         </tr>
 
-        <tr><td align="center"><code>819/037</code></td>
-            <td>819 ISO-8859-1</td>
-            <td>037 United States/Canada</td>
-            <td><center>YES</center></td>
+        <tr><td align="center"><b><code>819/037</code></b></td>
+            <td><b>819 ISO-8859-1</b></td>
+            <td><b>037 United States/Canada</b></td>
+            <td><b><center>YES</center></b></td>
         </tr>
 
         <tr><td align="center"><code>819/037v2</code></td>
@@ -470,10 +480,10 @@ a real System/390.  The configuration file is an ASCII text file.
             <td><center>YES</center></td>
         </tr>
 
-        <tr><td align="center"><code>819/500</code></td>
-            <td>819 ISO-8859-1</td>
-            <td>500 International</td>
-            <td><center>YES</center></td>
+        <tr><td align="center"><b><code>819/500</code></b></td>
+            <td><b>819 ISO-8859-1</b></td>
+            <td><b>500 International</b></td>
+            <td><b><center>YES</center></b></td>
         </tr>
 
         <tr><td align="center"><b><code>819/1047</code></b></td>
@@ -518,10 +528,10 @@ a real System/390.  The configuration file is an ASCII text file.
             <td><center>YES</center></td>
         </tr>
 
-        <tr><td align="center"><code>ISOANSI/037</code></td>
-            <td>ISO ANSI</td>
-            <td>037 United States/Canada</td>
-            <td><center>YES</center></td>
+        <tr><td align="center"><b><code>ISOANSI/037</code></b></td>
+            <td><b>ISO ANSI</b></td>
+            <td><b>037 United States/Canada</b></td>
+            <td><b><center>YES</center></b></td>
         </tr>
 
     </table>
@@ -548,40 +558,58 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <p>
 
-    The recommended code page is "<b>819/1047</b>", as it is both transparent
-    and properly translates <i><u>all</u></i> ASCII characters to their EBCDIC
-    equivalents, including all extended ASCII characters such as
-
-    '[' (left square bracket),
-    '\' (backslash),
-    ']' (right square bracket),
-    '^' (caret / circumflex),
-    '_' (underscore),
-    '`' (grave / accent),
-    '{' (left curly bracket),
-    '|' (vertical bar),
-    '}' (right curly bracket),
-    '~' (tilde),
-    '&cent;' (cent),
-    '&pound;' (pound),
-    '&curren;' (Currency sign),
-    '&yen;' (yen, yuan),
-    '&brvbar;' (broken bar),
-    '&sect;' (section sign),
-    '&copy;' (copyright),
-    '&ordf;' (feminine ordinal indicator),
-    '&reg;' (registered trademark),
-    '&deg;' (degree),
-    '&plusmn;' (plus-minus),
-    '&micro;' (mu/micro),
-    '&para;' (pilcrow/paragraph),
-    '&ordm;' (masculine ordinal indicator),
-    '&iquest;' (inverted question mark),
-    '&times;' (multiplication sign),
-    '&divide;' (obelus/divide sign).
+    The recommended code page for Linux guests is
+    "<b>819/500</b>",
+    as it is both transparent and appears to be the code
+    page that s390x Linux actually uses, thus allowing
+    boot/startup messages to be parsed and displayed properly.
 
     <p>
 
+    The recommended code page for non-Linux guests (e.g. z/OS, etc) is
+    "<b>819/1047</b>", as it is both transparent and properly translates
+    all ASCII characters to their EBCDIC equivalents,
+    including all extended ASCII characters too, such as:
+
+    <p>
+
+<blockquote>
+<table style="width:25%">
+
+<tr><td style="text-align:center">!</td><td style="text-align:left"> &nbsp; &nbsp; exclamation point</td></tr>
+<tr><td style="text-align:center">[</td><td style="text-align:left"> &nbsp; &nbsp; left square bracket</td></tr>
+<tr><td style="text-align:center">]</td><td style="text-align:left"> &nbsp; &nbsp; right square bracket</td></tr>
+<tr><td style="text-align:center">{</td><td style="text-align:left"> &nbsp; &nbsp; left curly bracket</td></tr>
+<tr><td style="text-align:center">}</td><td style="text-align:left"> &nbsp; &nbsp; right curly bracket</td></tr>
+<tr><td style="text-align:center">|</td><td style="text-align:left"> &nbsp; &nbsp; solid vertical bar</td></tr>
+<tr><td style="text-align:center">&brvbar;</td><td style="text-align:left"> &nbsp; &nbsp; broken vertical bar</td></tr>
+<tr><td style="text-align:center">\</td><td style="text-align:left"> &nbsp; &nbsp; backslash</td></tr>
+<tr><td style="text-align:center">&not;</td><td style="text-align:left"> &nbsp; &nbsp; logical not</td></tr>
+<tr><td style="text-align:center">^</td><td style="text-align:left"> &nbsp; &nbsp; caret / circumflex</td></tr>
+<tr><td style="text-align:center">_</td><td style="text-align:left"> &nbsp; &nbsp; underscore</td></tr>
+<tr><td style="text-align:center">`</td><td style="text-align:left"> &nbsp; &nbsp; grave accent</td></tr>
+<tr><td style="text-align:center">~</td><td style="text-align:left"> &nbsp; &nbsp; tilde</td></tr>
+<tr><td style="text-align:center">&cent;</td><td style="text-align:left"> &nbsp; &nbsp; cent</td></tr>
+<tr><td style="text-align:center">&pound;</td><td style="text-align:left"> &nbsp; &nbsp; pound</td></tr>
+<tr><td style="text-align:center">&curren;</td><td style="text-align:left"> &nbsp; &nbsp; currency sign</td></tr>
+<tr><td style="text-align:center">&yen;</td><td style="text-align:left"> &nbsp; &nbsp; yen</td></tr>
+<tr><td style="text-align:center">&sect;</td><td style="text-align:left"> &nbsp; &nbsp; section sign</td></tr>
+<tr><td style="text-align:center">&para;</td><td style="text-align:left"> &nbsp; &nbsp; pilcrow/paragraph</td></tr>
+<tr><td style="text-align:center">&copy;</td><td style="text-align:left"> &nbsp; &nbsp; copyright symbol</td></tr>
+<tr><td style="text-align:center">&reg;</td><td style="text-align:left"> &nbsp; &nbsp; registered trademark</td></tr>
+<tr><td style="text-align:center">&ordf;</td><td style="text-align:left"> &nbsp; &nbsp; feminine ordinal indicator</td></tr>
+<tr><td style="text-align:center">&deg;</td><td style="text-align:left"> &nbsp; &nbsp; degree</td></tr>
+<tr><td style="text-align:center">&ordm;</td><td style="text-align:left"> &nbsp; &nbsp; masculine ordinal indicator</td></tr>
+<tr><td style="text-align:center">&plusmn;</td><td style="text-align:left"> &nbsp; &nbsp; plus-minus</td></tr>
+<tr><td style="text-align:center">&micro;</td><td style="text-align:left"> &nbsp; &nbsp; mu/micro</td></tr>
+<tr><td style="text-align:center">&iquest;</td><td style="text-align:left"> &nbsp; &nbsp; inverted question mark</td></tr>
+<tr><td style="text-align:center">&times;</td><td style="text-align:left"> &nbsp; &nbsp; multiplication sign</td></tr>
+<tr><td style="text-align:center">&divide;</td><td style="text-align:left"> &nbsp; &nbsp; obelus/divide sign</td></tr>
+
+</table>
+</blockquote>
+
+    <p>
 
 <a name="CONKPALV"></a>
 <dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>
@@ -650,15 +678,66 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUMODEL"></a>
-<dt><code>CPUMODEL &nbsp; <u>0586</u> &#124; <em>xxxx</em></code>
+<dt><code>CPUMODEL &nbsp; <u>0586</u> &#124; <em>xxxx</em> &#124; <em>$(symbol)</em></code>
 <dd><p>
     Specifies the 4 hexadecimal digit CPU machine type number (known prior
     to ESA/390 as the model number) stored by the STIDP instruction.
     <p>
-    <i><b>Note:</b></i> Hercules makes no attempt to emulate all aspects of,
+    To make it easier to specify the model number for certain known models,
+    the following <a href="#DEFSYM">symbols</a> are now automatically
+    predefined starting with Hercules version 4.4:
+    <p>
+        <table style="width:25%">
+          <tr>
+            <th>Symbol</th>
+            <th>Model</th>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>zPDT</code></td>
+            <td style="text-align:center"><code>1090</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>EC12</code></td>
+            <td style="text-align:center"><code>2827</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>BC12</code></td>
+            <td style="text-align:center"><code>2828</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z13</code></td>
+            <td style="text-align:center"><code>2964</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z13s</code></td>
+            <td style="text-align:center"><code>2965</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z14</code></td>
+            <td style="text-align:center"><code>3906</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z14ZR1</code></td>
+            <td style="text-align:center"><code>3907</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z15</code></td>
+            <td style="text-align:center"><code>8561</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z15T02</code></td>
+            <td style="text-align:center"><code>8562</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z16</code></td>
+            <td style="text-align:center"><code>3931</code></td>
+          </tr>
+        </table>
+    <p>
+    <i><b>Note:</b> Hercules makes no attempt to emulate all aspects of,
     or features of, a given CPU model. The CPUMODEL statement defines a purely
     cosmetic value only. It defines only the value that the STIDP (Store CPU
-    ID) instruction stores, and nothing more.
+    ID) instruction stores, and nothing more.</i>
     <p>
 
 <a name="CPUSERIAL"></a>
@@ -674,13 +753,25 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUVERID"></a>
-<dt><code>CPUVERID &nbsp; <u>FD</u> &#124; <em>xx</em></code>
+<dt><code>CPUVERID &nbsp; <u>FD</u> &#124; <em>xx</em> &nbsp; [FORCE]</code>
 <dd><p>
     Specifies the 2 hexadecimal digit CPU version code stored by the STIDP
-    instruction when the architecture mode is S/370 or ESA390. When the
-    architecture mode is z/Arch the version code is always stored as
-    <code>00</code> and the value specified here is ignored. The default
-    version code is <code>FD</code> unless changed.
+    instruction.
+    <p>
+    The default cpuverid version code at startup is <b>FD</b>, and that value will
+    be stored by the STIDP instruction -- <i>even for z/Arch</i> -- unless and <i>UNTIL</i>
+    you set it to a different value via the <code>cpuverid</code> command/statement.
+    <p>
+    If you try using the <code>cpuverid</code> command/statement to set a non-zero cpuverid
+    value when the architecture mode is currently set to z/Arch, the version
+    code stored by the STIDP instruction will <i><u>still</u></i> be stored as 00 anyway,
+    <i><u>unless</u></i> ... the <code>FORCE</code> option is used. For z/Arch, the <code>FORCE</code> option is
+    the <i><u>only</u></i> way to cause the cpuverid command to force the STIDP instruction
+    to store a non-zero version code. (But as explained, at startup, the value
+    stored will still be FD even for z/Arch, since that is Hercules's default version
+    code value. This means if you want your STIDP version code to be 00 for <b>z/Arch</b>, then you
+    <i><u>must</u></i> use a <code>cpuverid</code> command/statement in your configuration file
+    to set it to that value.)
     <p>
 
 <a name="DEFSYM"></a>
@@ -840,7 +931,8 @@ a real System/390.  The configuration file is an ASCII text file.
     Specifies a particular STFL/STFLE facility to be enabled or disabled,
     or a request to query of the current settings. Use <code>QUERY ALL</code>
     to obtain a list of valid <code><em>facility</em></code> &nbsp;names
-    that may be used for the given archlvl.
+    that may be used for the given archlvl. Enter <code>help facility</code>
+    for detailed <code>FACILITY</code> command/statement use.
    <p>
     Alternatively, you can also specify the actual STFL/STFLE bit number
     to be turned off or on (disabled or enabled) using the format
@@ -864,17 +956,42 @@ a real System/390.  The configuration file is an ASCII text file.
     or the default mode if there was no preceding ARCHLVL statement.
    <p>
 
+<a name="HERCPRIO"></a>
+<dt><code>HERCPRIO &nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; unsupported)</i>
+<dt><code>TODPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; unsupported)</i>
+<dt><code>DEVPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; unsupported)</i>
+<dt><code>CPUPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; unsupported)</i>
+<dd><p>
+    The ability to define process and thread priorities has been
+    <a href="hercrnot.html#4.1">removed</a> from SDL Hyperion as of version
+    <a href="hercrnot.html#4.1">4.1</a>. You should remove all such statements
+    from your configuration file.
+    <p>
+
 <a name="HTTPPORT"></a>
 <dt><code>HTTP &nbsp; PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
 <dd><p>
     Specifies the port number (in decimal) on which the HTTP server
     will listen. The port number must either be 80
-    or within the range 1024 - 65535 inclusive. The server is not start until a subsequent
+    or within the range 1024 - 65535 inclusive. The server is not started until a subsequent
     <code><a href="#HTTPSTRT">HTTP START</a></code> statement is found.
     <p>
     <tt>AUTH</tt> indictates that a userid and password are required to access
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
+    <p>
+    <i><b><u>Security Alert!</u></b> &nbsp;When <tt>AUTH</tt> is specified
+    (and specifying a userid and password is thus required), one must exercise
+    due diligence to prevent unauthorized access to Hercules's configuration file
+    that contains those userids and passwords.
+    </i>
+    <p>
+    <i><b><u>Security Alert!</u></b> &nbsp;The HTTP Server currently utilizes the
+    insecure "http" protocol, not the more secure "https" protocol. All commands
+    and responses are transmitted over the network in the clear, allowing anyone
+    sniffing network traffic to see everything you do and possibly inject unauthorized
+    commands of their own. Exercise caution when using the HTTP Server feature.
+    </i>
     <p>
 
 <a name="HTTPROOT"></a>
@@ -929,7 +1046,7 @@ a real System/390.  The configuration file is an ASCII text file.
     on a real machine because we may present an I/O interrupt sooner than a
     real machine.
     <p>
-    NOTE : <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
+    NOTE: <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
     IODELAY to 800 since the problem described above is no longer present in
     recent versions of the Linux kernel.
     <p>
@@ -973,8 +1090,17 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="LOADPARM"></a>
 <dt><code>LOADPARM &nbsp; <em>xxxxxxxx</em></code>
 <dd><p>
-    Specifies the eight-character IPL parameter which is used
-    by some operating systems to select system parameters.
+    Specifies the <i>default</i> eight-character IPL parameter used by
+    some operating systems to select system parameters.
+    <p>
+    The specified value is used as the <code>IPL</code> command's default
+    <code>LOADPARM</code> option parameter when the <code>IPL</code>
+    command is issued without the <code>LOADPARM</code> option. Regardless
+    of the value specified for this setting, the value can alway be
+    overridden by specifying a different value for the <code>LOADPARM</code>
+    option on the <code>IPL</code> command itself. The LOADPARM configuration
+    file option simply specifies a <i>default</i> value that will be used
+    unless overridden with a different value on the IPL command itself.
     <p>
 
 <a name="LOGOPT"></a>
@@ -1047,9 +1173,9 @@ a real System/390.  The configuration file is an ASCII text file.
     rounded up to the next 4K boundary. Otherwise, storage sizes not on
     a 1M boundary are rounded up to the next 1M boundary.
     <p>
-    The minimum size is 4K for S/370 and ESA/390, and 8K for
-    z/Arch.  A maximum of 64M may be specified for S/370,
-    2048M (2G) for ESA/390, and 16E for z/Arch.
+    The minimum size is 64K for S/370 and 1M for ESA/390 and
+    z/Arch.  A maximum of 2G may be specified for S/370 and
+    ESA/390, and 16E for z/Arch.
     <p>
     <b>Notes:</b>
     <ol><p><li>
@@ -1075,8 +1201,9 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="MANUFACTURER"></a>
 <dt><code>MANUFACTURER &nbsp; <em>name</em></code>
 <dd><p>
-    Specifies the MANUFACTURER name returned the STSI instruction.  The default is
-    <code>HRC</code>.
+    Specifies the 1-16 character MANUFACTURER name returned the STSI instruction.
+    Valid characters are 0-9 and uppercase A-Z only.
+    The default is <code>HRC</code>.
     <p>
 
 <a name="MAXCPU"></a>
@@ -1088,31 +1215,31 @@ a real System/390.  The configuration file is an ASCII text file.
     All processors are CP engines unless otherwise specified by the
     <a href="#ENGINES">ENGINES</a> statement.
     <p>
-    The value of MAXCPU cannot exceed the value of <code>MAX_CPU_ENGINES</code>.
+    The value of MAXCPU cannot exceed the value of <code>MAX_CPU_ENGS</code>.
 
     If MAXCPU is not specified in the Hercules configuration file,
     then its initial value is equal to NUMCPU.
 
     If MAXCPU and NUMCPU are both omitted, MAXCPU is set to 1.
     <p>
-    <code>MAX_CPU_ENGINES</code> is a compile-time variable which sets
+    <code>MAX_CPU_ENGS</code> is a compile-time variable which sets
     an upper limit on the value of MAXCPU.
-    The value of <code>MAX_CPU_ENGINES</code> is displayed in the
+    The value of <code>MAX_CPU_ENGS</code> is displayed in the
     Build information message on the Hercules control panel at startup time.
-    To change the value of <code>MAX_CPU_ENGINES</code> you must rebuild
+    To change the value of <code>MAX_CPU_ENGS</code> you must rebuild
     Hercules.
     For Unix builds, specify
     <tt>./configure --enable-multi-cpu=<em>nn</em></tt>
     before performing make.
     For Windows builds, specify
-    <tt>SET MAX_CPU_ENGINES=<em>nn</em></tt>
+    <tt>SET MAX_CPU_ENGS=<em>nn</em></tt>
     before performing nmake.
     <p>
-    <code>MAX_CPU_ENGINES</code> cannot exceed 64. For performance reasons,
+    <code>MAX_CPU_ENGS</code> cannot exceed 64. For performance reasons,
     values above 32 are not recommended for 32-bit platforms.
-    If <code>MAX_CPU_ENGINES</code> is set to 1 then multiprocessing is disabled.
+    If <code>MAX_CPU_ENGS</code> is set to 1 then multiprocessing is disabled.
     See also <a href="#NUMCPU">NUMCPU</a> for a discussion of the performance
-    implications of <code>MAX_CPU_ENGINES</code>.
+    implications of <code>MAX_CPU_ENGS</code>.
     <p>
 
 <a name="MODEL"></a>
@@ -1122,7 +1249,9 @@ a real System/390.  The configuration file is an ASCII text file.
     [ <em>temp_capacity_model</em> ]
     </code>
 <dd><p>
-    Specifies the MODEL names returned by the STSI instruction.
+    Specifies the 1-16 character MODEL names returned the STSI instruction.
+    Valid characters are 0-9 and uppercase A-Z only.
+    The default is <code>EMULATOR</code>.
     <p>
     If two operands are supplied, the first is the hardware model name (CPC
     ND model) and the second is the capacity model name (CPC SI model).
@@ -1130,8 +1259,6 @@ a real System/390.  The configuration file is an ASCII text file.
     name and the capacity model name.
     The optional third and fourth operands specify the permanent capacity
     model name and the temporary capacity model name respectively.
-    <p>
-    The default is <code>EMULATOR</code>.
     <p>
 
 <a name="MODPATH"></a>
@@ -1227,69 +1354,114 @@ a real System/390.  The configuration file is an ASCII text file.
     There is little point, however, in specifying <tt>NUMCPU</tt> greater
     than 1 unless your guest operating system (running under Hercules) is
     actually able to support multiple CPUs (and if you do not actually need
-    multiprocessor emulation, then setting <tt>MAX_CPU_ENGINES</tt> to 1 at
+    multiprocessor emulation, then setting <tt>MAX_CPU_ENGS</tt> to 1 at
     compile time might even produce a slight performance advantage too).
     <p>
 
 <a name="OSTAILOR"></a>
-<dt><code>OSTAILOR &nbsp; OS/390 &#124; z/OS &#124;
-    VM &#124; VSE &#124; z/VSE &#124; LINUX &#124; OpenSolaris &#124; QUIET &#124; NULL</code>
+<dt><code>OSTAILOR &nbsp; <u>DEFAULT</u> &#124; OS/390 &#124; z/OS
+    &#124; VM &#124; z/VM &#124; VSE &#124; z/VSE &#124; LINUX
+    &#124; OpenSolaris &#124; QUIET &#124; NULL</code>
 <dd><p>
     Specifies the intended operating system.  The effect of this
     parameter is to reduce control panel message traffic by
     selectively suppressing trace messages for program checks
     which are considered normal in the specified environment.
-    <code>QUIET</code> discards all exception messages.
-    <code>NULL</code> allows all exception messages to be logged.
+    <code>QUIET</code> <i>suppresses</i> all exception messages.
+    <code>NULL</code> <i>displays</i> all exception messages.
     <p>
-    Optionally prefix any value except <code>QUIET</code> or
-    <code>NULL</code> with '+' to cause the suppressions for that
+    <i>
+    <b>Note!</b> Neither QUIET nor NULL should <u>ever</u> be used
+    in normal circumstances! QUIET hides what otherwise might be important
+    messages needed to diagnose incorrect Hercules and/or guest functionality.
+    Only use QUIET under the guidance of Hercules product support personnel.
+    Instead, please specify an OSTAILOR value that is appropriate for the guest
+    operating system you intend to run under Hercules, or else let it default
+    by not specifying it at all.
+    </i>
+    <p>
+    If no <code>OSTAILOR</code> statement is specified at all, then <code><u>DEFAULT</u></code>
+    is used, which suppresses only program check messages for interruption codes
+    10 (segment-translation exception), 11 (page-translation exception),
+    16 (trace-table exception) and 1C (space-switch event), which are considered
+    to be completely normal and unremarkable for virtually all known mainframe
+    operating systems.
+    <p>
+    Optionally prefix any value (except <code>QUIET</code> or
+    <code>NULL</code>) with '+' to cause the suppressions for that
     environment to be combined (added) to those already specified,
     or with '-' to remove such suppressions (i.e. to allow them).
     <p>
-    If the <code>OSTAILOR</code>
-    statement is omitted, exception messages for program checks
-    10, 11, 16, and 1C are suppressed.
+    This allows you to, for example, suppress messages for both z/VM
+    as well as for z/OS too (for situations where you intend to run
+    z/OS as a guest under z/VM) by specifying two OSTAILOR statements
+    as follows:
+    <blockquote><code>
+        OSTAILOR &nbsp;z/VM</br>
+        OSTAILOR &nbsp;+Z/OS
+    </code> </blockquote>
     <p>
-    Use the <code>ostailor</code> or <code>pgmtrace</code> panel
-    commands to display or alter the current settings.
+    Use the "<code>pgmtrace</code>" panel command to fine tune the current settings.
     <p>
 
 <a name="PANOPT"></a>
-<dt><code>PANOPT &nbsp; <u>FULLPATH</u> &#124; NAMEONLY </code>
+<dt><code>PANOPT &nbsp; <u>FULLPATH</u>&#124;NAMEONLY RATE=<u>SLOW</u>&#124;FAST&#124;<em>nnn</em> MSGCOLOR=<u>NO</u>&#124;DARK&#124;LIGHT TITLE=xxx</code>
 <dd><p>
-    Defines panel options. The only supported options at this time are
-    <code>NAMEONLY</code> or <code>FULLPATH</code>. The <code>NAMEONLY</code>
-    option requests the panel to display only the emulated device's base
-    filename instead of the fullpath filename, which is the default.
+    Defines panel display options.
+    <code>NAMEONLY</code> requests the extended panel screen (that displays
+    the list of devices and is reached by pressing the ESC key) to display only
+    the emulated device's base filename. The default is <code><u>FULLPATH</u></code>
+    which displays the file's full path filename.
+    <p>
+    <code>RATE=<em>nnn</em></code> specifies the panel refresh rate in
+    milliseconds between screen refreshes. <code>RATE=SLOW</code> is the same as 500.
+    <code>RATE=FAST</code> is the same as 50. A value less than the system clock
+    tick interval or greater than 5000 will be rejected. <code><u>SLOW</u></code> is the default.
+    <p>
+    <code>MSGCOLOR=DARK</code> displays colorized panel messages meant for
+    'dark' panels (such as white text on black background) whereas
+    <code>MSGCOLOR=LIGHT</code> is obviously meant for panels using dark
+    text on light backgrounds. Only 'E' (error), 'W' (warning), 'D' (debug)
+    and 'I' (informational) messages are colorized. Any message not detected
+    as a Hercules "HHCnnnnnX" format message are not colorized. The colors
+    are currently hard coded and cannot be changed. <code><u>NO</u></code> is the
+    default, <i>but <code>DARK</code> or <code>LIGHT</code> (as appropriate for your system)
+    is <b>strongly encouraged</b> as it makes error and warning messages more noticeable
+    and less likely to be missed.</i>
+    <p>
+    <code>TITLE=xxx</code> defines an optional console window title-bar string
+    to be used in place of the default supplied by the windowing system, and allows
+    you to distinguish between different Hercules sessions (instances) running
+    on the same machine. If the value contains any blanks, the entire option
+    specification should be enclosed within double-quotes (e.g. <code>"TITLE=my title"</code>,
+    <i>not</i> &nbsp;<code>TITLE="my title"</code> which is an error).
+    <p>
+    The <code>TITLE=</code> option takes effect only when the Hercules console
+    is displayed on either an xterm terminal (commonly used on Unix systems)
+    or in a Command Prompt window on Windows systems.
+    <p>
+    <b>Note:</b> neither the <code>MSGCOLOR=</code> nor the <code>TITLE=</code> option
+    has any effect when Hercules is run under the control of an external GUI since
+    since Hercules's console window is hidden in favor of using the external GUI's
+    window instead (and the GUI is in control of its own colors). The <code>RATE=</code>
+    option however, controls how often the external GUI will refresh its own window
+    and other user-interface controls. Similarly, the <code>FULLPATH</code> and
+    <code>NAMEONLY</code> option controls how the external GUI displays your list
+    of emulated devices.
     <p>
 
 <a name="PANRATE"></a>
-<dt><code>PANRATE &nbsp; <u>SLOW</u> &#124; FAST &#124; <em>nn</em></code>
+<dt><code>PANRATE &nbsp; <u>SLOW</u> &#124; FAST &#124; <em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; use PANOPT instead)</i>
 <dd><p>
-    Specifies the panel refresh rate, in milliseconds between refreshes. SLOW
-    is the same as 500, and FAST is the same as 50. A value less than the
-    Linux system clock tick interval (10 on Intel, 1 on Alpha), or more than
-    5000, will be rejected. SLOW is the default.
+    This statement has been deprecated in favor of the
+    <code><a href="#PANOPT">PANOPT</a></code> statement instead.
     <p>
 
 <a name="PANTITLE"></a>
-<dt><code>PANTITLE &nbsp; <em>"title-string"</em></code>
+<dt><code>PANTITLE &nbsp; <em>"title-string"</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; use PANOPT instead)</i>
 <dd><p>
-    Specifies an optional console window title-bar string to be used
-    in place of the default supplied by the windowing system. If the value
-    contains any blanks it must be enclosed within double-quotes.
-    <p>
-    This option allows one to distinguish between different Hercules
-    sessions when running more than one instance of Hercules on the same
-    machine.
-    <p>
-    This option takes effect only when the Hercules console is displayed
-    on an xterm terminal (commonly used on Unix systems), or
-    in a Windows command prompt window.
-    Note that this option has no effect when Hercules is run under control
-    of the Hercules GUI since Hercules's console window is hidden in favor
-    of using the GUI's window instead.
+    This statement has been deprecated in favor of the
+    <code><a href="#PANOPT">PANOPT</a></code> statement instead.
     <p>
 
 <a name="PGMPRDOS"></a>
@@ -1321,8 +1493,9 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="PLANT"></a>
 <dt><code>PLANT &nbsp; <em>name</em></code>
 <dd><p>
-    Specifies the PLANT name returned by the STSI instruction.  The default is
-    <code>ZZ</code>.
+    Specifies the 1-4 character PLANT name returned the STSI instruction.
+    Valid characters are 0-9 and uppercase A-Z only.
+    The default is <code>ZZ</code>.
     <p>
 
 <a name="SCSIMOUNT"></a>
@@ -1410,25 +1583,57 @@ a real System/390.  The configuration file is an ASCII text file.
     statement.
     <p>
 
+<a name="SYSGPORT"></a>
+<dt><code>SYSGPORT &nbsp; <i><u>NO</u></i> &nbsp;<i>-or-</i> &nbsp;<i>3278</i> &nbsp;<i>-or-</i> &nbsp;<i>nnnn</i> &nbsp;<i>-or-</i> &nbsp;<i>host:port</i></code>
+<dd><p>
+    Specifies (typically) the port number (in decimal) to which tn3270
+    and telnet clients should use to connect to a <a href="#SYSG">SYSG</a>
+    console device or the value <code>NO</code>. The default is
+    <code><u>NO</u></code>, meaning no separate listening socket
+    will be created for SYSG console connections. If an invalid value
+    is specified Hercules defaults to port number <u>3278</u>.
+    See also the <a href="#CNSLPORT"><code>CNSLPORT</code></a> statement.
+    <p>
+    The <code>SYSGPORT</code> statement may also be specified as
+    <code>host:port</code>, where <code>host</code> identifies the
+    IP address of the host interface the telnet console server should
+    bind to (listen for connections on). If not specified the server
+    will accept connections on the port from any host interface.
+    <p>
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
+    for additional information about setting up a telnet or tn3270 client.
+    <p>
+
 <a name="TIMERINT"></a>
 <dt><code>TIMERINT &nbsp; DEFAULT &#124; <em>nnnn</em></code>
 <dd><p>
-    Specifies the internal timers update interval, in microseconds.  This
-    parameter specifies how frequently Hercules's internal timers-update thread
-    updates the TOD Clock, CPU Timer, and other architectural related
-    clock/timer values.  The default interval is 50 microseconds, which
-    strikes a reasonable balance between clock accuracy and overall host
-    performance. The minimum allowed value is 1 microsecond and the maximum
-    is 1000000 microseconds (i.e. one second). Also note that due to host
-    system limitations and/or design, some hosts might round or
-    <a href="https://en.wikipedia.org/wiki/Timer_coalescing">coalesce</a>
-    microsecond wait intervals up to a longer millisecond interval instead.
+    Specifies the internal timers update interval, in microseconds.
+    This parameter specifies how frequently Hercules's internal
+    timers-update thread updates the TOD Clock, CPU Timer, and other
+    architectural related clock/timer values.
     <p>
-    <i><b>Caution:</b> &nbsp;While a lower TIMERINT value may help
-    increase the accuracy of your guest's TOD Clock and CPU Timer values,
-    it could also have a severe negative impact on the overall performance
-    of your host operating system depending on the priority (or 'nice' value)
-    of the Hercules process itself.
+    When the z/Architecure Transactional-Execution Facility (073_TRANSACT_EXEC)
+    is not installed or enabled, the minimum and default intervals are 1
+    and 50 microseconds respectively, which strikes a reasonable balance
+    between clock accuracy and overall host performance.
+    <p>
+    When the z/Architecure Transactional-Execution Facility <i><u>is</u></i> installed and
+    enabled, the minimum and default intervals are 200 and 400 microseconds.
+    <p>
+    The maximum allowed interval is 999999 microseconds
+    (one microsecond less than one second).
+    <p>
+    Also note that due to host system limitations and/or design, some
+    hosts may round up and/or
+    <a href="https://en.wikipedia.org/wiki/Timer_coalescing">coalesce</a>
+    short microsecond intervals to a much longer millisecond interval instead.
+    <p>
+    <i><b><u>CAUTION!</u></b> &nbsp;While lower TIMERINT values <u>may</u> help increase the accuracy
+    of your guest's TOD Clock and CPU Timer values, it could also have a
+    <b>severe negative impact</b> on host operating system performance as well.
+    You should exercise <u>extreme caution</u> when choosing your TIMERINT value
+    in relationship to the actual process priority (nice value) of the
+    Hercules process itself.
     </i>
     <p>
 
@@ -1562,7 +1767,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
         ...</pre></code>
 <p>
-    In this example, device 0380 will be a 3420 loaded with the AWS tape file in /home/hercules/tapes/scratch.aws
+    In this example, device 0380 will be a 3420 loaded with the AWS tape file in <code>/home/hercules/tapes/scratch.aws</code>
 <h4>Special symbols</h4>
     <h5>Device group symbols</h5>
     <p>
@@ -2331,25 +2536,29 @@ a real System/390.  The configuration file is an ASCII text file.
     The integrated 3270 (SYSG) console is similar to a <a href="#loc3270">local non-SNA
     3270</a> device, except that it is not addressed by subchannel number and it is
     supported only by certain system control programs. The SYSG console is defined
-    like a 3270 device except that the device type is SYSG and the device number is
-    ignored. Only one SYSG console can be defined in a configuration.
+    like a 3270 device except that the device number is ignored (but is usually specified
+    as 0000) and the device type is specified as "SYSG". Only one SYSG console device
+    may be defined in a configuration.
     <p>
 
     Use tn3270 client software to connect to the SYSG console device via the port number
-    specified on the <a href="#CNSLPORT">CNSLPORT</a> statement, just as you would connect
-    to a regular local non-SNA 3270 device.
+    specified on the <a href="#SYSGPORT">SYSGPORT</a> statement if specified <i>(or to
+    the port number specified on the <a href="#CNSLPORT">CNSLPORT</a> statement if not
+    specified)</i>, just as you would connect to a regular local non-SNA 3270 device.
     See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a tn3270 client.
     <p>
 
-    The SYSG console configuration statement recognizes optional arguments which specify
-    <a href="#loc3270group">group name</a> and <a href="#loc3270ipaddr">IP address</a>
-    in the same way as previously described for a <a href="#loc3270">local non-SNA
-    3270</a> device. These optional arguments provide a means to ensure that a given
-    tn3270 client can connect directly to the SYSG console. If the group name and IP
-    address arguments are not specified, then the SYSG console is considered to be a
-    member of the general pool of devices eligible for connection to any incoming
-    tn3270 client.
+    The SYSG console device configuration statement recognizes optional arguments
+    which specify <a href="#loc3270group">group name</a> and
+    <a href="#loc3270ipaddr">IP address</a> in the same way as previously described
+    for a <a href="#loc3270">local non-SNA 3270</a> devices. When the
+    <a href="#SYSGPORT">SYSGPORT</a> statement is not specified, these optional
+    arguments provide an alternate way to ensure that a given tn3270 client
+    can connect directly to the SYSG device. If the group name and IP address
+    arguments are not specified (and no <a href="#SYSGPORT">SYSGPORT</a> statement
+    is specified), then the SYSG console is considered to be a member of the general
+    pool of devices eligible for connection by any incoming tn3270 client.
     <p>
 
 <hr width="50%"><p>
@@ -2375,7 +2584,6 @@ a real System/390.  The configuration file is an ASCII text file.
         Hex     Glyph    Description
 
         0x2F      /       slash (default)
-        0x5C      \       backslash
         0x60      `       backtick
         0x3D      =       equals
         0x7E      ~       tilde
@@ -2595,6 +2803,20 @@ a real System/390.  The configuration file is an ASCII text file.
         This option is deprecated and will be removed in a future
         release.  Please use the more aptly named <code>append</code>
         option instead.
+        <p>
+
+    <dt><code>sockdev</code>
+    <dd><p>
+        Indicates the card punch is a socket device wherein the
+        filename is actually a socket specification instead of a
+        device filename.  When used, there must only be one filename
+        specified in the form: <code>port</code> or <code>host:port</code>.
+        The device then accepts
+        remote connections on the given TCP/IP port,
+        and writes data to the socket instead of to a device
+        file. This allows automatic remote spooling of card punch
+        data. The sockdev option is mutually exclusive with the
+        <code>crlf</code> and <code>append</code> options.
         <p>
 
     </dl>
@@ -2975,7 +3197,7 @@ a real System/390.  The configuration file is an ASCII text file.
             to <code>65535</code>, the latter being the default.
             Decreasing the value from its default may reduce compression
             performance.
-            For compatability with AWSTAPE files created by the P/390,
+            For compatibility with AWSTAPE files created by the P/390,
             specify <code>AWSTAPE</code> with <code>CHUNKSIZE=4096</code>.
             <p>
 
@@ -2983,6 +3205,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <p>
 
+<a name="TAPE_ADD_PARMS"></a>
     <dt>The following additional parameters apply to
         <b><a href="#AWS">AWS</a></b>, <b><a href="#HET">HET</a></b>
         and <b><a href="#FAKETAPE">FakeTape</a></b> virtual tape files:
@@ -3122,7 +3345,7 @@ a real System/390.  The configuration file is an ASCII text file.
             A message is also issued whenever a successful mount or unmount
             is performed.
             <p>
-            A sample guest automount program called 
+            A sample guest automount program called
             <code><a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/util/TMOUNT.txt">TMOUNT</a></code>
             for the DOS/VSE operating system is provided in the
             <code>util</code> subdirectory of the distributed source code.
@@ -3383,11 +3606,16 @@ a real System/390.  The configuration file is an ASCII text file.
         first device of the group being an even numbered device:
 
             <blockquote>
-            <code>0600<b>.3</b> &nbsp; QETH &nbsp;<i>[arguments]</i></code>
+            <code>0600<b>.3</b> &nbsp; QETH &nbsp;<i>[arguments...]</i></code>
             </blockquote>
 
-        The device/emulation type may optionally be specified as <code><b>OSA</b></code>
-        or <code><b>OSD</b></code> instead of <code>QETH</code>.
+        You may also optionally use <code>OSA</code> or <code>OSD</code>
+        as the device/emulation type instead of <code>QETH</code> if desired:
+
+            <blockquote>
+            <code>0600.3 &nbsp; OSA &nbsp;&nbsp;<i>[arguments...]</i></code><br>
+            <code>0600.3 &nbsp; OSD &nbsp;&nbsp;<i>[arguments...]</i></code>
+            </blockquote>
 
         </p>
 
@@ -3405,14 +3633,13 @@ a real System/390.  The configuration file is an ASCII text file.
         <br><br>
 
         <i>
-        <b>Please note</b> that this is still considered to be an
-        <u>experimental driver still under development</u>.
-        Not all of the features or functionality that real OSA devices have
-        are currently supported. For example, the current implementation
-        only supports three devices: the read device, the write device and
-        the datapath device. Real OSA devices support multiple datapath
-        devices. Support for this feature is planned, but is not yet
-        implemented.
+        <b>Please note</b> that this is still considered to be an experimental
+        driver still under development. Not all of the features or functionality
+        that real OSA devices have are currently supported. For example, the
+        current implementation only supports three devices: the read device,
+        the write device and the datapath device. Real OSA devices support
+        multiple datapath devices. Support for this feature is planned, but is
+        not yet implemented.
         </i>
 
         </p>
@@ -3568,9 +3795,16 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <p>
 
-        The LCS device is a "grouped" device that requires 2 (two) device
-        addresses (device numbers) to be defined per LCS group, with the
-        first device of the group being an even numbered device:
+        Beginning with SDL Hyperion version 4.4, an LCS device is now also capable of
+        providing <a href="#SNA">SNA</a> support as well. Refer to the
+        <a href="https://github.com/sdl-hercules-390/hyperion/blob/master/readme/README.SNA.md">README.SNA</a>
+        document for details.
+
+        <p>
+
+        Except when defined as an <a href="#SNA">SNA</a> device, the LCS device is a "grouped" device
+        that requires 2 (two) device addresses (device numbers) to be defined per
+        LCS group, with the first device of the group being an even numbered device:
 
             <blockquote>
             <code>0E20<b>.2</b> &nbsp; LCS &nbsp;<i>[arguments]</i></code>
@@ -3685,6 +3919,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
             The syntax for the OSA Address Table (OAT) is as follows:
             <p>
+<a name="SNA"></a>
 <table border=1 cellpadding=20><tr><td>
 <pre><code>*****************************************************
 * Dev    Mode   Port    Entry specific information  *
@@ -3715,7 +3950,12 @@ ROUTE  00  172.21.3.32  255.255.255.224
                     <dt><code><em>Mode</em></code>
                     <dd>is the operation mode: IP or SNA.
                         <p>
-                        <i><b>Note:</b> &nbsp;the SNA operation mode is not currently implemented.</i>
+                        <i><b>Note:</b> &nbsp;the SNA operation mode is currently
+                        not implemented via the OAT file. Rather, a separate LCS
+                        device with the <code>-e SNA</code> device option must be
+                        specified instead. Refer to the
+                        <a href="https://github.com/sdl-hercules-390/hyperion/blob/master/readme/README.SNA.md">README.SNA</a>
+                        document for details.</i>
                         <p>
 
                     <dt><code><em>Port</em></code>
@@ -3990,14 +4230,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
         networking devices will fail and your guest's networking will not work.
         </i>
 
-        <p>       
+        <p>
         A Hercules CTCE device requires two even-odd pairs of devices, one for
-        reading and the other for writing.  In the previous CTCE version these had 
+        reading and the other for writing.  In the previous CTCE version these had
         to be an even-odd pair of port numbers, whereby only the even port numbers
         had to be specified in the CTCE configuration.  This restriction has now
         been removed.  Any port number > 1024 and < 65534 is allowed.  The CTCE
-        configuration specifies the listening port number at the receiving end, 
-        the sender side port number is a free randomly chosen one. 
+        configuration specifies the listening port number at the receiving end,
+        the sender side port number is a free randomly chosen one.
         <p>
         The socket connection pairs cross-connect,
         the arrows showing the send->receive direction :
@@ -4008,16 +4248,16 @@ ROUTE  00  172.21.3.32  255.255.255.224
         CTCE connected Hercules instances can be hosted on either Unix or Windows
         or MacOS platforms.  Neither side needs to be the same as the other.
         Each side can be different from the other if needed. One side
-        can be Windows and the other side can be Linux if so desired.     
+        can be Windows and the other side can be Linux if so desired.
         <p>
-        The configuration statement for CTCE devices is in one of these 2 possible 
+        The configuration statement for CTCE devices is in one of these 2 possible
         formats (noting that items between [] brackets are optional):
         <p>
-        <dl> <!-- begin CTCE parms -->     
+        <dl> <!-- begin CTCE parms -->
         <dt><code><em>ldevnum</em> &nbsp;&nbsp;&nbsp; CTCE [<em>lport</em>] [<em>rdevnum</em>=]<em>raddress</em> &nbsp; <em>rport</em>  [[<em>mtu</em>]<em>sml</em>] [ATTNDELAY <em>delay</em>] [FICON]</code>
         <dt><code><em>ldevnum</em>[.n]                CTCE [<em>lport</em>] [<em>rdevnum</em>]=<em>raddress</em>       [<em>rport</em>] [[<em>mtu</em>]<em>sml</em>] [ATTNDELAY <em>delay</em>] [FICON]</code>
         </dl> <!-- end CTCE parms -->
-            
+
         <p>
         <dl> <!-- begin required CTCE parameters -->
         <dt>There is only one or two <i>required</i> positional arguments in addition to the <em>ldevnum</em>:
@@ -4027,7 +4267,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dd>The device number (CCUU) on the <i>local</i> system.
                     Please note that this can optionally be followed by <em>.n</em> in
                     which case multiple CTCE devices can be configured with one config
-                    statement.   
+                    statement.
 
                 <p>
 
@@ -4038,7 +4278,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
                 <dt><code><em>rport</em></code>
                 <dd>The listening TCP/IP port number on the <i>remote</i> system.
-                    Please note that this parameter is only required when the 
+                    Please note that this parameter is only required when the
                     <em>rdevnum</em> parameter and the following equal sign are
                     not specified, or when the <em>mtu</em> parameter needs to be
                     specified.  When not required, the default is 3088.
@@ -4054,21 +4294,21 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dt><code><em>lport</em></code>
                 <dd>The listening TCP/IP port number on the <i>local</i> system.
                     The default value is 3088.
-                
+
                 <p>
-                
+
                 <dt><code><em>rdevnum</em></code>
                 <dd>The device number (CCUU) on the <i>remote</i> system.
-                    The default is equal to the <em>ldevnum</em> on the  <i>local</i> system. 
-                    Please note that in case only one or two hexadecimal digits are given (i.e. a		
+                    The default is equal to the <em>ldevnum</em> on the  <i>local</i> system.
+                    Please note that in case only one or two hexadecimal digits are given (i.e. a
                     value up to 255 and thus not a complete device number CCUU), the effective
                     <em>rdevnum</em> will be computed by exclusive-or of this value with the
                     <em>ldevnum</em> specified.  In case <em>.n</em> is given and > 1, this
                     will apply to all <em>ldevnum</em> - <em>rdevnum</em> pairs.  Please see an
                     example of this down below.
 
-                <p>                
-                            
+                <p>
+
                 <dt><code><em>mtu</em></code>
                 <dd>Maximum Transmission Unit buffer size.
                     The default value is 62552 bytes.
@@ -4079,8 +4319,8 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
                 <dt><code><em>sml</em></code>
                 <dd>Small minimum for MTU. The default value is 16 bytes.
-                
-                <p>              
+
+                <p>
 
                 <dt><code><em>delay</em></code>
                 <dd>The number of msec ATTN signals will be delayed for in order
@@ -4110,64 +4350,64 @@ ROUTE  00  172.21.3.32  255.255.255.224
     0E41   CTCE  30882  192.168.1.100  30882 </pre>
         </blockquote>
         <p>
-        
+
                 <p>
         Exploiting the new features of the newer CTCE version 2 format, this can be simplified omitting all port numbers
         <blockquote>
             <p>
             First Hercules PC Host with IP address 192.168.1.100:
             <pre>
-    0E40   CTCE    0E40=192.168.1.200       
+    0E40   CTCE    0E40=192.168.1.200
     0E41   CTCE    0E41=192.168.1.200        </pre>
             <p>
             Second Hercules PC Host with IP address 192.168.1.200:
             <pre>
-    0E40   CTCE    0E40=192.168.1.100       
+    0E40   CTCE    0E40=192.168.1.100
     0E41   CTCE    0E41=192.168.1.100        </pre>
         </blockquote>
         <p>
-        
+
         <p>
         As there are <em>2</em> equal <em>ldevnum</em> - <em>rdevnum</em> pairs, this can be simplified further:
         <blockquote>
             <p>
             First Hercules PC Host with IP address 192.168.1.100:
             <pre>
-    0E40.2 CTCE        =192.168.1.200  30882 </pre>
+    0E40.2 CTCE        =192.168.1.200        </pre>
             <p>
             Second Hercules PC Host with IP address 192.168.1.200:
             <pre>
-    0E40.2 CTCE        =192.168.1.100  30882 </pre>
+    0E40.2 CTCE        =192.168.1.100        </pre>
         </blockquote>
-        <p>        
+        <p>
 
         <p>
         Showing an example of specifying a <em>rdevnum</em> using the exclusive-or operation with a small value:
         <blockquote>
             <p>
             <pre>
-    0E40.4 CTCE       1=192.168.1.200  30882 </pre>
+    0E40.4 CTCE       1=192.168.1.200        </pre>
             <p>
             The above is axactly the same as this specification:
             <pre>
-    0E40   CTCE    0E41=192.168.1.200  30882
-    0E41   CTCE    0E40=192.168.1.200  30882
-    0E42   CTCE    0E43=192.168.1.200  30882        
-    0E43   CTCE    0E42=192.168.1.200  30882 </pre>
+    0E40   CTCE    0E41=192.168.1.200
+    0E41   CTCE    0E40=192.168.1.200
+    0E42   CTCE    0E43=192.168.1.200
+    0E43   CTCE    0E42=192.168.1.200        </pre>
                 <p>
             The above example could be used to establish a redundant pair
             of read/write CTC links, where each Hercules side uses the even
-            devnum addresses for reading, and the odd ones for writing 
-            (or the other way around).  That way, the operating system 
+            devnum addresses for reading, and the odd ones for writing
+            (or the other way around).  That way, the operating system
             definitions on each side can be identical, e.g. for a VTAM MPC CTC link :
             <pre>
-    CTCATRL  VBUILD TYPE=TRL                                                                                 
+    CTCATRL  VBUILD TYPE=TRL
     C0E40TRL TRLE  LNCTL=MPC,READ=(0E40,0E42),WRITE=(0E41,0E43)
 
-    CTCALCL  VBUILD TYPE=LOCAL                                                                      
+    CTCALCL  VBUILD TYPE=LOCAL
     C0E40LCL PU    TRLE=C0E40TRL,XID=YES,CONNTYPE=APPN,CPCP=YES,TGP=CHANNEL</pre>
         </blockquote>
-        <p>    
+        <p>
 
 <p><br>
 
@@ -4438,15 +4678,16 @@ ROUTE  00  172.21.3.32  255.255.255.224
     image.
     <p>
 
-    Refer to "Creating an empty DASD volume" in the "Creating, formatting,
-    and loading DASD volumes" section of the
+    Refer to "<a href="hercload.html#dasdinit">Creating an empty DASD volume</a>"
+    in the "Creating, formatting, and loading DASD volumes" section of the
     <a href="hercload.html">Creating DASD</a>
     web page for information on using the 'dasdinit' command/utility to
     create compressed dasd files. Refer to the
     <a href="cckddasd.html">Compressed Dasd Emulation</a>
     page for details on the actual CCKD emulation itself and additional
-    information on the <a href="cckddasd.html#cckdcommand">CCKD</a>
-    initialization/tuning control file statement.
+    information on the <a href="cckddasd.html#cckdcommand"><code>'CCKD'</code>
+    initialization/tuning control file statement</a>, as well as information
+    regarding the use of <a href="cckddasd.html#shadowfiles">shadow files</a>.
     <p>
 
     If you specify an INET address, the format is:
@@ -4478,8 +4719,11 @@ ROUTE  00  172.21.3.32  255.255.255.224
     <dl> <!-- begin (CKD) additional DASD arguments -->
 
 <a name="shadow"></a>
-    <dt><code>sf=<em>shadow-file-name</em></code>
+    <dt><code>sf=<em>shadow-file-filename-template</em></code>
     <dd><p>
+        Shadow files are only supported for compressed dasd images.
+        <p>
+
         A shadow file contains all the changes made to the emulated dasd since
         it was created, until the next shadow file is created. The moment of the
         shadow file's creation can be thought of as a snapshot of the current
@@ -4521,6 +4765,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
         Here the disk is not intended to be updated (MVS updates the DSCB
         last referenced field for a readonly file) and any writes appear to
         be successful even though nothing actually gets written.
+        <p>
+        Please also note the <code>fakewrite</code> option is only valid when
+        the <code>readonly</code> option is also specified. That is to say,
+        regardless of whether the host dasd image file is actually read/only
+        or read/write, specifying the <code>fakewrite</code> option without
+        the <code>readonly</code> option also being specified, is invalid.
+        The <code>fakewrite</code> option should always be considered to be
+        a <i><u>subset</u></i> of the <code>readonly</code> option.
         <p>
         <code>fakewrite</code> may be abbreviated as
         <code>fakewrt</code> or <code>fw</code>

@@ -42,7 +42,7 @@
           r ff0=00f1f20000f5f6f7f800000000000000    # (skip 3, 4 and 9)
 
           # Run the tests...
-          runtest   0.1               # (plenty of time)
+          runtest   1                 # (plenty of time)
 
           # Clean up afterwards
           detach    000f              # (no longer needed)
@@ -89,7 +89,7 @@
             r ff0=00f1f20000f5f6f7f800000000000000    # (skip 3, 4 and 9)
 
             # Run the tests...
-            runtest   0.1               # (plenty of time)
+            runtest   1                 # (plenty of time)
 
             # Clean up afterwards
             detach    000f              # (no longer needed)
@@ -125,7 +125,7 @@
             r ff0=00f1f2f3f4f5f6f7f8f9000000000000    # (default = all)
 
             # Run the tests...
-            runtest   0.1               # (plenty of time)
+            runtest   1                 # (plenty of time)
 
             # Clean up afterwards
             detach    000f              # (no longer needed)

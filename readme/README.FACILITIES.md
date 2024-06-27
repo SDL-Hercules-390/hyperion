@@ -14,7 +14,7 @@
 5. [Defining the facility.c run-time tables and functions](#5-Defining-the-facility-c-run-time-tables-and-functions)<br>
    5a. [The `FT` table](#5a-The-FT-table)<br>
    5b. [The `FT2` table](#5b-The-FT2-table)<br>
-   5c. [`modxxx` Modification Check functions](#5c-modxxx-Modification-Check-functions)<br>
+   5c. [`modnnn` Modification Check functions](#5c-modnnn-Modification-Check-functions)<br>
    5d. [`instrxxx` Update Opcode Table functions](#5d-instrxxx-Update-Opcode-Table-functions)<br>
 6. [Coding the facility instructions themselves](#6-Coding-the-facility-instructions-themselves)<br>
    6a. [`DEF_INST` in `opcode.h`](#6a-DEF_INST-in-opcode-h)<br>
@@ -59,7 +59,7 @@ The [stfl.h](../stfl.h) header looks like this:
                                                      168 are both zero, ESA/390
                                                      mode is active. When bit 2
                                                      is zero and bit 168 is one,
-                                                     ESA/390-compatability mode
+                                                     ESA/390-compatibility mode
                                                      is active.                */
       #define STFL_003_DAT_ENHANCE_1         3    /* DAT-Enhancement Facility 1
                                                      is installed.             */
@@ -97,7 +97,7 @@ _**Please note**_ the comments on some of the definitions (e.g.
 `"Bits 76 and 77 are one when bit 155 is one"`). It is _**very important**_ to
 document such conditions as their enforcement is one of the primary purposes
 of the `facility` command, controlled via the [`FT2` table](#5b-The-FT2-table)
-and corresponding [`modxxx` functions](#5c-modxxx-Modification-Check-Functions).
+and corresponding [`modnnn` functions](#5c-modnnn-Modification-Check-Functions).
 
 &nbsp;
 
@@ -165,7 +165,7 @@ that the Transactional-Execution Facility FEATURE is also #defined:
 
 The same facility dependency concept (one facility being dependent on, or implying, another)
 is also enforced at runtime (but accomplished differently of course) by the
-[`modxxx`](#5c-modxxx-Modification-Check-Functions) function declared in the
+[`modnnn`](#5c-modnnn-Modification-Check-Functions) function declared in the
 facility's [`FT2`](#5b-The-FT2-table) table entry.
 
 &nbsp;
@@ -245,7 +245,7 @@ one of eight defined values #defined at the very beginning of [facility.c](../fa
 ### 5b. The `FT2` table
 
 The `FT2` table defines additional information for each facility defined to the
-system, such as the name of the facility's [`modxxx`](#5c-modxxx-Modification-Check-Functions)
+system, such as the name of the facility's [`modnnn`](#5c-modnnn-Modification-Check-Functions)
 Modification Check function, the name of the facility's 
 [`instrxxx`](#5d-instrxxx-Update-Opcode-Table-functions) Update Opcode Table function
 and the facility's "Long" name (description).
@@ -256,12 +256,12 @@ called by [bldcfg.c](../bldcfg.c)'s `build_config` function during Hercules
 startup and initialization) to create the master `factab` table used to
 initialize the `sysblk.facility_list` variable in `SYSBLK`.
 
-The [`modxxx`](#5c-modxxx-Modification-Check-Functions) parameter defines the
+The [`modnnn`](#5c-modnnn-Modification-Check-Functions) parameter defines the
 name of the facility's Modification Check function which defines the function
 that controls the enabling and disabling of that particular facility bit when
 the given facility requires or implies one or more other facility bits also
 being set. Refer to the next section just below for more information about the
-[`modxxx`](#5c-modxxx-Modification-Check-Functions) Modification Check function.
+[`modnnn`](#5c-modnnn-Modification-Check-Functions) Modification Check function.
 
 The [`instrxxx`](#5d-instrxxx-Update-Opcode-Table-functions) Update Opcode Table function
 parameter defines the function which controls the enabling or disabling of the actual
@@ -285,17 +285,17 @@ Exception" Program Check interruption.
       static FACTAB factab[] =
       {
       /*----------------------------------------------------------------------------*/
-      /*   (func)    (func)      Short Name...               Long Description...    */
+      /*   (func)   (func)    Short Name...          Long Description...            */
       /*----------------------------------------------------------------------------*/
 
       ...
 
-      FT2( modlong,   instr18,   018_LONG_DISPL_INST,        "Long-Displacement Facility" )
-      FT2( modlong,   NULL,      019_LONG_DISPL_HPERF,       "Long-Displacement Facility Has High Performance" )
+      FT2( mod018,  instr18,  018_LONG_DISPL_INST,   "Long-Displacement Facility" )
+      FT2( mod019,  NULL,     019_LONG_DISPL_HPERF,  "Long-Displacement Facility Has High Performance" )
 
       ...etc...
 
-      FT2( NULL,      instr21,   021_EXTENDED_IMMED,         "Extended-Immediate Facility" )
+      FT2( NULL,    instr21,  021_EXTENDED_IMMED,    "Extended-Immediate Facility" )
 
       ...etc...
 ```
@@ -308,9 +308,9 @@ by the `facility` command when a display of the available facilities is requeste
 
 
 
-### 5c. `modxxx` Modification Check functions
+### 5c. `modnnn` Modification Check functions
 
-The `modxxx` Modification Check functions are defined in the [`FT2`](#5b-The-FT2-table)
+The `modnnn` Modification Check functions are defined in the [`FT2`](#5b-The-FT2-table)
 table entries and control the enabling or disabling of a given facility for those
 facilities which are dependent on one or more other facilities.
 
@@ -323,48 +323,136 @@ facility 19 enabled without facility 18 also being enabled.
 On the other hand, you _may_ have facility 18 enabled but _not_ facility 19. That is
 allowed. But having 19 enabled without _also_ having 18 enabled too, is _**invalid**_.
 
-It is the `modxxx` Modification Check function's job to enforce such restrictions,
+It is the `modnnn` Modification Check function's job to enforce such restrictions,
 and such functions are defined in the first parameter of the [`FT2`](#5b-The-FT2-table)
 table. The actual function itself that does the enforcement looks like this:
 
 
 ```C
-      static  bool  modlong   ( bool enable, int bitno, int archnum, ...
+      static  bool  mod018    ( bool enable, int bitno, int archnum, ...
+      static  bool  mod019    ( bool enable, int bitno, int archnum, ...
 
       ...
 
       /*-------------------------------------------------------------------*/
-      /*                          modlong                                  */
+      /*                          mod018                                   */
       /*-------------------------------------------------------------------*/
-      /*                   bit 19 implies bit 18                           */
+      /*                       required by 19                              */
       /*-------------------------------------------------------------------*/
-      FAC_MOD_OK_FUNC           ( modlong )
+      FAC_MOD_OK_FUNC           ( mod018 )
+      {
+          if (!enable) // disabling
+          {
+              if (FACILITY_ENABLED_ARCH( 019_LONG_DISPL_HPERF, archnum ))
+                  return HHC00890E( STFL_019_LONG_DISPL_HPERF );
+          }
+          return true;
+      }
+
+      /*-------------------------------------------------------------------*/
+      /*                          mod019                                   */
+      /*-------------------------------------------------------------------*/
+      /*                     also requires 18                              */
+      /*-------------------------------------------------------------------*/
+      FAC_MOD_OK_FUNC           ( mod019 )
       {
           if (enable)
           {
-              if (bitno == STFL_019_LONG_DISPL_HPERF)
-              {
-                  if (!FACILITY_ENABLED_ARCH( 018_LONG_DISPL_INST, archnum ))
-                      return HHC00890E(  STFL_018_LONG_DISPL_INST );
-              }
-          }
-          else // disabling
-          {
-              if (bitno == STFL_018_LONG_DISPL_INST)
-              {
-                  if (FACILITY_ENABLED_ARCH( 019_LONG_DISPL_HPERF, archnum ))
-                      return HHC00890E( STFL_019_LONG_DISPL_HPERF );
-              }
+              if (!FACILITY_ENABLED_ARCH( 018_LONG_DISPL_INST, archnum ))
+                  return HHC00890E(  STFL_018_LONG_DISPL_INST );
           }
           return true;
       }
 ```
 
-**Please note** that the above function not only prevents enabling bit 19 unless
+**Please note** that the above functions not only prevent enabling bit 19 unless
 bit 18 is first enabled, but also prevents bit 18 from being _disabled_ as well,
-unless bit 19 is disabled beforehand.
+unless bit 19 is first disabled beforehand.
+
+_**For reference**_, I have manually created the following tables which documents
+the various interfacility dependencies according to the _May 2022_ version of manual
+SA22-7832-_**13** "z/Architecture Principles of Operation"_:
+
+<center>
+
+### Facility Dependencies
+
+  Bit  |  Requires ...                  |  Required _by_ ...
+------:|:-------------------------------|:--------------------------------------
+  000  |                                |  007
+  003  |                                |  004, 005
+  004  |  003                           |  005
+  005  |  003, 004                      |
+  007  |  000                           |
+  008  |                                |  078
+  014  |                                |  149
+  018  |                                |  019
+  019  |  018                           |
+  025  |                                |  139
+  028  |                                |  139
+  037  |  042                           |
+`+` 040|                                |  068
+  042  |                                |  037, 043
+  043  |  042                           |
+  045  |                                |  061
+  048  |  042                           |
+  049  |                                |  073, 081
+  050  |  073                           |
+  051  |                                |  194
+  061  |  045                           |
+`+` 067|                                |  068, 142
+`+` 068|  040, 067                      |
+  073  |  049                           |  050
+  076  |                                |  146, 155
+  077  |                                |  155
+  078  |  008                           |
+  080  |  042                           |
+  081  |  049                           |
+  129  |                                |  134, 135, 148, 152, 165, 192
+  134  |  129                           |  152, 192
+  135  |  129                           |  148
+  139  |  025, 028                      |
+`+` 142|  067                           |
+  146  |  076                           |
+  148  |  129, 135                      |
+  149  |  014                           |
+  152  |  129, 134                      |  192
+  155  |  076, 077                      |
+  165  |  129                           |
+  192  |  129, 134, 152                 |
+  193  | (PER-3)                        |
+  194  |  051                           |
+  196  |                                |  197
+  197  |  196                           |
 
 
+</center>
+
+    +    For facility bits 40, 67, 68: see pages vii and 2-1, and reference 7 on page viii
+         of manual SA23-2260-05 "Load-Program-Parameter and CPU-Measurement Facilities".
+
+         For facility bits 67, 142: see reference 10 on page xxxii of manual SA22-7832-13
+         "z/Architecture Principles of Operation".
+
+<center>
+
+### Facility Incompatibilities
+
+  Bit  | Incompatible with ...
+------:|:--------------------------
+`+` 002|  168
+  010  |  169
+  014  |  169
+  066  |  169
+  145  |  169
+  149  |  169
+`+` 168|  002
+  169  |  010, 014, 066, 145, 149
+
+</center>
+
+      +    For facility bits 002 and 168: either bit may be on, or neither bit may be on,
+           but both bits can never be on at the same time.
 
 ### 5d. `instrxxx` Update Opcode Table functions
 
@@ -375,7 +463,7 @@ exist when the given facility is enabled.
 
 The function is called by the `init_facilities_lists` function at Hercules startup
 (as well as by the `facility` command too whenever a facility is manually enabled
-or disabled) to patch (update) the opcode.c instruction table to either enable or
+or disabled) to patch (update) the `opcode.c` instruction table to either enable or
 disable the given set of instructions depending on whether the given facility is
 enabled or disabled for that architecture.
 
@@ -497,7 +585,7 @@ architecture:
       {
       int     r1, r2;                         /* Values of R fields        */
 
-          RRE0( inst, regs, r1, r2 );
+          RRE( inst, regs, r1, r2 );
 
           /* Load sign-extended halfword from second operand register */
           regs->GR_G( r1 ) = (S64)(S16)(regs->GR_LHL( r2 ));
@@ -509,12 +597,12 @@ architecture:
 
 
 **Please note** that under normal circumstances there is no need to code any
-`if (FACILITY_ENABLED( ... ))` statement anywhere in your instruction if
-your instruction is only defined when the given facility is enabled, as
-this is handled automatically by the associated `facility.c`
-[`BEG_DIS_FAC_INS_FUNC` function](#5d-instrxxx-Update-Opcode-Table-functions)
-(controlled by the [`instrxxx`](#5d-instrxxx-Update-Opcode-Table-functions)
-second parameter of the [`FT2`](#5b-The-FT2-table) table.)
+`if (FACILITY_ENABLED( ... ))` test anywhere in your instruction if your
+instruction is only defined when the given facility is enabled, as this is
+handled automatically by the associated `facility.c` [`BEG_DIS_FAC_INS_FUNC`
+function](#5d-instrxxx-Update-Opcode-Table-functions) (controlled by the
+[`instrxxx`](#5d-instrxxx-Update-Opcode-Table-functions) second parameter of
+the [`FT2`](#5b-The-FT2-table) table.)
 
 When the facility is enabled, the instruction is defined and will be called.
 When the facility is _not_ enabled, the instruction is _not_ defined and will
@@ -523,6 +611,31 @@ of the primary purposes of the code in [`facility.c`](../facility.c).
 
 Thus you can be assured that if your instruction is called, the corresponding
 facility is indeed enabled. Otherwise your instruction function would never
-have been called! Thus any use of the `FACILITY_ENABLED( ... )` macro is
+have been called! Thus any use of `if (FACILITY_ENABLED( ... ))` statement is
 completely unnecessary.
+
+_The **only** time you **might** need to_ code a `if (FACILITY_ENABLED( ... ))`
+statement is if the instruction in question is defined to behave _differently_
+depending on whether a given facility is enabled (installed) or not. For example,
+take a look at the `IPTE` (Invalidate Page Table Entry) and `SSKE` (Set Storage
+Key extended) instructions in `control.c`.
+
+The `IPTE` instruction contains a `if (FACILITY_ENABLED( ... ))` check for
+each of the `051_LOCAL_TLB_CLEARING` and `013_IPTE_RANGE` facilities because
+it behaves differently depending on whether either of those facilities is
+enabled or not.
+
+Similarly, the `SSKE` instruction contains a `if (FACILITY_ENABLED( ... ))`
+check for the `008_EDAT_1` facility because it too behaves differently depending
+on whether that particular facility is enabled or not.
+
+These are likely the _only_ times an instruction function might actually need
+to use an `if (FACILITY_ENABLED( ... ))` statement.
+
+_**But the key point is,**_ you _don't_ need to do any `if (FACILITY_ENABLED( ... ))`
+test simply to check whether or not your _INSTRUCTION EXISTS_ due to whether
+or not your facility is enabled or not. _That_ type of check (test) is handled
+automatically by the `FT2` table's second parameter and corresponding `instrxxx`
+function.
+
 &nbsp;

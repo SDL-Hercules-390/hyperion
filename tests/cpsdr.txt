@@ -1,5 +1,5 @@
 * CPSDR test
-sysclear           
+sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
@@ -17,10 +17,10 @@ r 22A=B3723031     # CPSDR F3,F3,F1    Load FPR3 from FPR1 with sign of FPR3
 r 22E=B3722032     # CPSDR F3,F2,F2    Load FPR3 from FPR2 with sign of FPR2
 r 232=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 240=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 244=80000000     # FPCREG            Floating point control register        
-r 248=07F3123456789ABC                 # FPR0 positive 
+r 244=80000000     # FPCREG            Floating point control register
+r 248=07F3123456789ABC                 # FPR0 positive
 r 250=F813ABCDEF123456                 # FPR2 negative
-r 258=7D55ABCDEF123456                 # FPR1 positive   
+r 258=7D55ABCDEF123456                 # FPR1 positive
 r 260=8055ABCDEF123456                 # FPR3 negative
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 s+

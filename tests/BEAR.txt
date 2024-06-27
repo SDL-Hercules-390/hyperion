@@ -1,0 +1,112 @@
+msglvl -debug
+*
+*
+*
+*
+***********************************************************************
+***********************************************************************
+*
+* Test instruction tracing for z/Arch LBEAR/STBEAR and S370 CONCS/DISCS
+*
+***********************************************************************
+***********************************************************************
+*
+*
+*
+*
+************************************************
+*         First test: System/370 mode
+************************************************
+*
+*
+sysclear
+archlvl 370
+#
+r 000=0008000000000370                  # S/370 restart PSW
+r 068=000A00000000DEAD                  # S/370 pgm new PSW
+#
+r 1A0=00000001800000000000000000000900  # z/Arch restart PSW
+r 1D0=0002000180000000000000000000DEAD  # z/Arch pgm new PSW
+#
+#                S/370
+#
+r 370=B2000000                          # Connect channel set
+r 374=B2010000                          # Disconnect channel set
+r 378=82000800                          # Load SUCCESS PSW
+#
+#                z/Arch
+#
+r 900=B2000E10                          # Load dummy BEAR
+r 904=B2010E20                          # First Store BEAR
+r 908=47F00920                          # Branch... (loads new BEAR)
+#
+r 920=B2010E30                          # Second Store BEAR
+r 924=B2B20E00                          # Load SUCCESS PSW
+#
+#            Working Storage
+#
+r 800=000A000000000000                  # S/370  SUCCESS PSW
+r E00=00020001800000000000000000000000  # z/Arch SUCCESS PSW
+r E10=1234567812345678                  # Dummy BEAR value to be loaded
+r E20=0000000000000000                  # First  stored BEAR value
+r E30=0000000000000000                  # Second stored BEAR value
+#
+t+
+restart
+pause 0.1
+*
+*
+*
+*
+************************************************
+*         Second test: z/Architecture mode
+************************************************
+*
+*
+sysclear
+archlvl 900
+#
+r 000=0008000000000370                  # S/370 restart PSW
+r 068=000A00000000DEAD                  # S/370 pgm new PSW
+#
+r 1A0=00000001800000000000000000000900  # z/Arch restart PSW
+r 1D0=0002000180000000000000000000DEAD  # z/Arch pgm new PSW
+#
+#                S/370
+#
+r 370=B2000000                          # Connect channel set
+r 374=B2010000                          # Disconnect channel set
+r 378=82000800                          # Load SUCCESS PSW
+#
+#                z/Arch
+#
+r 900=B2000E10                          # Load dummy BEAR
+r 904=B2010E20                          # First Store BEAR
+r 908=47F00920                          # Branch... (loads new BEAR)
+#
+r 920=B2010E30                          # Second Store BEAR
+r 924=B2B20E00                          # Load SUCCESS PSW
+#
+#            Working Storage
+#
+r 800=000A000000000000                  # S/370  SUCCESS PSW
+r E00=00020001800000000000000000000000  # z/Arch SUCCESS PSW
+r E10=1234567812345678                  # Dummy BEAR value to be loaded
+r E20=0000000000000000                  # First  stored BEAR value
+r E30=0000000000000000                  # Second stored BEAR value
+#
+t+
+restart
+pause 0.1
+r E10.30
+*
+*
+*
+*
+************************************************
+*               TEST COMPLETE
+************************************************
+*
+*
+*
+*

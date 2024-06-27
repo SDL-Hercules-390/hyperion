@@ -581,10 +581,12 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
     RRE(inst, regs, r1, r2);
 
     /* Display instruction if debugging */
-    #if defined(CHSC_DEBUG)
+#if defined(CHSC_DEBUG)
     ARCH_DEP(display_inst) (regs, inst);
-    #endif
+#endif
 
+    PER_ZEROADDR_CHECK( regs, r1 );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -740,7 +742,7 @@ BYTE dumpbuf[32*1024] = {0};
         MSGBUF( hex, "%2.2X", *p );
         STRLCAT( hexbuf, hex );
         c = guest_to_host(*p);
-        if (!isprint(c) || iscntrl(c)) c = '.';
+        if (!isprint((unsigned char)c) || iscntrl((unsigned char)c)) c = '.';
         charbuf[disp & 15] = c;
     }
 

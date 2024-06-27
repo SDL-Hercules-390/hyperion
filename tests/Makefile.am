@@ -9,14 +9,19 @@ EXTRA_DIST =                    \
      agf.assemble               \
      agf.listing                \
      agf.tst                    \
-     agf.txt                    \
      alsi.txt                   \
-     asmtst.xedit               \
+     3330.cckd64                \
+     3380.cckd64                \
+     3390.cckd64                \
      awsbsf.aws                 \
      awsbsf.tst                 \
      axtr.txt                   \
-     bldhtc.exec                \
-     bldhtc.rexx                \
+     BEAR.txt                   \
+     bc-ilc.asm                 \
+     bc-ilc.core                \
+     bc-ilc.list                \
+     bc-ilc.tst                 \
+     bc-ilc.pdf                 \
      bfp-001-divtoint.asm       \
      bfp-001-divtoint.core      \
      bfp-001-divtoint.list      \
@@ -109,44 +114,54 @@ EXTRA_DIST =                    \
      bfp-023-threads.core       \
      bfp-023-threads.list       \
      bfp-023-threads.sptst      \
+     bfp-001-divtoint.pdf       \
+     bfp-002-loadr.pdf          \
+     bfp-003-loadfpi.pdf        \
+     bfp-004-cvttolog.pdf       \
+     bfp-005-cvttolog64.pdf     \
+     bfp-006-cvttofix.pdf       \
+     bfp-007-cvttofix64.pdf     \
+     bfp-008-cvtfrlog.pdf       \
+     bfp-009-cvtfrlog64.pdf     \
+     bfp-010-cvtfrfix.pdf       \
+     bfp-011-cvtfrfix64.pdf     \
+     bfp-012-loadtest.pdf       \
+     bfp-013-comps.pdf          \
+     bfp-014-divide.pdf         \
+     bfp-015-sqrt.pdf           \
+     bfp-016-add.pdf            \
+     bfp-017-loadl.pdf          \
+     bfp-018-subtract.pdf       \
+     bfp-019-multiply.pdf       \
+     bfp-020-multlonger.pdf     \
+     bfp-021-multadd.pdf        \
+     bfp-022-multsub.pdf        \
      bim-001-add-sub.asm        \
      bim-001-add-sub.core       \
      bim-001-add-sub.list       \
      bim-001-add-sub.tst        \
+     bim-001-add-sub.pdf        \
      brc.txt                    \
      CBUC.asm                   \
      CBUC.core                  \
      CBUC.list                  \
      CBUC.pdf                   \
+     CBUC.subtst                \
      CBUC.tst                   \
      CCW-ILS.asm                \
+     CCW-ILS.core               \
      CCW-ILS.list               \
      CCW-ILS.pdf                \
-     CCW-ILS.core               \
      CCW-ILS.tst                \
      CCWILS.3390-1.comp-z       \
+     datetime.rexx              \
+     cdfr.txt                   \
+     cdgr.txt                   \
      CDSG.asm                   \
      CDSG.core                  \
      CDSG.list                  \
-     CDSG.pdf                   \
+     CDSG.PDF                   \
      CDSG.tst                   \
-     CLCL-et-al.asm             \
-     CLCL-et-al.core            \
-     CLCL-et-al.list            \
-     CLCL-et-al.pdf             \
-     CLCL-et-al.tst             \
-     CLCL.asm                   \
-     CLCL.core                  \
-     CLCL.list                  \
-     CLCL.pdf                   \
-     CLCL.tst                   \
-     CMPSC.asm                  \
-     CMPSC.core                 \
-     CMPSC.list                 \
-     CMPSC.pdf                  \
-     CMPSC.tst                  \
-     cdfr.txt                   \
-     cdgr.txt                   \
      cdsg.txt                   \
      cgdr.txt                   \
      cgdtr.txt                  \
@@ -158,59 +173,162 @@ EXTRA_DIST =                    \
      cipher.assemble            \
      cipher.listing             \
      cipher.tst                 \
-     cmd-abs-2K.subtst          \
-     cmd-abs-4K.subtst          \
-     cmd-abs.tst                \
-     cmd-rv-2K.subtst           \
-     cmd-rv-4K-32.subtst        \
-     cmd-rv-4K-64.subtst        \
-     cmd-rv.tst                 \
-     cr.tst                     \
+     CLCL-et-al.asm             \
+     CLCL-et-al.core            \
+     CLCL-et-al.list            \
+     CLCL-et-al.pdf             \
+     CLCL-et-al.tst             \
+     CLCL.asm                   \
+     CLCL.core                  \
+     CLCL.list                  \
+     CLCL.pdf                   \
+     CLCL.tst                   \
+     CLCLE-01-unaligned-buffers.asm   \
+     CLCLE-01-unaligned-buffers.core  \
+     CLCLE-01-unaligned-buffers.list  \
+     CLCLE-01-unaligned-buffers.pdf   \
+     CLCLE-01-unaligned-buffers.tst   \
+     CLCLE-02-unaligned-buffers.asm   \
+     CLCLE-02-unaligned-buffers.core  \
+     CLCLE-02-unaligned-buffers.list  \
+     CLCLE-02-unaligned-buffers.pdf   \
+     CLCLE-02-unaligned-buffers.tst   \
+     CLCLE-03-basic.asm               \
+     CLCLE-03-basic.core              \
+     CLCLE-03-basic.list              \
+     CLCLE-03-basic.pdf               \
+     CLCLE-03-basic.tst               \
+     CLCLE-04-performance.asm         \
+     CLCLE-04-performance.core        \
+     CLCLE-04-performance.list        \
+     CLCLE-04-performance.pdf         \
+     CLCLE-04-performance.tst         \
+     cmd-abs-2K.subxxx          \
+     cmd-abs-4K.subxxx          \
+     cmd-abs.xxx                \
+     cmd-rv-2K.subxxx           \
+     cmd-rv-4K-32.subxxx        \
+     cmd-rv-4K-64.subxxx        \
+     cmd-rv.xxx                 \
+     CMPSC.asm                  \
+     CMPSC.core                 \
+     CMPSC.list                 \
+     CMPSC.pdf                  \
+     CMPSC.tst                  \
      comments.txt               \
-     cpu0off.core               \
-     FAC53.asm                  \
-     FAC53.core                 \
-     FAC53.list                 \
-     FAC53.pdf                  \
-     FAC53.tst                  \
      cpsdr.txt                  \
+     cr.tst                     \
      csst.txt                   \
-     cvttst.rexx                \
      csxtr.assemble             \
      csxtr.listing              \
      csxtr.tst                  \
+     CU12-01-xpage.asm          \
+     CU12-01-xpage.core         \
+     CU12-01-xpage.list         \
+     CU12-01-xpage.pdf          \
+     CU12-01-xpage.tst          \
+     CU12-02-performance.asm    \
+     CU12-02-performance.core   \
+     CU12-02-performance.list   \
+     CU12-02-performance.pdf    \
+     CU12-02-performance.tst    \
+     CU14-01-xpage.asm          \
+     CU14-01-xpage.core         \
+     CU14-01-xpage.list         \
+     CU14-01-xpage.pdf          \
+     CU14-01-xpage.tst          \
+     CU14-02-performance.asm    \
+     CU14-02-performance.core   \
+     CU14-02-performance.list   \
+     CU14-02-performance.pdf    \
+     CU14-02-performance.tst    \
+     CUSE-01-basic.asm          \
+     CUSE-01-basic.core         \
+     CUSE-01-basic.list         \
+     CUSE-01-basic.pdf          \
+     CUSE-01-basic.tst          \
+     CUSE-02-performance.asm    \
+     CUSE-02-performance.core   \
+     CUSE-02-performance.list   \
+     CUSE-02-performance.pdf    \
+     CUSE-02-performance.tst    \
      cxgbr.txt                  \
      cxgtr.txt                  \
      dc-float.asm               \
+     dfp-080-from-packed.asm    \
+     dfp-080-from-packed.core   \
+     dfp-080-from-packed.list   \
+     dfp-080-from-packed.tst    \
+     dfp-080-to-packed.asm      \
+     dfp-080-to-packed.core     \
+     dfp-080-to-packed.list     \
+     dfp-080-to-packed.tst      \
      diag24.txt                 \
      diag8.txt                  \
      digest.assemble            \
      digest.listing             \
      digest.tst                 \
      dotest                     \
+     dummy.subtst               \
      dxtr.txt                   \
+     E7Prefix.asm               \
+     E7Prefix.core              \
+     E7Prefix.list              \
+     E7Prefix.pdf               \
+     E7Prefix.tst               \
      epsw.txt                   \
+     ex.txt                     \
      exrl.txt                   \
+     FAC53.asm                  \
+     FAC53.core                 \
+     FAC53.list                 \
+     FAC53.pdf                  \
+     FAC53.tst                  \
+     FAC5861.asm                \
+     FAC5861.core               \
+     FAC5861.list               \
+     FAC5861.pdf                \
+     FAC5861.tst                \
      fiebr.txt                  \
+     fix-page.asm               \
+     fix-page.core              \
+     fix-page.list              \
+     fix-page.tst               \
+     fix-page.pdf               \
      fixtr.txt                  \
+     float.asm                  \
+     float.core                 \
+     float.list                 \
+     float.tst                  \
+     float.pdf                  \
+     GH615.asm                  \
+     GH615.core                 \
+     GH615.list                 \
+     GH615.pdf                  \
+     GH615.tst                  \
+     hetbsf-bzip2.het           \
      hetbsf.het                 \
      hetbsf.tst                 \
      iedtr.txt                  \
+     ifelse.tst                 \
      ilc.assemble               \
      ilc.listing                \
      ilc.tst                    \
      invpsw.assemble            \
      invpsw.listing             \
      invpsw.tst                 \
+     kimd-hw.tst                \
      kimd0.txt                  \
      kimd1.txt                  \
      kimd2.txt                  \
      kimd3.txt                  \
      kimd65.txt                 \
+     klmd-hw.tst                \
      klmd0.txt                  \
      klmd1.txt                  \
      klmd2.txt                  \
      klmd3.txt                  \
+     km-hw.tst                  \
      km0.txt                    \
      km1.txt                    \
      km10.txt                   \
@@ -228,6 +346,7 @@ EXTRA_DIST =                    \
      km58.txt                   \
      km60.txt                   \
      km9.txt                    \
+     kmac-hw.tst                \
      kmac0.txt                  \
      kmac1.txt                  \
      kmac10.txt                 \
@@ -241,6 +360,7 @@ EXTRA_DIST =                    \
      kmac28.txt                 \
      kmac3.txt                  \
      kmac9.txt                  \
+     kmc-hw.tst                 \
      kmc0.txt                   \
      kmc1.txt                   \
      kmc10.txt                  \
@@ -255,6 +375,7 @@ EXTRA_DIST =                    \
      kmc3.txt                   \
      kmc67.txt                  \
      kmc9.txt                   \
+     kmctr-hw.tst               \
      kmctr0.txt                 \
      kmctr1.txt                 \
      kmctr10.txt                \
@@ -268,6 +389,7 @@ EXTRA_DIST =                    \
      kmctr28.txt                \
      kmctr3.txt                 \
      kmctr9.txt                 \
+     kmf-hw.tst                 \
      kmf0.txt                   \
      kmf1.txt                   \
      kmf10.txt                  \
@@ -281,6 +403,7 @@ EXTRA_DIST =                    \
      kmf28.txt                  \
      kmf3.txt                   \
      kmf9.txt                   \
+     kmo-hw.tst                 \
      kmo0.txt                   \
      kmo1.txt                   \
      kmo10.txt                  \
@@ -313,24 +436,44 @@ EXTRA_DIST =                    \
      maer.txt                   \
      mainsize.tst               \
      Makefile.am                \
-     mhi.assemble               \
-     mhi.listing                \
+     mhi.asm                    \
+     mhi.core                   \
+     mhi.list                   \
      mhi.tst                    \
      mkcore.rexx                \
      mvcle.assemble             \
      mvcle.listing              \
      mvcle.tst                  \
+     mvcos-001.asm              \
+     mvcos-001.core             \
+     mvcos-001.list             \
+     mvcos-001.pdf              \
+     mvcos-001.tst              \
      mvcos.txt                  \
      mxtr.txt                   \
+     PERZAD.asm                 \
+     PERZAD.core                \
+     PERZAD.list                \
+     PERZAD.pdf                 \
+     PERZAD.tst                 \
      pfpo.asm                   \
      pfpo.core                  \
      pfpo.list                  \
      PFPO.pdf                   \
      pfpo.tst                   \
      popcnt.txt                 \
-     pr.tst                     \
      pr.subtst                  \
+     pr.tst                     \
      printer.txt                \
+     punch.txt                  \
+     privop.asm                 \
+     privop.core                \
+     privop.list                \
+     privop.tst                 \
+     problem.asm                \
+     problem.core               \
+     problem.list               \
+     problem.tst                \
      ptf.txt                    \
      README.md                  \
      redtest.rexx               \
@@ -341,25 +484,46 @@ EXTRA_DIST =                    \
      runtest                    \
      runtest.cmd                \
      runtest.subtst             \
-     stidp-esa390.subtst        \
-     stidp-s370.subtst          \
-     stidp-zarch.subtst         \
      runtest0.tst               \
      runtest4.tst               \
+     semipriv.asm               \
+     semipriv.core              \
+     semipriv.list              \
+     semipriv.tst               \
      sigp.assemble              \
      sigp.listing               \
      sigp.tst                   \
+     skey370.asm                \
+     skey370.core               \
+     skey370.list               \
+     skey370.pdf                \
+     skey370.tst                \
+     skey370.TXTCARDS           \
+     skey390z.asm               \
+     skey390z.core              \
+     skey390z.list              \
+     skey390z.pdf               \
+     skey390z.tst               \
      srdt.txt                   \
-     ssk370.tst                 \
+     SRSTU.tst                  \
+     ssk370.xxx                 \
      sske.assemble              \
      sske.listing               \
      sske.tst                   \
-     sske370.tst                \
-     sske390.tst                \
-     stfl.assemble              \
+     sske370.xxx                \
+     sske390.xxx                \
+     stfl.asm                   \
      stfl.core                  \
-     stfl.listing               \
+     stfl.list                  \
+     stfl.pdf                   \
      stfl.tst                   \
+     stfle.txt                  \
+     stidp-esa390.subtst        \
+     stidp-force.tst            \
+     stidp-s370.subtst          \
+     stidp-zarch.subtst         \
+     stidp.tst                  \
+     stidp.txt                  \
      str-001-cksm.asm           \
      str-001-cksm.core          \
      str-001-cksm.list          \
@@ -376,28 +540,81 @@ EXTRA_DIST =                    \
      str-001-srst.core          \
      str-001-srst.list          \
      str-001-srst.tst           \
-     stidp.tst                  \
-     stfle.txt                  \
-     stidp.txt                  \
+     str-001-cksm.pdf           \
+     str-001-clst.pdf           \
+     str-001-mvst.pdf           \
+     str-001-srst.pdf           \
+     TRE-01-basic.asm           \
+     TRE-01-basic.core          \
+     TRE-01-basic.list          \
+     TRE-01-basic.pdf           \
+     TRE-01-basic.tst           \
+     TRE-02-performance.asm     \
+     TRE-02-performance.core    \
+     TRE-02-performance.list    \
+     TRE-02-performance.pdf     \
+     TRE-02-performance.tst     \
+     TRTE-01-basic.asm          \
+     TRTE-01-basic.core         \
+     TRTE-01-basic.list         \
+     TRTE-01-basic.pdf          \
+     TRTE-01-basic.tst          \
+     TRTE-02-performance.asm    \
+     TRTE-02-performance.core   \
+     TRTE-02-performance.list   \
+     TRTE-02-performance.pdf    \
+     TRTE-02-performance.tst    \
+     TRTR-01-basic.asm          \
+     TRTR-01-basic.core         \
+     TRTR-01-basic.list         \
+     TRTR-01-basic.pdf          \
+     TRTR-01-basic.tst          \
+     TRTR-02-performance.asm    \
+     TRTR-02-performance.core   \
+     TRTR-02-performance.list   \
+     TRTR-02-performance.pdf    \
+     TRTR-02-performance.tst    \
+     TRTRE-01-basic.asm         \
+     TRTRE-01-basic.core        \
+     TRTRE-01-basic.list        \
+     TRTRE-01-basic.pdf         \
+     TRTRE-01-basic.tst         \
+     TRTRE-02-performance.asm   \
+     TRTRE-02-performance.core  \
+     TRTRE-02-performance.list  \
+     TRTRE-02-performance.pdf   \
+     TRTRE-02-performance.tst   \
      stsi.txt                   \
      sus40002.txt               \
+     tape.240k-2.txt            \
+     tape.240k.txt              \
+     tape.2m.txt                \
+     tape.32k.txt               \
      tape.asm                   \
      tape.aws                   \
      tape.core                  \
      tape.list                  \
      tape.pdf                   \
      tape.tst                   \
-     tape.240k-2.txt            \
-     tape.240k.txt              \
-     tape.2m.txt                \
-     tape.32k.txt               \
+     TXFPER.asm                 \
+     TXFPER.core                \
+     TXFPER.list                \
+     TXFPER.pdf                 \
+     TXFPER.tst                 \
      tapebsf.subtst             \
      tapepos.txt                \
      tbedr.txt                  \
      tdcdt.txt                  \
      tdgdt.txt                  \
      tests.conf                 \
+     text2tst.rexx              \
      thder.txt                  \
      timeout.tst                \
      trace.txt                  \
-     trte.txt
+     trte.txt                   \
+     wild.assemble              \
+     wild.listing               \
+     wild.tst                   \
+     zeos.assemble              \
+     zeos.listing               \
+     zeos.tst

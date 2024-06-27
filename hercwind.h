@@ -90,6 +90,7 @@ struct dirent
 #define inline          __inline
 #define __inline__      __inline
 
+#define HAVE_SWAP_BUILTINS
 #define HAVE_STRUCT_IN_ADDR_S_ADDR
 #define HAVE_SYS_MTIO_H         // (ours is called 'w32mtio.h')
 #define HAVE_ASSERT_H

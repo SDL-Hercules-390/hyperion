@@ -189,13 +189,21 @@ int     rc;                             /* Return code               */
     /* The fourth argument (or third for -r) is the volume size */
     if (argc > volsize_argnum)
     {
+        S32 signed_size = 0;    /* SIGNED Volume size */
+
         if (argc > (volsize_argnum+1))
             argexit( 5, NULL, pgm );
 
-        if (!argv[volsize_argnum] || strlen(argv[volsize_argnum]) == 0
-            || sscanf(argv[volsize_argnum], "%u%c", &size, &c) != 1)
+        if (0
+            || !argv      [volsize_argnum]
+            || strlen(argv[volsize_argnum]) == 0
+            || sscanf(argv[volsize_argnum], "%d%c", &signed_size, &c) != 1
+            || (type == 'C' && (signed_size < 1 || signed_size > 65536))
+            || (type == 'F' && signed_size < 64)
+        )
             argexit( 4, argv[volsize_argnum], pgm );
 
+        size = (U32) signed_size;
         altcylflag = 0;
     }
 
@@ -264,21 +272,21 @@ static void argexit( int code, char* m, const char* pgm )
             // HHC02448 "Usage: dasdinit64 ...."
 
 #if defined( HAVE_ZLIB )
-         char *bufz = "HHC02448I   -z        build compressed dasd image file using zlib\n";
+            char *bufz = "HHC02448I   -z        build compressed dasd image file using zlib\n";
 #else
-         char *bufz = "";
+            char *bufz = "";
 #endif
 
 #if defined( CCKD_BZIP2 )
-         char *bufbz = "HHC02448I   -bz2      build compressed dasd image file using bzip2\n";
+            char *bufbz = "HHC02448I   -bz2      build compressed dasd image file using bzip2\n";
 #else
-         char *bufbz = "";
+            char *bufbz = "";
 #endif
 
-         char* buflfs = "";
+            char* buflfs = "";
 
-         if (sizeof(off_t) > 4)
-            buflfs = "HHC02448I   -lfs      build a large (uncompressed) dasd file (if supported)\n";
+            if (sizeof(off_t) > 4)
+                buflfs = "HHC02448I   -lfs      build a large (uncompressed) dasd file (if supported)\n";
 
             WRMSG( HHC02448, "I", pgm, bufz, bufbz, buflfs );
         }

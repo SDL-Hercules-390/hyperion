@@ -1,5 +1,6 @@
 /* LOADPARM.C   (C) Copyright Jan Jaeger, 2004-2012                  */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2013-2021                             */
 /*              SCLP / MSSF loadparm                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -96,8 +97,8 @@ static GSYSINFO gsysinfo;
     if (_source) \
         { \
         for (; i < n; i++) \
-             if (isprint((_source)[i])) \
-                 _target[i] = host_to_guest((int)toupper((_source)[i])); \
+             if (isprint((unsigned char)(_source)[i])) \
+                 _target[i] = host_to_guest((int)toupper((unsigned char)(_source)[i])); \
              else \
                  _target[i] = 0x40; \
         } \
@@ -115,9 +116,9 @@ static GSYSINFO gsysinfo;
     BYTE    temp[sizeof(_target)]; \
     memset(temp, 0x40, sizeof(temp) ); \
     for (i = 0, n = 0; (_source) && i < strlen(_source) && i < sizeof(temp); i++) \
-        if (isalnum((_source)[i])) \
+        if (isalnum((unsigned char)(_source)[i])) \
         { \
-            temp[i] = host_to_guest((int)toupper((_source)[i])); \
+            temp[i] = host_to_guest((int)toupper((unsigned char)(_source)[i])); \
             n++; \
         } \
         else \
@@ -179,9 +180,9 @@ static int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
     copylen = MIN(strlen(name), len);
 
     for ( i = 0, n = 0; i < copylen; i++ )
-        if ( isalnum(name[i]) )
+        if ( isalnum((unsigned char)name[i]) )
         {
-            temp_fld[i] = host_to_guest((int)toupper(name[i]));
+            temp_fld[i] = host_to_guest((int)toupper((unsigned char)name[i]));
             n++;
         }
         else
@@ -216,7 +217,7 @@ static int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t fle
     {
         c = guest_to_host(fld[i]);
 
-        if ( c == SPACE || !isalnum(c) )
+        if ( c == SPACE || !isalnum((unsigned char)c) )
             break; /* there should not be any embedded blanks */
 
         name[i] = c;
@@ -426,31 +427,6 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
 //      return 0;
 
     return 0;
-}
-
-LOADPARM_DLL_IMPORT
-char **str_model()
-{
-    static char h_model[sizeof(gsysinfo.model)+1];
-    static char c_model[sizeof(gsysinfo.modelcapa)+1];
-    static char p_model[sizeof(gsysinfo.modelperm)+1];
-    static char t_model[sizeof(gsysinfo.modeltemp)+1];
-    static char *models[5] = { h_model, c_model, p_model, t_model, NULL };
-
-    if (gsysinfo_init_flg == FALSE )
-        get_gsysinfo(NULL);
-
-    memset(h_model, 0, sizeof(h_model));
-    memset(c_model, 0, sizeof(c_model));
-    memset(p_model, 0, sizeof(p_model));
-    memset(t_model, 0, sizeof(t_model));
-
-    (void)copy_ebcdic_to_stringz(h_model, sizeof(h_model), gsysinfo.model, sizeof(gsysinfo.model));
-    (void)copy_ebcdic_to_stringz(c_model, sizeof(c_model), gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa));
-    (void)copy_ebcdic_to_stringz(p_model, sizeof(p_model), gsysinfo.modelperm, sizeof(gsysinfo.modelperm));
-    (void)copy_ebcdic_to_stringz(t_model, sizeof(t_model), gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp));
-
-    return models;
 }
 
 void get_model(BYTE *dest)
@@ -754,7 +730,7 @@ void get_mpfactors(BYTE *dest)
 #define  MPFACTOR_DENOMINATOR     100
 #define  MPFACTOR_PERCENT          95
 
-    static U16 mpfactors[MAX_CPU_ENGINES-1] = {0};
+    static U16 mpfactors[ MAX_CPU_ENGS - 1 ] = {0};
     static BYTE didthis = 0;
 
     if (!didthis)
@@ -792,7 +768,7 @@ void get_mpfactors(BYTE *dest)
     }
 
     /* Return the requested information... */
-    memcpy( dest, &mpfactors[0], (MAX_CPU_ENGINES-1) * sizeof(U16) );
+    memcpy( dest, &mpfactors[0], (MAX_CPU_ENGS - 1) * sizeof( U16 ));
 }
 
 
@@ -823,11 +799,11 @@ get_RealCPCount (void)
             possible = hostinfo.num_procs;
     }
     else
-        possible = MAX_CPU_ENGINES;
+        possible = MAX_CPU_ENGS;
 
     /* Limit to the maximum number of Hercules CPU engines */
-    if (possible > MAX_CPU_ENGINES)
-        possible = MAX_CPU_ENGINES;
+    if (possible > MAX_CPU_ENGS)
+        possible = MAX_CPU_ENGS;
 
     /* Set number of reserved processors */
     reserved = possible - sysblk.cpus;

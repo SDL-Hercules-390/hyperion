@@ -202,7 +202,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
                     strnfilenamecmp( (pszTapeDevNum=path+7)-2, "st",  2 ) == 0
                 )
             &&  strlen(pszTapeDevNum) == 1
-            &&  isdigit(*pszTapeDevNum)
+            &&  isdigit((unsigned char)*pszTapeDevNum)
         )
         {
             // Change it to a Windows device name (e.g. \\.\Tape0)
@@ -650,7 +650,7 @@ ssize_t  w32_read_tape ( ufd_t ufd, void* buf, size_t nbyte )
         return 0;   // (tapemark)
     }
 
-    // EIO != errno || !GMT_EOF( *pStat )  -->  bona fide i/o error...
+    // EIO != errno || !GMT_EOF( *pStat )  -->  bonafide i/o error...
 
     ASSERT( ERROR_FILEMARK_DETECTED != dwLastError );
     return -1;

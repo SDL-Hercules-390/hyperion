@@ -40,7 +40,6 @@
 #include "devtype.h"
 #include "opcode.h"
 #include "history.h"
-// #include "inline.h"
 #include "fillfnam.h"
 #include "hconsole.h"
 
@@ -114,7 +113,7 @@ static U32    NPdata;
 static U32    NPmips;
 static U32    NPsios;
 static int    NPcpugraph;
-static int    NPcpugraphpct[MAX_CPU_ENGINES];
+static int    NPcpugraphpct[ MAX_CPU_ENGS ];
 
 /* Current device states */
 #define       NP_MAX_DEVICES (PANEL_MAX_ROWS - 3)
@@ -526,14 +525,14 @@ static void draw_char (int c)
 static void draw_fw (U32 fw)
 {
     char buf[9];
-    snprintf (buf, sizeof(buf), "%8.8X", fw);
+    MSGBUF (buf, "%8.8X", fw);
     draw_text (buf);
 }
 
 static void draw_dw (U64 dw)
 {
     char buf[17];
-    snprintf (buf, sizeof(buf), "%16.16"PRIX64, dw);
+    MSGBUF (buf, "%16.16"PRIX64, dw);
     draw_text (buf);
 }
 
@@ -670,7 +669,7 @@ static void NP_screen_redraw (REGS *regs)
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
-        regs = regs->guestregs;
+        regs = GUESTREGS;
 #endif /*defined(_FEATURE_SIE)*/
 
     /*
@@ -699,7 +698,7 @@ static void NP_screen_redraw (REGS *regs)
 #if defined( OPTION_SHARED_DEVICES )
 
     /* Center "Peripherals" on the right-hand-side */
-    i = 40 + snprintf(buf, sizeof(buf),
+    i = 40 + MSGBUF(buf,
                       "Peripherals [Shared Port %u]",
                       sysblk.shrdport);
     if ((cons_cols < i) || !sysblk.shrdport)
@@ -728,7 +727,7 @@ static void NP_screen_redraw (REGS *regs)
         NPpswmode = (regs->arch_mode == ARCH_900_IDX);
         NPpswzhost =
 #if defined(_FEATURE_SIE)
-                     !NPpswmode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX;
+                     !NPpswmode && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX;
 #else
                      0;
 #endif /*defined(_FEATURE_SIE)*/
@@ -741,7 +740,7 @@ static void NP_screen_redraw (REGS *regs)
         NPregzhost =
 #if defined(_FEATURE_SIE)
                      (regs->arch_mode != ARCH_900_IDX
-                   && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX
+                   && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX
                    && (NPregdisp == 0 || NPregdisp == 1));
 #else
                      0;
@@ -867,7 +866,7 @@ static void NP_screen_redraw (REGS *regs)
         NPcpugraph_valid = 0;
         for (i = 0; i < NPcpugraph_ncpu; i++)
         {
-            snprintf (buf, sizeof(buf), "%s%02X ", PTYPSTR(i), i);
+            MSGBUF (buf, "%s%02X ", PTYPSTR(i), i);
             set_pos (line++, 1);
             draw_text (buf);
         }
@@ -910,13 +909,11 @@ static char *format_int(uint64_t ic)
         ic/=1000;
         if(ic==0)
         {
-            snprintf(grps[maxg],sizeof(grps[maxg]),"%u",grp);
-            grps[maxg][sizeof(grps[maxg])-1] = '\0';
+            MSGBUF(grps[maxg],"%u",grp);
         }
         else
         {
-            snprintf(grps[maxg],sizeof(grps[maxg]),"%3.3u",grp);
-            grps[maxg][sizeof(grps[maxg])-1] = '\0';
+            MSGBUF(grps[maxg],"%3.3u",grp);
         }
         maxg++;
     }
@@ -979,7 +976,7 @@ static void NP_update(REGS *regs)
 
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs))
-        regs = regs->hostregs;
+        regs = HOSTREGS;
 #endif /*defined(_FEATURE_SIE)*/
 
     /* percent CPU busy */
@@ -996,7 +993,7 @@ static void NP_update(REGS *regs)
                 }
         set_color (COLOR_WHITE, COLOR_BLUE);
         set_pos (1, 22);
-        snprintf(buf, sizeof(buf), "%3d", (n > 0 ? cpupct_total/n : 0));
+        MSGBUF(buf, "%3d", (n > 0 ? cpupct_total/n : 0));
         draw_text (buf);
     }
 
@@ -1004,13 +1001,13 @@ static void NP_update(REGS *regs)
     {
 #if defined(_FEATURE_SIE)
         if(regs->sie_active)
-            regs = regs->guestregs;
+            regs = GUESTREGS;
 #endif /*defined(_FEATURE_SIE)*/
 
         mode = (regs->arch_mode == ARCH_900_IDX);
         zhost =
 #if defined(_FEATURE_SIE)
-                !mode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX;
+                !mode && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX;
 #else // !defined(_FEATURE_SIE)
                 0;
 #endif // defined(_FEATURE_SIE)
@@ -1061,11 +1058,11 @@ static void NP_update(REGS *regs)
         }
 
         /* Display psw state */
-        snprintf (buf, sizeof(buf), "%2d%c%c%c%c%c%c%c%c",
+        MSGBUF (buf, "%2d%c%c%c%c%c%c%c%c",
                       regs->psw.amode64                  ? 64  :
                       regs->psw.amode                    ? 31  : 24,
                       regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
-                      sysblk.inststep                    ? 'T' : '.',
+                      sysblk.instbreak                   ? 'T' : '.',
                       WAITSTATE (&regs->psw)             ? 'W' : '.',
                       regs->loadstate                    ? 'L' : '.',
                       regs->checkstop                    ? 'C' : '.',
@@ -1086,7 +1083,7 @@ static void NP_update(REGS *regs)
         zhost =
 #if defined(_FEATURE_SIE)
                 (regs->arch_mode != ARCH_900_IDX
-              && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX
+              && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX
               && (NPregdisp == 0 || NPregdisp == 1));
 #else // !defined(_FEATURE_SIE)
                      0;
@@ -1288,13 +1285,13 @@ static void NP_update(REGS *regs)
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 1);
         if((sysblk.mipsrate / 1000000) > 999)
-          snprintf(buf, sizeof(buf), "%2d,%03d", sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000);
+          MSGBUF(buf, "%2d,%03d", sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000);
         else if((sysblk.mipsrate / 1000000) > 99)
-          snprintf(buf, sizeof(buf), "%4d.%01d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
+          MSGBUF(buf, "%4d.%01d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
         else if((sysblk.mipsrate / 1000000) > 9)
-          snprintf(buf, sizeof(buf), "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
+          MSGBUF(buf, "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
         else
-          snprintf(buf, sizeof(buf), "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
+          MSGBUF(buf, "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
         draw_text (buf);
         NPmips = sysblk.mipsrate;
         NPmips_valid = 1;
@@ -1310,7 +1307,7 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 8);
-        snprintf(buf, sizeof(buf), "%6.6s", format_int(sysblk.siosrate));
+        MSGBUF(buf, "%6.6s", format_int(sysblk.siosrate));
         draw_text (buf);
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
@@ -1370,7 +1367,7 @@ static void NP_update(REGS *regs)
 
         online = (dev->console && dev->connected) || strlen(dev->filename) > 0;
         busy   = dev->busy != 0 || IOPENDING(dev) != 0;
-        open   = dev->fd > 2;
+        open   = dev->fd >= 0;
 
         /* device identifier */
         if (!NPdevices_valid || online != NPonline[i])
@@ -1386,7 +1383,10 @@ static void NP_update(REGS *regs)
         {
             set_pos (DEV_LINE+i, 43);
             set_color (busy ? COLOR_LIGHT_YELLOW : COLOR_LIGHT_GREY, COLOR_BLACK);
-            snprintf (buf, sizeof(buf), "%4.4X", dev->devnum);
+            if (dev == sysblk.sysgdev)
+                STRLCPY( buf, "SYSG" );
+            else
+                MSGBUF (buf, "%4.4X", dev->devnum);
             draw_text (buf);
             NPdevnum[i] = dev->devnum;
             NPbusy[i] = busy;
@@ -1397,7 +1397,7 @@ static void NP_update(REGS *regs)
         {
             set_pos (DEV_LINE+i, 48);
             set_color (open ? COLOR_LIGHT_GREEN : COLOR_LIGHT_GREY, COLOR_BLACK);
-            snprintf (buf, sizeof(buf), "%4.4X", dev->devtype);
+            MSGBUF (buf, "%4.4X", dev->devtype);
             draw_text (buf);
             NPdevtype[i] = dev->devtype;
             NPopen[i] = open;
@@ -1409,7 +1409,7 @@ static void NP_update(REGS *regs)
         {
             set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
             set_pos (DEV_LINE+i, 53);
-            snprintf (buf, sizeof(buf), "%-4.4s", devclass);
+            MSGBUF (buf, "%-4.4s", devclass);
             draw_text (buf);
             /* Draw device name only if they're NOT assigning a new one */
             if (0
@@ -1424,7 +1424,7 @@ static void NP_update(REGS *regs)
                 l = (int)strlen(devnam);
                 for ( p = 0; p < l; p++ )
                 {
-                    if ( !isprint(devnam[p]) )
+                    if ( !isprint((unsigned char)devnam[p]) )
                     {
                         devnam[p] = '\0';
                         break;
@@ -1552,52 +1552,196 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
 }
 
 ///////////////////////////////////////////////////////////////////////
+// Get a working copy of the active REGS struct(s) for specified CPU
 
-REGS *copy_regs(int cpu)
+static REGS* panel_copy_regs( int cpu )
 {
-    REGS *regs;
+    REGS* regs; /* (pointer to REGS struct that we'll be returning) */
 
+    /* Default to CPU #0 if invalid CPU number is passed */
     if (cpu < 0 || cpu >= sysblk.maxcpu)
         cpu = 0;
 
-    obtain_lock (&sysblk.cpulock[cpu]);
-
-    if ((regs = sysblk.regs[cpu]) == NULL)
+    /* Use the standardized REGS copy function to make the copy */
+    obtain_lock( &sysblk.cpulock[ cpu ]);
     {
-        release_lock(&sysblk.cpulock[cpu]);
-        return &sysblk.dummyregs;
+        if (!sysblk.regs[ cpu ])
+        {
+            /* Specified CPU does not exist. Use dummyregs instead */
+            release_lock( &sysblk.cpulock[ cpu ]);
+            return &sysblk.dummyregs;
+        }
+
+        /* Make a working copy of this CPU's REGS structs */
+        regs = copy_regs( sysblk.regs[ cpu ] );
     }
+    release_lock( &sysblk.cpulock[ cpu ]);
 
-    memcpy (&copyregs, regs, sysblk.regs_copy_len);
+    /* Copy the working copy to our static work variables */
+    memcpy( &copyregs, regs, sysblk.regs_copy_len );
 
-    if (copyregs.hostregs == NULL)
-    {
-        release_lock(&sysblk.cpulock[cpu]);
-        return &sysblk.dummyregs;
-    }
+    /* Free the original working copy */
+    free_aligned( regs );
 
-#if defined(_FEATURE_SIE)
+    /* Point to our static copy */
+    regs = &copyregs;
+
+    /* Make a separate copy of the guest REGS, if they exist */
+    if (GUESTREGS)
+        memcpy( &copysieregs, GUESTREGS, sysblk.regs_copy_len );
+
+    /* Switch to using the guest REGS instead, if SIE is active */
+#if defined( _FEATURE_SIE )
     if (regs->sie_active)
-    {
-        memcpy (&copysieregs, regs->guestregs, sysblk.regs_copy_len);
-        copyregs.guestregs = &copysieregs;
-        copysieregs.hostregs = &copyregs;
         regs = &copysieregs;
-    }
-    else
-#endif // defined(_FEATURE_SIE)
-        regs = &copyregs;
+#endif
 
-    SET_PSW_IA(regs);
+    /* Ensure PSW accurately reflects the current instruction */
+    MAYBE_SET_PSW_IA_FROM_IP( regs );
 
-    release_lock(&sysblk.cpulock[cpu]);
+    /* Return pointer to static copy of active CPU's REGS struct */
     return regs;
 }
 
+///////////////////////////////////////////////////////////////////////
+// Set panel colors
+
+DLL_EXPORT void set_panel_colors()
+{
+    switch (sysblk.pan_colors)
+    {
+    default:
+    case PANC_NONE:   // No colors: use defaults
+
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        break;
+
+    case PANC_DARK:   // Dark scheme: light text on dark background
+
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_RED;
+
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_BLUE;
+
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        break;
+
+    case PANC_LIGHT:  // Light scheme: dark text on light background
+
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_DARK_GREY;
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_BLACK;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_RED;
+
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_BLUE;
+
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_S_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_FG_IDX ] = COLOR_DARK_GREY;
+        sysblk.pan_color[ PANC_A_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        break;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////
+// Return panel message FG/BG color for given message severity code
+
+static int msgcolor( int sev, int fgbg )
+{
+    switch (sev) {
+    case 'I': return sysblk.pan_color[ PANC_I_IDX ][ fgbg ];
+    case 'E': return sysblk.pan_color[ PANC_E_IDX ][ fgbg ];
+    case 'W': return sysblk.pan_color[ PANC_W_IDX ][ fgbg ];
+    case 'D': return sysblk.pan_color[ PANC_D_IDX ][ fgbg ];
+    case 'S': return sysblk.pan_color[ PANC_S_IDX ][ fgbg ];
+    case 'A': return sysblk.pan_color[ PANC_A_IDX ][ fgbg ]; default: break; }
+              return sysblk.pan_color[ PANC_X_IDX ][ fgbg ];
+}
+static int fg_msgcolor( int sev ) { return msgcolor( sev, PANC_FG_IDX ); }
+static int bg_msgcolor( int sev ) { return msgcolor( sev, PANC_BG_IDX ); }
+
+static bool have_regexp = false;
+
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+
+// PROGRAMMING NOTE: using a variable named "regex" conflicts with
+// <libgen.h> on Solaris, so we use variable name "regexp" instead.
+
+static regex_t     regexp;      // (see above PROGRAMMING NOTE)
+static regmatch_t  regmatch;
+
+static void init_HHC_regexp()
+{
+    // "HHC99999S"
+    have_regexp = (0 == regcomp( &regexp, "(HHC[0-9][0-9][0-9][0-9][0-9]\\S)", REG_EXTENDED ))
+        ? true : false;
+}
+#endif // defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+
+///////////////////////////////////////////////////////////////////////
+// Return panel message severity code
+
+static int msg_sev( const char* msg )
+{
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+    if (have_regexp)
+    {
+        if (regexec( &regexp, msg, 1, &regmatch, 0 ) == 0)
+            return (int)(msg[ regmatch.rm_so + 8 ]);
+    }
+    else
+#endif // defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+    {
+        int sevidx = MLVL( DEBUG ) ? MLVL_DEBUG_PFXIDX + 8 : 8;
+        if ((int)strlen( msg ) > sevidx)
+            return (int)(msg[ sevidx ]);
+    }
+    return (int)' ';
+}
 
 /*-------------------------------------------------------------------*/
-/* Panel display thread                                              */
-/*                                                                   */
+/*                    Panel display thread                           */
+/*-------------------------------------------------------------------*/
 /* This function runs on the main thread.  It receives messages      */
 /* from the log task and displays them on the screen.  It accepts    */
 /* panel commands from the keyboard and executes them.  It samples   */
@@ -1639,6 +1783,10 @@ size_t  loopcount;                      /* Number of iterations done */
     SET_THREAD_NAME( PANEL_THREAD_NAME );
     hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
     history_init();
+
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+    init_HHC_regexp();
+#endif
 
     /* Set Some Function Key Defaults */
     {
@@ -1843,7 +1991,7 @@ size_t  loopcount;                      /* Number of iterations done */
                         case 'o':
                             if (!sysblk.hicpu)
                               break;
-                            regs = copy_regs(sysblk.pcpu);
+                            regs = panel_copy_regs(sysblk.pcpu);
                             aaddr = APPLY_PREFIXING (NPaddress, regs->PX);
                             if (aaddr > regs->mainlim)
                                 break;
@@ -1936,13 +2084,13 @@ size_t  loopcount;                      /* Number of iterations done */
                         case 1:                     /* IPL - 2nd part */
                             if (!sysblk.hicpu)
                               break;
-                            i = toupper(NPdevice) - 'A';
+                            i = toupper((unsigned char)NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
                                 memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
                                 break;
                             }
-                            sprintf (cmdline, "ipl %4.4x", NPdevnum[i]);
+                            MSGBUF (cmdline, "ipl %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
                             memset(NPprompt2,0,sizeof(NPprompt2));
                             redraw_status = 1;
@@ -1957,7 +2105,7 @@ size_t  loopcount;                      /* Number of iterations done */
                         case 2:                     /* Device int: part 2 */
                             if (!sysblk.hicpu)
                               break;
-                            i = toupper(NPdevice) - 'A';
+                            i = toupper((unsigned char)NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
                                 memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
@@ -1976,7 +2124,7 @@ size_t  loopcount;                      /* Number of iterations done */
                             redraw_status = 1;
                             break;
                         case 3:                     /* Device asgn: part 2 */
-                            i = toupper(NPdevice) - 'A';
+                            i = toupper((unsigned char)NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
                                 memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
@@ -2181,7 +2329,7 @@ size_t  loopcount;                      /* Number of iterations done */
 
                             while (*p && ncmd_tok < 10 )
                             {
-                                while (*p && isspace(*p))
+                                while (*p && isspace((unsigned char)*p))
                                 {
                                     p++;
                                 }
@@ -2195,7 +2343,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                 cmd_tok[ncmd_tok] = p; ++ncmd_tok; // count new arg
 
                                 while ( *p
-                                        && !isspace(*p)
+                                        && !isspace((unsigned char)*p)
                                         && *p != '\"'
                                         && *p != '\'' )
                                 {
@@ -2280,7 +2428,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                             }
                                         }
                                     }
-                                    else if ( !isdigit( pt1[idx+1] ) && ( pt1[idx+1] != '$' ) )
+                                    else if ( !isdigit( (unsigned char)pt1[idx+1] ) && ( pt1[idx+1] != '$' ) )
                                     {
                                         psz_cmdline[odx++] = pt1[idx];
                                     }
@@ -2583,7 +2731,7 @@ size_t  loopcount;                      /* Number of iterations done */
                     if (1
                         && cmdlen == 0
                         && NPDup == 0
-                        && !sysblk.inststep
+                        && !sysblk.instbreak
                     ) {
                         history_show();
                     } else {
@@ -2635,7 +2783,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                         STRLCPY(cmdline, NPdevnam[NPasgn]);
                                     }
                                     STRLCPY(NPdevnam[NPasgn], "");
-                                    sprintf (NPentered, "devinit %4.4x %s",
+                                    MSGBUF (NPentered, "devinit %4.4x %s",
                                              NPdevnum[NPasgn], cmdline);
                                     do_panel_command(NPentered);
                                     STRLCPY(NPprompt2, "");
@@ -2656,7 +2804,7 @@ size_t  loopcount;                      /* Number of iterations done */
                 } /* end if (kbbuf[i] == '\n') */
 
                 /* Ignore non-printable characters */
-                if (!isprint(kbbuf[i])) {
+                if (!isprint((unsigned char)kbbuf[i])) {
                     beep();
                     i++;
                     continue;
@@ -2823,7 +2971,7 @@ FinishShutdown:
         {
             if ( sysblk.shutfini ) break;
             /* wait for system to finish shutting down */
-            usleep(10000);
+            USLEEP(10000);
             lmsmax = INT_MAX;
             goto FinishShutdown;
         }
@@ -2837,7 +2985,7 @@ FinishShutdown:
         /* =END= */
 
         /* Obtain the PSW for target CPU */
-        regs = copy_regs( sysblk.pcpu );
+        regs = panel_copy_regs( sysblk.pcpu );
         memset( curr_psw, 0, sizeof( curr_psw ));
         copy_psw( regs, curr_psw );
 
@@ -2880,6 +3028,7 @@ FinishShutdown:
         /*        the NP display as an else after those ifs */
 
         if (NPDup == 0) {
+            int sev, fg_color, bg_color;
             /* Rewrite the screen if display update indicators are set */
             if (redraw_msgs && !npquiet)
             {
@@ -2894,9 +3043,14 @@ FinishShutdown:
                 /* Then draw current screen */
                 for (p=topmsg; i < (SCROLL_LINES + numkept) && (p != curmsg->next || p == topmsg); i++, p = p->next)
                 {
-                    set_pos (i+1, 1);
-                    set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-                    write_text (p->msg, MSG_SIZE);
+                    sev = msg_sev( p->msg );
+
+                    fg_color = fg_msgcolor( sev );
+                    bg_color = bg_msgcolor( sev );
+
+                    set_pos( i+1, 1 );
+                    set_color( fg_color, bg_color );
+                    write_text( p->msg, MSG_SIZE );
                 }
 
                 /* Pad remainder of screen with blank lines */
@@ -3000,14 +3154,14 @@ FinishShutdown:
                 saved_cons_col = cur_cons_col;
 
                 memset (buf, ' ', cons_cols);
-                len = sprintf ( buf, "%s%02X ",
+                len = MSGBUF ( buf, "%s%02X ",
                     PTYPSTR(sysblk.pcpu), sysblk.pcpu ) ;
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
-                    len += sprintf(buf+len, "PSW=%8.8X%8.8X ",
+                    len += idx_snprintf( len, buf, sizeof(buf), "PSW=%8.8X%8.8X ",
                                    fetch_fw( curr_psw ), fetch_fw( curr_psw + 4 ));
                     if (regs->arch_mode == ARCH_900_IDX)
-                        len += sprintf (buf+len, "%16.16"PRIX64" ",
+                        len += idx_snprintf( len, buf, sizeof(buf), "%16.16"PRIX64" ",
                                         fetch_dw( curr_psw + 8 ));
 #if defined(_FEATURE_SIE)
                     else
@@ -3018,21 +3172,24 @@ FinishShutdown:
                             buf[len++] = ' ';
                         }
 #endif /*defined(_FEATURE_SIE)*/
-                    len += sprintf (buf+len, "%2d%c%c%c%c%c%c%c%c",
+                    len += idx_snprintf( len, buf, sizeof(buf), "%2d%c%c%c%c%c%c%c%c",
                            regs->psw.amode64                  ? 64 :
                            regs->psw.amode                    ? 31 : 24,
                            regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
-                           sysblk.inststep                    ? 'T' : '.',
+                           sysblk.instbreak                   ? 'T' : '.',
                            WAITSTATE(&regs->psw)              ? 'W' : '.',
                            regs->loadstate                    ? 'L' : '.',
                            regs->checkstop                    ? 'C' : '.',
                            PROBSTATE(&regs->psw)              ? 'P' : '.',
                            SIE_MODE(regs)                     ? 'S' : '.',
-                           regs->arch_mode == ARCH_900_IDX        ? 'Z' : '.');
+                           regs->arch_mode == ARCH_900_IDX    ? 'Z' : '.');
                 }
                 else
-                    len += sprintf (buf+len,"%s", "Offline");
-                buf[len++] = ' ';
+                    len += idx_snprintf( len, buf, sizeof(buf), "%s", "Offline");
+
+                memset( buf+len, ' ', sizeof( buf ) - len - 1 );
+                buf[ sizeof( buf ) - 1 ] = 0;
+                len++;
 
                 /* Bottom line right corner can be when there is space:
                  * ""
@@ -3048,14 +3205,14 @@ FinishShutdown:
                     U32 mipsrate = prev_mipsrate / 1000000;
 
                     /* Format instruction count */
-                    i = snprintf(ibuf, sizeof(ibuf),
+                    i = MSGBUF(ibuf,
                                  "instcnt %s",
                                  format_int( prev_instcount ));
 
                     if ((len + i + 12) < cons_cols)
                     {
                         if (mipsrate > 999)
-                            i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                            i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                           "; mips %1d,%03d",
                                           prev_mipsrate / 1000000000,
                                           ((prev_mipsrate % 1000000000) +
@@ -3065,17 +3222,17 @@ FinishShutdown:
                             U32 mipsfrac = prev_mipsrate % 1000000;
 
                             if (mipsrate > 99)
-                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                               "; mips %3d.%01d",
                                               mipsrate,
                                               (mipsfrac + 50000) / 100000);
                             else if (mipsrate > 9)
-                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                               "; mips %2d.%02d",
                                               mipsrate,
                                               (mipsfrac + 5000) / 10000);
                             else
-                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                               "; mips %1d.%03d",
                                               mipsrate,
                                               (mipsfrac + 500) / 1000);
@@ -3097,7 +3254,7 @@ FinishShutdown:
                     if (numcpu)
                         ibuf[(int)i++] = ';',
                         ibuf[(int)i++] = ' ';
-                    i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                    i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                   "I/O %6.6s",
                                   format_int( prev_siosrate ));
                 }
@@ -3166,6 +3323,8 @@ FinishShutdown:
         npquiet = sysblk.npquiet;
 
     } /* end while */
+
+    free( kbbuf );
 
     sysblk.panel_init = 0;
 

@@ -696,13 +696,12 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetCMPSC ))( CMPSCBLK* pCMPSCBLK, REGS* reg
     pCMPSCBLK->r1       =  r1;
     pCMPSCBLK->r2       =  r2;
 
-    pCMPSCBLK->pOp1     = GR_A( r1,   regs );
-    pCMPSCBLK->pOp2     = GR_A( r2,   regs );
+    GR0                 = regs->GR_L( 0 );
+    GR1                 = GR_A( 1,    regs ) & ADDRESS_MAXWRAP( regs );
+    pCMPSCBLK->pOp1     = GR_A( r1,   regs ) & ADDRESS_MAXWRAP( regs );
+    pCMPSCBLK->pOp2     = GR_A( r2,   regs ) & ADDRESS_MAXWRAP( regs );
     pCMPSCBLK->nLen1    = GR_A( r1+1, regs );
     pCMPSCBLK->nLen2    = GR_A( r2+1, regs );
-
-    GR0 = regs->GR_L( 0 );
-    GR1 = GR_A( 1, regs );
 
 //  pCMPSCBLK->e        = (GR0 >>  8) & 0x01;   // (no such field)
     pCMPSCBLK->f1       = (GR0 >>  9) & 0x01;

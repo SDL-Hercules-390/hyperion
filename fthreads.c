@@ -787,7 +787,7 @@ FT_CALL_THREAD_PARMS;
 
 //----------------------------------------------------------------------------------
 
-static DWORD  __stdcall  FTWin32ThreadFunc
+static unsigned __stdcall  FTWin32ThreadFunc
 (
     void*  pMyArgs
 )

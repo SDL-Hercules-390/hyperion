@@ -1,4 +1,4 @@
-/* W32UTIL.C    (C) Copyright "Fish" (David B. Trout), 2005-2012     */
+/* W32UTIL.C    (C) Copyright "Fish" (David B. Trout), 2005-2021     */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              Windows porting functions                            */
 /*                                                                   */
@@ -782,13 +782,27 @@ static int w32_nanosleep ( const struct timespec* rqtp )
 
 DLL_EXPORT int nanosleep ( const struct timespec* rqtp, struct timespec* rmtp )
 {
+    /* "If the rmtp argument is non-NULL, the timespec structure referenced by it
+        is updated to contain the amount of time remaining in the interval (the
+        requested time minus the time actually slept). The rqtp and rmtp arguments
+        MAY point to the same object."
+    */
+    int rc = w32_nanosleep( rqtp );
+
     if (unlikely( rmtp ))
     {
+        // Windows always sleeps for the requested interval,
+        // so there will never be any remaining sleep time.
+
+        // Note that we must be careful do the below AFTER
+        // we've slept and not before, since rmtp MAY point
+        // to the same place as rqtp!
+
         rmtp->tv_sec  = 0;
         rmtp->tv_nsec = 0;
     }
 
-    return w32_nanosleep ( rqtp );
+    return rc;
 }
 
 #endif // !defined( HAVE_NANOSLEEP )
@@ -1017,7 +1031,7 @@ static INLINE U64 FileTime2us (const FILETIME ft)
 
 static INLINE void FileTime2timeval (const FILETIME ft, struct timeval* tv)
 {
-    us2timeval( FileTime2us( ft ), tv );    // Convert to timeval
+    usecs2timeval( FileTime2us( ft ), tv );    // Convert to timeval
 }
 
 
@@ -1314,7 +1328,7 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
         if (1
             && inlen >= 11
             && strncasecmp((const char *)inpath,"/cygdrive/",10) == 0
-            && isalpha(inpath[10])
+            && isalpha((unsigned char)inpath[10])
         )
         {
             *outpath++ = inpath[10];
@@ -1475,7 +1489,6 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     OSVERSIONINFOEX   vi;
     MEMORYSTATUSEX    ms;
     SYSTEM_INFO       si;
-    BOOL              ext;
     char             *psz = "", *prod_id = "", *prod_proc = "";
     DWORD             dw;
     PGNSI             pgnsi;
@@ -1638,6 +1651,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
         pgnsi( &si );
     else GetSystemInfo( &si );
 
+#if 0 // DEPRECATED!
     vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
     if (!(ext = GetVersionEx ((OSVERSIONINFO *) &vi)))
     {
@@ -1647,6 +1661,9 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             psz = "??";
         }
     }
+#else // replacement
+    w32_GetWinVersInfo( &vi );
+#endif
 
     switch ( vi.dwPlatformId )
     {
@@ -2067,17 +2084,78 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             break;
     }
 
-#if defined(__MINGW32_VERSION)
- #define HWIN32_SYSNAME         "MINGW32"
-#else
- #define HWIN32_SYSNAME         "Windows"
-#endif
+    /* Use winbrand.dll's "BrandingFormatString" function to retrieve
+       Windows's TRUE product name (sysname). (Thank you Bill Lewis!)
+    */
+    {
+        UINT  uiSize               =  0;
+        char  dllpath[ MAX_PATH ]  = {0};
+        bool  gotsysname           = false;
 
-    _snprintf(
-        pHostInfo->sysname, sizeof(
-        pHostInfo->sysname)-1,        HWIN32_SYSNAME );
-        pHostInfo->sysname[ sizeof(
-        pHostInfo->sysname)-1] = 0;
+        uiSize = GetSystemDirectoryA( dllpath, (UINT) sizeof( dllpath ));
+
+        if (uiSize && uiSize < (UINT) sizeof( dllpath ))
+        {
+            HMODULE hMod = NULL;
+
+            strncpy( &dllpath[ uiSize ], "\\winbrand.dll", sizeof( dllpath ) - uiSize );
+            dllpath[ sizeof( dllpath ) - 1 ] = 0; // (ALWAYS after strncpy!)
+
+            hMod = LoadLibraryEx( dllpath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH );
+
+            if (hMod)
+            {
+                FARPROC pfnBrandingFormatString =
+                    GetProcAddress( hMod, "BrandingFormatString" );
+
+                if (pfnBrandingFormatString)
+                {
+                    // BrandingFormatString's format codes are undocumented. The
+                    // only place I could find them anywhere was on this web page:
+                    // https://dennisbabkin.com/blog/?t=how-to-tell-the-real-version-of-windows-your-app-is-running-on
+
+                    // The "BrandingFormatString" function always takes a WIDE string
+                    // argument and always returns a WIDE string result too, for BOTH
+                    // the 32-bit and 64-bit versions of windbrand.dll.
+
+                    PWSTR pwstrOSName = (PWSTR) pfnBrandingFormatString( L"%WINDOWS_LONG%" );
+
+                    if (pwstrOSName)
+                    {
+                        // UPPERCASE '%S' (as opposed to the normal lowercase '%s')
+                        // means the input string being formatted is a wide string,
+                        // and should be printf formatted into an ASCII string. The
+                        // complete opposite is of course true whenever wprintf is
+                        // used instead.
+
+                        MSGBUF( pHostInfo->sysname, "%S", pwstrOSName );
+                        GlobalFree( (HGLOBAL) pwstrOSName );
+                        gotsysname = true;
+                        psz = pHostInfo->sysname;
+                    }
+                }
+
+                FreeLibrary( hMod );
+            }
+        }
+
+        /* Use original code if the above didn't work */
+
+        if (!gotsysname)
+        {
+            #if defined(__MINGW32_VERSION)
+             #define HWIN32_SYSNAME         "MINGW32"
+            #else
+             #define HWIN32_SYSNAME         "Windows"
+            #endif
+
+            _snprintf(
+                pHostInfo->sysname, sizeof(
+                pHostInfo->sysname)-1,        HWIN32_SYSNAME );
+                pHostInfo->sysname[ sizeof(
+                pHostInfo->sysname)-1] = 0;
+        }
+    }
 
     _snprintf(
         pHostInfo->release, sizeof(
@@ -2093,6 +2171,90 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
         pHostInfo->version[ sizeof(
         pHostInfo->version)-1] = 0;
 
+    // registry CurrentBuildNumber, DisplayVersion
+    {
+        DWORD   dwSize   = 0;
+        DWORD   dwType   = 0;
+        LONG    lResult  = 0;
+        HKEY    hKey     = NULL;
+        bool    gotbld   = false;
+
+        lResult = RegOpenKeyEx
+        (
+            HKEY_LOCAL_MACHINE,
+            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+            0, // (no options)
+            KEY_QUERY_VALUE,
+            &hKey
+        );
+        if (ERROR_SUCCESS == lResult)
+        {
+            dwSize = (DWORD) sizeof( pHostInfo->curbuild );
+
+            lResult = RegQueryValueEx
+            (
+                hKey,
+                "CurrentBuildNumber",   // (e.g. "22631")
+                NULL,
+                &dwType,
+                (BYTE*) pHostInfo->curbuild,
+                &dwSize
+            );
+            if (ERROR_SUCCESS == lResult)
+            {
+                char display_version[64] = {0};
+
+                if (dwSize > sizeof( pHostInfo->curbuild ))
+                    dwSize = sizeof( pHostInfo->curbuild );
+
+                if (dwSize < 1)
+                    dwSize = 1;
+
+                pHostInfo->curbuild[ dwSize - 1 ] = 0;
+                gotbld = true;
+
+                dwSize = (DWORD) sizeof( display_version );
+
+                lResult = RegQueryValueEx
+                (
+                    hKey,
+                    "DisplayVersion",   // (e.g. "23H2")
+                    NULL,
+                    &dwType,
+                    (BYTE*) display_version,
+                    &dwSize
+                );
+                if (ERROR_SUCCESS == lResult)
+                {
+                    char new_sysname[64] = {0};
+
+                    if (dwSize > sizeof( display_version ))
+                        dwSize = sizeof( display_version );
+
+                    if (dwSize < 1)
+                        dwSize = 1;
+
+                    display_version[ dwSize - 1 ] = 0;
+
+                    STRLCPY( new_sysname, pHostInfo->sysname );
+                    STRLCAT( new_sysname, " " );
+                    STRLCAT( new_sysname, display_version );
+                    STRLCPY( pHostInfo->sysname, new_sysname );
+                }
+            }
+
+            RegCloseKey( hKey );
+        }
+
+        if (!gotbld)
+        {
+            _snprintf(
+                pHostInfo->curbuild, sizeof(
+                pHostInfo->curbuild)-1, "%d", vi.dwBuildNumber );
+                pHostInfo->curbuild[ sizeof(
+                pHostInfo->curbuild)-1] = 0;
+        }
+    }
 
     switch ( si.wProcessorArchitecture )
     {
@@ -2202,7 +2364,7 @@ static char    chStdIn          = 0;        // (the char read from stdin)
 // at a time. This may perhaps be slightly inefficient but it makes for a simpler
 // implementation and besides, we don't really expect huge gobs of data coming in.
 
-static DWORD WINAPI ReadStdInThread( LPVOID lpParameter )
+static unsigned WINAPI ReadStdInThread( LPVOID lpParameter )
 {
     DWORD   dwBytesRead  = 0;
 
@@ -2227,7 +2389,7 @@ static DWORD WINAPI ReadStdInThread( LPVOID lpParameter )
 
             MSGBUF
             (
-                 buf, "ReadFile( hDupedStdIn ) failed! dwLastError=%d (0x%08.8X): %s"
+                 buf, "ReadFile( hDupedStdIn ) failed! dwLastError=%d (0x%8.8X): %s"
                 ,dwLastError
                 ,dwLastError
                 ,szErrMsg
@@ -2315,7 +2477,7 @@ static void CreateReadStdInThread()
             DWORD  dwLastError;
             char   szErrMsg[ 256 ];
 
-            // "DuplicateHandle() failed: dwLastError=%d (0x%08.8X): %s"
+            // "DuplicateHandle() failed: dwLastError=%d (0x%8.8X): %s"
             dwLastError = GetLastError();
             WRMSG( HHC04110, "W", dwLastError, dwLastError,
                 w32_w32errmsg( dwLastError, szErrMsg, sizeof( szErrMsg )));
@@ -2592,7 +2754,7 @@ static void kasock_init()
 #define MAX_KA_CNT              255                 // maximum probes
 
     {
-        OSVERSIONINFO  vi  = { sizeof( vi ), 0 };
+        OSVERSIONINFOEX vi = { sizeof( vi ), 0 };
         BOOL    bPreVista  = FALSE;
         DWORD   dwSize     = sizeof( DWORD );
         LONG    lResult    = 0;
@@ -2602,7 +2764,11 @@ static void kasock_init()
         DWORD   dwCnt1     = 0;
         DWORD   dwCnt2     = 0;
 
+#if 0 // DEPRECATED!
         VERIFY( GetVersionEx( &vi ));
+#else // replacement
+        w32_GetWinVersInfo( &vi );
+#endif
         bPreVista = (vi.dwMajorVersion < 6);
 
         lResult = RegOpenKeyEx( KA_REGROOT, KA_REGKEY, 0, KEY_QUERY_VALUE, &hKey );
@@ -3084,7 +3250,7 @@ DLL_EXPORT int inet_aton( const char* cp, struct in_addr* addr )
 // Do '_get_osfhandle'.
 //
 // If '_get_osfhandle' error, then it's either already a HANDLE (SOCKET probably),
-// or else a bona fide invalid file descriptor or invalid SOCKET handle, so do a
+// or else a bonafide invalid file descriptor or invalid SOCKET handle, so do a
 // normal FD_SET.
 //
 // Otherwise ('_get_osfhandle' success), then it WAS a file descriptor
@@ -4175,7 +4341,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         return -1;
     }
 
-    SET_THREAD_NAME_ID( dwThreadId, "w32_read_piped_process_stdOUT_output_thread" );
+    SET_THREAD_NAME_ID( dwThreadId, "w32_pipe_stdOUT" );
 
     //////////////////////////////////////////////////
     // Stderr...
@@ -4218,7 +4384,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         return -1;
     }
 
-    SET_THREAD_NAME_ID( dwThreadId, "w32_read_piped_process_stdERR_output_thread" );
+    SET_THREAD_NAME_ID( dwThreadId, "w32_pipe_stdERR" );
 
     // Piped process capture handling...
 
@@ -4238,7 +4404,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
         // Now print ALL captured messages AT ONCE (if any)...
 
-        while (pPipedProcessCtl->nStrLen && isspace( pPipedProcessCtl->pszBuffer[ pPipedProcessCtl->nStrLen - 1 ] ))
+        while (pPipedProcessCtl->nStrLen && isspace( (unsigned char)pPipedProcessCtl->pszBuffer[ pPipedProcessCtl->nStrLen - 1 ] ))
             pPipedProcessCtl->nStrLen--;
         if (pPipedProcessCtl->nStrLen)
         {
@@ -4387,7 +4553,7 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
         *pend = 0;                      // (change newline character to null)
         pmsgend = pend;                 // (start removing blanks from here)
 
-        while (--pmsgend >= pbeg && isspace(*pmsgend)) {*pmsgend = 0; --nlen;}
+        while (--pmsgend >= pbeg && isspace((unsigned char)*pmsgend)) {*pmsgend = 0; --nlen;}
 
         // If we were passed a PIPED_PROCESS_CTL pointer, then the root thread
         // wants us to just capture the o/p and IT will issue the logmsg within
@@ -4644,10 +4810,10 @@ DLL_EXPORT char*  w32_strcasestr( const char* haystack, const char* needle )
 
     while ( haystack[++i] != '\0' )
     {
-        if ( tolower( haystack[i] ) == tolower( needle[0] ) )
+        if ( tolower( (unsigned char)haystack[i] ) == tolower( (unsigned char)needle[0] ) )
         {
             int j=i, k=0, match=0;
-            while ( tolower( haystack[++j] ) == tolower( needle[++k] ) )
+            while ( tolower( (unsigned char)haystack[++j] ) == tolower( (unsigned char)needle[++k] ) )
             {
                 match=1;
                 // Catch case when they match at the end
@@ -4712,6 +4878,22 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
 
     err = _sopen_s( &fh, path, oflag, sh_flg, pmode );
 
+    // If only read-only access was requested and permission was denied,
+    // then the file is already opened with write access by someone else.
+    // Try again without requesting write access denial to others. This
+    // allows batch utilities such as "dasdls" to open and read the file
+    // even though e.g. Hercules already has it opened with write access.
+
+    if (1
+        && !(oflag & (_O_WRONLY | _O_RDWR))   // (open == read only?)
+        && EACCES == err                      // (permission denied?)
+    )
+    {
+        sh_flg = _SH_DENYNO;  // (no read or write denials this time)
+        err = _sopen_s( &fh, path, oflag, sh_flg, pmode );
+    }
+
+    // Issue an error message only if verbose debugging is enabled
     if (1
         && err != 0
         && MLVL( DEBUG )
@@ -4720,6 +4902,7 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
     {
         char msgbuf[MAX_PATH * 2];
         MSGBUF( msgbuf, "Error opening '%s'; errno(%d) %s", path, err, strerror(err) );
+        // "DBG: %s"
         WRMSG( HHC90000, "D", msgbuf );
     }
     return fh;
@@ -4747,6 +4930,65 @@ DLL_EXPORT  bool are_elevated()
         CloseHandle( hToken );
 
     return elevated;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// w32_GetWinVersInfo -- replacement for GetVersionEx that works properly
+// for ANY version of Windows regardless of build target. (GetVersionEx
+// has been deprecated and returns INACCURATE information for any version
+// of Windows newer than Windows 8. It essentially LIES! Thanks Microsuck!)
+
+void (WINAPI* pfnRtlGetNtVersionNumbers)
+(
+    __out_opt ULONG* pNtMajorVersion,
+    __out_opt ULONG* pNtMinorVersion,
+    __out_opt ULONG* pNtBuildNumber
+);
+
+DLL_EXPORT void w32_GetWinVersInfo( OSVERSIONINFOEX* pOSVersInfoEx )
+{
+    FARPROC  pfnRtlGetNtVersionNumbers =  NULL;
+
+    ULONG  ulMajorVersion  = 0;
+    ULONG  ulMinorVersion  = 0;
+    ULONG  ulBuildNumber   = 0;
+
+    // First, call the old/deprecated/original "GetVersionEx"
+    // to populate all of the other non-version-number fields.
+
+    memset( pOSVersInfoEx, 0, sizeof( OSVERSIONINFOEX ));
+
+    pOSVersInfoEx->dwOSVersionInfoSize = sizeof( OSVERSIONINFOEX );
+
+    if (!GetVersionEx( (OSVERSIONINFO*) pOSVersInfoEx ))
+    {
+        pOSVersInfoEx->dwOSVersionInfoSize = sizeof( OSVERSIONINFO );
+        // (ignore any error; we did the best we could!)
+        GetVersionEx( (OSVERSIONINFO*) pOSVersInfoEx );
+    }
+
+    // Now retrieve the TRUE/ACCURATE/REAL Windows version numbers
+
+    pfnRtlGetNtVersionNumbers = GetProcAddress(
+        GetModuleHandle( "ntdll.dll" ), "RtlGetNtVersionNumbers" );
+
+    if (!pfnRtlGetNtVersionNumbers)
+        CRASH(); // (highly unlikely!)
+
+    pfnRtlGetNtVersionNumbers( &ulMajorVersion, &ulMinorVersion, &ulBuildNumber );
+
+    // Turn off the high-order 4 bits of the build number, which is a code
+    // that identifies whether this build of Windows is a Production/Release
+    // build or a Checked debugging build of Windows, which is uninteresting
+    // to Hercules.
+
+    ulBuildNumber &= ~0xF0000000;   // (not interested in these bits)
+
+    // Update the OSVERSIONINFOEX fields with ACCURATE/TRUE information.
+
+    pOSVersInfoEx->dwMajorVersion = (DWORD) ulMajorVersion;
+    pOSVersInfoEx->dwMinorVersion = (DWORD) ulMinorVersion;
+    pOSVersInfoEx->dwBuildNumber  = (DWORD) ulBuildNumber;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

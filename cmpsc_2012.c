@@ -1198,6 +1198,15 @@ DEF_INST( cmpsc_2012 )
     int  r1, r2;                        /* Operand register numbers          */
     RRE( inst, regs, r1, r2 );          /* Decode the instruction...         */
 
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (0
+        || GR_A( 1,  regs ) == 0
+        || GR_A( r1, regs ) == 0
+        || GR_A( r2, regs ) == 0
+    )
+        ARCH_DEP( per3_zero )( regs );
+#endif
+
     /* Build our internal Compression Call parameters block */
 
     ARCH_DEP( cmpsc_SetCMPSC )( &cmpsc, regs, r1, r2 );
@@ -1237,6 +1246,8 @@ DEF_INST( cmpsc_2012 )
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#endif /* defined( FEATURE_CMPSC ) */
+
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
@@ -1271,6 +1282,8 @@ DEF_INST( cmpsc_2012 )
 /*-------------------------------------------------------------------*/
 
 
+#if defined( _FEATURE_CMPSC )
+
 ///////////////////////////////////////////////////////////////////////////////
 // Dictionary sizes in bytes by CDSS
 
@@ -1285,6 +1298,6 @@ const U32 g_nDictSize[ MAX_CDSS ] =
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#endif /* !defined( _GEN_ARCH ) */
+#endif // defined( _FEATURE_CMPSC )
 
-#endif /* defined( FEATURE_CMPSC ) */
+#endif /* !defined( _GEN_ARCH ) */

@@ -2,6 +2,7 @@
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              (C) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2013-2021                             */
 /*              CPU functions                                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -152,49 +153,52 @@ DLL_EXPORT int stopall_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 
-#ifdef _FEATURE_CPU_RECONFIG
-
+#if defined( _FEATURE_CPU_RECONFIG )
 /*-------------------------------------------------------------------*/
 /* cf command - configure/deconfigure a CPU                          */
 /*-------------------------------------------------------------------*/
-int cf_cmd(int argc, char *argv[], char *cmdline)
+int cf_cmd( int argc, char* argv[], char* cmdline )
 {
-    int on = -1;
+    int on = -1;  // (-1 indicates no change wanted)
 
     UPPER_ARGV_0( argv );
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
+    /* Change settings? */
     if (argc == 2)
     {
-        if ( CMD(argv[1],on,2) )
-            on = 1;
-        else if ( CMD(argv[1],off,3) )
-            on = 0;
+             if (CMD( argv[1], ON,  2 )) on = 1; // (change to online)
+        else if (CMD( argv[1], OFF, 3 )) on = 0; // (change to offline)
     }
 
-    OBTAIN_INTLOCK(NULL);
-
-    if (IS_CPU_ONLINE(sysblk.pcpu))
+    /* Display current settings or change to new settings */
+    OBTAIN_INTLOCK( NULL );
     {
-        if (on < 0)
-            WRMSG(HHC00819, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu );
-        else if (on == 0)
-            deconfigure_cpu(sysblk.pcpu);
+        if (IS_CPU_ONLINE( sysblk.pcpu ))
+        {
+            if (on < 0) // (no change; just show current setting)
+                // "Processor %s%02X: online"
+                WRMSG( HHC00819, "I", PTYPSTR( sysblk.pcpu ), sysblk.pcpu );
+            else if (on == 0) // (change to offline)
+                deconfigure_cpu( sysblk.pcpu );
+        }
+        else // (cpu is currently offline)
+        {
+            if (on < 0) // (no change; show current setting)
+                // "Processor %s%02X: offline"
+                WRMSG( HHC00820, "I", PTYPSTR( sysblk.pcpu ), sysblk.pcpu );
+            else if (on > 0) // (change to online)
+                configure_cpu( sysblk.pcpu );
+        }
     }
-    else
-    {
-        if (on < 0)
-            WRMSG(HHC00820, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu );
-        else if (on > 0)
-            configure_cpu(sysblk.pcpu);
-    }
+    RELEASE_INTLOCK( NULL );
 
-    RELEASE_INTLOCK(NULL);
-
+    /* If settings changed, show results */
     if (on >= 0)
     {
-        cf_cmd (1, argv, argv[0]);
+        // (call ourselves again to display current settings)
+        cf_cmd( 1, argv, argv[0] );
     }
 
     return 0;
@@ -204,64 +208,68 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* cfall command - configure/deconfigure all CPU's                   */
 /*-------------------------------------------------------------------*/
-int cfall_cmd(int argc, char *argv[], char *cmdline)
+int cfall_cmd( int argc, char *argv[], char *cmdline )
 {
-static char *qproc[] = { "qproc", NULL };
+static char* qproc[] = { "qproc", NULL };   // "qproc" command
 int rc = 0;
 int on = -1;
 
     UPPER_ARGV_0( argv );
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     if (argc == 2)
     {
-        if ( CMD(argv[1],on,2) )
-            on = 1;
-        else if ( CMD(argv[1],off,3) )
-            on = 0;
+             if (CMD( argv[1], ON,  2 )) on = 1; // (change to online)
+        else if (CMD( argv[1], OFF, 3 )) on = 0; // (change to offline)
         else
         {
+            // "Missing or invalid argument(s)"
             WRMSG( HHC17000, "E" );
             rc = -1;
         }
-        if ( rc == 0 )
+        if (rc == 0)
         {
-            rc = configure_numcpu(on ? sysblk.maxcpu : 0);
+            // configure number of online CPUs (i.e. NUMCPU)
+            rc = configure_numcpu( on ? sysblk.maxcpu : 0 );
         }
     }
-    else if ( argc == 1 )
+    else if (argc == 1)
     {
-        rc = qproc_cmd(1, qproc, *qproc);
+        // Show current CPU settings
+        rc = qproc_cmd( 1, qproc, *qproc );
     }
     else
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
     }
     return rc;
 }
 
-#else
-int cf_cmd(int argc, char *argv[], char *cmdline)
+#else // !defined( _FEATURE_CPU_RECONFIG )
+int cf_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
+    // "Panel command %s is not supported in this build; see option %s"
     WRMSG( HHC02310, "S", "cf", "FEATURE_CPU_RECONFIG" );
     return -1;
 }
-int cfall_cmd(int argc, char *argv[], char *cmdline)
+int cfall_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
+    // "Panel command %s is not supported in this build; see option %s"
     WRMSG( HHC02310, "S", "cfall", "FEATURE_CPU_RECONFIG" );
     return -1;
 }
-#endif /*_FEATURE_CPU_RECONFIG*/
+#endif /* defined( _FEATURE_CPU_RECONFIG ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -456,8 +464,8 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
                     */
                     for (j=0, len = (int) strlen( argv[i] ); j < len && psi < SIZEOF_IPLPARM; j++)
                     {
-                        if (islower( argv[i][j] ))
-                            argv[i][j] = toupper( argv[i][j] );
+                        if (islower( (unsigned char)argv[i][j] ))
+                            argv[i][j] = toupper( (unsigned char)argv[i][j] );
 
                         sysblk.iplparmstring[ psi++ ] = host_to_guest( argv[i][j] );
                     }
@@ -485,6 +493,9 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         U16    devnum;
         BYTE   c;
         char   save_ch=0;
+
+        /* Start with default LOADPARM value */
+        set_loadparm( sysblk.loadparm );
 
         /* Save the LOADPARM in case of error */
         orig_loadparm = strdup( str_loadparm() );
@@ -569,6 +580,14 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
 int ipl_cmd( int argc, char* argv[], char* cmdline )
 {
     const bool clear = false;
+    if (sysblk.sfcmd)
+    {
+        // "System cannot be IPLed once shadow file commands have been issued"
+        // "Hercules needs to be restarted before proceeding"
+        WRMSG( HHC00830, "E" );
+        WRMSG( HHC00831, "W" );
+        return -1;
+    }
     return ipl_cmd2( argc, argv, cmdline, clear );
 }
 
@@ -579,6 +598,14 @@ int ipl_cmd( int argc, char* argv[], char* cmdline )
 int iplc_cmd( int argc, char* argv[], char* cmdline )
 {
     const bool clear = true;
+    if (sysblk.sfcmd)
+    {
+        // "System cannot be IPLed once shadow file commands have been issued"
+        // "Hercules needs to be restarted before proceeding"
+        WRMSG( HHC00830, "E" );
+        WRMSG( HHC00831, "W" );
+        return -1;
+    }
     return ipl_cmd2( argc, argv, cmdline, clear );
 }
 
@@ -673,9 +700,23 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
 
     if (argc == 2)  /* Define a new value? */
     {
-        if (CMD( argv[1], default, 7 ) || CMD( argv[1], reset, 5 ))
+        if (CMD( argv[1], DEFAULT, 7 ) || CMD( argv[1], RESET, 5 ))
         {
-            sysblk.timerint = DEF_TOD_UPDATE_USECS;
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+            if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, sysblk.arch_mode ))
+            {
+                sysblk.timerint     = DEF_TXF_TIMERINT;
+                sysblk.txf_timerint = DEF_TXF_TIMERINT;
+            }
+            else
+#endif
+            {
+                sysblk.timerint     = DEF_TOD_UPDATE_USECS;
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+                sysblk.txf_timerint = DEF_TOD_UPDATE_USECS;
+#endif
+            }
+
             if (MLVL( VERBOSE ))
             {
                 // "%-14s set to %s"
@@ -692,7 +733,10 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
                 && timerint <= MAX_TOD_UPDATE_USECS
             )
             {
-                sysblk.timerint = timerint;
+                sysblk.timerint     = timerint;
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+                sysblk.txf_timerint = sysblk.timerint;
+#endif
                 if (MLVL( VERBOSE ))
                 {
                     char buf[25];
@@ -710,6 +754,15 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
                 rc = -1;
             }
         }
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+        if (rc == 0 && sysblk.config_processed)
+        {
+            sysblk.cfg_timerint = sysblk.timerint;
+            txf_set_timerint( FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, ARCH_900_IDX ));
+        }
+#endif
     }
     else if (argc == 1)
     {
@@ -833,10 +886,10 @@ int rc = 0;
 #if defined(_FEATURE_SIE)
         if ( regs->sie_active )
         {
-            vtod_now = TOD_CLOCK(regs->guestregs);
-            vepoch_now = regs->guestregs->tod_epoch;
-            vclkc_now = regs->guestregs->clkc;
-            vcpt_now = CPU_TIMER(regs->guestregs);
+            vtod_now = TOD_CLOCK(GUESTREGS);
+            vepoch_now = GUESTREGS->tod_epoch;
+            vclkc_now = GUESTREGS->clkc;
+            vcpt_now = CPU_TIMER(GUESTREGS);
             sie_flag = 1;
         }
 #endif
@@ -872,12 +925,12 @@ int rc = 0;
             epoch_sign = ' ';
         }
         MSGBUF( buf, "off = %16.16"PRIX64"   %c%s",
-                etod2tod(epoch_now), epoch_sign,
+                ETOD_high64_to_TOD_high56(epoch_now), epoch_sign,
                 format_tod(clock_buf,epoch_now_abs,FALSE) );
         WRMSG(HHC02274, "I", buf);
 
         MSGBUF( buf, "ckc = %16.16"PRIX64"    %s",
-                etod2tod(clkc_now), format_tod(clock_buf,clkc_now,TRUE) );
+                ETOD_high64_to_TOD_high56(clkc_now), format_tod(clock_buf,clkc_now,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
         if (regs->cpustate != CPUSTATE_STOPPED)
@@ -891,7 +944,7 @@ int rc = 0;
         {
 
             MSGBUF( buf, "vtod = %16.16"PRIX64"    %s",
-                    etod2tod(vtod_now), format_tod(clock_buf,vtod_now,TRUE) );
+                    ETOD_high64_to_TOD_high56(vtod_now), format_tod(clock_buf,vtod_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
             if (vepoch_now < 0)
@@ -905,12 +958,12 @@ int rc = 0;
                 vepoch_sign = ' ';
             }
             MSGBUF( buf, "voff = %16.16"PRIX64"   %c%s",
-                    etod2tod(vepoch_now), vepoch_sign,
+                    ETOD_high64_to_TOD_high56(vepoch_now), vepoch_sign,
                     format_tod(clock_buf,vepoch_now_abs,FALSE) );
             WRMSG(HHC02274, "I", buf);
 
             MSGBUF( buf, "vckc = %16.16"PRIX64"    %s",
-                    etod2tod(vclkc_now), format_tod(clock_buf,vclkc_now,TRUE) );
+                    ETOD_high64_to_TOD_high56(vclkc_now), format_tod(clock_buf,vclkc_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
             MSGBUF( buf, "vcpt = %16.16"PRIX64, vcpt_now );
@@ -994,30 +1047,32 @@ int start_cmd_cpu( int argc, char* argv[], char* cmdline )
     UNREFERENCED(cmdline);
 
     OBTAIN_INTLOCK(NULL);
-
-    if (IS_CPU_ONLINE(sysblk.pcpu))
     {
-        REGS *regs = sysblk.regs[sysblk.pcpu];
-        if ( regs->cpustate == CPUSTATE_STARTED )
+        // Start just the target CPU...
+
+        if (IS_CPU_ONLINE(sysblk.pcpu))
         {
-            WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "stopped");
-            rc = 1;
+            REGS *regs = sysblk.regs[sysblk.pcpu];
+            if ( regs->cpustate == CPUSTATE_STARTED )
+            {
+                WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "stopped");
+                rc = 1;
+            }
+            else
+            {
+                regs->opinterv = 0;
+                regs->cpustate = CPUSTATE_STARTED;
+                regs->checkstop = 0;
+                WAKEUP_CPU(regs);
+                WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "running state selected" );
+            }
         }
         else
         {
-            regs->opinterv = 0;
-            regs->cpustate = CPUSTATE_STARTED;
-            regs->checkstop = 0;
-            WAKEUP_CPU(regs);
-            WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "running state selected" );
+            WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+            rc = 1;
         }
     }
-    else
-    {
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        rc = 1;
-    }
-
     RELEASE_INTLOCK(NULL);
 
     return rc;
@@ -1032,36 +1087,54 @@ int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
 
     UPPER_ARGV_0( argv );
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
-    OBTAIN_INTLOCK(NULL);
-
-    if (IS_CPU_ONLINE(sysblk.pcpu))
+    OBTAIN_INTLOCK( NULL );
     {
-        REGS *regs = sysblk.regs[sysblk.pcpu];
-        if ( regs->cpustate != CPUSTATE_STARTED )
+        if (IS_CPU_ONLINE( sysblk.pcpu ))
         {
-            WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "started");
-            rc = 1;
+            REGS* regs = sysblk.regs[ sysblk.pcpu ];
+
+            if (regs->cpustate != CPUSTATE_STARTED)
+            {
+                if (1
+                    && regs->cpustate == CPUSTATE_STOPPED
+                    && WAITSTATE( &regs->psw )
+                    && IS_IC_DISABLED_WAIT_PSW( regs )
+                )
+                {
+                    // "Processor %s%02X: processor %sstopped due to disabled wait"
+                    WRMSG( HHC00826, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "already " );
+                }
+                else
+                {
+                    // "Processor %s%02X: processor is not %s"
+                    WRMSG( HHC00816, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "started" );
+                }
+                rc = 1;
+            }
+            else
+            {
+                regs->opinterv = 1;
+                regs->cpustate = CPUSTATE_STOPPING;
+
+                ON_IC_INTERRUPT( regs );
+                WAKEUP_CPU( regs );
+
+                // "Processor %s%02X: %s"
+                WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "manual state selected" );
+            }
         }
         else
         {
-            regs->opinterv = 1;
-            regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(regs);
-            WAKEUP_CPU (regs);
-            WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "manual state selected" );
+            // "Processor %s%02X: processor is not %s"
+            WRMSG( HHC00816, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online" );
+            rc = 1;
         }
     }
-    else
-    {
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        rc = 1;
-    }
-
-    RELEASE_INTLOCK(NULL);
+    RELEASE_INTLOCK( NULL );
 
     return rc;
 }

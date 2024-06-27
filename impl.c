@@ -1,4 +1,5 @@
 /* IMPL.C       (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2023                             */
 /*              Hercules Initialization Module                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -28,17 +29,21 @@
 #if defined( OPTION_W32_CTCI )      // (need tt32_get_default_iface)
 #include "w32ctca.h"
 #endif
+#include "cckddasd.h"               // (need cckd_gc_rpt_states)
 
 static char shortopts[] =
 
-    "eh::f:r:db:vt::p:l:s:";
+    "eh::f:o:r:db:vt::p:l:s:";
 
 #if defined(HAVE_GETOPT_LONG)
 static struct option longopts[] =
 {
     { "externalgui",    no_argument, NULL, 'e' },
     { "help",     optional_argument, NULL, 'h' },
+    { "version",        no_argument, NULL, 'V' },
     { "config",   required_argument, NULL, 'f' },
+    { "output",   required_argument, NULL, 'o' },
+    { "logfile",  required_argument, NULL, 'o' },
     { "rcfile",   required_argument, NULL, 'r' },
     { "daemon",         no_argument, NULL, 'd' },
     { "herclogo", required_argument, NULL, 'b' },
@@ -84,7 +89,11 @@ extern int process_script_file( const char*, bool );
 
 /* Forward declarations:                                             */
 static void init_progname( int argc, char* argv[] );
+
 static int process_args( int argc, char* argv[] );
+#define PROCESS_ARGS_OK     0
+#define PROCESS_ARGS_ERROR  1
+#define PROCESS_ARGS_EXIT   2
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
@@ -111,11 +120,11 @@ static void delayed_exit (int exit_code)
 
     fflush(stderr);
     fflush(stdout);
-    usleep(100000);
+    USLEEP(100000);
     do_shutdown();
     fflush(stderr);
     fflush(stdout);
-    usleep(100000);
+    USLEEP(100000);
     return;
 }
 
@@ -151,7 +160,7 @@ static void sigint_handler( int signo )
     sysblk.sigintreq = 1;
 
     /* Activate instruction stepping */
-    sysblk.inststep = 1;
+    sysblk.instbreak = 1;
     SET_IC_TRACE;
 }
 
@@ -197,7 +206,7 @@ static void do_emergency_shutdown()
     else // (already in progress)
     {
         while (!sysblk.shutfini)
-            usleep(100000);
+            USLEEP(100000);
     }
 }
 
@@ -353,6 +362,55 @@ static LRESULT CALLBACK MainWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             do_emergency_shutdown();
             return 0; // (message handled)
 
+        case WM_POWERBROADCAST:
+
+            // Notifies applications that a power-management event
+            // has occurred.
+
+            switch (wParam)
+            {
+                case PBT_APMSUSPEND:
+
+                    // Notifies applications that the computer
+                    // is about to enter a suspended state.
+
+                    sysblk.sys_suspended = true;
+                    sysblk.sys_resumed   = false;
+                    break;
+
+                case PBT_APMRESUMESUSPEND:
+
+                    // Notifies applications that the system has resumed
+                    // operation after being suspended.
+
+                    /*
+                       The below special "FALLTHRU" comment lets GCC know that we are
+                       purposely falling through to the next switch case and is needed
+                       in order to suppress the warning that GCC would otherwise issue.
+                    */
+                    /* FALLTHRU */
+
+                case PBT_APMRESUMEAUTOMATIC:
+
+                    // Notifies applications that the computer has woken up
+                    // automatically to handle an event.
+
+                    sysblk.sys_suspended = false;
+                    sysblk.sys_resumed   = true;
+                    break;
+
+                default:
+
+                    break;  /* (do nothing) */
+            }
+
+            /*
+               The below special "FALLTHRU" comment lets GCC know that we are
+               purposely falling through to the next switch case and is needed
+               in order to suppress the warning that GCC would otherwise issue.
+            */
+            /* FALLTHRU */
+
         default:
 
             return DefWindowProc( hWnd, msg, wParam, lParam );
@@ -408,11 +466,17 @@ static void* WinMsgThread( void* arg )
 static void* watchdog_thread( void* arg )
 {
     REGS* regs;
-    S64   savecount[ MAX_CPU_ENGINES ];
+    S64   savecount[ MAX_CPU_ENGS ];
     int   cpu;
+    int   sleep_seconds  = WATCHDOG_SECS;
+    int   sleep_secs2nd  = 3;
+    int   slept_secs;
+    int   rc;
 
     bool  deadlock_reported = false;
     bool  hung_cpu_reported = false;
+
+    CPU_BITMAP  hung_cpus_mask  = 0;
 
     UNREFERENCED( arg );
 
@@ -422,13 +486,51 @@ static void* watchdog_thread( void* arg )
     /* Set watchdog priority LOWER than the CPU thread priority
        such that it will not invalidly detect an inoperable CPU
     */
-    set_thread_priority( MAX( sysblk.minprio, sysblk.cpuprio - 1 ));
+    SET_THREAD_PRIORITY( MAX( sysblk.minprio, sysblk.cpuprio - 1 ), sysblk.qos_user_initiated);
+    UNREFERENCED(rc);
 
     do
     {
-        /* Only check for problems "every once in a while" */
-        SLEEP( WATCHDOG_SECS );
+        /* PROGRAMMING NOTE: sleeping in many small increments (rather
+           than one large sleep) prevents problems that can occur when
+           the system resumes (awakens) after having been suspended.
+           (GH Issue #458 "Hercules crash after resume from suspend")
+        */
+        for (slept_secs=0; slept_secs < sleep_seconds; ++slept_secs)
+        {
+            SLEEP( 1 );     /* (sleep one second at a time) */
 
+#if defined( _MSVC_ )
+            /* Start over again upon resume from suspend. This should
+               hopefully resolve GitHub Issue #489 "Hercules 4.4.1
+               crashes after OSA failure" by preventing malfunctioning
+               CPU false positives.
+            */
+            if (sysblk.sys_suspended || sysblk.sys_resumed)
+            {
+                /* We're either being suspended or resumed */
+                sleep_seconds  = WATCHDOG_SECS;
+                sleep_secs2nd  = 3;
+                slept_secs     = 0;
+                hung_cpus_mask = 0;
+
+                /* If being resumed, reset our flags to normal */
+                if (!sysblk.sys_suspended && sysblk.sys_resumed)
+                {
+                    sysblk.sys_suspended = false;
+                    sysblk.sys_resumed   = false;
+                }
+
+                continue;   /* (start over) */
+            }
+#endif
+        } /* (end for (slept_secs ...) */
+
+#if defined( _MSVC_ )
+        // Disable all watchdog logic while debugger is attached
+        if (IsDebuggerPresent())
+            continue;
+#endif
         /* Check for and report any deadlocks */
         if (hthread_report_deadlocks( deadlock_reported ? NULL : "S" ))
         {
@@ -466,7 +568,7 @@ static void* watchdog_thread( void* arg )
 #if defined( _FEATURE_WAITSTATE_ASSIST )
                 || (1
                     && regs->sie_active
-                    && WAITSTATE( &regs->guestregs->psw )
+                    && WAITSTATE( &GUESTREGS->psw )
                    )
 #endif
             )
@@ -494,32 +596,62 @@ static void* watchdog_thread( void* arg )
             /*           MALFUNCTIONING CPU DETECTED!            */
             /*****************************************************/
 
-            if (!hung_cpu_reported)
+            hung_cpus_mask |= CPU_BIT( cpu );
+        }
+
+        /* If any hung CPUs were detected, do a second pass in
+           case there is another CPU that also stopped executing
+           instructions a few seconds after the first one did.
+        */
+        if (hung_cpus_mask && sleep_seconds != sleep_secs2nd)
+        {
+            sleep_seconds = sleep_secs2nd;
+            continue;
+        }
+
+        /* Report all hung CPUs all at the same time */
+        if (hung_cpus_mask && !hung_cpu_reported)
+        {
+            for (cpu=0; cpu < sysblk.maxcpu; cpu++)
             {
-                // "PROCESSOR %s%02X APPEARS TO BE HUNG!"
-                WRMSG( HHC00822, "S", PTYPSTR( regs->cpuad ), regs->cpuad );
-                HDC1( debug_watchdog_signal, regs );
+                if (hung_cpus_mask & CPU_BIT( cpu ))
+                {
+                    // "PROCESSOR %s%02X APPEARS TO BE HUNG!"
+                    WRMSG( HHC00822, "S", PTYPSTR( cpu ), cpu );
+                    HDC1( debug_watchdog_signal, sysblk.regs[ cpu ]);
+                }
             }
+
             hung_cpu_reported = true;
         }
 
         /* Create a crash dump if any problems were detected */
         if (deadlock_reported || hung_cpu_reported)
         {
-#if defined( _MSVC_ ) && !defined( DEBUG )
-            static bool did_wait = false;
-            if (!did_wait)
+#if defined( _MSVC_ )
+            // Give developer time to attach a debugger before crashing
+            // If they do so, then prevent the crash from occurring as
+            // long as their debugger is still attached, but once they
+            // detach their debugger, then go ahead and allow the crash
+
+            // "You have %d seconds to attach a debugger before crash dump will be taken!"
+            WRMSG( HHC00823, "S", WAIT_FOR_DEBUGGER_SECS );
             {
-                /* Give the developer time to attach a debugger */
                 int i;
-                for (i=0; i < WAIT_FOR_DEBUGGER_SECS; ++i)
-                    if (!IsDebuggerPresent())
-                        SLEEP( 1 );
+                for (i=0; !IsDebuggerPresent() && i < WAIT_FOR_DEBUGGER_SECS; ++i)
+                    SLEEP( 1 );
+
+                // Don't crash if there is now a debugger attached
+                if (IsDebuggerPresent())
+                {
+                    // "Debugger attached! NOT crashing!"
+                    WRMSG( HHC00824, "S" );
+                    continue;
+                }
+
+                // "TIME'S UP! (or debugger has been detached!) - Forcing crash dump!"
+                WRMSG( HHC00825, "S" );
             }
-            did_wait = true;
-            /* Don't crash if a debugger is now/still attached */
-            if (IsDebuggerPresent())
-                continue;
 #endif
             /* Display additional debugging information */
             panel_command( "ptt" );
@@ -527,15 +659,25 @@ static void* watchdog_thread( void* arg )
             panel_command( "locks held sort tid" );
             panel_command( "threads waiting sort tid" );
 
-            if (hung_cpu_reported)
+            /* Display the instruction each hung CPU was executing */
+            if (hung_cpus_mask)
             {
-                /* Backup to actual instruction being executed */
                 BYTE* ip;
-                UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
+                REGS* regs;
 
-                /* Display instruction that appears to be hung */
-                ip = regs->ip < regs->aip ? regs->inst : regs->ip;
-                ARCH_DEP( display_inst )( regs, ip );
+                for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+                {
+                    if (hung_cpus_mask & CPU_BIT( cpu ))
+                    {
+                        /* Backup to actual instruction being executed */
+                        regs = sysblk.regs[ cpu ];
+                        SET_PSW_IA_AND_MAYBE_IP( regs, PSW_IA_FROM_IP( regs, -REAL_ILC( regs )));
+
+                        /* Display instruction that appears to be hung */
+                        ip = regs->ip < regs->aip ? regs->inst : regs->ip;
+                        ARCH_DEP( display_inst )( regs, ip );
+                    }
+                }
             }
 
             /* Give logger thread time to log messages */
@@ -562,8 +704,19 @@ void* log_do_callback( void* dummy )
 
     UNREFERENCED( dummy );
 
-    while ((msglen = log_read( &msgbuf, &msgidx, LOG_BLOCK )))
-        log_callback( msgbuf, msglen );
+    while (!sysblk.shutfini && logger_isactive())
+    {
+        msglen = log_read( &msgbuf, &msgidx, LOG_NOBLOCK );
+
+        if (msglen)
+        {
+            log_callback( msgbuf, msglen );
+            continue;
+        }
+
+        /* wait a bit for new message(s) to arrive before retrying */
+        USLEEP( PANEL_REFRESH_RATE_FAST * 1000 );
+    }
 
     /* Let them know logger thread has ended */
     log_callback( NULL, 0 );
@@ -616,7 +769,7 @@ static void* process_rc_file( void* dummy )
         /* Wait for panel thread to engage */
         if (!sysblk.daemon_mode)
             while (!sysblk.panel_init)
-                usleep( 10 * 1000 );
+                USLEEP( 10 * 1000 );
 
 #endif // ZZ FIXME: THIS NEEDS TO GO
 
@@ -628,21 +781,55 @@ static void* process_rc_file( void* dummy )
 }
 
 /*-------------------------------------------------------------------*/
+/* Display cmdline arguments help                                    */
+/*-------------------------------------------------------------------*/
+static void arghelp()
+{
+    char   pgm[ MAX_PATH ];
+    char*  strtok_str = NULL;
+
+    STRLCPY( pgm, sysblk.hercules_pgmname );
+
+    // "Usage: %s [--help[=SHORT|LONG|VERSION|BUILD]] -f config-filename|\"none\" [-o logfile-name] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]] [-p dyn-load-dir] [[-l dynmod-to-load]...] [> logfile]"
+    WRMSG( HHC01407, "S", strtok_r( pgm, ".", &strtok_str ) );
+
+    fflush( stderr );
+    fflush( stdout );
+    USLEEP( 100000 );
+}
+
+/* Functions in module skey.h/.c, needed by impl.c */
+
+extern BYTE s370_get_storage_key( U64 abs );
+extern BYTE s390_get_storage_key( U64 abs );
+extern BYTE z900_get_storage_key( U64 abs );
+
+/*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int impl( int argc, char* argv[] )
 {
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
-int     rc;
+int     rc, maxprio, minprio;
 
     SET_THREAD_NAME( IMPL_THREAD_NAME );
 
     /* Seed the pseudo-random number generator */
     init_random();
 
+    /* Save minprio/maxprio, which were set in bootstrap.c when it
+       called SET_THREAD_NAME at or near the beginning of main().
+    */
+    minprio = sysblk.minprio;
+    maxprio = sysblk.maxprio;
+
     /* Clear the system configuration block */
     memset( &sysblk, 0, sizeof( SYSBLK ) );
+
+    /* Restore saved minprio/maxprio into SYSBLK */
+    sysblk.minprio = minprio;
+    sysblk.maxprio = maxprio;
 
     /* Lock SYSBLK into memory since it's referenced so frequently.
        Note that the call could fail when the working set is small
@@ -661,9 +848,34 @@ int     rc;
     sysblk.logoptnotime = 0;
     sysblk.logoptnodate = 1;
 
+    sysblk.num_pfxs  = (int) strlen( DEF_CMDPREFIXES );
+    sysblk.cmd_pfxs  = malloc( sysblk.num_pfxs );
+    sysblk.used_pfxs = malloc( sysblk.num_pfxs );
+
+    memcpy( sysblk.cmd_pfxs, DEF_CMDPREFIXES, sysblk.num_pfxs );
+    memset( sysblk.used_pfxs,       0,        sysblk.num_pfxs );
+
     /* Initialize program name and version strings arrays */
     init_progname( argc, argv );
     init_sysblk_version_str_arrays( NULL );
+
+    /* Process two common Unix options right here to avoid displaying
+       a bunch of unrelated threading messages on exit which just clutter
+       up the output and hide the real information.
+
+       Yes, this is a kludge, but it's not the only one in this thing.
+    */
+    if (argc == 2 && strcmp(argv[1], "--version") == 0)
+    {
+        display_version(stdout, 0, NULL);
+        return 0;
+    }
+
+    if (argc == 2 && strcmp(argv[1], "--usage") == 0)
+    {
+        arghelp();
+        return 0;
+    }
 
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
@@ -728,7 +940,7 @@ int     rc;
 
     sysblk.sysgroup = DEFAULT_SYSGROUP;
 
-    /* set default console port address */
+    /* set default console port addresses */
     sysblk.cnslport = strdup("3270");
 
     /* Initialize automatic creation of missing tape file to default */
@@ -775,10 +987,15 @@ int     rc;
 
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 
-    /* set default Program Interrupt Trace to NONE */
+    /* set default Program Interrupt Trace */
     sysblk.pgminttr = OS_DEFAULT;
+    sysblk.ostailor = OSTAILOR_DEFAULT;
 
     sysblk.timerint = DEF_TOD_UPDATE_USECS;
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    sysblk.txf_timerint = sysblk.timerint;
+#endif
 
 #if defined( _FEATURE_ECPSVM )
     sysblk.ecpsvm.available = 0;
@@ -802,13 +1019,30 @@ int     rc;
 
         MSGBUF( buf, "%04X", sysblk.cpumodel );
         set_symbol( "CPUMODEL", buf );
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+        defsym_TXF_models();
+#endif
     }
 
 #if defined( _FEATURE_047_CMPSC_ENH_FACILITY )
     sysblk.zpbits  = DEF_CMPSC_ZP_BITS;
 #endif
 
+    /* Initialize Trace File helper function pointers */
+    sysblk.s370_gsk = &s370_get_storage_key;
+    sysblk.s390_gsk = &s390_get_storage_key;
+    sysblk.z900_gsk = &z900_get_storage_key;
+
+    sysblk.s370_vtr = &s370_virt_to_real;
+    sysblk.s390_vtr = &s390_virt_to_real;
+    sysblk.z900_vtr = &z900_virt_to_real;
+
+    sysblk.s370_sit = &s370_store_int_timer;
+    sysblk.gct      = &get_cpu_timer;
+
     /* Initialize locks, conditions, and attributes */
+    initialize_lock( &sysblk.tracefileLock );
     initialize_lock( &sysblk.bindlock );
     initialize_lock( &sysblk.config   );
     initialize_lock( &sysblk.todlock  );
@@ -820,6 +1054,9 @@ int     rc;
     initialize_lock( &sysblk.crwlock  );
     initialize_lock( &sysblk.ioqlock  );
     initialize_lock( &sysblk.dasdcache_lock );
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    initialize_lock( &sysblk.rublock );
+#endif
 
     initialize_condition( &sysblk.scrcond );
     initialize_condition( &sysblk.ioqcond );
@@ -839,19 +1076,25 @@ int     rc;
     initialize_detach_attr( DETACHED );
     initialize_join_attr( JOINABLE );
 
+    /* Initialize CPU ENGINES locks and conditions */
     initialize_condition( &sysblk.cpucond );
     {
         int i; char buf[32];
-        for (i=0; i < MAX_CPU_ENGINES; i++)
+        for (i=0; i < MAX_CPU_ENGS; i++)
         {
+            MSGBUF( buf,    "&sysblk.cpulock[%*d]", MAX_CPU_ENGS > 99 ? 3 : 2, i );
             initialize_lock( &sysblk.cpulock[i] );
-            MSGBUF( buf, "&sysblk.cpulock[%*d]",
-                MAX_CPU_ENGINES > 99 ? 3 : 2, i );
-            set_lock_name( &sysblk.cpulock[i], buf );
+            set_lock_name(   &sysblk.cpulock[i], buf );
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+            MSGBUF( buf,    "&sysblk.txf_lock[%*d]", MAX_CPU_ENGS > 99 ? 3 : 2, i );
+            initialize_lock( &sysblk.txf_lock[i] );
+            set_lock_name(   &sysblk.txf_lock[i], buf );
+#endif
         }
     }
-    initialize_condition( &sysblk.sync_cond );
-    initialize_condition( &sysblk.sync_bc_cond );
+    initialize_condition( &sysblk.all_synced_cond );
+    initialize_condition( &sysblk.sync_done_cond );
 
     /* Copy length for regs */
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end
@@ -865,6 +1108,9 @@ int     rc;
     */
     if (!isatty(STDERR_FILENO) && !isatty(STDOUT_FILENO))
         sysblk.daemon_mode = 1;       /* Leave -d intact */
+
+    /* Initialize panel colors */
+    set_panel_colors();
 
     /* Initialize the logmsg pipe and associated logger thread.
        This causes all subsequent logmsg's to be redirected to
@@ -906,11 +1152,26 @@ int     rc;
     sysblk.hercprio = DEFAULT_HERC_PRIO  /*     V     */;
     sysblk.todprio  = DEFAULT_TOD_PRIO;  /* (highest) */
 
+#if defined( BUILD_APPLE_M1 )
+    /* Initialize default qos classes high to low */
+    sysblk.qos_user_interactive = QOS_CLASS_USER_INTERACTIVE;
+    sysblk.qos_user_initiated   = QOS_CLASS_USER_INITIATED;
+    sysblk.qos_default          = QOS_CLASS_DEFAULT;
+    sysblk.qos_utility          = QOS_CLASS_UTILITY;
+    sysblk.qos_background       = QOS_CLASS_BACKGROUND;
+#endif
+
     /* Set the priority of the main Hercules thread */
-    if ((rc = set_thread_priority( sysblk.hercprio )) != 0)
+    SET_THREAD_PRIORITY( sysblk.hercprio, sysblk.qos_user_initiated );
+    if (rc != 0)
     {
+#if defined( BUILD_APPLE_M1 )
+        // "Setting main thread QoS to USER_INITIATED failed: %s"
+        WRMSG( HHC00113, "E", strerror( rc ));
+#else
         // "set_thread_priority( %d ) failed: %s"
         WRMSG( HHC00109, "E", sysblk.hercprio, strerror( rc ));
+#endif
 
         // "Defaulting all threads to priority %d"
         WRMSG( HHC00110, "W", sysblk.minprio );
@@ -928,21 +1189,35 @@ int     rc;
        messages until after the logger has been initialized, since it
        is the logger that processes all WRMSG() calls.
     */
-    /* Log our own thread started message (better late than never) */
-    LOG_THREAD_BEGIN( IMPL_THREAD_NAME  );
 
-    /* Set the priority of the logger thread and log its started msg */
-    set_thread_priority_id( sysblk.loggertid, sysblk.srvprio );
-    LOG_TID_BEGIN( sysblk.loggertid, LOGGER_THREAD_NAME );
+    /* Set the priority of the logger thread */
+    set_thread_priority_id(sysblk.loggertid, sysblk.srvprio);
 
     /* Process command-line arguments. Exit if any serious errors. */
-    if ((rc = process_args( argc, argv )) != 0)
+    if ((rc = process_args( argc, argv )) != PROCESS_ARGS_OK)
     {
-        // "Terminating due to %d argument errors"
-        WRMSG( HHC02343, "S", rc );
-        delayed_exit( rc );
-        return rc;
+        switch (rc)
+        {
+          case PROCESS_ARGS_ERROR:
+            display_version(stdout, 0, NULL);
+
+            /* Show them our command line arguments */
+            arghelp();
+
+            // "Terminating due to %d argument errors"
+            WRMSG( HHC02343, "S", rc );
+            /* FALLTHROUGH */ // silence GCC warning
+
+          case PROCESS_ARGS_EXIT:
+            delayed_exit( rc );
+            return rc;
+        }
     }
+
+    /* The following comment is incorrect and misleading because
+       logger_init() had already been called above, before the
+       display_version() call.  So we won't do it again here.
+    */
 
     /* Now display the version information again after logger_init
        has been called so that either the panel display thread or the
@@ -958,9 +1233,31 @@ int     rc;
        cepted and handled by the logger facility thereby allowing the
        panel thread or external gui to "see" it and thus display it.
     */
-    display_version       ( stdout, 0, NULL );
+
+    /* Always show version right away */
+    display_version(stdout, 0, NULL);
     display_build_options ( stdout, 0 );
     display_extpkg_vers   ( stdout, 0 );
+
+    /* We log these *after* the version number display. */
+
+    /* Log our own thread started message (better late than never) */
+    LOG_THREAD_BEGIN(IMPL_THREAD_NAME);
+
+    /* Log the logger thread */
+    LOG_TID_BEGIN(sysblk.loggertid, LOGGER_THREAD_NAME);
+
+    /* Warn if crash dumps aren't enabled */
+#if !defined( _MSVC_ )
+    {
+        struct rlimit  core_limit;
+        if (getrlimit( RLIMIT_CORE, &core_limit ) == 0)
+            sysblk.ulimit_unlimited = (RLIM_INFINITY == core_limit.rlim_cur);
+        if (!sysblk.ulimit_unlimited)
+            // "Crash dumps NOT enabled"
+            WRMSG( HHC00017, "W" );
+    }
+#endif
 
     /* Report whether Hercules is running in "elevated" mode or not */
     // HHC00018 "Hercules is %srunning in elevated mode"
@@ -1103,7 +1400,7 @@ int     rc;
     {
         if (hdl_loadmod( "dyngui", HDL_LOAD_NOUNLOAD ) != 0)
         {
-            usleep( 10000 ); // (give logger time to show them the error message)
+            USLEEP( 10000 ); // (give logger time to show them the error message)
             // "Load of dyngui.dll failed, hercules terminated"
             WRMSG( HHC01409, "S" );
             delayed_exit( -1 );
@@ -1130,7 +1427,7 @@ int     rc;
 
         if (err)
         {
-            usleep( 10000 ); // (give logger time to display message)
+            USLEEP( 10000 ); // (give logger time to display message)
             // "Hercules terminating, see previous messages for reason"
             WRMSG( HHC01408, "S");
             delayed_exit( -1 );
@@ -1271,6 +1568,24 @@ int     rc;
         return 1;
     }
 
+    sysblk.config_processed = true;
+    sysblk.cfg_timerint = sysblk.timerint;
+
+    /* Report CCKD dasd image garbage states at startup */
+    cckd_gc_rpt_states();
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+    if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, ARCH_900_IDX ))
+    {
+        txf_model_warning( true );
+        txf_set_timerint( true );
+    }
+    else
+        txf_set_timerint( false );
+
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
     /* Process the .rc file synchronously when in daemon mode. */
     /* Otherwise Start up the RC file processing thread.       */
     if (sysblk.daemon_mode)
@@ -1301,24 +1616,48 @@ int     rc;
         panel_display();  /* Returns only AFTER Hercules is shutdown */
     else
     {
-        /* We're in daemon mode... */
-        if (daemon_task)
-            daemon_task();/* Returns only AFTER Hercules is shutdown */
+        /*-----------------------------------------------*/
+        /*            We're in daemon mode...            */
+        /*-----------------------------------------------*/
+
+        if (daemon_task)    /* External GUI in control? */
+            daemon_task();  /* Returns only when GUI decides to */
         else
         {
-            /* daemon mode without any daemon_task */
+            /* daemon mode without any external GUI... */
+
             process_script_file( "-", true );
 
             /* We come here only if the user did ctl-d on a tty,
                or we reached EOF on stdin.  No quit command has
                been issued (yet) since that (via do_shutdown())
                would not return.  So we issue the quit here once
-               all CPUs have quiesced since without any CPUs and
-               stdin at EOF, there's nothing more for us to do!
+               all CPUs have quiesced, since with no CPUs doing
+               anything and stdin at EOF, there's no longer any
+               reason for us to stick around!
+
+               UNLESS, of course, there were never at any CPUs
+               defined/configured to begin with! (NUMCPU 0 was
+               specified). Such would be the case when Hercules
+               was running solely as a shared dasd server with
+               no guest operating IPLed for example.
+
+               In such a case we must continue running in order
+               to continue serving shared dasd I/O requests for
+               our clients, so we continue running FOREVER. We
+               NEVER exit. We can only go away (disappear) when
+               the user wants us to, by either manually killing
+               us or by issuing the 'quit' command via our HTTP
+               Server interface.
             */
-            while (sysblk.started_mask) /* All CPUs quiesced?        */
-                usleep( 10 * 1000 );    /* Wait for CPUs to stop.    */
-            quit_cmd( 0, NULL, NULL );  /* Then pull the plug.       */
+            while (0
+                || sysblk.started_mask  /* CPU(s) still running?     */
+                || !sysblk.config_mask  /* ZERO CPUs configured?     */
+            )
+                USLEEP( 10 * 1000 );    /* Wait on CPU(s) or forever */
+
+            if (sysblk.config_mask)     /* If NUMCPU > 0, then do    */
+                quit_cmd( 0, 0, 0);     /* normal/clean shutdown     */
         }
     }
 
@@ -1334,7 +1673,7 @@ int     rc;
     socket_deinit();
 #endif
     fflush( stdout );
-    usleep( 10000 );
+    USLEEP( 10000 );
     return 0; /* return back to bootstrap.c */
 } /* end function impl */
 
@@ -1370,7 +1709,7 @@ static void init_progname( int argc, char* argv[] )
 /*-------------------------------------------------------------------*/
 static int process_args( int argc, char* argv[] )
 {
-    int  arg_error = 0;                 /* 1=Invalid arguments       */
+    int  arg_error = PROCESS_ARGS_OK;
     int  c = 0;                         /* Next option flag          */
 
     // Save a copy of the command line before getopt mangles argv[]
@@ -1397,7 +1736,7 @@ static int process_args( int argc, char* argv[] )
 
     if (2 <= argc && !strcmp(argv[1], "-?"))
     {
-        arg_error++;
+        arg_error = PROCESS_ARGS_ERROR;
         goto error;
     }
 
@@ -1421,6 +1760,11 @@ static int process_args( int argc, char* argv[] )
 
                 break;
 
+            case 'V':
+                display_version(stdout, 0, NULL);
+                arg_error = PROCESS_ARGS_EXIT;
+                break;
+
             case 'h':       /* -h[=type] or --help[=type] */
 
                 if (optarg) /* help type specified? */
@@ -1429,6 +1773,7 @@ static int process_args( int argc, char* argv[] )
                         || strcasecmp( optarg, "short"  ) == 0
                     )
                     {
+                        arg_error = PROCESS_ARGS_ERROR;  // (forced by help option)
                         ;   // (do nothing)
                     }
                     else if (0
@@ -1436,12 +1781,14 @@ static int process_args( int argc, char* argv[] )
                     )
                     {
                         display_version( stdout, 0, NULL );
+                        arg_error = PROCESS_ARGS_EXIT;
                     }
                     else if (0
                         || strcasecmp( optarg, "build"   ) == 0
                     )
                     {
                         display_build_options( stdout, 0 );
+                        arg_error = PROCESS_ARGS_EXIT;
                     }
                     else if (0
                         || strcasecmp( optarg, "all"  ) == 0
@@ -1452,20 +1799,33 @@ static int process_args( int argc, char* argv[] )
                         display_version      ( stdout, 0, NULL );
                         display_build_options( stdout, 0 );
                         display_extpkg_vers  ( stdout, 0 );
+                        arg_error = PROCESS_ARGS_EXIT;
                     }
                     else
                     {
                         // "Invalid help option argument: %s"
                         WRMSG( HHC00025, "E", optarg );
+                        arg_error = PROCESS_ARGS_ERROR;  // (forced by help option)
                     }
                 }
+                else
+                {
+                    /* Show them our command line arguments */
+                    display_version(stdout, 0, NULL);
+                    arghelp();
+                    arg_error = PROCESS_ARGS_EXIT;
+                }
 
-                arg_error++;  // (forced by help option)
                 break;
 
             case 'f':
 
                 cfgorrc[ want_cfg ].filename = optarg;
+                break;
+
+            case 'o':
+
+                log_sethrdcpy( optarg );
                 break;
 
             case 'r':
@@ -1490,8 +1850,8 @@ static int process_args( int argc, char* argv[] )
 
                         for (j=0; j < (int) strlen( sym ); j++)
                         {
-                            if (islower( sym[j] ))
-                                sym[j] = toupper( sym[j] );
+                            if (islower( (unsigned char)sym[j] ))
+                                sym[j] = toupper( (unsigned char)sym[j] );
                         }
 
                         set_symbol( sym, value );
@@ -1571,7 +1931,7 @@ static int process_args( int argc, char* argv[] )
                     {
                         // "Test timeout factor %s outside of valid range 1.0 to %3.1f"
                         WRMSG( HHC00020, "S", optarg, max_factor );
-                        arg_error++;
+                        arg_error = PROCESS_ARGS_ERROR;
                     }
                 }
                 break;
@@ -1580,14 +1940,14 @@ static int process_args( int argc, char* argv[] )
             {
                 char buf[16];
 
-                if (isprint( optopt ))
+                if (isprint( (unsigned char)optopt ))
                     MSGBUF( buf, "'-%c'", optopt );
                 else
                     MSGBUF( buf, "(hex %2.2x)", optopt );
 
                 // "Invalid/unsupported option: %s"
                 WRMSG( HHC00023, "S", buf );
-                arg_error++;
+                arg_error = PROCESS_ARGS_ERROR;
             }
             break;
 
@@ -1598,63 +1958,68 @@ static int process_args( int argc, char* argv[] )
     {
         // "Unrecognized option: %s"
         WRMSG( HHC00024, "S", argv[ optind++ ]);
-        arg_error++;
+        arg_error = PROCESS_ARGS_ERROR;
     }
 
 error:
 
     /* Terminate if invalid arguments were detected */
-    if (arg_error)
+    if (arg_error != PROCESS_ARGS_OK)
     {
-        char   pgm[ MAX_PATH ];
-        char*  strtok_str = NULL;
-
-        const char symsub[] = " [-s sym=val]";
-        const char dlsub [] = " [-p dyn-load-dir] [[-l dynmod-to-load]...]";
-
-        /* Show them all of our command-line arguments... */
-        STRLCPY( pgm, sysblk.hercules_pgmname );
-
-        // "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
-        WRMSG( HHC01407, "S", strtok_r( pgm, ".", &strtok_str ), symsub, dlsub );
+        /* Do nothing. Caller will call "arghelp" to
+          show them our command-line arguments... */
     }
     else /* Check for config and rc file, but don't open */
     {
         struct stat st;
         int i, rv;
+        bool using_default;
 
         for (i=0; cfgorrccount > i; i++)
         {
-            /* If no value explicitly specified, try env. default */
-            if (!cfgorrc[i].filename)
-                cfgorrc[i].filename = get_symbol( cfgorrc[i].envname );
+            using_default = false;
 
-            /* If no env. default, try hard coded default */
+            /* If no value explicitly specified, try environment */
             if (0
                 || !cfgorrc[i].filename
                 || !cfgorrc[i].filename[0]
             )
             {
-                /* Use default from current directory if it exists */
-                if ((rv = stat( cfgorrc[i].defaultfile, &st )) == 0)
+                const char* envname = get_symbol( cfgorrc[i].envname );
+
+                if (envname && envname[0])
+                    cfgorrc[i].filename = envname;
+                else
+                {
+                    /* If no environment, use our hard coded default */
+                    using_default = true;
                     cfgorrc[i].filename = cfgorrc[i].defaultfile;
-                continue;
+                }
             }
 
             /* Explicit request for no file use at all? */
-            if (strcasecmp( cfgorrc[i].filename, "None" ) == 0)
+            if (strcasecmp( cfgorrc[i].filename, "none" ) == 0)
             {
                cfgorrc[i].filename = NULL;  /* Suppress file */
                continue;
             }
 
-            /* File specified explicitly or by env; check existence */
+            /* File specified either explicitly, by environment,
+               or by hard coded default: verify its existence.
+            */
             if ((rv = stat( cfgorrc[i].filename, &st )) != 0)
             {
-                // "%s file %s not found: %s"
+                /* If this is the .rc file, default to none */
+                if (want_rc == i && using_default)
+                {
+                   cfgorrc[i].filename = NULL;  /* Suppress file */
+                   continue;
+                }
+
+                // "%s file '%s' not found: %s"
                 WRMSG( HHC02342, "S", cfgorrc[i].whatfile,
                     cfgorrc[i].filename, strerror( errno ));
-                arg_error++;
+                arg_error = PROCESS_ARGS_ERROR;
             }
         }
     }

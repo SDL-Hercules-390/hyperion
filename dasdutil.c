@@ -177,7 +177,7 @@ static void do_data_dump( bool ascii, void* addr, unsigned int len, unsigned int
                 if (!ascii)
                     c = guest_to_host(c);
 
-                if (isprint(c))
+                if (isprint((unsigned char)c))
                     print_chars[i] = c;
             }
 
@@ -192,7 +192,7 @@ static void do_data_dump( bool ascii, void* addr, unsigned int len, unsigned int
         hex_chars[xi] = '\0';
     }
 
-    if (firstsame || len <= DD_BPL)
+    if (firstsame || len <= MAX_DD)
         same_as_above( &firstsame, &lastsame, lineoff, hex_chars, print_chars );
 
     if (len > MAX_DD)
@@ -582,7 +582,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         char *p;
         for (p = rmtdev + 1; *p && *p != ':'; p++)
         {
-            if (!isdigit(*p))  /* (port numbers are always numeric) */
+            if (!isdigit((unsigned char)*p))  /* (port numbers are always numeric) */
             {
                 /* Not a port number ==> not really a remote device */
                 rmtdev = NULL;
@@ -1187,6 +1187,7 @@ int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 /*      start    Starting cylinder number for this file              */
 /*      end      Ending cylinder number for this file                */
 /*      volcyls  Total number of cylinders on volume                 */
+/*      serial   Physical serial number                              */
 /*      volser   Volume serial number                                */
 /*      comp     Compression algorithm for a compressed device.      */
 /*               Will be 0xff if device is not to be compressed.     */
@@ -1203,7 +1204,7 @@ int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 static int
 create_ckd_file (char *fname, int fseqn, U16 devtype, U32 heads,
                 U32 trksize, BYTE *buf, U32 start, U32 end,
-                U32 volcyls, char *volser, BYTE comp, int dasdcopy,
+                U32 volcyls, const char* serial, char *volser, BYTE comp, int dasdcopy,
                 int nullfmt, int rawflag,
                 int flagECmode, int flagMachinecheck)
 {
@@ -1283,7 +1284,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the device header */
     memset( &devhdr, 0, CKD_DEVHDR_SIZE );
-    gen_dasd_serial( devhdr.dh_serial );
+    memcpy( devhdr.dh_serial, serial, sizeof( devhdr.dh_serial ));
 
     if (comp == 0xff) memcpy( devhdr.dh_devid, dh_devid_str( CKD_P370_TYP ), 8 );
     else              memcpy( devhdr.dh_devid, dh_devid_str( CKD_C370_TYP ), 8 );
@@ -1786,6 +1787,7 @@ U32             maxcpif;                /* Maximum number of cylinders
                                            in each CKD image file    */
 u_int           rec0len = 8;            /* Length of R0 data         */
 U32             trksize;                /* DASD image track length   */
+char            serial[ sizeof_member( CKD_DEVHDR, dh_serial ) + 1 ] = {0};
 
     /* Compute the DASD image track length */
     trksize = CKD_TRKHDR_SIZE
@@ -1897,6 +1899,9 @@ U32             trksize;                /* DASD image track length   */
         }
     }
 
+    /* Generate a random serial number for this new dasd */
+    gen_dasd_serial( serial );
+
     /* Create the DASD image files */
     for (cyl = 0, fileseq = 1; cyl < volcyls;
             cyl += maxcpif, fileseq++)
@@ -1918,7 +1923,7 @@ U32             trksize;                /* DASD image track length   */
 
         /* Create a CKD DASD image file */
         rc = create_ckd_file (sfname, fileseq, devtype, heads,
-                    trksize, buf, cyl, endcyl, volcyls, volser,
+                    trksize, buf, cyl, endcyl, volcyls, serial, volser,
                     comp, dasdcopy, nullfmt, rawflag,
                     flagECmode, flagMachinecheck);
         if (rc < 0) return -1;
@@ -1992,7 +1997,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Display progress message */
-    // "%1d:%04X CKD file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
+    // "%1d:%04X FBA file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
     FWRMSG( stdout, HHC00463, "I", 0, 0, fname,
             devtype, rawflag ? "" : volser, sectors, sectsz );
 
@@ -2157,7 +2162,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Display progress message */
-    // "%1d:%04X CKD file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+    // "%1d:%04X FBA file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
     FWRMSG( stdout, HHC00465, "I", 0, 0, fname,
         devtype, rawflag ? "" : volser, sectors, sectsz );
 
@@ -2370,36 +2375,91 @@ DLL_EXPORT void set_verbose_util( bool v ) {        verbose = v; }
 DLL_EXPORT bool is_verbose_util()          { return verbose;     }
 DLL_EXPORT int  next_util_devnum()         { return nextnum++;   }
 
-DLL_EXPORT int valid_dsname( const char *pszdsname )
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                      Data Set Naming Rules                        */
+/*                                                                   */
+/*               https://www.ibm.com/docs/en/zos/2.4.0?              */
+/*               topic=conventions-data-set-naming-rules             */
+/*                                                                   */
+/*    A data set name consists of one or more parts connected        */
+/*    by periods. Each part is called a qualifier.                   */
+/*                                                                   */
+/*     - Each qualifier must begin with an alphabetic character      */
+/*       (A-Z) or the special characters $, #, @.                    */
+/*                                                                   */
+/*     - The remaining characters in each qualifier can be           */
+/*       alphabetic, digits (0-9), a hyphen (-), or the special      */
+/*       characters $, #, @.                                         */
+/*                                                                   */
+/*     - Each qualifier must be one to eight characters long.        */
+/*                                                                   */
+/*     - The maximum length of a complete data set name before       */
+/*       specifying a member name is 44 characters, including        */
+/*       the periods.                                                */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+#define VALID_BEG_QUAL_CHARS    "ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@"
+#define VALID_QUAL_CHARS        VALID_BEG_QUAL_CHARS "-0123456789"
+
+static const char*  g_valid_beg_qual_chars  = VALID_BEG_QUAL_CHARS;
+static const char*  g_valid_qual_chars      = VALID_QUAL_CHARS;
+
+static bool valid_qualifier( const char* qualifier )
 {
-    int i;
-    int iLen = (int)strlen(pszdsname);
+    int len = (int) strlen( qualifier );
+    char beg[2] = {0};
 
-    if ( iLen > 44 || iLen == 0 ) return FALSE;
+    beg[0] = *qualifier;
 
-    for ( i = 0; i < iLen; i++ )
+    if (0
+        || len < 1
+        || len > 8
+        || (int)strspn( qualifier, g_valid_qual_chars     ) < len
+        || (int)strspn( beg,       g_valid_beg_qual_chars ) < 1
+    )
+        return false;
+    return true;
+}
+
+DLL_EXPORT bool valid_dsname( const char* dsname )
+{
+    int i, n = 0, len = (int) strlen( dsname );
+    char qualifier[9] = {0};
+    char qchar;
+
+    if (0
+        || len < 1
+        || len > 44
+        || dsname[0] == '.'
+    )
+        return false;
+
+    for (i=0; i < len; ++i)
     {
-        BYTE c = pszdsname[i];
-        if ( isalnum( c ) )
-            continue;
-        else if ( c == '$' )
-            continue;
-        else if ( c == '@' )
-            continue;
-        else if ( c == '#' )
-            continue;
-        else if ( c == '-' )
-            continue;
-        else if ( c == '.' )
-            continue;
-        else if ( c == '{' )
-            continue;
-        else if ( i > 1 && c == '\0' )
-            break;
+        if ((qchar = dsname[i]) == '.')
+        {
+            if (!valid_qualifier( qualifier ))
+                return false;
+            n = 0;
+        }
         else
-            return FALSE;
+        {
+            if (n >= 8)
+                return false;
+
+            qualifier[n++] = qchar;
+            qualifier[n] = 0;
+        }
     }
-    return TRUE;
+
+    qualifier[n] = 0;
+
+    if (!valid_qualifier( qualifier ))
+        return false;
+
+    return true;
 }
 
 /*-------------------------------------------------------------------*/
@@ -2432,9 +2492,8 @@ CKD_RECHDR*  rechdr;                    /* Pointer to record header  */
 }
 
 /*-------------------------------------------------------------------*/
-/* Dasd image file classification functions                          */
+/*  Return the devid string to be placed into the device header      */
 /*-------------------------------------------------------------------*/
-
 DLL_EXPORT const char* dh_devid_str( U32 typmsk )
 {
 #define RETURN_DEVHDRID_STR( typ )      \
@@ -2446,7 +2505,7 @@ DLL_EXPORT const char* dh_devid_str( U32 typmsk )
     RETURN_DEVHDRID_STR( CKD_C370 );    // "CKD_C370" (C=Compressed)
     RETURN_DEVHDRID_STR( CKD_S370 );    // "CKD_S370" (S=Shadow)
 
-    RETURN_DEVHDRID_STR( FBA_P370 );    // "FBA_P370" (same for FBA)
+//  RETURN_DEVHDRID_STR( FBA_P370 );    // "FBA_P370" (same for FBA)
     RETURN_DEVHDRID_STR( FBA_C370 );    // "FBA_C370"        "
     RETURN_DEVHDRID_STR( FBA_S370 );    // "FBA_S370"        "
 
@@ -2454,13 +2513,20 @@ DLL_EXPORT const char* dh_devid_str( U32 typmsk )
     RETURN_DEVHDRID_STR( CKD_C064 );    // "CKD_C064"        "
     RETURN_DEVHDRID_STR( CKD_S064 );    // "CKD_S064"        "
 
-    RETURN_DEVHDRID_STR( FBA_P064 );    // "FBA_P064" (same for FBA)
+//  RETURN_DEVHDRID_STR( FBA_P064 );    // "FBA_P064" (same for FBA)
     RETURN_DEVHDRID_STR( FBA_C064 );    // "FBA_C064"        "
     RETURN_DEVHDRID_STR( FBA_S064 );    // "FBA_S064"        "
 
-    return NULL;
+    // Normal FBA images do not have device headers, so
+    // if they asked us to return them an FBA devid string,
+    // then that's an error since there is no such thing!
+
+    return NULL;  // (unknown or invalid typmsk passed)
 }
 
+/*-------------------------------------------------------------------*/
+/*  Determine devid type based on the device header's devid string   */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT U32 dh_devid_typ( BYTE* dh_devid )
 {
 #define RETURN_DEVHDRID_TYP( typ )          \
@@ -2472,7 +2538,7 @@ DLL_EXPORT U32 dh_devid_typ( BYTE* dh_devid )
     RETURN_DEVHDRID_TYP( CKD_C370 );    // "CKD_C370" (C=Compressed)
     RETURN_DEVHDRID_TYP( CKD_S370 );    // "CKD_S370" (S=Shadow)
 
-    RETURN_DEVHDRID_TYP( FBA_P370 );    // "FBA_P370" (same for FBA)
+//  RETURN_DEVHDRID_TYP( FBA_P370 );    // "FBA_P370" (same for FBA)
     RETURN_DEVHDRID_TYP( FBA_C370 );    // "FBA_C370"        "
     RETURN_DEVHDRID_TYP( FBA_S370 );    // "FBA_S370"        "
 
@@ -2480,13 +2546,20 @@ DLL_EXPORT U32 dh_devid_typ( BYTE* dh_devid )
     RETURN_DEVHDRID_TYP( CKD_C064 );    // "CKD_C064"        "
     RETURN_DEVHDRID_TYP( CKD_S064 );    // "CKD_S064"        "
 
-    RETURN_DEVHDRID_TYP( FBA_P064 );    // "FBA_P064" (same for FBA)
+//  RETURN_DEVHDRID_TYP( FBA_P064 );    // "FBA_P064" (same for FBA)
     RETURN_DEVHDRID_TYP( FBA_C064 );    // "FBA_C064"        "
     RETURN_DEVHDRID_TYP( FBA_S064 );    // "FBA_S064"        "
 
-    return 0;
+    // Since normal FBA/FBA64 images do not have device headers,
+    // if the pased dh_devid doesn't match any of the above, we
+    // presume it is a normal FBA dasd image type.
+
+    return FBA_P370_TYP;  // (presumed if none of the above)
 }
 
+/*-------------------------------------------------------------------*/
+/*  Determine if device header matches ANY of the requested types    */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT bool is_dh_devid_typ( BYTE* dh_devid, U32 typmsk )
 {
 #define RETURN_IS_DEVHDRID( typ )               \
@@ -2501,7 +2574,7 @@ DLL_EXPORT bool is_dh_devid_typ( BYTE* dh_devid, U32 typmsk )
     RETURN_IS_DEVHDRID( CKD_C370 );     // "CKD_C370" (C=Compressed)
     RETURN_IS_DEVHDRID( CKD_S370 );     // "CKD_S370" (S=Shadow)
 
-    RETURN_IS_DEVHDRID( FBA_P370 );     // "FBA_P370" (same for FBA)
+//  RETURN_IS_DEVHDRID( FBA_P370 );     // "FBA_P370" (same for FBA)
     RETURN_IS_DEVHDRID( FBA_C370 );     // "FBA_C370"        "
     RETURN_IS_DEVHDRID( FBA_S370 );     // "FBA_S370"        "
 
@@ -2509,9 +2582,39 @@ DLL_EXPORT bool is_dh_devid_typ( BYTE* dh_devid, U32 typmsk )
     RETURN_IS_DEVHDRID( CKD_C064 );     // "CKD_C064"        "
     RETURN_IS_DEVHDRID( CKD_S064 );     // "CKD_S064"        "
 
-    RETURN_IS_DEVHDRID( FBA_P064 );     // "FBA_P064" (same for FBA)
+//  RETURN_IS_DEVHDRID( FBA_P064 );     // "FBA_P064" (same for FBA)
     RETURN_IS_DEVHDRID( FBA_C064 );     // "FBA_C064"        "
     RETURN_IS_DEVHDRID( FBA_S064 );     // "FBA_S064"        "
 
-    return false;
+    // Since normal FBA/FBA64 images do not have device headers,
+    // if they're asking whether the passed devid matches that
+    // of an FBA type, we must first check to see whether it matches
+    // the devid of any of the OTHER known types first, before we're
+    // able to positively conclude whether it's an FBA type or not.
+    //
+    // If it matches any of the other known types, then it obviously
+    // is NOT an FBA type. Otherwise, if it's NOT any of the other
+    // known types, we must unfortunately presume it's an FBA type.
+
+    if (0
+        || !(typmsk & (FBA_P370_TYP | FBA_P064_TYP))
+        || memcmp( dh_devid, "CKD_P370", 8 ) == 0
+        || memcmp( dh_devid, "CKD_C370", 8 ) == 0
+        || memcmp( dh_devid, "CKD_S370", 8 ) == 0
+
+//      || memcmp( dh_devid, "FBA_P370", 8 ) == 0
+        || memcmp( dh_devid, "FBA_C370", 8 ) == 0
+        || memcmp( dh_devid, "FBA_S370", 8 ) == 0
+
+        || memcmp( dh_devid, "CKD_P064", 8 ) == 0
+        || memcmp( dh_devid, "CKD_C064", 8 ) == 0
+        || memcmp( dh_devid, "CKD_S064", 8 ) == 0
+
+//      || memcmp( dh_devid, "FBA_P064", 8 ) == 0
+        || memcmp( dh_devid, "FBA_C064", 8 ) == 0
+        || memcmp( dh_devid, "FBA_S064", 8 ) == 0
+    )
+        return false;   // (definitely NOT their requested type)
+    else
+        return true;    // (PRESUMED to be a normal FBA device)
 }

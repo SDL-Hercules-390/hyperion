@@ -1,4 +1,5 @@
 /* ccfixme.h (C) Copyright "Fish" (David B. Trout), 2011             */
+/*           (C) and others 2013-2023                                */
 /*                                                                   */
 /*             Released under "The Q Public License Version 1"       */
 /*             (http://www.hercules-390.org/herclic.html)            */
@@ -23,6 +24,14 @@
 #if defined( __GNUC__ )
   #define  GCC_VERSION \
     (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+
+/*-------------------------------------------------------------------*/
+/* Same thing for CLANG                                              */
+/*-------------------------------------------------------------------*/
+#if defined( __clang__ )
+  #define  CLANG_VERSION \
+    (__clang_major__ * 10000 + __clang_minor__ * 100 + 0)
 #endif
 
 /*-------------------------------------------------------------------*/

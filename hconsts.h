@@ -17,24 +17,26 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/* Maximum CPU Engines                                               */
+/*                     Maximum CPU Engines                           */
 /*-------------------------------------------------------------------*/
 
-#if !defined( MAX_CPU_ENGINES )
+#if !defined( MAX_CPU_ENGS )
   #if defined( HAVE___INT128_T )
-    #define MAX_CPU_ENGINES     128
+    #define MAX_CPU_ENGS      128
   #else
-    #define MAX_CPU_ENGINES      64
+    #define MAX_CPU_ENGS       64
   #endif
 #endif
 
-// (PREFERRED default MAX_CPU_ENGINES)
-#define PREF_DEF_MAXCPU           8     /*  Default sysblk.maxcpu
-                                            to 8 according to old
-                                            MAX_CPU_ENGINES default  */
+// (PREFERRED default MAX_CPU_ENGS)
+#define PREF_DEF_MAXCPU         8       /* Default sysblk.maxcpu
+                                           to 8 according to old
+                                           MAX_CPU_ENGS default      */
+
+#define MAX_CPU_LOOPS         256       /* UNROLLED_EXECUTE loops    */
 
 /*-------------------------------------------------------------------*/
-/*      Some handy quantity definitions                              */
+/*               Some handy quantity definitions                     */
 /*-------------------------------------------------------------------*/
 #define  ONE_KILOBYTE   ((U32)                     (1024))  /* 2^10 (16^2)  * 4  */
 #define  TWO_KILOBYTE   ((U32)(2           *        1024))  /* 2^11 (16^2)  * 8  */
@@ -124,6 +126,9 @@
 #define MAX_370_MAINSIZE_PAGES      (MAX_370_MAINSIZE_BYTES  >> SHIFT_4K)
 #define MAX_390_MAINSIZE_PAGES      (MAX_390_MAINSIZE_BYTES  >> SHIFT_4K)
 #define MAX_900_MAINSIZE_PAGES      (MAX_900_MAINSIZE_BYTES  >> SHIFT_4K)
+
+#define MIN_ARCH_MAINSIZE_BYTES     0   // (slot 0 = minimum for arch)
+#define MAX_ARCH_MAINSIZE_BYTES     1   // (slot 1 = maximum for arch)
 
 /*-------------------------------------------------------------------*/
 /* Miscellaneous system related constants we could be missing...     */
@@ -360,7 +365,7 @@
 #define PGM_PRD_OS_LICENSED   0                 /* Licensed          */
 
 /*-------------------------------------------------------------------*/
-/*           Storage access bits used by logical_to_main             */
+/*           Storage access bits used by logical_to_main_l           */
 /*-------------------------------------------------------------------*/
 #define ACC_CHECK          0x0001          /* Possible storage update*/
 #define ACC_WRITE          0x0002          /* Storage update         */
@@ -395,7 +400,8 @@
 /* Special value for arn parameter for translate functions in dat.c  */
 /*-------------------------------------------------------------------*/
 #define USE_INST_SPACE          (-1)    /* Instruction space virtual */
-#define USE_REAL_ADDR           (-2)    /* Real address              */
+#define USE_REAL_ADDR           (-2)    /* Real address (DAT access)
+                                           (prevents TLB hit/use)    */
 #define USE_PRIMARY_SPACE       (-3)    /* Primary space virtual     */
 #define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
 #define USE_HOME_SPACE          (-5)    /* Home space virtual        */
@@ -405,8 +411,8 @@
 /*              Interception codes used by longjmp/SIE               */
 /*-------------------------------------------------------------------*/
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */
-#define SIE_HOST_INTERRUPT      (-2)    /* Host interrupt pending    */
-#define SIE_HOST_PGMINT         (-3)    /* Host program interrupt    */
+#define SIE_HOST_INT_PEND       (-2)    /* Host interrupt pending    */
+#define SIE_HOST_PGM_INT        (-3)    /* Host program interrupt    */
 #define SIE_INTERCEPT_INST      (-4)    /* Instruction interception  */
 #define SIE_INTERCEPT_INSTCOMP  (-5)    /* Instr. int TS/CS/CDS      */
 #define SIE_INTERCEPT_EXTREQ    (-6)    /* External interrupt        */
@@ -421,16 +427,20 @@
 #define SIE_INTERCEPT_IOINT    (-15)    /* I/O Interruption          */
 #define SIE_INTERCEPT_IOINTP   (-16)    /* I/O Interruption pending  */
 #define SIE_INTERCEPT_IOINST   (-17)    /* I/O Instruction           */
+#define SIE_MAX_NEG            (-17)    /* (maximum negative value)  */
+
 #if defined( SIE_DEBUG_PERFMON )
 #define SIE_PERF_ENTER         ( 0 )    /* SIE performance monitor   */
-#define SIE_PERF_ENTER_F       (-31)    /* Enter Fast (retain state) */
-#define SIE_PERF_EXIT          (-30)    /* SIE exit                  */
-#define SIE_PERF_RUNSIE        (-29)    /* run_sie entered           */
-#define SIE_PERF_RUNLOOP_1     (-28)    /* run_sie runloop 1         */
-#define SIE_PERF_RUNLOOP_2     (-27)    /* run_sue runloop 2         */
-#define SIE_PERF_INTCHECK      (-26)    /* run_sie intcheck          */
-#define SIE_PERF_EXEC          (-25)    /* run_sie execute inst      */
+#define SIE_MIN_NEG_DEBUG      (-24)    /* (minimum negative value)  */
 #define SIE_PERF_EXEC_U        (-24)    /* run_sie unrolled exec     */
+#define SIE_PERF_EXEC          (-25)    /* run_sie execute inst      */
+#define SIE_PERF_INTCHECK      (-26)    /* run_sie intcheck          */
+#define SIE_PERF_RUNLOOP_2     (-27)    /* run_sue runloop 2         */
+#define SIE_PERF_RUNLOOP_1     (-28)    /* run_sie runloop 1         */
+#define SIE_PERF_RUNSIE        (-29)    /* run_sie entered           */
+#define SIE_PERF_EXIT          (-30)    /* SIE exit                  */
+#define SIE_PERF_ENTER_F       (-31)    /* Enter Fast (retain state) */
+#define SIE_MAX_NEG_DEBUG      (-31)    /* (maximum negative value)  */
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -492,9 +502,12 @@
 /*-------------------------------------------------------------------*/
 #define PGMBIT( pgm_code )   (1ULL << (pgm_code-1)) /* helper macro  */
 
-#define    OS_QUIET         (0x0000000000000000ULL) /* Trace none    */
-#define    OS_NULL          (0xFFFFFFFFFFFFFFFFULL) /* Trace all     */
-#define    OS_DEFAULT       (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_QUIET          0x80000000
+#define       OS_QUIET         (0x0000000000000000ULL) /* Trace none */
+#define OSTAILOR_NULL           0x40000000
+#define       OS_NULL          (0xFFFFFFFFFFFFFFFFULL) /* Trace all  */
+#define OSTAILOR_DEFAULT        0x20000000
+#define       OS_DEFAULT       (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
         | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
@@ -502,7 +515,8 @@
         | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
         | PGMBIT(  PGM_MONITOR_EVENT                         )        \
      ))
-#define    OS_OS390         (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_OS390          0x10000000
+#define       OS_OS390         (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_PRIVILEGED_OPERATION_EXCEPTION        )        \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
@@ -516,7 +530,8 @@
         | PGMBIT(  PGM_STACK_OPERATION_EXCEPTION             )        \
         | PGMBIT(  PGM_MONITOR_EVENT                         )        \
      ))
-#define    OS_ZOS           (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_ZOS            0x08000000
+#define       OS_ZOS           (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
         | PGMBIT(  PGM_DATA_EXCEPTION                        )        \
@@ -533,7 +548,8 @@
         | PGMBIT(  PGM_REGION_THIRD_TRANSLATION_EXCEPTION    )        \
         | PGMBIT(  PGM_MONITOR_EVENT                         )        \
      ))
-#define    OS_VSE           (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_VSE            0x04000000
+#define       OS_VSE           (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
         | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
@@ -546,7 +562,8 @@
         | PGMBIT(  PGM_STACK_OPERATION_EXCEPTION             )        \
         | PGMBIT(  PGM_MONITOR_EVENT                         )        \
      ))
-#define    OS_VM            (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_VM             0x02000000
+#define       OS_VM            (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_OPERATION_EXCEPTION                   )        \
         | PGMBIT(  PGM_PRIVILEGED_OPERATION_EXCEPTION        )        \
@@ -558,7 +575,8 @@
      ))
 #if !defined( NO_IEEE_SUPPORT )
 
-#define    OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_LINUX          0x01000000
+#define       OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
@@ -573,7 +591,8 @@
 
 #else // defined( NO_IEEE_SUPPORT )
 
-#define    OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_LINUX          0x01000000
+#define       OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_OPERATION_EXCEPTION                   )        \
         | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
@@ -589,7 +608,8 @@
      ))
 
 #endif
-#define    OS_OPENSOLARIS   (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_OPENSOLARIS    0x00800000
+#define       OS_OPENSOLARIS   (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
@@ -599,5 +619,24 @@
         | PGMBIT(  PGM_REGION_SECOND_TRANSLATION_EXCEPTION   )        \
         | PGMBIT(  PGM_REGION_THIRD_TRANSLATION_EXCEPTION    )        \
      ))
+
+/*-------------------------------------------------------------------*/
+/*         Channel constants, also needed by ckddasd code            */
+/*-------------------------------------------------------------------*/
+
+/*  CAUTION: for performance reasons the size of the data portion
+    of IOBUF (i.e. IOBUF_MINSIZE) should never be less than 64K-1,
+    and sizes greater than 64K may cause stack overflows to occur.
+*/
+#define IOBUF_ALIGN         4096          /* Must be a power of 2    */
+#define IOBUF_HDRSIZE       IOBUF_ALIGN   /* Multiple of IOBUF_ALIGN */
+#define IOBUF_MINSIZE       65536         /* Multiple of IOBUF_ALIGN */
+#define IOBUF_INCREASE      1048576       /* Multiple of IOBUF_ALIGN */
+
+/*-------------------------------------------------------------------*/
+/*         Default command prefixes for Integrated Consoles          */
+/*-------------------------------------------------------------------*/
+
+#define DEF_CMDPREFIXES     "/`=~@$%^&_:?0123456789"
 
 #endif // _HCONSTS_H

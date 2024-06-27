@@ -1,0 +1,676 @@
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *                            FLOAT
+                                                     4 ***********************************************************************
+                                                     5 *
+                                                     6 *   This program performs a few EXTREMELY simple Floating Point
+                                                     7 *   tests based on the instruction-use examples in Appendix A.
+                                                     8 *   "Number Representation and Instruction-Use Examples" of the
+                                                     9 *   SA22-7200-00 "ESA/370 Principles of Operation" manual.
+                                                    10 *
+                                                    11 *   Unlike other S/370 tests, this test runs in BC mode not EC mode
+                                                    12 *   for no other reason than that's the mode that MVT runs in, and
+                                                    13 *   at the time, there was some concern as to whether floating point
+                                                    14 *   instructions were being executed properly (GitHub Issue #546).
+                                                    15 *
+                                                    16 *   UPDATE: This test has now been updated to also support running
+                                                    17 *   in z/Arcitecture mode as well, since z/Arcitecture also supports
+                                                    18 *   HFP instructions.
+                                                    19 *
+                                                    20 ***********************************************************************
+
+
+                                                    22 ***********************************************************************
+                                                    23 *                          LOW CORE
+                                                    24 ***********************************************************************
+
+
+                              00000000  00000601    26 TEST     START 0
+00000000                      00000000              27          USING TEST,0                 Use absolute addressing
+
+
+                                                    29          PRINT DATA
+
+00000000                      00000000  00000000    31          ORG   TEST+X'00'             S/370 Restart new PSW
+00000000  00000000 00000200                         32          DC    XL4'00000000',A(BEGIN)
+
+
+00000008                      00000008  00000068    34          ORG   TEST+X'68'             S/370 Program new PSW
+00000068  00020000 0000DEAD                         35          DC    XL4'00020000',A(X'DEAD')
+
+
+00000070                      00000070  000001A0    37          ORG   TEST+X'1A0'            z Restart New PSW
+000001A0  00000001 80000000                         38          DC    0D'0',X'0000000180000000',AD(BEGINZ)
+000001A8  00000000 0000020C
+
+
+000001B0                      000001B0  000001D0    40          ORG   TEST+X'1D0'            z Program New PSW
+000001D0  00020001 80000000                         41          DC    0D'0',X'0002000180000000',AD(X'DEAD')
+000001D8  00000000 0000DEAD
+
+                                                    43          PRINT NODATA
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    45 ***********************************************************************
+                                                    46 *                          MAINLINE
+                                                    47 ***********************************************************************
+
+000001E0                      000001E0  00000200    49          ORG   TEST+X'200'            Start of test program
+
+
+
+00000200  92F3 03B2                     000003B2    51 BEGIN    MVI   RUNMODE,MODE370        370 mode
+00000204  45F0 0218                     00000218    52          BAL   R15,DOTESTS
+00000208  47F0 023A                     0000023A    53          B     SUCCESS
+
+
+
+0000020C  92E9 03B2                     000003B2    55 BEGINZ   MVI   RUNMODE,ZMODE          z/Architecture mode
+00000210  45F0 0218                     00000218    56          BAL   R15,DOTESTS
+00000214  47F0 023A                     0000023A    57          B     SUCCESS
+
+
+
+
+00000218                                            59 DOTESTS  DS    0H                     Perform all tests...
+
+00000218  45E0 02B8                     000002B8    61          BAL   R14,TEST1
+0000021C  45E0 02DC                     000002DC    62          BAL   R14,TEST2
+00000220  45E0 0300                     00000300    63          BAL   R14,TEST3
+00000224  45E0 0340                     00000340    64          BAL   R14,TEST4
+00000228  45E0 0372                     00000372    65          BAL   R14,TEST5
+0000022C  45E0 0390                     00000390    66          BAL   R14,TEST6
+
+
+00000230  9200 0600                     00000600    68          MVI   TESTNUM,0              No test has failed
+00000234  9200 0601                     00000601    69          MVI   SUBTEST,0              No sub-test has failed either
+
+00000238  07FF                                      71          BR    R15                    Return to caller
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    73 ***********************************************************************
+                                                    74 *                         END OF JOB
+                                                    75 ***********************************************************************
+
+
+0000023A  95F3 03B2                     000003B2    77 SUCCESS  CLI   RUNMODE,MODE370
+0000023E  4770 025E                     0000025E    78          BNE   ZSUCCESS
+00000242  8200 0270                     00000270    79          LPSW  OKPSW
+
+
+00000246  95F3 03B2                     000003B2    81 BADCC    CLI   RUNMODE,MODE370
+0000024A  4770 0262                     00000262    82          BNE   ZBADCC
+0000024E  8200 0278                     00000278    83          LPSW  CCPSW
+
+
+00000252  95F3 03B2                     000003B2    85 BADGOT   CLI   RUNMODE,MODE370
+00000256  4770 0266                     00000266    86          BNE   ZBADGOT
+0000025A  8200 0280                     00000280    87          LPSW  GOTPSW
+
+
+
+0000025E  B2B2 0288                     00000288    89 ZSUCCESS LPSWE ZOKPSW
+00000262  B2B2 0298                     00000298    90 ZBADCC   LPSWE ZCCPSW
+00000266  B2B2 02A8                     000002A8    91 ZBADGOT  LPSWE ZGOTPSW
+
+
+
+
+
+
+                                                    93          PRINT DATA
+
+00000270  00020000 00000000                         95 OKPSW    DC    0D'0',XL4'00020000',A(0)
+00000278  00020000 000BADCC                         96 CCPSW    DC    0D'0',XL4'00020000',A(X'BADCC')
+00000280  00020000 00BADBAD                         97 GOTPSW   DC    0D'0',XL4'00020000',A(X'BADBAD')
+
+
+
+00000288  00020001 80000000                         99 ZOKPSW   DC    0D'0',XL8'0002000180000000',AD(0)
+00000290  00000000 00000000
+00000298  00020001 80000000                        100 ZCCPSW   DC    0D'0',XL8'0002000180000000',AD(X'BADCC')
+000002A0  00000000 000BADCC
+000002A8  00020001 80000000                        101 ZGOTPSW  DC    0D'0',XL8'0002000180000000',AD(X'BADBAD')
+000002B0  00000000 00BADBAD
+
+                                                   103          PRINT NODATA
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   105 ***********************************************************************
+                                                   106 *                TEST 1:  AE/AD  (Add Normalized)
+                                                   107 ***********************************************************************
+
+000002B8  92F1 0600                     00000600   109 TEST1    MVI   TESTNUM,X'F1'
+000002BC  9200 0601                     00000601   110          MVI   SUBTEST,0
+                                                   111 *
+                                                   112 *  Add Normalized (AD, ADR, AE, AER, AXR)
+                                                   113 *
+                                                   114 *    FPR6 contains
+                                                   115 *    C3 08 21 00 00 00 00 00
+                                                   116 *
+                                                   117 *    Storage location contains
+                                                   118 *    41 12 34 56 00 00 00 00
+                                                   119 *
+                                                   120 *
+                                                   121 *    Machine Format
+                                                   122 *
+                                                   123 *      Op Code R1 X2 B2 D2
+                                                   124 *        7A     6  0  D 000
+                                                   125 *
+                                                   126 *
+                                                   127 *    Assembler Format
+                                                   128 *
+                                                   129 *      Op Code R1,D2(X2,B2)
+                                                   130 *        AE    6,0(0,13)
+                                                   131 *
+                                                   132 *
+                                                   133 *  the result (left half of FPR6) is
+                                                   134 *  C2 80 EC BB.
+                                                   135 *
+                                                   136 *  The right half of FPR6 is unchanged.
+                                                   137 *
+                                                   138 *  Condition code 1 is set (result less than zero).
+                                                   139 *
+                                                   140 *  If the long-precision instruction 'AD' were used,
+                                                   141 *  the result in FPR6 would be
+                                                   142 *  C2 80 BC BA A0 00 00 00.
+                                                   143 *
+000002C0  6860 03B8                     000003B8   144          LD    FPR6,T1_FPR6
+000002C4  7A60 03C0                     000003C0   145          AE    FPR6,T1_STRG
+000002C8  47B0 0246                     00000246   146          BC    B'1011',BADCC  (not CC1)
+000002CC  6060 03C8                     000003C8   147          STD   FPR6,T1_GOT
+000002D0  D507 03C8 03D0      000003C8  000003D0   148          CLC   T1_GOT,T1_WANT
+000002D6  4770 0252                     00000252   149          BNE   BADGOT
+000002DA  07FE                                     150          BR    R14
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   152 ***********************************************************************
+                                                   153 *                 TEST 2:  AU  (Add Unnormalized)
+                                                   154 ***********************************************************************
+
+000002DC  92F2 0600                     00000600   156 TEST2    MVI   TESTNUM,X'F2'
+000002E0  9200 0601                     00000601   157          MVI   SUBTEST,0
+                                                   158 *
+                                                   159 *  Add Unnormalized (AU, AUR, AW, AWR)
+                                                   160 *
+                                                   161 *  using the the same operands as in the
+                                                   162 *  previous ADD NORMALIZED example:
+                                                   163 *
+                                                   164 *  FPR6 contains
+                                                   165 *  C3 08 21 00 00 00 00 00
+                                                   166 *
+                                                   167 *  Storage location contains
+                                                   168 *  41 12 34 56 00 00 00 00
+                                                   169 *
+                                                   170 *
+                                                   171 *    Machine Format
+                                                   172 *
+                                                   173 *      Op Code R1 X2 B2 D2
+                                                   174 *        7E     6  0  D 0000
+                                                   175 *
+                                                   176 *
+                                                   177 *    Assembler Format
+                                                   178 *
+                                                   179 *      Op Code R1,D2(X2,B2)
+                                                   180 *        AU    6,0(0,13)
+                                                   181 *
+                                                   182 *
+                                                   183 *  result in FPR6
+                                                   184 *  C3 08 0E CB 00 00 00 00
+                                                   185 *
+                                                   186 *  Condition code 1 is set (result less than zero).
+                                                   187 *
+000002E4  6860 03D8                     000003D8   188          LD    FPR6,T2_FPR6
+000002E8  7E60 03E0                     000003E0   189          AU    FPR6,T2_STRG
+000002EC  47B0 0246                     00000246   190          BC    B'1011',BADCC  (not CC1)
+000002F0  6060 03E8                     000003E8   191          STD   FPR6,T2_GOT
+000002F4  D507 03E8 03F0      000003E8  000003F0   192          CLC   T2_GOT,T2_WANT
+000002FA  4770 0252                     00000252   193          BNE   BADGOT
+000002FE  07FE                                     194          BR    R14
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   196 ***********************************************************************
+                                                   197 *                  TEST 3:  CDR  (Compare)
+                                                   198 ***********************************************************************
+
+00000300  92F3 0600                     00000600   200 TEST3    MVI   TESTNUM,X'F3'
+00000304  9200 0601                     00000601   201          MVI   SUBTEST,0
+                                                   202 *
+                                                   203 *  Compare (CD, CDR, CE, CER)
+                                                   204 *
+                                                   205 *  FPR4 contains
+                                                   206 *  43 00 00 00 00 00 00 00 (zero)
+                                                   207 *
+                                                   208 *  FPR6 contains
+                                                   209 *  35 12 34 56 78 9A BC DE (positive number).
+                                                   210 *
+                                                   211 *
+                                                   212 *    Machine Format
+                                                   213 *
+                                                   214 *      Op Code R1 R2
+                                                   215 *        29     4  6
+                                                   216 *
+                                                   217 *
+                                                   218 *    Assembler Format
+                                                   219 *
+                                                   220 *      Op Code R1,R2
+                                                   221 *       CDR     4,6
+                                                   222 *
+                                                   223 *
+                                                   224 *  Condition code 1 is set (FPR4 less than FPR6).
+                                                   225 *
+                                                   226 *  If FPR6 instead contained
+                                                   227 *  34 12 34 56 78 9A BC DE
+                                                   228 *
+                                                   229 *  Condition code 0 (equal) would instead be set.
+                                                   230 *
+                                                   231 *  As another example
+                                                   232 *  41 00 12 34 56 78 9A BC
+                                                   233 *
+                                                   234 *  compares equal to all numbers of the form:
+                                                   235 *  3F 12 34 56 78 9A BC 0X
+                                                   236 *
+                                                   237 *  where X represents any hexadecimal digit.
+                                                   238 *
+00000308  6840 03F8                     000003F8   239          LD    FPR4,T3_FPR4
+0000030C  6860 0400                     00000400   240          LD    FPR6,T3_FPR6
+00000310  2946                                     241          CDR   FPR4,FPR6
+00000312  47B0 0246                     00000246   242          BC    B'1011',BADCC  (not CC1)
+00000316  6860 0408                     00000408   243          LD    FPR6,T3_FPR6A
+0000031A  2946                                     244          CDR   FPR4,FPR6
+0000031C  4770 0246                     00000246   245          BC    B'0111',BADCC  (not CC0)
+00000320  6840 0410                     00000410   246          LD    FPR4,T3_FPR4A
+00000324  4110 0418                     00000418   247          LA    R1,T3_FPR6X
+00000328  4120 0010                     00000010   248          LA    R2,T3_NUMX
+0000032C  6860 1000                     00000000   249 T3_XLOOP LD    FPR6,0(,R1)
+00000330  2946                                     250          CDR   FPR4,FPR6
+00000332  4770 0246                     00000246   251          BC    B'0111',BADCC  (not CC0)
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000336  4110 1008                     00000008   252          LA    R1,8(,R1)
+0000033A  4620 032C                     0000032C   253          BCT   R2,T3_XLOOP
+0000033E  07FE                                     254          BR    R14
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   256 ***********************************************************************
+                                                   257 *                   TEST 4:  DER  (Divide)
+                                                   258 ***********************************************************************
+
+00000340  92F4 0600                     00000600   260 TEST4    MVI   TESTNUM,X'F4'
+00000344  9200 0601                     00000601   261          MVI   SUBTEST,0
+                                                   262 *
+                                                   263 *  Divide (DD, DDR, DE, DER)
+                                                   264 *
+                                                   265 *  first operand  = dividend
+                                                   266 *  second operand = divisor
+                                                   267 *  resulting quotient = replaces first operand
+                                                   268 *
+                                                   269 *
+                                                   270 *    Machine Format
+                                                   271 *
+                                                   272 *      Op Code R1 R2
+                                                   273 *        3D     2  0
+                                                   274 *
+                                                   275 *
+                                                   276 *    Assembler Format
+                                                   277 *
+                                                   278 *      Op Code R1,R2
+                                                   279 *       DER     2,0
+                                                   280 *
+                                                   281 *
+                                                   282 *         FPR2 Before  FPR0          FPR2 After
+                                                   283 *  Case   (Dividend)   (Divisor)     (Quotient)
+                                                   284 *
+                                                   285 *   A     -43 082100   +43 001234    -42 72522F
+                                                   286 *   B     +42 101010   +45 111111    +3D F0F0F0
+                                                   287 *   C     +48 30000F   +41 400000    +47 C0003C
+                                                   288 *   D     +48 30000F   +41 200000    +48 180007
+                                                   289 *   E     +48 180007   +41 200000    +47 C00038
+                                                   290 *
+00000348  4110 0498                     00000498   291          LA    R1,T4_A
+0000034C  4120 0005                     00000005   292          LA    R2,T4_NUMT
+00000350  7820 1000                     00000000   293 T4_LOOP  LE    FPR2,0(,R1)
+00000354  7800 1004                     00000004   294          LE    FPR0,4(,R1)
+00000358  3D20                                     295          DER   FPR2,FPR0
+0000035A  7020 04D4                     000004D4   296          STE   FPR2,T4_GOT
+0000035E  D503 04D4 1008      000004D4  00000008   297          CLC   T4_GOT,8(R1)
+00000364  4770 0252                     00000252   298          BNE   BADGOT
+00000368  4110 100C                     0000000C   299          LA    R1,3*4(,R1)
+0000036C  4620 0350                     00000350   300          BCT   R2,T4_LOOP
+00000370  07FE                                     301          BR    R14
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   303 ***********************************************************************
+                                                   304 *                   TEST 5:  HDR  (Halve)
+                                                   305 ***********************************************************************
+
+00000372  92F5 0600                     00000600   307 TEST5    MVI   TESTNUM,X'F5'
+00000376  9200 0601                     00000601   308          MVI   SUBTEST,0
+                                                   309
+                                                   310 *
+                                                   311 *  Halve (HDR, HER)
+                                                   312 *
+                                                   313 *  HALVE produces the same result as floating-point
+                                                   314 *  DIVIDE with a divisor of 2.0.
+                                                   315 *
+                                                   316 *  FPR2 contains
+                                                   317 *  + 48 30 00 00 00 00 00 0F
+                                                   318 *
+                                                   319 *  FPR2 result
+                                                   320 *  + 48 18 00 00 00 00 00 07
+                                                   321 *
+                                                   322 *
+                                                   323 *    Machine Format
+                                                   324 *
+                                                   325 *      Op Code R1 R2
+                                                   326 *        24     2  2
+                                                   327 *
+                                                   328 *    Assembler Format
+                                                   329 *
+                                                   330 *      Op Code R1,R2
+                                                   331 *       HDR     2,2
+                                                   332 *
+0000037A  6820 04D8                     000004D8   333          LD    FPR2,T5_FPR2
+0000037E  2422                                     334          HDR   FPR2,FPR2
+00000380  6020 04E0                     000004E0   335          STD   FPR2,T5_GOT
+00000384  D507 04E0 04E8      000004E0  000004E8   336          CLC   T5_GOT,T5_WANT
+0000038A  4770 0252                     00000252   337          BNE   BADGOT
+0000038E  07FE                                     338          BR    R14
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   340 ***********************************************************************
+                                                   341 *                   TEST 6:  MDR  (Multiply)
+                                                   342 ***********************************************************************
+
+00000390  92F6 0600                     00000600   344 TEST6    MVI   TESTNUM,X'F6'
+00000394  9200 0601                     00000601   345          MVI   SUBTEST,0
+                                                   346 *
+                                                   347 *  Multiply (MD, MDR, ME, MER, MXD, MXDR, MXR)
+                                                   348 *
+                                                   349 *  FPR0: -33 606060 60606060
+                                                   350 *  FPR2: -5A 200000 20000020
+                                                   351 *
+                                                   352 *
+                                                   353 *    Machine Format
+                                                   354 *
+                                                   355 *      Op Code R1 R2
+                                                   356 *        2C     0  2
+                                                   357 *
+                                                   358 *    Assembler Format
+                                                   359 *
+                                                   360 *      Op Code R1,R2
+                                                   361 *        MDR    0,2
+                                                   362 *
+                                                   363 *
+                                                   364 *  Final FPR0 result:
+                                                   365 *  +4C C0C0C1 81818241
+                                                   366 *
+00000398  6800 04F0                     000004F0   367          LD    FPR0,T6_FPR0
+0000039C  6820 04F8                     000004F8   368          LD    FPR2,T6_FPR2
+000003A0  2C02                                     369          MDR   FPR0,FPR2
+000003A2  6000 0500                     00000500   370          STD   FPR0,T6_GOT
+000003A6  D507 0500 0508      00000500  00000508   371          CLC   T6_GOT,T6_WANT
+000003AC  4770 0252                     00000252   372          BNE   BADGOT
+000003B0  07FE                                     373          BR    R14
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   375 ***********************************************************************
+                                                   376 *                      Working storage
+                                                   377 ***********************************************************************
+
+000003B2                                           379          LTORG ,                        Literals Pool
+
+
+000003B2  40                                       381 RUNMODE  DC    C' '                     Run mode
+                              000000F3  00000001   382 MODE370  EQU   C'3'                     370 run mode
+                              000000E9  00000001   383 ZMODE    EQU   C'Z'                     z/Architecture run mode
+
+
+000003B8                                           385          DC    0D'0'
+000003B8  C3082100 00000000                        386 T1_FPR6  DC    XL8'C3 08 21 00 00 00 00 00'
+000003C0  41123456 00000000                        387 T1_STRG  DC    XL8'41 12 34 56 00 00 00 00'
+000003C8  00000000 00000000                        388 T1_GOT   DC    XL8'00'
+000003D0  C280ECBB 00000000                        389 T1_WANT  DC    XL8'C2 80 EC BB 00 00 00 00'
+
+
+000003D8  C3082100 00000000                        391 T2_FPR6  DC    XL8'C3 08 21 00 00 00 00 00'
+000003E0  41123456 00000000                        392 T2_STRG  DC    XL8'41 12 34 56 00 00 00 00'
+000003E8  00000000 00000000                        393 T2_GOT   DC    XL8'00'
+000003F0  C3080ECB 00000000                        394 T2_WANT  DC    XL8'C3 08 0E CB 00 00 00 00'
+
+
+000003F8  43000000 00000000                        396 T3_FPR4  DC    XL8'43 00 00 00 00 00 00 00'
+00000400  35123456 789ABCDE                        397 T3_FPR6  DC    XL8'35 12 34 56 78 9A BC DE'
+00000408  34123456 789ABCDE                        398 T3_FPR6A DC    XL8'34 12 34 56 78 9A BC DE'
+00000410  41001234 56789ABC                        399 T3_FPR4A DC    XL8'41 00 12 34 56 78 9A BC'
+00000418  3F123456 789ABC00                        400 T3_FPR6X DC    XL8'3F 12 34 56 78 9A BC 00'
+00000420  3F123456 789ABC01                        401          DC    XL8'3F 12 34 56 78 9A BC 01'
+00000428  3F123456 789ABC02                        402          DC    XL8'3F 12 34 56 78 9A BC 02'
+00000430  3F123456 789ABC03                        403          DC    XL8'3F 12 34 56 78 9A BC 03'
+00000438  3F123456 789ABC04                        404          DC    XL8'3F 12 34 56 78 9A BC 04'
+00000440  3F123456 789ABC05                        405          DC    XL8'3F 12 34 56 78 9A BC 05'
+00000448  3F123456 789ABC06                        406          DC    XL8'3F 12 34 56 78 9A BC 06'
+00000450  3F123456 789ABC07                        407          DC    XL8'3F 12 34 56 78 9A BC 07'
+00000458  3F123456 789ABC08                        408          DC    XL8'3F 12 34 56 78 9A BC 08'
+00000460  3F123456 789ABC09                        409          DC    XL8'3F 12 34 56 78 9A BC 09'
+00000468  3F123456 789ABC0A                        410          DC    XL8'3F 12 34 56 78 9A BC 0A'
+00000470  3F123456 789ABC0B                        411          DC    XL8'3F 12 34 56 78 9A BC 0B'
+00000478  3F123456 789ABC0C                        412          DC    XL8'3F 12 34 56 78 9A BC 0C'
+00000480  3F123456 789ABC0D                        413          DC    XL8'3F 12 34 56 78 9A BC 0D'
+00000488  3F123456 789ABC0E                        414          DC    XL8'3F 12 34 56 78 9A BC 0E'
+00000490  3F123456 789ABC0F                        415          DC    XL8'3F 12 34 56 78 9A BC 0F'
+                              00000010  00000001   416 T3_NUMX  EQU   (*-T3_FPR6X)/8
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   418          PRINT DATA
+
+00000498  C3082100 43001234                        420 T4_A     DC    XL4'C3 082100',XL4'43 001234',XL4'C2 72522F'
+000004A0  C272522F
+000004A4  42101010 45111111                        421 T4_B     DC    XL4'42 101010',XL4'45 111111',XL4'3D F0F0F0'
+000004AC  3DF0F0F0
+000004B0  4830000F 41400000                        422 T4_C     DC    XL4'48 30000F',XL4'41 400000',XL4'47 C0003C'
+000004B8  47C0003C
+000004BC  4830000F 41200000                        423 T4_D     DC    XL4'48 30000F',XL4'41 200000',XL4'48 180007'
+000004C4  48180007
+000004C8  48180007 41200000                        424 T4_E     DC    XL4'48 180007',XL4'41 200000',XL4'47 C00038'
+000004D0  47C00038
+
+                              00000005  00000001   426 T4_NUMT  EQU   (*-T4_A)/(3*4)
+000004D4  00000000                                 427 T4_GOT   DC    XL4'00'
+
+                                                   429          PRINT NODATA
+
+
+
+000004D8                                           431          DC    0D'0'            (alignment)
+
+
+
+
+000004D8  48300000 0000000F                        433 T5_FPR2  DC    XL8'48 30 00 00 00 00 00 0F'
+000004E0  00000000 00000000                        434 T5_GOT   DC    XL8'00'
+000004E8  48180000 00000007                        435 T5_WANT  DC    XL8'48 18 00 00 00 00 00 07'
+
+
+000004F0  B3606060 60606060                        437 T6_FPR0  DC    XL8'B3 606060 60606060'
+000004F8  DA200000 20000020                        438 T6_FPR2  DC    XL8'DA 200000 20000020'
+00000500  00000000 00000000                        439 T6_GOT   DC    XL8'00'
+00000508  4CC0C0C1 81818241                        440 T6_WANT  DC    XL8'4C C0C0C1 81818241'
+
+
+
+                                                   442 ***********************************************************************
+                                                   443 *                      Test Flags
+                                                   444 ***********************************************************************
+
+00000510                      00000510  00000600   446          ORG   TEST+X'600'              Test flags
+
+00000600  00                                       448 TESTNUM  DC    X'00'                    Test number that failed
+00000601  00                                       449 SUBTEST  DC    X'00'                    Sub-test number that failed
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   451 ***********************************************************************
+                                                   452 *                      Register equates
+                                                   453 ***********************************************************************
+
+                              00000000  00000001   455 R0       EQU   0
+                              00000001  00000001   456 R1       EQU   1
+                              00000002  00000001   457 R2       EQU   2
+                              00000003  00000001   458 R3       EQU   3
+                              00000004  00000001   459 R4       EQU   4
+                              00000005  00000001   460 R5       EQU   5
+                              00000006  00000001   461 R6       EQU   6
+                              00000007  00000001   462 R7       EQU   7
+                              00000008  00000001   463 R8       EQU   8
+                              00000009  00000001   464 R9       EQU   9
+                              0000000A  00000001   465 R10      EQU   10
+                              0000000B  00000001   466 R11      EQU   11
+                              0000000C  00000001   467 R12      EQU   12
+                              0000000D  00000001   468 R13      EQU   13
+                              0000000E  00000001   469 R14      EQU   14
+                              0000000F  00000001   470 R15      EQU   15
+
+                              00000000  00000001   472 FPR0     EQU   0
+                              00000002  00000001   473 FPR2     EQU   2
+                              00000004  00000001   474 FPR4     EQU   4
+                              00000006  00000001   475 FPR6     EQU   6
+
+
+                                        00000000   477          END   TEST
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    14
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BADCC               I    000246       4    81  146  190  242  245  251
+BADGOT              I    000252       4    85  149  193  298  337  372
+BEGIN               I    000200       4    51   32
+BEGINZ              I    00020C       4    55   38
+CCPSW               D    000278       8    96   83
+DOTESTS             H    000218       2    59   52   56
+FPR0                U    000000       1   472  294  295  367  369  370
+FPR2                U    000002       1   473  293  295  296  333  334  335  368  369
+FPR4                U    000004       1   474  239  241  244  246  250
+FPR6                U    000006       1   475  144  145  147  188  189  191  240  241  243  244  249  250
+GOTPSW              D    000280       8    97   87
+IMAGE               1    000000    1538     0
+MODE370             U    0000F3       1   382   51   77   81   85
+OKPSW               D    000270       8    95   79
+R0                  U    000000       1   455
+R1                  U    000001       1   456  247  249  252  291  293  294  297  299
+R10                 U    00000A       1   465
+R11                 U    00000B       1   466
+R12                 U    00000C       1   467
+R13                 U    00000D       1   468
+R14                 U    00000E       1   469   61   62   63   64   65   66  150  194  254  301  338  373
+R15                 U    00000F       1   470   52   56   71
+R2                  U    000002       1   457  248  253  292  300
+R3                  U    000003       1   458
+R4                  U    000004       1   459
+R5                  U    000005       1   460
+R6                  U    000006       1   461
+R7                  U    000007       1   462
+R8                  U    000008       1   463
+R9                  U    000009       1   464
+RUNMODE             C    0003B2       1   381   51   55   77   81   85
+SUBTEST             X    000601       1   449   69  110  157  201  261  308  345
+SUCCESS             I    00023A       4    77   53   57
+T1_FPR6             X    0003B8       8   386  144
+T1_GOT              X    0003C8       8   388  147  148
+T1_STRG             X    0003C0       8   387  145
+T1_WANT             X    0003D0       8   389  148
+T2_FPR6             X    0003D8       8   391  188
+T2_GOT              X    0003E8       8   393  191  192
+T2_STRG             X    0003E0       8   392  189
+T2_WANT             X    0003F0       8   394  192
+T3_FPR4             X    0003F8       8   396  239
+T3_FPR4A            X    000410       8   399  246
+T3_FPR6             X    000400       8   397  240
+T3_FPR6A            X    000408       8   398  243
+T3_FPR6X            X    000418       8   400  416  247
+T3_NUMX             U    000010       1   416  248
+T3_XLOOP            I    00032C       4   249  253
+T4_A                X    000498       4   420  426  291
+T4_B                X    0004A4       4   421
+T4_C                X    0004B0       4   422
+T4_D                X    0004BC       4   423
+T4_E                X    0004C8       4   424
+T4_GOT              X    0004D4       4   427  296  297
+T4_LOOP             I    000350       4   293  300
+T4_NUMT             U    000005       1   426  292
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    15
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+T5_FPR2             X    0004D8       8   433  333
+T5_GOT              X    0004E0       8   434  335  336
+T5_WANT             X    0004E8       8   435  336
+T6_FPR0             X    0004F0       8   437  367
+T6_FPR2             X    0004F8       8   438  368
+T6_GOT              X    000500       8   439  370  371
+T6_WANT             X    000508       8   440  371
+TEST                J    000000    1538    26   31   34   37   40   49  446   27  477
+TEST1               I    0002B8       4   109   61
+TEST2               I    0002DC       4   156   62
+TEST3               I    000300       4   200   63
+TEST4               I    000340       4   260   64
+TEST5               I    000372       4   307   65
+TEST6               I    000390       4   344   66
+TESTNUM             X    000600       1   448   68  109  156  200  260  307  344
+ZBADCC              I    000262       4    90   82
+ZBADGOT             I    000266       4    91   86
+ZCCPSW              D    000298       8   100   90
+ZGOTPSW             D    0002A8       8   101   91
+ZMODE               U    0000E9       1   383   55
+ZOKPSW              D    000288       8    99   89
+ZSUCCESS            I    00025E       4    89   78
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    16
+
+MACRO  DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    17
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   1538  000-601  000-601
+  Region           1538  000-601  000-601
+    CSECT  TEST    1538  000-601  000-601
+ASMA Ver. 0.2.1                    VERY Simple Basic HFP Floating Point Tests                       24 Feb 2023 12:25:31  Page    18
+
+   STMT                                        FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\float\float.asm
+
+
+** NO ERRORS FOUND **
+
+

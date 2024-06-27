@@ -1,5 +1,6 @@
 /*  HSCUTL.C    (C) Copyright Ivan Warren & Others, 2003-2012        */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2011-2023                             */
 /*              Hercules Platform Port & Misc Functions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -464,7 +465,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
             if (c == '\0' ) break;
 
             /* Check if it is a white space and no other character yet */
-            if(!lstarted && isspace(c)) continue;
+            if(!lstarted && isspace((unsigned char)c)) continue;
             lstarted=1;
 
             /* Check that statement does not overflow buffer */
@@ -601,6 +602,58 @@ DLL_EXPORT void list_all_symbols()
         if ((tok = symbols[i]) != NULL)
             // "Symbol %-12s %s"
             WRMSG( HHC02199, "I", tok->var, tok->val ? tok->val : "" );
+}
+
+/* Hercules microsecond sleep */
+DLL_EXPORT int herc_usleep( useconds_t usecs, const char* file, int line )
+{
+    int  rc, save_errno = 0, eintr_retrys = 0;
+
+    struct timespec usecs_left;
+    usecs_left.tv_nsec = usecs * 1000L;
+    usecs_left.tv_sec  = usecs_left.tv_nsec / ONE_BILLION;
+    usecs_left.tv_nsec %=                     ONE_BILLION;
+
+    while (1
+        && (rc = nanosleep( &usecs_left, &usecs_left ) != 0)
+        && (save_errno = errno) == EINTR
+        && (0
+            || usecs_left.tv_sec != 0
+            || usecs_left.tv_nsec > (USLEEP_MIN * 1000)
+           )
+    )
+        ++eintr_retrys; // (keep retrying until done or min reached)
+
+    if (0
+        || rc != 0
+        || eintr_retrys > NANOSLEEP_EINTR_RETRY_WARNING_TRESHOLD
+    )
+    {
+        char fnc[128], msg[128];
+
+        MSGBUF( fnc, "USLEEP() at %s(%d)",
+            TRIMLOC( file ), line );
+
+        if (save_errno != EINTR)
+        {
+            MSGBUF( msg, "rc=%d, errno=%d: %s",
+                rc, save_errno, strerror( save_errno ));
+
+            // "Error in function %s: %s"
+            WRMSG( HHC00075, "E", fnc, msg );
+            errno = save_errno;
+        }
+
+        if (eintr_retrys > NANOSLEEP_EINTR_RETRY_WARNING_TRESHOLD)
+        {
+            MSGBUF( msg, "rc=%d, EINTR retrys count=%d",
+                rc, eintr_retrys );
+
+            // "Warning in function %s: %s"
+            WRMSG( HHC00092, "W", fnc, msg );
+        }
+    }
+    return rc;
 }
 
 /* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */
@@ -911,11 +964,15 @@ int set_socket_keepalive( int sfd,
     struct protoent * tcpproto;
 
     /* Retrieve TCP protocol value (mostly for FreeBSD portability) */
-    tcpproto = getprotobyname("TCP");
+    tcpproto = getprotobyname("tcp");
     if (!tcpproto)
     {
-        WRMSG( HHC02219, "E", "getprotobyname(\"TCP\")", strerror( HSO_errno ));
-        return -1;
+        tcpproto = getprotobyname("TCP");
+        if (!tcpproto)
+        {
+            WRMSG( HHC02219, "E", "getprotobyname(\"tcp\")", strerror( HSO_errno ));
+            return -1;
+        }
     }
     l_tcp = tcpproto->p_proto;
 
@@ -1019,11 +1076,15 @@ int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval,
     socklen_t  optlen = sizeof( optval );
 
     /* Retrieve TCP protocol value (mostly for FreeBSD portability) */
-    tcpproto = getprotobyname("TCP");
+    tcpproto = getprotobyname("tcp");
     if (!tcpproto)
     {
-        WRMSG( HHC02219, "E", "getprotobyname(\"TCP\")", strerror( HSO_errno ));
-        return -1;
+        tcpproto = getprotobyname("TCP");
+        if (!tcpproto)
+        {
+            WRMSG( HHC02219, "E", "getprotobyname(\"tcp\")", strerror( HSO_errno ));
+            return -1;
+        }
     }
     l_tcp = tcpproto->p_proto;
 #else
@@ -1096,9 +1157,7 @@ DLL_EXPORT char * hgets(char *b,size_t c,int s)
     while(ix<c)
     {
         b[ix]=hgetc(s);
-//      if(b[ix]==EOF)         /* GCC Warning: always false */
-//                             /* due to -Wtype-limits;     */
-        if ((int)b[ix] == EOF) /* Corrected.                */
+        if ((signed char)b[ix] == EOF)
         {
             return NULL;
         }
@@ -1505,10 +1564,14 @@ int initialize_utility( int argc, char* argv[],
     hthreads_internal_init();                   // (must be second)
     SET_THREAD_NAME( exename );                 // (then other stuff)
     sysblk.msglvl = DEFAULT_MLVL;
+    sysblk.sysgroup = DEFAULT_SYSGROUP;
 
     initialize_detach_attr( DETACHED );
     initialize_join_attr( JOINABLE );
     initialize_lock( &sysblk.dasdcache_lock );
+    initialize_lock( &sysblk.scrlock );
+    initialize_condition( &sysblk.scrcond );
+
     set_codepage( NULL );
     init_hostinfo( &hostinfo );
 
@@ -1823,7 +1886,7 @@ DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
 
     while (*p && *pargc < maxargc)
     {
-        while (*p && isspace(*p))
+        while (*p && isspace((unsigned char)*p))
         {
             p++;
         }
@@ -1841,7 +1904,7 @@ DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
         *pargv = p;
         ++*pargc;
 
-        while (*p && !isspace(*p) && *p != '\"' && *p != '\'')
+        while (*p && !isspace((unsigned char)*p) && *p != '\"' && *p != '\'')
         {
             p++;
         }
@@ -1882,20 +1945,35 @@ DLL_EXPORT void init_random()
 }
 
 /*-------------------------------------------------------------------*/
-/* Check if string is numeric                                        */
+/* Check if string is numeric or hexadecimal                         */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT bool is_numeric( const char* str )
 {
     return is_numeric_l( str, strlen( str ));
 }
-
-DLL_EXPORT bool is_numeric_l( const char* str, int len )
+DLL_EXPORT bool is_numeric_l( const char* str, size_t len )
 {
-    int  i;
+    size_t i;
     for (i=0; i < len; i++)
-        if (str[i] < '0' || str[i] > '9')
+        if (!(str[i] >= '0' && str[i] <= '9'))
             return false;
-    return true;
+    return len ? true : false; // (empty string is not numeric)
+}
+DLL_EXPORT bool is_hex( const char* str )
+{
+    return is_hex_l( str, strlen( str ));
+}
+DLL_EXPORT bool is_hex_l( const char* str, size_t len )
+{
+    size_t i;
+    for (i=0; i < len; i++)
+        if (!(0
+            || (str[i] >= '0' && str[i] <= '9')
+            || (str[i] >= 'a' && str[i] <= 'f')
+            || (str[i] >= 'A' && str[i] <= 'F')
+        ))
+            return false;
+    return len ? true : false; // (empty string is not hex)
 }
 
 /*-------------------------------------------------------------------*/
@@ -1905,13 +1983,13 @@ DLL_EXPORT void string_to_upper( char* source )
 {
     int  i;
     for (i=0; source[i]; i++)
-        source[i] = toupper( source[i] );
+        source[i] = toupper( (unsigned char)source[i] );
 }
 DLL_EXPORT void string_to_lower( char* source )
 {
     int  i;
     for (i=0; source[i]; i++)
-        source[i] = tolower( source[i] );
+        source[i] = tolower( (unsigned char)source[i] );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1941,3 +2019,2925 @@ DLL_EXPORT int make_asciiz( char* dest, int destlen, BYTE* src, int srclen )
     dest[len] = 0;
     return len;
 }
+
+/*-------------------------------------------------------------------*/
+/*                        idx_snprintf                               */
+/*      Fix for "Potential snprintf buffer overflow" #457            */
+/*-------------------------------------------------------------------*/
+/* This function is a replacement for code that builds a message     */
+/* piecemeal (a little bit at a time) via a series of snprint calls  */
+/* indexing each time a little bit further into the message buffer   */
+/* until the entire message is built:                                */
+/*                                                                   */
+/*      char buf[64];                                                */
+/*      size_t bufl = sizeof( buf );                                 */
+/*      int n = 0;                                                   */
+/*                                                                   */
+/*      n =  snprintf( buf,   bufl,   "%part1", part1 );             */
+/*      n += snprintf( buf+n, bufl-n, "%part2", part2 );             */
+/*      n += snprintf( buf+n, bufl-n, "%part3", part3 );             */
+/*      ...                                                          */
+/*      n += snprintf( buf+n, bufl-n, "%lastpart", lastpart );       */
+/*                                                                   */
+/*      WRMSG( HHCnnnn, "I", buf );                                  */
+/*                                                                   */
+/* The problem with the above code is there is no check to ensure    */
+/* a buffer overflow does not occur due to trying to format more     */
+/* data than the buffer can hold.                                    */
+/*                                                                   */
+/* The idx_snprintf function accomplishes the same thing but without */
+/* overflowing the buffer. It checks to ensure the idx buffer offset */
+/* value never exceeds the size of the buffer.                       */
+/*                                                                   */
+/* The return value is the same as what snprintf returns, BUT THE    */
+/* BUFFER ADDRESS AND SIZE PASSED TO THE FUNCTION is the *original*  */
+/* address and size of the buffer (i.e. the raw buf and bufl value   */
+/* but NOT offset by the index):                                     */
+/*                                                                   */
+/*      char buf[64];                                                */
+/*      size_t bufl = sizeof( buf );                                 */
+/*      int n = 0;                                                   */
+/*                                                                   */
+/*      n =  idx_snprintf( n, buf, bufl, "%part1", part1 );          */
+/*      n += idx_snprintf( n, buf, bufl, "%part2", part2 );          */
+/*      n += idx_snprintf( n, buf, bufl, "%part3", part3 );          */
+/*      ...                                                          */
+/*      n += idx_snprintf( n, buf, bufl, "%lastpart", lastpart );    */
+/*                                                                   */
+/*      WRMSG( HHCnnnn, "I", buf );                                  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int  idx_snprintf( int idx, char* buffer, size_t bufsiz, const char* fmt, ... )
+{
+    int rc;
+    va_list vargs;
+
+    if (idx < 0 || !bufsiz || (size_t)idx >= bufsiz)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "W", "idx_snprintf", "OVERFLOW (bufsiz too small)" );
+        idx = (int)(bufsiz ? bufsiz-1 : 0); /* (prevent buffer overflow) */
+    }
+
+    va_start( vargs, fmt );
+    rc = vsnprintf( buffer+idx, bufsiz-idx, fmt, vargs );
+    return rc;
+}
+
+/*-------------------------------------------------------------------
+ * Elbrus e2k
+ *-------------------------------------------------------------------*/
+#if defined(__e2k__) && defined(__LCC__)
+
+volatile char __e2k_lockflags[__E2K_LOCKFLAGS_SIZE];
+
+int __cmpxchg16_e2k(volatile char *lockflag, U64 *old1, U64 *old2, U64 new1,
+                    U64 new2, volatile void *ptr)
+{
+    // returns 0 == success, 1 otherwise
+    int result;
+
+    while (__atomic_test_and_set(lockflag, __ATOMIC_ACQUIRE) == 1)
+        ;
+
+    if (*old1 == *(U64 *)ptr && *old2 == *((U64 *)ptr + 1)) {
+        *(U64 *)ptr = new1;
+        *((U64 *)ptr + 1) = new2;
+        result = 0;
+    } else {
+        *old1 = *((U64 *)ptr);
+        *old2 = *((U64 *)ptr + 1);
+        result = 1;
+    }
+
+    __atomic_clear(lockflag, __ATOMIC_RELEASE);
+
+    return result;
+}
+#endif /* e2k && LCC */
+
+/*-------------------------------------------------------------------*/
+/*     Processor types table and associated query functions          */
+/*-------------------------------------------------------------------*/
+struct PTYPTAB
+{
+    const BYTE  ptyp;           // 1-byte processor type (service.h)
+    const char* shortname;      // 2-character short name (Hercules)
+    const char* longname;       // 16-character long name (diag 224)
+};
+typedef struct PTYPTAB PTYPTAB;
+
+static PTYPTAB ptypes[] =
+{
+    { SCCB_PTYP_CP,      "CP", "CP              " },  // 0
+    { SCCB_PTYP_UNKNOWN, "??", "                " },  // 1 (unknown == blanks)
+    { SCCB_PTYP_ZAAP,    "AP", "ZAAP            " },  // 2
+    { SCCB_PTYP_IFL,     "IL", "IFL             " },  // 3
+    { SCCB_PTYP_ICF,     "CF", "ICF             " },  // 4
+    { SCCB_PTYP_ZIIP,    "IP", "ZIIP            " },  // 5
+};
+
+DLL_EXPORT const char* ptyp2long( BYTE ptyp )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (ptypes[i].ptyp == ptyp)
+            return ptypes[i].longname;
+    return "                ";              // 16 blanks
+}
+
+DLL_EXPORT const char* ptyp2short( BYTE ptyp )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (ptypes[i].ptyp == ptyp)
+            return ptypes[i].shortname;
+    return "??";
+}
+
+DLL_EXPORT BYTE short2ptyp( const char* shortname )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (strcasecmp( ptypes[i].shortname, shortname ) == 0)
+            return ptypes[i].ptyp;
+    return SCCB_PTYP_UNKNOWN;
+}
+
+DLL_EXPORT U64 do_make_psw64( PSW* psw, BYTE real_ilc, int arch /*370/390/900*/, bool bc )
+{
+    /* Return first/only 64-bit DWORD of the PSW -- IN HOST FORMAT!
+
+       Caller is responsible for doing the STORE_DW on the returned
+       value, which does a CSWAP to place it into guest storage in
+       proper big endian format. The 900 mode caller (i.e. z/Arch)
+       is also responsible for doing the store of the second DWORD
+       of the 16-byte z/Arch PSW = the 64-bit instruction address.
+    */
+
+    BYTE  b0, b1, b2, b3, b4;
+    U16   b23;
+    U32   b567, b4567;
+    U64   psw64 = 0;
+
+    switch (arch)
+    {
+        case 370:
+
+        if (bc) {
+            //                      370 BC-mode
+            //
+            //     +---------------+---+-----+------+---------------+----
+            //     | channel masks | E | key | 0MWP | interupt code | ..
+            //     +---------------+---+-----+------+---------------+----
+            //     0               7   8     12     16             31
+
+            //  ---+-----+----+------+------------------------------+
+            //   ..| ilc | cc | mask |     instruction address      |
+            //  ---+-----+----+------+------------------------------+
+            //     32    34   36     40                            63
+
+            b0 = psw->sysmask;
+
+            b1 = 0
+                 | psw->pkey
+                 | psw->states
+                 ;
+
+            b23 = psw->intcode;
+
+            b4 = 0
+                 | ((real_ilc >> 1) << 6)   // CAREFUL! Herc's ilc value
+                                            // is the ACTUAL length (2,
+                                            // 4 or 6), but the value in
+                                            // the PSW is either 1,2,3!)
+                 | (psw->cc << 4)
+                 |  psw->progmask
+                 ;
+
+            b567 = psw->IA_L;
+
+            if (!psw->zeroilc)
+                b567 &= AMASK24;
+
+            psw64 = 0
+                    | ( (U64) b0   << (64-(1*8)) )
+                    | ( (U64) b1   << (64-(2*8)) )
+                    | ( (U64) b23  << (64-(4*8)) )
+                    | ( (U64) b4   << (64-(5*8)) )
+                    | ( (U64) b567 << (64-(8*8)) )
+                    ;
+            break;
+        }
+
+        /* Not 370 BC-mode = 370 EC-mode. Fall through to the 390 case,
+           which handles both ESA/390 mode and S/370 EC-mode PSWs too.
+
+           The below special "FALLTHRU" comment lets GCC know that we are
+           purposely falling through to the next switch case and is needed
+           in order to suppress the warning that GCC would otherwise issue.
+        */
+        /* FALLTHRU */
+
+        case 390:
+            //                      370 EC-mode
+            //
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     | 0R00 | 0TIE | key | 1MWP | S0 | cc | mask | 00000000 | ..
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     0      4      8     12     16   18   20     24
+
+            //  ---+----------+-------------------------------------------+
+            //   ..| 00000000 |       instruction address                 |  (370)
+            //  ---+----------+-------------------------------------------+
+            //     32         40                                         63
+            //
+            //                        ESA/390
+            //
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     | 0R00 | 0TIE | key | 1MWP | AS | cc | mask | 00000000 | ..
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     0      4      8     12     16   18   20     24
+            //
+            //  ---+---+--------------------------------------------------+
+            //   ..| A |              instruction address                 |  (390)
+            //  ---+---+--------------------------------------------------+
+            //     32  33                                                63
+
+            b0 = psw->sysmask;
+
+            b1 = 0
+                 | psw->pkey
+                 | psw->states
+                 ;
+
+            b2 = 0
+                 |  psw->asc           // (S0 or AS)
+                 | (psw->cc << 4)
+                 |  psw->progmask
+                 ;
+
+            b3 = psw->zerobyte;
+
+            b4567 = psw->IA_L;
+
+            if (!psw->zeroilc)
+                b4567 &= psw->amode ? AMASK31 : AMASK24;
+
+            if (psw->amode)
+                b4567 |= 0x80000000;
+
+            psw64 = 0
+                    | ( (U64) b0    << (64-(1*8)) )
+                    | ( (U64) b1    << (64-(2*8)) )
+                    | ( (U64) b2    << (64-(3*8)) )
+                    | ( (U64) b3    << (64-(4*8)) )
+                    | ( (U64) b4567 << (64-(8*8)) )
+                    ;
+            break;
+
+        case 900:
+            //                      z/Architecture
+            //
+            //     +------+------+-----+------+----+----+------+-----------+---
+            //     | 0R00 | 0TIE | key | 0MWP | AS | cc | mask | 0000 000E | ..
+            //     +------+------+-----+------+----+----+------+-----------+---
+            //     0      4      8     12     16   18   20     24         31
+            //
+            //  ---+---+---------------------------------------------------+
+            //   ..| B | 0000000000000000000000000000000000000000000000000 |
+            //  ---+---+---------------------------------------------------+
+            //     32  33                                                 63
+
+            b0 = psw->sysmask;
+
+            b1 = 0
+                 | psw->pkey
+                 | psw->states
+                 ;
+
+            b2 = 0
+                 |  psw->asc
+                 | (psw->cc << 4)
+                 |  psw->progmask
+                 ;
+
+            b3 = psw->zerobyte;
+
+            if (psw->amode64)
+                b3 |= 0x01;
+
+            b4567 = psw->zeroword;
+
+            if (psw->amode)
+                b4567 |= 0x80000000;
+
+            psw64 = 0
+                    | ( (U64) b0    << (64-(1*8)) )
+                    | ( (U64) b1    << (64-(2*8)) )
+                    | ( (U64) b2    << (64-(3*8)) )
+                    | ( (U64) b3    << (64-(4*8)) )
+                    | ( (U64) b4567 << (64-(8*8)) )
+                    ;
+            break;
+
+        default:        // LOGIC ERROR!
+            CRASH();    // LOGIC ERROR!
+    }
+    return psw64;
+}
+
+/*-------------------------------------------------------------------*/
+/*              Return Program Interrupt Name                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* PIC2Name( int pcode )
+{
+    static const char* pgmintname[] =
+    {
+        /* 01 */    "Operation exception",
+        /* 02 */    "Privileged-operation exception",
+        /* 03 */    "Execute exception",
+        /* 04 */    "Protection exception",
+        /* 05 */    "Addressing exception",
+        /* 06 */    "Specification exception",
+        /* 07 */    "Data exception",
+        /* 08 */    "Fixed-point-overflow exception",
+        /* 09 */    "Fixed-point-divide exception",
+        /* 0A */    "Decimal-overflow exception",
+        /* 0B */    "Decimal-divide exception",
+        /* 0C */    "HFP-exponent-overflow exception",
+        /* 0D */    "HFP-exponent-underflow exception",
+        /* 0E */    "HFP-significance exception",
+        /* 0F */    "HFP-floating-point-divide exception",
+        /* 10 */    "Segment-translation exception",
+        /* 11 */    "Page-translation exception",
+        /* 12 */    "Translation-specification exception",
+        /* 13 */    "Special-operation exception",
+        /* 14 */    "Pseudo-page-fault exception",
+        /* 15 */    "Operand exception",
+        /* 16 */    "Trace-table exception",
+        /* 17 */    "ASN-translation exception",
+        /* 18 */    "Transaction constraint exception",
+        /* 19 */    "Vector/Crypto operation exception",
+        /* 1A */    "Page state exception",
+        /* 1B */    "Vector processing exception",
+        /* 1C */    "Space-switch event",
+        /* 1D */    "Square-root exception",
+        /* 1E */    "Unnormalized-operand exception",
+        /* 1F */    "PC-translation specification exception",
+        /* 20 */    "AFX-translation exception",
+        /* 21 */    "ASX-translation exception",
+        /* 22 */    "LX-translation exception",
+        /* 23 */    "EX-translation exception",
+        /* 24 */    "Primary-authority exception",
+        /* 25 */    "Secondary-authority exception",
+        /* 26 */ /* "Page-fault-assist exception",          */
+        /* 26 */    "LFX-translation exception",
+        /* 27 */ /* "Control-switch exception",             */
+        /* 27 */    "LSX-translation exception",
+        /* 28 */    "ALET-specification exception",
+        /* 29 */    "ALEN-translation exception",
+        /* 2A */    "ALE-sequence exception",
+        /* 2B */    "ASTE-validity exception",
+        /* 2C */    "ASTE-sequence exception",
+        /* 2D */    "Extended-authority exception",
+        /* 2E */    "LSTE-sequence exception",
+        /* 2F */    "ASTE-instance exception",
+        /* 30 */    "Stack-full exception",
+        /* 31 */    "Stack-empty exception",
+        /* 32 */    "Stack-specification exception",
+        /* 33 */    "Stack-type exception",
+        /* 34 */    "Stack-operation exception",
+        /* 35 */    "Unassigned exception",
+        /* 36 */    "Unassigned exception",
+        /* 37 */    "Unassigned exception",
+        /* 38 */    "ASCE-type exception",
+        /* 39 */    "Region-first-translation exception",
+        /* 3A */    "Region-second-translation exception",
+        /* 3B */    "Region-third-translation exception",
+        /* 3C */    "Unassigned exception",
+        /* 3D */    "Unassigned exception",
+        /* 3E */    "Unassigned exception",
+        /* 3F */    "Unassigned exception",
+        /* 40 */    "Monitor event"
+    };
+
+    int ndx, code = (pcode & 0xFF);
+
+    if (code == 0x80)
+        return "PER event";
+
+    if (code < 1 || code > (int) _countof( pgmintname ))
+        return "Unassigned exception";
+
+    ndx = ((code - 1) & 0x3F);
+
+    return (ndx >= 0 && ndx < (int) _countof( pgmintname )) ?
+        pgmintname[ ndx ] : "Unassigned exception";
+}
+
+/*-------------------------------------------------------------------*/
+/*                 Return SIGP Order Name                            */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* order2name( BYTE order )
+{
+static const char *ordername[] =
+{
+/* 0x00                          */  "Unassigned",
+/* 0x01 SIGP_SENSE               */  "Sense",
+/* 0x02 SIGP_EXTCALL             */  "External call",
+/* 0x03 SIGP_EMERGENCY           */  "Emergency signal",
+/* 0x04 SIGP_START               */  "Start",
+/* 0x05 SIGP_STOP                */  "Stop",
+/* 0x06 SIGP_RESTART             */  "Restart",
+/* 0x07 SIGP_IPR                 */  "Initial program reset",
+/* 0x08 SIGP_PR                  */  "Program reset",
+/* 0x09 SIGP_STOPSTORE           */  "Stop and store status",
+/* 0x0A SIGP_IMPL                */  "Initial microprogram load",
+/* 0x0B SIGP_INITRESET           */  "Initial CPU reset",
+/* 0x0C SIGP_RESET               */  "CPU reset",
+/* 0x0D SIGP_SETPREFIX           */  "Set prefix",
+/* 0x0E SIGP_STORE               */  "Store status",
+/* 0x0F                          */  "Unassigned",
+/* 0x10                          */  "Unassigned",
+/* 0x11 SIGP_STOREX              */  "Store extended status at address",
+/* 0x12 SIGP_SETARCH             */  "Set architecture mode",
+/* 0x13 SIGP_COND_EMERGENCY      */  "Conditional emergency",
+/* 0x14                          */  "Unassigned",
+/* 0x15 SIGP_SENSE_RUNNING_STATE */  "Sense running state"
+};
+    return (order >= _countof( ordername )) ?
+        "Unassigned" : ordername[ order ];
+}
+
+/*-------------------------------------------------------------------*/
+/*                 Return PER Event name(s)                          */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* perc2name( BYTE perc, char* buf, size_t bufsiz )
+{   /*
+           Hex    Bit   PER Event
+            80     0    Successful-branching
+            40     1    Instruction-fetching
+            20     2    Storage-alteration
+            10     3    Storage-key-alteration
+            08     4    Store-using-real-address
+            04     5    Zero-address-detection
+            02     6    Transaction-end
+            01     7    Instruction-fetching nullification (PER-3) */
+
+    const char* name;
+
+    switch (perc)
+    {
+        /*-----------------------------------------------------------*/
+        /*               Basic single-bit events...                  */
+        /*-----------------------------------------------------------*/
+
+        case 0x80:
+        {
+            name = "BRANCH";
+            break;
+        }
+
+        case 0x40:
+        {
+            name = "IFETCH";
+            break;
+        }
+
+        case 0x20:
+        {
+            name = "STOR";
+            break;
+        }
+
+        case 0x10:
+        {
+            /* NOTE: docs say: "A zero is stored in bit position 3 of
+               locations 150-151", so this SHOULDN'T(?) occur, but if
+               for some reason it does, let's return an indication.
+            */
+            name = "SKEY";
+            break;
+        }
+
+#if 0 // (probably illegal? i.e. should never occur? See 0x28 below!)
+
+        case 0x08:
+        {
+            name = "STURA";
+            break;
+        }
+#endif
+        case 0x04:
+        {
+            name = "ZAD";
+            break;
+        }
+
+        case 0x02:
+        {
+            name = "TEND";
+            break;
+        }
+
+        case 0x01:
+        {
+            name = "IFNULL";
+            break;
+        }
+
+        /*-----------------------------------------------------------*/
+        /*    Exceptions to the rule requiring special handling      */
+        /*-----------------------------------------------------------*/
+
+        case 0x24:
+        {
+            /* "... when ... a storage-alteration ... event is re-
+               cognized concurrently with a zero-address-detection
+               event, only the storage alteration ... event is in-
+               dicated." (Not sure whether that means ONLY the 0x20
+               storage alteration bit is set, or whether the "event"
+               should simply be TREATED AS a storage event, so to
+               be safe, we'll code for it.)
+            */
+            name = "STOR";
+            break;
+        }
+
+        case 0x28:
+        {
+            /* "... while ones in bit positions 2 and 4 indicate a
+               store-using-real-address event."
+            */
+            name = "STURA";
+            break;
+        }
+
+#if 0 // (probbaly illegal? i.e. should never occur?)
+
+        case 0x2C:
+        {
+            /* "... when ... store-using-real-address event is re-
+               cognized concurrently with a zero-address-detection
+               event, only the ... store-using-real-address event
+               is indicated."
+            */
+            name = "STURA";
+            break;
+        }
+#endif
+        case 0x41:
+        {
+            /* "When a program interruption occurs for a PER instruc-
+               tion fetching nullification event, bits 1 and 7 are set
+               to one in the PER code. No other PER events are concur-
+               rently indicated.
+            */
+            name = "IFETCH+IFNULL";
+            break;
+        }
+
+        case 0x42:
+        {
+            /* "If an instruction-fetching basic event coincides with
+               the transaction-end event, bit 1 is also set to one
+               in the PER code."
+            */
+            name = "IFETCH+TEND";
+            break;
+        }
+
+        default:
+        {
+            name = "UNKNOWN!";
+            break;
+        }
+    }
+
+    strlcpy( buf, name, bufsiz );
+    return buf;
+}
+
+/*-------------------------------------------------------------------*/
+/*      Format Operation-Request Block (ORB) for display             */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* FormatORB( ORB* orb, char* buf, size_t bufsz )
+{
+    if (!buf)
+        return NULL;
+
+    if (bufsz)
+        *buf = 0;
+
+    if (bufsz <= 1 || !orb)
+        return buf;
+
+    snprintf( buf, bufsz,
+
+        "IntP:%2.2X%2.2X%2.2X%2.2X Key:%d LPM:%2.2X "
+        "Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c%c%c%c%c %c%c.....%c "
+        "%cCW:%2.2X%2.2X%2.2X%2.2X"
+
+        , orb->intparm[0], orb->intparm[1], orb->intparm[2], orb->intparm[3]
+        , (orb->flag4 & ORB4_KEY) >> 4
+        , orb->lpm
+
+        , (orb->flag4 & ~ORB4_KEY)
+        , orb->flag5
+        , orb->flag7
+
+        , ( orb->flag4 & ORB4_S ) ? 'S' : '.'
+        , ( orb->flag4 & ORB4_C ) ? 'C' : '.'
+        , ( orb->flag4 & ORB4_M ) ? 'M' : '.'
+        , ( orb->flag4 & ORB4_Y ) ? 'Y' : '.'
+
+        , ( orb->flag5 & ORB5_F ) ? 'F' : '.'
+        , ( orb->flag5 & ORB5_P ) ? 'P' : '.'
+        , ( orb->flag5 & ORB5_I ) ? 'I' : '.'
+        , ( orb->flag5 & ORB5_A ) ? 'A' : '.'
+
+        , ( orb->flag5 & ORB5_U ) ? 'U' : '.'
+        , ( orb->flag5 & ORB5_B ) ? 'B' : '.'
+        , ( orb->flag5 & ORB5_H ) ? 'H' : '.'
+        , ( orb->flag5 & ORB5_T ) ? 'T' : '.'
+
+        , ( orb->flag7 & ORB7_L ) ? 'L' : '.'
+        , ( orb->flag7 & ORB7_D ) ? 'D' : '.'
+        , ( orb->flag7 & ORB7_X ) ? 'X' : '.'
+
+        , ( orb->flag5 & ORB5_B ) ? 'T' : 'C'  // (TCW or CCW)
+
+        , orb->ccwaddr[0], orb->ccwaddr[1], orb->ccwaddr[2], orb->ccwaddr[3]
+    );
+
+    return buf;
+}
+
+/*-------------------------------------------------------------------*/
+/*      Determine if running on a big endian system or not           */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT bool are_big_endian()
+{
+    static union
+    {
+        uint32_t  ui32;
+        char      b[4];
+    }
+    test = {0x01020304};
+    return (0x01 == test.b[0]);
+}
+
+/*********************************************************************/
+/*********************************************************************/
+/**                                                                 **/
+/**                    TraceFile support                            **/
+/**                                                                 **/
+/*********************************************************************/
+/*********************************************************************/
+
+/*-------------------------------------------------------------------*/
+/*    Determine if endian swaps are going to be needed or not        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT bool tf_are_swaps_needed( TFSYS* sys )
+{
+    return
+    (0
+        || (1
+            && are_big_endian()     // (we are big endian)
+            && sys->bigend == 0     // (but file is little endian)
+           )
+        || (1
+            && !are_big_endian()    // (we are little endian)
+            && sys->bigend == 1     // (but file is big endian)
+           )
+    );
+}
+
+//---------------------------------------------------------------------
+//       (helper function to call correct ARCH_DEP function)
+//---------------------------------------------------------------------
+static int tf_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype )
+{
+    switch (regs->arch_mode)
+    {
+#if defined(       _370 )
+        case   ARCH_370_IDX:
+            return sysblk.s370_vtr( raptr, siptr, vaddr, arn, regs, acctype );
+#endif
+#if defined(       _390 )
+        case   ARCH_390_IDX:
+            return sysblk.s390_vtr( raptr, siptr, vaddr, arn, regs, acctype );
+#endif
+#if defined(       _900 )
+        case   ARCH_900_IDX:
+            return sysblk.z900_vtr( raptr, siptr, vaddr, arn, regs, acctype );
+#endif
+        default: CRASH();
+            UNREACHABLE_CODE( return 0 );
+    }
+}
+
+//---------------------------------------------------------------------
+//       (helper function to call correct ARCH_DEP function)
+//---------------------------------------------------------------------
+static BYTE tf_get_storage_key( REGS* regs, U64 abs )
+{
+    switch (regs->arch_mode)
+    {
+#if defined(       _370 )
+        case   ARCH_370_IDX:
+            return sysblk.s370_gsk( abs );
+#endif
+#if defined(       _390 )
+        case   ARCH_390_IDX:
+            return sysblk.s390_gsk( abs );
+#endif
+#if defined(       _900 )
+        case   ARCH_900_IDX:
+            return sysblk.z900_gsk( abs );
+#endif
+        default: CRASH();
+            UNREACHABLE_CODE( return 0 );
+    }
+}
+
+//---------------------------------------------------------------------
+//       (helper function to call correct ARCH_DEP function)
+//---------------------------------------------------------------------
+static void tf_store_int_timer( REGS* regs, U64 raddr )
+{
+    switch (regs->arch_mode)
+    {
+#if defined(     _370 )
+        case ARCH_370_IDX:
+            if (ITIMER_ACCESS( raddr, 16 ))
+                 sysblk.s370_sit( regs );
+            return;
+#endif
+#if defined(     _390 )
+        case ARCH_390_IDX:
+            //    390 doesn't have interval timers
+            return;
+#endif
+#if defined(     _900 )
+        case ARCH_900_IDX:
+            //    900 doesn't have interval timers
+            return;
+#endif
+        default: CRASH();
+            UNREACHABLE_CODE( return );
+    }
+}
+
+//---------------------------------------------------------------------
+//       (helper function to call correct ARCH_DEP function)
+//---------------------------------------------------------------------
+static U64 tf_apply_prefixing( U64 radr, REGS* regs )
+{
+    switch (regs->arch_mode)
+    {
+#if defined(            _370 )
+        case        ARCH_370_IDX:
+            return APPLY_370_PREFIXING( radr, regs->PX_370 );
+#endif
+#if defined(            _390 )
+        case        ARCH_390_IDX:
+            return APPLY_390_PREFIXING( radr, regs->PX_390 );
+#endif
+#if defined(            _900 )
+        case        ARCH_900_IDX:
+            return APPLY_900_PREFIXING( radr, regs->PX_900 );
+#endif
+        default: CRASH();
+            UNREACHABLE_CODE( return 0 );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                       TFSYS record                                */
+/*-------------------------------------------------------------------*/
+static const size_t tfsys_size = sizeof( TFSYS );
+static TFSYS tfsys = {0};
+
+/*-------------------------------------------------------------------*/
+/*                Write starting TFSYS record                        */
+/*-------------------------------------------------------------------*/
+static bool tf_write_initial_TFSYS_locked( TIMEVAL* tod )
+{
+    size_t  written;
+    bool    ret = true;
+
+    /* Initialize TFSYS record */
+
+    tfsys.ffmt[0] = '%';
+    tfsys.ffmt[1] = 'T';
+    tfsys.ffmt[2] = 'F';
+    tfsys.ffmt[3] = TF_FMT;
+
+    tfsys.bigend   = are_big_endian() ? 1 : 0;
+    tfsys.engs     = MAX_CPU_ENGS;
+    tfsys.archnum0 = _ARCH_NUM_0;
+    tfsys.archnum1 = _ARCH_NUM_1;
+    tfsys.archnum2 = _ARCH_NUM_2;
+
+    memcpy( &tfsys.beg_tod, tod, sizeof( tfsys.beg_tod ));
+    memset( &tfsys.end_tod,  0,  sizeof( tfsys.end_tod ));
+
+    STRLCPY( tfsys.version, *sysblk.vers_info );
+    memcpy( &tfsys.ptyp[0], &sysblk.ptyp[0], MAX_CPU_ENGS );
+
+    if ((written = fwrite( &tfsys, 1, tfsys_size,
+                sysblk.traceFILE )) < tfsys_size)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", "fwrite()", strerror( errno ));
+        ret = false;
+    }
+
+    sysblk.curtracesize += written;
+
+    // "Trace file tracing begun..."
+    WRMSG( HHC02383, "I" );
+
+    return ret;
+}
+
+/*-------------------------------------------------------------------*/
+/*                     Close TraceFile                               */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void tf_close_locked()
+{
+    /* Quick exit if already closed */
+    if (!sysblk.traceFILE)
+        return;
+
+    if (fseek( sysblk.traceFILE, 0, SEEK_SET ) != 0)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", "fseek()", strerror( errno ));
+    }
+    else if (fwrite( &tfsys, 1, tfsys_size, sysblk.traceFILE ) < tfsys_size)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", "fwrite()", strerror( errno ));
+    }
+
+    /* Now close the file */
+    VERIFY( 0 == fclose( sysblk.traceFILE ));
+    sysblk.traceFILE = NULL;
+    sysblk.curtracesize = 0;
+}
+
+DLL_EXPORT void tf_close( void* notused )
+{
+    UNREFERENCED( notused );
+
+    OBTAIN_TRACEFILE_LOCK();
+    {
+        tf_close_locked();
+    }
+    RELEASE_TRACEFILE_LOCK();
+}
+
+/*-------------------------------------------------------------------*/
+/*                 Write TraceFile record                            */
+/*-------------------------------------------------------------------*/
+static bool tf_write( REGS* regs, void* rec, U16 curr, U16 msgnum )
+{
+    static size_t  bufsize  = 0;
+    static U16     prev     = 0;
+
+    TFHDR*   hdr;
+    size_t   written;
+    TIMEVAL  tod;
+    TID      tid;
+    bool     nostop;
+    bool     auto_closed = false; // (true when MAX= reached)
+    bool     ret = true;
+
+    OBTAIN_TRACEFILE_LOCK();
+    {
+        /* Quick exit if tracefile tracing isn't active */
+        if (!sysblk.traceFILE)
+        {
+            RELEASE_TRACEFILE_LOCK();
+            return true;
+        }
+
+        gettimeofday( (TIMEVAL*) &tod, NULL );
+
+        /* Write TFSYS record if first time */
+        if (!sysblk.curtracesize)
+        {
+            if (!tf_write_initial_TFSYS_locked( &tod ))
+            {
+                // (error message already issued)
+                RELEASE_TRACEFILE_LOCK();
+                return false;
+            }
+
+            bufsize = tf_MAX_RECSIZE();
+            prev = 0;
+
+            /* Register shutdown function so close updates TFSYS */
+            hdl_addshut( "tf_close", tf_close, NULL );
+        }
+
+        /* Copy caller's entire record into our buffer */
+        if ((size_t)curr > bufsize) CRASH();
+        hdr = (TFHDR*) sysblk.tracefilebuff;
+        memcpy( hdr, rec, curr );
+
+        /* Finish building their header */
+        hdr->prev      = prev;
+        hdr->curr      = curr;
+        hdr->cpuad     = regs ? regs->cpuad : 0xFFFF;
+        hdr->msgnum    = msgnum;
+        hdr->arch_mode = regs ? regs->arch_mode : 0xFF;
+        hdr->tod       = tod;
+        tid             = hthread_self();
+        hdr->tidnum     = TID_CAST( tid );
+        get_thread_name( tid, hdr->thrdname );
+
+        /* Update the TFSYS record's end time too */
+        memcpy( &tfsys.end_tod, &tod, sizeof( tfsys.end_tod ));
+
+        /* Write caller's entire record to the trace file */
+        if ((written = fwrite( hdr, 1, curr,
+                sysblk.traceFILE )) <  curr)
+        {
+            // "Error in function %s: %s"
+            WRMSG( HHC00075, "E", "fwrite()", strerror( errno ));
+            ret = false;
+        }
+
+        /* Update variables for next time */
+        sysblk.curtracesize += written;
+        prev = curr;
+
+        /* Count total trace records */
+        if (hdr->cpuad == 0xFFFF)
+            tfsys.tot_dev++;
+        else
+        {
+            if (hdr->msgnum == 2324)
+                tfsys.tot_ins++;
+        }
+
+        /* Stop tracing when MAX size exceeded */
+        if (sysblk.curtracesize > sysblk.maxtracesize)
+        {
+            tf_close_locked();
+            auto_closed = true; // (handled further below)
+            nostop = sysblk.tfnostop ? true : false;
+        }
+    }
+    RELEASE_TRACEFILE_LOCK();
+
+    /* If file automatically closed due to MAX= being reached... */
+    if (auto_closed)
+    {
+        /* Stop all instruction tracing too unless asked not to */
+        if (nostop)
+        {
+            // "Trace file MAX= reached; file closed, tracing %s"
+            WRMSG( HHC02379, "I", "continues" );
+        }
+        else
+        {
+            tf_autostop();
+
+            // "Trace file MAX= reached; file closed, tracing %s"
+            WRMSG( HHC02379, "I", "auto-stopped" );
+        }
+    }
+
+    return ret;
+}
+
+//---------------------------------------------------------------------
+//               Automatically stop all tracing
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_autostop()
+{
+    bool bWasActive;
+
+    /* Stop all tracing */
+    OBTAIN_INTLOCK( NULL );
+    {
+        DEVBLK* dev;
+        int cpu;
+
+        /* Stop overall instruction tracing */
+        bWasActive = sysblk.insttrace ? true : false;
+        sysblk.insttrace = false;
+
+        /* Stop instruction tracing for all CPUs */
+        for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+        {
+            if (IS_CPU_ONLINE( cpu ))
+            {
+                bWasActive = bWasActive || sysblk.regs[ cpu ]->insttrace;
+                sysblk.regs[ cpu ]->insttrace = false;
+            }
+        }
+
+        /* Stop ORB/CCW/KEY tracing for all devices */
+        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        {
+            bWasActive = bWasActive || dev->ccwtrace || dev->orbtrace || dev->ckdkeytrace;
+            dev->ccwtrace    = false;
+            dev->orbtrace    = false;
+            dev->ckdkeytrace = false;
+        }
+    }
+    RELEASE_INTLOCK( NULL );
+
+    return bWasActive;
+}
+
+//---------------------------------------------------------------------
+//                      Search key
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0423( DEVBLK* dev, size_t kl, BYTE* key )
+{
+    TF00423 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.kl = (BYTE) kl;
+    memcpy( rec.key, key, kl );
+    return tf_write( NULL, &rec, sizeof( TF00423 ), 423 );
+}
+
+//---------------------------------------------------------------------
+//                      Cur trk
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0424( DEVBLK* dev, S32 trk )
+{
+    TF00424 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk    = trk;
+    rec.bufcur = dev->bufcur;
+    return tf_write( NULL, &rec, sizeof( TF00424 ), 424 );
+}
+
+//---------------------------------------------------------------------
+//                      Updating track
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0425( DEVBLK* dev )
+{
+    TF00425 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.bufcur = dev->bufcur;
+    return tf_write( NULL, &rec, sizeof( TF00425 ), 425 );
+}
+
+//---------------------------------------------------------------------
+//                      Cache hit
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0426( DEVBLK* dev, S32 trk, S32 i )
+{
+    TF00426 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk = trk;
+    rec.idx = i;
+    return tf_write( NULL, &rec, sizeof( TF00426 ), 426 );
+}
+
+//---------------------------------------------------------------------
+//                   Unavailable cache
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0427( DEVBLK* dev, S32 trk )
+{
+    TF00427 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk = trk;
+    return tf_write( NULL, &rec, sizeof( TF00427 ), 427 );
+}
+
+//---------------------------------------------------------------------
+//                      Cache miss
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0428( DEVBLK* dev, S32 trk, S32 o )
+{
+    TF00428 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk = trk;
+    rec.idx = o;
+    return tf_write( NULL, &rec, sizeof( TF00428 ), 428 );
+}
+
+//---------------------------------------------------------------------
+//                      Offset
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0429( DEVBLK* dev, S32 trk, S32 fnum )
+{
+    TF00429 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk    = trk;
+    rec.offset = dev->ckdtrkoff;
+    rec.len    = dev->ckdtrksz;
+    rec.fnum   = fnum;
+    return tf_write( NULL, &rec, sizeof( TF00429 ), 429 );
+}
+
+//---------------------------------------------------------------------
+//                      Trkhdr
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0430( DEVBLK* dev, S32 trk )
+{
+    TF00430 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.trk = trk;
+    memcpy( rec.buf, dev->buf, sizeof( rec.buf ));
+    return tf_write( NULL, &rec, sizeof( TF00430 ), 430 );
+}
+
+//---------------------------------------------------------------------
+//                      Seeking
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0431( DEVBLK* dev, int cyl, int head )
+{
+    TF00431 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.cyl  = cyl;
+    rec.head = head;
+    return tf_write( NULL, &rec, sizeof( TF00431 ), 431 );
+}
+
+//---------------------------------------------------------------------
+//                      MT advance error
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0432( DEVBLK* dev )
+{
+    TF00432 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.count = dev->ckdlcount;
+    rec.mask  = dev->ckdfmask;
+    return tf_write( NULL, &rec, sizeof( TF00432 ), 432 );
+}
+
+//---------------------------------------------------------------------
+//                      MT advance
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0433( DEVBLK* dev, int cyl, int head )
+{
+    TF00433 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.cyl  = cyl;
+    rec.head = head;
+    return tf_write( NULL, &rec, sizeof( TF00433 ), 433 );
+}
+
+//---------------------------------------------------------------------
+//                   Read count orientation
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0434( DEVBLK* dev )
+{
+    TF00434 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.orient = (BYTE) dev->ckdorient;
+    return tf_write( NULL, &rec, sizeof( TF00434 ), 434 );
+}
+
+//---------------------------------------------------------------------
+//                      Cyl head record kl dl
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0435( DEVBLK* dev )
+{
+    TF00435 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.dl     = dev->ckdcurdl;
+    rec.cyl    = dev->ckdcurcyl;
+    rec.head   = dev->ckdcurhead;
+    rec.record = dev->ckdcurrec;
+    rec.kl     = dev->ckdcurkl;
+    rec.offset = dev->ckdtrkof;
+    return tf_write( NULL, &rec, sizeof( TF00435 ), 435 );
+}
+
+//---------------------------------------------------------------------
+//                      Read key
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0436( DEVBLK* dev )
+{
+    TF00436 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.kl = dev->ckdcurkl;
+    return tf_write( NULL, &rec, sizeof( TF00436 ), 436 );
+}
+
+//---------------------------------------------------------------------
+//                      Read data
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0437( DEVBLK* dev )
+{
+    TF00437 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.dl = dev->ckdcurdl;
+    return tf_write( NULL, &rec, sizeof( TF00437 ), 437 );
+}
+
+//---------------------------------------------------------------------
+//                 Write cyl head record kl dl
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0438( DEVBLK* dev, BYTE recnum, BYTE keylen, U16 datalen )
+{
+    TF00438 rec;
+    rec.rhdr.devnum  = dev->devnum;
+    rec.rhdr.lcss    = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.datalen = datalen;
+    rec.recnum  = recnum;
+    rec.keylen  = keylen;
+    rec.cyl     = dev->ckdcurcyl;
+    rec.head    = dev->ckdcurhead;
+    return tf_write( NULL, &rec, sizeof( TF00438 ), 438 );
+}
+
+//---------------------------------------------------------------------
+//                   Set track overflow flag
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0439( DEVBLK* dev, BYTE recnum )
+{
+    TF00439 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.recnum = recnum;
+    rec.cyl    = dev->ckdcurcyl;
+    rec.head   = dev->ckdcurhead;
+    return tf_write( NULL, &rec, sizeof( TF00439 ), 439 );
+}
+
+//---------------------------------------------------------------------
+//                 Update cyl head record kl dl
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0440( DEVBLK* dev )
+{
+    TF00440 rec;
+    rec.rhdr.devnum  = dev->devnum;
+    rec.rhdr.lcss    = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.cyl     = dev->ckdcurcyl;
+    rec.head    = dev->ckdcurhead;
+    rec.recnum  = dev->ckdcurrec;
+    rec.keylen  = dev->ckdcurkl;
+    rec.datalen = dev->ckdcurdl;
+
+    return tf_write( NULL, &rec, sizeof( TF00440 ), 440 );
+}
+
+//---------------------------------------------------------------------
+//                   Update cyl head record dl
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0441( DEVBLK* dev )
+{
+    TF00441 rec;
+    rec.rhdr.devnum  = dev->devnum;
+    rec.rhdr.lcss    = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.cyl     = dev->ckdcurcyl;
+    rec.head    = dev->ckdcurhead;
+    rec.recnum  = dev->ckdcurrec;
+    rec.datalen = dev->ckdcurdl;
+    return tf_write( NULL, &rec, sizeof( TF00441 ), 441 );
+}
+
+//---------------------------------------------------------------------
+//                      Set file mask
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0442( DEVBLK* dev )
+{
+    TF00442 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.mask = dev->ckdfmask;
+    return tf_write( NULL, &rec, sizeof( TF00442 ), 442 );
+}
+
+//---------------------------------------------------------------------
+//                      Cache hit
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0516( DEVBLK* dev, S32 blkgrp, S32 i )
+{
+    TF00516 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.blkgrp = blkgrp;
+    rec.idx    = i;
+    return tf_write( NULL, &rec, sizeof( TF00516 ), 516 );
+}
+
+//---------------------------------------------------------------------
+//                    Unavailable cache
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0517( DEVBLK* dev, S32 blkgrp )
+{
+    TF00517 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.blkgrp = blkgrp;
+    return tf_write( NULL, &rec, sizeof( TF00517 ), 517 );
+}
+
+//---------------------------------------------------------------------
+//                    Cache miss
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0518( DEVBLK* dev, S32 blkgrp, S32 o )
+{
+    TF00518 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.blkgrp = blkgrp;
+    rec.idx    = o;
+    return tf_write( NULL, &rec, sizeof( TF00518 ), 518 );
+}
+
+//---------------------------------------------------------------------
+//                    Offset len
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0519( DEVBLK* dev, S32 blkgrp, U64 offset, S32 len )
+{
+    TF00519 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.blkgrp = blkgrp;
+    rec.offset = offset;
+    rec.len    = len;
+    return tf_write( NULL, &rec, sizeof( TF00519 ), 519 );
+}
+
+//---------------------------------------------------------------------
+//                    Positioning
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0520( DEVBLK* dev )
+{
+    TF00520 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    STRLCPY( rec.filename, TRIMLOC( dev->filename ));
+    rec.rba    = dev->fbarba;
+    return tf_write( NULL, &rec, sizeof( TF00520 ), 520 );
+}
+
+//---------------------------------------------------------------------
+//                    Wait State PSW
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0800( REGS* regs )
+{
+    TF00800 rec;
+    memcpy( &rec.psw, &regs->psw, sizeof( rec.psw ));
+    rec.psw.ilc = REAL_ILC( regs );
+    rec.amode64 = rec.psw.amode64;
+    rec.amode   = rec.psw.amode;
+    rec.zeroilc = rec.psw.zeroilc;
+    return tf_write( regs, &rec, sizeof( TF00800 ), 800 );
+}
+
+//---------------------------------------------------------------------
+//                  Program Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0801( REGS* regs, U16 pcode, BYTE ilc )
+{
+    TF00801 rec;
+    rec.sie =
+#if defined( _FEATURE_SIE )
+        SIE_MODE( regs );
+#else
+        false;
+#endif
+    rec.ilc = ilc;
+    rec.pcode = pcode;
+    rec.why = (pcode & PGM_TXF_EVENT) ? regs->txf_why : 0;
+    rec.dxc = ((pcode & 0xFF) == PGM_DATA_EXCEPTION) ? regs->dxc : 0;
+    return tf_write( regs, &rec, sizeof( TF00801 ), 801 );
+}
+
+//---------------------------------------------------------------------
+//                       PER event
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0802( REGS* regs, U64 ia, U32 pcode, U16 perc )
+{
+    TF00802 rec;
+    rec.ia    = ia;
+    rec.pcode = pcode;
+    rec.perc  = perc;
+    return tf_write( regs, &rec, sizeof( TF00802 ), 802 );
+}
+
+//---------------------------------------------------------------------
+//                  Program interrupt loop
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0803( REGS* regs, const char* str )
+{
+    TF00803 rec;
+    STRLCPY( rec.str, str );
+    return tf_write( regs, &rec, sizeof( TF00803 ), 803 );
+}
+
+//---------------------------------------------------------------------
+//                  I/O interrupt (S/370)
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0804( REGS* regs, BYTE* csw, U16 ioid, BYTE lcss )
+{
+    TF00804 rec;
+    rec.ioid = ioid;
+    rec.rhdr.lcss = lcss;
+    memcpy( rec.csw, csw, sizeof( rec.csw ));
+    return tf_write( regs, &rec, sizeof( TF00804 ), 804 );
+}
+
+//---------------------------------------------------------------------
+//                    I/O Interrupt
+//            (handles both HHC00805 and HHC00806)
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0806( REGS* regs, U32 ioid, U32 ioparm, U32 iointid )
+{
+    TF00806 rec;
+    rec.ioid    = ioid;
+    rec.ioparm  = ioparm;
+    rec.iointid = iointid;
+    return tf_write( regs, &rec, sizeof( TF00806 ), 806 );
+}
+
+//---------------------------------------------------------------------
+//                 Machine Check Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0807( REGS* regs, U64 mcic, U64 fsta, U32 xdmg )
+{
+    TF00807 rec;
+    rec.mcic = mcic;
+    rec.xdmg = xdmg;
+    rec.fsta = fsta;
+    return tf_write( regs, &rec, sizeof( TF00807 ), 807 );
+}
+
+//---------------------------------------------------------------------
+//                       Store Status
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0808( REGS* regs )
+{
+    TF00808 rec;
+    return tf_write( regs, &rec, sizeof( TF00808 ), 808 );
+}
+
+//---------------------------------------------------------------------
+//                    Disabled Wait State
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0809( REGS* regs, const char* str)
+{
+    TF00809 rec;
+    STRLCPY( rec.str, str );
+    return tf_write( regs, &rec, sizeof( TF00809 ), 809 );
+}
+
+//---------------------------------------------------------------------
+//                      Architecture mode
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0811( REGS* regs, const char* archname )
+{
+    TF00811 rec;
+    STRLCPY( rec.archname, archname );
+    return tf_write( regs, &rec, sizeof( TF00811 ), 811 );
+}
+
+//---------------------------------------------------------------------
+//               Vector facility online (370/390)
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0812( REGS* regs )
+{
+    TF00812 rec;
+    return tf_write( regs, &rec, sizeof( TF00812 ), 812 );
+}
+
+//---------------------------------------------------------------------
+//                    Signal Processor
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0814( REGS* regs, BYTE order, BYTE cc, U16 cpad, U32 status, U64 parm, BYTE got_status )
+{
+    TF00814 rec;
+    rec.order      = order;
+    rec.cc         = cc;
+    rec.cpad       = cpad;
+    rec.status     = status;
+    rec.parm       = parm;
+    rec.got_status = got_status;
+    return tf_write( regs, &rec, sizeof( TF00814 ), 814 );
+}
+
+//---------------------------------------------------------------------
+//                  External Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0840( REGS* regs, U16 icode )
+{
+    TF00840 rec;
+    rec.icode = icode;
+    rec.cpu_timer = (EXT_CPU_TIMER_INTERRUPT == rec.icode)
+                  ? sysblk.gct( regs ) : 0;
+    return tf_write( regs, &rec, sizeof( TF00840 ), 840 );
+}
+
+//---------------------------------------------------------------------
+//                  Block I/O Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0844( REGS* regs )
+{
+    TF00844 rec;
+    rec.rhdr.devnum   = sysblk.biodev->devnum;
+    rec.rhdr.lcss     = SSID_TO_LCSS( sysblk.biodev->ssid );
+    rec.servcode = sysblk.servcode;
+    rec.bioparm  = sysblk.bioparm;
+    rec.biostat  = sysblk.biostat;
+    rec.biosubcd = sysblk.biosubcd;
+    return tf_write( regs, &rec, sizeof( TF00844 ), 844 );
+}
+
+//---------------------------------------------------------------------
+//               Block I/O External interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0845( REGS* regs )
+{
+    TF00845 rec;
+    rec.bioparm  = sysblk.bioparm;
+    rec.biosubcd = sysblk.biosubcd;
+    return tf_write( regs, &rec, sizeof( TF00845 ), 845 );
+}
+
+//---------------------------------------------------------------------
+//               Service Signal External Interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_0846( REGS* regs )
+{
+    TF00846 rec;
+    rec.servparm = sysblk.servparm;
+    return tf_write( regs, &rec, sizeof( TF00846 ), 846 );
+}
+
+//---------------------------------------------------------------------
+//                      Halt subchannel
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1300( DEVBLK* dev, BYTE cc )
+{
+    TF01300 rec;
+    rec.cc     = cc;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01300 ), 1300 );
+}
+
+//---------------------------------------------------------------------
+//                      IDAW/MIDAW
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1301( const DEVBLK* dev, const U64 addr, const U16 count,
+              BYTE* data, BYTE amt, const BYTE flag, const BYTE type )
+{
+    TF01301 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    rec.amt   = amt;
+    rec.addr  = addr;
+    rec.count = count;
+    rec.type  = type;
+    rec.mflag = flag;
+    rec.code  = dev->code;
+    memcpy( rec.data, data, amt );
+    return tf_write( NULL, &rec, sizeof( TF01301 ), 1301 );
+}
+
+//---------------------------------------------------------------------
+//                  Attention signaled
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1304( DEVBLK* dev )
+{
+    TF01304 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01304 ), 1304 );
+}
+
+//---------------------------------------------------------------------
+//                      Attention
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1305( DEVBLK* dev )
+{
+    TF01305 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01305 ), 1305 );
+}
+
+//---------------------------------------------------------------------
+//                  Initial status interrupt
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1306( DEVBLK* dev )
+{
+    TF01306 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01306 ), 1306 );
+}
+
+//---------------------------------------------------------------------
+//                  Attention completed
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1307( DEVBLK* dev )
+{
+    TF01307 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01307 ), 1307 );
+}
+
+//---------------------------------------------------------------------
+//                  Clear completed
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1308( DEVBLK* dev )
+{
+    TF01308 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01308 ), 1308 );
+}
+
+//---------------------------------------------------------------------
+//                      Halt completed
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1309( DEVBLK* dev )
+{
+    TF01309 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01309 ), 1309 );
+}
+
+//---------------------------------------------------------------------
+//                      Suspended
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1310( DEVBLK* dev )
+{
+    TF01310 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01310 ), 1310 );
+}
+
+//---------------------------------------------------------------------
+//                        Resumed
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1311( DEVBLK* dev )
+{
+    TF01311 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01311 ), 1311 );
+}
+
+//---------------------------------------------------------------------
+//                       I/O stat
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1312( DEVBLK* dev, BYTE us, BYTE cs, BYTE amt, U32 resid, BYTE* data )
+{
+    TF01312 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    rec.unitstat = us;
+    rec.chanstat = cs;
+    rec.amt      = amt;
+    rec.residual = resid;
+    memcpy( rec.data, data, amt );
+    return tf_write( NULL, &rec, sizeof( TF01312 ), 1312 );
+}
+
+//---------------------------------------------------------------------
+//                          Sense
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1313( DEVBLK* dev )
+{
+    TF01313 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    memcpy( rec.sense, dev->sense, sizeof( rec.sense ));
+    if (dev->sns)
+        dev->sns( dev, rec.sns, sizeof( rec.sns ));
+    else
+        rec.sns[0] = 0;
+    return tf_write( NULL, &rec, sizeof( TF01313 ), 1313 );
+}
+
+//---------------------------------------------------------------------
+//                          CCW
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1315( const DEVBLK* dev, const BYTE* ccw,
+              const U32 addr, const U16 count, BYTE* data, BYTE amt )
+{
+    TF01315 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    rec.amt   = amt;
+    rec.addr  = addr;
+    rec.count = count;
+    memcpy( rec.ccw,  ccw,  sizeof( rec.ccw ));
+    memcpy( rec.data, data, amt );
+    return tf_write( NULL, &rec, sizeof( TF01315 ), 1315 );
+}
+
+//---------------------------------------------------------------------
+//                      CSW (370)
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1316( const DEVBLK* dev, const BYTE csw[] )
+{
+    TF01316 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    memcpy( rec.csw, csw, sizeof( rec.csw ));
+    return tf_write( NULL, &rec, sizeof( TF01316 ), 1316 );
+}
+
+//---------------------------------------------------------------------
+//                         SCSW
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1317( const DEVBLK* dev, const SCSW scsw )
+{
+    TF01317 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    memcpy( &rec.scsw, &scsw, sizeof( rec.scsw ));
+    return tf_write( NULL, &rec, sizeof( TF01317 ), 1317 );
+}
+
+//---------------------------------------------------------------------
+//                        TEST I/O
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1318( DEVBLK* dev, BYTE cc )
+{
+    TF01318 rec;
+    rec.cc     = cc;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01318 ), 1318 );
+}
+
+//---------------------------------------------------------------------
+//               S/370 start I/O conversion started
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1320( DEVBLK* dev )
+{
+    TF01320 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01320 ), 1320 );
+}
+
+//---------------------------------------------------------------------
+//               S/370 start I/O conversion success
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1321( DEVBLK* dev )
+{
+    TF01321 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01321 ), 1321 );
+}
+
+//---------------------------------------------------------------------
+//                      Halt I/O
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1329( DEVBLK* dev )
+{
+    TF01329 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01329 ), 1329 );
+}
+
+//---------------------------------------------------------------------
+//                      HIO modification
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1330( DEVBLK* dev )
+{
+    TF01330 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01330 ), 1330 );
+}
+
+//---------------------------------------------------------------------
+//                      Clear subchannel
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1331( DEVBLK* dev )
+{
+    TF01331 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01331 ), 1331 );
+}
+
+//---------------------------------------------------------------------
+//                      Halt subchannel
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1332( DEVBLK* dev )
+{
+    TF01332 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01332 ), 1332 );
+}
+
+//---------------------------------------------------------------------
+//                    Resume subchannel
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1333( DEVBLK* dev, BYTE cc )
+{
+    TF01333 rec;
+    rec.cc     = cc;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    return tf_write( NULL, &rec, sizeof( TF01333 ), 1333 );
+}
+
+//---------------------------------------------------------------------
+//                          ORB
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1334( DEVBLK* dev, ORB* orb )
+{
+    TF01334 rec;
+    rec.rhdr.devnum = dev->devnum;
+    rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
+    memcpy( &rec.orb, orb, sizeof( rec.orb ));
+    return tf_write( NULL, &rec, sizeof( TF01334 ), 1334 );
+}
+
+//---------------------------------------------------------------------
+//                      Startio cc=2
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_1336( DEVBLK* dev )
+{
+    TF01336 rec;
+    rec.rhdr.devnum  = dev->devnum;
+    rec.rhdr.lcss    = SSID_TO_LCSS( dev->ssid );
+    rec.busy         = dev->busy;
+    rec.startpending = dev->startpending;
+    return tf_write( NULL, &rec, sizeof( TF01336 ), 1336 );
+}
+
+//---------------------------------------------------------------------
+//                  General Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2269( REGS* regs, BYTE* inst )
+{
+    TF02269 rec;
+    memcpy( rec.gr, regs->gr, sizeof( rec.gr ));
+    rec.ifetch_error = inst ? false : true;
+    rec.sie =
+#if defined( _FEATURE_SIE )
+        SIE_MODE( regs );
+#else
+        false;
+#endif
+    return tf_write( regs, &rec, sizeof( TF02269 ), 2269 );
+}
+
+//---------------------------------------------------------------------
+//               Floating Point Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2270( REGS* regs )
+{
+    TF02270 rec;
+    memcpy( rec.fpr, regs->fpr, sizeof( rec.fpr ));
+    rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
+    return tf_write( regs, &rec, sizeof( TF02270 ), 2270 );
+}
+
+//---------------------------------------------------------------------
+//                  Control Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2271( REGS* regs )
+{
+    TF02271 rec;
+    memcpy( rec.cr, &regs->cr_struct[1], sizeof( rec.cr ));
+    return tf_write( regs, &rec, sizeof( TF02271 ), 2271 );
+}
+
+//---------------------------------------------------------------------
+//                  Access Registers
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2272( REGS* regs )
+{
+    TF02272 rec;
+    memcpy( rec.ar, regs->ar, sizeof( rec.ar ));
+    return tf_write( regs, &rec, sizeof( TF02272 ), 2272 );
+}
+
+//---------------------------------------------------------------------
+//           Floating Point Control Register
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2276( REGS* regs )
+{
+    TF02276 rec;
+    rec.fpc = regs->fpc;
+    rec.afp = (regs->CR(0) & CR0_AFP) ? true : false;
+    return tf_write( regs, &rec, sizeof( TF02276 ), 2276 );
+}
+
+//---------------------------------------------------------------------
+//              Primary Instruction Trace
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2324( REGS* regs, BYTE* inst )
+{
+    TF02324 rec;
+    rec.sie =
+#if defined( _FEATURE_SIE )
+        SIE_MODE( regs );
+#else
+        false;
+#endif
+    rec.ilc = ILC( inst[0] ); // (value in regs not always right)
+    memcpy( &rec.psw,  &regs->psw, sizeof( rec.psw ));
+    memcpy( rec.inst, inst, rec.ilc );
+    rec.amode64 = rec.psw.amode64;
+    rec.amode   = rec.psw.amode;
+    rec.zeroilc = rec.psw.zeroilc;
+    return tf_write( regs, &rec, sizeof( TF02324 ), 2324 );
+}
+
+//---------------------------------------------------------------------
+//           Instruction Storage Operand helper
+//---------------------------------------------------------------------
+
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Waddress-of-packed-member" )
+
+static void tf_2326_op( REGS* regs, TFOP* op, BYTE opcode1, BYTE opcode2, int b, bool isop2 )
+{
+    if (b >= 0)
+    {
+        int ar, stid;
+
+        /* Determine if operand should be treated as a real address */
+        if (0
+            || REAL_MODE( &regs->psw )
+            || (isop2 && IS_REAL_ADDR_OP( opcode1, opcode2 ))
+        )
+            ar = USE_REAL_ADDR;
+        else
+            ar = b;
+
+        /* Get the real address for this virtual address */
+        if ((op->xcode = tf_virt_to_real( &op->raddr, &stid,
+             op->vaddr, ar, regs, ACCTYPE_HW )) == 0)
+        {
+            U64 pagesize, bytemask, abs;
+            size_t amt = sizeof( op->stor );
+
+            /* Convert real address to absolute address */
+            abs = tf_apply_prefixing( op->raddr, regs );
+
+            /* Determine page size and byte mask */
+            if (regs->arch_mode == ARCH_370_IDX)
+            {
+                pagesize = STORAGE_KEY_2K_PAGESIZE;
+                bytemask = STORAGE_KEY_2K_BYTEMASK;
+            }
+            else
+            {
+                pagesize = STORAGE_KEY_4K_PAGESIZE;
+                bytemask = STORAGE_KEY_4K_BYTEMASK;
+            }
+
+            /* If virtual storage, only save the data that's
+               on this one page (i.e. to the end of the page) */
+            if (ar != USE_REAL_ADDR)
+            {
+                amt = pagesize - (abs & bytemask);
+
+                if (amt > sizeof( op->stor ))
+                    amt = sizeof( op->stor );
+            }
+
+            /* Update Interval Timer beforehand, if needed */
+#if defined( _FEATURE_INTERVAL_TIMER )
+            tf_store_int_timer( regs, op->raddr );
+#endif
+            /* Save as much operand data as possible */
+            memcpy( op->stor, regs->mainstor + abs, amt );
+
+            /* Save the amount we saved and its storage key */
+            op->amt = (BYTE) amt; // (how much we saved)
+            op->skey = tf_get_storage_key( regs, abs );
+        }
+    }
+}
+
+POP_GCC_WARNINGS()
+
+//---------------------------------------------------------------------
+//                 Instruction Storage
+//---------------------------------------------------------------------
+DLL_EXPORT bool tf_2326( REGS* regs, TF02326* tf2326, BYTE opcode1, BYTE opcode2,
+                                           int    b1,    int    b2 )
+{
+    if (tf2326->valid)
+    {
+        tf2326->real_mode = REAL_MODE( &regs->psw );
+        tf2326->b1 = b1;
+        tf2326->b2 = b2;
+        tf_2326_op( regs, &tf2326->op1, opcode1, opcode2, b1, false );
+        tf_2326_op( regs, &tf2326->op2, opcode1, opcode2, b2, true  );
+    }
+    return tf_write( regs, tf2326, sizeof( TF02326 ), 2326 );
+}
+
+/*-------------------------------------------------------------------*/
+/*            Return maximum TraceFile record size                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT size_t  tf_MAX_RECSIZE()
+{
+    size_t
+        max_recsize = sizeof( TFSYS );
+
+    // Device tracing
+
+    if (max_recsize < sizeof( TF00423 ))
+        max_recsize = sizeof( TF00423 );
+
+    if (max_recsize < sizeof( TF00424 ))
+        max_recsize = sizeof( TF00424 );
+
+    if (max_recsize < sizeof( TF00425 ))
+        max_recsize = sizeof( TF00425 );
+
+    if (max_recsize < sizeof( TF00426 ))
+        max_recsize = sizeof( TF00426 );
+
+    if (max_recsize < sizeof( TF00427 ))
+        max_recsize = sizeof( TF00427 );
+
+    if (max_recsize < sizeof( TF00428 ))
+        max_recsize = sizeof( TF00428 );
+
+    if (max_recsize < sizeof( TF00429 ))
+        max_recsize = sizeof( TF00429 );
+
+    if (max_recsize < sizeof( TF00430 ))
+        max_recsize = sizeof( TF00430 );
+
+    if (max_recsize < sizeof( TF00431 ))
+        max_recsize = sizeof( TF00431 );
+
+    if (max_recsize < sizeof( TF00432 ))
+        max_recsize = sizeof( TF00432 );
+
+    if (max_recsize < sizeof( TF00433 ))
+        max_recsize = sizeof( TF00433 );
+
+    if (max_recsize < sizeof( TF00434 ))
+        max_recsize = sizeof( TF00434 );
+
+    if (max_recsize < sizeof( TF00435 ))
+        max_recsize = sizeof( TF00435 );
+
+    if (max_recsize < sizeof( TF00436 ))
+        max_recsize = sizeof( TF00436 );
+
+    if (max_recsize < sizeof( TF00437 ))
+        max_recsize = sizeof( TF00437 );
+
+    if (max_recsize < sizeof( TF00438 ))
+        max_recsize = sizeof( TF00438 );
+
+    if (max_recsize < sizeof( TF00439 ))
+        max_recsize = sizeof( TF00439 );
+
+    if (max_recsize < sizeof( TF00440 ))
+        max_recsize = sizeof( TF00440 );
+
+    if (max_recsize < sizeof( TF00441 ))
+        max_recsize = sizeof( TF00441 );
+
+    if (max_recsize < sizeof( TF00442 ))
+        max_recsize = sizeof( TF00442 );
+
+    if (max_recsize < sizeof( TF00516 ))
+        max_recsize = sizeof( TF00516 );
+
+    if (max_recsize < sizeof( TF00517 ))
+        max_recsize = sizeof( TF00517 );
+
+    if (max_recsize < sizeof( TF00518 ))
+        max_recsize = sizeof( TF00518 );
+
+    if (max_recsize < sizeof( TF00519 ))
+        max_recsize = sizeof( TF00519 );
+
+    if (max_recsize < sizeof( TF00520 ))
+        max_recsize = sizeof( TF00520 );
+
+    // Instruction tracing
+
+    if (max_recsize < sizeof( TF00800 ))
+        max_recsize = sizeof( TF00800 );
+
+    if (max_recsize < sizeof( TF00801 ))
+        max_recsize = sizeof( TF00801 );
+
+    if (max_recsize < sizeof( TF00802 ))
+        max_recsize = sizeof( TF00802 );
+
+    if (max_recsize < sizeof( TF00803 ))
+        max_recsize = sizeof( TF00803 );
+
+    if (max_recsize < sizeof( TF00804 ))
+        max_recsize = sizeof( TF00804 );
+
+    if (max_recsize < sizeof( TF00806 )) // (handles both HHC00805 and HHC00806)
+        max_recsize = sizeof( TF00806 );
+
+    if (max_recsize < sizeof( TF00807 ))
+        max_recsize = sizeof( TF00807 );
+
+    if (max_recsize < sizeof( TF00808 ))
+        max_recsize = sizeof( TF00808 );
+
+    if (max_recsize < sizeof( TF00809 ))
+        max_recsize = sizeof( TF00809 );
+
+    if (max_recsize < sizeof( TF00811 ))
+        max_recsize = sizeof( TF00811 );
+
+    if (max_recsize < sizeof( TF00812 ))
+        max_recsize = sizeof( TF00812 );
+
+    if (max_recsize < sizeof( TF00814 ))
+        max_recsize = sizeof( TF00814 );
+
+    if (max_recsize < sizeof( TF00840 ))
+        max_recsize = sizeof( TF00840 );
+
+    if (max_recsize < sizeof( TF00844 ))
+        max_recsize = sizeof( TF00844 );
+
+    if (max_recsize < sizeof( TF00845 ))
+        max_recsize = sizeof( TF00845 );
+
+    if (max_recsize < sizeof( TF00846 ))
+        max_recsize = sizeof( TF00846 );
+
+    // Device tracing
+
+    if (max_recsize < sizeof( TF01300 ))
+        max_recsize = sizeof( TF01300 );
+
+    if (max_recsize < sizeof( TF01301 ))
+        max_recsize = sizeof( TF01301 );
+
+    if (max_recsize < sizeof( TF01304 ))
+        max_recsize = sizeof( TF01304 );
+
+    if (max_recsize < sizeof( TF01305 ))
+        max_recsize = sizeof( TF01305 );
+
+    if (max_recsize < sizeof( TF01306 ))
+        max_recsize = sizeof( TF01306 );
+
+    if (max_recsize < sizeof( TF01307 ))
+        max_recsize = sizeof( TF01307 );
+
+    if (max_recsize < sizeof( TF01308 ))
+        max_recsize = sizeof( TF01308 );
+
+    if (max_recsize < sizeof( TF01309 ))
+        max_recsize = sizeof( TF01309 );
+
+    if (max_recsize < sizeof( TF01310 ))
+        max_recsize = sizeof( TF01310 );
+
+    if (max_recsize < sizeof( TF01311 ))
+        max_recsize = sizeof( TF01311 );
+
+    if (max_recsize < sizeof( TF01312 ))
+        max_recsize = sizeof( TF01312 );
+
+    if (max_recsize < sizeof( TF01313 ))
+        max_recsize = sizeof( TF01313 );
+
+    if (max_recsize < sizeof( TF01315 ))
+        max_recsize = sizeof( TF01315 );
+
+    if (max_recsize < sizeof( TF01316 ))
+        max_recsize = sizeof( TF01316 );
+
+    if (max_recsize < sizeof( TF01317 ))
+        max_recsize = sizeof( TF01317 );
+
+    if (max_recsize < sizeof( TF01318 ))
+        max_recsize = sizeof( TF01318 );
+
+    if (max_recsize < sizeof( TF01320 ))
+        max_recsize = sizeof( TF01320 );
+
+    if (max_recsize < sizeof( TF01321 ))
+        max_recsize = sizeof( TF01321 );
+
+    if (max_recsize < sizeof( TF01329 ))
+        max_recsize = sizeof( TF01329 );
+
+    if (max_recsize < sizeof( TF01330 ))
+        max_recsize = sizeof( TF01330 );
+
+    if (max_recsize < sizeof( TF01331 ))
+        max_recsize = sizeof( TF01331 );
+
+    if (max_recsize < sizeof( TF01332 ))
+        max_recsize = sizeof( TF01332 );
+
+    if (max_recsize < sizeof( TF01333 ))
+        max_recsize = sizeof( TF01333 );
+
+    if (max_recsize < sizeof( TF01334 ))
+        max_recsize = sizeof( TF01334 );
+
+    if (max_recsize < sizeof( TF01336 ))
+        max_recsize = sizeof( TF01336 );
+
+    // Instruction tracing
+
+    if (max_recsize < sizeof( TF02269 ))
+        max_recsize = sizeof( TF02269 );
+
+    if (max_recsize < sizeof( TF02270 ))
+        max_recsize = sizeof( TF02270 );
+
+    if (max_recsize < sizeof( TF02271 ))
+        max_recsize = sizeof( TF02271 );
+
+    if (max_recsize < sizeof( TF02272 ))
+        max_recsize = sizeof( TF02272 );
+
+    if (max_recsize < sizeof( TF02276 ))
+        max_recsize = sizeof( TF02276 );
+
+    if (max_recsize < sizeof( TF02324))
+        max_recsize = sizeof( TF02324 );
+
+    if (max_recsize < sizeof( TF02326))
+        max_recsize = sizeof( TF02326 );
+
+    return
+        max_recsize;
+}
+
+/*-------------------------------------------------------------------*/
+/*          Do unconditional Endian swap of TFSYS record             */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void tf_swap_sys( TFSYS* sys )
+{
+    sys->bigend          = !sys->bigend;
+    sys->beg_tod.tv_sec  = SWAP32( sys->beg_tod.tv_sec  );
+    sys->beg_tod.tv_usec = SWAP32( sys->beg_tod.tv_usec );
+    sys->end_tod.tv_sec  = SWAP32( sys->end_tod.tv_sec  );
+    sys->end_tod.tv_usec = SWAP32( sys->end_tod.tv_usec );
+    sys->tot_ins         = SWAP64( sys->tot_ins         );
+    sys->tot_dev         = SWAP64( sys->tot_dev         );
+}
+
+/*-------------------------------------------------------------------*/
+/*        Do unconditional Endian swap of TFHDR record header        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void tf_swap_hdr( BYTE sys_ffmt, TFHDR* hdr )
+{
+    hdr->prev        = SWAP16( hdr->prev        );
+    hdr->curr        = SWAP16( hdr->curr        );
+    hdr->cpuad       = SWAP16( hdr->cpuad       );
+    hdr->msgnum      = SWAP16( hdr->msgnum      );
+    hdr->devnum      = SWAP16( hdr->devnum      );
+    hdr->tod.tv_sec  = SWAP32( hdr->tod.tv_sec  );
+    hdr->tod.tv_usec = SWAP32( hdr->tod.tv_usec );
+
+    // Format-2...
+
+    if (sys_ffmt >= TF_FMT2)
+        hdr->tidnum  = SWAP64( hdr->tidnum      );
+}
+
+/*-------------------------------------------------------------------*/
+/*     Do unconditional Endian swap of Trace File record fields      */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* PROGRAMMING NOTE: the TFHDR* passed to us by TFPRINT, from our    */
+/* point of view, appears to point to a "new" (current) format trace */
+/* record with both the header fields as well as the rec fields all  */
+/* properly aligned.                                                 */
+/*                                                                   */
+/* When TFSWAP calls us however, it passes an adjusted TFHDR pointer */
+/* wherein only the actual rec fields are aligned properly. This is  */
+/* safe to do since we don't ever access any of the header fields    */
+/* anyway. We only mess with the actual rec fields.                  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void tf_swap_rec( TFHDR* hdr, U16 msgnum )
+{
+    switch (msgnum)
+    {
+        case  423:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  424:
+        {
+            TF00424* rec = (TF00424*) hdr;
+            rec->trk     = SWAP32( rec->trk    );
+            rec->bufcur  = SWAP32( rec->bufcur );
+        }
+        break;
+
+        case  425:
+        {
+            TF00425* rec = (TF00425*) hdr;
+            rec->bufcur  = SWAP32( rec->bufcur );
+        }
+        break;
+
+        case  426:
+        {
+            TF00426* rec = (TF00426*) hdr;
+            rec->trk     = SWAP32( rec->trk );
+            rec->idx     = SWAP32( rec->idx );
+        }
+        break;
+
+        case  427:
+        {
+            TF00427* rec = (TF00427*) hdr;
+            rec->trk     = SWAP32( rec->trk );
+        }
+        break;
+
+        case  428:
+        {
+            TF00428* rec = (TF00428*) hdr;
+            rec->trk     = SWAP32( rec->trk );
+            rec->idx     = SWAP32( rec->idx );
+        }
+        break;
+
+        case  429:
+        {
+            TF00429* rec = (TF00429*) hdr;
+            rec->trk     = SWAP32( rec->trk    );
+            rec->fnum    = SWAP32( rec->fnum   );
+            rec->len     = SWAP32( rec->len    );
+            rec->offset  = SWAP64( rec->offset );
+        }
+        break;
+
+        case  430:
+        {
+            TF00430* rec = (TF00430*) hdr;
+            rec->trk     = SWAP32( rec->trk );
+        }
+        break;
+
+        case  431:
+        {
+            TF00431* rec = (TF00431*) hdr;
+            rec->cyl     = SWAP32( rec->cyl  );
+            rec->head    = SWAP32( rec->head );
+        }
+        break;
+
+        case  432:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  433:
+        {
+            TF00433* rec = (TF00433*) hdr;
+            rec->cyl     = SWAP32( rec->cyl  );
+            rec->head    = SWAP32( rec->head );
+        }
+        break;
+
+        case  434:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  435:
+        {
+            TF00435* rec = (TF00435*) hdr;
+            rec->dl      = SWAP16( rec->dl     );
+            rec->cyl     = SWAP32( rec->cyl    );
+            rec->head    = SWAP32( rec->head   );
+            rec->record  = SWAP32( rec->record );
+            rec->kl      = SWAP32( rec->kl     );
+            rec->offset  = SWAP32( rec->offset );
+        }
+        break;
+
+        case  436:
+        {
+            TF00436* rec = (TF00436*) hdr;
+            rec->kl      = SWAP32( rec->kl );
+        }
+        break;
+
+        case  437:
+        {
+            TF00437* rec = (TF00437*) hdr;
+            rec->dl      = SWAP16( rec->dl );
+        }
+        break;
+
+        case  438:
+        {
+            TF00438* rec = (TF00438*) hdr;
+            rec->datalen = SWAP16( rec->datalen );
+            rec->cyl     = SWAP32( rec->cyl     );
+            rec->head    = SWAP32( rec->head    );
+        }
+        break;
+
+        case  439:
+        {
+            TF00439* rec = (TF00439*) hdr;
+            rec->cyl     = SWAP32( rec->cyl  );
+            rec->head    = SWAP32( rec->head );
+        }
+        break;
+
+        case  440:
+        {
+            TF00440* rec = (TF00440*) hdr;
+            rec->datalen = SWAP16( rec->datalen );
+            rec->cyl     = SWAP32( rec->cyl     );
+            rec->head    = SWAP32( rec->head    );
+            rec->recnum  = SWAP32( rec->recnum  );
+            rec->keylen  = SWAP32( rec->keylen  );
+        }
+        break;
+
+        case  441:
+        {
+            TF00441* rec = (TF00441*) hdr;
+            rec->datalen = SWAP16( rec->datalen );
+            rec->cyl     = SWAP32( rec->cyl     );
+            rec->head    = SWAP32( rec->head    );
+            rec->recnum  = SWAP32( rec->recnum  );
+        }
+        break;
+
+        case  442:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  516:
+        {
+            TF00516* rec = (TF00516*) hdr;
+            rec->blkgrp  = SWAP32( rec->blkgrp );
+            rec->idx     = SWAP32( rec->idx    );
+        }
+        break;
+
+        case  517:
+        {
+            TF00517* rec = (TF00517*) hdr;
+            rec->blkgrp  = SWAP32( rec->blkgrp );
+        }
+        break;
+
+        case  518:
+        {
+            TF00518* rec = (TF00518*) hdr;
+            rec->blkgrp  = SWAP32( rec->blkgrp );
+            rec->idx     = SWAP32( rec->idx    );
+        }
+        break;
+
+        case  519:
+        {
+            TF00519* rec = (TF00519*) hdr;
+            rec->blkgrp  = SWAP32( rec->blkgrp );
+            rec->len     = SWAP32( rec->len    );
+            rec->offset  = SWAP64( rec->offset );
+        }
+        break;
+
+        case  520:
+        {
+            TF00520* rec = (TF00520*) hdr;
+            rec->rba     = SWAP64( rec->rba );
+        }
+        break;
+
+        case  800:
+        {
+            TF00800* rec = (TF00800*) hdr;
+
+            rec->psw.intcode  = SWAP16( rec->psw.intcode  );
+            rec->psw.zeroword = SWAP32( rec->psw.zeroword );
+            rec->psw.ia.D     = SWAP64( rec->psw.ia.D     );
+            rec->psw.amask.D  = SWAP64( rec->psw.amask.D  );
+
+            rec->psw.amode64  = rec->amode64 ? 1 : 0;
+            rec->psw.amode    = rec->amode   ? 1 : 0;
+            rec->psw.zeroilc  = rec->zeroilc ? 1 : 0;
+        }
+        break;
+
+        case  801:
+        {
+            TF00801* rec = (TF00801*) hdr;
+            rec->pcode  = SWAP16( rec->pcode );
+            rec->dxc    = SWAP32( rec->dxc   );
+            rec->why    = SWAP32( rec->why   );
+        }
+        break;
+
+        case  802:
+        {
+            TF00802* rec = (TF00802*) hdr;
+            rec->perc   = SWAP16( rec->perc  );
+            rec->pcode  = SWAP32( rec->pcode );
+            rec->ia     = SWAP64( rec->ia    );
+        }
+        break;
+
+        case  803:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  804:
+        {
+            TF00804* rec = (TF00804*) hdr;
+            rec->ioid    = SWAP16( rec->ioid );
+        }
+        break;
+
+        case  806: // (handles both HHC00805 and HHC00806)
+        {
+            TF00806* rec = (TF00806*) hdr;
+            rec->ioid    = SWAP32( rec->ioid    );
+            rec->ioparm  = SWAP32( rec->ioparm  );
+            rec->iointid = SWAP32( rec->iointid );
+        }
+        break;
+
+        case  807:
+        {
+            TF00807* rec = (TF00807*) hdr;
+            rec->xdmg    = SWAP32( rec->xdmg );
+            rec->mcic    = SWAP64( rec->mcic );
+            rec->fsta    = SWAP64( rec->fsta );
+        }
+        break;
+
+        case  808:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  809:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  811:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  812:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case  814:
+        {
+            TF00814* rec = (TF00814*) hdr;
+            rec->cpad    = SWAP16( rec->cpad   );
+            rec->status  = SWAP32( rec->status );
+            rec->parm    = SWAP64( rec->parm   );
+        }
+        break;
+
+        case  840:
+        {
+            TF00840* rec   = (TF00840*) hdr;
+            rec->icode     = SWAP16( rec->icode     );
+            rec->cpu_timer = SWAP64( rec->cpu_timer );
+        }
+        break;
+
+        case  844:
+        {
+            TF00844* rec  = (TF00844*) hdr;
+            rec->servcode = SWAP16( rec->servcode );
+            rec->bioparm  = SWAP64( rec->bioparm  );
+        }
+        break;
+
+        case  845:
+        {
+            TF00845* rec = (TF00845*) hdr;
+            rec->bioparm = SWAP64( rec->bioparm );
+        }
+        break;
+
+        case  846:
+        {
+            TF00846* rec  = (TF00846*) hdr;
+            rec->servparm = SWAP32( rec->servparm );
+        }
+        break;
+
+        case 1300:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1301:
+        {
+            TF01301* rec = (TF01301*) hdr;
+            rec->count   = SWAP16( rec->count );
+            rec->addr    = SWAP64( rec->addr  );
+        }
+        break;
+
+        case 1304:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1305:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1306:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1307:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1308:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1309:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1310:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1311:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1312:
+        {
+            TF01312* rec  = (TF01312*) hdr;
+            rec->residual = SWAP32( rec->residual );
+        }
+        break;
+
+        case 1313:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1315:
+        {
+            TF01315* rec = (TF01315*) hdr;
+            rec->count   = SWAP16( rec->count );
+            rec->addr    = SWAP32( rec->addr  );
+        }
+        break;
+
+        case 1316:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1317:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1318:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1320:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1321:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1329:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1330:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1331:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1332:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1333:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1334:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 1336:
+        {
+            // (nothing to swap!)
+        }
+        break;
+
+        case 2269:
+        {
+            TF02269* rec = (TF02269*) hdr;
+            int  i;
+            for (i=0; i < 16; ++i)
+                rec->gr[i].D   = SWAP64( rec->gr[i].D );
+        }
+        break;
+
+        case 2270:
+        {
+            TF02270* rec = (TF02270*) hdr;
+            int  i;
+            for (i=0; i < 32; ++i)
+                rec->fpr[i]   = SWAP32( rec->fpr[i] );
+        }
+        break;
+
+        case 2271:
+        {
+            TF02271* rec = (TF02271*) hdr;
+            int  i;
+            for (i=0; i < 16; ++i)
+                rec->cr[i].D   = SWAP64( rec->cr[i].D );
+        }
+        break;
+
+        case 2272:
+        {
+            TF02272* rec = (TF02272*) hdr;
+            int  i;
+            for (i=0; i < 16; ++i)
+                rec->ar[i]   = SWAP32( rec->ar[i] );
+        }
+        break;
+
+        case 2276:
+        {
+            TF02276* rec = (TF02276*) hdr;
+            rec->fpc     = SWAP32( rec->fpc );
+        }
+        break;
+
+        case 2324:
+        {
+            TF02324* rec = (TF02324*) hdr;
+
+            rec->psw.intcode  = SWAP16( rec->psw.intcode  );
+            rec->psw.zeroword = SWAP32( rec->psw.zeroword );
+            rec->psw.ia.D     = SWAP64( rec->psw.ia.D     );
+            rec->psw.amask.D  = SWAP64( rec->psw.amask.D  );
+
+            rec->psw.amode64  = rec->amode64 ? 1 : 0;
+            rec->psw.amode    = rec->amode   ? 1 : 0;
+            rec->psw.zeroilc  = rec->zeroilc ? 1 : 0;
+        }
+        break;
+
+        case 2326:
+        {
+            TF02326* rec = (TF02326*) hdr;
+            TFOP* op;
+
+            rec->b1   = SWAP16( rec->b1 );
+            rec->b2   = SWAP16( rec->b2 );
+
+            op = &rec->op1;
+
+            op->xcode = SWAP16( op->xcode );
+            op->vaddr = SWAP64( op->vaddr );
+            op->raddr = SWAP64( op->raddr );
+
+            op = &rec->op2;
+
+            op->xcode = SWAP16( op->xcode );
+            op->vaddr = SWAP64( op->vaddr );
+            op->raddr = SWAP64( op->raddr );
+        }
+        break;
+
+        default: CRASH(); UNREACHABLE_CODE( return );
+    }
+}
+
+/*********************************************************************/
+/*                   END OF TraceFile support                        */
+/*********************************************************************/

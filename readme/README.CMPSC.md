@@ -8,7 +8,7 @@
 
 The z/Architecture Compression Call instruction (CMPSC opcode B263) had at one time two different implementations within Hercules 4.0 Hyperion.
 
-The original (legacy) CMPSC implementation was lacking support for the z/Architecture CMPSC-enhancement facility, failed to pass some cmpsctst testing tool**(*)** architecural compliance tests, and was not as fast.
+The original (legacy) CMPSC implementation was lacking support for the z/Architecture CMPSC-enhancement facility, failed to pass some cmpsctst testing tool **`(*)`** architecural compliance tests, and was not as fast.
 
 The replacement "cmpsc_2012" implementation not only passes all cmpsctst testing tool architectural compliance tests, but also fully supports the z/Architecture CMPSC-enhancement facility, and is about 10% faster as well. Because of this the old legacy implementation was removed and the new 2012 implementation is now the _only_ implementation in Hercules 4.0 Hyperion.
 
@@ -33,4 +33,4 @@ The new default cmpsc_2012 implementation logic is spread across several differe
 
 The original legacy cmpsc implementation was written by Bernard van der Helm of Noordwijkerhout, The Netherlands. The new/improved cmpsc_2012 implementation was written by Fish (David B. Trout) of the United States of America, and borrows some of the techniques that Bernard pioneered.
 
-###### (*) The CMPSCTST instruction testing tool is maintained separately from Hercules in its own source code repository on GitHub, ships with a pre-built set of ready-to-run binaries (executable files and scripts) for both Windows and Linux (CentOS 6.4 with gcc 4.4), a default set of test files, and contains a detailed README explaining how to not only build the tool for yourself but also how to run its many tests. The repository is located [here](https://github.com/Fish-Git/cmpsctst).
+**`(*)`** <small><i>The CMPSCTST instruction testing tool is maintained separately from Hercules in its own source code repository on GitHub, ships with a pre-built set of ready-to-run binaries (executable files and scripts) for both Windows and Linux (CentOS 6.4 with gcc 4.4), a default set of test files, and contains a detailed README explaining how to not only build the tool for yourself but also how to run its many tests. The repository is located **[here](https://github.com/Fish-Git/cmpsctst)**.</i></small>

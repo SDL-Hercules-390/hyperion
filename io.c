@@ -1,6 +1,6 @@
 /* IO.C         (C) Copyright Roger Bowler, 1994-2012                */
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
-/*              ESA/390 CPU Emulator                                 */
+/*              I/O Instructions                                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -73,12 +73,13 @@ DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "CSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "CSCH (sie)" );
@@ -129,12 +130,13 @@ DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "HSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "HSCH (sie)" );
@@ -184,7 +186,9 @@ DEVBLK* dev;                            /* -> device block           */
 PMCW    pmcw;                           /* Path management ctl word  */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "MSCH" );
@@ -242,7 +246,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     PERFORM_CHKPT_SYNC( regs );
 
     /* Obtain the device lock */
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
     {
         /* Condition code 1 if subchannel is status pending
            with other than intermediate status */
@@ -253,7 +257,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
         {
             PTIO( ERR, "*MSCH" );
             regs->psw.cc = 1;
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
@@ -262,7 +266,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
         {
             PTIO( ERR, "*MSCH" );
             regs->psw.cc = 2;
-            release_lock( &dev->lock );
+            RELEASE_DEVLOCK( dev );
             return;
         }
 
@@ -310,7 +314,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
 
             dev->mainstor = &(sysblk.mainstor[ mso ]);
             dev->mainlim  = msl - mso;
-            dev->storkeys = &(STORAGE_KEY( mso, &sysblk ));
+            dev->storkeys = ARCH_DEP( get_ptr_to_storekey )( mso );
         }
 #endif
 
@@ -323,7 +327,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
         dev->priority |= 0x00800000ULL >> ((dev->pmcw.flag4 & PMCW4_ISC) >> 3);
 
     }
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
 
     /* Set condition code 0 */
     regs->psw.cc = 0;
@@ -341,8 +345,8 @@ BYTE    chpid;
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
 
     PTIO(IO,"RCHP");
@@ -372,12 +376,13 @@ DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "RSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "RSCH (sie)" );
@@ -428,8 +433,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
 
     PTIO(IO,"SAL");
@@ -451,10 +456,11 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+    if(SIE_STATE_BIT_OFF(regs, EC0, IOA) && !regs->sie_pref)
 #endif
         SIE_INTERCEPT(regs);
 
@@ -532,13 +538,15 @@ DEVBLK* dev;                            /* -> device block           */
 ORB     orb;                            /* Operation request block   */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "SSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "SSCH (sie)" );
@@ -651,9 +659,10 @@ static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
 };
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
 
     PTIO_CH( IO, "STCPS", 0 );
@@ -667,26 +676,24 @@ static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
     /* Scan DEVBLK chain for busy devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        /* Obtain the device lock */
-        obtain_lock(&dev->lock);
-
-        if (1
-            &&  dev->allocated                     /* Valid DEVBLK   */
-            && (dev->pmcw.flag5 & PMCW5_V)         /* Valid device   */
-            && (dev->pmcw.flag5 & PMCW5_E)         /* Device enabled */
-            && (dev->scsw.flag3 & SCSW3_AC_SCHAC)  /* Subchan active */
-            && (dev->scsw.flag3 & SCSW3_AC_DEVAC)  /* Device active  */
-           )
+        OBTAIN_DEVLOCK( dev );
         {
-            /* Retrieve active CHPID */
-            chpid = dev->pmcw.chpid[msbn[dev->pmcw.lpum]];
+            if (1
+                &&  dev->allocated                     /* Valid DEVBLK   */
+                && (dev->pmcw.flag5 & PMCW5_V)         /* Valid device   */
+                && (dev->pmcw.flag5 & PMCW5_E)         /* Device enabled */
+                && (dev->scsw.flag3 & SCSW3_AC_SCHAC)  /* Subchan active */
+                && (dev->scsw.flag3 & SCSW3_AC_DEVAC)  /* Device active  */
+               )
+            {
+                /* Retrieve active CHPID */
+                chpid = dev->pmcw.chpid[msbn[dev->pmcw.lpum]];
 
-            /* Update channel path status work area */
-            work[chpid/8] |= 0x80 >> (chpid % 8);
+                /* Update channel path status work area */
+                work[chpid/8] |= 0x80 >> (chpid % 8);
+            }
         }
-
-        /* Release the device lock */
-        release_lock(&dev->lock);
+        RELEASE_DEVLOCK( dev );
     }
 
     /* Store channel path status word at operand address */
@@ -704,13 +711,12 @@ VADR    effective_addr2;                /* Effective address         */
 U32     crw;                            /* Channel Report Word       */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
+    TXF_INSTR_CHECK( regs );
     PTIO(IO,"STCRW");
-
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     FW_CHECK(effective_addr2, regs);
 
     /* Validate write access to operand before taking any
@@ -744,11 +750,11 @@ DEVBLK* dev;                            /* -> device block           */
 SCHIB   schib;                          /* Subchannel information blk*/
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
-
     PTIO( IO, "STSCH" );
-
     PTIO( IO, "STSCH (sie)" );
     SIE_INTERCEPT( regs );
 
@@ -778,14 +784,14 @@ SCHIB   schib;                          /* Subchannel information blk*/
     /* Build the subchannel information block */
     schib.pmcw = dev->pmcw;
 
-    obtain_lock( &dev->lock );
+    OBTAIN_DEVLOCK( dev );
     {
         if (dev->pciscsw.flag3 & SCSW3_SC_PEND)
             schib.scsw = dev->pciscsw;
         else
             schib.scsw = dev->scsw;
     }
-    release_lock( &dev->lock );
+    RELEASE_DEVLOCK( dev );
 
     memset( schib.moddep, 0, sizeof( schib.moddep ));
 
@@ -816,10 +822,11 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
 
     S( inst, regs, b2, effective_addr2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
        SIE_INTERCEPT( regs );
 
@@ -864,8 +871,8 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
                 if (icode != SIE_NO_INTERCEPT)
                 {
                     /* Point to SIE copy of PSA in state descriptor */
-                    psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
-                    STORAGE_KEY( SIE_STATE( regs ), regs->hostregs ) |= (STORKEY_REF | STORKEY_CHANGE);
+                    psa = (void*)(HOSTREGS->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
+                    ARCH_DEP( or_storage_key )( SIE_STATE( regs ), (STORKEY_REF | STORKEY_CHANGE) );
                 }
                 else
 #endif
@@ -874,7 +881,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
                     pfx = regs->PX;
                     SIE_TRANSLATE( &pfx, ACCTYPE_SIE, regs );
                     psa = (void*)(regs->mainstor + pfx);
-                    STORAGE_KEY( pfx, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+                    ARCH_DEP( or_storage_key )( pfx, (STORKEY_REF | STORKEY_CHANGE) );
                 }
 
                 /* If operand address is zero, store in PSA */
@@ -926,13 +933,14 @@ IRB     irb;                            /* Interruption response blk */
 int     cc;                             /* Condition Code            */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
-
     PTIO( IO, "TSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "TSCH (sie)" );
@@ -1000,12 +1008,13 @@ DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "XSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "XSCH (sie)" );
@@ -1067,6 +1076,8 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=suspend   */
                                         /*      5-7=zero             */
 
     S(inst, regs, b2, effective_addr2);
+
+    TXF_INSTR_CHECK( regs );
 
 #if defined(FEATURE_ECPSVM)
     if((inst[1])!=0x02)
@@ -1150,10 +1161,9 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"TIO");
 
     /* Locate the device block */
@@ -1192,10 +1202,9 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"HIO");
 
     /* Locate the device block */
@@ -1229,8 +1238,8 @@ U16     tch_ctl;
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     PTIO(IO,"TCH");
 
 #if defined(_FEATURE_SIE)
@@ -1268,10 +1277,9 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"STIDC");
 
     /* Store Channel ID and set condition code */
@@ -1295,10 +1303,9 @@ int     i;
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"CONCS");
 
     effective_addr2 &= 0xFFFF;
@@ -1361,10 +1368,9 @@ int     i;
 
     S(inst, regs, b2, effective_addr2);
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"DISCS");
 
     /* Hercules has as many channelsets as CSS's */

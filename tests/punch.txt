@@ -1,0 +1,31 @@
+# Punch test cards to punch device
+archmode S/370
+sysreset
+r 00=0000000000000200   # Restart new PSW
+r 28=000200000000DEAD   # Program new PSW
+r 48=00000340           # CAW
+
+r 200=4110000D          # R1 = device address = X'00D' = Card Punch
+r 204=9C001000          # SIO 0(R1)
+r 208=82000300          # LPSW WAITPSW
+
+r 300=0002000000000000  # WAITPSW
+
+r 340=0100040060000050  # CCW "This is a test card..."
+r 348=0100050060000050  # CCW "Card two"
+r 350=0100060020000050  # CCW "Card three"
+#
+r 400="This is a test card being punche"
+r 420="d to a 'sockdev' socket punch de"
+r 440="vice...         "
+#
+r 500="Card two                        "
+r 520="                                "
+r 540="                "
+#
+r 600="Card three                      "
+r 620="                                "
+r 640="                "
+#
+t+000D                  # Trace CCWs
+restart

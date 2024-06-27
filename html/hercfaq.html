@@ -216,47 +216,44 @@ Hercules: Frequently-Asked Questions
 <H4><A NAME="2.04">2.04</A>
     Where can I obtain OS/360 ?
 </H4>
+<OL>
 <P>
-    1. Rick Fochtman's OS/360 archive CD is now obtainable by download
+    <LI>Rick Fochtman's OS/360 archive CD is now obtainable by download
     from these locations:
+    </LI>
 </P>
 <UL>
 <LI>
-<A HREF="http://www.jaymoseley.com/hercules/install.htm">http://www.jaymoseley.com/hercules/install.htm</A>
-<!-- Following links no longer exist
-<LI>
-<A HREF="http://www.cyberdynesys.com/os360.tgz">http://www.cyberdynesys.com/os360.tgz</A>
-</LI>
-<LI>
-<A HREF="ftp://ftp.ox.ac.uk/pub/linux/hercos360/os360.tar.gz">ftp://ftp.ox.ac.uk/pub/linux/hercos360/os360.tar.gz</A>
-</LI>
-<LI>
-<A HREF="ftp://source.rfc822.org/pub/mirror/hercules/hercos360/os360.tar.gz">ftp://source.rfc822.org/pub/mirror/hercules/hercos360/os360.tar.gz</A>
-</LI>
-     end of non-existent links -->
-<LI>
-<A HREF="http://open360.copyleft.de/OS360/Download.html">http://open360.copyleft.de/OS360/Download.html</A>
+<A HREF="https://cbttape.org/os360.htm">https://cbttape.org/os360.htm</A>
 </LI>
 </UL>
 <P>
-    2. If you are interested in obtaining a copy of the CD itself,
-    contact Rick Fochtman at <EM>rfochtman</EM>@<EM>ync.net</EM>.
-</P>
-<P>
-    3. Alternatively, you can download the OS/360 Y2K Starter package
-    from <a href="http://open360.copyleft.de/OS360/Download.html">
-    http://open360.copyleft.de/OS360/Download.html</a>
-    which contains a full featured MVT system on a 3330 image,
+    <LI>At the cbttape site, you can download the OS/360 Y2K Starter package from
+    <a href="ftp://cbttape.org/pub/OS360/OS360RICK1.zip">
+    ftp://cbttape.org/pub/OS360/OS360RICK1.zip</a>,
+    which contains a full featured MVT system on a 3330 image
     with some minimal documentation. The configuration is that of a
     370/158 with 4 megabytes of main storage, running OS/MVT Release
     21.0. The same site also offers a MVTDBL volume and a
     <EM>Builder</EM> package for those who like to participate in
     OS/360 nucleus hacking.
+
+    <P>
+    Please note that the previously mentioned cbttape OS/360 download
+    link is an "ftp://" protocol link, and some web browsers (most notably
+    Google Chrome) no longer support the "ftp://" protocol. If such is the
+    case for you, you will need to use a proper FTP client to download the
+    mentioned OS/360 .zip file.
+    </P>
+
+    </LI>
 </P>
 <P>
-    4. Jay Maynard's "IBM Public Domain Software Collection"
+    <LI>Jay Maynard's "IBM Public Domain Software Collection"
        at <a href="http://www.ibiblio.org/jmaynard/">http://www.ibiblio.org/jmaynard/</a>
        contains copies of the OS/360 Release 21.8 distribution tapes.
+    </LI>
+</OL>
 <H4><A NAME="2.05">2.05</A>
     Where can I obtain MVS 3.8 ?
 </H4>
@@ -781,18 +778,21 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <UL>
 <li>Access-Exception-Fetch/Store-Indication Facility
 <li>ASN-and-LX-Reuse Facility
+<li>BEAR-Enhancement Facility
 <li>CMPSC-Enhancement Facility
 <li>Compare-and-Swap-and-Store Facility 1
 <li>Compare-and-Swap-and-Store Facility 2
 <li>Conditional-Emergency-Signal and Sense-Running-Status Facility
 <li>Conditional-SSKE Facility
 <li>Configuration-Topology Facility
+<li>Constrained-Transactional-Execution Facility
 <li>DAT-Enhancement Facility 1
 <li>DAT-Enhancement Facility 2
-<li>Decimal-Floating-Point-Rounding Facility
-<li>Decimal-Floating-Point-Zoned-Conversion Facility
 <li>Decimal-Floating-Point Facility
 <li>Decimal-Floating-Point Facility Has High Performance
+<li>Decimal-Floating-Point-Rounding Facility
+<li>Decimal-Floating-Point-Zoned-Conversion Facility
+<li>Decimal-Floating-Point-Packed-Conversion Facility
 <li>Distinct-Operands Facility
 <li>Enhanced-DAT Facility 1
 <li>Enhanced-Monitor Facility
@@ -816,6 +816,7 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>High-Word Facility
 <li>IEEE-Exception-Simulation Facility
 <li>Integrated 3270 (SYSG) Console
+<li>Insert-Reference-Bits-Multiple Facility
 <li>Interlocked-Access Facility 1
 <li>Interlocked-Access Facility 2
 <li>IPTE-Range Facility
@@ -825,22 +826,28 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Load-Program-Parameter Facility
 <li>Load/Store-on-Condition Facility 1
 <li>Load/Store-on-Condition Facility 2
+<li>Local-TLB-Clearing Facility
 <li>Logical Partition (LPAR) Support
 <li>Long-Displacement Facility
 <li>Long-Displacement Facility Has High Performance
+<li>Message-Security Assist
 <li>Message-Security-Assist Extension 1 Support
 <li>Message-Security-Assist Extension 2 Support
 <li>Message-Security-Assist Extension 3
 <li>Message-Security-Assist Extension 4
-<li>Message-Security Assist
 <li>Miscellaneous-Instruction-Extensions Facility 1
+<li>Miscellaneous-Instruction-Extensions Facility 2
+<li>Miscellaneous-Instruction-Extensions Facility 3
 <li>Modified CCW Indirect Data Addressing (MIDAW) Facility
 <li>Move-with-Optional-Specifications Facility
 <li>Multiple-Subchannel-Set Facility
 <li>MVCIN Move Inverse Instruction Support
 <li>N3 Instructions are installed
+<li>Nonquiescing Key-Setting Facility
 <li>Parsing-Enhancement Facility
 <li>PER-3 Facility
+<li>PER Storage-Key-Alteration Facility
+<li>PER Zero-Address-Detection Facility
 <li>PFPO (Perform Floating-Point Operation) Facility
 <li>Population-Count Facility
 <li>Processor-Assist Facility
@@ -852,24 +859,25 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Sense-Running-Status Facility
 <li>Store-Clock-Fast Facility
 <li>Store-Facility-List-Extended Facility
+<li>Store-Hypervisor-Information Facility
 <li>SVS Set Vector Summary Instruction Support
 <li>TOD-Clock-Steering Facility
-<li>z/Architecture architectural mode is active
+<li>Transactional-Execution Facility
 <li>z/Architecture architectural mode is installed
+<li>z/Architecture architectural mode is active
 </UL>
 
 <P>The following features of <b>z/Architecture</b> have <i><u>not</u></i> yet been implemented:</P>
 
 <UL>
-<li>Constrained-Transactional-Execution Facility
 <li>CPU-Measurement Counter Facility
 <li>CPU-Measurement Sampling Facility
 <li>CZAM Facility (Configuration-z/Architecture-Architectural-Mode)
-<li>Decimal-Floating-Point-Packed-Conversion Facility
 <li>DEFLATE-Conversion Facility
 <li>Enhanced-DAT Facility 2
+<li>Enhanced-Sort Facility
 <li>Entropy-Encoding-Compression Facility
-<li>ESA/390-Compatability-Mode Facility
+<li>ESA/390-compatibility-Mode Facility
 <li>Extended-I/O-Measurement-Block Facility
 <li>Extended-I/O-Measurement-Word Facility
 <li>FCX-Bidirectional-Data-Transfer Facility
@@ -877,38 +885,37 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Guarded-Storage Facility
 <li>IDTE selective clearing when region-table invalidated
 <li>IDTE selective clearing when segment-table invalidated
-<li>Insert-Reference-Bits-Multiple Facility
 <li>Instruction-Execution-Protection Facility
 <li>Integrated ASCII (SYSA) Console
-<li>Local-TLB-Clearing Facility
 <li>Message-Security-Assist Extension 5
 <li>Message-Security-Assist Extension 6
 <li>Message-Security-Assist Extension 7
 <li>Message-Security-Assist Extension 8
 <li>Message-Security-Assist Extension 9
-<li>Miscellaneous-Instruction-Extensions Facility 2
-<li>Miscellaneous-Instruction-Extensions Facility 3
 <li>Move-Page-and-Set-Key Facility
 <li>Multiple-Epoch Facility
 <li>Multithreading Facility
-<li>Nonquiescing Key-Setting Facility
+<li>Neural-Network-Processing-Assist Facility
 <li>Order-Preserving-Compression Facility
-<li>PER Storage-Key-Alteration Facility
-<li>PER Zero-Address-Detection Facility
+<li>Processor-Activity-Instrumentation Facility
+<li>Processor-Activity-Instrumentation Extension 1 Facility
 <li>Program-Directed IPL (<i>proper</i> Diagnose x'308' support)
+<li>Reset-DAT-Protection Facility
 <li>Restore-Subchannel Facility
+<li>Secure-Execution-Unpack Facility
 <li>Server-Time-Protocol Facility
 <li>Side-Effect-Access Facility
+<li>Storage-Key-Removal Facility
 <li>Store-CPU-Counter-Multiple Facility
-<li>Store-Hypervisor-Information Facility
 <li>Test-Pending-External-Interruption Facility
-<li>Transactional-Execution Facility
+<li>Ultravisor-Call Facility
 <li>Vector-Enhancements Facility 1
 <li>Vector-Enhancements Facility 2
-<li>Vector Facility for z/Architecture
 <li>Vector Packed-Decimal Facility
-<li>Vector-Packed-Decimal-Enhancement Facility
+<li>Vector-Packed-Decimal-Enhancement Facility 1
+<li>Vector-Packed-Decimal-Enhancement Facility 2
 <li>Warning-Track-Interruption Facility
+<li>z/Architecture Vector Facility
 </UL>
 
 <P>The following <b>standard</b> feature has <i><u>not</u></i> yet been implemented:</P>
@@ -1006,6 +1013,7 @@ project, either as coders or as testers or both:</P>
 <li>Peter Kuschnerus
 <li>Paul Leisy
 <li>Kevin Leonard
+<li><a href="https://github.com/wrljet/">Bill Lewis</a>
 <li>Albert Louw
 <li>Peter Macdonald
 <li>Lutz Mader
@@ -1053,7 +1061,9 @@ project, either as coders or as testers or both:</P>
 <li>Kees Verruijt
 <li><a href="http://www.vitillaro.org/">Giuseppe Vitillaro</a>
 <li><A HREF="http://www.ivansoftware.com/">Ivan Warren</A>
+<li>James Wekel
 <li><a href="https://www1.ethz.ch/id/people/allid_list/juergen">Juergen Winkelmann</a>
+<li>Bob Wood
 <li>Ian Worthington
 <li>Rod Zazubek
 <li>Bjoern A. Zeeb

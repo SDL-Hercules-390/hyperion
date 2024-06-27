@@ -1,4 +1,5 @@
 /* HETLIB.C    (C) Copyright Leland Lucius, 2000-2012                */
+/*             (C) and others 2013-2023                              */
 /*             Library for managing Hercules Emulated Tapes          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -79,12 +80,10 @@ static const char *het_errstr[] =
             Currently, "HETOPEN_CREATE" is the only flag available and has
             the same function as the O_CREAT flag of the open(3) function.
 
-            @ISW@ Added flag HETOPEN_READONLY
-
-            HETOPEN_CREATE and HETOPEN_READONLY are mutually exclusive.
-
             When HETOPEN_READONLY is set, the het file must exist.
             It is opened read only. Any attempt to write will fail.
+
+            HETOPEN_CREATE and HETOPEN_READONLY are mutually exclusive.
 
     RETURN VALUE
             If no errors are detected then the return value will be >= 0
@@ -769,9 +768,16 @@ het_read( HETB *hetb, void *sbuf )
 {
     char *tptr;
     int rc;
+
     unsigned long slen;
-    int flags1, flags2;
     unsigned long tlen;
+
+#if defined( HET_BZIP2 )
+    unsigned int bz_slen;
+    unsigned int bz_tlen;
+#endif
+
+    int flags1, flags2;
     char *tbuf;
 
     /*
@@ -965,14 +971,21 @@ het_read( HETB *hetb, void *sbuf )
 
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:
+
                 slen = HETMAX_BLOCKSIZE;
 
+                bz_slen = (unsigned int) slen;
+                bz_tlen = (unsigned int) tlen;
+
                 rc = BZ2_bzBuffToBuffDecompress( sbuf,
-                                                 (void *) &slen,
+                                                 (void *) &bz_slen,
                                                  tbuf,
-                                                 tlen,
+                                                 bz_tlen,
                                                  0,
                                                  0 );
+                slen = (unsigned long) bz_slen;
+                tlen = (unsigned long) bz_tlen;
+
                 if (rc != BZ_OK)
                 {
                     rc = errno;
@@ -1256,7 +1269,13 @@ het_write( HETB *hetb, const void *sbuf, int slen )
 {
     int rc;
     int flags;
+
     unsigned long tlen;
+
+#if defined( HET_BZIP2 )
+    unsigned int bz_tlen;
+#endif
+
     char *tbuf = NULL;
 #if defined( HAVE_ZLIB ) || defined( HET_BZIP2 )
     size_t tsiz = ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12);
@@ -1319,13 +1338,17 @@ het_write( HETB *hetb, const void *sbuf, int slen )
             case HETHDR_FLAGS1_BZLIB:
                 tlen = tsiz;
 
+                bz_tlen = (unsigned int) tlen;
+
                 rc = BZ2_bzBuffToBuffCompress( tbuf,
-                                               (void *) &tlen,
+                                               (void *) &bz_tlen,
                                                (void *)sbuf,
                                                slen,
                                                hetb->level,
                                                0,
                                                0 );
+                tlen = (unsigned long) bz_tlen;
+
                 if( rc != BZ_OK )
                 {
                     rc = errno;

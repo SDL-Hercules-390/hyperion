@@ -8,6 +8,8 @@
 /*              (c) Copyright Bernard van der Helm, 2009-2011        */
 /*              Noordwijkerhout, The Netherlands                     */
 
+/*              (C) Copyright Bob Wood, 2018-2021                    */
+
 /*-------------------------------------------------------------------*/
 /* This module implements the Perform Floating Point Operation       */
 /* instruction described in the manual SA22-7832-05.                 */
@@ -20,7 +22,6 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "inline.h"
 
 #include "decimal128.h"
 #include "decimal64.h"
@@ -28,6 +29,15 @@
 #include "decPacked.h"
 
 #if defined( FEATURE_044_PFPO_FACILITY )
+
+#define GR0_IS(           _optbits )    ((_optbits) & 0x80)
+#define GR0_AE(           _optbits )    ((_optbits) & 0x40)
+#define GR0_TR_HFP_OVER(  _optbits )    ((_optbits) & 0x20)
+#define GR0_TR_HFP_UNDER( _optbits )    ((_optbits) & 0x10)
+#define GR0_TR_BFP_RSRVD( _optbits )    ((_optbits) & 0x30)
+#define GR0_TR_DQPC(      _optbits )    ((_optbits) & 0x20)
+#define GR0_TR_DPQC(      _optbits )    ((_optbits) & 0x10)
+#define GR0_RM(           _optbits )    ((_optbits) & 0x0F)
 
 const uint16_t DPD2BIN[1024]={    0,    1,    2,    3,    4,    5,    6,    7,
     8,    9,   80,   81,  800,  801,  880,  881,   10,   11,   12,   13,   14,
@@ -238,7 +248,7 @@ const int  bflexpmax   [5] = { 0, 255, 2047, 0, 32767 };
 /***************************************************************/
 void arraydiv(unsigned int *ltab,int divisor,int ntab,unsigned int *rem)
 {
-  unsigned long long temp1;
+  unsigned long long temp1 = 0;
   unsigned long long work1;
   unsigned long long divisort;
   unsigned long long dividend;
@@ -250,7 +260,7 @@ void arraydiv(unsigned int *ltab,int divisor,int ntab,unsigned int *rem)
     dividend = work1 / divisort;
     ltab[i] = (unsigned int)(dividend & 0x00000000ffffffffll);
     temp1 = work1 % divisort;
-    if (i < ntab)
+    if ((i + 1 ) < ntab)
       work1 = (temp1 << 32) + (unsigned long long)ltab[i + 1];
   }
   *rem = (unsigned int)temp1;
@@ -534,7 +544,7 @@ void roundarray(unsigned int *ntab, int nword, int roundrule, int rem, int base,
   return;
 }
 
-int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbits, int *FPC,int roundrule, int neg)
+int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, BYTE optbits, int *fpc,int roundrule, int neg)
 {
   int cc = 0;
   int rx;
@@ -543,19 +553,19 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbit
   int mid;
   int rem;
   int hexp = *hexpptr;
-  int shiftmax;
+  int shiftmax = 0;
   int shiftamt;
   unsigned int remtab[4];
   if (hexp > 127)
   {
-    if (ccbits & 0x20)
+    if (GR0_TR_HFP_OVER( optbits ))
     {
-      if (*FPC & 0x20000000)
+      if (*fpc & FPC_MASK_IMO)
       {
-        *FPC &= 0xfff700ff;
-        *FPC |= 0x00002800;
+        *fpc &= ~(FPC_FLAG_SFX | FPC_DXC);
+        *fpc |= DXC_IEEE_OF_INEX_TRUNC << FPC_DXC_SHIFT;
         hfltab[0] |= 0x41000000;
-        if (ccbits & 0x40)
+        if (GR0_AE( optbits ))
           cc = 2;
         else
           cc = -7;
@@ -565,17 +575,17 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbit
         memset(hfltab, 0xff, sizeof(int) * hflnum);
         hfltab[0] &= 0x00ffffff;
         hfltab[0] |= 0x7f000000;
-        *FPC |= 0x00002800;
+        *fpc |= DXC_IEEE_OF_INEX_TRUNC << FPC_DXC_SHIFT;
         cc = 2;
       }
     }
     else
     {
-      if (*FPC & 0x80000000)
+      if (*fpc & FPC_MASK_IMI)
       {
-        *FPC &= 0xfff700ff;
-        *FPC |= 0x00008000;
-        if (ccbits & 0x40)
+        *fpc &= ~(FPC_FLAG_SFX | FPC_DXC);;
+        *fpc |= FPC_DXC_I;
+        if (GR0_AE( optbits ))
           cc = 2;
         else
           cc = -7;
@@ -586,7 +596,7 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbit
         memset(hfltab, 0xff, sizeof(int) * hflnum);
         hfltab[0] &= 0x00ffffff;
         hfltab[0] |= 0x7f000000;
-        *FPC |= 0x00800000;
+        *fpc |= FPC_FLAG_SFI;
         cc = 2;
       }
     }
@@ -636,7 +646,7 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbit
         else
           mid = 0;
         roundarray(hfltab, hflnum, roundrule, rem, 16, neg, 0, mid);
-        *FPC |= 0x00080000;
+        *fpc |= FPC_FLAG_SFX;
         if (hflnum == 4)
         {
           hfltab[0] = (hfltab[0] << 8) | (hfltab[1] >> 24);
@@ -646,33 +656,33 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbit
         *hexpptr = 0;
         return 0;
       }
-      if (ccbits & 0x10)
+      if (GR0_TR_HFP_UNDER( optbits ))
       {
-        if ((*FPC & 0x10000000) && ((ccbits & 0x40) == 0))
+        if ((*fpc & FPC_MASK_IMU) && !GR0_AE( optbits ))
         {
           cc = -7;
-          *FPC &= 0xffff00ff;
-          *FPC |= 0x00008000;
+          *fpc &= ~FPC_DXC;
+          *fpc |= DXC_IEEE_INVALID_OP << FPC_DXC_SHIFT;
         }
         else
         {
           memset(hfltab, 0x00, sizeof(int) * hflnum);
-          *FPC |= 0x00180000;
+          *fpc |= (FPC_FLAG_SFU | FPC_FLAG_SFX);
           cc = 2;
         }
       }
       else
       {
-        if ((*FPC & 0x80000000) && ((ccbits & 0x40) == 0))
+        if ((*fpc & FPC_MASK_IMI) && !GR0_AE( optbits ))
         {
           cc = -7;
-          *FPC &= 0xffff00ff;
-          *FPC |= 0x00008000;
+          *fpc &= ~FPC_DXC;
+          *fpc |= DXC_IEEE_INVALID_OP << FPC_DXC_SHIFT;
         }
         else
         {
           memset(hfltab, 0x00, sizeof(int) * hflnum);
-          *FPC |= 0x00080000;
+          *fpc |= FPC_FLAG_SFX;
           cc = 2;
         }
       }
@@ -680,7 +690,7 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbit
   return cc;
 }
 
-int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, int *FPC,int roundrule,int neg)
+int checkbfp(unsigned int *bfltab, int bflnum, int bexp, BYTE optbits, int *fpc,int roundrule,int neg)
 {
   int cc = 0;
   int rx;
@@ -689,15 +699,15 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, i
   int rem;
   int i;
   int shiftamt;
-  int shiftmax;
+  int shiftmax = 0;
   unsigned int remtab[4];
   int maxexp = bflexpmax[bflnum];
   if (bexp > maxexp)
   {
-    if (*FPC & 0x20000000)
+    if (*fpc & FPC_MASK_IMO)
     {
-      *FPC &= 0xfff700ff;
-      *FPC |= 0x00002800;
+      *fpc &= ~(FPC_FLAG_SFX | FPC_DXC);;
+      *fpc |= DXC_IEEE_OF_INEX_TRUNC << FPC_DXC_SHIFT;
       switch (bflnum)
       {
       case 1:
@@ -710,7 +720,7 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, i
         bfltab[0] |= 0x3fff8000;
         break;
       }
-      if (ccbits & 0x40)
+      if (GR0_AE( optbits ))
         cc = 2;
       else
         cc = -7;
@@ -735,7 +745,7 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, i
         break;
       }
 
-      *FPC |= 0x00200000;
+      *fpc |= FPC_FLAG_SFO;
       cc = 2;
     }
   }
@@ -780,28 +790,28 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, i
         else
           mid = 0;
         roundarray(bfltab, bflnum , roundrule, rem, 2, neg, 1, mid);
-        *FPC |= 0x00080000;
+        *fpc |= FPC_FLAG_SFX;
         return 0;
       }
-      if (*FPC & 0x10000000)
+      if (*fpc & FPC_MASK_IMU)
       {
-        if (ccbits & 0x40)
+        if (GR0_AE( optbits ))
         {
           cc = 2;
-          *FPC &= 0x0000ff00;
-          *FPC |= 0x00001c00;
+          *fpc &= ~FPC_DXC;
+          *fpc |= DXC_IEEE_UF_INEX_INCR << FPC_DXC_SHIFT;
         }
         else
         {
           cc = -7;
-          *FPC &= 0xffff00ff;
-          *FPC |= 0x00008000;
+          *fpc &= ~FPC_DXC;
+          *fpc |= DXC_IEEE_INVALID_OP  << FPC_DXC_SHIFT;
         }
       }
       else
       {
         memset(bfltab, 0x00, sizeof(int) * bflnum);
-        *FPC |= 0x00180000;
+        *fpc |= (FPC_FLAG_SFU | FPC_FLAG_SFX);
         cc = 2;
       }
     }
@@ -811,7 +821,7 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, i
 /***************************************************************/
 /*   dfl2hfl:  Convert a decfloat value to hexfloat            */
 /***************************************************************/
-int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflwords,unsigned char ccbits,int binflg,int *FPC)
+int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflwords,BYTE optbits,int binflg,int *fpc)
 {
   int i;
   unsigned int dec[ARRAYMAX];
@@ -819,22 +829,21 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int k;
   unsigned int wrk[ARRAYMAX];
   unsigned int remtab[ARRAYMAX];
-  unsigned char decwork[6210];
+  BYTE decwork[6210];
   unsigned int rem;
-  unsigned char binzero[ARRAYMAX * sizeof(int)];
+  BYTE binzero[ARRAYMAX * sizeof(int)];
   long long wk;
   int decnum;
   int cc = 0;
-  int decctr;
   int roundrule;
   int hexp;
   int rx;
   int rbit;
   int ndigit;
-  int maxdigit;
+  int maxdigit = 0;
   int maxbits;
   int numbits;
-  int expword2;
+  int expword2 = 0;
   int shiftamt;
   int shiftstd;
   int bitctr;
@@ -843,10 +852,9 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int neg = 0;
   int exact = 1;
   int exp;
-  int dexp;
   int bexp;
   int delta;
-  int expword;
+  int expword = 0;
   //  the following table is used to reverse the bits in a byte.  This is needed
   //  for nan processing
   unsigned int bittab1[256] = {
@@ -881,15 +889,15 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int mid;
   int tradix;
   memset(binzero, 0x00, sizeof(binzero));
-  temp1 = (int)(ccbits & 0x0f);
+  temp1 = (int) GR0_RM( optbits );
   if (temp1 == 0)
-    roundrule = (*FPC & 0x00000070) >> 4;
+    roundrule = (*fpc & FPC_DRM) >> 4;
   else
     if (temp1 == 1)
-      roundrule = (*FPC & 0x00000007);
+      roundrule = (*fpc & FPC_BRM_3BIT);
     else
       roundrule = temp1 - 8;
-  tradix = (int)((ccbits & 0x30) >> 4);
+  tradix = (int)((optbits & 0x30) >> 4);
   if (binflg && tradix)
   {
     cc = -1;
@@ -939,10 +947,10 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
     }
     else
     {
-      if (*FPC & 0x80)
+      if (*fpc & 0x80) // (invalid reserved bit that must be zero?)
       {
-        *FPC &= 0xffff00ff;
-        *FPC |= 0x00008000;
+        *fpc &= ~FPC_DXC;
+        *fpc |= DXC_IEEE_INVALID_OP << FPC_DXC_SHIFT;
         return -7;
       }
       memset(hfltab, 0xff, 4 * hflwords);
@@ -955,10 +963,10 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
     nan = 1;
     if (binflg == 0)
     {
-      if (*FPC & 0x80)
+      if (*fpc & 0x80) // (invalid reserved bit that must be zero?)
       {
-        *FPC &= 0xffff00ff;
-        *FPC |= 0x00008000;
+        *fpc &= ~FPC_DXC;
+        *fpc |= DXC_IEEE_INVALID_OP << FPC_DXC_SHIFT;
         return -7;
       }
       memset(hfltab, 0xff, 4 * hflwords);
@@ -1020,11 +1028,9 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   lzero = getlzerobits(dec, ARRAYMAX);
   memset(hfl,0x00,sizeof(hfl));
   memset(decwork,0x00,sizeof(decwork));
-  decctr = 0;
   fac10 = 0;
   hexp = 0;
   bexp = 0;
-  dexp = exp;
   if (binflg)
     maxbits = bflmaxdigit[hflwords];
   else
@@ -1053,6 +1059,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
     {
       arraydiv(dec,1024,ARRAYMAX,&rem);
       decnum = DPD2BIN[rem];
+      if (i == ndpd - 1) decnum += lmd;
       memset(wrk, 0x00, ARRAYMAX * 4);
       wrk[ARRAYMAX - 1] = decnum;
       k = fac10;
@@ -1191,7 +1198,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
       shiftamt = numbits - bitctr;
       arrayshiftright(hfl, ARRAYMAX, shiftamt, remtab);
       if (memcmp(remtab, binzero, sizeof(remtab)) != 0)
-        *FPC |= 0x00080000;
+        *fpc |= FPC_FLAG_SFX;
       if (shiftamt % 32)
       {
         rx = ARRAYMAX - (shiftamt / 32) - 1;
@@ -1239,7 +1246,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
       shiftamt = (ndigit - maxdigit) * 4;
       arrayshiftright(hfl, ARRAYMAX, shiftamt, remtab);
       if (memcmp(remtab, binzero, sizeof(remtab)) != 0)
-        *FPC |= 0x00080000;
+        *fpc |= FPC_FLAG_SFX;
       if (shiftamt % 32)
         rx = ARRAYMAX - (shiftamt / 32) - 1;
       else
@@ -1351,11 +1358,11 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
       hfltab[2] += (wk1 << 24);
   }
   if (!exact)
-    *FPC |= 0x00080000;
+    *fpc |= FPC_FLAG_SFX;
   if (binflg)
-    cc = checkbfp(hfltab, hflwords, bexp, ccbits, FPC, roundrule, neg);
+    cc = checkbfp(hfltab, hflwords, bexp, optbits, fpc, roundrule, neg);
   else
-    cc = checkhfp(hfltab, hflwords, &hexp, ccbits, FPC, roundrule, neg);
+    cc = checkhfp(hfltab, hflwords, &hexp, optbits, fpc, roundrule, neg);
   if (neg)
     hfltab[0] |= 0x80000000;
   return cc;
@@ -1364,34 +1371,32 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
 /***************************************************************/
 /*   hfldhfl:  Convert a hexfloat value to decfloat            */
 /***************************************************************/
-int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dflwords, unsigned char ccbits, int binflg, int *FPC)
+int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dflwords, BYTE optbits, int binflg, int *fpc)
 {
   int exp;
-  int dexp;
+  int dexp = 0;
   unsigned int exp1;
   unsigned int hfl[ARRAYMAX];
   unsigned int dec[ARRAYMAX];
   unsigned int wrk[ARRAYMAX];
   unsigned int remtab[ARRAYMAX];
-  unsigned char decwork[6210];
-  unsigned char binzero[6210];
+  BYTE decwork[6210];
+  BYTE binzero[6210];
   int i;
   int k;
   int cc = 0;
   int decctr;
   int neg = 0;
   unsigned int wk1;
-  unsigned int wk2;
   unsigned int rem;
   int ndpdctr;
   int ndpd;
-  int roundrule;
   unsigned int rbe;
   int lzero;
   int lzerohex;
-  int bexp;
+  int bexp = 0;
   int delta;
-  int hexp;
+  int hexp = 0;
   int shiftamt;
   unsigned int maxexp;
   int maxdigits;
@@ -1425,20 +1430,11 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
   unsigned int temptab[4];
   int expword;
   int cbits;
-  int maxbits;
-  int tradix;
+  int maxbits = 0;
   unsigned int temp1;
   unsigned int temp2;
   memset(binzero, 0x00, sizeof(binzero));
-  temp1 = (unsigned int)(ccbits & 0x0f);
-  if (temp1 == 0)
-    roundrule = (*FPC & 0x00000070) >> 4;
-  else
-    if (temp1 == 1)
-      roundrule = (*FPC & 0x00000007);
-    else
-      roundrule = (int)(temp1 - 8);
-  tradix = (int)((ccbits & 0x30) >> 4);
+  temp1 = (unsigned int) GR0_RM( optbits );
   if (hfltab[0] & 0x80000000)
   {
     neg = 1;
@@ -1664,7 +1660,7 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
 /*   digit.                                                    */
 /***************************************************************/
     arraydiv(hfl,10,ARRAYMAX,&rem);
-    decwork[decctr] = (unsigned char)rem;
+    decwork[decctr] = (BYTE)rem;
     decctr++;
     if (memcmp(hfl, binzero, ARRAYMAX * 4) == 0)
       break;
@@ -1679,7 +1675,6 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
     if (memcmp(decwork, binzero, delta) != 0)
       rview = 0;
     wk1 = (unsigned int)decwork[delta - 1];
-    wk2 = (unsigned int)decwork[delta];
     rem = 0;
     if (wk1 > 5)
       rem = 1;
@@ -1696,7 +1691,7 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
         wk1 = (unsigned int)decwork[i] + 1;
         if (wk1 < 10)
         {
-          decwork[i] = (unsigned char)wk1;
+          decwork[i] = (BYTE)wk1;
           break;
         }
         decwork[i] = 0x00;
@@ -1737,7 +1732,7 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
     }
   }
   else
-    *FPC |= 0x00080000;
+    *fpc |= FPC_FLAG_SFX;
   /***************************************************************/
   /*   figure out the lmd (left most digit)                      */
   /***************************************************************/
@@ -1832,7 +1827,7 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
 /***************************************************************/
 /*   convert hex float to binary (IEEE) float.                 */
 /***************************************************************/
-int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, unsigned char ccbits, int *FPC)
+int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, BYTE optbits, int *fpc)
 {
   unsigned int temptab1[6];
   int hexp;
@@ -1846,19 +1841,17 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, u
   int roundrule;
   int shiftword;
   int maxword;
-  int tradix;
   int rem;
   unsigned int temp1;
   unsigned int temp2;
-  temp1 = (unsigned int)(ccbits & 0x0f);
+  temp1 = (unsigned int) GR0_RM( optbits );
   if (temp1 == 0)
-    roundrule = (*FPC & 0x00000070) >> 4;
+    roundrule = (*fpc & FPC_DRM) >> 4;
   else
     if (temp1 == 1)
-      roundrule = (*FPC & 0x00000007);
+      roundrule = (*fpc & FPC_BRM_3BIT);
     else
       roundrule = (int)(temp1 - 8);
-  tradix = (int)((ccbits & 0x30) >> 4);
   memset(temptab1, 0x00,sizeof(temptab1));
   memcpy(temptab1, tab, nwordin * 4);
   neg = tab[0] >> 31;
@@ -1982,7 +1975,7 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, u
       temptab1[3] == 0 && temptab1[4] == 0)
       mid = 1;
     if (mid == 0 || rem != 0)
-      *FPC |= 0x00080000;
+      *fpc |= FPC_FLAG_SFX;
     roundarray(tabout, 1, roundrule, rem, 2, neg, 1, mid);
     tabout[0] &= 0x007fffff;
     break;
@@ -1996,7 +1989,7 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, u
       temptab1[4] == 0)
       mid = 1;
     if (mid == 0 || rem != 0)
-      *FPC |= 0x00080000;
+      *fpc |= FPC_FLAG_SFX;
     roundarray(tabout, 2, roundrule, rem, 2, neg, 1, mid);
     tabout[0] &= 0x000fffff;
     break;
@@ -2007,7 +2000,7 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, u
     if (temptab1[4] == 0)
       mid = 1;
     if (mid == 0 || rem != 0)
-      *FPC |= 0x00080000;
+      *fpc |= FPC_FLAG_SFX;
     roundarray(tabout, 4, roundrule, rem, 2, neg, 1, mid);
     bexp += 16383;
     bexp <<= 16;
@@ -2029,12 +2022,12 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, u
 /*                     it can be converted to a hex exponent.                 */
 /*                                                                            */
 /******************************************************************************/
-int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, unsigned char ccbits, int *FPC)
+int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, BYTE optbits, int *fpc)
 {
   unsigned int temptab1[6];
   unsigned int remtab[4];
   int hexp;
-  int bexpbias;
+  int bexpbias = 0;
   int hexp2;
   int bexp = 0;
   int bexpround;
@@ -2047,21 +2040,19 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
   int shiftctr;
   int roundrule;
   int maxword;
-  int tradix;
   unsigned int temp1;
   unsigned int temp2;
-  unsigned char binzero[32];
+  BYTE binzero[32];
   maxword = max(nwordin, nwordout) + 1;
   memset(binzero, 0x00, sizeof(binzero));
-  temp1 = (unsigned int)(ccbits & 0x0f);
+  temp1 = (unsigned int) GR0_RM( optbits );
   if (temp1 == 0)
-    roundrule = (*FPC & 0x00000070) >> 4;
+    roundrule = (*fpc & FPC_DRM) >> 4;
   else
     if (temp1 == 1)
-      roundrule = (*FPC & 0x00000007);
+      roundrule = (*fpc & FPC_BRM_3BIT);
     else
       roundrule = (int)(temp1 - 8);
-  tradix = (int)((ccbits & 0x30) >> 4);
   memset(temptab1, 0x00, sizeof(temptab1));
   memcpy(temptab1, tab, sizeof(int) * nwordin);
   neg = tab[0] >> 31;
@@ -2095,10 +2086,10 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
   }
   if (bexpbias == bflexpmax[nwordin])
   {
-    if (*FPC & 0x80)
+    if (*fpc & 0x80) // (invalid reserved bit that must be zero?)
     {
-      *FPC &= 0xffff00ff;
-      *FPC |= 0x00008000;
+      *fpc &= ~FPC_DXC;
+      *fpc |= DXC_IEEE_INVALID_OP << FPC_DXC_SHIFT;
       return -7;
     }
     memset(tabout, 0xff, 16);
@@ -2162,7 +2153,7 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
       }
     }
   hexp += 64;
-  cc = checkhfp(temptab1, nwordout, &hexp, ccbits, FPC, roundrule, neg);
+  cc = checkhfp(temptab1, nwordout, &hexp, optbits, fpc, roundrule, neg);
   memcpy(tabout, temptab1, sizeof(int) * nwordout);
   switch (nwordout)
   {
@@ -2174,7 +2165,7 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
       temptab1[3] == 0 && temptab1[4] == 0)
       mid = 1;
     if (mid == 0 || rem != 0)
-      *FPC |= 0x00080000;
+      *fpc |= FPC_FLAG_SFX;
     roundarray(tabout, 1, roundrule, rem, 16, neg, 0, mid);
     tabout[1] = 0;
     tabout[2] = 0;
@@ -2188,7 +2179,7 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
       temptab1[4] == 0)
       mid = 1;
     if (mid == 0 || rem != 0)
-      *FPC |= 0x00080000;
+      *fpc |= FPC_FLAG_SFX;
     roundarray(tabout, 2, roundrule, rem, 16, neg, 0, mid);
     tabout[2] = 0;
     tabout[3] = 0;
@@ -2201,7 +2192,7 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
     if (temptab1[3] == 0 && temptab1[4] == 0)
       mid = 1;
     if (mid == 0 || rem != 0)
-      *FPC |= 0x00080000;
+      *fpc |= FPC_FLAG_SFX;
     roundarray(tabout, 4, roundrule, rem, 16, neg, 0, mid);
     temp1 = tabout[2] >> 24;
     tabout[2] &= 0x00ffffff;
@@ -2224,404 +2215,346 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
 /*-------------------------------------------------------------------*/
 /* 010A PFPO  - Perform Floating Point Operation                 [E] */
 /*-------------------------------------------------------------------*/
-DEF_INST(perform_floating_point_operation)
+DEF_INST( perform_floating_point_operation )
 {
-  S64 gr0;
-  unsigned int ftab[4];
-  unsigned int tabout[4];
-  int numout = 0;
-  int opcode;
-  int cc = 0;
-  int FPC;
-  int dxc;
-  int rrbits;
-  unsigned char ccbits;
-  int i0,i2,i4,i6;
-  char creg0[8];
+    unsigned int  ftab[4];   // Input Floating-Point value to be converted
+    unsigned int  tabout[4]; // Output converted Floating-Point value result
 
-  i0 = FPR2I(0);
-  i2 = FPR2I(2);
-  i4 = FPR2I(4);
-  i6 = FPR2I(6);
+    int numout = 0;     // Output length in words
+    int opcode;         // Conversion Operation Code (NOT instruction opcode!)
+    int cc = 0;         // Condition Code??
+    int fpc;            // Floating-Point Control Register value
+    int dxc;            // Decimal Exception Code value
+    int i0, i2, i4, i6; // Floating-Point register array indexes
 
-    E(inst, regs);
+    /* Extract fields from General Register 0 */
+    bool test_mode = GR0_T( regs );
+    BYTE otc       = GR0_OTC( regs );
+    BYTE ofc1      = GR0_OFC1( regs );
+    BYTE ofc2      = GR0_OFC2( regs );
+    BYTE optbits   = regs->GR_LHLCL(0);
+    BYTE rm        = GR0_RM( optbits );
 
-   gr0 = (S64)regs->GR_G(0);
-   FPC = regs->fpc;
-   FPC &= 0xffff00ff;
-   ftab[0] = (unsigned int)(regs->fpr[i4]);
-   ftab[1] = (unsigned int)(regs->fpr[i4 + 1]);
-   ftab[2] = (unsigned int)(regs->fpr[i6]);
-   ftab[3] = (unsigned int)(regs->fpr[i6 + 1]);
-   memcpy(creg0,(void *)&gr0,8);
-   ccbits = creg0[0];
-   rrbits = (int)(ccbits & 0x0f);
-   if (rrbits > 1 && rrbits < 8)
-   {
-     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-     return;
-   }
-   if (creg0[3] != 0x01)
-   {
-     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-     return;
-   }
-   switch (creg0[2])
-   {
-   case 0x00:
-     opcode = 1;
-     break;
-   case 0x01:
-     opcode = 2;
-     break;
-   case 0x02:
-     opcode = 3;
-     break;
-   case 0x05:
-     opcode = 4;
-     break;
-   case 0x06:
-     opcode = 5;
-     break;
-   case 0x07:
-     opcode = 6;
-     break;
-   case 0x08:
-     opcode = 7;
-     break;
-   case 0x09:
-     opcode = 8;
-     break;
-   case 0x0a:
-     opcode = 9;
-     break;
-  default:
-     opcode = -1;
-   }
-   if (opcode == -1)
-   {
-     if (creg0[3] & 0x80)
-       regs->psw.cc = 3;
-     else
-     {
-       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-     }
-     return;
-   }
-   switch (creg0[1])
-   {
-   case 0x00:
-     opcode += 10;
-     break;
-   case 0x01:
-     opcode += 20;
-     break;
-   case 0x02:
-     opcode += 30;
-     break;
-   case 0x05:
-     opcode += 40;
-     break;
-   case 0x06:
-     opcode += 50;
-     break;
-   case 0x07:
-     opcode += 60;
-     break;
-   case 0x08:
-     opcode += 70;
-     break;
-   case 0x09:
-    opcode += 80;
-     break;
-   case 0x0a:
-    opcode += 90;
-     break;
-   default:
-      numout = -1;
-   }
-   if (numout == -1)
-   {
-     if (creg0[3] & 0x80)
-       regs->psw.cc = 3;
-     else
-     {
-       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-     }
-     return;
-   }
-   if (creg0[3] & 0x80)
-   {
-     regs->psw.cc = 0;
-     return;
-   }
-   switch (opcode)
-   {
-   case 71:
-     cc = dfl2hflbfl(ftab,tabout,1,1,ccbits,0,&FPC);
-     numout = 1;
-     break;
-   case 72:
-     cc = dfl2hflbfl(ftab,tabout,1,2,ccbits,0,&FPC);
-     numout = 2;
-     break;
-   case 73:
-     cc = dfl2hflbfl(ftab,tabout,1,4,ccbits,0,&FPC);
-     numout = 4;
-     break;
-   case 81:
-     cc = dfl2hflbfl(ftab,tabout,2,1,ccbits,0,&FPC);
-     numout = 1;
-     break;
-   case 82:
-     cc = dfl2hflbfl(ftab,tabout,2,2,ccbits,0,&FPC);
-     numout = 2;
-     break;
-   case 83:
-     cc = dfl2hflbfl(ftab,tabout,2,4,ccbits,0,&FPC);
-     numout = 4;
-     break;
-   case 91:
-     cc = dfl2hflbfl(ftab,tabout,4,1,ccbits,0,&FPC);
-     numout = 1;
-     break;
-   case 92:
-     cc = dfl2hflbfl(ftab,tabout,4,2,ccbits,0,&FPC);
-     numout = 2;
-     break;
-   case 93:
-     cc = dfl2hflbfl(ftab,tabout,4,4,ccbits,0,&FPC);
-     numout = 4;
-     break;
-   case 17:
-     cc = hflbfl2dfl(ftab,tabout,1,1,ccbits,0,&FPC);
-     numout = 1;
-     break;
-   case 18:
-     cc = hflbfl2dfl(ftab,tabout,1,2,ccbits,0,&FPC);
-     numout = 2;
-     break;
-   case 19:
-     cc = hflbfl2dfl(ftab,tabout,1,4,ccbits,0,&FPC);
-     numout = 4;
-     break;
-   case 27:
-     cc = hflbfl2dfl(ftab,tabout,2,1,ccbits,0,&FPC);
-     numout = 1;
-     break;
-   case 28:
-     cc = hflbfl2dfl(ftab,tabout,2,2,ccbits,0,&FPC);
-     numout = 2;
-     break;
-   case 29:
-     cc = hflbfl2dfl(ftab,tabout,2,4,ccbits,0,&FPC);
-     numout = 4;
-     break;
-   case 37:
-     cc = hflbfl2dfl(ftab,tabout,4,1,ccbits,0,&FPC);
-     numout = 1;
-     break;
-   case 38:
-     cc = hflbfl2dfl(ftab,tabout,4,2,ccbits,0,&FPC);
-     numout = 2;
-     break;
-   case 39:
-     cc = hflbfl2dfl(ftab,tabout,4,4,ccbits,0,&FPC);
-     numout = 4;
-     break;
-   case 41:
-     cc = bfl2hfl(ftab, tabout, 1, 1, ccbits, &FPC);
-     numout = 1;
-     break;
-   case 42:
-     cc = bfl2hfl(ftab, tabout, 1, 2, ccbits, &FPC);
-     numout = 2;
-     break;
-   case 43:
-     cc = bfl2hfl(ftab, tabout, 1, 4, ccbits, &FPC);
-     numout = 4;
-     break;
-   case 51:
-     cc = bfl2hfl(ftab, tabout, 2, 1, ccbits, &FPC);
-     numout = 1;
-     break;
-   case 52:
-     cc = bfl2hfl(ftab, tabout, 2, 2, ccbits, &FPC);
-     numout = 2;
-     break;
-   case 53:
-     cc = bfl2hfl(ftab, tabout, 2, 4, ccbits, &FPC);
-     numout = 4;
-     break;
-   case 61:
-     cc = bfl2hfl(ftab, tabout, 4, 1, ccbits, &FPC);
-     numout = 1;
-     break;
-   case 62:
-     cc = bfl2hfl(ftab, tabout, 4, 2, ccbits, &FPC);
-     numout = 2;
-     break;
-   case 63:
-     cc = bfl2hfl(ftab, tabout, 4, 4, ccbits, &FPC);
-     numout = 4;
-     break;
-   case 14:
-     cc = hfl2bfl(ftab, tabout, 1, 1, ccbits, &FPC);
-     numout = 1;
-     break;
-   case 15:
-     cc = hfl2bfl(ftab, tabout, 1, 2, ccbits, &FPC);
-     numout = 2;
-     break;
-   case 16:
-     cc = hfl2bfl(ftab, tabout, 1, 4, ccbits, &FPC);
-     numout = 4;
-     break;
-   case 24:
-     cc = hfl2bfl(ftab, tabout, 2, 1, ccbits, &FPC);
-     numout = 1;
-     break;
-   case 25:
-     cc = hfl2bfl(ftab, tabout, 2, 2, ccbits, &FPC);
-     numout = 2;
-     break;
-   case 26:
-     cc = hfl2bfl(ftab, tabout, 2, 4, ccbits, &FPC);
-     numout = 4;
-     break;
-   case 34:
-     cc = hfl2bfl(ftab, tabout, 4, 1, ccbits, &FPC);
-     numout = 1;
-     break;
-   case 35:
-     cc = hfl2bfl(ftab, tabout, 4, 2, ccbits, &FPC);
-     numout = 2;
-     break;
-   case 36:
-     cc = hfl2bfl(ftab, tabout, 4, 4, ccbits, &FPC);
-     numout = 4;
-     break;
-   case 74:
-     cc = dfl2hflbfl(ftab, tabout, 1, 1, ccbits, 1,&FPC);
-     numout = 1;
-     break;
-   case 75:
-     cc = dfl2hflbfl(ftab, tabout, 1, 2, ccbits, 1, &FPC);
-     numout = 2;
-     break;
-   case 76:
-     cc = dfl2hflbfl(ftab, tabout, 1, 4, ccbits, 1, &FPC);
-     numout = 4;
-     break;
-   case 84:
-     cc = dfl2hflbfl(ftab, tabout, 2, 1, ccbits, 1, &FPC);
-     numout = 1;
-     break;
-   case 85:
-     cc = dfl2hflbfl(ftab, tabout, 2, 2, ccbits, 1, &FPC);
-     numout = 2;
-     break;
-   case 86:
-     cc = dfl2hflbfl(ftab, tabout, 2, 4, ccbits, 1, &FPC);
-     numout = 4;
-     break;
-   case 94:
-     cc = dfl2hflbfl(ftab, tabout, 4, 1, ccbits, 1, &FPC);
-     numout = 1;
-     break;
-   case 95:
-     cc = dfl2hflbfl(ftab, tabout, 4, 2, ccbits, 1, &FPC);
-     numout = 2;
-     break;
-   case 96:
-     cc = dfl2hflbfl(ftab, tabout, 4, 4, ccbits, 1, &FPC);
-     numout = 4;
-     break;
-   case 47:
-     cc = hflbfl2dfl(ftab, tabout, 1, 1, ccbits, 1, &FPC);
-     numout = 1;
-     break;
-   case 48:
-     cc = hflbfl2dfl(ftab, tabout, 1, 2, ccbits, 1, &FPC);
-     numout = 2;
-     break;
-   case 49:
-     cc = hflbfl2dfl(ftab, tabout, 1, 4, ccbits, 1, &FPC);
-     numout = 4;
-     break;
-   case 57:
-     cc = hflbfl2dfl(ftab, tabout, 2, 1, ccbits, 1, &FPC);
-     numout = 1;
-     break;
-   case 58:
-     cc = hflbfl2dfl(ftab, tabout, 2, 2, ccbits, 1,&FPC);
-     numout = 2;
-     break;
-   case 59:
-     cc = hflbfl2dfl(ftab, tabout, 2, 4, ccbits, 1, &FPC);
-     numout = 4;
-     break;
-   case 67:
-     cc = hflbfl2dfl(ftab, tabout, 4, 1, ccbits, 1, &FPC);
-     numout = 1;
-     break;
-   case 68:
-     cc = hflbfl2dfl(ftab, tabout, 4, 2, ccbits, 1, &FPC);
-     numout = 2;
-     break;
-   case 69:
-     cc = hflbfl2dfl(ftab, tabout, 4, 4, ccbits, 1, &FPC);
-     numout = 4;
-     break;
-   default:
-     numout = -1;
-   }
-   if (numout < 0)
-     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-  dxc = (FPC & 0x0000ff00) >> 8;
-  regs->dxc = dxc;
-  regs->fpc = FPC;
-  if ((FPC & 0x00008000) == 0x00)
-  {
-    regs->fpr[i0] = tabout[0];
-    if (numout == 1)
-      regs->fpr[i0 + 1] = 0;
-    else
+    E( inst, regs );
+    TXFC_INSTR_CHECK( regs );
+
+    /* Get fpr array indexes to source and destination registers */
+
+    i0 = FPR2I(0);      // (op1 dst)
+    i2 = FPR2I(2);      // (op1 dst)
+    i4 = FPR2I(4);      // (op2 src)
+    i6 = FPR2I(6);      // (op2 src)
+
+    fpc = regs->fpc;    // FPC value...
+    fpc &= ~FPC_DXC;    // ... without DXC
+
+    /* Retrieve souce floating-point value to be converted */
+
+    ftab[0] = (unsigned int) (regs->fpr[ i4 + 0 ]);
+    ftab[1] = (unsigned int) (regs->fpr[ i4 + 1 ]);
+    ftab[2] = (unsigned int) (regs->fpr[ i6 + 0 ]);
+    ftab[3] = (unsigned int) (regs->fpr[ i6 + 1 ]);
+
+    /* Check for Reserved/Invalid Operation-Type Code */
+    if (otc != 1)
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* Check for Reserved/Invalid Rounding Method */
+    if (rm >= 2 && rm <= 7)
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* DFP DQPC only valid if FP Extension Facility installed */
+    if (1
+        && GR0_TR_DQPC( optbits )
+        && !FACILITY_ENABLED( 037_FP_EXTENSION, regs )
+    )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* Check for Reserved/Invalid Operand-Format Code */
+    switch (ofc1)
     {
-      regs->fpr[i0 + 1] = tabout[1];
-      if (numout > 2)
-      {
-        regs->fpr[i2] = tabout[2];
-        regs->fpr[i2 + 1] = tabout[3];
-      }
-    }
-  }
-  if (cc >= 0)
-  {
-    // if reg0 says supPress inexact errors, turn off the bit
-    if (FPC & 0x00080000)      // inexact
-    {
-      //   generate program interuption if the mask is in place and error not suppressed
-      if ((FPC & 0x08000000) && (ccbits & 0x80) == 0)
-      {
-        FPC &= 0xffff00ff;
-        FPC |= 0x00000c00;
-        regs->fpc = FPC;
-        regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
-      }
-      //  if inexact suppression requested, turn off the bit in the FPC
-      if (ccbits & 0x80)
-        regs->fpc &= 0xfff7ffff;
-    }
-   }
-   else
-   {
-     regs->fpc = FPC;
-     ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
-   }
+    case 0x00: opcode =  1; break;  // HFP Short        target
+    case 0x01: opcode =  2; break;  // HFP Long         target
+    case 0x02: opcode =  3; break;  // HFP Extended     target
 
-} /* end DEF_INST(perform_floating_point_operation) */
+    case 0x05: opcode =  4; break;  // BFP Short        target
+    case 0x06: opcode =  5; break;  // BFP Long         target
+    case 0x07: opcode =  6; break;  // BFP Extended     target
+
+    case 0x08: opcode =  7; break;  // DFP Short        target
+    case 0x09: opcode =  8; break;  // DFP Long         target
+    case 0x0A: opcode =  9; break;  // DFP Extended     target
+
+    default:   opcode = -1; break;  // Reserved/Invalid target
+    }
+    if (0
+        || opcode == -1
+        || (1
+            && (0
+                || opcode == 4
+                || opcode == 5
+                || opcode == 6
+               )
+            && GR0_TR_BFP_RSRVD( optbits )
+           )
+    )
+    {
+        if (!test_mode)
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+        regs->psw.cc = 3;
+        regs->GR_L( 1 ) = 0;  //  *** See PROGRAMMING NOTE further below! ***
+        return;
+    }
+    switch (ofc2)
+    {
+    case 0x00: opcode += 10; break;  // HFP Short        source
+    case 0x01: opcode += 20; break;  // HFP Long         source
+    case 0x02: opcode += 30; break;  // HFP Extended     source
+
+    case 0x05: opcode += 40; break;  // BFP Short        source
+    case 0x06: opcode += 50; break;  // BFP Long         source
+    case 0x07: opcode += 60; break;  // BFP Extended     source
+
+    case 0x08: opcode += 70; break;  // DFP Short        source
+    case 0x09: opcode += 80; break;  // DFP Long         source
+    case 0x0A: opcode += 90; break;  // DFP Extended     source
+
+    default:   numout = -1;  break;  // Reserved/Invalid source
+    }
+    if (numout == -1)
+    {
+        if (!test_mode)
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+        regs->psw.cc = 3;
+        regs->GR_L( 1 ) = 0;  //  *** See PROGRAMMING NOTE further below! ***
+        return;
+    }
+
+    /* If test mode, validate the request itself */
+    if (test_mode)
+    {
+        switch (opcode)
+        {
+        case 71: case 72: case 73:  // DFP Short     ==>  HFP Short/Long/Extended
+        case 81: case 82: case 83:  // DFP Long      ==>  HFP Short/Long/Extended
+        case 91: case 92: case 93:  // DFP Extended  ==>  HFP Short/Long/Extended
+
+        case 17: case 18: case 19:  // HFP Short     ==>  DFP Short/Long/Extended
+        case 27: case 28: case 29:  // HFP Long      ==>  DFP Short/Long/Extended
+        case 37: case 38: case 39:  // HFP Extended  ==>  DFP Short/Long/Extended
+
+        case 41: case 42: case 43:  // BFP Short     ==>  HFP Short/Long/Extended
+        case 51: case 52: case 53:  // BFP Long      ==>  HFP Short/Long/Extended
+        case 61: case 62: case 63:  // BFP Extended  ==>  HFP Short/Long/Extended
+
+        case 14: case 15: case 16:  // HFP Short     ==>  BFP Short/Long/Extended
+        case 24: case 25: case 26:  // HFP Long      ==>  BFP Short/Long/Extended
+        case 34: case 35: case 36:  // HFP Extended  ==>  BFP Short/Long/Extended
+
+        case 74: case 75: case 76:  // DFP Short     ==>  BFP Short/Long/Extended
+        case 84: case 85: case 86:  // DFP Long      ==>  BFP Short/Long/Extended
+        case 94: case 95: case 96:  // DFP Extended  ==>  BFP Short/Long/Extended
+
+        case 47: case 48: case 49:  // BFP Short     ==>  DFP Short/Long/Extended
+        case 57: case 58: case 59:  // BFP Long      ==>  DFP Short/Long/Extended
+        case 67: case 68: case 69:  // BFP Extended  ==>  DFP Short/Long/Extended
+            regs->psw.cc = 0; break;
+        default:
+            regs->psw.cc = 3; break;
+        }
+        regs->GR_L( 1 ) = 0;  //  *** See PROGRAMMING NOTE further below! ***
+        return;
+    }
+
+    /* NOT test mode: Process their request... */
+    switch (opcode)
+    {
+        // DFP Short     ==>  HFP Short/Long/Extended
+    case 71: cc = dfl2hflbfl( ftab, tabout, 1, 1, optbits, 0, &fpc ); numout = 1; break;
+    case 72: cc = dfl2hflbfl( ftab, tabout, 1, 2, optbits, 0, &fpc ); numout = 2; break;
+    case 73: cc = dfl2hflbfl( ftab, tabout, 1, 4, optbits, 0, &fpc ); numout = 4; break;
+
+        // DFP Long      ==>  HFP Short/Long/Extended
+    case 81: cc = dfl2hflbfl( ftab, tabout, 2, 1, optbits, 0, &fpc ); numout = 1; break;
+    case 82: cc = dfl2hflbfl( ftab, tabout, 2, 2, optbits, 0, &fpc ); numout = 2; break;
+    case 83: cc = dfl2hflbfl( ftab, tabout, 2, 4, optbits, 0, &fpc ); numout = 4; break;
+
+        // DFP Extended  ==>  HFP Short/Long/Extended
+    case 91: cc = dfl2hflbfl( ftab, tabout, 4, 1, optbits, 0, &fpc ); numout = 1; break;
+    case 92: cc = dfl2hflbfl( ftab, tabout, 4, 2, optbits, 0, &fpc ); numout = 2; break;
+    case 93: cc = dfl2hflbfl( ftab, tabout, 4, 4, optbits, 0, &fpc ); numout = 4; break;
+
+    //---------------------------------------------------------------------------------
+
+        // HFP Short     ==>  DFP Short/Long/Extended
+    case 17: cc = hflbfl2dfl( ftab, tabout, 1, 1, optbits, 0, &fpc ); numout = 1; break;
+    case 18: cc = hflbfl2dfl( ftab, tabout, 1, 2, optbits, 0, &fpc ); numout = 2; break;
+    case 19: cc = hflbfl2dfl( ftab, tabout, 1, 4, optbits, 0, &fpc ); numout = 4; break;
+
+        // HFP Long      ==>  DFP Short/Long/Extended
+    case 27: cc = hflbfl2dfl( ftab, tabout, 2, 1, optbits, 0, &fpc ); numout = 1; break;
+    case 28: cc = hflbfl2dfl( ftab, tabout, 2, 2, optbits, 0, &fpc ); numout = 2; break;
+    case 29: cc = hflbfl2dfl( ftab, tabout, 2, 4, optbits, 0, &fpc ); numout = 4; break;
+
+        // HFP Extended  ==>  DFP Short/Long/Extended
+    case 37: cc = hflbfl2dfl( ftab, tabout, 4, 1, optbits, 0, &fpc ); numout = 1; break;
+    case 38: cc = hflbfl2dfl( ftab, tabout, 4, 2, optbits, 0, &fpc ); numout = 2; break;
+    case 39: cc = hflbfl2dfl( ftab, tabout, 4, 4, optbits, 0, &fpc ); numout = 4; break;
+
+    //---------------------------------------------------------------------------------
+
+        // BFP Short     ==>  HFP Short/Long/Extended
+    case 41: cc = bfl2hfl(    ftab, tabout, 1, 1, optbits,    &fpc ); numout = 1; break;
+    case 42: cc = bfl2hfl(    ftab, tabout, 1, 2, optbits,    &fpc ); numout = 2; break;
+    case 43: cc = bfl2hfl(    ftab, tabout, 1, 4, optbits,    &fpc ); numout = 4; break;
+
+        // BFP Long      ==>  HFP Short/Long/Extended
+    case 51: cc = bfl2hfl(    ftab, tabout, 2, 1, optbits,    &fpc ); numout = 1; break;
+    case 52: cc = bfl2hfl(    ftab, tabout, 2, 2, optbits,    &fpc ); numout = 2; break;
+    case 53: cc = bfl2hfl(    ftab, tabout, 2, 4, optbits,    &fpc ); numout = 4; break;
+
+        // BFP Extended  ==>  HFP Short/Long/Extended
+    case 61: cc = bfl2hfl(    ftab, tabout, 4, 1, optbits,    &fpc ); numout = 1; break;
+    case 62: cc = bfl2hfl(    ftab, tabout, 4, 2, optbits,    &fpc ); numout = 2; break;
+    case 63: cc = bfl2hfl(    ftab, tabout, 4, 4, optbits,    &fpc ); numout = 4; break;
+
+    //---------------------------------------------------------------------------------
+
+        // HFP Short     ==>  BFP Short/Long/Extended
+    case 14: cc = hfl2bfl(    ftab, tabout, 1, 1, optbits,    &fpc ); numout = 1; break;
+    case 15: cc = hfl2bfl(    ftab, tabout, 1, 2, optbits,    &fpc ); numout = 2; break;
+    case 16: cc = hfl2bfl(    ftab, tabout, 1, 4, optbits,    &fpc ); numout = 4; break;
+
+        // HFP Long      ==>  BFP Short/Long/Extended
+    case 24: cc = hfl2bfl(    ftab, tabout, 2, 1, optbits,    &fpc ); numout = 1; break;
+    case 25: cc = hfl2bfl(    ftab, tabout, 2, 2, optbits,    &fpc ); numout = 2; break;
+    case 26: cc = hfl2bfl(    ftab, tabout, 2, 4, optbits,    &fpc ); numout = 4; break;
+
+        // HFP Extended  ==>  BFP Short/Long/Extended
+    case 34: cc = hfl2bfl(    ftab, tabout, 4, 1, optbits,    &fpc ); numout = 1; break;
+    case 35: cc = hfl2bfl(    ftab, tabout, 4, 2, optbits,    &fpc ); numout = 2; break;
+    case 36: cc = hfl2bfl(    ftab, tabout, 4, 4, optbits,    &fpc ); numout = 4; break;
+
+    //---------------------------------------------------------------------------------
+
+        // DFP Short     ==>  BFP Short/Long/Extended
+    case 74: cc = dfl2hflbfl( ftab, tabout, 1, 1, optbits, 1, &fpc ); numout = 1; break;
+    case 75: cc = dfl2hflbfl( ftab, tabout, 1, 2, optbits, 1, &fpc ); numout = 2; break;
+    case 76: cc = dfl2hflbfl( ftab, tabout, 1, 4, optbits, 1, &fpc ); numout = 4; break;
+
+        // DFP Long      ==>  BFP Short/Long/Extended
+    case 84: cc = dfl2hflbfl( ftab, tabout, 2, 1, optbits, 1, &fpc ); numout = 1; break;
+    case 85: cc = dfl2hflbfl( ftab, tabout, 2, 2, optbits, 1, &fpc ); numout = 2; break;
+    case 86: cc = dfl2hflbfl( ftab, tabout, 2, 4, optbits, 1, &fpc ); numout = 4; break;
+
+        // DFP Extended  ==>  BFP Short/Long/Extended
+    case 94: cc = dfl2hflbfl( ftab, tabout, 4, 1, optbits, 1, &fpc ); numout = 1; break;
+    case 95: cc = dfl2hflbfl( ftab, tabout, 4, 2, optbits, 1, &fpc ); numout = 2; break;
+    case 96: cc = dfl2hflbfl( ftab, tabout, 4, 4, optbits, 1, &fpc ); numout = 4; break;
+
+    //---------------------------------------------------------------------------------
+
+        // BFP Short     ==>  DFP Short/Long/Extended
+    case 47: cc = hflbfl2dfl( ftab, tabout, 1, 1, optbits, 1, &fpc ); numout = 1; break;
+    case 48: cc = hflbfl2dfl( ftab, tabout, 1, 2, optbits, 1, &fpc ); numout = 2; break;
+    case 49: cc = hflbfl2dfl( ftab, tabout, 1, 4, optbits, 1, &fpc ); numout = 4; break;
+
+        // BFP Long      ==>  DFP Short/Long/Extended
+    case 57: cc = hflbfl2dfl( ftab, tabout, 2, 1, optbits, 1, &fpc ); numout = 1; break;
+    case 58: cc = hflbfl2dfl( ftab, tabout, 2, 2, optbits, 1, &fpc ); numout = 2; break;
+    case 59: cc = hflbfl2dfl( ftab, tabout, 2, 4, optbits, 1, &fpc ); numout = 4; break;
+
+        // BFP Extended  ==>  DFP Short/Long/Extended
+    case 67: cc = hflbfl2dfl( ftab, tabout, 4, 1, optbits, 1, &fpc ); numout = 1; break;
+    case 68: cc = hflbfl2dfl( ftab, tabout, 4, 2, optbits, 1, &fpc ); numout = 2; break;
+    case 69: cc = hflbfl2dfl( ftab, tabout, 4, 4, optbits, 1, &fpc ); numout = 4; break;
+
+    //---------------------------------------------------------------------------------
+
+    default: numout = -1; break;
+    }
+
+
+    /*****************************************************************/
+    /*                    PROGRAMMING NOTE!                          */
+    /*****************************************************************/
+    /*                                                               */
+    /*  Set Return Code value in GR1 to zero. FIXME: we know this    */
+    /*  isn't right, but it's the best we can do for now. We will    */
+    /*  fix it later. Besides, it's very likely zero IS correct!     */
+    /*                                                               */
+    /*****************************************************************/
+    regs->GR_L( 1 ) = 0;
+
+
+    /* Specification Exception if Invalid Operation Code */
+    if (numout < 0)
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* Retrieve/Set DXC/FPC results */
+    dxc = (fpc & FPC_DXC) >> FPC_DXC_SHIFT;
+    regs->dxc = dxc;
+    regs->fpc = fpc;
+
+    /* If not Invalid Operation, update registers with the results */
+    if (!(fpc & FPC_DXC_I))
+    {
+        regs->fpr[ i0 + 0 ] = tabout[0];            // (short/long/extended)
+
+        if (numout == 1)                            // (short?)
+            regs->fpr[ i0 + 1 ] = 0;                // (short)
+        else
+        {
+            regs->fpr[ i0 + 1 ] = tabout[1];        // (long/extended)
+
+            if (numout > 2)                         // (extended?)
+            {
+                regs->fpr[ i2 + 0 ] = tabout[2];    // (extended)
+                regs->fpr[ i2 + 1 ] = tabout[3];    // (extended)
+            }
+        }
+    }
+
+    if (cc >= 0)
+    {
+        // FIXME: currently, CC1 is never returned because cc=1 is
+        // never returned by any of the above conversion functions,
+        // but it's the best we can do for now. We'll fix it later.
+        regs->psw.cc = cc;
+
+        /* If GR0 says suppress inexact errors, then turn off the FPC bit */
+        if (fpc & FPC_FLAG_SFX) // inexact
+        {
+            /* Generate a Program Interuption if the mask is in place
+               and the error is not being purposely suppressed.
+            */
+            if ((fpc & FPC_MASK_IMX) && !GR0_IS( optbits ))
+            {
+                fpc &= ~FPC_DXC;
+                fpc |= DXC_IEEE_INEXACT_INCR << FPC_DXC_SHIFT;
+
+                regs->fpc = fpc;
+                regs->dxc = DXC_DECIMAL;
+
+                ARCH_DEP( program_interrupt )( regs, PGM_DATA_EXCEPTION );
+            }
+
+            /* Otherwise if inexact suppression was requested, turn off
+               that bit in the FPC.
+            */
+            if (GR0_IS( optbits ))
+                regs->fpc &= ~FPC_FLAG_SFX;
+        }
+    }
+    else // (cc < 0)
+    {
+        regs->fpc = fpc;
+        ARCH_DEP( program_interrupt )( regs, PGM_DATA_EXCEPTION );
+    }
+
+} /* end DEF_INST( perform_floating_point_operation ) */
 
 #endif /* defined( FEATURE_044_PFPO_FACILITY ) */
 

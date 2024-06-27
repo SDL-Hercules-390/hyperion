@@ -26,6 +26,11 @@
 /* Thus  for  preconfigured FreeBSD interfaces we need to modify the */
 /* name of the character file being opened.                          */
 
+/* On NetBSD you open /dev/tun<n> which must be given by the user,   */
+/* who has pre-configured that tunnel for use.                       */
+/* If you want a L2 (ethernet) interface, open /dev/tap or           */
+/* /dev/tap<n>.  You cannot switch from one mode to the other.       */
+
 
 #include "hstdinc.h"
 
@@ -71,6 +76,7 @@ static void tuntap_term( void* arg )
 //
 // TUNTAP_SetMode           (TUNTAP_CreateInterface helper)
 //
+#if defined(__linux__) || defined(OPTION_W32_CTCI)
 static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 {
     int rc;
@@ -108,12 +114,15 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         else if (pid == 0)
         {
             /* child */
+            char msglvl[16] = {0};
             dup2 (ifd[0], STDIN_FILENO);
             dup2 (STDOUT_FILENO, STDERR_FILENO);
             dup2 (ifd[0], STDOUT_FILENO);
             close (ifd[1]);
-            rc = execlp (hercifc, hercifc, NULL );
-            return -1;
+            MSGBUF( msglvl, "%d", sysblk.msglvl );
+            execlp( hercifc, hercifc, msglvl, query_codepage(), NULL );
+            WRMSG( HHC00136, "E", "execlp()", strerror( errno ) );
+            exit( 127 );
         }
 
         /* parent */
@@ -157,6 +166,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 
     return rc;
 }   // End of function  TUNTAP_SetMode()
+#endif /* __linux__ || OPTION_W32_CTCI */
 
 
 //
@@ -212,7 +222,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 // Output:
 //      pfd            Pointer to receive the file descriptor of the
 //                       TUN/TAP interface.
-//      pszNetDevName  Pointer to receive the name if the interface.
+//      pszNetDevName  Pointer to receive the name of the interface.
 
 int             TUNTAP_CreateInterface( char* pszTUNDevice,
                                         int   iFlags,
@@ -248,6 +258,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
     if ( strncasecmp( utsbuf.sysname, "linux",  5 ) == 0 )
 #endif
     {
+#if defined (__linux__) || defined(OPTION_W32_CTCI)
         // Linux kernel (builtin tun device) or Windows
         struct hifr hifr;
 
@@ -271,10 +282,18 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         }
 
         strcpy( pszNetDevName, hifr.hifr_name );
+#endif /* __linux__ || OPTION_W32_CTCI */
     }
 #if !defined( OPTION_W32_CTCI )
     else
     {
+        if ((iFlags & IFF_TUN) && !strstr(pszTUNDevice, "tun")) {
+             WRMSG( HHC00156, "W", pszTUNDevice );
+        }
+        if ((iFlags & IFF_TAP) && !strstr(pszTUNDevice, "tap")) {
+             WRMSG( HHC00157, "W", pszTUNDevice );
+        }
+
         // Other OS: Simply use basename of the device
         // Notes: (JAP) This is problematic at best. Until we have a
         //        clean FreeBSD compile from the base tree I can't
@@ -1066,8 +1085,6 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         if (!(pszCfgCmd = get_symbol( "HERCULES_IFC" )) || !*pszCfgCmd)
             pszCfgCmd = HERCIFC_CMD;
 
-        TRACE(MSG(HHC00147, "I", pszCfgCmd));
-
         // Fork a process to execute the hercifc
         ifc_pid = fork();
 
@@ -1081,7 +1098,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         // The child process executes the configuration command
         if( ifc_pid == 0 )
         {
-            /* @ISW@ Close all file descriptors
+            /* Close all file descriptors
              * (except ifc_fd[1] and STDOUT FILENO)
              * (otherwise some devices are never closed)
              * (ex: SCSI tape devices can never be re-opened)
@@ -1089,6 +1106,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             struct rlimit rlim;
             int i;
             rlim_t file_limit;
+            char msglvl[16] = {0};
             getrlimit(RLIMIT_NOFILE,&rlim);
             /* While Linux and Cygwin have limits of 1024 files by default,
              * Mac OS X does not - its default is -1, or completely unlimited.
@@ -1106,17 +1124,17 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
                     close(i);
                 }
             }
-            /* @ISW@ Close spurious FDs END */
+            /* end close spurious FDs */
             dup2( ifc_fd[1], STDIN_FILENO  );
             dup2( STDOUT_FILENO, STDERR_FILENO );
 
             // Execute the interface configuration command
-            (void)execlp( pszCfgCmd, pszCfgCmd, NULL );
+            MSGBUF( msglvl, "%d", sysblk.msglvl );
+            (void)execlp( pszCfgCmd, pszCfgCmd, msglvl, query_codepage(), NULL );
 
             // The exec function returns only if unsuccessful
             // "Error in function %s: %s"
             WRMSG( HHC00136, "E", "execlp()", strerror( errno ) );
-
             exit( 127 );
         }
 
@@ -1291,8 +1309,8 @@ int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
     {
         if
         (0
-            || !isxdigit(work[(i*3)+0])
-            || !isxdigit(work[(i*3)+1])
+            || !isxdigit((unsigned char)work[(i*3)+0])
+            || !isxdigit((unsigned char)work[(i*3)+1])
             ||  sep  !=  work[(i*3)+2]
         )
         {
@@ -1389,8 +1407,7 @@ void net_data_trace( DEVBLK* pDEVBLK, BYTE* pAddr, int iLen, BYTE bDir, BYTE bSe
         print_ebcdic[sizeof(print_ebcdic)-1] = '\0';          /* with null termination */
         memset( print_line, 0, sizeof( print_line ) );
 
-        snprintf((char *) print_line, sizeof(print_line), "+%4.4X%c ", offset, bDir );
-        print_line[sizeof(print_line)-1] = '\0';            /* force null termination */
+        MSGBUF(print_line, "+%4.4X%c ", offset, bDir );
 
         for( i = 0; i < 16; i++ )
         {
@@ -1398,16 +1415,16 @@ void net_data_trace( DEVBLK* pDEVBLK, BYTE* pAddr, int iLen, BYTE bDir, BYTE bSe
 
             if( offset < iLen )
             {
-                snprintf((char *) tmp, 32, "%2.2X", c );
+                MSGBUF(tmp,"%2.2X", c );
                 tmp[sizeof(tmp)-1] = '\0';
                 STRLCAT( print_line, tmp );
 
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
 
-                if( isprint( e ) )
+                if( isprint( (unsigned char)e ) )
                     print_ebcdic[i] = e;
-                if( isprint( c ) )
+                if( isprint( (unsigned char)c ) )
                     print_ascii[i] = c;
             }
             else

@@ -17,9 +17,11 @@
 
 #include "hercules.h"
 
-#if defined(HAVE_SYS_SYSCTL_H)
-#include <sys/sysctl.h>
-#endif
+#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
+#  if defined(HAVE_SYS_SYSCTL_H)
+#    include <sys/sysctl.h>
+#  endif
+#endif /* #if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD ) */
 
 DLL_EXPORT HOST_INFO  hostinfo;     /* Host system information       */
 
@@ -90,6 +92,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
             STRLCPY( pHostInfo->machine, machine );
         }
 
+#if !defined( __OpenBSD__ )
         length = sizeof(iRV);
         if ( sysctlbyname("kern.maxfilesperproc", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->maxfilesopen = iRV;
@@ -142,6 +145,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
             STRLCPY( pHostInfo->machine, mach );
             pHostInfo->cpu_aes_extns = 1;
         }
+#endif /* #if !defined( __OpenBSD__ ) */
 
 #if defined(HW_MEMSIZE)
         length = sizeof(ui64RV);
@@ -207,7 +211,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         }
 #endif
     }
-#endif
+#endif /* #if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD ) */
 
     pHostInfo->hostpagesz = (U64) HPAGESIZE();
 
@@ -263,12 +267,13 @@ DLL_EXPORT char* format_hostinfo ( HOST_INFO*  pHostInfo,
         }
 
 #if defined( OPTION_LONG_HOSTINFO )
+        // (long: show host version too)
         snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
-            "Running on %s %s-%s. %s, %s%s",
+            "Running on: %s %s-%s. %s, %s%s",
             pHostInfo->nodename,
             pHostInfo->sysname,
             pHostInfo->release,
-            pHostInfo->version,     // (show host version too)
+            pHostInfo->version,     // (host version)
             pHostInfo->machine,
             num_procs
         );

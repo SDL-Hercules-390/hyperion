@@ -1,4 +1,5 @@
 /* DECIMAL.C    (C) Copyright Roger Bowler, 1991-2012                */
+/*              (C) and others 2013-2022                             */
 /*              ESA/390 Packed Decimal Routines                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -23,7 +24,8 @@
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 /* TP instruction - Roger Bowler                            08/02/01 */
 /* packed_to_binary subroutine - Roger Bowler               29/06/03 */
-/* binary_to_packed subroutine - Roger Bowler              02jul2003 */
+/* binary_to_packed subroutine - Roger Bowler              02Jul2003 */
+/* PER 1 GRA - Fish                                        31Jan2022 */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -706,8 +708,9 @@ BYTE    dec3[MAX_DECIMAL_DIGITS];       /* Work area for result      */
 int     count1, count2, count3;         /* Significant digit counters*/
 int     sign1, sign2, sign3;            /* Sign of operands & result */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -780,8 +783,9 @@ int     count1, count2;                 /* Significant digit counters*/
 int     sign1, sign2;                   /* Sign of each operand      */
 int     rc;                             /* Return code               */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -840,8 +844,9 @@ int     count1, count2;                 /* Significant digit counters*/
 int     sign1, sign2;                   /* Sign of operands          */
 int     signq, signr;                   /* Sign of quotient/remainder*/
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if the second operand length exceeds 15 digits
        or is equal to or greater than the first operand length */
@@ -913,8 +918,9 @@ BYTE    fbyte;                          /* Fill byte                 */
 BYTE    pbyte;                          /* Pattern byte              */
 BYTE    rbyte;                          /* Result byte               */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+    SS_L(inst, regs, l, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
+    TXFC_INSTR_CHECK( regs );
 
     /* If addr1 crosses page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -1074,6 +1080,12 @@ BYTE    rbyte;                          /* Result byte               */
     /* Set condition code */
     regs->psw.cc = cc;
 
+#if defined( FEATURE_PER1 )
+    /* Check for PER 1 GRA event */
+    if (inst[0] == 0xDF) // EDMK?
+        PER_GRA_CHECK( regs, PER_GRA_MASK( 1 ));
+#endif
+
 } /* end DEF_INST(edit_x_edit_and_mark) */
 
 
@@ -1095,8 +1107,9 @@ int     d;                              /* Decimal digit             */
 int     i1, i2, i3;                     /* Array subscripts          */
 int     carry;                          /* Carry indicator           */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if the second operand length exceeds 15 digits
        or is equal to or greater than the first operand length */
@@ -1165,8 +1178,9 @@ int     i, j;                           /* Array subscripts          */
 int     d;                              /* Decimal digit             */
 int     carry;                          /* Carry indicator           */
 
-    SS(inst, regs, l1, i3, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, i3, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b1 );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operand into work area */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec, &count, &sign);
@@ -1260,8 +1274,9 @@ BYTE    dec3[MAX_DECIMAL_DIGITS];       /* Work area for result      */
 int     count1, count2, count3;         /* Significant digit counters*/
 int     sign1, sign2, sign3;            /* Sign of operands & result */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -1333,8 +1348,9 @@ BYTE    dec[MAX_DECIMAL_DIGITS];        /* Work area for operand     */
 int     count;                          /* Significant digit counter */
 int     sign;                           /* Sign                      */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load second operand into work area */
     ARCH_DEP(load_decimal) (effective_addr2, l2, b2, regs, dec, &count, &sign);
@@ -1377,6 +1393,9 @@ int     cc = 0;                         /* Condition code            */
 BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
     RSL(inst, regs, l1, b1, effective_addr1);
+    PER_ZEROADDR_XCHECK( regs, b1 );
+
+    TXFC_INSTR_CHECK( regs );
 
     /* Fetch the packed decimal operand into the work area */
     ARCH_DEP(vfetchc) (pack, l1, effective_addr1, b1, regs);

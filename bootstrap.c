@@ -14,9 +14,6 @@
 
 #include "hstdinc.h"
 #include "hercules.h"
-#if defined(HDL_USE_LIBTOOL)
-#include "ltdl.h"
-#endif
 #include "cckd.h"
 #include "cckddasd.h"
 
@@ -90,11 +87,23 @@ static void log_crashed_msg( FILE* stream )
         "\n"
         "Hercules has crashed! (%s)\n"
         "\n"
-        "Creating crash dump... This may take a while...\n"
-        "\n"
 
         , strsignal( crash_signo )
     );
+    if (sysblk.ulimit_unlimited)
+        fprintf
+        (
+            stream,
+            "Creating crash dump... This will take a while...\n"
+            "\n"
+        );
+    else
+        fprintf
+        (
+            stream,
+            "Crash dump NOT created due to ulimit setting...\n"
+            "\n"
+        );
     fflush( stream );
 }
 
@@ -276,7 +285,7 @@ int main( int ac, char* av[] )
     {
         // Normal panel mode?
 
-        if (!sysblk.daemon_mode && isatty( STDERR_FILENO ))
+        if (/*!sysblk.daemon_mode &&*/ isatty( STDERR_FILENO ))
         {
             // Then disable the [x] Close button for safety
 
@@ -632,8 +641,14 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 #define MAX_MINIDUMP_USER_STREAMS  (1024)   // (just an arbitrary value)
 #define NUM_CCKD_TRACE_STRINGS       (64)   // (EACH STRING is one stream)
 #define NUM_LOGFILE_MESSAGES       (1024)   // (counts as ONE big stream)
+#define MAX_STREAM_BUFFERSIZE       (256)   // (max CommentStreamA length)
 
 static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
+
+static ULONG StreamBufferSize( size_t len  )
+{
+    return (ULONG) (len < MAX_STREAM_BUFFERSIZE ? len : MAX_STREAM_BUFFERSIZE);
+}
 
 #define BUILD_SYSBLK_USER_STREAM( sysblk_xxx )                                 \
                                                                                \
@@ -642,7 +657,7 @@ static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
     {                                                                          \
         UserStreamArray[ StreamNum ].Type       = CommentStreamA;              \
         UserStreamArray[ StreamNum ].Buffer     = (PVOID)         *pstr;       \
-        UserStreamArray[ StreamNum ].BufferSize = (ULONG) strlen( *pstr ) + 1; \
+        UserStreamArray[ StreamNum ].BufferSize = StreamBufferSize( strlen( *pstr ) + 1 ); \
     }
 
 static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
@@ -678,7 +693,7 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
 
         UserStreamArray[ StreamNum ].Type       = CommentStreamA;
         UserStreamArray[ StreamNum ].Buffer     = (PVOID)                      buf;
-        UserStreamArray[ StreamNum ].BufferSize = (ULONG) (strlen((const char*)buf)+1);
+        UserStreamArray[ StreamNum ].BufferSize = StreamBufferSize( strlen( (const char*) buf ) + 1 );
         StreamNum++;
     }
 
@@ -715,7 +730,7 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
 
             UserStreamArray[ StreamNum ].Type       = CommentStreamA;
             UserStreamArray[ StreamNum ].Buffer     = (PVOID)                      p;
-            UserStreamArray[ StreamNum ].BufferSize = (ULONG) (strlen((const char*)p)+1);
+            UserStreamArray[ StreamNum ].BufferSize = StreamBufferSize( strlen( (const char*) p ) + 1 );
         }
     }
 
@@ -733,7 +748,7 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
         {
             UserStreamArray[ StreamNum ].Type       = CommentStreamA;
             UserStreamArray[ StreamNum ].Buffer     = (PVOID) logbuf_ptr;
-            UserStreamArray[ StreamNum ].BufferSize = (ULONG) logbuf_bytes - 1;
+            UserStreamArray[ StreamNum ].BufferSize = StreamBufferSize( logbuf_bytes - 1 );
             StreamNum++;
         }
     }

@@ -8,90 +8,42 @@
 #ifndef _HINLINES_H
 #define _HINLINES_H
 
+/*-------------------------------------------------------------------*/
 /* Define inline assembly style for GNU C compatible compilers */
-#if defined(__GNUC__)
+
+#if defined( __GNUC__ )
     #define asm  __asm__
 #endif
 
 /*-------------------------------------------------------------------*/
 
-#if !defined(round_to_hostpagesize)
-static inline U64 round_to_hostpagesize(U64 n)
-{
-    U64 factor = hostinfo.hostpagesz - 1;
-    return ((n + factor) & ~factor);
-}
-#endif
+#if !defined( clear_io_buffer )
+
+#define clear_storage(   _addr, _n )  __clear_io_buffer( (void*)(_addr), (size_t)(_n) )
+#define clear_io_buffer( _addr, _n )  __clear_io_buffer( (void*)(_addr), (size_t)(_n) )
+
+#define clear_page(    _addr )        __clear_page( (void*)(_addr), (size_t)( FOUR_KILOBYTE / 64 ) )
+#define clear_page_1M( _addr )        __clear_page( (void*)(_addr), (size_t)( ONE_MEGABYTE  / 64 ) )
+#define clear_page_4K( _addr )        __clear_page( (void*)(_addr), (size_t)( FOUR_KILOBYTE / 64 ) )
+#define clear_page_2K( _addr )        __clear_page( (void*)(_addr), (size_t)( TWO_KILOBYTE  / 64 ) )
 
 /*-------------------------------------------------------------------*/
 
-#if !defined(clear_io_buffer)
-
-#define clear_storage(_addr, _n)                                       \
-      __clear_io_buffer((void *)(_addr), (size_t)(_n))
-#define clear_io_buffer(_addr,_n)                                      \
-      __clear_io_buffer((void *)(_addr),(size_t)(_n))
-#define clear_page(_addr)                                              \
-      __clear_page((void *)(_addr), (size_t)( FOUR_KILOBYTE / 64 ) )
-#define clear_page_1M(_addr)                                           \
-      __clear_page((void *)(_addr), (size_t)( ONE_MEGABYTE  / 64 ) )
-#define clear_page_4K(_addr)                                           \
-      __clear_page((void *)(_addr), (size_t)( FOUR_KILOBYTE / 64 ) )
-#define clear_page_2K(_addr)                                           \
-      __clear_page((void *)(_addr), (size_t)( TWO_KILOBYTE  / 64 ) )
-
-/*-------------------------------------------------------------------*/
-
-#if defined(__GNUC__) && defined(__SSE2__) && (__SSE2__ == 1)
-  #define _GCC_SSE2_
-#elif defined (_MSVC_)
-  #if defined( _M_X64 )
-    /* "On the x64 platform, __faststorefence generates
-        an instruction that is a faster store fence
-        than the sfence instruction. Use this intrinsic
-        instead of _mm_sfence on the x64 platform."
+#if defined ( _MSVC_ ) && defined( _M_X64 )
+    /*
+        Microsoft x64: "On the x64 platform, __faststorefence
+        generates an instruction that is a faster store fence
+        than the sfence instruction. Use this intrinsic instead
+        of _mm_sfence on the x64 platform."
     */
-    #define  SFENCE  __faststorefence
-  #else
-    #define  SFENCE  _mm_sfence
-  #endif
+  #define  SFENCE  __faststorefence
+#else
+  #define  SFENCE  _mm_sfence
 #endif
 
 /*-------------------------------------------------------------------*/
 
-#if defined(_GCC_SSE2_)
-
-static inline void __clear_page( void *addr, size_t pgszmod64 )
-{
-    unsigned char xmm_save[16];
-    unsigned int i;
-
-    asm volatile("": : :"memory");      /* barrier */
-
-    asm volatile("\n\t"
-        "movups %%xmm0, (%0)\n\t"
-        "xorps  %%xmm0, %%xmm0"
-        : : "r" (xmm_save));
-
-    for (i = 0; i < pgszmod64; i++)
-        asm volatile("\n\t"
-            "movntps %%xmm0,   (%0)\n\t"
-            "movntps %%xmm0, 16(%0)\n\t"
-            "movntps %%xmm0, 32(%0)\n\t"
-            "movntps %%xmm0, 48(%0)"
-            : : "r"(addr) : "memory");
-
-    asm volatile("\n\t"
-        "sfence\n\t"
-        "movups (%0), %%xmm0"
-        : : "r" (xmm_save) : "memory");
-
-    return;
-}
-
-/*-------------------------------------------------------------------*/
-
-#elif defined (_MSVC_)
+#if defined( _GCC_SSE2_ ) || defined ( _MSVC_ )
 
 static inline void __clear_page( void* addr, size_t pgszmod64 )
 {
@@ -102,20 +54,27 @@ static inline void __clear_page( void* addr, size_t pgszmod64 )
     // directly. You can, however, see these types in the debugger.
 
     unsigned int i;                 /* (work var for loop) */
+    float* locaddr;                 /* local copy of addr  */
     __m128 xmm0;                    /* (work XMM register) */
 
     /* Init work reg to 0 */
     xmm0 = _mm_setzero_ps();        // (suppresses C4700; will be optimized out)
     _mm_xor_ps( xmm0, xmm0 );
 
-    /* Clear requested page without polluting our cache */
-    for (i=0; i < pgszmod64; i++, (float*) addr += 16 )
+    /* Copy addr */
+    locaddr = addr;
+
+    /* Clear requested page WITHOUT polluting our cache */
+    for (i=0; i < pgszmod64; i++, locaddr += 16)
     {
-        _mm_stream_ps( (float*) addr+ 0, xmm0 );
-        _mm_stream_ps( (float*) addr+ 4, xmm0 );
-        _mm_stream_ps( (float*) addr+ 8, xmm0 );
-        _mm_stream_ps( (float*) addr+12, xmm0 );
+        _mm_stream_ps( locaddr+ 0, xmm0 );
+        _mm_stream_ps( locaddr+ 4, xmm0 );
+        _mm_stream_ps( locaddr+ 8, xmm0 );
+        _mm_stream_ps( locaddr+12, xmm0 );
     }
+
+    /* Copy addr back */
+    addr = locaddr;
 
     /* An SFENCE guarantees that every preceding store
        is globally visible before any subsequent store. */
@@ -124,15 +83,15 @@ static inline void __clear_page( void* addr, size_t pgszmod64 )
     return;
 }
 #else /* (all others) */
-  #define  __clear_page(_addr, _pgszmod64 )    memset((void*)(_addr), 0, ((size_t)(_pgszmod64)) << 6)
+  #define  __clear_page( _addr, _pgszmod64 )    memset( (void*)(_addr), 0, ((size_t)(_pgszmod64)) << 6 )
 #endif
 
 /*-------------------------------------------------------------------*/
 
-#if defined(_GCC_SSE2_)
-static inline void __optimize_clear(void *addr, size_t n)
+#if defined( _GCC_SSE2_ )
+static inline void __optimize_clear( void* addr, size_t n )
 {
-    char *mem = addr;
+    char* mem = addr;
 
     /* Let the compiler perform special case optimization */
     while (n-- > 0)
@@ -141,16 +100,16 @@ static inline void __optimize_clear(void *addr, size_t n)
     return;
 }
 #else /* (all others, including _MSVC_) */
-  #define __optimize_clear(p,n)     memset((void*)(p),0,(size_t)(n))
+  #define __optimize_clear( p, n )  memset( (void*)(p), 0, (size_t)(n) )
 #endif
 
 /*-------------------------------------------------------------------*/
 
-#if defined(_GCC_SSE2_) || defined (_MSVC_)
-static inline void __clear_io_buffer(void *addr, size_t n)
+#if defined( _GCC_SSE2_ ) || defined ( _MSVC_ )
+static inline void __clear_io_buffer( void* addr, size_t n )
 {
     unsigned int x;
-    void *limit;
+    void* limit;
 
     /* Let the C compiler perform special case optimization */
     if ((x = (U64)(uintptr_t)addr & 0x00000FFF))
@@ -158,10 +117,9 @@ static inline void __clear_io_buffer(void *addr, size_t n)
         unsigned int a = 4096 - x;
 
         __optimize_clear( addr, a );
+
         if (!(n -= a))
-        {
             return;
-        }
     }
 
     /* Calculate page clear size */
@@ -182,9 +140,7 @@ static inline void __clear_io_buffer(void *addr, size_t n)
 
     /* Clean up any remainder */
     if (n)
-    {
         __optimize_clear( addr, n );
-    }
 
     return;
 
@@ -193,10 +149,10 @@ static inline void __clear_io_buffer(void *addr, size_t n)
 /*-------------------------------------------------------------------*/
 
 #else /* (all others) */
-  #define  __clear_io_buffer(_addr, _n)  memset((void*)(_addr), 0, (size_t)(_n))
+  #define  __clear_io_buffer( _addr, _n )  memset( (void*)(_addr), 0, (size_t)(_n) )
 #endif
 
-#endif /* !defined(clear_io_buffer) */
+#endif /* !defined( clear_io_buffer ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -249,7 +205,7 @@ static inline void synchronize_cpus( REGS* regs, const char* location )
     CPU_BITMAP mask = sysblk.started_mask;
 
     /* Deselect current processor and waiting processors from mask */
-    mask &= ~(sysblk.waiting_mask | (regs)->hostregs->cpubit);
+    mask &= ~(sysblk.waiting_mask | HOSTREGS->cpubit);
 
     /* Deselect processors at a syncpoint and count active processors
      */
@@ -273,7 +229,7 @@ static inline void synchronize_cpus( REGS* regs, const char* location )
                 ON_IC_INTERRUPT( i_regs );
 
                 if (SIE_MODE( i_regs ))
-                    ON_IC_INTERRUPT( i_regs->guestregs );
+                    ON_IC_INTERRUPT( GUEST( i_regs ));
             }
         }
     }
@@ -285,15 +241,16 @@ static inline void synchronize_cpus( REGS* regs, const char* location )
     if (n && mask)
     {
         sysblk.sync_mask = mask;
-        sysblk.syncing   = 1;
+        sysblk.syncing   = true;
+
         sysblk.intowner  = LOCK_OWNER_NONE;
+        {
+            hthread_wait_condition( &sysblk.all_synced_cond, &sysblk.intlock, location );
+        }
+        sysblk.intowner  = HOSTREGS->cpuad;
 
-        hthread_wait_condition( &sysblk.sync_cond, &sysblk.intlock, location );
-
-        sysblk.intowner  = (regs)->hostregs->cpuad;
-        sysblk.syncing   = 0;
-
-        hthread_broadcast_condition( &sysblk.sync_bc_cond, location );
+        sysblk.syncing   = false;
+        hthread_broadcast_condition( &sysblk.sync_done_cond, location );
     }
     /* All active processors other than self, are now waiting at their
      * respective sync point. We may now safely proceed doing whatever
@@ -384,23 +341,33 @@ static inline void wakeup_cpus_mask( CPU_BITMAP mask, const char* location )
 #define OBTAIN_INTLOCK(r)       Obtain_Interrupt_Lock( r, PTT_LOC )
 #define RELEASE_INTLOCK(r)      Release_Interrupt_Lock( r, PTT_LOC )
 #define TRY_OBTAIN_INTLOCK(r)   Try_Obtain_Interrupt_Lock( r, PTT_LOC )
+#define IS_INTLOCK_HELD(r)      (sysblk.intowner == (r)->cpuad)
 
 static inline void Interrupt_Lock_Obtained( REGS* regs, const char* location )
 {
     if (regs)
     {
+        /* Wait for any SYNCHRONIZE_CPUS to finish before proceeding */
         while (sysblk.syncing)
         {
-            sysblk.sync_mask &= ~regs->hostregs->cpubit;
+            /* Indicate we have reached the sync point */
+            sysblk.sync_mask &= ~HOSTREGS->cpubit;
 
+            /* If we're the last CPU to reach this sync point,
+               signal the CPU that requested the sync that it
+               may now safely proceed with its exclusive logic.
+            */
             if (!sysblk.sync_mask)
-                hthread_signal_condition( &sysblk.sync_cond, location );
+                hthread_signal_condition( &sysblk.all_synced_cond, location );
 
-            hthread_wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock, location );
+            /* Wait for CPU that requested the sync to indicate
+               it's done and thus is now safe for us to proceed.
+            */
+            hthread_wait_condition( &sysblk.sync_done_cond, &sysblk.intlock, location );
         }
 
-        regs->hostregs->intwait = 0;
-        sysblk.intowner = regs->hostregs->cpuad;
+        HOSTREGS->intwait = false;
+        sysblk.intowner = HOSTREGS->cpuad;
     }
     else
         sysblk.intowner = LOCK_OWNER_OTHER;
@@ -411,7 +378,7 @@ static inline void Interrupt_Lock_Obtained( REGS* regs, const char* location )
 static inline void Obtain_Interrupt_Lock( REGS* regs, const char* location )
 {
     if (regs)
-        regs->hostregs->intwait = 1;
+        HOSTREGS->intwait = true;
     hthread_obtain_lock( &sysblk.intlock, location );
     Interrupt_Lock_Obtained( regs, location );
 }
@@ -422,9 +389,11 @@ static inline int Try_Obtain_Interrupt_Lock( REGS* regs, const char* location )
 {
     int rc;
     if (regs)
-        regs->hostregs->intwait = 1;
+        HOSTREGS->intwait = true;
     if ((rc = hthread_try_obtain_lock( &sysblk.intlock, location )) == 0)
         Interrupt_Lock_Obtained( regs, location );
+    else if (regs)
+        HOSTREGS->intwait = false;
     return rc;
 }
 
@@ -438,25 +407,42 @@ static inline void Release_Interrupt_Lock( REGS* regs, const char* location )
 }
 
 /*-------------------------------------------------------------------*/
-/*              Update SYSBLK Instruction Count                      */
+/*           Atomically update 32-bit/64-bit value                   */
 /*-------------------------------------------------------------------*/
-
-#define UPDATE_SYSBLK_INSTCOUNT( _count ) \
-    Update_SYSBLK_instcount(     _count )
-
-static inline void Update_SYSBLK_instcount( int count )
+static inline void atomic_update32( volatile S32* p, S32 count )
 {
-    /* Update system-wide sysblk.instcount instruction counter */
 #if defined( _MSVC_ )
-    InterlockedExchangeAdd64( &sysblk.instcount, count );
+    InterlockedExchangeAdd( p, count );
 #else // GCC (and CLANG?)
   #if defined( HAVE_SYNC_BUILTINS )
-    __sync_fetch_and_add( &sysblk.instcount, count );
+    __sync_fetch_and_add( p, count );
   #else
-    sysblk.instcount += count;  /* (N.B. non-atomic!) */
+    *p += count;  /* (N.B. non-atomic!) */
   #endif
 #endif
 }
+static inline void atomic_update64( volatile S64* p, S64 count )
+{
+#if defined( _MSVC_ )
+    InterlockedExchangeAdd64( p, count );
+#else // GCC (and CLANG?)
+  #if defined( HAVE_SYNC_BUILTINS )
+    __sync_fetch_and_add( p, count );
+  #else
+    *p += count;  /* (N.B. non-atomic!) */
+  #endif
+#endif
+}
+#if !defined( _MSVC_ ) && !defined( HAVE_SYNC_BUILTINS )
+  WARNING( "Missing atomic 32/64 bit increment support!" )
+#endif
+
+/*-------------------------------------------------------------------*/
+/*           Atomically update SYSBLK Instruction Counter            */
+/*-------------------------------------------------------------------*/
+
+#define UPDATE_SYSBLK_INSTCOUNT( _count ) \
+        atomic_update64( &sysblk.instcount, (_count) )
 
 /*-------------------------------------------------------------------*/
 /* Stop ALL CPUs                                      (INTLOCK held) */
@@ -465,21 +451,46 @@ static inline void stop_all_cpus_intlock_held()
 {
     CPU_BITMAP  mask;
     REGS*       regs;
-    int         i;
+    int         cpu;
 
-    for (i=0, mask = sysblk.started_mask; mask; i++, mask >>= 1)
+    mask = sysblk.started_mask & sysblk.config_mask;
+
+    for (cpu=0; mask; cpu++)
     {
-        if (mask & 1)
+        if (mask & 1)   // (configured and started?)
         {
-            regs = sysblk.regs[i];
-
+            regs = sysblk.regs[ cpu ];
             regs->opinterv = 1;
             regs->cpustate = CPUSTATE_STOPPING;
-
             ON_IC_INTERRUPT( regs );
-
             signal_condition( &regs->intcond );
         }
+         mask >>= 1;
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* Start ALL CPUs                                     (INTLOCK held) */
+/*-------------------------------------------------------------------*/
+static inline void start_all_cpus_intlock_held()
+{
+    CPU_BITMAP  mask;
+    REGS*       regs;
+    int         cpu;
+
+    mask = (~sysblk.started_mask) & sysblk.config_mask;
+
+    for (cpu=0; mask; cpu++)
+    {
+        if (mask & 1)   // (configured but not started?)
+        {
+            regs = sysblk.regs[ cpu ];
+            regs->opinterv = 0;
+            regs->cpustate = CPUSTATE_STARTED;
+            ON_IC_INTERRUPT( regs );
+            signal_condition( &regs->intcond );
+        }
+        mask >>= 1;
     }
 }
 
@@ -551,6 +562,18 @@ static inline void stop_all_cpus()
     OBTAIN_INTLOCK( NULL );
     {
         stop_all_cpus_intlock_held();
+    }
+    RELEASE_INTLOCK( NULL );
+}
+
+/*-------------------------------------------------------------------*/
+/* Start ALL CPUs                                 (INTLOCK not held) */
+/*-------------------------------------------------------------------*/
+static inline void start_all_cpus()
+{
+    OBTAIN_INTLOCK( NULL );
+    {
+        start_all_cpus_intlock_held();
     }
     RELEASE_INTLOCK( NULL );
 }

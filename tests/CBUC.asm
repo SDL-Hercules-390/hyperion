@@ -24,8 +24,6 @@
 *  This test attempts to detect any discrepancy in this area.
 *
 ***********************************************************************
-                                                                SPACE
-***********************************************************************
 *
 *                       Example test scripts
 *
@@ -41,6 +39,7 @@
 * script      "$(testpath)/CBUC.subtst"  &     # ('&' = async thread!)
 * runtest     300                              # (subtst will stop it)
 * *Done
+* numcpu 1
 *
 *                          (CBUC.subtst)
 *
@@ -161,27 +160,34 @@ BEGIN2   LA    R2,1                     Second CPU number
          STH   R4,X'1AE'                Update restart PSW
          SIGP  R0,R2,X'06'              Restart second CPU
          BNZ   SIG2FAIL                 WTF?! (SIGP failed!)
-*        B     READER                   Enter our own work loop
-                                                                SPACE 6
+                                                                SPACE
+         STCKF BEGCLOCK                 Get entry TOD
+         NC    BEGCLOCK,=X'FFFFFFFFC0000000'  (0.25 seconds)
+                                                                SPACE
+WAITLOOP STCKF NOWCLOCK                 Get current TOD
+         NC    NOWCLOCK,=X'FFFFFFFFC0000000'  (0.25 seconds)
+         CLC   NOWCLOCK,BEGCLOCK        Has 0.25 seconds passed yet?
+         BE    WAITLOOP                 Not yet. Keep waiting.
+                                                                SPACE 5
 READER   L     R0,RDCOUNT               R0 <== loop count
 READLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
-         BNE   GOODEOJ                  Yes, then do so.
+         BNE   STOPTEST                 Yes, then do so.
                                                                 SPACE
          MVC   WORK,READDEST            Grab copy of test value
                                                                 SPACE
          CLC   WORK,PATTERN1            Is it all the first pattern?
          BNE   READ2                    No, check if second pattern
          BCT   R0,READLOOP              Otherwise keep looping...
-         B     GOODEOJ                  Done!
+         B     STOPTEST                 Done!
                                                                 SPACE
 READ2    CLC   WORK,PATTERN2            Is it all the second pattern?
-         BNE   FAILEOJ                  No?! Then *FAIL* immediately!
+         BNE   FAILTEST                 No?! Then *FAIL* immediately!
          BCT   R0,READLOOP              Otherwise keep looping...
-         B     GOODEOJ                  Done!
+         B     STOPTEST                 Done!
                                                                 EJECT
 WRITER   L     R0,WRCOUNT               R0 <== loop count
 WRITLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
-         BNE   GOODEOJ                  Yes, then do so.
+         BNE   STOPTEST                 Yes, then do so.
 
          TM    OPTFLAG,OPTMVC
          BZ             NOMVC1
@@ -230,16 +236,22 @@ NOMVCL2  EQU   *
 NOMVCLE2 EQU   *
                                                                 SPACE
          BCT   R0,WRITLOOP              Otherwise keep looping...
-         B     GOODEOJ                  Done.
+         B     STOPTEST                 Done.
                                                                 EJECT
 ***********************************************************************
 *                            PSWs
 ***********************************************************************
                                                                 SPACE 3
-GOODEOJ  MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+FAILFLAG DC       X'00'                 X'FF' == test has failed
+                                                                SPACE
+STOPTEST CLI      FAILFLAG,X'00'        Should test end normally?
+         BNE      FAILTEST              No! Test has failed!
+                                                                SPACE
+         MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
          DWAITEND LOAD=YES              Normal completion
                                                                 SPACE 4
-FAILEOJ  MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+FAILTEST MVI      FAILFLAG,X'FF'        Indicate test has failed!
+         MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
          DWAIT    LOAD=YES,CODE=BAD     Abnormal termination
                                                                 SPACE 4
 SIG1FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
@@ -264,6 +276,9 @@ WRITDEST DS    0CL16                    Writer thread destination
          DC    CL3'AAA'
 READDEST DC    CL8'BBBBBBBB'            MUST be doubleword ALIGNED!
          DC    CL5'AAAAA'
+                                                                SPACE
+BEGCLOCK DC    D'0'                     CPU 0 entry TOD
+NOWCLOCK DC    D'0'                     CPU 0 start TOD
                                                                 SPACE 4
          ORG   CBUC+X'500'              Fixed address of 'stop' flag
                                                                 SPACE
@@ -272,7 +287,7 @@ PATTERN1 DC    CL16'AAAAAAAAAAAAAAAA'   Should be unaligned
          DC    XL2'0000'
 PATTERN2 DC    CL16'BBBBBBBBBBBBBBBB'   Should also be unaligned
                                                                 SPACE 4
-         ORG   CBUC+X'600'              Fixed address of 'stop' flag
+         ORG   CBUC+X'600'              Fixed address of 'option' flag
                                                                 SPACE
 OPTMVC   EQU   X'80'                    Use 'MVC'   in write loop
 OPTMVCL  EQU   X'40'                    Use 'MVCL'  in write loop

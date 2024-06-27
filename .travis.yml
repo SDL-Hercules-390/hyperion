@@ -1,52 +1,87 @@
-os: linux
-dist: trusty
 language: c
+
 #
 jobs:
   include:
-    - name: "Ub 14.04 -- gcc 4.8.4"
-      dist: trusty
+    - name: "Ubuntu 18.04 -- gcc 7.5.0"
+      os: linux
+      dist: bionic
       env: MATRIX_EVAL="CC=gcc"
 
-    - name: "Ub 14.04 -- gcc 6.5.0"
-      dist: trusty
-      compiler: gcc
-      addons:
-        apt:
-          sources:  ubuntu-toolchain-r-test
-          packages: g++-6
-
-    - name: "Ub 14.04 -- gcc 7.4.0"
-      dist: trusty
-      compiler: gcc
-      addons:
-        apt:
-          sources:  ubuntu-toolchain-r-test
-          packages: g++-7
-
-    - name: "Ub 14.04 -- clang 5.0.0"
-      dist: trusty
+    - name: "Ubuntu 18.04 -- Clang 7.0.0"
+      os: linux
+      dist: bionic
       env: MATRIX_EVAL="CC=clang"
 
-    - name: "Ub 16.04 -- gcc 5.4.0"
-      dist: xenial
+    - name: "Ubuntu 20.04 -- gcc 9.3.0"
+      os: linux
+      dist: focal
       env: MATRIX_EVAL="CC=gcc"
 
-    - name: "Ub 16.04 -- clang 7.0.0"
-      dist: xenial
+#   - name: "Ubuntu 20.04 -- Clang 11"
+#     os: linux
+#     dist: focal
+#     env: MATRIX_EVAL="CC=clang-11"
+
+    - name: "macOS XCode 12.5 -- clang" # macOS 11.3
+      os: osx
+      osx_image: xcode12.5
       env: MATRIX_EVAL="CC=clang"
+
+    - name: "macOS XCode 12.5 -- gcc" # macOS 11.3
+      os: osx
+      osx_image: xcode12.5
+      env: MATRIX_EVAL="CC=gcc"
+
+    - name: "macOS XCode 11.6 -- clang" # macOS 10.15.5
+      os: osx
+      osx_image: xcode11.6
+      env: MATRIX_EVAL="CC=clang"
+
+    - name: "macOS XCode 11.6 -- gcc" # macOS 10.15.5
+      os: osx
+      osx_image: xcode11.6
+      env: MATRIX_EVAL="CC=gcc"
+
+    - name: "macOS XCode 10.3 -- clang" # macOS 10.14.4
+      os: osx
+      osx_image: xcode10.3
+      env: MATRIX_EVAL="CC=clang"
+    
+    - name: "macOS XCode 10.3 -- gcc" # macOS 10.14.4
+      os: osx
+      osx_image: xcode10.3
+      env: MATRIX_EVAL="CC=gcc"
+
+    - name: "macOS XCode 9.4 -- clang" # macOS 10.13
+      os: osx
+      osx_image: xcode9.4
+      env: MATRIX_EVAL="CC=clang"
+
+    - name: "macOS XCode 9.4 -- gcc" # macOS 10.13
+      os: osx
+      osx_image: xcode9.4
+      env: MATRIX_EVAL="CC=gcc"
 
 #
 before_install:
-  - sudo apt-get install -y regina-rexx libregina3-dev
-  - sudo apt-get install -y binutils binutils-dev
+  - echo $TRAVIS_OS_NAME
   - eval "${MATRIX_EVAL}"
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo $TRAVIS_DIST                                 ; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -y regina-rexx libregina3-dev; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -y binutils binutils-dev     ; fi
+# - 'if [ "$TRAVIS_DIST"   = "focal" ]; then sudo apt install -y clang-11; fi'
 
 #
 before_script:
+  - eval "${MATRIX_EVAL}"
+  - bash -c '${CC} --version'
   - util/bldlvlck
   - ./autogen.sh
-  - ./configure --enable-regina-rexx
+  - mkdir build
+  - cd build
+  - ../configure --enable-regina-rexx
+  - ./config.status --config
   - bash -c '${CC} --version'
 
 #

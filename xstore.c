@@ -37,15 +37,17 @@ U32     xaddr;                          /* Expanded storage block#   */
 size_t  xoffs;                          /* Byte offset into xpndstor */
 
     RRE(inst, regs, r1, r2);
+    PER_ZEROADDR_CHECK( regs, r1 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
-    if(SIE_STATB(regs, IC3, PGX))
+    if(SIE_STATE_BIT_ON(regs, IC3, PGX))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Cannot perform xstore page movement in XC mode */
-    if(SIE_STATB(regs, MX, XC))
+    if(SIE_STATE_BIT_ON(regs, MX, XC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -102,15 +104,17 @@ U32     xaddr;                          /* Expanded storage block#   */
 size_t  xoffs;                          /* Byte offset into xpndstor */
 
     RRE(inst, regs, r1, r2);
+    PER_ZEROADDR_CHECK( regs, r1 );
 
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
-    if(SIE_STATB(regs, IC3, PGX))
+    if(SIE_STATE_BIT_ON(regs, IC3, PGX))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Cannot perform xstore page movement in XC mode */
-    if(SIE_STATB(regs, MX, XC))
+    if(SIE_STATE_BIT_ON(regs, MX, XC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -154,38 +158,39 @@ size_t  xoffs;                          /* Byte offset into xpndstor */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
 
-#if defined(FEATURE_MOVE_PAGE_FACILITY_2) && defined(FEATURE_EXPANDED_STORAGE)
+#if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && defined( FEATURE_EXPANDED_STORAGE )
 /*-------------------------------------------------------------------*/
 /* B259 IESBE - Invalidate Expanded Storage Block Entry        [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(invalidate_expanded_storage_block_entry)
+DEF_INST( invalidate_expanded_storage_block_entry )
 {
-int     r1, r2;                         /* Values of R fields        */
+int     r1, r2;                         /* Operand register numbers  */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
-    PRIV_CHECK(regs);
+    TXF_INSTR_CHECK( regs );
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_SIE)
-    if(SIE_STATNB(regs, EC0, MVPG))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#if defined( _FEATURE_SIE )
+    if (SIE_STATE_BIT_OFF( regs, EC0, MVPG ))
+        SIE_INTERCEPT( regs );
+#endif
 
-    /* Perform serialization before operation */
-    PERFORM_SERIALIZATION (regs);
-    OBTAIN_INTLOCK(regs);
-    SYNCHRONIZE_CPUS(regs);
+    PERFORM_SERIALIZATION( regs );
+    {
+        OBTAIN_INTLOCK( regs );
+        {
+            SYNCHRONIZE_CPUS( regs );
 
-    /* Invalidate page table entry */
-    ARCH_DEP(invalidate_pte) (inst[1], regs->GR_G(r1), regs->GR_L(r2), regs);
+            /* Invalidate page table entry */
+            ARCH_DEP( invalidate_pte )( inst[1], regs->GR_G( r1 ), regs->GR( r2 ), regs, false );
+        }
+        RELEASE_INTLOCK( regs );
+    }
+    PERFORM_SERIALIZATION( regs );
 
-    RELEASE_INTLOCK(regs);
-
-    /* Perform serialization after operation */
-    PERFORM_SERIALIZATION (regs);
-
-} /* end DEF_INST(invalidate_expanded_storage_block_entry) */
-#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
+} /* end DEF_INST( invalidate_expanded_storage_block_entry ) */
+#endif /* defined( FEATURE_EXPANDED_STORAGE ) */
 
 
 #if defined(_MSVC_)
@@ -216,9 +221,11 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
     RRE(inst, regs, r1, r2);
+    PER_ZEROADDR_CHECK2( regs, r1, r2 );
+    TXF_INSTR_CHECK( regs );
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATNB(regs, EC0, MVPG))
+    if(SIE_STATE_BIT_OFF(regs, EC0, MVPG))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -226,10 +233,10 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     akey1 = akey2 = regs->psw.pkey;
 
     /* If register 0 bit 20 or 21 is one, get access key from R0 */
-    if (regs->GR_L(0) & 0x00000C00)
+    if (regs->GR_L(0) & (GR0_MVPG_FIRST | GR0_MVPG_SECOND))
     {
         /* Extract the access key from register 0 bits 24-27 */
-        akey = regs->GR_L(0) & 0x000000F0;
+        akey = regs->GR_L(0) & GR0_MVPG_KEY;
 
         /* Priviliged operation exception if in problem state, and
            the specified key is not permitted by the PSW key mask */
@@ -238,18 +245,19 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             regs->program_interrupt (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
         /* If register 0 bit 20 is one, use R0 key for operand 1 */
-        if (regs->GR_L(0) & 0x00000800)
+        if (regs->GR_L(0) & GR0_MVPG_FIRST)
             akey1 = akey;
 
         /* If register 0 bit 21 is one, use R0 key for operand 2 */
-        if (regs->GR_L(0) & 0x00000400)
+        if (regs->GR_L(0) & GR0_MVPG_SECOND)
             akey2 = akey;
     }
 
     /* Specification exception if register 0 bits 16-19 are
        not all zero, or if bits 20 and 21 are both ones */
-    if ((regs->GR_L(0) & 0x0000F000) != 0
-        || (regs->GR_L(0) & 0x00000C00) == 0x00000C00)
+    if ((regs->GR_L(0) & GR0_MVPG_RSRVD) != 0
+        || (regs->GR_L(0) & (GR0_MVPG_FIRST | GR0_MVPG_SECOND))
+                         == (GR0_MVPG_FIRST | GR0_MVPG_SECOND))
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Determine the logical addresses of each operand */
@@ -283,20 +291,19 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(_FEATURE_SIE)
         if(SIE_MODE(regs)  && !regs->sie_pref)
         {
-
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
-                (SIE_STATB(regs, MX, XC) && AR_BIT(&regs->psw) && r2 > 0)
-                ? r2 : USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+                (SIE_STATE_BIT_ON(regs, MX, XC) && AR_BIT(&regs->psw) && r2 > 0)
+                ? r2 : USE_PRIMARY_SPACE, HOSTREGS, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
-                    USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+                    USE_PRIMARY_SPACE, HOSTREGS, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
+                (HOSTREGS->program_interrupt) (HOSTREGS, HOSTREGS->dat.xcode);
 
             /* Convert host real address to host absolute address */
-            raddr2 = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
-        }
+            raddr2 = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
+        } /* SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -320,7 +327,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                         cc = 2;
                         goto mvpg_progck;
                     }
-                }
+                } /* SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
 
                 rc = 0;
@@ -340,7 +347,6 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 /*DEBUG logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X, xpblk2 = %5.5X, akey2 = %2.2X\n",
                   pte2,xpkey2,xpblk2,akey2);  */
-
             }
             else
             {
@@ -382,17 +388,17 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         {
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
-                (SIE_STATB(regs, MX, XC) && AR_BIT(&regs->psw) && r1 > 0)
-                ? r1 : USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+                (SIE_STATE_BIT_ON(regs, MX, XC) && AR_BIT(&regs->psw) && r1 > 0)
+                ? r1 : USE_PRIMARY_SPACE, HOSTREGS, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
-                    USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+                    USE_PRIMARY_SPACE, HOSTREGS, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
+                (HOSTREGS->program_interrupt) (HOSTREGS, HOSTREGS->dat.xcode);
 
             /* Convert host real address to host absolute address */
-            raddr1 = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
-        }
+            raddr1 = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
+        } /* SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -448,9 +454,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Program check if operand not valid in main or expanded */
         if (rc)
         {
-        cc = 1;
+            cc = 1;
             goto mvpg_progck;
-    }
+        }
 
         /* Program check if page protection or access-list controlled
            protection applies to the first operand */
@@ -464,13 +470,13 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     } /* end if(!REAL_MODE) */
 
 #if defined(FEATURE_EXPANDED_STORAGE)
-    /* Program check if both operands are in expanded storage, or
-       if first operand is in expanded storage and the destination
-       reference intention (register 0 bit 22) is set to one, or
-       if first operand is in expanded storage and pte lock bit on, or
-       if first operand is in expanded storage and frame invalid */
+    /* Program check if both operands are in expanded storage,
+       or if first operand is in expanded storage and the Destination
+       Reference Intention (DRI) bit (register 0 bit 22) is set to one,
+       or if first operand is in expanded storage and PTE lock bit on,
+       or if first operand is in expanded storage and frame invalid */
     if ((xpvalid1 && xpvalid2)
-        || (xpvalid1 && (regs->GR_L(0) & 0x00000200))
+        || (xpvalid1 && (regs->GR_L(0) & GR0_MVPG_DRI))
         || (xpvalid1 && (pte1 & PAGETAB_PGLOCK))
         || (xpvalid1 && (xpblk1 >= sysblk.xpndsize)))
     {
@@ -509,7 +515,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     {
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
-        main1 = MADDRL (vaddr1, 4096, r1, regs, ACCTYPE_WRITE_SKP, akey1);
+        main1 = MADDRL (vaddr1, _4K, r1, regs, ACCTYPE_WRITE_SKP, akey1);
         sk1 = regs->dat.storkey;
     }
 
@@ -539,11 +545,10 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     if (xpvalid2)
     {
         /* Set the main storage reference and change bits */
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
 
         /* Set Expanded Storage reference bit in the PTE */
         STORE_W(regs->mainstor + raddr2, pte2 | PAGETAB_ESREF);
-
 
         /* Move 4K bytes from expanded storage to main storage */
         memcpy (main1,
@@ -564,7 +569,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Set the main storage reference and change bits */
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
 
         /* Move 4K bytes from main storage to main storage */
         memcpy (main1, main2, XSTORE_PAGESIZE);
@@ -578,9 +583,9 @@ mvpg_progck:
 
     PTT_ERR("*MVPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
-    /* If page translation exception (PTE invalid) and condition code
-        option in register 0 bit 23 is set, return condition code */
-    if ((regs->GR_L(0) & 0x00000100)
+    /* If page translation exception (PTE invalid) and Condition Code
+        Option (CCO) bit (register 0 bit 23) is set, return condition code */
+    if ((regs->GR_L(0) & GR0_MVPG_CCO)
         && regs->dat.xcode == PGM_PAGE_TRANSLATION_EXCEPTION
         && rc == 2)
     {

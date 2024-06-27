@@ -63,9 +63,9 @@
 /*-------------------------------------------------------------------*/
 
 #ifndef _WIN32_WINNT                    /* NON-MAKEFILE build?       */
-#define _WIN32_WINNT    WINNT_VISTA     /* Windows Vista             */
-#define  WINVER         WINNT_VISTA     /* Windows Vista             */
-#define _WIN32_IE       IE_VISTA        /* Windows Vista             */
+#define _WIN32_WINNT    WINNT_WIN7      /* Windows 7                 */
+#define  WINVER         WINNT_WIN7      /* Windows 7                 */
+#define _WIN32_IE       IE_IE110        /* Internet Explorer 11.0    */
 #include <SDKDDKVer.h>                  /* then need this header.    */
 #endif
 

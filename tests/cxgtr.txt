@@ -9,15 +9,15 @@ r 208=41100340     # LA R1,TEST1       R1=>Test data table
 r 20C=E33010000004 # LG R3,0(,R1)      Load R3=TESTn
 r 212=B2BD0314     # LFAS FPCREG       Load value into FPC register
 r 216=B3F90043     # CXGTR F4,R3       Convert FPR 4,6 from TESTn R3
-r 21A=B3EB01C4     # CSXTR R12,F4,1    Convert to PACKED R12,R13 from FPR 4,6  
+r 21A=B3EB01C4     # CSXTR R12,F4,1    Convert to PACKED R12,R13 from FPR 4,6
 r 21E=B3F10073     # CDGTR F7,R3       Convert FPR 7 from TESTn R3
-r 222=B3E301F7     # CSDTR R15,F7,1    Convert to PACKED R15 from FPR 7  
+r 222=B3E301F7     # CSDTR R15,F7,1    Convert to PACKED R15 from FPR 7
 r 226=41101008     # LA R1,8(,R1)      R1=>Next TESTn
 r 22A=4600020C     # BCT R0,LOOP       Loop to end of table
 r 22E=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
+r 314=00000000     # FPCREG            Floating point control register
 r 340=0000000000001000 # TEST1 DC G'4096'
 r 348=FFFFFFFFFFFFFFFE # TEST2 DC G'-2'
 r 350=7FFFFFFFFFFFFFFF # TEST3 DC G'9223372036854775807'

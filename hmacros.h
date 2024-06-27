@@ -1,4 +1,3 @@
-
 /* HMACROS.H    (C) Copyright Roger Bowler, 1999-2012                */
 /*               Hercules macros...                                  */
 /*                                                                   */
@@ -43,6 +42,15 @@
 /*         Round a value 'x' up to the next 'b' boundary             */
 /*-------------------------------------------------------------------*/
 #define ROUND_UP(x,b)       ((x)?((((x)+((b)-1))/(b))*(b)):(b))
+
+/*-------------------------------------------------------------------*/
+/*         Ensure start-end range stays within limits                */
+/*-------------------------------------------------------------------*/
+#define LIMIT_RANGE( _start, _end, _limit )                           \
+    do {                                                              \
+        if ((_end) > (_limit) && ((_end) - (_limit) + 1) > (_start))  \
+            (_end) = ((_start) + (_limit) - 1);                       \
+    } while(0)
 
 /*-------------------------------------------------------------------*/
 /*      Define min/max macros                                        */
@@ -389,26 +397,38 @@ typedef int CMPFUNC(const void*, const void*);
 #define IS_CPU_ONLINE(_cpu) \
   (sysblk.regs[(_cpu)] != NULL)
 
+#define HOST(  _regs )  (_regs)->hostregs
+#define GUEST( _regs )  (_regs)->guestregs
+
+#define HOSTREGS        HOST(  regs )   // 'regs' presumed
+#define GUESTREGS       GUEST( regs )   // 'regs' presumed
+
 /* Instruction count for a CPU */
 #define INSTCOUNT(_regs) \
- ((_regs)->hostregs->prevcount + (_regs)->hostregs->instcount)
+ (HOST(_regs)->prevcount + HOST(_regs)->instcount)
 
 /*-------------------------------------------------------------------*/
-/*      Obtain/Release mainlock                                      */
-/*      mainlock is only obtained by a CPU thread                    */
+/*                  Obtain/Release mainlock                          */
+/*-------------------------------------------------------------------*/
+/*  mainlock is only obtained by a CPU thread. PROGRAMMING NOTE:     */
+/*  The below #defines for OBTAIN_MAINLOCK and RELEASE_MAINLOCK      */
+/*  MIGHT be overridden/nullified by machdep.h if atomic assists     */
+/*  are available, since normally, that is the only reason for       */
+/*  needing to obtain mainlock in the first place: because you       */
+/*  need to do something atomically (e.g. need to do cmpxchg).       */
 /*-------------------------------------------------------------------*/
 
 #define OBTAIN_MAINLOCK_UNCONDITIONAL(_regs) \
  do { \
-  if ((_regs)->hostregs->cpubit != (_regs)->sysblk->started_mask) { \
+  if (HOST(_regs)->cpubit != (_regs)->sysblk->started_mask) { \
    obtain_lock(&(_regs)->sysblk->mainlock); \
-   (_regs)->sysblk->mainowner = regs->hostregs->cpuad; \
+   (_regs)->sysblk->mainowner = HOST(_regs)->cpuad; \
   } \
  } while (0)
 
 #define RELEASE_MAINLOCK_UNCONDITIONAL(_regs) \
  do { \
-   if ((_regs)->sysblk->mainowner == (_regs)->hostregs->cpuad) { \
+   if ((_regs)->sysblk->mainowner == HOST(_regs)->cpuad) { \
      (_regs)->sysblk->mainowner = LOCK_OWNER_NONE; \
      release_lock(&(_regs)->sysblk->mainlock); \
    } \
@@ -426,9 +446,23 @@ typedef int CMPFUNC(const void*, const void*);
 #define RELEASE_CRWLOCK()   release_lock( &sysblk.crwlock )
 
 /*-------------------------------------------------------------------*/
-/* Returns when all other CPU threads are blocked on intlock         */
+/*      Obtain/Release lock helper macros                            */
+/*      used mostly by channel.c                                     */
 /*-------------------------------------------------------------------*/
-#define AT_SYNCPOINT(_regs) ((_regs)->intwait)
+
+#define OBTAIN_IOQLOCK()          obtain_lock(  &sysblk.ioqlock )
+#define RELEASE_IOQLOCK()         release_lock( &sysblk.ioqlock )
+
+#define OBTAIN_IOINTQLK()         obtain_lock(  &sysblk.iointqlk )
+#define RELEASE_IOINTQLK()        release_lock( &sysblk.iointqlk )
+
+#define OBTAIN_DEVLOCK( dev )     obtain_lock(  &dev->lock )
+#define RELEASE_DEVLOCK( dev )    release_lock( &dev->lock )
+
+/*-------------------------------------------------------------------*/
+/* Return whether specified CPU is waiting to acquire intlock or not */
+/*-------------------------------------------------------------------*/
+#define AT_SYNCPOINT(_regs) (HOST(_regs)->intwait)
 
 /*-------------------------------------------------------------------*/
 /*      Macro to check if DEVBLK is for an existing device           */
@@ -441,6 +475,16 @@ typedef int CMPFUNC(const void*, const void*);
   #define IS_DEV(_dev) \
     ((_dev)->allocated && ((_dev)->pmcw.flag5 & PMCW5_V))
 #endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+
+#define INTEGRATED_CONS_FD              INT_MAX
+
+#define IS_INTEGRATED_CONS( _dev )          \
+    (1                                      \
+     && !(_dev)->console                    \
+     && (_dev)->connected                   \
+     && (_dev)->fd == INTEGRATED_CONS_FD    \
+     && strlen( (_dev)->filename ) > 0      \
+    )
 
 /*-------------------------------------------------------------------*/
 /*      HDL macro to call optional function override                 */
@@ -576,8 +620,8 @@ typedef int CMPFUNC(const void*, const void*);
           {                                                                         \
               VERIFY( getresuid( &sysblk.ruid, &sysblk.euid, &sysblk.suid ) == 0 ); \
               VERIFY( getresgid( &sysblk.rgid, &sysblk.egid, &sysblk.sgid ) == 0 ); \
-              VERIFY( setresuid(  sysblk.ruid,  sysblk.ruid,  sysblk.euid ) == 0 ); \
               VERIFY( setresgid(  sysblk.rgid,  sysblk.rgid,  sysblk.egid ) == 0 ); \
+              VERIFY( setresuid(  sysblk.ruid,  sysblk.ruid,  sysblk.euid ) == 0 ); \
           }                                                                         \
           while(0)
 
@@ -604,8 +648,8 @@ typedef int CMPFUNC(const void*, const void*);
                                                                                     \
           do                                                                        \
           {                                                                         \
-              VERIFY( setresuid( sysblk.ruid, sysblk.ruid, sysblk.ruid ) == 0 );    \
               VERIFY( setresgid( sysblk.rgid, sysblk.rgid, sysblk.rgid ) == 0 );    \
+              VERIFY( setresuid( sysblk.ruid, sysblk.ruid, sysblk.ruid ) == 0 );    \
           }                                                                         \
           while(0)
 
@@ -620,8 +664,8 @@ typedef int CMPFUNC(const void*, const void*);
               sysblk.rgid = getgid();                               \
               sysblk.egid = getegid();                              \
                                                                     \
-              VERIFY( setreuid( sysblk.euid, sysblk.ruid ) == 0 );  \
               VERIFY( setregid( sysblk.egid, sysblk.rgid ) == 0 );  \
+              VERIFY( setreuid( sysblk.euid, sysblk.ruid ) == 0 );  \
           }                                                         \
           while(0)
 
@@ -630,8 +674,8 @@ typedef int CMPFUNC(const void*, const void*);
                                                                     \
           do                                                        \
           {                                                         \
-              VERIFY( setreuid( sysblk.ruid, sysblk.euid ) == 0 );  \
               VERIFY( setregid( sysblk.rgid, sysblk.egid ) == 0 );  \
+              VERIFY( setreuid( sysblk.ruid, sysblk.euid ) == 0 );  \
           }                                                         \
           while(0)
 
@@ -650,8 +694,8 @@ typedef int CMPFUNC(const void*, const void*);
                                                                     \
           do                                                        \
           {                                                         \
-              VERIFY( setuid( sysblk.ruid ) == 0 );                 \
               VERIFY( setgid( sysblk.rgid ) == 0 );                 \
+              VERIFY( setuid( sysblk.ruid ) == 0 );                 \
           }                                                         \
           while(0)
 

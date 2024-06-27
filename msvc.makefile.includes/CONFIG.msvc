@@ -4,8 +4,7 @@
 # (C) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
 #
-#  Set NODEBUG flag appropriately before !INCLUDEing <win32.mak>
-#  and determine target processor type.
+#  Determine target processor and build type.
 #
 # ***************************************************************************
 

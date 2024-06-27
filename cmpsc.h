@@ -75,7 +75,7 @@ extern U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand  ))( CMPSCBLK* pCMPSCBLK );
 extern U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Compress))( CMPSCBLK* pCMPSCBLK );
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our's is the master header so we automatically #include all of our other
+// Ours is the master header so we automatically #include all of our other
 // headers too so all modules just need to #include ours and not any others.
 
 #include "cmpscbit.h"       // (Bit Extraction Macros)

@@ -1,4 +1,5 @@
 /* FEATCHK.H    (C) Copyright Jan Jaeger, 2000-2012                  */
+/*              (C) and others 2013-2023                             */
 /*              Feature definition consistency checks                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -355,6 +356,10 @@
  #define    _FEATURE_080_DFP_PACK_CONV_FACILITY
 #endif
 
+#if defined( FEATURE_081_PPA_IN_ORDER_FACILITY )
+ #define    _FEATURE_081_PPA_IN_ORDER_FACILITY
+#endif
+
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
  #define    _FEATURE_129_ZVECTOR_FACILITY
 #endif
@@ -365,6 +370,10 @@
 
 #if defined( FEATURE_131_SIDE_EFFECT_ACCESS_FACILITY )
  #define    _FEATURE_131_SIDE_EFFECT_ACCESS_FACILITY
+#endif
+
+#if defined( FEATURE_131_ENH_SUPP_ON_PROT_2_FACILITY )
+ #define    _FEATURE_131_ENH_SUPP_ON_PROT_2_FACILITY
 #endif
 
 #if defined( FEATURE_133_GUARDED_STORAGE_FACILITY )
@@ -411,6 +420,10 @@
  #define    _FEATURE_149_MOVEPAGE_SETKEY_FACILITY
 #endif
 
+#if defined( FEATURE_150_ENH_SORT_FACILITY )
+ #define    _FEATURE_150_ENH_SORT_FACILITY
+#endif
+
 #if defined( FEATURE_151_DEFLATE_CONV_FACILITY )
  #define    _FEATURE_151_DEFLATE_CONV_FACILITY
 #endif
@@ -423,8 +436,44 @@
  #define    _FEATURE_155_MSA_EXTENSION_FACILITY_9
 #endif
 
+#if defined( FEATURE_158_ULTRAV_CALL_FACILITY )
+ #define    _FEATURE_158_ULTRAV_CALL_FACILITY
+#endif
+
+#if defined( FEATURE_161_SEC_EXE_UNPK_FACILITY )
+ #define    _FEATURE_161_SEC_EXE_UNPK_FACILITY
+#endif
+
+#if defined( FEATURE_165_NNET_ASSIST_FACILITY )
+ #define    _FEATURE_165_NNET_ASSIST_FACILITY
+#endif
+
 #if defined( FEATURE_168_ESA390_COMPAT_MODE_FACILITY )
  #define    _FEATURE_168_ESA390_COMPAT_MODE_FACILITY
+#endif
+
+#if defined( FEATURE_169_SKEY_REMOVAL_FACILITY )
+ #define    _FEATURE_169_SKEY_REMOVAL_FACILITY
+#endif
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
+ #define    _FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY
+#endif
+
+#if defined( FEATURE_193_BEAR_ENH_FACILITY )
+ #define    _FEATURE_193_BEAR_ENH_FACILITY
+#endif
+
+#if defined( FEATURE_194_RESET_DAT_PROT_FACILITY )
+ #define    _FEATURE_194_RESET_DAT_PROT_FACILITY
+#endif
+
+#if defined( FEATURE_196_PROC_ACT_FACILITY )
+ #define    _FEATURE_196_PROC_ACT_FACILITY
+#endif
+
+#if defined( FEATURE_197_PROC_ACT_EXT_1_FACILITY )
+ #define    _FEATURE_197_PROC_ACT_EXT_1_FACILITY
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -433,6 +482,26 @@
 
 #if defined( FEATURE_2K_STORAGE_KEYS )
  #define    _FEATURE_2K_STORAGE_KEYS
+#endif
+
+#if defined( FEATURE_4K_STORAGE_KEYS )
+ #define    _FEATURE_4K_STORAGE_KEYS
+#endif
+
+#if defined( FEATURE_ADDRESS_LIMIT_CHECKING )
+ #define    _FEATURE_ADDRESS_LIMIT_CHECKING
+#endif
+
+#if defined( FEATURE_BASIC_STORAGE_KEYS )
+ #define    _FEATURE_BASIC_STORAGE_KEYS
+#endif
+
+#if defined( FEATURE_CMPSC )
+ #define    _FEATURE_CMPSC
+#endif
+
+#if defined( FEATURE_EXTENDED_STORAGE_KEYS )
+ #define    _FEATURE_EXTENDED_STORAGE_KEYS
 #endif
 
 #if defined( FEATURE_370_EXTENSION )
@@ -519,6 +588,10 @@
  #define    _FEATURE_PER
 #endif
 
+#if defined( FEATURE_PER1 )
+ #define    _FEATURE_PER1
+#endif
+
 #if defined( FEATURE_PER2 )
  #define    _FEATURE_PER2
 #endif
@@ -527,8 +600,12 @@
  #define    _FEATURE_PER3
 #endif
 
-#if defined( FEATURE_PER ) && !defined( FEATURE_PER2 ) && !defined( FEATURE_PER3 )
- #define     FEATURE_PER1
+#if defined( FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY )
+ #define    _FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY
+#endif
+
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+ #define    _FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY
 #endif
 
 #if defined( FEATURE_QDIO_TDD )
@@ -575,6 +652,10 @@
  #define    _FEATURE_TCPIP_EXTENSION
 #endif
 
+#if defined( FEATURE_ZVM_ESSA )
+ #define    _FEATURE_ZVM_ESSA
+#endif
+
 /*-------------------------------------------------------------------*/
 /*                     PROGRAMMING NOTE                              */
 /*-------------------------------------------------------------------*/
@@ -585,12 +666,11 @@
 /* of code pertaining to SIE appears to be an exception to the rule. */
 /*-------------------------------------------------------------------*/
 
-#if defined(   FEATURE_INTERPRETIVE_EXECUTION )
-
-  #define     _FEATURE_SIE    // (370/390 SIE)
+#if defined(   FEATURE_SIE )
+  #define     _FEATURE_SIE    // (370/390/900 SIE)
 
   #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    #define   _FEATURE_ZSIE   // (z/Arch SIE)
+    #define   _FEATURE_ZSIE   // (900 SIE)
   #endif
 
   #if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL )
@@ -601,43 +681,6 @@
     #define   _FEATURE_STORAGE_KEY_ASSIST
   #endif
 
-#endif
-
-/*-------------------------------------------------------------------*/
-
-#undef  _VSTORE_C_STATIC
-#define _VSTORE_C_STATIC            static inline
-
-#undef  _VFETCH_C_STATIC
-#define _VFETCH_C_STATIC            static inline
-
-#undef  _VSTORE_FULL_C_STATIC
-#define _VSTORE_FULL_C_STATIC       static
-
-/*-------------------------------------------------------------------*/
-/*        Memory accessing and dynamic translation #defines          */
-/*-------------------------------------------------------------------*/
-/* Ordinarily #defines related to DLL_IMPORT, DLL_EXPORT and extern  */
-/* are performed within the 'hexterns.h' header in coordination with */
-/* the source member and loadable module itself (see e.g. hsccmd.c   */
-/* _HSCCMD_C_ and _HENGINE_DLL_ handshaking with hexterns.h header). */
-/* Since guest memory accessing and dynamic address translation are  */
-/* common to across ALL build architectures however (and we wish to  */
-/* declare such functions 'static inline' for speed, which requires  */
-/* that they all be declared identically across all architectures),  */
-/* it's easier and more reliable to do the #defines here instead.    */
-/*-------------------------------------------------------------------*/
-
-#undef     _LOGICAL_C_STATIC
-
-#ifndef    _DAT_C
- #ifndef   _HENGINE_DLL_
-  #define  _LOGICAL_C_STATIC        DLL_IMPORT
- #else
-  #define  _LOGICAL_C_STATIC        extern
- #endif
-#else
- #define   _LOGICAL_C_STATIC        DLL_EXPORT
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -782,7 +825,7 @@
 /*                   Facility-bit FEATUREs                           */
 /*-------------------------------------------------------------------*/
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_INTERPRETIVE_EXECUTION ) \
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_SIE ) \
 && !defined( _FEATURE_SIE )
  #error z/Arch SIE requires ESA/390 SIE too
 #endif
@@ -838,12 +881,26 @@
  #error FEATURE_033_CSS_FACILITY_2 requires FEATURE_032_CSS_FACILITY
 #endif
 
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY ) && !defined( FEATURE_BINARY_FLOATING_POINT )
+ #error Floating point extensions facility requires Binary floating point support
+#endif
+
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY ) && !defined( FEATURE_042_DFP_FACILITY )
  #error Floating point extensions facility requires Decimal floating point facility
 #endif
 
-#if defined( FEATURE_037_FP_EXTENSION_FACILITY ) && !defined( FEATURE_BINARY_FLOATING_POINT )
- #error Floating point extensions facility requires Binary floating point support
+#if (defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY   ) ||       \
+     defined( FEATURE_041_DFP_ROUNDING_FACILITY      ) ||       \
+     defined( FEATURE_041_FPR_GR_TRANSFER_FACILITY   ) ||       \
+     defined( FEATURE_041_FPS_SIGN_HANDLING_FACILITY ) ||       \
+     defined( FEATURE_041_IEEE_EXCEPT_SIM_FACILITY   ))         \
+ && (                                                           \
+    !defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY   ) ||       \
+    !defined( FEATURE_041_DFP_ROUNDING_FACILITY      ) ||       \
+    !defined( FEATURE_041_FPR_GR_TRANSFER_FACILITY   ) ||       \
+    !defined( FEATURE_041_FPS_SIGN_HANDLING_FACILITY ) ||       \
+    !defined( FEATURE_041_IEEE_EXCEPT_SIM_FACILITY   ))
+ #error ALL "FEATURE_041..." features must either be ALL defined or ALL not defined
 #endif
 
 #if defined( FEATURE_042_DFP_FACILITY ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
@@ -854,24 +911,60 @@
  #error DFP has high performance requires Decimal floating point facility
 #endif
 
+#if (defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY    ) ||    \
+     defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY      ) ||    \
+     defined( FEATURE_045_HIGH_WORD_FACILITY            ) ||    \
+     defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) ||    \
+     defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 ) ||    \
+     defined( FEATURE_045_POPULATION_COUNT_FACILITY     ))      \
+ && (                                                           \
+    !defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY    ) ||    \
+    !defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY      ) ||    \
+    !defined( FEATURE_045_HIGH_WORD_FACILITY            ) ||    \
+    !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) ||    \
+    !defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 ) ||    \
+    !defined( FEATURE_045_POPULATION_COUNT_FACILITY     ))
+ #error ALL "FEATURE_045..." features must either be ALL defined or ALL not defined
+#endif
+
 #if defined( FEATURE_048_DFP_ZONE_CONV_FACILITY ) && !defined( FEATURE_042_DFP_FACILITY )
  #error Decimal-floating-point Zoned-conversion facility requires Decimal floating point facility
+#endif
+
+#if (defined( FEATURE_049_EXECUTION_HINT_FACILITY   ) ||        \
+     defined( FEATURE_049_LOAD_AND_TRAP_FACILITY    ) ||        \
+     defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY ) ||        \
+     defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 ))          \
+ && (                                                           \
+    !defined( FEATURE_049_EXECUTION_HINT_FACILITY   ) ||        \
+    !defined( FEATURE_049_LOAD_AND_TRAP_FACILITY    ) ||        \
+    !defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY ) ||        \
+    !defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 ))
+ #error ALL "FEATURE_049..." features must either be ALL defined or ALL not defined
 #endif
 
 #if defined( FEATURE_050_CONSTR_TRANSACT_FACILITY ) && !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
  #error Constrained-transactional-execution facility requires Transactional-execution facility
 #endif
 
+#if (defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 ) ||    \
+     defined( FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY  ))      \
+ && (                                                           \
+    !defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 ) ||    \
+    !defined( FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY  ))
+ #error ALL "FEATURE_053..." features must either be ALL defined or ALL not defined
+#endif
+
 #if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) && !defined( FEATURE_045_POPULATION_COUNT_FACILITY )
  #error Miscellaneous-Instruction-Extensions Facility 3 requires Population-Count facility
 #endif
 
-#if defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) && !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
- #error CPU Measurement Counter facility requires Load Program Parameter facility
-#endif
-
 #if defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY ) && !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
  #error CPU Measurement Sampling facility requires Load Program Parameter facility
+#endif
+
+#if defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY ) && !defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY )
+ #error CPU Measurement Sampling facility requires CPU Measurement Counter facility
 #endif
 
 #if  defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && !defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY )
@@ -890,12 +983,28 @@
  #error You cannot have "Message Security Assist extension 4" without having "Message Security Assist extension 3"
 #endif
 
+#if defined( FEATURE_078_ENHANCED_DAT_FACILITY_2 ) && !defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
+ #error FEATURE_078_ENHANCED_DAT_FACILITY_2 requires FEATURE_008_ENHANCED_DAT_FACILITY_1
+#endif
+
 #if defined( FEATURE_080_DFP_PACK_CONV_FACILITY ) && !defined( FEATURE_042_DFP_FACILITY )
  #error Decimal-floating-point Packed-conversion facility requires Decimal floating point facility
 #endif
 
+#if defined( FEATURE_081_PPA_IN_ORDER_FACILITY ) && !defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY )
+ #error FEATURE_081_PPA_IN_ORDER_FACILITY requires FEATURE_049_PROCESSOR_ASSIST_FACILITY
+#endif
+
 #if defined( FEATURE_129_ZVECTOR_FACILITY ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
  #error z/Arch Vector facility only valid for z/Arch mode
+#endif
+
+#if (defined( FEATURE_131_SIDE_EFFECT_ACCESS_FACILITY ) ||      \
+     defined( FEATURE_131_ENH_SUPP_ON_PROT_2_FACILITY ))        \
+ && (                                                           \
+    !defined( FEATURE_131_SIDE_EFFECT_ACCESS_FACILITY ) ||      \
+    !defined( FEATURE_131_ENH_SUPP_ON_PROT_2_FACILITY ))
+ #error ALL "FEATURE_131..." features must either be ALL defined or ALL not defined
 #endif
 
 #if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) && !defined( FEATURE_129_ZVECTOR_FACILITY )
@@ -941,6 +1050,34 @@
  #error FEATURE_155_MSA_EXTENSION_FACILITY_9 requires both FEATURE_076_MSA_EXTENSION_FACILITY_3 and FEATURE_077_MSA_EXTENSION_FACILITY_4
 #endif
 
+#if defined( FEATURE_165_NNET_ASSIST_FACILITY ) && !defined( FEATURE_129_ZVECTOR_FACILITY )
+ #error Neural-Network-Processing-Assist Facility requires z/Architecture Vector Facility
+#endif
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) && !defined( FEATURE_129_ZVECTOR_FACILITY )
+ #error Vector-Packed-Decimal-Enhancement Facility 2 requires z/Architecture Vector Facility
+#endif
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) && !defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
+ #error Vector-Packed-Decimal-Enhancement Facility 2 requires Vector Packed-Decimal Facility
+#endif
+
+#if defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY ) && !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
+ #error Vector-Packed-Decimal-Enhancement Facility 2 requires Vector-Packed-Decimal-Enhancement Facility
+#endif
+
+#if defined( FEATURE_193_BEAR_ENH_FACILITY ) && !defined( FEATURE_PER3 )
+ #error BEAR-Enhancement Facility requires PER-3 Facility
+#endif
+
+#if defined( FEATURE_194_RESET_DAT_PROT_FACILITY ) && !defined( FEATURE_051_LOCAL_TLB_CLEARING_FACILITY )
+ #error Reset-DAT-Protection Facility requires Local-TLB-Clearing Facility
+#endif
+
+#if defined( FEATURE_197_PROC_ACT_EXT_1_FACILITY ) && !defined( FEATURE_196_PROC_ACT_FACILITY )
+ #error Processor-Activity-Instrumentation Extension 1 Facility requires Processor-Activity-Instrumentation Facility
+#endif
+
 /*-------------------------------------------------------------------*/
 /*                  Non-facility-bit FEATUREs                        */
 /*-------------------------------------------------------------------*/
@@ -948,6 +1085,10 @@
 #if (!defined( FEATURE_2K_STORAGE_KEYS ) && !defined( FEATURE_4K_STORAGE_KEYS ))
  || ( defined( FEATURE_2K_STORAGE_KEYS ) &&  defined( FEATURE_4K_STORAGE_KEYS ))
  #error Storage Keys must be either 2K or 4K
+#endif
+
+#if !defined( FEATURE_BASIC_STORAGE_KEYS ) && !defined( FEATURE_EXTENDED_STORAGE_KEYS )
+ #error FEATURE_BASIC_STORAGE_KEYS and/or FEATURE_EXTENDED_STORAGE_KEYS must be defined
 #endif
 
 #if defined( FEATURE_370_EXTENSION ) && !defined( OPTION_370_MODE )
@@ -1031,7 +1172,7 @@
  #error Move page facility cannot be defined with 2K Storage keys
 #endif
 
-#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_SIE )
  #error MCDS is only supported with SIE
 #endif
 
@@ -1055,11 +1196,19 @@
  #error FEATURE_PER1 cannot be defined if FEATURE_PER2 or FEATURE_PER3 is defined
 #endif
 
-#if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY ) && !defined( FEATURE_PER3 )
+ #error FEATURE_PER3 must be defined when using FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY
+#endif
+
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY ) && !defined( FEATURE_PER3 )
+ #error FEATURE_PER3 must be defined when using FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY
+#endif
+
+#if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL ) && !defined( FEATURE_SIE )
  #error Protection Interception Control is only supported with SIE
 #endif
 
-#if defined( FEATURE_REGION_RELOCATE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_REGION_RELOCATE ) && !defined( FEATURE_SIE )
  #error Region Relocate Facility only supported with SIE
 #endif
 
@@ -1079,7 +1228,7 @@
  #error SCSI IPL requires FEATURE_HARDWARE_LOADER
 #endif
 
-#if defined( FEATURE_STORAGE_KEY_ASSIST ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_STORAGE_KEY_ASSIST ) && !defined( FEATURE_SIE )
  #error Storage Key assist only supported with SIE
 #endif
 
@@ -1087,6 +1236,6 @@
  #error VM Standard Block I/O DIAGNOSE 0x250 requires FEATURE_EMULATE_VM
 #endif
 
-#endif /* !defined( FEATALL_CHECKALL ) */
+#endif /* !defined( FEATCHK_DO_DEFINES ) */
 
 /* end of FEATCHK.H */

@@ -12,9 +12,13 @@
 /*                   Facility Table typedefs                         */
 /*-------------------------------------------------------------------*/
 
-typedef bool FACMODCHK( bool enable, int bitno, int archnum,
-                        const char* action, const char* actioning,
-                        const char* target_facname );
+typedef bool FACMODCHK( bool         enable,
+                        int          bitno,
+                        int          archnum,
+                        const char*  action,
+                        const char*  actioning,
+                        const char*  opp_actioning,
+                        const char*  target_facname );
 
 typedef void FACUPDINS( int hdl_arch, bool enable );
 

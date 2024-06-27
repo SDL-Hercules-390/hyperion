@@ -115,6 +115,8 @@ static PARSER ptab[] = {
     {"debug", "%s"},
     {"trace", "%s"},
     {"bufsize", "%s"},
+    {"listen", "%s"},
+    {"connect", "%s"},
     {NULL, NULL}
 };
 
@@ -132,7 +134,9 @@ enum {
     TCPNJE_KW_RNODE,
     TCPNJE_KW_DEBUG,
     TCPNJE_KW_TRACE,
-    TCPNJE_KW_BUFSIZE
+    TCPNJE_KW_BUFSIZE,
+    TCPNJE_KW_LISTEN,
+    TCPNJE_KW_CONNECT
 } tcpnje_kw;
 
 static void logdump(char *txt, DEVBLK *dev, BYTE *bfr, size_t sz)
@@ -175,7 +179,7 @@ static void logdump(char *txt, DEVBLK *dev, BYTE *bfr, size_t sz)
         for(j = 0; (j < 16) && ((i + j) < sz); j++)
         {
             character = guest_to_host(bfr[i + j]);
-            if (!isprint(character)) character = '.';
+            if (!isprint((unsigned char)character)) character = '.';
             logmsg("%c", character);
         }
         logmsg("\n");
@@ -198,7 +202,7 @@ static char *guest_to_host_string(char *string, size_t length, const BYTE *ebcdi
 
         if (string[i] == ' ')
             string[i] = '\0';
-        else if (!isprint(string[i]))
+        else if (!isprint((unsigned char)string[i]))
             string[i] = '.';
     }
 
@@ -347,6 +351,7 @@ static int tcpnje_getaddr(in_addr_t *ia, char *txt)
 /*                 -5 -> bind() failed (no access to privileged port)*/
 /*                 -6 -> bind() failed (some other reason).          */
 /*                 -7 -> listen() failed.                            */
+/*                 >0 -> nothing done due to listen parm being zero  */
 /*-------------------------------------------------------------------*/
 static int tcpnje_listen(struct TCPNJE *tn)
 {
@@ -355,6 +360,8 @@ static int tcpnje_listen(struct TCPNJE *tn)
     int savederrno;
     int sockopt;                /* Used for setsocketoption          */
     int rc;                     /* return code from various rtns     */
+
+    if (!tn->listen) return(999);
 
     intmp.s_addr = tn->lhost;   /* To display ip addresses in msgs   */
 
@@ -472,6 +479,7 @@ static int tcpnje_listen(struct TCPNJE *tn)
 /* tcpnje_connout : make a tcp outgoing call                         */
 /* return values : 0 -> call succeeded or initiated                  */
 /*                <0 -> call failed                                  */
+/*                >0 -> nothing done due to connect parm being zero  */
 /*-------------------------------------------------------------------*/
 static int tcpnje_connout(struct TCPNJE *tn)
 {
@@ -480,16 +488,19 @@ static int tcpnje_connout(struct TCPNJE *tn)
     struct in_addr intmp;
     char lnodestring[9], rnodestring[9];
 
+    if (!tn->connect) return(999);
+
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = tn->rhost;
     sin.sin_port = htons(tn->rport);
 
     /* Are we randomly delaying to avoid colliding with other end's open attempts? */
-    if (tn->activeopendelay)
+    if (tn->activeopendelay && tn->listen)
     {
         DBGMSG(256, "HHCTN033I %4.4X:TCPNJE - delaying link %s - %s active open for %d attempt(s)\n",
                      tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                                  guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode), tn->activeopendelay);
+        if (tn->activeopendelay > 3) USLEEP(1000);
         tn->activeopendelay--;
 
         /* Pretend we failed to connect */
@@ -561,6 +572,7 @@ static int tcpnje_connout(struct TCPNJE *tn)
                 guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
         tn->state = TCPCONACT;
     }
+    disable_nagle(tn->afd);
     return(0);
 }
 /*-------------------------------------------------------------------*/
@@ -686,7 +698,11 @@ static int     tcpnje_initiate_userdial(struct TCPNJE *tn)
 /*-------------------------------------------------------------------*/
 static void tcpnje_wakeup(struct TCPNJE *tn, BYTE code)
 {
-    write_pipe(tn->pipe[1], &code, 1);
+    if (write_pipe( tn->pipe[1], &code, 1 ) < 0)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC04000, "W", "write_pipe", strerror( errno ));
+    }
 }
 /*-------------------------------------------------------------------*/
 /* TCPNJE close connection to remote link partner                    */
@@ -1156,7 +1172,9 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         tcpnje_ttc(tn->pfd, TCPNJE_NAK, 3, tn);
                         close_socket(tn->pfd);
                         tn->pfd = -1;
-                        if (tn->state == TCPCONPAS) tn->state = tn->listening ? TCPLISTEN : CLOSED;
+                        close_socket(tn->afd);
+                        tn->afd = -1;
+                        tn->state = tn->listening ? TCPLISTEN : CLOSED;
                         return;
                     }
 
@@ -1250,6 +1268,9 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tcpnje_ttc(tn->pfd, TCPNJE_NAK, 3, tn);
         close_socket(tn->pfd);
         tn->pfd = -1;
+        close_socket(tn->afd);
+        tn->afd = -1;
+        tn->state = tn->listening ? TCPLISTEN : CLOSED;
         return;
     }
 
@@ -1263,6 +1284,9 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tcpnje_ttc(tn->pfd, TCPNJE_NAK, 3, tn);
         close_socket(tn->pfd);
         tn->pfd = -1;
+        close_socket(tn->afd);
+        tn->afd = -1;
+        tn->state = tn->listening ? TCPLISTEN : CLOSED;
         return;
     }
 
@@ -1352,9 +1376,20 @@ static void tcpnje_process_reply(struct TNBUFFER *buffer, struct TCPNJE *tn)
 
             /* Only retry active open after randomish number of attempts */
             tn->activeopendelay = (timenow.tv_sec + timenow.tv_usec) & 3;
+
+            /* However, if we got bashed by a NAK 3, restart the listener and
+               give active connecting a good long pause */
+            if (buffer->base.ttc->r == 3)
+            {
+                tn->activeopendelay = 20;
+                close_socket(tn->lfd);
+                tn->lfd = -1;
+                tn->listening = 0;
+            }
         }
 
         close_socket(tn->afd);
+        tn->afd = -1;
         tn->state = tn->listening ? TCPLISTEN : CLOSED;
     }
     else
@@ -1389,7 +1424,7 @@ static void *tcpnje_thread(void *vtn)
     int maxfd;                  /* highest FD for select             */
     int tn_shutdown;            /* Thread shutdown internal flag     */
     int init_signaled;          /* Thread initialisation signaled    */
-    int TTBlength;              /* Length of TTB in host byte order  */
+    int TTBlength = 0;          /* Length of TTB in host byte order  */
     int eintrcount = 0;         /* Number of times EINTR occured     */
     int errorcount067 = 0;      /* Number of times HHCTN067E issued  */
     int errorcount100 = 0;      /* Number of times HHCTN100E issued  */
@@ -1421,8 +1456,9 @@ static void *tcpnje_thread(void *vtn)
     init_signaled = 0;
 
     DBGMSG(1, "HHCTN002I %4.4X:TCPNJE - networking thread "TIDPAT" started for link %s - %s\n",
-            devnum, thread_id(), guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
-                                 guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
+            devnum, TID_CAST(thread_id()),
+            guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
+            guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
 
     if (!init_signaled)
     {
@@ -1656,9 +1692,10 @@ static void *tcpnje_thread(void *vtn)
                             /* to prevent OSes from issuing a loop of WRITES       */
                             else
                             {
-                                DBGMSG(32, "HHCTN007W %4.4X:TCPNJE - outgoing connection for link %s - %s failed or deferred\n",
-                                        devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
-                                                guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
+                                if (rc != 999)
+                                    DBGMSG(32, "HHCTN007W %4.4X:TCPNJE - outgoing connection for link %s - %s failed or deferred\n",
+                                            devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
+                                                    guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
                                 seltv = tcpnje_setto(&tv, tn->cto);
                             }
                         }
@@ -1809,7 +1846,7 @@ static void *tcpnje_thread(void *vtn)
         if (selectcount == 0)
         {
             DBGMSG(512, "HHCTN127D %4.4X:TCPNJE - select() timeout after %ld seconds %ld microseconds\n",
-                        devnum, tvcopy.tv_sec, tvcopy.tv_usec);
+                        devnum, tvcopy.tv_sec, (long int)tvcopy.tv_usec);
 
             /* Reset Call issued flag */
             tn->callissued = 0;
@@ -2144,6 +2181,7 @@ static void *tcpnje_thread(void *vtn)
                 }
 
                 tn->pfd = tempfd;
+                disable_nagle(tn->pfd);
 
                 /* Don't mess up any existing connection in case this one is not for us or doesn't work out */
                 if (tn->state == TCPLISTEN) tn->state = TCPCONPAS;
@@ -2392,6 +2430,8 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         tn->trace = TCPNJE_DEFAULT_TRACE;      /* Trace level bitmask */
         tn->maxidlewrites = TCPNJE_DEFAULT_KEEPALIVE;
         dev->bufsize = TCPNJE_DEFAULT_BUFSIZE;
+        tn->listen = TCPNJE_DEFAULT_LISTEN;
+        tn->connect = TCPNJE_DEFAULT_CONNECT;
 
         for(i = 0; i < 8; i++)
         {
@@ -2545,7 +2585,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                     }
                     for(j = 0; j < strlen(res.text); j++)
                     {
-                        tn->lnode[j] = host_to_guest(toupper(res.text[j]));
+                        tn->lnode[j] = host_to_guest(toupper((unsigned char)res.text[j]));
                     }
                     break;
                 case TCPNJE_KW_RNODE:
@@ -2557,7 +2597,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                     }
                     for(j = 0; j < strlen(res.text); j++)
                     {
-                        tn->rnode[j] = host_to_guest(toupper(res.text[j]));
+                        tn->rnode[j] = host_to_guest(toupper((unsigned char)res.text[j]));
                     }
                     break;
                 case TCPNJE_KW_DEBUG:
@@ -2580,6 +2620,12 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                         break;
                     }
                     dev->bufsize = atoi(res.text);
+                    break;
+                case TCPNJE_KW_LISTEN:
+                    tn->listen = atoi(res.text);
+                    break;
+                case TCPNJE_KW_CONNECT:
+                    tn->connect = atoi(res.text);
                     break;
                 default:
                     break;
@@ -2773,7 +2819,11 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         initialize_condition(&tn->ipc_halt);
 
         /* Allocate I/O -> Thread signaling pipe */
-        create_pipe(tn->pipe);
+        if (create_pipe( tn->pipe ) < 0)
+        {
+            // "Error in function %s: %s"
+            WRMSG( HHC04000, "W", "create_pipe", strerror( errno ));
+        }
 
 #if !defined(HYPERION_DEVHND_FORMAT)
         /* Point to the halt routine for HDV/HIO/HSCH handling */
@@ -2797,7 +2847,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         /* Start the async worker thread */
 
         /* Set thread-name for debugging purposes */
-        snprintf(thread_name, sizeof(thread_name),
+        MSGBUF(thread_name,
                  "tcpnje %4.4X thread", dev->devnum);
         thread_name[sizeof(thread_name) - 1] = 0;
 
@@ -4195,6 +4245,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 /* I don't understand at all and can't test.             */
                 DBGMSG(1, "HHCTN098E %4.4X:TCPNJE - POLL operation is not supported by TCPNJE\n",
                         dev->devnum);
+                /* FALLTHRU */
 
         default:
         /*---------------------------------------------------------------*/
