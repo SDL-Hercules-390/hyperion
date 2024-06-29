@@ -2817,6 +2817,13 @@ DEF_INST( vector_find_element_not_equal )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_find_any_element_equal )
 {
+// Overkill to prevent erroneous "may be used uninitialized" warnings
+#if defined(__clang__)
+    #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
+#elif defined(__GNUC__)
+    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
     int     v1, v2, v3, m4, m5;
     int     i, j;
     BYTE    irt1[16], irt2[16];        // First and second intermediate results
