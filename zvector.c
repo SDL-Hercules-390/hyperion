@@ -2818,8 +2818,10 @@ DEF_INST( vector_find_element_not_equal )
 DEF_INST( vector_find_any_element_equal )
 {
     int     v1, v2, v3, m4, m5;
-    int     int1, ind1, ind2, max, i, j, s;
-    BYTE    inter1[16], inter2[16];
+    int     i, j;
+    BYTE    irt1[16], irt2[16];        // First and second intermediate results
+    int     lxt1, lxt2;                // Lowest indexed true
+    int     mxt;                       // Maximum indexed true
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -2833,16 +2835,14 @@ DEF_INST( vector_find_any_element_equal )
     switch (m4)
     {
     case 0:  // Byte
-
-
         for (i=0; i<16; i++)
         {
-            inter1[i] = inter2[i] = FALSE;
+            irt1[i] = irt2[i] = FALSE;
             for (j=0; j<16; j++)
             {
                 if (regs->VR_B(v2,i) == regs->VR_B(v3,j))
                 {
-                    inter1[i] = TRUE;
+                    irt1[i] = TRUE;
                     break;
                 }
             }
@@ -2850,19 +2850,19 @@ DEF_INST( vector_find_any_element_equal )
             {
                 if (regs->VR_B(v2,i) == 0)
                 {
-                    inter2[i] = TRUE;
+                    irt2[i] = TRUE;
                 }
             }
             if (M5_IN)                 // if M5_IN (Invert Result)
             {
-                inter1[i] ^= TRUE;
+                irt1[i] ^= TRUE;
             }
         }
         if (M5_RT)                     // if M5_RT (Result Type)
         {
             for (i=0; i<16; i++)
             {
-                if (inter1[i] == TRUE)
+                if (irt1[i] == TRUE)
                     regs->VR_B(v1,i) = 0xFF;
                 else
                     regs->VR_B(v1,i) = 0x00;
@@ -2870,31 +2870,27 @@ DEF_INST( vector_find_any_element_equal )
         }
         else                           // else !M5_RT
         {
-            ind1 = ind2 = 16;
+            lxt1 = lxt2 = 16;
             for (i=0; i<16; i++)
             {
-                if (inter1[i] == TRUE && ind1 == 16)
-                    ind1 = i;
-                if (inter2[i] == TRUE && ind2 == 16)
-                    ind2 = i;
+                if (irt1[i] == TRUE && lxt1 == 16)
+                    lxt1 = i;
+                if (irt2[i] == TRUE && lxt2 == 16)
+                    lxt2 = i;
             }
-            regs->VR_D(v1, 0) = min(ind1, ind2);
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
             regs->VR_D(v1, 1) = 0;
         }
-
-
         break;
     case 1:  // Halfword
-
-
         for (i=0; i<8; i++)
         {
-            inter1[i] = inter2[i] = FALSE;
+            irt1[i] = irt2[i] = FALSE;
             for (j=0; j<8; j++)
             {
                 if (regs->VR_H(v2,i) == regs->VR_H(v3,j))
                 {
-                    inter1[i] = TRUE;
+                    irt1[i] = TRUE;
                     break;
                 }
             }
@@ -2902,19 +2898,19 @@ DEF_INST( vector_find_any_element_equal )
             {
                 if (regs->VR_H(v2,i) == 0)
                 {
-                    inter2[i] = TRUE;
+                    irt2[i] = TRUE;
                 }
             }
             if (M5_IN)                 // if M5_IN (Invert Result)
             {
-                inter1[i] ^= TRUE;
+                irt1[i] ^= TRUE;
             }
         }
         if (M5_RT)                     // if M5_RT (Result Type)
         {
             for (j=0; j<8; j++)
             {
-                if (inter1[i] == TRUE)
+                if (irt1[i] == TRUE)
                     regs->VR_H(v1,i) = 0xFFFF;
                 else
                     regs->VR_H(v1,i) = 0x0000;
@@ -2922,31 +2918,27 @@ DEF_INST( vector_find_any_element_equal )
         }
         else                           // else !M5_RT
         {
-            ind1 = ind2 = 16;
+            lxt1 = lxt2 = 16;
             for (i=0; i<8; i++)
             {
-                if (inter1[i] == TRUE && ind1 == 16)
-                    ind1 = i * 2;
-                if (inter2[i] == TRUE && ind2 == 16)
-                    ind2 = i * 2;
+                if (irt1[i] == TRUE && lxt1 == 16)
+                    lxt1 = i * 2;
+                if (irt2[i] == TRUE && lxt2 == 16)
+                    lxt2 = i * 2;
             }
-            regs->VR_D(v1, 0) = min(ind1, ind2);
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
             regs->VR_D(v1, 1) = 0;
         }
-
-
         break;
     case 2:  // Word
-
-
         for (i=0; i<4; i++)
         {
-            inter1[i] = inter2[i] = FALSE;
+            irt1[i] = irt2[i] = FALSE;
             for (j=0; j<4; j++)
             {
                 if (regs->VR_F(v2,i) == regs->VR_F(v3,j))
                 {
-                    inter1[i] = TRUE;
+                    irt1[i] = TRUE;
                     break;
                 }
             }
@@ -2954,19 +2946,19 @@ DEF_INST( vector_find_any_element_equal )
             {
                 if (regs->VR_F(v2,i) == 0)
                 {
-                    inter2[i] = TRUE;
+                    irt2[i] = TRUE;
                 }
             }
             if (M5_IN)                 // if M5_IN (Invert Result)
             {
-                inter1[i] ^= TRUE;
+                irt1[i] ^= TRUE;
             }
         }
         if (M5_RT)                     // if M5_RT (Result Type)
         {
             for (j=0; j<4; j++)
             {
-                if (inter1[i] == TRUE)
+                if (irt1[i] == TRUE)
                     regs->VR_F(v1,i) = 0xFFFFFFFF;
                 else
                     regs->VR_F(v1,i) = 0x00000000;
@@ -2974,38 +2966,59 @@ DEF_INST( vector_find_any_element_equal )
         }
         else                           // else !M5_RT
         {
-            ind1 = ind2 = 16;
+            lxt1 = lxt2 = 16;
             for (i=0; i<4; i++)
             {
-                if (inter1[i] == TRUE && ind1 == 16)
-                    ind1 = i * 4;
-                if (inter2[i] == TRUE && ind2 == 16)
-                    ind2 = i * 4;
+                if (irt1[i] == TRUE && lxt1 == 16)
+                    lxt1 = i * 4;
+                if (irt2[i] == TRUE && lxt2 == 16)
+                    lxt2 = i * 4;
             }
-            regs->VR_D(v1, 0) = min(ind1, ind2);
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
             regs->VR_D(v1, 1) = 0;
         }
-
-
         break;
     default:
-        /* remove initialization warnings */
-        max = 0, int1 = 0;  ind1 = max, ind2 = ind1;
-
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
 
     if (M5_CS)                         // if M5_CS (Condition Code Set)
     {
-        if (M5_ZS && (ind1 >= ind2))
-            regs->psw.cc = 0;
-        else if ((ind1 < max) && !(M5_ZS && (ind2 == max)))
-            regs->psw.cc = 1;
-        else if (M5_ZS && (ind1 < max) && ind1 < ind2)
-            regs->psw.cc = 2;
-        else if ((ind1 == max) && (ind2 == max))
+        switch (m4)
+        {
+        case 0:  // Byte
+            lxt1 = lxt2 = mxt = 16;
+            break;
+        case 1:  // Halfword
+            lxt1 = lxt2 = mxt = 8;
+            break;
+        case 2:  // Word
+            lxt1 = lxt2 = mxt = 4;
+            break;
+        }
+
+        for (i = 0; i < mxt; i++)
+        {
+            if (irt1[i] == TRUE && lxt1 == mxt)
+                lxt1 = i;
+            if (M5_ZS)                 // if M5_ZS (Zero Search)
+            {
+                if (irt2[i] == TRUE && lxt2 == mxt)
+                    lxt2 = i;
+            }
+        }
+
+        // cc 1 and 3 are possible when M5_ZS is 0 or 1.
+        if (lxt1 == mxt && lxt2 == mxt)
             regs->psw.cc = 3;
+        else if (lxt1 < mxt && lxt2 == mxt )
+            regs->psw.cc = 1;
+        // cc 0 and 2 are only possible when M5_ZS is 1.
+        else if (lxt1 < lxt2)
+            regs->psw.cc = 2;
+        else
+            regs->psw.cc = 0;
     }
 
 #undef M5_IN
