@@ -5604,37 +5604,6 @@ DEF_INST( divide_integer_bfp_short_reg )
 
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
 
-/* ====================================================================== */
-/* TEMPORARY while zVector instructions are being developed */
-
-//  #if defined(__clang__)
-//      #pragma clang diagnostic ignored "-Wunused-variable"
-//      #pragma clang diagnostic ignored "-Wunused-but-set-variable"
-//      #pragma clang diagnostic ignored "-Wcomment"
-//      #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
-//      #pragma clang diagnostic ignored "-Wmacro-redefined"
-//  #elif defined(__GNUC__)
-//      #pragma GCC diagnostic ignored "-Wunused-variable"
-//      #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-//      #pragma GCC diagnostic ignored "-Wcomment"
-//      #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-//  #endif
-
-//  #undef ZVECTOR_CHECK
-
-//  #define ZVECTOR_CHECK(_regs)  /* (do nothing) */
-
-//  #undef ZVECTOR_END
-
-//  #define ZVECTOR_END(_regs)                                      \
-//              ARCH_DEP(display_inst) (_regs, inst);
-
-//  #define ZVECTOR_END(_regs)                                      \
-//          if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36)  \
-//              ARCH_DEP(display_inst) (_regs, inst);
-
-/* ====================================================================== */
-
 /*
  * z/Architecture Principles of Operation (SA22-7832-10 onwards)
  * Chapter 24. Vector Floating-Point Instructions
@@ -7002,6 +6971,9 @@ DEF_INST( vector_fp_load_lengthened )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m5 is not part of this instruction */
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
 #define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
@@ -7311,6 +7283,9 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m5 is not part of this instruction */
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
 #define M4_RE ((m4 & 0xF) != 0) // Reserved
@@ -7399,6 +7374,9 @@ DEF_INST( vector_fp_compare_scalar )
     BYTE    newcc = 3;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m5 is not part of this instruction */
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
@@ -7623,6 +7601,9 @@ DEF_INST( vector_fp_square_root )
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
+    /* m5 is not part of this instruction */
+    UNREFERENCED( m5 );
+
     ZVECTOR_CHECK( regs );
 
 #define M4_SE ((m4 & 0x8) != 0) // Single-Element-Control (S)
@@ -7742,6 +7723,9 @@ DEF_INST( vector_fp_subtract )
     U32     ieee_trap_conds = 0;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -7881,6 +7865,9 @@ DEF_INST( vector_fp_add )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
 #define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
@@ -8019,6 +8006,9 @@ DEF_INST( vector_fp_divide )
     U32     ieee_trap_conds = 0;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -8163,6 +8153,9 @@ DEF_INST( vector_fp_multiply )
     U32     ieee_trap_conds = 0;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -8880,8 +8873,8 @@ DEF_INST( vector_fp_compare_high )
 DEF_INST( vector_fp_minimum )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     i;
-    BYTE    newcc = 3;
+//      int     i;
+//      BYTE    newcc = 3;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -8891,110 +8884,119 @@ DEF_INST( vector_fp_minimum )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
-#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
-#define M5_RE ((m5 & 0x7) != 0) // Reserved
-
-    if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
-    {
-        if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
-            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
-    }
-    else
-        ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-
-    if ( m4 == 3 )  // Long format
-    {
-        float64_t   op2, op3;
-
-        for (i=0; i < 2; i++)
-        {
-            if (i == 0 || !M5_SE)
-            {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-
-                /* Todo: FixMe! Write some code that implements this instruction! */
+    /* Temporary! */
+    UNREFERENCED( v1 );
+    UNREFERENCED( v2 );
+    UNREFERENCED( v3 );
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
 
-                switch (m6)
-                {
-                case 0:   // IEEE MinNum
-                    break;
-                case 1:   // Java Math.Min()
-                    break;
-                case 2:   // C-Style Min Macro
-                    break;
-                case 3:   // C++ algorithm.min()
-                    break;
-                case 4:   // fmin()
-                    break;
-                case 8:   // IEEE MinNum of absolute values
-                    break;
-                case 9:   // Java Math.Min() of absolute values
-                    break;
-                case 10:  // C-Style Min Macro of absolute values
-                    break;
-                case 11:  // C++ algorithm.min() of absolute values
-                    break;
-                case 12:  // fmin() of absolute values
-                    break;
-                }
-
-
-                newcc = FLOAT64_COMPARE( op2, op3 );
-                if (newcc == 3)
-                {
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                }
-                /* Xi is only trap that suppresses result, no return */
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (newcc == 3)
-                {
-                    continue;
-                }
-                if (newcc == 2)  // op3 is Minimum
-                {
-                    VECTOR_PUT_FLOAT64_NOCC( op3, v1, i, regs );
-                }
-                else             // op2 is Minimum, or op2 and op3 are equal
-                {
-                    VECTOR_PUT_FLOAT64_NOCC( op2, v1, i, regs );
-                }
-
-
-            }
-        }
-    }
-    else if ( m4 == 2 )  // Short format
-    {
-        float32_t   op2, op3;
-
-        for (i=0; i < 4; i++)
-        {
-            if (i == 0 || !M5_SE)
-            {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-
-                /* Todo: FixMe! Write some code that implements this instruction! */
-
-            }
-        }
-    }
-    else if ( m4 == 4 )  // Extended format
-    {
-        float128_t  op2, op3;
-
-        VECTOR_GET_FLOAT128_OP( op3, v3, regs );
-        VECTOR_GET_FLOAT128_OP( op2, v2, regs );
-
-        /* Todo: FixMe! Write some code that implements this instruction! */
-
-    }
-
-#undef M5_SE
-#undef M5_RE
+//  #define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+//  #define M5_RE ((m5 & 0x7) != 0) // Reserved
+//
+//      if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
+//      {
+//          if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
+//              ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+//      }
+//      else
+//          ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
+//
+//      if ( m4 == 3 )  // Long format
+//      {
+//          float64_t   op2, op3;
+//
+//          for (i=0; i < 2; i++)
+//          {
+//              if (i == 0 || !M5_SE)
+//              {
+//                  VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+//                  VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+//
+//                  /* Todo: FixMe! Write some code that implements this instruction! */
+//
+//
+//                  switch (m6)
+//                  {
+//                  case 0:   // IEEE MinNum
+//                      break;
+//                  case 1:   // Java Math.Min()
+//                      break;
+//                  case 2:   // C-Style Min Macro
+//                      break;
+//                  case 3:   // C++ algorithm.min()
+//                      break;
+//                  case 4:   // fmin()
+//                      break;
+//                  case 8:   // IEEE MinNum of absolute values
+//                      break;
+//                  case 9:   // Java Math.Min() of absolute values
+//                      break;
+//                  case 10:  // C-Style Min Macro of absolute values
+//                      break;
+//                  case 11:  // C++ algorithm.min() of absolute values
+//                      break;
+//                  case 12:  // fmin() of absolute values
+//                      break;
+//                  }
+//
+//
+//                  newcc = FLOAT64_COMPARE( op2, op3 );
+//                  if (newcc == 3)
+//                  {
+//                      softfloat_exceptionFlags = softfloat_flag_invalid;
+//                  }
+//                  /* Xi is only trap that suppresses result, no return */
+//                  VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+//
+//                  if (newcc == 3)
+//                  {
+//                      continue;
+//                  }
+//                  if (newcc == 2)  // op3 is Minimum
+//                  {
+//                      VECTOR_PUT_FLOAT64_NOCC( op3, v1, i, regs );
+//                  }
+//                  else             // op2 is Minimum, or op2 and op3 are equal
+//                  {
+//                      VECTOR_PUT_FLOAT64_NOCC( op2, v1, i, regs );
+//                  }
+//
+//
+//              }
+//          }
+//      }
+//      else if ( m4 == 2 )  // Short format
+//      {
+//          float32_t   op2, op3;
+//
+//          for (i=0; i < 4; i++)
+//          {
+//              if (i == 0 || !M5_SE)
+//              {
+//                  VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+//                  VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+//
+//                  /* Todo: FixMe! Write some code that implements this instruction! */
+//
+//              }
+//          }
+//      }
+//      else if ( m4 == 4 )  // Extended format
+//      {
+//          float128_t  op2, op3;
+//
+//          VECTOR_GET_FLOAT128_OP( op3, v3, regs );
+//          VECTOR_GET_FLOAT128_OP( op2, v2, regs );
+//
+//          /* Todo: FixMe! Write some code that implements this instruction! */
+//
+//      }
+//
+//  #undef M5_SE
+//  #undef M5_RE
 
     ZVECTOR_END( regs );
 }
@@ -9013,7 +9015,7 @@ DEF_INST( vector_fp_minimum )
 DEF_INST( vector_fp_maximum )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     i;
+//      int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -9023,88 +9025,97 @@ DEF_INST( vector_fp_maximum )
     if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 
 
-#define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
-#define M5_RE ((m5 & 0x7) != 0) // Reserved
-
-    if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
-    {
-        if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
-            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
-    }
-    else
-        ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-
-    if ( m4 == 3 )  // Long format
-    {
-        float64_t   op2, op3;
-
-        for (i=0; i < 2; i++)
-        {
-            if (i == 0 || !M5_SE)
-            {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-
-                /* Todo: FixMe! Write some code that implements this instruction! */
+    /* Temporary! */
+    UNREFERENCED( v1 );
+    UNREFERENCED( v2 );
+    UNREFERENCED( v3 );
+    UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
+    UNREFERENCED( m6 );
 
 
-                switch (m6)
-                {
-                case 0:   // IEEE MaxNum
-                    break;
-                case 1:   // Java Math.Max()
-                    break;
-                case 2:   // C-Style Max Macro
-                    break;
-                case 3:   // C++ Algorithm.max()
-                    break;
-                case 4:   // fmax()
-                    break;
-                case 8:   // IEEE MaxNumMag
-                    break;
-                case 9:   // Java Math.Max() of absolute values
-                    break;
-                case 10:  // C-Style Max Macro of absolute values
-                    break;
-                case 11:  // C++ Algorithm.max() of absolute values
-                    break;
-                case 12:  // fmax() of absolute values
-                    break;
-                }
-
-
-            }
-        }
-    }
-    else if ( m4 == 2 )  // Short format
-    {
-        float32_t   op2, op3;
-
-        for (i=0; i < 4; i++)
-        {
-            if (i == 0 || !M5_SE)
-            {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-
-                /* Todo: FixMe! Write some code that implements this instruction! */
-
-            }
-        }
-    }
-    else if ( m4 == 4 )  // Extended format
-    {
-        float128_t  op2, op3;
-
-        VECTOR_GET_FLOAT128_OP( op3, v3, regs );
-        VECTOR_GET_FLOAT128_OP( op2, v2, regs );
-
-        /* Todo: FixMe! Write some code that implements this instruction! */
-
-    }
-
-#undef M5_SE
-#undef M5_RE
+//  #define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
+//  #define M5_RE ((m5 & 0x7) != 0) // Reserved
+//
+//      if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
+//      {
+//          if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
+//              ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+//      }
+//      else
+//          ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
+//
+//      if ( m4 == 3 )  // Long format
+//      {
+//          float64_t   op2, op3;
+//
+//          for (i=0; i < 2; i++)
+//          {
+//              if (i == 0 || !M5_SE)
+//              {
+//                  VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+//                  VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+//
+//                  /* Todo: FixMe! Write some code that implements this instruction! */
+//
+//
+//                  switch (m6)
+//                  {
+//                  case 0:   // IEEE MaxNum
+//                      break;
+//                  case 1:   // Java Math.Max()
+//                      break;
+//                  case 2:   // C-Style Max Macro
+//                      break;
+//                  case 3:   // C++ Algorithm.max()
+//                      break;
+//                  case 4:   // fmax()
+//                      break;
+//                  case 8:   // IEEE MaxNumMag
+//                      break;
+//                  case 9:   // Java Math.Max() of absolute values
+//                      break;
+//                  case 10:  // C-Style Max Macro of absolute values
+//                      break;
+//                  case 11:  // C++ Algorithm.max() of absolute values
+//                      break;
+//                  case 12:  // fmax() of absolute values
+//                      break;
+//                  }
+//
+//
+//              }
+//          }
+//      }
+//      else if ( m4 == 2 )  // Short format
+//      {
+//          float32_t   op2, op3;
+//
+//          for (i=0; i < 4; i++)
+//          {
+//              if (i == 0 || !M5_SE)
+//              {
+//                  VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+//                  VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+//
+//                  /* Todo: FixMe! Write some code that implements this instruction! */
+//
+//              }
+//          }
+//      }
+//      else if ( m4 == 4 )  // Extended format
+//      {
+//          float128_t  op2, op3;
+//
+//          VECTOR_GET_FLOAT128_OP( op3, v3, regs );
+//          VECTOR_GET_FLOAT128_OP( op2, v2, regs );
+//
+//          /* Todo: FixMe! Write some code that implements this instruction! */
+//
+//      }
+//
+//  #undef M5_SE
+//  #undef M5_RE
 
     ZVECTOR_END( regs );
 }
