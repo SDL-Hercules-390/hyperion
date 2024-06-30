@@ -2815,6 +2815,23 @@ DEF_INST( vector_find_element_not_equal )
 /*-------------------------------------------------------------------*/
 /* E782 VFAE   - Vector Find Any Element Equal               [VRR-b] */
 /*-------------------------------------------------------------------*/
+/* In PoP (SA22-7832-13), for VFAE & VFEE we can read:
+"Programming Notes:
+1. If the RT flag is zero, a byte index is always
+stored into the first operand for any element size.
+For example, if the specified element size is halfword
+and the 2nd indexed halfword compared
+equal, a byte index of 4 would be stored."
+
+But I think that 4 would be a 2.
+The 2nd Half = 1 (index byte) x 2 (length of H) = 2.
+
+After 35 years, I must say this is the first typo I found in POP.
+Sent to IBM, they will reformulate the sentence.
+
+salva - 2023, feb,27.
+*/
+
 DEF_INST( vector_find_any_element_equal )
 {
 // Overkill to prevent erroneous "may be used uninitialized" warnings
@@ -3376,7 +3393,7 @@ DEF_INST( vector_string_search )
         }
         else
         {
-            for ( ; ; k += char_size )
+            for ( ; k < 16 ; k += char_size )
             {
                 if ( memcmp(&v2_temp[k], &nulls, char_size) == 0 )
                 {
