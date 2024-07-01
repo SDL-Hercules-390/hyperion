@@ -4554,22 +4554,136 @@ DEF_INST( vector_galois_field_multiply_sum )
 {
     int     v1, v2, v3, m4, m5, m6;
 
+    int     i;
+    int     k;
+    U8      myerU8;
+    U16     myerU16, mcandU16;
+    U32     myerU32, mcandU32;
+    U64     myerU64, mcandU64;
+    U64     mcandU128h;
+    U64     mcandU128l;
+    U16     accu16[16];
+    U32     accu32[8];
+    U64     accu64[4];
+    U64     accu128h[2];
+    U64     accu128l[2];
+
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
-    /* Temporary prior to instruction implementation */
-    UNREFERENCED( v1 );
-    UNREFERENCED( v2 );
-    UNREFERENCED( v3 );
-    UNREFERENCED( m4 );
+    /* m5, m6 are not part of this instruction */
     UNREFERENCED( m5 );
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here          hard!
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m4)
+    {
+    case 0:         /* Byte */
+
+        for (i=0; i < 16; i++) {
+            /* galois multiply - no overflow */
+            accu16[i] = 0;
+            mcandU16 = (U16) regs->VR_B(v2, i);
+            myerU8  = regs->VR_B(v3, i);
+
+            for (k=0; k < 8 && myerU8 !=0; k++)
+            {
+                if ( myerU8 & 0x01 )
+                    accu16[i] ^= mcandU16;
+                myerU8  >>= 1;
+                mcandU16 <<=1;
+            }
+        }
+
+        /* sum even-odd pair */
+        for ( i=0, k=0; i < 8; i++, k += 2)
+        {
+            regs->VR_H( v1, i ) = accu16[k] ^ accu16[k+1];
+        }
+        break;
+
+    case 1:         /* Halfword */
+        for (i=0; i < 8; i++) {
+            /* galois multiply - no overflow */
+            accu32[i] = 0;
+            mcandU32 = (U32) regs->VR_H(v2, i);
+            myerU16  = regs->VR_H(v3, i);
+
+            for (k=0; k < 16 && myerU16 !=0; k++)
+            {
+                if ( myerU16 & 0x01 )
+                    accu32[i] ^= mcandU32;
+                myerU16  >>= 1;
+                mcandU32 <<=1;
+            }
+        }
+
+        /* sum even-odd pair */
+        for ( i=0, k=0; i < 4; i++, k += 2)
+        {
+            regs->VR_F( v1, i ) = accu32[k] ^ accu32[k+1];
+        }
+        break;
+
+    case 2:         /* Word */
+        for (i=0; i < 4; i++) {
+            /* galois multiply - no overflow */
+            accu64[i] = 0;
+            mcandU64 = (U64) regs->VR_F(v2, i);
+            myerU32  = regs->VR_F(v3, i);
+
+            for (k=0; k < 32 && myerU32 !=0; k++)
+            {
+                if ( myerU32 & 0x01 )
+                    accu64[i] ^= mcandU64;
+                myerU32  >>= 1;
+                mcandU64 <<=1;
+            }
+        }
+
+        /* sum even-odd pair */
+        for ( i=0, k=0; i < 2; i++, k += 2)
+        {
+            regs->VR_D( v1, i ) = accu64[k] ^ accu64[k+1];
+        }
+        break;
+
+    case 3:         /* Doubleword */
+        for (i=0; i < 2; i++) {
+            /* galois multiply - no overflow */
+            accu128h[i] = 0;
+            accu128l[i] = 0;
+            mcandU128h  = 0;
+            mcandU128l = (U64) regs->VR_D(v2, i);
+            myerU64  = regs->VR_D(v3, i);
+
+            for (k=0; k < 64 && myerU64 !=0; k++)
+            {
+                if ( myerU64 & 0x01 )
+                {
+                    accu128h[i] ^= mcandU128h;
+                    accu128l[i] ^= mcandU128l;
+                }
+                myerU64  >>= 1;
+
+                /* U128: shift left 1 bit*/
+                mcandU128h = (mcandU128h << 1) | (mcandU128l >> 63);
+                mcandU128l <<= 1;
+
+            }
+        }
+
+        /* sum even-odd pair */
+        regs->VR_D( v1, 0 ) = accu128h[0] ^ accu128h[1];
+        regs->VR_D( v1, 1 ) = accu128l[0] ^ accu128l[1];
+
+        break;
+
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
     ZVECTOR_END( regs );
 }
 
@@ -4658,22 +4772,136 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 {
     int     v1, v2, v3, v4, m5, m6;
 
+    int     i;
+    int     k;
+    U8      myerU8;
+    U16     myerU16, mcandU16;
+    U32     myerU32, mcandU32;
+    U64     myerU64, mcandU64;
+    U64     mcandU128h;
+    U64     mcandU128l;
+    U16     accu16[16];
+    U32     accu32[8];
+    U64     accu64[4];
+    U64     accu128h[2];
+    U64     accu128l[2];
+
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
-    /* Temporary prior to instruction implementation */
-    UNREFERENCED( v1 );
-    UNREFERENCED( v2 );
-    UNREFERENCED( v3 );
-    UNREFERENCED( v4 );
-    UNREFERENCED( m5 );
+    /* m6 is not part of this instruction */
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here          hard!
-    //
-    if (1) ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
-    //
+
+    switch (m5)
+    {
+    case 0:         /* Byte */
+
+        for (i=0; i < 16; i++) {
+            /* galois multiply - no overflow */
+            accu16[i] = 0;
+            mcandU16 = (U16) regs->VR_B(v2, i);
+            myerU8  = regs->VR_B(v3, i);
+
+            for (k=0; k < 8 && myerU8 !=0; k++)
+            {
+                if ( myerU8 & 0x01 )
+                    accu16[i] ^= mcandU16;
+                myerU8  >>= 1;
+                mcandU16 <<=1;
+            }
+        }
+
+        /* sum even-odd pair plus vector accumulate */
+        for ( i=0, k=0; i < 8; i++, k += 2)
+        {
+            regs->VR_H( v1, i ) = accu16[k] ^ accu16[k+1] ^ regs->VR_H( v4, i);
+        }
+        break;
+
+    case 1:         /* Halfword */
+        for (i=0; i < 8; i++) {
+            /* galois multiply - no overflow */
+            accu32[i] = 0;
+            mcandU32 = (U32) regs->VR_H(v2, i);
+            myerU16  = regs->VR_H(v3, i);
+
+            for (k=0; k < 16 && myerU16 !=0; k++)
+            {
+                if ( myerU16 & 0x01 )
+                    accu32[i] ^= mcandU32;
+                myerU16  >>= 1;
+                mcandU32 <<=1;
+            }
+        }
+
+        /* sum even-odd pair plus vector accumulate */
+        for ( i=0, k=0; i < 4; i++, k += 2)
+        {
+            regs->VR_F( v1, i ) = accu32[k] ^ accu32[k+1] ^ regs->VR_F( v4, i);
+        }
+        break;
+
+    case 2:         /* Word */
+        for (i=0; i < 4; i++) {
+            /* galois multiply - no overflow */
+            accu64[i] = 0;
+            mcandU64 = (U64) regs->VR_F(v2, i);
+            myerU32  = regs->VR_F(v3, i);
+
+            for (k=0; k < 32 && myerU32 !=0; k++)
+            {
+                if ( myerU32 & 0x01 )
+                    accu64[i] ^= mcandU64;
+                myerU32  >>= 1;
+                mcandU64 <<=1;
+            }
+        }
+
+        /* sum even-odd pair plus vector accumulate */
+        for ( i=0, k=0; i < 2; i++, k += 2)
+        {
+            regs->VR_D( v1, i ) = accu64[k] ^ accu64[k+1] ^ regs->VR_D( v4, i );
+        }
+        break;
+
+    case 3:         /* Doubleword */
+        for (i=0; i < 2; i++) {
+            /* galois multiply - no overflow */
+            accu128h[i] = 0;
+            accu128l[i] = 0;
+            mcandU128h  = 0;
+            mcandU128l = (U64) regs->VR_D(v2, i);
+            myerU64  = regs->VR_D(v3, i);
+
+            for (k=0; k < 64 && myerU64 !=0; k++)
+            {
+                if ( myerU64 & 0x01 )
+                {
+                    accu128h[i] ^= mcandU128h;
+                    accu128l[i] ^= mcandU128l;
+                }
+                myerU64  >>= 1;
+
+                /* U128: shift left 1 bit*/
+                mcandU128h = (mcandU128h << 1) | (mcandU128l >> 63);
+                mcandU128l <<= 1;
+
+            }
+        }
+
+        /* sum even-odd pair plus vector accumulate */
+        regs->VR_D( v1, 0 ) = accu128h[0] ^ accu128h[1] ^ regs->VR_D( v4, 0);
+        regs->VR_D( v1, 1 ) = accu128l[0] ^ accu128l[1] ^ regs->VR_D( v4, 1);
+
+        break;
+
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
+
     ZVECTOR_END( regs );
 }
 
