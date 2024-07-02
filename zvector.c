@@ -4554,19 +4554,25 @@ DEF_INST( vector_galois_field_multiply_sum )
 {
     int     v1, v2, v3, m4, m5, m6;
 
-    int     i;
-    int     k;
-    U8      myerU8;
-    U16     myerU16, mcandU16;
-    U32     myerU32, mcandU32;
-    U64     myerU64, mcandU64;
-    U64     mcandU128h;
-    U64     mcandU128l;
-    U16     accu16[16];
-    U32     accu32[8];
-    U64     accu64[4];
-    U64     accu128h[2];
-    U64     accu128l[2];
+    int     i, k;                 /* loop index                      */
+
+    U8      myerU8;               /* byte multiplier                 */
+    U16     mcandU16;             /* byte multiplicand               */
+    U16     accu16[16];           /* byte accumulator                */
+
+    U16     myerU16;              /* halfword multiplier             */
+    U32     mcandU32;             /* halfword multiplicand           */
+    U32     accu32[8];            /* halfword accumulator            */
+
+    U32     myerU32;              /* word multiplier                 */
+    U64     mcandU64;             /* word multiplicand               */
+    U64     accu64[4];            /* word accumulator                */
+
+    U64     myerU64;              /* doublewword multiplier          */
+    U64     mcandU128h;           /* doublewword multiplicand - high */
+    U64     mcandU128l;           /* doublewword multiplicand - low  */
+    U64     accu128h[2];          /* doublewword accumulator  - high */
+    U64     accu128l[2];          /* doublewword accumulator  - low  */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -4772,19 +4778,25 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 {
     int     v1, v2, v3, v4, m5, m6;
 
-    int     i;
-    int     k;
-    U8      myerU8;
-    U16     myerU16, mcandU16;
-    U32     myerU32, mcandU32;
-    U64     myerU64, mcandU64;
-    U64     mcandU128h;
-    U64     mcandU128l;
-    U16     accu16[16];
-    U32     accu32[8];
-    U64     accu64[4];
-    U64     accu128h[2];
-    U64     accu128l[2];
+    int     i, k;                 /* loop index                      */
+
+    U8      myerU8;               /* byte multiplier                 */
+    U16     mcandU16;             /* byte multiplicand               */
+    U16     accu16[16];           /* byte accumulator                */
+
+    U16     myerU16;              /* halfword multiplier             */
+    U32     mcandU32;             /* halfword multiplicand           */
+    U32     accu32[8];            /* halfword accumulator            */
+
+    U32     myerU32;              /* word multiplier                 */
+    U64     mcandU64;             /* word multiplicand               */
+    U64     accu64[4];            /* word accumulator                */
+
+    U64     myerU64;              /* doublewword multiplier          */
+    U64     mcandU128h;           /* doublewword multiplicand - high */
+    U64     mcandU128l;           /* doublewword multiplicand - low  */
+    U64     accu128h[2];          /* doublewword accumulator  - high */
+    U64     accu128l[2];          /* doublewword accumulator  - low  */;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
