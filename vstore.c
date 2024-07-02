@@ -22,6 +22,7 @@
 /*  vstore2      Store a two-byte integer into virtual storage       */
 /*  vstore4      Store a four-byte integer into virtual storage      */
 /*  vstore8      Store an eight-byte integer into virtual storage    */
+/*  vstore16     Store a sixteen-byte integer into virtual storage   */
 /*  vstorec      Store 1 to 256 characters into virtual storage      */
 /*                                                                   */
 /*  wstoreX      Address-wrapping version of the above               */
@@ -30,6 +31,7 @@
 /*  vfetch2      Fetch a two-byte integer from virtual storage       */
 /*  vfetch4      Fetch a four-byte integer from virtual storage      */
 /*  vfetch8      Fetch an eight-byte integer from virtual storage    */
+/*  vfetch16     Fetch a sixteen-byte integer from virtual storage   */
 /*  vfetchc      Fetch 1 to 256 characters from virtual storage      */
 /*                                                                   */
 /*  wfetchX      Address-wrapping version of the above               */
@@ -77,23 +79,27 @@
 // test for FEATURE_XXX. (WITHOUT the underscore)
 //-------------------------------------------------------------------
 
-extern inline void ARCH_DEP( vstore2_full )( U16 value, VADR addr, int arn, REGS* regs );
-extern inline void ARCH_DEP( vstore4_full )( U32 value, VADR addr, int arn, REGS* regs );
-extern inline void ARCH_DEP( vstore8_full )( U64 value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstore2_full  )( U16 value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstore4_full  )( U32 value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstore8_full  )( U64 value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstore16_full )( QW  value, VADR addr, int arn, REGS* regs );
 
-extern inline U16  ARCH_DEP( vfetch2_full )( VADR addr, int arn, REGS* regs );
-extern inline U32  ARCH_DEP( vfetch4_full )( VADR addr, int arn, REGS* regs );
-extern inline U64  ARCH_DEP( vfetch8_full )( VADR addr, int arn, REGS* regs );
+extern inline U16 ARCH_DEP( vfetch2_full  )( VADR addr, int arn, REGS* regs );
+extern inline U32 ARCH_DEP( vfetch4_full  )( VADR addr, int arn, REGS* regs );
+extern inline U64 ARCH_DEP( vfetch8_full  )( VADR addr, int arn, REGS* regs );
+extern inline QW  ARCH_DEP( vfetch16_full )( VADR addr, int arn, REGS* regs );
 
-extern inline void ARCH_DEP( vstoreb )( BYTE value, VADR addr, int arn, REGS* regs );
-extern inline void ARCH_DEP( vstore2 )( U16  value, VADR addr, int arn, REGS* regs );
-extern inline void ARCH_DEP( vstore4 )( U32  value, VADR addr, int arn, REGS* regs );
-extern inline void ARCH_DEP( vstore8 )( U64  value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstoreb  )( BYTE value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstore2  )( U16  value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstore4  )( U32  value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstore8  )( U64  value, VADR addr, int arn, REGS* regs );
+extern inline void ARCH_DEP( vstore16 )( QW   value, VADR addr, int arn, REGS* regs );
 
-extern inline BYTE ARCH_DEP( vfetchb )( VADR addr, int arn, REGS* regs );
-extern inline U16  ARCH_DEP( vfetch2 )( VADR addr, int arn, REGS* regs );
-extern inline U32  ARCH_DEP( vfetch4 )( VADR addr, int arn, REGS* regs );
-extern inline U64  ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs );
+extern inline BYTE ARCH_DEP( vfetchb  )( VADR addr, int arn, REGS* regs );
+extern inline U16  ARCH_DEP( vfetch2  )( VADR addr, int arn, REGS* regs );
+extern inline U32  ARCH_DEP( vfetch4  )( VADR addr, int arn, REGS* regs );
+extern inline U64  ARCH_DEP( vfetch8  )( VADR addr, int arn, REGS* regs );
+extern inline QW   ARCH_DEP( vfetch16 )( VADR addr, int arn, REGS* regs );
 
 extern inline BYTE* ARCH_DEP( instfetch )( REGS* regs, int exec );
 

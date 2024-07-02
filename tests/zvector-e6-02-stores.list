@@ -1,0 +1,1400 @@
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *        Zvector E6 instruction tests for VRX encoded:
+                                                     5 *
+                                                     6 *        E609 VSTEBRH - VECTOR STORE BYTE REVERSED ELEMENT (16)
+                                                     7 *        E60A VSTEBRG - VECTOR STORE BYTE REVERSED ELEMENT (64)
+                                                     8 *        E60B VSTEBRF - VECTOR STORE BYTE REVERSED ELEMENT (32)
+                                                     9 *        E60E VSTBR   - VECTOR STORE BYTE REVERSED ELEMENTS
+                                                    10 *        E60F VSTER   - VECTOR STORE ELEMENTS REVERSED
+                                                    11 *
+                                                    12 *        James Wekel June 2024
+                                                    13 ***********************************************************************
+
+
+                                                    15 ***********************************************************************
+                                                    16 *
+                                                    17 *        basic instruction tests
+                                                    18 *
+                                                    19 ***********************************************************************
+                                                    20 *  This program tests proper functioning of the z/arch E6 VRX vector
+                                                    21 *  store instructions. Exceptions are not tested.
+                                                    22 *
+                                                    23 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    24 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    25 *  NOT designed to test all aspects of any of the instructions.
+                                                    26 *
+                                                    27 ***********************************************************************
+                                                    28 *
+                                                    29 *    *Testcase VECTOR E6 VRX store instructions
+                                                    30 *    *
+                                                    31 *    *   Zvector E6 instruction tests for VRX encoded:
+                                                    32 *    *
+                                                    33 *    *   E609 VSTEBRH - VECTOR STORE BYTE REVERSED ELEMENT (16)
+                                                    34 *    *   E60A VSTEBRG - VECTOR STORE BYTE REVERSED ELEMENT (64)
+                                                    35 *    *   E60B VSTEBRF - VECTOR STORE BYTE REVERSED ELEMENT (32)
+                                                    36 *    *   E60E VSTBR   - VECTOR STORE BYTE REVERSED ELEMENTS
+                                                    37 *    *   E60F VSTER   - VECTOR STORE ELEMENTS REVERSED
+                                                    38 *    *
+                                                    39 *    *   # ------------------------------------------------------------
+                                                    40 *    *   #  This tests only the basic function of the instruction.
+                                                    41 *    *   #  Exceptions are NOT tested.
+                                                    42 *    *   # ------------------------------------------------------------
+                                                    43 *    *
+                                                    44 *    mainsize    2
+                                                    45 *    numcpu      1
+                                                    46 *    sysclear
+                                                    47 *    archlvl     z/Arch
+                                                    48 *
+                                                    49 *    loadcore    "$(testpath)/zvector-e6-02-stores.core" 0x0
+                                                    50 *
+                                                    51 *    diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    52 *    runtest     2
+                                                    53 *    diag8cmd    disable   # (reset back to default)
+                                                    54 *
+                                                    55 *    *Done
+                                                    56 *
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    57 ***********************************************************************
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    59 ***********************************************************************
+                                                    60 *        FCHECK Macro - Is a Facility Bit set?
+                                                    61 *
+                                                    62 *        If the facility bit is NOT set, an message is issued and
+                                                    63 *        the test is skipped.
+                                                    64 *
+                                                    65 *        Fcheck uses R0, R1 and R2
+                                                    66 *
+                                                    67 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    68 ***********************************************************************
+                                                    69          MACRO
+                                                    70          FCHECK &BITNO,&NOTSETMSG
+                                                    71 .*                        &BITNO : facility bit number to check
+                                                    72 .*                        &NOTSETMSG : 'facility name'
+                                                    73          LCLA  &FBBYTE           Facility bit in Byte
+                                                    74          LCLA  &FBBIT            Facility bit within Byte
+                                                    75
+                                                    76          LCLA  &L(8)
+                                                    77 &L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+                                                    78
+                                                    79 &FBBYTE  SETA  &BITNO/8
+                                                    80 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    81 .*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    82
+                                                    83          B     X&SYSNDX
+                                                    84 *                                      Fcheck data area
+                                                    85 *                                      skip messgae
+                                                    86 SKT&SYSNDX DC  C'          Skipping tests: '
+                                                    87          DC    C&NOTSETMSG
+                                                    88          DC    C' facility (bit &BITNO) is not installed.'
+                                                    89 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                    90 *                                      facility bits
+                                                    91          DS    FD                      gap
+                                                    92 FB&SYSNDX DS   4FD
+                                                    93          DS    FD                      gap
+                                                    94 *
+                                                    95 X&SYSNDX EQU *
+                                                    96          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                    97          STFLE FB&SYSNDX               get facility bits
+                                                    98
+                                                    99          XGR   R0,R0
+                                                   100          IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+                                                   101          N     R0,=F'&FBBIT'           is bit set?
+                                                   102          BNZ   XC&SYSNDX
+                                                   103 *
+                                                   104 * facility bit not set, issue message and exit
+                                                   105 *
+                                                   106          LA    R0,SKL&SYSNDX           message length
+                                                   107          LA    R1,SKT&SYSNDX           message address
+                                                   108          BAL   R2,MSG
+                                                   109
+                                                   110          B     EOJ
+                                                   111 XC&SYSNDX EQU *
+                                                   112          MEND
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   114 ***********************************************************************
+                                                   115 *        Low core PSWs
+                                                   116 ***********************************************************************
+
+
+                              00000000  00001533   118 ZVE6TST  START 0
+00000000                      00000000             119          USING ZVE6TST,R0            Low core addressability
+                                                   120
+                              00000140  00000000   121 SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   123          ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                        124          DC    X'0000000180000000'
+000001A8  00000000 00000200                        125          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   127          ORG   ZVE6TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        128          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        129          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   131          ORG   ZVE6TST+X'200'        Start of actual test program...
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   133
+                                                   134 ***********************************************************************
+                                                   135 *               The actual "ZVE6TST" program itself...
+                                                   136 ***********************************************************************
+                                                   137 *
+                                                   138 *  Architecture Mode: z/Arch
+                                                   139 *  Register Usage:
+                                                   140 *
+                                                   141 *   R0       (work)
+                                                   142 *   R1-4     (work)
+                                                   143 *   R5       Testing control table - current test base
+                                                   144 *   R6-R7    (work)
+                                                   145 *   R8       First base register
+                                                   146 *   R9       Second base register
+                                                   147 *   R10      Third base register
+                                                   148 *   R11      E6TEST call return
+                                                   149 *   R12      E6TESTS register
+                                                   150 *   R13      (work)
+                                                   151 *   R14      Subroutine call
+                                                   152 *   R15      Secondary Subroutine call or work
+                                                   153 *
+                                                   154 ***********************************************************************
+
+00000200                      00000200             156          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200             157          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00002200             158          USING  BEGIN+8192,R10  THIRD Base Register
+
+00000200  0580                                     160 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                     161          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                     162          BCTR  R8,0             Initalize FIRST base register
+
+00000206  4190 8800                     00000800   164          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800   165          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                   166
+0000020E  41A0 9800                     00000800   167          LA    R10,2048(,R9)    Initalize THIRD base register
+00000212  41A0 A800                     00000800   168          LA    R10,2048(,R10)   Initalize THIRD base register
+                                                   169
+00000216  B600 82A4                     000004A4   170          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
+0000021A  9604 82A5                     000004A5   171          OI    CTLR0+1,X'04'    Turn on AFP bit
+0000021E  9602 82A5                     000004A5   172          OI    CTLR0+1,X'02'    Turn on Vector bit
+00000222  B700 82A4                     000004A4   173          LCTL  R0,R0,CTLR0      Reload updated CR0
+                                                   174
+                                                   175 ***********************************************************************
+                                                   176 * Is Vector-enhancements facility 2 installed  (bit 148
+                                                   177 ***********************************************************************
+                                                   178
+                                                   179          FCHECK 148,'Vector-enhancements facility 2'
+00000226  47F0 80B8                     000002B8   180+         B     X0001
+                                                   181+*                                      Fcheck data area
+                                                   182+*                                      skip messgae
+0000022A  40404040 40404040                        183+SKT0001  DC    C'          Skipping tests: '
+00000244  E58583A3 96996085                        184+         DC    C'Vector-enhancements facility 2'
+00000262  40868183 899389A3                        185+         DC    C' facility (bit 148) is not installed.'
+                              0000005D  00000001   186+SKL0001  EQU   *-SKT0001
+                                                   187+*                                      facility bits
+00000288  00000000 00000000                        188+         DS    FD                      gap
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000290  00000000 00000000                        189+FB0001   DS    4FD
+000002B0  00000000 00000000                        190+         DS    FD                      gap
+                                                   191+*
+                              000002B8  00000001   192+X0001    EQU   *
+000002B8  4100 0004                     00000004   193+         LA    R0,((X0001-FB0001)/8)-1
+000002BC  B2B0 8090                     00000290   194+         STFLE FB0001                  get facility bits
+000002C0  B982 0000                                195+         XGR   R0,R0
+000002C4  4300 80A2                     000002A2   196+         IC    R0,FB0001+18            get fbit byte
+000002C8  5400 82AC                     000004AC   197+         N     R0,=F'8'                is bit set?
+000002CC  4770 80E0                     000002E0   198+         BNZ   XC0001
+                                                   199+*
+                                                   200+* facility bit not set, issue message and exit
+                                                   201+*
+000002D0  4100 005D                     0000005D   202+         LA    R0,SKL0001              message length
+000002D4  4110 802A                     0000022A   203+         LA    R1,SKT0001              message address
+000002D8  4520 81C0                     000003C0   204+         BAL   R2,MSG
+000002DC  47F0 8288                     00000488   205+         B     EOJ
+                              000002E0  00000001   206+XC0001   EQU   *
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   208 ***********************************************************************
+                                                   209 *              Do tests in the E6TESTS table
+                                                   210 ***********************************************************************
+                                                   211
+000002E0  58C0 82B0                     000004B0   212          L     R12,=A(E6TESTS)       get table of test addresses
+                                                   213
+                              000002E4  00000001   214 NEXTE6   EQU   *
+000002E4  5850 C000                     00000000   215          L     R5,0(0,R12)       get test address
+000002E8  1255                                     216          LTR   R5,R5                have a test?
+000002EA  4780 8134                     00000334   217          BZ    ENDTEST                 done?
+                                                   218
+000002EE                      00000000             219          USING E6TEST,R5
+                                                   220
+000002EE  4800 5004                     00000004   221          LH    R0,TNUM           save current test number
+000002F2  5000 8E04                     00001004   222          ST    R0,TESTING        for easy reference
+                                                   223
+000002F6  D20F 8E84 8EA4      00001084  000010A4   224          MVC   V1OUTPUT,V1FUDGE  pollute v1 output (stored)
+000002FC  E710 8EB4 0006                000010B4   225          VL    V1,V1INPUT
+00000302  58B0 5000                     00000000   226          L     R11,TSUB          get address of test routine
+00000306  05BB                                     227          BALR  R11,R11           do test
+                                                   228
+00000308  E310 5014 0014                00000014   229          LGF   R1,READDR         get address of expected result
+0000030E  D50F 8E84 1000      00001084  00000000   230          CLC   V1OUTPUT,0(R1)    valid?
+00000314  4770 8120                     00000320   231          BNE   FAILMSG              no, issue failed message
+                                                   232
+00000318  41C0 C004                     00000004   233          LA    R12,4(0,R12)      next test address
+0000031C  47F0 80E4                     000002E4   234          B     NEXTE6
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   236 ***********************************************************************
+                                                   237 * result not as expected:
+                                                   238 *        issue message with test number, instruction under test
+                                                   239 *              and instruction m3
+                                                   240 ***********************************************************************
+                              00000320  00000001   241 FAILMSG  EQU   *
+00000320  45F0 8142                     00000342   242          BAL   R15,RPTERROR
+                                                   243
+
+
+                                                   245 ***********************************************************************
+                                                   246 * continue after a failed test
+                                                   247 ***********************************************************************
+                              00000324  00000001   248 FAILCONT EQU   *
+00000324  5800 82B4                     000004B4   249          L     R0,=F'1'          set failed test indicator
+00000328  5000 8E00                     00001000   250          ST    R0,FAILED
+                                                   251
+0000032C  41C0 C004                     00000004   252          LA    R12,4(0,R12)      next test address
+00000330  47F0 80E4                     000002E4   253          B     NEXTE6
+
+
+                                                   255 ***********************************************************************
+                                                   256 * end of testing; set ending psw
+                                                   257 ***********************************************************************
+                              00000334  00000001   258 ENDTEST  EQU   *
+00000334  5810 8E00                     00001000   259          L     R1,FAILED         did a test fail?
+00000338  1211                                     260          LTR   R1,R1
+0000033A  4780 8288                     00000488   261          BZ    EOJ                  No, exit
+0000033E  47F0 82A0                     000004A0   262          B     FAILTEST             Yes, exit with BAD PSW
+                                                   263
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   265 ***********************************************************************
+                                                   266 *        RPTERROR                 Report instruction test in error
+                                                   267 ***********************************************************************
+
+00000342  50F0 81A4                     000003A4   269 RPTERROR ST    R15,RPTSAVE          Save return address
+00000346  5050 81A8                     000003A8   270          ST    R5,RPTSVR5           Save R5
+                                                   271 *
+0000034A  4820 5004                     00000004   272          LH    R2,TNUM              get test number and convert
+0000034E  4E20 8E72                     00001072   273          CVD   R2,DECNUM
+00000352  D211 8E5C 8E46      0000105C  00001046   274          MVC   PRT3,EDIT
+00000358  DE11 8E5C 8E72      0000105C  00001072   275          ED    PRT3,DECNUM
+0000035E  D202 8E18 8E69      00001018  00001069   276          MVC   PRTNUM(3),PRT3+13    fill in message with test #
+                                                   277
+00000364  D207 8E33 5008      00001033  00000008   278          MVC   PRTNAME,OPNAME       fill in message with instruction
+                                                   279 *
+0000036A  E320 5007 0076                00000007   280          LB    R2,M3                get m3 and convert
+00000370  4E20 8E72                     00001072   281          CVD   R2,DECNUM
+00000374  D211 8E5C 8E46      0000105C  00001046   282          MVC   PRT3,EDIT
+0000037A  DE11 8E5C 8E72      0000105C  00001072   283          ED    PRT3,DECNUM
+00000380  D200 8E44 8E6B      00001044  0000106B   284          MVC   PRTM3(1),PRT3+15     fill in message with m3 field
+
+                                                   286 *
+                                                   287 *        Use Hercules Diagnose for Message to console
+                                                   288 *
+00000386  9002 81B0                     000003B0   289          STM   R0,R2,RPTDWSAV       save regs used by MSG
+0000038A  4100 003E                     0000003E   290          LA    R0,PRTLNG            message length
+0000038E  4110 8E08                     00001008   291          LA    R1,PRTLINE           messagfe address
+00000392  4520 81C0                     000003C0   292          BAL   R2,MSG               call Hercules console MSG display
+00000396  9802 81B0                     000003B0   293          LM    R0,R2,RPTDWSAV       restore regs
+
+
+0000039A  5850 81A8                     000003A8   295          L     R5,RPTSVR5         Restore R5
+0000039E  58F0 81A4                     000003A4   296          L     R15,RPTSAVE        Restore return address
+000003A2  07FF                                     297          BR    R15                Return to caller
+
+000003A4  00000000                                 299 RPTSAVE  DC    F'0'               R15 save area
+000003A8  00000000                                 300 RPTSVR5  DC    F'0'               R5 save area
+
+000003B0  00000000 00000000                        302 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   304 ***********************************************************************
+                                                   305 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   306 *              R2 = return address
+                                                   307 ***********************************************************************
+
+000003C0  4900 82B8                     000004B8   309 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000003C4  07D2                                     310          BNHR  R2                     No, ignore
+
+000003C6  9002 81FC                     000003FC   312          STM   R0,R2,MSGSAVE          Save registers
+
+000003CA  4900 82BA                     000004BA   314          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000003CE  47D0 81D6                     000003D6   315          BNH   MSGOK                  Yes, continue
+000003D2  4100 005F                     0000005F   316          LA    R0,L'MSGMSG            No, set to maximum
+
+000003D6  1820                                     318 MSGOK    LR    R2,R0                  Copy length to work register
+000003D8  0620                                     319          BCTR  R2,0                   Minus-1 for execute
+000003DA  4420 8208                     00000408   320          EX    R2,MSGMVC              Copy message to O/P buffer
+
+000003DE  4120 200A                     0000000A   322          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+000003E2  4110 820E                     0000040E   323          LA    R1,MSGCMD              Point to true command
+
+000003E6  83120008                                 325          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+000003EA  4780 81F6                     000003F6   326          BZ    MSGRET                 Return if successful
+                                                   327
+000003EE  1222                                     328          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+000003F0  4780 81F6                     000003F6   329          BZ    MSGRET                   an error occurred but coninue
+                                                   330
+000003F4  0000                                     331          DC    H'0'                   CRASH for debugging purposes
+
+000003F6  9802 81FC                     000003FC   333 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+000003FA  07F2                                     334          BR    R2                     Return to caller
+
+
+
+
+
+
+000003FC  00000000 00000000                        336 MSGSAVE  DC    3F'0'                  Registers save area
+00000408  D200 8217 1000      00000417  00000000   337 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+0000040E  D4E2C7D5 D6C8405C                        339 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+00000417  40404040 40404040                        340 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   341
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   343 ***********************************************************************
+                                                   344 *        Normal completion or Abnormal termination PSWs
+                                                   345 ***********************************************************************
+
+
+
+
+
+00000478  00020001 80000000                        347 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+00000488  B2B2 8278                     00000478   349 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+00000490  00020001 80000000                        351 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+000004A0  B2B2 8290                     00000490   353 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                                   355 ***********************************************************************
+                                                   356 *        Working Storage
+                                                   357 ***********************************************************************
+
+
+000004A4  00000000                                 359 CTLR0    DS    F                CR0
+000004A8  00000000                                 360          DS    F
+
+
+000004AC                                           362          LTORG ,                Literals pool
+000004AC  00000008                                 363                =F'8'
+000004B0  000014D0                                 364                =A(E6TESTS)
+000004B4  00000001                                 365                =F'1'
+000004B8  0000                                     366                =H'0'
+000004BA  005F                                     367                =AL2(L'MSGMSG)
+                                                   368
+                                                   369 *        some constants
+                                                   370
+                              00000400  00000001   371 K        EQU   1024             One KB
+                              00001000  00000001   372 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   373 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   374 MB       EQU   (K*K)             1 MB
+                                                   375
+                              AABBCCDD  00000001   376 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   377 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   379 *======================================================================
+                                                   380 *
+                                                   381 *  NOTE: start data on an address that is easy to display
+                                                   382 *        within Hercules
+                                                   383 *
+                                                   384 *======================================================================
+                                                   385
+000004BC                      000004BC  00001000   386          ORG   ZVE6TST+X'1000'
+00001000  00000000                                 387 FAILED   DC    F'0'                     some test failed?
+00001004  00000000                                 388 TESTING  DC    F'0'                     current test number
+
+
+                                                   390 *
+                                                   391 *        failed message and associated editting
+                                                   392 *
+00001008  40404040 40404040                        393 PRTLINE  DC    C'         Test # '
+00001018  A7A7A7                                   394 PRTNUM   DC    C'xxx'
+0000101B  40868189 93858440                        395          DC    c' failed for instruction '
+00001033  A7A7A7A7 A7A7A7A7                        396 PRTNAME  DC    CL8'xxxxxxxx'
+0000103B  40A689A3 884094F3                        397          DC    C' with m3='
+00001044  A7                                       398 PRTM3    DC    C'x'
+00001045  4B                                       399          DC    C'.'
+                              0000003E  00000001   400 PRTLNG   EQU   *-PRTLINE
+00001046  40212020 20202020                        401 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   402
+00001058  7E7E7E6E                                 403          DC    C'===>'
+0000105C  40404040 40404040                        404 PRT3     DC    CL18' '
+0000106E  4C7E7E7E                                 405          DC    C'<==='
+00001072  00000000 00000000                        406 DECNUM   DS    CL16
+
+
+                                                   408 *
+                                                   409 *        Vector instruction results, pollution and input
+                                                   410 *
+00001084                                           411          DS    0F
+00001084  00000000 00000000                        412 V1OUTPUT DS    XL16                                      V1 OUTPUT
+00001094  00000000 00000000                        413          DS    XL16                                        gap
+000010A4  FFFFFFFF FFFFFFFF                        414 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
+000010B4  00010203 04050607                        415 V1INPUT  DC    XL16'00010203040506070809101112131415'    V1 input
+000010C4  00000000 00000000                        416          DS    XL16                                         gap
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   418 ***********************************************************************
+                                                   419 *        E6TEST DSECT
+                                                   420 ***********************************************************************
+
+
+                                                   422 E6TEST   DSECT ,
+00000000  00000000                                 423 TSUB     DC    A(0)           pointer  to test
+00000004  0000                                     424 TNUM     DC    H'00'          Test Number
+00000006  00                                       425          DC    X'00'
+00000007  00                                       426 M3       DC    X'00'          M3 used
+                                                   427
+00000008  40404040 40404040                        428 OPNAME   DC    CL8' '         E6 name
+00000010  00000000                                 429 RELEN    DC    A(0)           RESULT LENGTH
+00000014  00000000                                 430 READDR   DC    A(0)
+                                                   431
+                                                   432 *        test routine will be here (from VRX macro)
+                                                   433 *
+                                                   434 *        followed by
+                                                   435 *              EXPECTED RESULT
+
+
+                              00000000  00001533   437 ZVE6TST  CSECT ,
+000010D4                                           438          DS    0F
+
+
+                                                   440 ***********************************************************************
+                                                   441 *     Macros to help build test tables
+                                                   442 ***********************************************************************
+
+
+
+                                                   444 *
+                                                   445 * macro to generate individual test
+                                                   446 *
+                                                   447          MACRO
+                                                   448          VRX   &INST,&M3
+                                                   449 .*                               &INST    - VRX instruction under test
+                                                   450 .*                               &M3      - m3 field
+                                                   451
+                                                   452          GBLA  &TNUM
+                                                   453 &TNUM    SETA  &TNUM+1
+                                                   454
+                                                   455          DS    0FD
+                                                   456          USING *,R5              base for test data and test routine
+                                                   457
+                                                   458 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   459          DC    H'&TNUM'          test number
+                                                   460          DC    X'00'
+                                                   461          DC    X'&M3'            M3
+                                                   462          DC    CL8'&INST'        instruction name
+                                                   463          DC    A(16)             result length
+                                                   464 REA&TNUM DC    A(RE&TNUM)        result address
+                                                   465 .*
+                                                   466 *
+                                                   467          DS    0F
+                                                   468 X&TNUM   &INST V1,V1OUTPUT,&M3   test instruction
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   469          BR    R11               return
+                                                   470
+                                                   471 RE&TNUM  DC    0F                xl16 result
+                                                   472
+                                                   473          DROP  R5
+                                                   474          MEND
+
+
+
+                                                   476 *
+                                                   477 * macro to generate table of pointers to individual tests
+                                                   478 *
+                                                   479          MACRO
+                                                   480          PTTABLE
+                                                   481          GBLA  &TNUM
+                                                   482          LCLA  &CUR
+                                                   483 &CUR     SETA  1
+                                                   484 .*
+                                                   485 TTABLE   DS    0F
+                                                   486 .LOOP    ANOP
+                                                   487 .*
+                                                   488          DC    A(T&CUR)          TEST &CUR
+                                                   489 .*
+                                                   490 &CUR     SETA  &CUR+1
+                                                   491          AIF   (&CUR LE &TNUM).LOOP
+                                                   492 *
+                                                   493          DC    A(0)              END OF TABLE
+                                                   494          DC    A(0)
+                                                   495 .*
+                                                   496          MEND
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   498 ***********************************************************************
+                                                   499 *        E6 VRX tests
+                                                   500 ***********************************************************************
+                                                   501          PRINT DATA
+                                                   502
+                                                   503 *        E609 VSTEBRH - VECTOR STORE BYTE REVERSED ELEMENT (16)
+                                                   504 *        E60A VSTEBRG - VECTOR STORE BYTE REVERSED ELEMENT (64)
+                                                   505 *        E60B VSTEBRF - VECTOR STORE BYTE REVERSED ELEMENT (32)
+                                                   506 *        E60E VSTBR   - VECTOR STORE BYTE REVERSED ELEMENTS
+                                                   507 *        E60F VSTER   - VECTOR STORE ELEMENTS REVERSED
+                                                   508
+                                                   509 *        VRX   instruction, m3
+                                                   510 *              followed by 16 byte expected result
+                                                   511 *---------------------------------------------------------------------
+                                                   512 * VSTEBRH - VECTOR STORE BYTE REVERSED ELEMENT (16)
+                                                   513 *---------------------------------------------------------------------
+                                                   514          VRX   VSTEBRH,0
+000010D8                                           515+         DS    0FD
+000010D8                      000010D8             516+         USING *,R5              base for test data and test routine
+000010D8  000010F0                                 517+T1       DC    A(X1)             address of test routine
+000010DC  0001                                     518+         DC    H'1'              test number
+000010DE  00                                       519+         DC    X'00'
+000010DF  00                                       520+         DC    X'0'              M3
+000010E0  E5E2E3C5 C2D9C840                        521+         DC    CL8'VSTEBRH'      instruction name
+000010E8  00000010                                 522+         DC    A(16)             result length
+000010EC  000010F8                                 523+REA1     DC    A(RE1)            result address
+                                                   524+*
+000010F0                                           525+         DS    0F
+000010F0  E610 8E84 0009                00001084   526+X1       VSTEBRH V1,V1OUTPUT,0   test instruction
+000010F6  07FB                                     527+         BR    R11               return
+000010F8                                           528+RE1      DC    0F                xl16 result
+000010F8                                           529+         DROP  R5
+000010F8  0100FFFF FFFFFFFF                        530          DC    XL16'0100FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+00001100  FFFFFFFF FFFFFFFF
+                                                   531
+                                                   532          VRX   VSTEBRH,1
+00001108                                           533+         DS    0FD
+00001108                      00001108             534+         USING *,R5              base for test data and test routine
+00001108  00001120                                 535+T2       DC    A(X2)             address of test routine
+0000110C  0002                                     536+         DC    H'2'              test number
+0000110E  00                                       537+         DC    X'00'
+0000110F  01                                       538+         DC    X'1'              M3
+00001110  E5E2E3C5 C2D9C840                        539+         DC    CL8'VSTEBRH'      instruction name
+00001118  00000010                                 540+         DC    A(16)             result length
+0000111C  00001128                                 541+REA2     DC    A(RE2)            result address
+                                                   542+*
+00001120                                           543+         DS    0F
+00001120  E610 8E84 1009                00001084   544+X2       VSTEBRH V1,V1OUTPUT,1   test instruction
+00001126  07FB                                     545+         BR    R11               return
+00001128                                           546+RE2      DC    0F                xl16 result
+00001128                                           547+         DROP  R5
+00001128  0302FFFF FFFFFFFF                        548          DC    XL16'0302FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+00001130  FFFFFFFF FFFFFFFF
+                                                   549
+                                                   550          VRX   VSTEBRH,2
+00001138                                           551+         DS    0FD
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001138                      00001138             552+         USING *,R5              base for test data and test routine
+00001138  00001150                                 553+T3       DC    A(X3)             address of test routine
+0000113C  0003                                     554+         DC    H'3'              test number
+0000113E  00                                       555+         DC    X'00'
+0000113F  02                                       556+         DC    X'2'              M3
+00001140  E5E2E3C5 C2D9C840                        557+         DC    CL8'VSTEBRH'      instruction name
+00001148  00000010                                 558+         DC    A(16)             result length
+0000114C  00001158                                 559+REA3     DC    A(RE3)            result address
+                                                   560+*
+00001150                                           561+         DS    0F
+00001150  E610 8E84 2009                00001084   562+X3       VSTEBRH V1,V1OUTPUT,2   test instruction
+00001156  07FB                                     563+         BR    R11               return
+00001158                                           564+RE3      DC    0F                xl16 result
+00001158                                           565+         DROP  R5
+00001158  0504FFFF FFFFFFFF                        566          DC    XL16'0504FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+00001160  FFFFFFFF FFFFFFFF
+                                                   567
+                                                   568          VRX   VSTEBRH,3
+00001168                                           569+         DS    0FD
+00001168                      00001168             570+         USING *,R5              base for test data and test routine
+00001168  00001180                                 571+T4       DC    A(X4)             address of test routine
+0000116C  0004                                     572+         DC    H'4'              test number
+0000116E  00                                       573+         DC    X'00'
+0000116F  03                                       574+         DC    X'3'              M3
+00001170  E5E2E3C5 C2D9C840                        575+         DC    CL8'VSTEBRH'      instruction name
+00001178  00000010                                 576+         DC    A(16)             result length
+0000117C  00001188                                 577+REA4     DC    A(RE4)            result address
+                                                   578+*
+00001180                                           579+         DS    0F
+00001180  E610 8E84 3009                00001084   580+X4       VSTEBRH V1,V1OUTPUT,3   test instruction
+00001186  07FB                                     581+         BR    R11               return
+00001188                                           582+RE4      DC    0F                xl16 result
+00001188                                           583+         DROP  R5
+00001188  0706FFFF FFFFFFFF                        584          DC    XL16'0706FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+00001190  FFFFFFFF FFFFFFFF
+                                                   585
+                                                   586          VRX   VSTEBRH,4
+00001198                                           587+         DS    0FD
+00001198                      00001198             588+         USING *,R5              base for test data and test routine
+00001198  000011B0                                 589+T5       DC    A(X5)             address of test routine
+0000119C  0005                                     590+         DC    H'5'              test number
+0000119E  00                                       591+         DC    X'00'
+0000119F  04                                       592+         DC    X'4'              M3
+000011A0  E5E2E3C5 C2D9C840                        593+         DC    CL8'VSTEBRH'      instruction name
+000011A8  00000010                                 594+         DC    A(16)             result length
+000011AC  000011B8                                 595+REA5     DC    A(RE5)            result address
+                                                   596+*
+000011B0                                           597+         DS    0F
+000011B0  E610 8E84 4009                00001084   598+X5       VSTEBRH V1,V1OUTPUT,4   test instruction
+000011B6  07FB                                     599+         BR    R11               return
+000011B8                                           600+RE5      DC    0F                xl16 result
+000011B8                                           601+         DROP  R5
+000011B8  0908FFFF FFFFFFFF                        602          DC    XL16'0908FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+000011C0  FFFFFFFF FFFFFFFF
+                                                   603
+                                                   604          VRX   VSTEBRH,5
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000011C8                                           605+         DS    0FD
+000011C8                      000011C8             606+         USING *,R5              base for test data and test routine
+000011C8  000011E0                                 607+T6       DC    A(X6)             address of test routine
+000011CC  0006                                     608+         DC    H'6'              test number
+000011CE  00                                       609+         DC    X'00'
+000011CF  05                                       610+         DC    X'5'              M3
+000011D0  E5E2E3C5 C2D9C840                        611+         DC    CL8'VSTEBRH'      instruction name
+000011D8  00000010                                 612+         DC    A(16)             result length
+000011DC  000011E8                                 613+REA6     DC    A(RE6)            result address
+                                                   614+*
+000011E0                                           615+         DS    0F
+000011E0  E610 8E84 5009                00001084   616+X6       VSTEBRH V1,V1OUTPUT,5   test instruction
+000011E6  07FB                                     617+         BR    R11               return
+000011E8                                           618+RE6      DC    0F                xl16 result
+000011E8                                           619+         DROP  R5
+000011E8  1110FFFF FFFFFFFF                        620          DC    XL16'1110FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+000011F0  FFFFFFFF FFFFFFFF
+                                                   621
+                                                   622          VRX   VSTEBRH,6
+000011F8                                           623+         DS    0FD
+000011F8                      000011F8             624+         USING *,R5              base for test data and test routine
+000011F8  00001210                                 625+T7       DC    A(X7)             address of test routine
+000011FC  0007                                     626+         DC    H'7'              test number
+000011FE  00                                       627+         DC    X'00'
+000011FF  06                                       628+         DC    X'6'              M3
+00001200  E5E2E3C5 C2D9C840                        629+         DC    CL8'VSTEBRH'      instruction name
+00001208  00000010                                 630+         DC    A(16)             result length
+0000120C  00001218                                 631+REA7     DC    A(RE7)            result address
+                                                   632+*
+00001210                                           633+         DS    0F
+00001210  E610 8E84 6009                00001084   634+X7       VSTEBRH V1,V1OUTPUT,6   test instruction
+00001216  07FB                                     635+         BR    R11               return
+00001218                                           636+RE7      DC    0F                xl16 result
+00001218                                           637+         DROP  R5
+00001218  1312FFFF FFFFFFFF                        638          DC    XL16'1312FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+00001220  FFFFFFFF FFFFFFFF
+                                                   639
+                                                   640          VRX   VSTEBRH,7
+00001228                                           641+         DS    0FD
+00001228                      00001228             642+         USING *,R5              base for test data and test routine
+00001228  00001240                                 643+T8       DC    A(X8)             address of test routine
+0000122C  0008                                     644+         DC    H'8'              test number
+0000122E  00                                       645+         DC    X'00'
+0000122F  07                                       646+         DC    X'7'              M3
+00001230  E5E2E3C5 C2D9C840                        647+         DC    CL8'VSTEBRH'      instruction name
+00001238  00000010                                 648+         DC    A(16)             result length
+0000123C  00001248                                 649+REA8     DC    A(RE8)            result address
+                                                   650+*
+00001240                                           651+         DS    0F
+00001240  E610 8E84 7009                00001084   652+X8       VSTEBRH V1,V1OUTPUT,7   test instruction
+00001246  07FB                                     653+         BR    R11               return
+00001248                                           654+RE8      DC    0F                xl16 result
+00001248                                           655+         DROP  R5
+00001248  1514FFFF FFFFFFFF                        656          DC    XL16'1514FFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+00001250  FFFFFFFF FFFFFFFF
+                                                   657
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   658 *---------------------------------------------------------------------
+                                                   659 * VSTEBRG - VECTOR STORE BYTE REVERSED ELEMENT (64)
+                                                   660 *---------------------------------------------------------------------
+                                                   661          VRX   VSTEBRG,0
+00001258                                           662+         DS    0FD
+00001258                      00001258             663+         USING *,R5              base for test data and test routine
+00001258  00001270                                 664+T9       DC    A(X9)             address of test routine
+0000125C  0009                                     665+         DC    H'9'              test number
+0000125E  00                                       666+         DC    X'00'
+0000125F  00                                       667+         DC    X'0'              M3
+00001260  E5E2E3C5 C2D9C740                        668+         DC    CL8'VSTEBRG'      instruction name
+00001268  00000010                                 669+         DC    A(16)             result length
+0000126C  00001278                                 670+REA9     DC    A(RE9)            result address
+                                                   671+*
+00001270                                           672+         DS    0F
+00001270  E610 8E84 000A                00001084   673+X9       VSTEBRG V1,V1OUTPUT,0   test instruction
+00001276  07FB                                     674+         BR    R11               return
+00001278                                           675+RE9      DC    0F                xl16 result
+00001278                                           676+         DROP  R5
+00001278  07060504 03020100                        677          DC    XL16'0706050403020100FFFFFFFFFFFFFFFF'
+00001280  FFFFFFFF FFFFFFFF
+                                                   678
+                                                   679          VRX   VSTEBRG,1
+00001288                                           680+         DS    0FD
+00001288                      00001288             681+         USING *,R5              base for test data and test routine
+00001288  000012A0                                 682+T10      DC    A(X10)            address of test routine
+0000128C  000A                                     683+         DC    H'10'             test number
+0000128E  00                                       684+         DC    X'00'
+0000128F  01                                       685+         DC    X'1'              M3
+00001290  E5E2E3C5 C2D9C740                        686+         DC    CL8'VSTEBRG'      instruction name
+00001298  00000010                                 687+         DC    A(16)             result length
+0000129C  000012A8                                 688+REA10    DC    A(RE10)           result address
+                                                   689+*
+000012A0                                           690+         DS    0F
+000012A0  E610 8E84 100A                00001084   691+X10      VSTEBRG V1,V1OUTPUT,1   test instruction
+000012A6  07FB                                     692+         BR    R11               return
+000012A8                                           693+RE10     DC    0F                xl16 result
+000012A8                                           694+         DROP  R5
+000012A8  15141312 11100908                        695          DC    XL16'1514131211100908FFFFFFFFFFFFFFFF'
+000012B0  FFFFFFFF FFFFFFFF
+                                                   696
+                                                   697
+                                                   698 *---------------------------------------------------------------------
+                                                   699 * VSTEBRF - VECTOR STORE BYTE REVERSED ELEMENT (32)
+                                                   700 *---------------------------------------------------------------------
+                                                   701          VRX   VSTEBRF,0
+000012B8                                           702+         DS    0FD
+000012B8                      000012B8             703+         USING *,R5              base for test data and test routine
+000012B8  000012D0                                 704+T11      DC    A(X11)            address of test routine
+000012BC  000B                                     705+         DC    H'11'             test number
+000012BE  00                                       706+         DC    X'00'
+000012BF  00                                       707+         DC    X'0'              M3
+000012C0  E5E2E3C5 C2D9C640                        708+         DC    CL8'VSTEBRF'      instruction name
+000012C8  00000010                                 709+         DC    A(16)             result length
+000012CC  000012D8                                 710+REA11    DC    A(RE11)           result address
+                                                   711+*
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000012D0                                           712+         DS    0F
+000012D0  E610 8E84 000B                00001084   713+X11      VSTEBRF V1,V1OUTPUT,0   test instruction
+000012D6  07FB                                     714+         BR    R11               return
+000012D8                                           715+RE11     DC    0F                xl16 result
+000012D8                                           716+         DROP  R5
+000012D8  03020100 FFFFFFFF                        717          DC    XL16'03020100FFFFFFFFFFFFFFFFFFFFFFFF'
+000012E0  FFFFFFFF FFFFFFFF
+                                                   718
+                                                   719          VRX   VSTEBRF,1
+000012E8                                           720+         DS    0FD
+000012E8                      000012E8             721+         USING *,R5              base for test data and test routine
+000012E8  00001300                                 722+T12      DC    A(X12)            address of test routine
+000012EC  000C                                     723+         DC    H'12'             test number
+000012EE  00                                       724+         DC    X'00'
+000012EF  01                                       725+         DC    X'1'              M3
+000012F0  E5E2E3C5 C2D9C640                        726+         DC    CL8'VSTEBRF'      instruction name
+000012F8  00000010                                 727+         DC    A(16)             result length
+000012FC  00001308                                 728+REA12    DC    A(RE12)           result address
+                                                   729+*
+00001300                                           730+         DS    0F
+00001300  E610 8E84 100B                00001084   731+X12      VSTEBRF V1,V1OUTPUT,1   test instruction
+00001306  07FB                                     732+         BR    R11               return
+00001308                                           733+RE12     DC    0F                xl16 result
+00001308                                           734+         DROP  R5
+00001308  07060504 FFFFFFFF                        735          DC    XL16'07060504FFFFFFFFFFFFFFFFFFFFFFFF'
+00001310  FFFFFFFF FFFFFFFF
+                                                   736
+                                                   737          VRX   VSTEBRF,2
+00001318                                           738+         DS    0FD
+00001318                      00001318             739+         USING *,R5              base for test data and test routine
+00001318  00001330                                 740+T13      DC    A(X13)            address of test routine
+0000131C  000D                                     741+         DC    H'13'             test number
+0000131E  00                                       742+         DC    X'00'
+0000131F  02                                       743+         DC    X'2'              M3
+00001320  E5E2E3C5 C2D9C640                        744+         DC    CL8'VSTEBRF'      instruction name
+00001328  00000010                                 745+         DC    A(16)             result length
+0000132C  00001338                                 746+REA13    DC    A(RE13)           result address
+                                                   747+*
+00001330                                           748+         DS    0F
+00001330  E610 8E84 200B                00001084   749+X13      VSTEBRF V1,V1OUTPUT,2   test instruction
+00001336  07FB                                     750+         BR    R11               return
+00001338                                           751+RE13     DC    0F                xl16 result
+00001338                                           752+         DROP  R5
+00001338  11100908 FFFFFFFF                        753          DC    XL16'11100908FFFFFFFFFFFFFFFFFFFFFFFF'
+00001340  FFFFFFFF FFFFFFFF
+                                                   754
+                                                   755          VRX   VSTEBRF,3
+00001348                                           756+         DS    0FD
+00001348                      00001348             757+         USING *,R5              base for test data and test routine
+00001348  00001360                                 758+T14      DC    A(X14)            address of test routine
+0000134C  000E                                     759+         DC    H'14'             test number
+0000134E  00                                       760+         DC    X'00'
+0000134F  03                                       761+         DC    X'3'              M3
+00001350  E5E2E3C5 C2D9C640                        762+         DC    CL8'VSTEBRF'      instruction name
+00001358  00000010                                 763+         DC    A(16)             result length
+0000135C  00001368                                 764+REA14    DC    A(RE14)           result address
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   765+*
+00001360                                           766+         DS    0F
+00001360  E610 8E84 300B                00001084   767+X14      VSTEBRF V1,V1OUTPUT,3   test instruction
+00001366  07FB                                     768+         BR    R11               return
+00001368                                           769+RE14     DC    0F                xl16 result
+00001368                                           770+         DROP  R5
+00001368  15141312 FFFFFFFF                        771          DC    XL16'15141312FFFFFFFFFFFFFFFFFFFFFFFF'
+00001370  FFFFFFFF FFFFFFFF
+                                                   772
+                                                   773 *---------------------------------------------------------------------
+                                                   774 * VSTBR   - VECTOR STORE BYTE REVERSED ELEMENTS
+                                                   775 *---------------------------------------------------------------------
+                                                   776          VRX   VSTBR,1
+00001378                                           777+         DS    0FD
+00001378                      00001378             778+         USING *,R5              base for test data and test routine
+00001378  00001390                                 779+T15      DC    A(X15)            address of test routine
+0000137C  000F                                     780+         DC    H'15'             test number
+0000137E  00                                       781+         DC    X'00'
+0000137F  01                                       782+         DC    X'1'              M3
+00001380  E5E2E3C2 D9404040                        783+         DC    CL8'VSTBR'        instruction name
+00001388  00000010                                 784+         DC    A(16)             result length
+0000138C  00001398                                 785+REA15    DC    A(RE15)           result address
+                                                   786+*
+00001390                                           787+         DS    0F
+00001390  E610 8E84 100E                00001084   788+X15      VSTBR V1,V1OUTPUT,1     test instruction
+00001396  07FB                                     789+         BR    R11               return
+00001398                                           790+RE15     DC    0F                xl16 result
+00001398                                           791+         DROP  R5
+00001398  01000302 05040706                        792          DC    XL16'01000302050407060908111013121514'
+000013A0  09081110 13121514
+                                                   793
+                                                   794          VRX   VSTBR,2
+000013A8                                           795+         DS    0FD
+000013A8                      000013A8             796+         USING *,R5              base for test data and test routine
+000013A8  000013C0                                 797+T16      DC    A(X16)            address of test routine
+000013AC  0010                                     798+         DC    H'16'             test number
+000013AE  00                                       799+         DC    X'00'
+000013AF  02                                       800+         DC    X'2'              M3
+000013B0  E5E2E3C2 D9404040                        801+         DC    CL8'VSTBR'        instruction name
+000013B8  00000010                                 802+         DC    A(16)             result length
+000013BC  000013C8                                 803+REA16    DC    A(RE16)           result address
+                                                   804+*
+000013C0                                           805+         DS    0F
+000013C0  E610 8E84 200E                00001084   806+X16      VSTBR V1,V1OUTPUT,2     test instruction
+000013C6  07FB                                     807+         BR    R11               return
+000013C8                                           808+RE16     DC    0F                xl16 result
+000013C8                                           809+         DROP  R5
+000013C8  03020100 07060504                        810          DC    XL16'03020100070605041110090815141312'
+000013D0  11100908 15141312
+                                                   811
+                                                   812          VRX   VSTBR,3
+000013D8                                           813+         DS    0FD
+000013D8                      000013D8             814+         USING *,R5              base for test data and test routine
+000013D8  000013F0                                 815+T17      DC    A(X17)            address of test routine
+000013DC  0011                                     816+         DC    H'17'             test number
+000013DE  00                                       817+         DC    X'00'
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000013DF  03                                       818+         DC    X'3'              M3
+000013E0  E5E2E3C2 D9404040                        819+         DC    CL8'VSTBR'        instruction name
+000013E8  00000010                                 820+         DC    A(16)             result length
+000013EC  000013F8                                 821+REA17    DC    A(RE17)           result address
+                                                   822+*
+000013F0                                           823+         DS    0F
+000013F0  E610 8E84 300E                00001084   824+X17      VSTBR V1,V1OUTPUT,3     test instruction
+000013F6  07FB                                     825+         BR    R11               return
+000013F8                                           826+RE17     DC    0F                xl16 result
+000013F8                                           827+         DROP  R5
+000013F8  07060504 03020100                        828          DC    XL16'07060504030201001514131211100908'
+00001400  15141312 11100908
+                                                   829
+                                                   830          VRX   VSTBR,4
+00001408                                           831+         DS    0FD
+00001408                      00001408             832+         USING *,R5              base for test data and test routine
+00001408  00001420                                 833+T18      DC    A(X18)            address of test routine
+0000140C  0012                                     834+         DC    H'18'             test number
+0000140E  00                                       835+         DC    X'00'
+0000140F  04                                       836+         DC    X'4'              M3
+00001410  E5E2E3C2 D9404040                        837+         DC    CL8'VSTBR'        instruction name
+00001418  00000010                                 838+         DC    A(16)             result length
+0000141C  00001428                                 839+REA18    DC    A(RE18)           result address
+                                                   840+*
+00001420                                           841+         DS    0F
+00001420  E610 8E84 400E                00001084   842+X18      VSTBR V1,V1OUTPUT,4     test instruction
+00001426  07FB                                     843+         BR    R11               return
+00001428                                           844+RE18     DC    0F                xl16 result
+00001428                                           845+         DROP  R5
+00001428  15141312 11100908                        846          DC    XL16'15141312111009080706050403020100'
+00001430  07060504 03020100
+                                                   847
+                                                   848 *---------------------------------------------------------------------
+                                                   849 * VSTER   - VECTOR STORE ELEMENTS REVERSED
+                                                   850 *---------------------------------------------------------------------
+                                                   851          VRX   VSTER,1
+00001438                                           852+         DS    0FD
+00001438                      00001438             853+         USING *,R5              base for test data and test routine
+00001438  00001450                                 854+T19      DC    A(X19)            address of test routine
+0000143C  0013                                     855+         DC    H'19'             test number
+0000143E  00                                       856+         DC    X'00'
+0000143F  01                                       857+         DC    X'1'              M3
+00001440  E5E2E3C5 D9404040                        858+         DC    CL8'VSTER'        instruction name
+00001448  00000010                                 859+         DC    A(16)             result length
+0000144C  00001458                                 860+REA19    DC    A(RE19)           result address
+                                                   861+*
+00001450                                           862+         DS    0F
+00001450  E610 8E84 100F                00001084   863+X19      VSTER V1,V1OUTPUT,1     test instruction
+00001456  07FB                                     864+         BR    R11               return
+00001458                                           865+RE19     DC    0F                xl16 result
+00001458                                           866+         DROP  R5
+00001458  14151213 10110809                        867          DC    XL16'14151213101108090607040502030001'
+00001460  06070405 02030001
+                                                   868
+                                                   869          VRX   VSTER,2
+00001468                                           870+         DS    0FD
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001468                      00001468             871+         USING *,R5              base for test data and test routine
+00001468  00001480                                 872+T20      DC    A(X20)            address of test routine
+0000146C  0014                                     873+         DC    H'20'             test number
+0000146E  00                                       874+         DC    X'00'
+0000146F  02                                       875+         DC    X'2'              M3
+00001470  E5E2E3C5 D9404040                        876+         DC    CL8'VSTER'        instruction name
+00001478  00000010                                 877+         DC    A(16)             result length
+0000147C  00001488                                 878+REA20    DC    A(RE20)           result address
+                                                   879+*
+00001480                                           880+         DS    0F
+00001480  E610 8E84 200F                00001084   881+X20      VSTER V1,V1OUTPUT,2     test instruction
+00001486  07FB                                     882+         BR    R11               return
+00001488                                           883+RE20     DC    0F                xl16 result
+00001488                                           884+         DROP  R5
+00001488  12131415 08091011                        885          DC    XL16'12131415080910110405060700010203'
+00001490  04050607 00010203
+                                                   886
+                                                   887          VRX   VSTER,3
+00001498                                           888+         DS    0FD
+00001498                      00001498             889+         USING *,R5              base for test data and test routine
+00001498  000014B0                                 890+T21      DC    A(X21)            address of test routine
+0000149C  0015                                     891+         DC    H'21'             test number
+0000149E  00                                       892+         DC    X'00'
+0000149F  03                                       893+         DC    X'3'              M3
+000014A0  E5E2E3C5 D9404040                        894+         DC    CL8'VSTER'        instruction name
+000014A8  00000010                                 895+         DC    A(16)             result length
+000014AC  000014B8                                 896+REA21    DC    A(RE21)           result address
+                                                   897+*
+000014B0                                           898+         DS    0F
+000014B0  E610 8E84 300F                00001084   899+X21      VSTER V1,V1OUTPUT,3     test instruction
+000014B6  07FB                                     900+         BR    R11               return
+000014B8                                           901+RE21     DC    0F                xl16 result
+000014B8                                           902+         DROP  R5
+000014B8  08091011 12131415                        903          DC    XL16'08091011121314150001020304050607'
+000014C0  00010203 04050607
+                                                   904
+000014C8  00000000                                 905          DC    F'0'     END OF TABLE
+000014CC  00000000                                 906          DC    F'0'
+                                                   907 *
+                                                   908 * table of pointers to individual load test
+                                                   909 *
+000014D0                                           910 E6TESTS  DS    0F
+                                                   911          PTTABLE
+000014D0                                           912+TTABLE   DS    0F
+000014D0  000010D8                                 913+         DC    A(T1)             TEST &CUR
+000014D4  00001108                                 914+         DC    A(T2)             TEST &CUR
+000014D8  00001138                                 915+         DC    A(T3)             TEST &CUR
+000014DC  00001168                                 916+         DC    A(T4)             TEST &CUR
+000014E0  00001198                                 917+         DC    A(T5)             TEST &CUR
+000014E4  000011C8                                 918+         DC    A(T6)             TEST &CUR
+000014E8  000011F8                                 919+         DC    A(T7)             TEST &CUR
+000014EC  00001228                                 920+         DC    A(T8)             TEST &CUR
+000014F0  00001258                                 921+         DC    A(T9)             TEST &CUR
+000014F4  00001288                                 922+         DC    A(T10)            TEST &CUR
+000014F8  000012B8                                 923+         DC    A(T11)            TEST &CUR
+000014FC  000012E8                                 924+         DC    A(T12)            TEST &CUR
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001500  00001318                                 925+         DC    A(T13)            TEST &CUR
+00001504  00001348                                 926+         DC    A(T14)            TEST &CUR
+00001508  00001378                                 927+         DC    A(T15)            TEST &CUR
+0000150C  000013A8                                 928+         DC    A(T16)            TEST &CUR
+00001510  000013D8                                 929+         DC    A(T17)            TEST &CUR
+00001514  00001408                                 930+         DC    A(T18)            TEST &CUR
+00001518  00001438                                 931+         DC    A(T19)            TEST &CUR
+0000151C  00001468                                 932+         DC    A(T20)            TEST &CUR
+00001520  00001498                                 933+         DC    A(T21)            TEST &CUR
+                                                   934+*
+00001524  00000000                                 935+         DC    A(0)              END OF TABLE
+00001528  00000000                                 936+         DC    A(0)
+                                                   937
+0000152C  00000000                                 938          DC    F'0'     END OF TABLE
+00001530  00000000                                 939          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   941 ***********************************************************************
+                                                   942 *        Register equates
+                                                   943 ***********************************************************************
+
+
+                              00000000  00000001   945 R0       EQU   0
+                              00000001  00000001   946 R1       EQU   1
+                              00000002  00000001   947 R2       EQU   2
+                              00000003  00000001   948 R3       EQU   3
+                              00000004  00000001   949 R4       EQU   4
+                              00000005  00000001   950 R5       EQU   5
+                              00000006  00000001   951 R6       EQU   6
+                              00000007  00000001   952 R7       EQU   7
+                              00000008  00000001   953 R8       EQU   8
+                              00000009  00000001   954 R9       EQU   9
+                              0000000A  00000001   955 R10      EQU   10
+                              0000000B  00000001   956 R11      EQU   11
+                              0000000C  00000001   957 R12      EQU   12
+                              0000000D  00000001   958 R13      EQU   13
+                              0000000E  00000001   959 R14      EQU   14
+                              0000000F  00000001   960 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                   962 ***********************************************************************
+                                                   963 *        Register equates
+                                                   964 ***********************************************************************
+
+
+                              00000000  00000001   966 V0       EQU   0
+                              00000001  00000001   967 V1       EQU   1
+                              00000002  00000001   968 V2       EQU   2
+                              00000003  00000001   969 V3       EQU   3
+                              00000004  00000001   970 V4       EQU   4
+                              00000005  00000001   971 V5       EQU   5
+                              00000006  00000001   972 V6       EQU   6
+                              00000007  00000001   973 V7       EQU   7
+                              00000008  00000001   974 V8       EQU   8
+                              00000009  00000001   975 V9       EQU   9
+                              0000000A  00000001   976 V10      EQU   10
+                              0000000B  00000001   977 V11      EQU   11
+                              0000000C  00000001   978 V12      EQU   12
+                              0000000D  00000001   979 V13      EQU   13
+                              0000000E  00000001   980 V14      EQU   14
+                              0000000F  00000001   981 V15      EQU   15
+                              00000010  00000001   982 V16      EQU   16
+                              00000011  00000001   983 V17      EQU   17
+                              00000012  00000001   984 V18      EQU   18
+                              00000013  00000001   985 V19      EQU   19
+                              00000014  00000001   986 V20      EQU   20
+                              00000015  00000001   987 V21      EQU   21
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001   988 V22      EQU   22
+                              00000017  00000001   989 V23      EQU   23
+                              00000018  00000001   990 V24      EQU   24
+                              00000019  00000001   991 V25      EQU   25
+                              0000001A  00000001   992 V26      EQU   26
+                              0000001B  00000001   993 V27      EQU   27
+                              0000001C  00000001   994 V28      EQU   28
+                              0000001D  00000001   995 V29      EQU   29
+                              0000001E  00000001   996 V30      EQU   30
+                              0000001F  00000001   997 V31      EQU   31
+                                                   998
+                                                   999          END
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    26
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   160  125  156  157  158
+CTLR0               F    000004A4           4   359  170  171  172  173
+DECNUM              C    00001072          16   406  273  275  281  283
+E6TEST              4    00000000          24   422  219
+E6TESTS             F    000014D0           4   910  212
+EDIT                X    00001046          18   401  274  282
+ENDTEST             U    00000334           1   258  217
+EOJ                 I    00000488           4   349  205  261
+EOJPSW              D    00000478           8   347  349
+FAILCONT            U    00000324           1   248
+FAILED              F    00001000           4   387  250  259
+FAILMSG             U    00000320           1   241  231
+FAILPSW             D    00000490           8   351  353
+FAILTEST            I    000004A0           4   353  262
+FB0001              F    00000290           8   189  193  194  196
+IMAGE               1    00000000        5428     0
+K                   U    00000400           1   371  372  373  374
+K64                 U    00010000           1   373
+M3                  X    00000007           1   426  280
+MB                  U    00100000           1   374
+MSG                 I    000003C0           4   309  204  292
+MSGCMD              C    0000040E           9   339  322  323
+MSGMSG              C    00000417          95   340  316  337  314
+MSGMVC              I    00000408           6   337  320
+MSGOK               I    000003D6           2   318  315
+MSGRET              I    000003F6           4   333  326  329
+MSGSAVE             F    000003FC           4   336  312  333
+NEXTE6              U    000002E4           1   214  234  253
+OPNAME              C    00000008           8   428  278
+PAGE                U    00001000           1   372
+PRT3                C    0000105C          18   404  274  275  276  282  283  284
+PRTLINE             C    00001008          16   393  400  291
+PRTLNG              U    0000003E           1   400  290
+PRTM3               C    00001044           1   398  284
+PRTNAME             C    00001033           8   396  278
+PRTNUM              C    00001018           3   394  276
+R0                  U    00000000           1   945  119  170  173  193  195  196  197  202  221  222  249  250  289  290  293
+                                                     309  312  314  316  318  333
+R1                  U    00000001           1   946  203  229  230  259  260  291  323  337
+R10                 U    0000000A           1   955  158  167  168
+R11                 U    0000000B           1   956  226  227  527  545  563  581  599  617  635  653  674  692  714  732  750
+                                                     768  789  807  825  843  864  882  900
+R12                 U    0000000C           1   957  212  215  233  252
+R13                 U    0000000D           1   958
+R14                 U    0000000E           1   959
+R15                 U    0000000F           1   960  242  269  296  297
+R2                  U    00000002           1   947  204  272  273  280  281  289  292  293  310  312  318  319  320  322  328
+                                                     333  334
+R3                  U    00000003           1   948
+R4                  U    00000004           1   949
+R5                  U    00000005           1   950  215  216  219  270  295  516  529  534  547  552  565  570  583  588  601
+                                                     606  619  624  637  642  655  663  676  681  694  703  716  721  734  739
+                                                     752  757  770  778  791  796  809  814  827  832  845  853  866  871  884
+                                                     889  902
+R6                  U    00000006           1   951
+R7                  U    00000007           1   952
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    27
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+R8                  U    00000008           1   953  156  160  161  162  164
+R9                  U    00000009           1   954  157  164  165  167
+RE1                 F    000010F8           4   528  523
+RE10                F    000012A8           4   693  688
+RE11                F    000012D8           4   715  710
+RE12                F    00001308           4   733  728
+RE13                F    00001338           4   751  746
+RE14                F    00001368           4   769  764
+RE15                F    00001398           4   790  785
+RE16                F    000013C8           4   808  803
+RE17                F    000013F8           4   826  821
+RE18                F    00001428           4   844  839
+RE19                F    00001458           4   865  860
+RE2                 F    00001128           4   546  541
+RE20                F    00001488           4   883  878
+RE21                F    000014B8           4   901  896
+RE3                 F    00001158           4   564  559
+RE4                 F    00001188           4   582  577
+RE5                 F    000011B8           4   600  595
+RE6                 F    000011E8           4   618  613
+RE7                 F    00001218           4   636  631
+RE8                 F    00001248           4   654  649
+RE9                 F    00001278           4   675  670
+REA1                A    000010EC           4   523
+REA10               A    0000129C           4   688
+REA11               A    000012CC           4   710
+REA12               A    000012FC           4   728
+REA13               A    0000132C           4   746
+REA14               A    0000135C           4   764
+REA15               A    0000138C           4   785
+REA16               A    000013BC           4   803
+REA17               A    000013EC           4   821
+REA18               A    0000141C           4   839
+REA19               A    0000144C           4   860
+REA2                A    0000111C           4   541
+REA20               A    0000147C           4   878
+REA21               A    000014AC           4   896
+REA3                A    0000114C           4   559
+REA4                A    0000117C           4   577
+REA5                A    000011AC           4   595
+REA6                A    000011DC           4   613
+REA7                A    0000120C           4   631
+REA8                A    0000123C           4   649
+REA9                A    0000126C           4   670
+READDR              A    00000014           4   430  229
+REG2LOW             U    000000DD           1   377
+REG2PATT            U    AABBCCDD           1   376
+RELEN               A    00000010           4   429
+RPTDWSAV            D    000003B0           8   302  289  293
+RPTERROR            I    00000342           4   269  242
+RPTSAVE             F    000003A4           4   299  269  296
+RPTSVR5             F    000003A8           4   300  270  295
+SKL0001             U    0000005D           1   186  202
+SKT0001             C    0000022A          26   183  186  203
+SVOLDPSW            U    00000140           0   121
+T1                  A    000010D8           4   517  913
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    28
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+T10                 A    00001288           4   682  922
+T11                 A    000012B8           4   704  923
+T12                 A    000012E8           4   722  924
+T13                 A    00001318           4   740  925
+T14                 A    00001348           4   758  926
+T15                 A    00001378           4   779  927
+T16                 A    000013A8           4   797  928
+T17                 A    000013D8           4   815  929
+T18                 A    00001408           4   833  930
+T19                 A    00001438           4   854  931
+T2                  A    00001108           4   535  914
+T20                 A    00001468           4   872  932
+T21                 A    00001498           4   890  933
+T3                  A    00001138           4   553  915
+T4                  A    00001168           4   571  916
+T5                  A    00001198           4   589  917
+T6                  A    000011C8           4   607  918
+T7                  A    000011F8           4   625  919
+T8                  A    00001228           4   643  920
+T9                  A    00001258           4   664  921
+TESTING             F    00001004           4   388  222
+TNUM                H    00000004           2   424  221  272
+TSUB                A    00000000           4   423  226
+TTABLE              F    000014D0           4   912
+V0                  U    00000000           1   966
+V1                  U    00000001           1   967  225  526  544  562  580  598  616  634  652  673  691  713  731  749  767
+                                                     788  806  824  842  863  881  899
+V10                 U    0000000A           1   976
+V11                 U    0000000B           1   977
+V12                 U    0000000C           1   978
+V13                 U    0000000D           1   979
+V14                 U    0000000E           1   980
+V15                 U    0000000F           1   981
+V16                 U    00000010           1   982
+V17                 U    00000011           1   983
+V18                 U    00000012           1   984
+V19                 U    00000013           1   985
+V1FUDGE             X    000010A4          16   414  224
+V1INPUT             X    000010B4          16   415  225
+V1OUTPUT            X    00001084          16   412  224  230  526  544  562  580  598  616  634  652  673  691  713  731  749
+                                                     767  788  806  824  842  863  881  899
+V2                  U    00000002           1   968
+V20                 U    00000014           1   986
+V21                 U    00000015           1   987
+V22                 U    00000016           1   988
+V23                 U    00000017           1   989
+V24                 U    00000018           1   990
+V25                 U    00000019           1   991
+V26                 U    0000001A           1   992
+V27                 U    0000001B           1   993
+V28                 U    0000001C           1   994
+V29                 U    0000001D           1   995
+V3                  U    00000003           1   969
+V30                 U    0000001E           1   996
+V31                 U    0000001F           1   997
+V4                  U    00000004           1   970
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    29
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V5                  U    00000005           1   971
+V6                  U    00000006           1   972
+V7                  U    00000007           1   973
+V8                  U    00000008           1   974
+V9                  U    00000009           1   975
+X0001               U    000002B8           1   192  180  193
+X1                  I    000010F0           6   526  517
+X10                 I    000012A0           6   691  682
+X11                 I    000012D0           6   713  704
+X12                 I    00001300           6   731  722
+X13                 I    00001330           6   749  740
+X14                 I    00001360           6   767  758
+X15                 I    00001390           6   788  779
+X16                 I    000013C0           6   806  797
+X17                 I    000013F0           6   824  815
+X18                 I    00001420           6   842  833
+X19                 I    00001450           6   863  854
+X2                  I    00001120           6   544  535
+X20                 I    00001480           6   881  872
+X21                 I    000014B0           6   899  890
+X3                  I    00001150           6   562  553
+X4                  I    00001180           6   580  571
+X5                  I    000011B0           6   598  589
+X6                  I    000011E0           6   616  607
+X7                  I    00001210           6   634  625
+X8                  I    00001240           6   652  643
+X9                  I    00001270           6   673  664
+XC0001              U    000002E0           1   206  198
+ZVE6TST             J    00000000        5428   118  121  123  127  131  386  119
+=A(E6TESTS)         A    000004B0           4   364  212
+=AL2(L'MSGMSG)      R    000004BA           2   367  314
+=F'1'               F    000004B4           4   365  249
+=F'8'               F    000004AC           4   363  197
+=H'0'               H    000004B8           2   366  309
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    30
+
+ MACRO   DEFN  REFERENCES
+
+FCHECK     70   179
+PTTABLE   480   911
+VRX       448   514   532   550   568   586   604   622   640   661   679   701   719   737   755   776   794   812   830   851   869   887
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    31
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    5428  0000-1533  0000-1533
+  Region            5428  0000-1533  0000-1533
+    CSECT  ZVE6TST  5428  0000-1533  0000-1533
+ASMA Ver. 0.7.0  zvector-e6-02-stores (Zvector E6 VRX stores)                                       18 Jun 2024 18:57:02  Page    32
+
+   STMT                       FILE NAME
+
+1     /home/tn529/sharedvfp/tests/zvector-e6-02-stores.asm
+
+
+** NO ERRORS FOUND **
+
+

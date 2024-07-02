@@ -1,0 +1,1804 @@
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *        Zvector E6 instruction tests for VRR-b encoded:
+                                                     5 *
+                                                     6 *        E67C VSCSHP - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP
+                                                     7 *
+                                                     8 *        James Wekel June 2024
+                                                     9 ***********************************************************************
+
+
+                                                    11 ***********************************************************************
+                                                    12 *
+                                                    13 *        basic instruction tests
+                                                    14 *
+                                                    15 ***********************************************************************
+                                                    16 *  This program tests proper functioning of the z/arch E6 VRR-b decimal
+                                                    17 *  scale adn convert and split to HFP instruction.
+                                                    18 *  Exceptions are not tested.
+                                                    19 *
+                                                    20 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    21 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    22 *  NOT designed to test all aspects of any of the instructions.
+                                                    23 *
+                                                    24 ***********************************************************************
+                                                    25 *
+                                                    26 *  A cross-check test is performed if the shifted packed decimal
+                                                    27 *  source can be converted to a 64-bit fixed value without overflow.
+                                                    28 *  The cross-check test converts the 64-bit fixed value to short
+                                                    29 *  float (CEGR) to compare with the high result. The high result is
+                                                    30 *  converted back to fixed, subtracted from source 64-bit fixed, and
+                                                    31 *  converted to long float (CDGR) for create the low result.
+                                                    32 *  This low result is compared to VSCSHP low result. An XCHECK test
+                                                    33 *  error message will be issued if there is a difference.
+                                                    34 *
+                                                    35 ***********************************************************************
+                                                    36 *
+                                                    37 *  *Testcase zvector-e6-18-VSCSHP: VECTOR E6 VRR-b VSCSHP instruction
+                                                    38 *  *
+                                                    39 *  *        Zvector E6 instruction tests for VRR-b encoded:
+                                                    40 *  *
+                                                    41 *  *        E67C VSCSHP - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP
+                                                    42 *  *
+                                                    43 *  *        # --------------------------------------------------------
+                                                    44 *  *        #  This tests only the basic function of the instruction.
+                                                    45 *  *        #  Exceptions are NOT tested.
+                                                    46 *  *        # --------------------------------------------------------
+                                                    47 *  *
+                                                    48 *  mainsize    2
+                                                    49 *  numcpu      1
+                                                    50 *  sysclear
+                                                    51 *  archlvl     z/Arch
+                                                    52 *
+                                                    53 *  loadcore    "$(testpath)/zvector-e6-18-VSCSHP.core" 0x0
+                                                    54 *
+                                                    55 *  diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    56 *  runtest 2
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    57 *  diag8cmd    disable   # (reset back to default)
+                                                    58 *
+                                                    59 *  *Done
+                                                    60 *
+                                                    61 ***********************************************************************
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    63 ***********************************************************************
+                                                    64 *        FCHECK Macro - Is a Facility Bit set?
+                                                    65 *
+                                                    66 *        If the facility bit is NOT set, an message is issued and
+                                                    67 *        the test is skipped.
+                                                    68 *
+                                                    69 *        Fcheck uses R0, R1 and R2
+                                                    70 *
+                                                    71 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    72 ***********************************************************************
+                                                    73          MACRO
+                                                    74          FCHECK &BITNO,&NOTSETMSG
+                                                    75 .*                        &BITNO : facility bit number to check
+                                                    76 .*                        &NOTSETMSG : 'facility name'
+                                                    77          LCLA  &FBBYTE           Facility bit in Byte
+                                                    78          LCLA  &FBBIT            Facility bit within Byte
+                                                    79
+                                                    80          LCLA  &L(8)
+                                                    81 &L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+                                                    82
+                                                    83 &FBBYTE  SETA  &BITNO/8
+                                                    84 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    85 .*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    86
+                                                    87          B     X&SYSNDX
+                                                    88 *                                      Fcheck data area
+                                                    89 *                                      skip messgae
+                                                    90 SKT&SYSNDX DC  C'          Skipping tests: '
+                                                    91          DC    C&NOTSETMSG
+                                                    92          DC    C' facility (bit &BITNO) is not installed.'
+                                                    93 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                    94 *                                      facility bits
+                                                    95          DS    FD                      gap
+                                                    96 FB&SYSNDX DS   4FD
+                                                    97          DS    FD                      gap
+                                                    98 *
+                                                    99 X&SYSNDX EQU *
+                                                   100          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                   101          STFLE FB&SYSNDX               get facility bits
+                                                   102
+                                                   103          XGR   R0,R0
+                                                   104          IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+                                                   105          N     R0,=F'&FBBIT'           is bit set?
+                                                   106          BNZ   XC&SYSNDX
+                                                   107 *
+                                                   108 * facility bit not set, issue message and exit
+                                                   109 *
+                                                   110          LA    R0,SKL&SYSNDX           message length
+                                                   111          LA    R1,SKT&SYSNDX           message address
+                                                   112          BAL   R2,MSG
+                                                   113
+                                                   114          B     EOJ
+                                                   115 XC&SYSNDX EQU *
+                                                   116          MEND
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   118 ***********************************************************************
+                                                   119 *        Low core PSWs
+                                                   120 ***********************************************************************
+
+
+                              00000000  000019DB   122 ZVE6TST  START 0
+00000000                      00000000             123          USING ZVE6TST,R0            Low core addressability
+                                                   124
+                              00000140  00000000   125 SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   127          ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                        128          DC    X'0000000180000000'
+000001A8  00000000 00000200                        129          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   131          ORG   ZVE6TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        132          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        133          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   135          ORG   ZVE6TST+X'200'        Start of actual test program...
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   137
+                                                   138 ***********************************************************************
+                                                   139 *               The actual "ZVE6TST" program itself...
+                                                   140 ***********************************************************************
+                                                   141 *
+                                                   142 *  Architecture Mode: z/Arch
+                                                   143 *  Register Usage:
+                                                   144 *
+                                                   145 *   R0       (work)
+                                                   146 *   R1-4     (work)
+                                                   147 *   R5       Testing control table - current test base
+                                                   148 *   R6-R7    (work)
+                                                   149 *   R8       First base register
+                                                   150 *   R9       Second base register
+                                                   151 *   R10      Third base register
+                                                   152 *   R11      E6TEST call return
+                                                   153 *   R12      E6TESTS register
+                                                   154 *   R13      (work)
+                                                   155 *   R14      Subroutine call
+                                                   156 *   R15      Secondary Subroutine call or work
+                                                   157 *
+                                                   158 ***********************************************************************
+
+00000200                      00000200             160          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200             161          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00002200             162          USING  BEGIN+8192,R10  THIRD Base Register
+                                                   163
+00000200  0580                                     164 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                     165          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                     166          BCTR  R8,0             Initalize FIRST base register
+                                                   167
+00000206  4190 8800                     00000800   168          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800   169          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                   170
+0000020E  41A0 9800                     00000800   171          LA    R10,2048(,R9)    Initalize THIRD base register
+00000212  41A0 A800                     00000800   172          LA    R10,2048(,R10)   Initalize THIRD base register
+                                                   173
+00000216  B600 838C                     0000058C   174          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
+0000021A  9604 838D                     0000058D   175          OI    CTLR0+1,X'04'    Turn on AFP bit
+0000021E  9602 838D                     0000058D   176          OI    CTLR0+1,X'02'    Turn on Vector bit
+00000222  B700 838C                     0000058C   177          LCTL  R0,R0,CTLR0      Reload updated CR0
+                                                   178
+                                                   179 ***********************************************************************
+                                                   180 * Is Vector-packed-decimal-enhancement facility 2 installed  (bit 192)
+                                                   181 ***********************************************************************
+                                                   182
+                                                   183          FCHECK 192,'vector-packed-decimal-enhancement facility 2'
+00000226  47F0 80C8                     000002C8   184+         B     X0001
+                                                   185+*                                      Fcheck data area
+                                                   186+*                                      skip messgae
+0000022A  40404040 40404040                        187+SKT0001  DC    C'          Skipping tests: '
+00000244  A58583A3 96996097                        188+         DC    C'vector-packed-decimal-enhancement facility 2'
+00000270  40868183 899389A3                        189+         DC    C' facility (bit 192) is not installed.'
+                              0000006B  00000001   190+SKL0001  EQU   *-SKT0001
+                                                   191+*                                      facility bits
+00000298  00000000 00000000                        192+         DS    FD                      gap
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000002A0  00000000 00000000                        193+FB0001   DS    4FD
+000002C0  00000000 00000000                        194+         DS    FD                      gap
+                                                   195+*
+                              000002C8  00000001   196+X0001    EQU   *
+000002C8  4100 0004                     00000004   197+         LA    R0,((X0001-FB0001)/8)-1
+000002CC  B2B0 80A0                     000002A0   198+         STFLE FB0001                  get facility bits
+000002D0  B982 0000                                199+         XGR   R0,R0
+000002D4  4300 80B8                     000002B8   200+         IC    R0,FB0001+24            get fbit byte
+000002D8  5400 8394                     00000594   201+         N     R0,=F'128'              is bit set?
+000002DC  4770 80F0                     000002F0   202+         BNZ   XC0001
+                                                   203+*
+                                                   204+* facility bit not set, issue message and exit
+                                                   205+*
+000002E0  4100 006B                     0000006B   206+         LA    R0,SKL0001              message length
+000002E4  4110 802A                     0000022A   207+         LA    R1,SKT0001              message address
+000002E8  4520 82A8                     000004A8   208+         BAL   R2,MSG
+000002EC  47F0 8370                     00000570   209+         B     EOJ
+                              000002F0  00000001   210+XC0001   EQU   *
+                                                   211
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   213 ***********************************************************************
+                                                   214 *              Do tests in the E6TESTS table
+                                                   215 ***********************************************************************
+                                                   216
+000002F0  58C0 8398                     00000598   217          L     R12,=A(E6TESTS)       get table of test addresses
+                                                   218
+                              000002F4  00000001   219 NEXTE6   EQU   *
+000002F4  5850 C000                     00000000   220          L     R5,0(0,R12)       get test address
+000002F8  1255                                     221          LTR   R5,R5                have a test?
+000002FA  4780 8262                     00000462   222          BZ    ENDTEST                 done?
+                                                   223
+000002FE                      00000000             224          USING E6TEST,R5
+                                                   225
+000002FE  4800 5004                     00000004   226          LH    R0,TNUM           save current test number
+00000302  5000 8E04                     00001004   227          ST    R0,TESTING        for easy reference
+                                                   228
+00000306  58B0 5000                     00000000   229          L     R11,TSUB          get address of test routine
+0000030A  05BB                                     230          BALR  R11,R11           do test
+                                                   231
+0000030C  E710 8EDC 000E                000010DC   232          VST   V1,V1OUTPUT       save result
+                                                   233
+00000312  45F0 812E                     0000032E   234          BAL   R15,XCHECK
+                                                   235
+00000316  E310 5018 0014                00000018   236          LGF   R1,READDR         expected result address
+0000031C  D50F 8EDC 1000      000010DC  00000000   237          CLC   V1OUTPUT,0(R1)
+00000322  4770 8208                     00000408   238          BNE   FAILMSG           no, issue failed message
+                                                   239
+00000326  41C0 C004                     00000004   240          LA    R12,4(0,R12)      next test address
+0000032A  47F0 80F4                     000002F4   241          B     NEXTE6
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   243 *----------------------------------------------------------------------
+                                                   244 * For small (19 digit) values, cross check result
+                                                   245 * if rounding mode = 0 and convertion to 64-bit does not overflow
+                                                   246 *
+                                                   247 *        R15 - RETURN
+                                                   248 *
+                                                   249 *        v1,v2,v3 have result, source, scale
+                                                   250 *----------------------------------------------------------------------
+                              0000032E  00000001   251 XCHECK   EQU   *
+                                                   252
+0000032E  E7B2 0000 0056                           253          VLR   V11,V2         copy source
+00000334  E6AB 3019 F072                           254          VSRPR V10,V11,V3,159,1    shift
+0000033A  071F                                     255          BCR   1,R15          cc=3: overflow: ignore and return
+                                                   256
+0000033C  E60A 0018 0052                           257          VCVBG R0,V10,1,8     get 64-bit binary value
+00000342  071F                                     258          BCR   1,15           cc=3: overflow: ignore and return
+                                                   259
+00000344  E640 839C 2004                0000059C   260          VLLEBRZ V4,=F'0',2   zero V4 (FPR4)
+0000034A  E660 839C 2004                0000059C   261          VLLEBRZ V6,=F'0',2   zero V6 (FPR6)
+                                                   262 *
+                                                   263 * convert R0 to appropriate short HFP format (high result)
+                                                   264 *
+00000350  B3C4 0040                                265          CEGR  FPR4,R0        convert r0 to short hfp
+00000354  E740 81E0 000E                000003E0   266          VST   V4,XCV4
+0000035A  E710 81F0 000E                000003F0   267          VST   V1,XCV1
+00000360  D507 81F0 81E0      000003F0  000003E0   268          CLC   XCV1(8),XCV4   compare short (long) HFP
+00000366  4770 8188                     00000388   269          BNE   XCFAIL
+                                                   270 *
+                                                   271 * build low result & compare
+                                                   272 *
+0000036A  B3C8 1014                                273          CGER  R1,1,FPR4       convert high result back to fixed
+0000036E  B9E9 1020                                274          SGRK  R2,R0,R1        split ie. subtract high result
+00000372  B3C5 0042                                275          CDGR  FPR4,R2         convert r2 to long hfp
+00000376  E740 81E0 000E                000003E0   276          VST   V4,XCV4
+0000037C  D507 81F8 81E0      000003F8  000003E0   277          CLC   XCV1+8(8),XCV4  compare low result long HFP
+00000382  4770 8188                     00000388   278          BNE   XCFAIL
+00000386  07FF                                     279          BR    R15             Ok, exit
+                                                   280
+                                                   281 * xcheck failed message
+00000388                                           282 XCFAIL   DS    0H
+00000388  4820 5004                     00000004   283          LH    R2,TNUM              get test number and convert
+0000038C  4E20 8EBB                     000010BB   284          CVD   R2,DECNUM
+00000390  D211 8EA5 8E8F      000010A5  0000108F   285          MVC   PRT3,EDIT
+00000396  DE11 8EA5 8EBB      000010A5  000010BB   286          ED    PRT3,DECNUM
+0000039C  D202 8E55 8EB2      00001055  000010B2   287          MVC   XCPTNUM(3),PRT3+13   fill in message with test #
+                                                   288
+000003A2  D207 8E77 500C      00001077  0000000C   289          MVC   XCPNAME,OPNAME       fill in message with instruction
+                                                   290
+000003A8  B982 0022                                291          XGR   R2,R2                get scale as U8
+000003AC  4320 5007                     00000007   292          IC    R2,SCALE                and convert
+000003B0  4E20 8EBB                     000010BB   293          CVD   R2,DECNUM
+000003B4  D211 8EA5 8E8F      000010A5  0000108F   294          MVC   PRT3,EDIT
+000003BA  DE11 8EA5 8EBB      000010A5  000010BB   295          ED    PRT3,DECNUM
+000003C0  D202 8E8B 8EB2      0000108B  000010B2   296          MVC   XCPSCALE(3),PRT3+13  fill in message with scale field
+                                                   297
+000003C6  50F0 8200                     00000400   298          ST    R15,XCR15            save r15
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000003CA  4100 0047                     00000047   299          LA    R0,XCPLNG            message length
+000003CE  4110 8E48                     00001048   300          LA    R1,XCPLINE           messagfe address
+000003D2  45F0 8270                     00000470   301          BAL   R15,RPTERROR
+                                                   302
+000003D6  58F0 8200                     00000400   303          L     R15,XCR15
+000003DA  07FF                                     304          BR    R15         return from xcheck
+                                                   305
+000003E0                                           306          DS    0FD
+000003E0  00000000 00000000                        307 XCV4     DS    XL16
+000003F0  00000000 00000000                        308 XCV1     DS    XL16
+00000400  00000000 00000000                        309 XCR15    DS    FD
+                                                   310
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   312 ***********************************************************************
+                                                   313 * result not as expected:
+                                                   314 *        issue message with test number, instruction under test
+                                                   315 *              and instruction i3
+                                                   316 ***********************************************************************
+                              00000408  00000001   317 FAILMSG  EQU   *
+00000408  4820 5004                     00000004   318          LH    R2,TNUM              get test number and convert
+0000040C  4E20 8EBB                     000010BB   319          CVD   R2,DECNUM
+00000410  D211 8EA5 8E8F      000010A5  0000108F   320          MVC   PRT3,EDIT
+00000416  DE11 8EA5 8EBB      000010A5  000010BB   321          ED    PRT3,DECNUM
+0000041C  D202 8E15 8EB2      00001015  000010B2   322          MVC   PRTNUM(3),PRT3+13    fill in message with test #
+                                                   323
+00000422  D207 8E30 500C      00001030  0000000C   324          MVC   PRTNAME,OPNAME       fill in message with instruction
+                                                   325 *
+00000428  B982 0022                                326          XGR   R2,R2
+0000042C  4320 5007                     00000007   327          IC    R2,SCALE             get scale and convert
+00000430  4E20 8EBB                     000010BB   328          CVD   R2,DECNUM
+00000434  D211 8EA5 8E8F      000010A5  0000108F   329          MVC   PRT3,EDIT
+0000043A  DE11 8EA5 8EBB      000010A5  000010BB   330          ED    PRT3,DECNUM
+00000440  D202 8E44 8EB2      00001044  000010B2   331          MVC   PRTSCALE(3),PRT3+13     fill in message with scale
+                                                   332
+00000446  4100 0040                     00000040   333          LA    R0,PRTLNG            message length
+0000044A  4110 8E08                     00001008   334          LA    R1,PRTLINE           messagfe address
+0000044E  45F0 8270                     00000470   335          BAL   R15,RPTERROR
+
+
+                                                   337 ***********************************************************************
+                                                   338 * continue after a failed test
+                                                   339 ***********************************************************************
+                              00000452  00000001   340 FAILCONT EQU   *
+00000452  5800 83A0                     000005A0   341          L     R0,=F'1'          set failed test indicator
+00000456  5000 8E00                     00001000   342          ST    R0,FAILED
+                                                   343
+0000045A  41C0 C004                     00000004   344          LA    R12,4(0,R12)      next test address
+0000045E  47F0 80F4                     000002F4   345          B     NEXTE6
+
+
+                                                   347 ***********************************************************************
+                                                   348 * end of testing; set ending psw
+                                                   349 ***********************************************************************
+                              00000462  00000001   350 ENDTEST  EQU   *
+00000462  5810 8E00                     00001000   351          L     R1,FAILED         did a test fail?
+00000466  1211                                     352          LTR   R1,R1
+00000468  4780 8370                     00000570   353          BZ    EOJ                  No, exit
+0000046C  47F0 8388                     00000588   354          B     FAILTEST             Yes, exit with BAD PSW
+                                                   355
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   357 ***********************************************************************
+                                                   358 *        RPTERROR          Report instruction test in error
+                                                   359 *                             R0 = MESSGAE LENGTH
+                                                   360 *                             R1 = ADDRESS OF MESSAGE
+                                                   361 ***********************************************************************
+
+00000470  50F0 8290                     00000490   363 RPTERROR ST    R15,RPTSAVE          Save return address
+00000474  5050 8294                     00000494   364          ST    R5,RPTSVR5           Save R5
+                                                   365 *
+                                                   366 *        Use Hercules Diagnose for Message to console
+                                                   367 *
+00000478  9002 8298                     00000498   368          STM   R0,R2,RPTDWSAV       save regs used by MSG
+0000047C  4520 82A8                     000004A8   369          BAL   R2,MSG               call Hercules console MSG display
+00000480  9802 8298                     00000498   370          LM    R0,R2,RPTDWSAV       restore regs
+
+
+00000484  5850 8294                     00000494   372          L     R5,RPTSVR5           Restore R5
+00000488  58F0 8290                     00000490   373          L     R15,RPTSAVE          Restore return address
+0000048C  07FF                                     374          BR    R15                  Return to caller
+
+00000490  00000000                                 376 RPTSAVE  DC    F'0'                 R15 save area
+00000494  00000000                                 377 RPTSVR5  DC    F'0'                 R5 save area
+
+00000498  00000000 00000000                        379 RPTDWSAV DC    2D'0'                R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   381 ***********************************************************************
+                                                   382 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   383 *              R2 = return address
+                                                   384 ***********************************************************************
+
+000004A8  4900 83A4                     000005A4   386 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000004AC  07D2                                     387          BNHR  R2                     No, ignore
+
+000004AE  9002 82E4                     000004E4   389          STM   R0,R2,MSGSAVE          Save registers
+
+000004B2  4900 83A6                     000005A6   391          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000004B6  47D0 82BE                     000004BE   392          BNH   MSGOK                  Yes, continue
+000004BA  4100 005F                     0000005F   393          LA    R0,L'MSGMSG            No, set to maximum
+
+000004BE  1820                                     395 MSGOK    LR    R2,R0                  Copy length to work register
+000004C0  0620                                     396          BCTR  R2,0                   Minus-1 for execute
+000004C2  4420 82F0                     000004F0   397          EX    R2,MSGMVC              Copy message to O/P buffer
+
+000004C6  4120 200A                     0000000A   399          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+000004CA  4110 82F6                     000004F6   400          LA    R1,MSGCMD              Point to true command
+
+000004CE  83120008                                 402          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+000004D2  4780 82DE                     000004DE   403          BZ    MSGRET                 Return if successful
+                                                   404
+000004D6  1222                                     405          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+000004D8  4780 82DE                     000004DE   406          BZ    MSGRET                   an error occurred but coninue
+                                                   407
+000004DC  0000                                     408          DC    H'0'                   CRASH for debugging purposes
+
+000004DE  9802 82E4                     000004E4   410 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+000004E2  07F2                                     411          BR    R2                     Return to caller
+
+
+
+
+
+
+000004E4  00000000 00000000                        413 MSGSAVE  DC    3F'0'                  Registers save area
+000004F0  D200 82FF 1000      000004FF  00000000   414 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+000004F6  D4E2C7D5 D6C8405C                        416 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+000004FF  40404040 40404040                        417 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   418
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   420 ***********************************************************************
+                                                   421 *        Normal completion or Abnormal termination PSWs
+                                                   422 ***********************************************************************
+
+
+
+
+
+00000560  00020001 80000000                        424 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+00000570  B2B2 8360                     00000560   426 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+00000578  00020001 80000000                        428 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+00000588  B2B2 8378                     00000578   430 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                                   432 ***********************************************************************
+                                                   433 *        Working Storage
+                                                   434 ***********************************************************************
+
+
+0000058C  00000000                                 436 CTLR0    DS    F                CR0
+00000590  00000000                                 437          DS    F
+
+
+                                                   439
+00000594                                           440          LTORG ,                Literals pool
+00000594  00000080                                 441                =F'128'
+00000598  00001974                                 442                =A(E6TESTS)
+0000059C  00000000                                 443                =F'0'
+000005A0  00000001                                 444                =F'1'
+000005A4  0000                                     445                =H'0'
+000005A6  005F                                     446                =AL2(L'MSGMSG)
+                                                   447
+                                                   448 *        some constants
+                                                   449
+                              00000400  00000001   450 K        EQU   1024             One KB
+                              00001000  00000001   451 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   452 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   453 MB       EQU   (K*K)             1 MB
+                                                   454
+                              AABBCCDD  00000001   455 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   456 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   458 *======================================================================
+                                                   459 *
+                                                   460 *  NOTE: start data on an address that is easy to display
+                                                   461 *        within Hercules
+                                                   462 *
+                                                   463 *======================================================================
+                                                   464
+000005A8                      000005A8  00001000   465          ORG   ZVE6TST+X'1000'
+00001000  00000000                                 466 FAILED   DC    F'0'                     some test failed?
+00001004  00000000                                 467 TESTING  DC    F'0'                     current test #
+
+
+                                                   469 ***********************************************************************
+                                                   470 *        TEST failed : result messgae
+                                                   471 ***********************************************************************
+                                                   472 *
+                                                   473 *        failed message and associated editting
+                                                   474 *
+00001008  40404040 4040E385                        475 PRTLINE  DC    C'      Test # '
+00001015  A7A7A7                                   476 PRTNUM   DC    C'xxx'
+00001018  40868189 93858440                        477          DC    c' failed for instruction '
+00001030  A7A7A7A7 A7A7A7A7                        478 PRTNAME  DC    CL8'xxxxxxxx'
+00001038  40A689A3 8840A283                        479          DC    C' with scale='
+00001044  A7A7A7                                   480 PRTSCALE DC    C'xxx'
+00001047  4B                                       481          DC    C'.'
+                              00000040  00000001   482 PRTLNG   EQU   *-PRTLINE
+
+
+                                                   484 ***********************************************************************
+                                                   485 *        TEST failed : XCHECK
+                                                   486 ***********************************************************************
+                                                   487 *
+                                                   488 *        XCHECK failed message
+                                                   489 *
+00001048  40404040 4040E385                        490 XCPLINE  DC    C'      Test # '
+00001055  A7A7A7                                   491 XCPTNUM  DC    C'xxx'
+00001058  40E7C3C8 C5C3D240                        492          DC    c' XCHECK failed for instruction '
+00001077  A7A7A7A7 A7A7A7A7                        493 XCPNAME  DC    CL8'xxxxxxxx'
+0000107F  40A689A3 8840A283                        494          DC    C' with scale='
+0000108B  A7A7A7                                   495 XCPSCALE DC    C'xxx'
+0000108E  4B                                       496          DC    C'.'
+                              00000047  00000001   497 XCPLNG   EQU   *-XCPLINE
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   499 ***********************************************************************
+                                                   500 *        TEST failed : message working storge
+                                                   501 ***********************************************************************
+0000108F  40212020 20202020                        502 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   503
+000010A1  7E7E7E6E                                 504          DC    C'===>'
+000010A5  40404040 40404040                        505 PRT3     DC    CL18' '
+000010B7  4C7E7E7E                                 506          DC    C'<==='
+000010BB  00000000 00000000                        507 DECNUM   DS    CL16
+
+
+                                                   509 *
+                                                   510 *        Vector instruction results, pollution and input
+                                                   511 *
+000010CB  E5F140D6 A4A397A4                        512          DC    C'V1 Output ===>'
+000010DC                                           513          DS    0F
+000010DC  00000000 00000000                        514 V1OUTPUT DS    XL16                                      V1 OUTPUT
+000010EC  00000000 00000000                        515          DS    XL16                                        gap
+000010FC  FFFFFFFF FFFFFFFF                        516 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
+0000110C  12345678 90123456                        517 V1INPUT  DC    XL16'1234567890123456789012345678901D'    V1 input
+0000111C  00000000 00000000                        518          DS    XL16
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   520 ***********************************************************************
+                                                   521 *        E6TEST DSECT
+                                                   522 ***********************************************************************
+
+
+                                                   524 E6TEST   DSECT ,
+00000000  00000000                                 525 TSUB     DC    A(0)           pointer  to test
+00000004  0000                                     526 TNUM     DC    H'00'          Test Number
+00000006  00                                       527          DC    X'00'
+00000007  00                                       528 SCALE    DC    HL1'00'        scale used
+00000008  00000000                                 529 V2ADDR   DC    A(0)           address of v2: 16-byte packed decimal
+0000000C  40404040 40404040                        530 OPNAME   DC    CL8' '         E6 name
+00000014  00000000                                 531 RELEN    DC    A(0)           result length
+00000018  00000000                                 532 READDR   DC    A(0)           expected result address
+                                                   533
+                                                   534 **
+                                                   535 *        test routine will be here (from VRR-b macro)
+
+
+                              00000000  000019DB   537 ZVE6TST  CSECT ,
+0000112C                                           538          DS    0F
+
+
+                                                   540 ***********************************************************************
+                                                   541 *     Macros to help build test tables
+                                                   542 ***********************************************************************
+
+
+
+                                                   544 *
+                                                   545 * macro to generate individual test
+                                                   546 *
+                                                   547          MACRO
+                                                   548          VRR_B &INST,&SCALE
+                                                   549 .*                               &INST - VRR-b instruction under test
+                                                   550
+                                                   551          GBLA  &TNUM
+                                                   552 &TNUM    SETA  &TNUM+1
+                                                   553
+                                                   554          DS    0FD
+                                                   555          USING *,R5              base for test data and test routine
+                                                   556
+                                                   557 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   558          DC    H'&TNUM'          test number
+                                                   559          DC    X'00'
+                                                   560 V3_&TNUM DC    HL1'&SCALE'       scale
+                                                   561 V2_&TNUM DC    A(RE&TNUM+16)     address of v2: 16-byte packed decimal
+                                                   562          DC    CL8'&INST'        instruction name
+                                                   563          DC    A(16)             result length
+                                                   564          DC    A(RE&TNUM)        address of expected result
+                                                   565 .*
+                                                   566 *
+                                                   567 X&TNUM   DS    0F
+                                                   568          VL    V1,V1FUDGE        fudge V1
+                                                   569
+                                                   570          LGF   R2,V2_&TNUM       get v2
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   571          VL    V2,0(R2)
+                                                   572
+                                                   573          VLEB  V3,V3_&TNUM,7     get v3 scale
+                                                   574
+                                                   575          &INST V1,V2,V3          test instruction
+                                                   576
+                                                   577          BR    R11               return
+                                                   578
+                                                   579 RE&TNUM  DS    0F                expected 16 byte result
+                                                   580          DROP  R5
+                                                   581
+                                                   582          MEND
+
+
+
+                                                   584 *
+                                                   585 * macro to generate table of pointers to individual tests
+                                                   586 *
+                                                   587          MACRO
+                                                   588          PTTABLE
+                                                   589          GBLA  &TNUM
+                                                   590          LCLA  &CUR
+                                                   591 &CUR     SETA  1
+                                                   592 .*
+                                                   593 TTABLE   DS    0F
+                                                   594 .LOOP    ANOP
+                                                   595 .*
+                                                   596          DC    A(T&CUR)          TEST &CUR
+                                                   597 .*
+                                                   598 &CUR     SETA  &CUR+1
+                                                   599          AIF   (&CUR LE &TNUM).LOOP
+                                                   600 *
+                                                   601          DC    A(0)              END OF TABLE
+                                                   602          DC    A(0)
+                                                   603 .*
+                                                   604          MEND
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   606 ***********************************************************************
+                                                   607 *        E6 VRR-b tests
+                                                   608 ***********************************************************************
+                                                   609          PRINT DATA
+                                                   610 *
+                                                   611 *         E67C VSCSHP - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP
+                                                   612 *
+                                                   613 *----------------------------------------------------------------------
+                                                   614 * VSCSHP - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP
+                                                   615 *----------------------------------------------------------------------
+                                                   616 *   VRR-b   instruction
+                                                   617 *   followed by
+                                                   618 *              followed by
+                                                   619 *              v1 - 16 byte expected result
+                                                   620 *              v2 - 16 byte zoned decimal (operand)
+                                                   621 *----------------------------------------------------------------------
+                                                   622 * NO Shift/Scale
+                                                   623 *----------------------------------------------------------------------
+                                                   624
+                                                   625 * +0
+                                                   626          VRR_B VSCSHP,0
+00001130                                           627+         DS    0FD
+00001130                      00001130             628+         USING *,R5              base for test data and test routine
+00001130  0000114C                                 629+T1       DC    A(X1)             address of test routine
+00001134  0001                                     630+         DC    H'1'              test number
+00001136  00                                       631+         DC    X'00'
+00001137  00                                       632+V3_1     DC    HL1'0'            scale
+00001138  0000117C                                 633+V2_1     DC    A(RE1+16)         address of v2: 16-byte packed decimal
+0000113C  E5E2C3E2 C8D74040                        634+         DC    CL8'VSCSHP'       instruction name
+00001144  00000010                                 635+         DC    A(16)             result length
+00001148  0000116C                                 636+         DC    A(RE1)            address of expected result
+                                                   637+*
+0000114C                                           638+X1       DS    0F
+0000114C  E710 8EFC 0006                000010FC   639+         VL    V1,V1FUDGE        fudge V1
+00001152  E320 5008 0014                00001138   640+         LGF   R2,V2_1           get v2
+00001158  E722 0000 0006                00000000   641+         VL    V2,0(R2)
+0000115E  E730 5007 7000                00001137   642+         VLEB  V3,V3_1,7         get v3 scale
+00001164  E612 3000 007C                           643+         VSCSHP V1,V2,V3         test instruction
+0000116A  07FB                                     644+         BR    R11               return
+0000116C                                           645+RE1      DS    0F                expected 16 byte result
+0000116C                                           646+         DROP  R5
+0000116C  00000000 00000000                        647          DC    XL16'00000000000000000000000000000000'
+00001174  00000000 00000000
+0000117C  00000000 00000000                        648          DC    XL16'0000000000000000000000000000000C'
+00001184  00000000 0000000C
+                                                   649 * -0
+                                                   650          VRR_B VSCSHP,0
+00001190                                           651+         DS    0FD
+00001190                      00001190             652+         USING *,R5              base for test data and test routine
+00001190  000011AC                                 653+T2       DC    A(X2)             address of test routine
+00001194  0002                                     654+         DC    H'2'              test number
+00001196  00                                       655+         DC    X'00'
+00001197  00                                       656+V3_2     DC    HL1'0'            scale
+00001198  000011DC                                 657+V2_2     DC    A(RE2+16)         address of v2: 16-byte packed decimal
+0000119C  E5E2C3E2 C8D74040                        658+         DC    CL8'VSCSHP'       instruction name
+000011A4  00000010                                 659+         DC    A(16)             result length
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000011A8  000011CC                                 660+         DC    A(RE2)            address of expected result
+                                                   661+*
+000011AC                                           662+X2       DS    0F
+000011AC  E710 8EFC 0006                000010FC   663+         VL    V1,V1FUDGE        fudge V1
+000011B2  E320 5008 0014                00001198   664+         LGF   R2,V2_2           get v2
+000011B8  E722 0000 0006                00000000   665+         VL    V2,0(R2)
+000011BE  E730 5007 7000                00001197   666+         VLEB  V3,V3_2,7         get v3 scale
+000011C4  E612 3000 007C                           667+         VSCSHP V1,V2,V3         test instruction
+000011CA  07FB                                     668+         BR    R11               return
+000011CC                                           669+RE2      DS    0F                expected 16 byte result
+000011CC                                           670+         DROP  R5
+000011CC  00000000 00000000                        671          DC    XL16'00000000000000000000000000000000'
+000011D4  00000000 00000000
+000011DC  00000000 00000000                        672          DC    XL16'0000000000000000000000000000000D'
+000011E4  00000000 0000000D
+                                                   673 * +1
+                                                   674          VRR_B VSCSHP,0
+000011F0                                           675+         DS    0FD
+000011F0                      000011F0             676+         USING *,R5              base for test data and test routine
+000011F0  0000120C                                 677+T3       DC    A(X3)             address of test routine
+000011F4  0003                                     678+         DC    H'3'              test number
+000011F6  00                                       679+         DC    X'00'
+000011F7  00                                       680+V3_3     DC    HL1'0'            scale
+000011F8  0000123C                                 681+V2_3     DC    A(RE3+16)         address of v2: 16-byte packed decimal
+000011FC  E5E2C3E2 C8D74040                        682+         DC    CL8'VSCSHP'       instruction name
+00001204  00000010                                 683+         DC    A(16)             result length
+00001208  0000122C                                 684+         DC    A(RE3)            address of expected result
+                                                   685+*
+0000120C                                           686+X3       DS    0F
+0000120C  E710 8EFC 0006                000010FC   687+         VL    V1,V1FUDGE        fudge V1
+00001212  E320 5008 0014                000011F8   688+         LGF   R2,V2_3           get v2
+00001218  E722 0000 0006                00000000   689+         VL    V2,0(R2)
+0000121E  E730 5007 7000                000011F7   690+         VLEB  V3,V3_3,7         get v3 scale
+00001224  E612 3000 007C                           691+         VSCSHP V1,V2,V3         test instruction
+0000122A  07FB                                     692+         BR    R11               return
+0000122C                                           693+RE3      DS    0F                expected 16 byte result
+0000122C                                           694+         DROP  R5
+0000122C  41100000 00000000                        695          DC    XL16'41100000000000000000000000000000'
+00001234  00000000 00000000
+0000123C  00000000 00000000                        696          DC    XL16'0000000000000000000000000000001C'
+00001244  00000000 0000001C
+                                                   697 * -1
+                                                   698          VRR_B VSCSHP,0
+00001250                                           699+         DS    0FD
+00001250                      00001250             700+         USING *,R5              base for test data and test routine
+00001250  0000126C                                 701+T4       DC    A(X4)             address of test routine
+00001254  0004                                     702+         DC    H'4'              test number
+00001256  00                                       703+         DC    X'00'
+00001257  00                                       704+V3_4     DC    HL1'0'            scale
+00001258  0000129C                                 705+V2_4     DC    A(RE4+16)         address of v2: 16-byte packed decimal
+0000125C  E5E2C3E2 C8D74040                        706+         DC    CL8'VSCSHP'       instruction name
+00001264  00000010                                 707+         DC    A(16)             result length
+00001268  0000128C                                 708+         DC    A(RE4)            address of expected result
+                                                   709+*
+0000126C                                           710+X4       DS    0F
+0000126C  E710 8EFC 0006                000010FC   711+         VL    V1,V1FUDGE        fudge V1
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001272  E320 5008 0014                00001258   712+         LGF   R2,V2_4           get v2
+00001278  E722 0000 0006                00000000   713+         VL    V2,0(R2)
+0000127E  E730 5007 7000                00001257   714+         VLEB  V3,V3_4,7         get v3 scale
+00001284  E612 3000 007C                           715+         VSCSHP V1,V2,V3         test instruction
+0000128A  07FB                                     716+         BR    R11               return
+0000128C                                           717+RE4      DS    0F                expected 16 byte result
+0000128C                                           718+         DROP  R5
+0000128C  C1100000 00000000                        719          DC    XL16'C1100000000000000000000000000000'
+00001294  00000000 00000000
+0000129C  00000000 00000000                        720          DC    XL16'0000000000000000000000000000001D'
+000012A4  00000000 0000001D
+                                                   721
+                                                   722 * -36650385409
+                                                   723          VRR_B VSCSHP,0
+000012B0                                           724+         DS    0FD
+000012B0                      000012B0             725+         USING *,R5              base for test data and test routine
+000012B0  000012CC                                 726+T5       DC    A(X5)             address of test routine
+000012B4  0005                                     727+         DC    H'5'              test number
+000012B6  00                                       728+         DC    X'00'
+000012B7  00                                       729+V3_5     DC    HL1'0'            scale
+000012B8  000012FC                                 730+V2_5     DC    A(RE5+16)         address of v2: 16-byte packed decimal
+000012BC  E5E2C3E2 C8D74040                        731+         DC    CL8'VSCSHP'       instruction name
+000012C4  00000010                                 732+         DC    A(16)             result length
+000012C8  000012EC                                 733+         DC    A(RE5)            address of expected result
+                                                   734+*
+000012CC                                           735+X5       DS    0F
+000012CC  E710 8EFC 0006                000010FC   736+         VL    V1,V1FUDGE        fudge V1
+000012D2  E320 5008 0014                000012B8   737+         LGF   R2,V2_5           get v2
+000012D8  E722 0000 0006                00000000   738+         VL    V2,0(R2)
+000012DE  E730 5007 7000                000012B7   739+         VLEB  V3,V3_5,7         get v3 scale
+000012E4  E612 3000 007C                           740+         VSCSHP V1,V2,V3         test instruction
+000012EA  07FB                                     741+         BR    R11               return
+000012EC                                           742+RE5      DS    0F                expected 16 byte result
+000012EC                                           743+         DROP  R5
+000012EC  C9888888 00000000                        744          DC    XL16'C988888800000000C110000000000000'
+000012F4  C1100000 00000000
+000012FC  00000000 00000000                        745          DC    XL16'0000000000000000000036650385409D'
+00001304  00003665 0385409D
+                                                   746
+                                                   747 * +9000000000000001
+                                                   748          VRR_B VSCSHP,0
+00001310                                           749+         DS    0FD
+00001310                      00001310             750+         USING *,R5              base for test data and test routine
+00001310  0000132C                                 751+T6       DC    A(X6)             address of test routine
+00001314  0006                                     752+         DC    H'6'              test number
+00001316  00                                       753+         DC    X'00'
+00001317  00                                       754+V3_6     DC    HL1'0'            scale
+00001318  0000135C                                 755+V2_6     DC    A(RE6+16)         address of v2: 16-byte packed decimal
+0000131C  E5E2C3E2 C8D74040                        756+         DC    CL8'VSCSHP'       instruction name
+00001324  00000010                                 757+         DC    A(16)             result length
+00001328  0000134C                                 758+         DC    A(RE6)            address of expected result
+                                                   759+*
+0000132C                                           760+X6       DS    0F
+0000132C  E710 8EFC 0006                000010FC   761+         VL    V1,V1FUDGE        fudge V1
+00001332  E320 5008 0014                00001318   762+         LGF   R2,V2_6           get v2
+00001338  E722 0000 0006                00000000   763+         VL    V2,0(R2)
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000133E  E730 5007 7000                00001317   764+         VLEB  V3,V3_6,7         get v3 scale
+00001344  E612 3000 007C                           765+         VSCSHP V1,V2,V3         test instruction
+0000134A  07FB                                     766+         BR    R11               return
+0000134C                                           767+RE6      DS    0F                expected 16 byte result
+0000134C                                           768+         DROP  R5
+0000134C  4E1FF973 00000000                        769          DC    XL16'4E1FF9730000000048CAFA8001000000'
+00001354  48CAFA80 01000000
+0000135C  00000000 00000009                        770          DC    XL16'0000000000000009000000000000001C'
+00001364  00000000 0000001C
+                                                   771
+                                                   772 * -9223372036854775808
+                                                   773          VRR_B VSCSHP,0
+00001370                                           774+         DS    0FD
+00001370                      00001370             775+         USING *,R5              base for test data and test routine
+00001370  0000138C                                 776+T7       DC    A(X7)             address of test routine
+00001374  0007                                     777+         DC    H'7'              test number
+00001376  00                                       778+         DC    X'00'
+00001377  00                                       779+V3_7     DC    HL1'0'            scale
+00001378  000013BC                                 780+V2_7     DC    A(RE7+16)         address of v2: 16-byte packed decimal
+0000137C  E5E2C3E2 C8D74040                        781+         DC    CL8'VSCSHP'       instruction name
+00001384  00000010                                 782+         DC    A(16)             result length
+00001388  000013AC                                 783+         DC    A(RE7)            address of expected result
+                                                   784+*
+0000138C                                           785+X7       DS    0F
+0000138C  E710 8EFC 0006                000010FC   786+         VL    V1,V1FUDGE        fudge V1
+00001392  E320 5008 0014                00001378   787+         LGF   R2,V2_7           get v2
+00001398  E722 0000 0006                00000000   788+         VL    V2,0(R2)
+0000139E  E730 5007 7000                00001377   789+         VLEB  V3,V3_7,7         get v3 scale
+000013A4  E612 3000 007C                           790+         VSCSHP V1,V2,V3         test instruction
+000013AA  07FB                                     791+         BR    R11               return
+000013AC                                           792+RE7      DS    0F                expected 16 byte result
+000013AC                                           793+         DROP  R5
+000013AC  D0800000 00000000                        794          DC    XL16'D0800000000000000000000000000000'
+000013B4  00000000 00000000
+000013BC  00000000 00009223                        795          DC    XL16'0000000000009223372036854775808D'
+000013C4  37203685 4775808D
+                                                   796
+                                                   797 *  9223372036854775807
+                                                   798          VRR_B VSCSHP,0
+000013D0                                           799+         DS    0FD
+000013D0                      000013D0             800+         USING *,R5              base for test data and test routine
+000013D0  000013EC                                 801+T8       DC    A(X8)             address of test routine
+000013D4  0008                                     802+         DC    H'8'              test number
+000013D6  00                                       803+         DC    X'00'
+000013D7  00                                       804+V3_8     DC    HL1'0'            scale
+000013D8  0000141C                                 805+V2_8     DC    A(RE8+16)         address of v2: 16-byte packed decimal
+000013DC  E5E2C3E2 C8D74040                        806+         DC    CL8'VSCSHP'       instruction name
+000013E4  00000010                                 807+         DC    A(16)             result length
+000013E8  0000140C                                 808+         DC    A(RE8)            address of expected result
+                                                   809+*
+000013EC                                           810+X8       DS    0F
+000013EC  E710 8EFC 0006                000010FC   811+         VL    V1,V1FUDGE        fudge V1
+000013F2  E320 5008 0014                000013D8   812+         LGF   R2,V2_8           get v2
+000013F8  E722 0000 0006                00000000   813+         VL    V2,0(R2)
+000013FE  E730 5007 7000                000013D7   814+         VLEB  V3,V3_8,7         get v3 scale
+00001404  E612 3000 007C                           815+         VSCSHP V1,V2,V3         test instruction
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000140A  07FB                                     816+         BR    R11               return
+0000140C                                           817+RE8      DS    0F                expected 16 byte result
+0000140C                                           818+         DROP  R5
+0000140C  507FFFFF 00000000                        819          DC    XL16'507FFFFF000000004AFFFFFFFFFF0000'
+00001414  4AFFFFFF FFFF0000
+0000141C  00000000 00009223                        820          DC    XL16'0000000000009223372036854775807C'
+00001424  37203685 4775807C
+                                                   821
+                                                   822 * 18446744073709551615
+                                                   823          VRR_B VSCSHP,0
+00001430                                           824+         DS    0FD
+00001430                      00001430             825+         USING *,R5              base for test data and test routine
+00001430  0000144C                                 826+T9       DC    A(X9)             address of test routine
+00001434  0009                                     827+         DC    H'9'              test number
+00001436  00                                       828+         DC    X'00'
+00001437  00                                       829+V3_9     DC    HL1'0'            scale
+00001438  0000147C                                 830+V2_9     DC    A(RE9+16)         address of v2: 16-byte packed decimal
+0000143C  E5E2C3E2 C8D74040                        831+         DC    CL8'VSCSHP'       instruction name
+00001444  00000010                                 832+         DC    A(16)             result length
+00001448  0000146C                                 833+         DC    A(RE9)            address of expected result
+                                                   834+*
+0000144C                                           835+X9       DS    0F
+0000144C  E710 8EFC 0006                000010FC   836+         VL    V1,V1FUDGE        fudge V1
+00001452  E320 5008 0014                00001438   837+         LGF   R2,V2_9           get v2
+00001458  E722 0000 0006                00000000   838+         VL    V2,0(R2)
+0000145E  E730 5007 7000                00001437   839+         VLEB  V3,V3_9,7         get v3 scale
+00001464  E612 3000 007C                           840+         VSCSHP V1,V2,V3         test instruction
+0000146A  07FB                                     841+         BR    R11               return
+0000146C                                           842+RE9      DS    0F                expected 16 byte result
+0000146C                                           843+         DROP  R5
+0000146C  50FFFFFF 00000000                        844          DC    XL16'50FFFFFF000000004AFFFFFFFFFF0000'
+00001474  4AFFFFFF FFFF0000
+0000147C  00000000 00018446                        845          DC    XL16'0000000000018446744073709551615C'
+00001484  74407370 9551615C
+                                                   846
+                                                   847 * 9009000000018446744073709551615
+                                                   848          VRR_B VSCSHP,0
+00001490                                           849+         DS    0FD
+00001490                      00001490             850+         USING *,R5              base for test data and test routine
+00001490  000014AC                                 851+T10      DC    A(X10)            address of test routine
+00001494  000A                                     852+         DC    H'10'             test number
+00001496  00                                       853+         DC    X'00'
+00001497  00                                       854+V3_10    DC    HL1'0'            scale
+00001498  000014DC                                 855+V2_10    DC    A(RE10+16)        address of v2: 16-byte packed decimal
+0000149C  E5E2C3E2 C8D74040                        856+         DC    CL8'VSCSHP'       instruction name
+000014A4  00000010                                 857+         DC    A(16)             result length
+000014A8  000014CC                                 858+         DC    A(RE10)           address of expected result
+                                                   859+*
+000014AC                                           860+X10      DS    0F
+000014AC  E710 8EFC 0006                000010FC   861+         VL    V1,V1FUDGE        fudge V1
+000014B2  E320 5008 0014                00001498   862+         LGF   R2,V2_10          get v2
+000014B8  E722 0000 0006                00000000   863+         VL    V2,0(R2)
+000014BE  E730 5007 7000                00001497   864+         VLEB  V3,V3_10,7        get v3 scale
+000014C4  E612 3000 007C                           865+         VSCSHP V1,V2,V3         test instruction
+000014CA  07FB                                     866+         BR    R11               return
+000014CC                                           867+RE10     DS    0F                expected 16 byte result
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000014CC                                           868+         DROP  R5
+000014CC  5A71B5A6 00000000                        869          DC    XL16'5A71B5A6000000005423751870DF6067'
+000014D4  54237518 70DF6067
+000014DC  90090000 00018446                        870          DC    XL16'9009000000018446744073709551615C'
+000014E4  74407370 9551615C
+                                                   871
+                                                   872 * 9999999990018446744073709551615
+                                                   873          VRR_B VSCSHP,0
+000014F0                                           874+         DS    0FD
+000014F0                      000014F0             875+         USING *,R5              base for test data and test routine
+000014F0  0000150C                                 876+T11      DC    A(X11)            address of test routine
+000014F4  000B                                     877+         DC    H'11'             test number
+000014F6  00                                       878+         DC    X'00'
+000014F7  00                                       879+V3_11    DC    HL1'0'            scale
+000014F8  0000153C                                 880+V2_11    DC    A(RE11+16)        address of v2: 16-byte packed decimal
+000014FC  E5E2C3E2 C8D74040                        881+         DC    CL8'VSCSHP'       instruction name
+00001504  00000010                                 882+         DC    A(16)             result length
+00001508  0000152C                                 883+         DC    A(RE11)           address of expected result
+                                                   884+*
+0000150C                                           885+X11      DS    0F
+0000150C  E710 8EFC 0006                000010FC   886+         VL    V1,V1FUDGE        fudge V1
+00001512  E320 5008 0014                000014F8   887+         LGF   R2,V2_11          get v2
+00001518  E722 0000 0006                00000000   888+         VL    V2,0(R2)
+0000151E  E730 5007 7000                000014F7   889+         VLEB  V3,V3_11,7        get v3 scale
+00001524  E612 3000 007C                           890+         VSCSHP V1,V2,V3         test instruction
+0000152A  07FB                                     891+         BR    R11               return
+0000152C                                           892+RE11     DS    0F                expected 16 byte result
+0000152C                                           893+         DROP  R5
+0000152C  5A7E37BE 00000000                        894          DC    XL16'5A7E37BE00000000541E05A6B0816BCD'
+00001534  541E05A6 B0816BCD
+0000153C  99999999 90018446                        895          DC    XL16'9999999990018446744073709551615C'
+00001544  74407370 9551615C
+                                                   896
+                                                   897 *----------------------------------------------------------------------
+                                                   898 * With Shift/Scale
+                                                   899 *----------------------------------------------------------------------
+                                                   900
+                                                   901 * +0
+                                                   902          VRR_B VSCSHP,1
+00001550                                           903+         DS    0FD
+00001550                      00001550             904+         USING *,R5              base for test data and test routine
+00001550  0000156C                                 905+T12      DC    A(X12)            address of test routine
+00001554  000C                                     906+         DC    H'12'             test number
+00001556  00                                       907+         DC    X'00'
+00001557  01                                       908+V3_12    DC    HL1'1'            scale
+00001558  0000159C                                 909+V2_12    DC    A(RE12+16)        address of v2: 16-byte packed decimal
+0000155C  E5E2C3E2 C8D74040                        910+         DC    CL8'VSCSHP'       instruction name
+00001564  00000010                                 911+         DC    A(16)             result length
+00001568  0000158C                                 912+         DC    A(RE12)           address of expected result
+                                                   913+*
+0000156C                                           914+X12      DS    0F
+0000156C  E710 8EFC 0006                000010FC   915+         VL    V1,V1FUDGE        fudge V1
+00001572  E320 5008 0014                00001558   916+         LGF   R2,V2_12          get v2
+00001578  E722 0000 0006                00000000   917+         VL    V2,0(R2)
+0000157E  E730 5007 7000                00001557   918+         VLEB  V3,V3_12,7        get v3 scale
+00001584  E612 3000 007C                           919+         VSCSHP V1,V2,V3         test instruction
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000158A  07FB                                     920+         BR    R11               return
+0000158C                                           921+RE12     DS    0F                expected 16 byte result
+0000158C                                           922+         DROP  R5
+0000158C  00000000 00000000                        923          DC    XL16'00000000000000000000000000000000'
+00001594  00000000 00000000
+0000159C  00000000 00000000                        924          DC    XL16'0000000000000000000000000000000C'
+000015A4  00000000 0000000C
+                                                   925 * -0
+                                                   926          VRR_B VSCSHP,1
+000015B0                                           927+         DS    0FD
+000015B0                      000015B0             928+         USING *,R5              base for test data and test routine
+000015B0  000015CC                                 929+T13      DC    A(X13)            address of test routine
+000015B4  000D                                     930+         DC    H'13'             test number
+000015B6  00                                       931+         DC    X'00'
+000015B7  01                                       932+V3_13    DC    HL1'1'            scale
+000015B8  000015FC                                 933+V2_13    DC    A(RE13+16)        address of v2: 16-byte packed decimal
+000015BC  E5E2C3E2 C8D74040                        934+         DC    CL8'VSCSHP'       instruction name
+000015C4  00000010                                 935+         DC    A(16)             result length
+000015C8  000015EC                                 936+         DC    A(RE13)           address of expected result
+                                                   937+*
+000015CC                                           938+X13      DS    0F
+000015CC  E710 8EFC 0006                000010FC   939+         VL    V1,V1FUDGE        fudge V1
+000015D2  E320 5008 0014                000015B8   940+         LGF   R2,V2_13          get v2
+000015D8  E722 0000 0006                00000000   941+         VL    V2,0(R2)
+000015DE  E730 5007 7000                000015B7   942+         VLEB  V3,V3_13,7        get v3 scale
+000015E4  E612 3000 007C                           943+         VSCSHP V1,V2,V3         test instruction
+000015EA  07FB                                     944+         BR    R11               return
+000015EC                                           945+RE13     DS    0F                expected 16 byte result
+000015EC                                           946+         DROP  R5
+000015EC  00000000 00000000                        947          DC    XL16'00000000000000000000000000000000'
+000015F4  00000000 00000000
+000015FC  00000000 00000000                        948          DC    XL16'0000000000000000000000000000000D'
+00001604  00000000 0000000D
+                                                   949 * +1
+                                                   950          VRR_B VSCSHP,1
+00001610                                           951+         DS    0FD
+00001610                      00001610             952+         USING *,R5              base for test data and test routine
+00001610  0000162C                                 953+T14      DC    A(X14)            address of test routine
+00001614  000E                                     954+         DC    H'14'             test number
+00001616  00                                       955+         DC    X'00'
+00001617  01                                       956+V3_14    DC    HL1'1'            scale
+00001618  0000165C                                 957+V2_14    DC    A(RE14+16)        address of v2: 16-byte packed decimal
+0000161C  E5E2C3E2 C8D74040                        958+         DC    CL8'VSCSHP'       instruction name
+00001624  00000010                                 959+         DC    A(16)             result length
+00001628  0000164C                                 960+         DC    A(RE14)           address of expected result
+                                                   961+*
+0000162C                                           962+X14      DS    0F
+0000162C  E710 8EFC 0006                000010FC   963+         VL    V1,V1FUDGE        fudge V1
+00001632  E320 5008 0014                00001618   964+         LGF   R2,V2_14          get v2
+00001638  E722 0000 0006                00000000   965+         VL    V2,0(R2)
+0000163E  E730 5007 7000                00001617   966+         VLEB  V3,V3_14,7        get v3 scale
+00001644  E612 3000 007C                           967+         VSCSHP V1,V2,V3         test instruction
+0000164A  07FB                                     968+         BR    R11               return
+0000164C                                           969+RE14     DS    0F                expected 16 byte result
+0000164C                                           970+         DROP  R5
+0000164C  41A00000 00000000                        971          DC    XL16'41A00000000000000000000000000000'
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001654  00000000 00000000
+0000165C  00000000 00000000                        972          DC    XL16'0000000000000000000000000000001C'
+00001664  00000000 0000001C
+                                                   973 * -1
+                                                   974          VRR_B VSCSHP,1
+00001670                                           975+         DS    0FD
+00001670                      00001670             976+         USING *,R5              base for test data and test routine
+00001670  0000168C                                 977+T15      DC    A(X15)            address of test routine
+00001674  000F                                     978+         DC    H'15'             test number
+00001676  00                                       979+         DC    X'00'
+00001677  01                                       980+V3_15    DC    HL1'1'            scale
+00001678  000016BC                                 981+V2_15    DC    A(RE15+16)        address of v2: 16-byte packed decimal
+0000167C  E5E2C3E2 C8D74040                        982+         DC    CL8'VSCSHP'       instruction name
+00001684  00000010                                 983+         DC    A(16)             result length
+00001688  000016AC                                 984+         DC    A(RE15)           address of expected result
+                                                   985+*
+0000168C                                           986+X15      DS    0F
+0000168C  E710 8EFC 0006                000010FC   987+         VL    V1,V1FUDGE        fudge V1
+00001692  E320 5008 0014                00001678   988+         LGF   R2,V2_15          get v2
+00001698  E722 0000 0006                00000000   989+         VL    V2,0(R2)
+0000169E  E730 5007 7000                00001677   990+         VLEB  V3,V3_15,7        get v3 scale
+000016A4  E612 3000 007C                           991+         VSCSHP V1,V2,V3         test instruction
+000016AA  07FB                                     992+         BR    R11               return
+000016AC                                           993+RE15     DS    0F                expected 16 byte result
+000016AC                                           994+         DROP  R5
+000016AC  C1A00000 00000000                        995          DC    XL16'C1A00000000000000000000000000000'
+000016B4  00000000 00000000
+000016BC  00000000 00000000                        996          DC    XL16'0000000000000000000000000000001D'
+000016C4  00000000 0000001D
+                                                   997
+                                                   998 * -36650385409
+                                                   999          VRR_B VSCSHP,2
+000016D0                                          1000+         DS    0FD
+000016D0                      000016D0            1001+         USING *,R5              base for test data and test routine
+000016D0  000016EC                                1002+T16      DC    A(X16)            address of test routine
+000016D4  0010                                    1003+         DC    H'16'             test number
+000016D6  00                                      1004+         DC    X'00'
+000016D7  02                                      1005+V3_16    DC    HL1'2'            scale
+000016D8  0000171C                                1006+V2_16    DC    A(RE16+16)        address of v2: 16-byte packed decimal
+000016DC  E5E2C3E2 C8D74040                       1007+         DC    CL8'VSCSHP'       instruction name
+000016E4  00000010                                1008+         DC    A(16)             result length
+000016E8  0000170C                                1009+         DC    A(RE16)           address of expected result
+                                                  1010+*
+000016EC                                          1011+X16      DS    0F
+000016EC  E710 8EFC 0006                000010FC  1012+         VL    V1,V1FUDGE        fudge V1
+000016F2  E320 5008 0014                000016D8  1013+         LGF   R2,V2_16          get v2
+000016F8  E722 0000 0006                00000000  1014+         VL    V2,0(R2)
+000016FE  E730 5007 7000                000016D7  1015+         VLEB  V3,V3_16,7        get v3 scale
+00001704  E612 3000 007C                          1016+         VSCSHP V1,V2,V3         test instruction
+0000170A  07FB                                    1017+         BR    R11               return
+0000170C                                          1018+RE16     DS    0F                expected 16 byte result
+0000170C                                          1019+         DROP  R5
+0000170C  CB355555 00000000                       1020          DC    XL16'CB35555500000000C520064000000000'
+00001714  C5200640 00000000
+0000171C  00000000 00000000                       1021          DC    XL16'0000000000000000000036650385409D'
+00001724  00003665 0385409D
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1022
+                                                  1023 * +9000000000000001
+                                                  1024          VRR_B VSCSHP,2
+00001730                                          1025+         DS    0FD
+00001730                      00001730            1026+         USING *,R5              base for test data and test routine
+00001730  0000174C                                1027+T17      DC    A(X17)            address of test routine
+00001734  0011                                    1028+         DC    H'17'             test number
+00001736  00                                      1029+         DC    X'00'
+00001737  02                                      1030+V3_17    DC    HL1'2'            scale
+00001738  0000177C                                1031+V2_17    DC    A(RE17+16)        address of v2: 16-byte packed decimal
+0000173C  E5E2C3E2 C8D74040                       1032+         DC    CL8'VSCSHP'       instruction name
+00001744  00000010                                1033+         DC    A(16)             result length
+00001748  0000176C                                1034+         DC    A(RE17)           address of expected result
+                                                  1035+*
+0000174C                                          1036+X17      DS    0F
+0000174C  E710 8EFC 0006                000010FC  1037+         VL    V1,V1FUDGE        fudge V1
+00001752  E320 5008 0014                00001738  1038+         LGF   R2,V2_17          get v2
+00001758  E722 0000 0006                00000000  1039+         VL    V2,0(R2)
+0000175E  E730 5007 7000                00001737  1040+         VLEB  V3,V3_17,7        get v3 scale
+00001764  E612 3000 007C                          1041+         VSCSHP V1,V2,V3         test instruction
+0000176A  07FB                                    1042+         BR    R11               return
+0000176C                                          1043+RE17     DS    0F                expected 16 byte result
+0000176C                                          1044+         DROP  R5
+0000176C  4FC7D713 00000000                       1045          DC    XL16'4FC7D7130000000049B49DA006400000'
+00001774  49B49DA0 06400000
+0000177C  00000000 00000009                       1046          DC    XL16'0000000000000009000000000000001C'
+00001784  00000000 0000001C
+                                                  1047
+                                                  1048 * -9223372036854775808
+                                                  1049          VRR_B VSCSHP,2
+00001790                                          1050+         DS    0FD
+00001790                      00001790            1051+         USING *,R5              base for test data and test routine
+00001790  000017AC                                1052+T18      DC    A(X18)            address of test routine
+00001794  0012                                    1053+         DC    H'18'             test number
+00001796  00                                      1054+         DC    X'00'
+00001797  02                                      1055+V3_18    DC    HL1'2'            scale
+00001798  000017DC                                1056+V2_18    DC    A(RE18+16)        address of v2: 16-byte packed decimal
+0000179C  E5E2C3E2 C8D74040                       1057+         DC    CL8'VSCSHP'       instruction name
+000017A4  00000010                                1058+         DC    A(16)             result length
+000017A8  000017CC                                1059+         DC    A(RE18)           address of expected result
+                                                  1060+*
+000017AC                                          1061+X18      DS    0F
+000017AC  E710 8EFC 0006                000010FC  1062+         VL    V1,V1FUDGE        fudge V1
+000017B2  E320 5008 0014                00001798  1063+         LGF   R2,V2_18          get v2
+000017B8  E722 0000 0006                00000000  1064+         VL    V2,0(R2)
+000017BE  E730 5007 7000                00001797  1065+         VLEB  V3,V3_18,7        get v3 scale
+000017C4  E612 3000 007C                          1066+         VSCSHP V1,V2,V3         test instruction
+000017CA  07FB                                    1067+         BR    R11               return
+000017CC                                          1068+RE18     DS    0F                expected 16 byte result
+000017CC                                          1069+         DROP  R5
+000017CC  D2320000 00000000                       1070          DC    XL16'D2320000000000000000000000000000'
+000017D4  00000000 00000000
+000017DC  00000000 00009223                       1071          DC    XL16'0000000000009223372036854775808D'
+000017E4  37203685 4775808D
+                                                  1072
+                                                  1073 *  9223372036854775807
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1074          VRR_B VSCSHP,2
+000017F0                                          1075+         DS    0FD
+000017F0                      000017F0            1076+         USING *,R5              base for test data and test routine
+000017F0  0000180C                                1077+T19      DC    A(X19)            address of test routine
+000017F4  0013                                    1078+         DC    H'19'             test number
+000017F6  00                                      1079+         DC    X'00'
+000017F7  02                                      1080+V3_19    DC    HL1'2'            scale
+000017F8  0000183C                                1081+V2_19    DC    A(RE19+16)        address of v2: 16-byte packed decimal
+000017FC  E5E2C3E2 C8D74040                       1082+         DC    CL8'VSCSHP'       instruction name
+00001804  00000010                                1083+         DC    A(16)             result length
+00001808  0000182C                                1084+         DC    A(RE19)           address of expected result
+                                                  1085+*
+0000180C                                          1086+X19      DS    0F
+0000180C  E710 8EFC 0006                000010FC  1087+         VL    V1,V1FUDGE        fudge V1
+00001812  E320 5008 0014                000017F8  1088+         LGF   R2,V2_19          get v2
+00001818  E722 0000 0006                00000000  1089+         VL    V2,0(R2)
+0000181E  E730 5007 7000                000017F7  1090+         VLEB  V3,V3_19,7        get v3 scale
+00001824  E612 3000 007C                          1091+         VSCSHP V1,V2,V3         test instruction
+0000182A  07FB                                    1092+         BR    R11               return
+0000182C                                          1093+RE19     DS    0F                expected 16 byte result
+0000182C                                          1094+         DROP  R5
+0000182C  5231FFFF 00000000                       1095          DC    XL16'5231FFFF000000004CFFFFFFFFFF9C00'
+00001834  4CFFFFFF FFFF9C00
+0000183C  00000000 00009223                       1096          DC    XL16'0000000000009223372036854775807C'
+00001844  37203685 4775807C
+                                                  1097
+                                                  1098 * 18446744073709551615
+                                                  1099          VRR_B VSCSHP,2
+00001850                                          1100+         DS    0FD
+00001850                      00001850            1101+         USING *,R5              base for test data and test routine
+00001850  0000186C                                1102+T20      DC    A(X20)            address of test routine
+00001854  0014                                    1103+         DC    H'20'             test number
+00001856  00                                      1104+         DC    X'00'
+00001857  02                                      1105+V3_20    DC    HL1'2'            scale
+00001858  0000189C                                1106+V2_20    DC    A(RE20+16)        address of v2: 16-byte packed decimal
+0000185C  E5E2C3E2 C8D74040                       1107+         DC    CL8'VSCSHP'       instruction name
+00001864  00000010                                1108+         DC    A(16)             result length
+00001868  0000188C                                1109+         DC    A(RE20)           address of expected result
+                                                  1110+*
+0000186C                                          1111+X20      DS    0F
+0000186C  E710 8EFC 0006                000010FC  1112+         VL    V1,V1FUDGE        fudge V1
+00001872  E320 5008 0014                00001858  1113+         LGF   R2,V2_20          get v2
+00001878  E722 0000 0006                00000000  1114+         VL    V2,0(R2)
+0000187E  E730 5007 7000                00001857  1115+         VLEB  V3,V3_20,7        get v3 scale
+00001884  E612 3000 007C                          1116+         VSCSHP V1,V2,V3         test instruction
+0000188A  07FB                                    1117+         BR    R11               return
+0000188C                                          1118+RE20     DS    0F                expected 16 byte result
+0000188C                                          1119+         DROP  R5
+0000188C  5263FFFF 00000000                       1120          DC    XL16'5263FFFF000000004CFFFFFFFFFF9C00'
+00001894  4CFFFFFF FFFF9C00
+0000189C  00000000 00018446                       1121          DC    XL16'0000000000018446744073709551615C'
+000018A4  74407370 9551615C
+                                                  1122
+                                                  1123 * 9009000000018446744073709551615
+                                                  1124          VRR_B VSCSHP,3
+000018B0                                          1125+         DS    0FD
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000018B0                      000018B0            1126+         USING *,R5              base for test data and test routine
+000018B0  000018CC                                1127+T21      DC    A(X21)            address of test routine
+000018B4  0015                                    1128+         DC    H'21'             test number
+000018B6  00                                      1129+         DC    X'00'
+000018B7  03                                      1130+V3_21    DC    HL1'3'            scale
+000018B8  000018FC                                1131+V2_21    DC    A(RE21+16)        address of v2: 16-byte packed decimal
+000018BC  E5E2C3E2 C8D74040                       1132+         DC    CL8'VSCSHP'       instruction name
+000018C4  00000010                                1133+         DC    A(16)             result length
+000018C8  000018EC                                1134+         DC    A(RE21)           address of expected result
+                                                  1135+*
+000018CC                                          1136+X21      DS    0F
+000018CC  E710 8EFC 0006                000010FC  1137+         VL    V1,V1FUDGE        fudge V1
+000018D2  E320 5008 0014                000018B8  1138+         LGF   R2,V2_21          get v2
+000018D8  E722 0000 0006                00000000  1139+         VL    V2,0(R2)
+000018DE  E730 5007 7000                000018B7  1140+         VLEB  V3,V3_21,7        get v3 scale
+000018E4  E612 3000 007C                          1141+         VSCSHP V1,V2,V3         test instruction
+000018EA  07FB                                    1142+         BR    R11               return
+000018EC                                          1143+RE21     DS    0F                expected 16 byte result
+000018EC                                          1144+         DROP  R5
+000018EC  5D1BC2D9 00000000                       1145          DC    XL16'5D1BC2D90000000056FA816778E89096'
+000018F4  56FA8167 78E89096
+000018FC  90090000 00018446                       1146          DC    XL16'9009000000018446744073709551615C'
+00001904  74407370 9551615C
+                                                  1147
+                                                  1148 * 9999999990018446744073709551615
+                                                  1149          VRR_B VSCSHP,3
+00001910                                          1150+         DS    0FD
+00001910                      00001910            1151+         USING *,R5              base for test data and test routine
+00001910  0000192C                                1152+T22      DC    A(X22)            address of test routine
+00001914  0016                                    1153+         DC    H'22'             test number
+00001916  00                                      1154+         DC    X'00'
+00001917  03                                      1155+V3_22    DC    HL1'3'            scale
+00001918  0000195C                                1156+V2_22    DC    A(RE22+16)        address of v2: 16-byte packed decimal
+0000191C  E5E2C3E2 C8D74040                       1157+         DC    CL8'VSCSHP'       instruction name
+00001924  00000010                                1158+         DC    A(16)             result length
+00001928  0000194C                                1159+         DC    A(RE22)           address of expected result
+                                                  1160+*
+0000192C                                          1161+X22      DS    0F
+0000192C  E710 8EFC 0006                000010FC  1162+         VL    V1,V1FUDGE        fudge V1
+00001932  E320 5008 0014                00001918  1163+         LGF   R2,V2_22          get v2
+00001938  E722 0000 0006                00000000  1164+         VL    V2,0(R2)
+0000193E  E730 5007 7000                00001917  1165+         VLEB  V3,V3_22,7        get v3 scale
+00001944  E612 3000 007C                          1166+         VSCSHP V1,V2,V3         test instruction
+0000194A  07FB                                    1167+         BR    R11               return
+0000194C                                          1168+RE22     DS    0F                expected 16 byte result
+0000194C                                          1169+         DROP  R5
+0000194C  5D1ED09B 00000000                       1170          DC    XL16'5D1ED09B0000000057EA5461321798D1'
+00001954  57EA5461 321798D1
+0000195C  99999999 90018446                       1171          DC    XL16'9999999990018446744073709551615C'
+00001964  74407370 9551615C
+                                                  1172
+                                                  1173
+0000196C  00000000                                1174          DC    F'0'     END OF TABLE
+00001970  00000000                                1175          DC    F'0'
+                                                  1176 *
+                                                  1177 * table of pointers to individual tests
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    29
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1178 *
+00001974                                          1179 E6TESTS  DS    0F
+                                                  1180          PTTABLE
+00001974                                          1181+TTABLE   DS    0F
+00001974  00001130                                1182+         DC    A(T1)             TEST &CUR
+00001978  00001190                                1183+         DC    A(T2)             TEST &CUR
+0000197C  000011F0                                1184+         DC    A(T3)             TEST &CUR
+00001980  00001250                                1185+         DC    A(T4)             TEST &CUR
+00001984  000012B0                                1186+         DC    A(T5)             TEST &CUR
+00001988  00001310                                1187+         DC    A(T6)             TEST &CUR
+0000198C  00001370                                1188+         DC    A(T7)             TEST &CUR
+00001990  000013D0                                1189+         DC    A(T8)             TEST &CUR
+00001994  00001430                                1190+         DC    A(T9)             TEST &CUR
+00001998  00001490                                1191+         DC    A(T10)            TEST &CUR
+0000199C  000014F0                                1192+         DC    A(T11)            TEST &CUR
+000019A0  00001550                                1193+         DC    A(T12)            TEST &CUR
+000019A4  000015B0                                1194+         DC    A(T13)            TEST &CUR
+000019A8  00001610                                1195+         DC    A(T14)            TEST &CUR
+000019AC  00001670                                1196+         DC    A(T15)            TEST &CUR
+000019B0  000016D0                                1197+         DC    A(T16)            TEST &CUR
+000019B4  00001730                                1198+         DC    A(T17)            TEST &CUR
+000019B8  00001790                                1199+         DC    A(T18)            TEST &CUR
+000019BC  000017F0                                1200+         DC    A(T19)            TEST &CUR
+000019C0  00001850                                1201+         DC    A(T20)            TEST &CUR
+000019C4  000018B0                                1202+         DC    A(T21)            TEST &CUR
+000019C8  00001910                                1203+         DC    A(T22)            TEST &CUR
+                                                  1204+*
+000019CC  00000000                                1205+         DC    A(0)              END OF TABLE
+000019D0  00000000                                1206+         DC    A(0)
+                                                  1207
+000019D4  00000000                                1208          DC    F'0'     END OF TABLE
+000019D8  00000000                                1209          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    30
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1211 ***********************************************************************
+                                                  1212 *        Register equates
+                                                  1213 ***********************************************************************
+
+
+                              00000000  00000001  1215 R0       EQU   0
+                              00000001  00000001  1216 R1       EQU   1
+                              00000002  00000001  1217 R2       EQU   2
+                              00000003  00000001  1218 R3       EQU   3
+                              00000004  00000001  1219 R4       EQU   4
+                              00000005  00000001  1220 R5       EQU   5
+                              00000006  00000001  1221 R6       EQU   6
+                              00000007  00000001  1222 R7       EQU   7
+                              00000008  00000001  1223 R8       EQU   8
+                              00000009  00000001  1224 R9       EQU   9
+                              0000000A  00000001  1225 R10      EQU   10
+                              0000000B  00000001  1226 R11      EQU   11
+                              0000000C  00000001  1227 R12      EQU   12
+                              0000000D  00000001  1228 R13      EQU   13
+                              0000000E  00000001  1229 R14      EQU   14
+                              0000000F  00000001  1230 R15      EQU   15
+
+
+                                                  1232 ***********************************************************************
+                                                  1233 *        Register equates
+                                                  1234 ***********************************************************************
+
+
+                              00000000  00000001  1236 FPR0     EQU   0
+                              00000001  00000001  1237 FPR1     EQU   1
+                              00000002  00000001  1238 FPR2     EQU   2
+                              00000003  00000001  1239 FPR3     EQU   3
+                              00000004  00000001  1240 FPR4     EQU   4
+                              00000005  00000001  1241 FPR5     EQU   5
+                              00000006  00000001  1242 FPR6     EQU   6
+                              00000007  00000001  1243 FPR7     EQU   7
+                              00000008  00000001  1244 FPR8     EQU   8
+                              00000009  00000001  1245 FPR9     EQU   9
+                              0000000A  00000001  1246 FPR10    EQU   10
+                              0000000B  00000001  1247 FPR11    EQU   11
+                              0000000C  00000001  1248 FPR12    EQU   12
+                              0000000D  00000001  1249 FPR13    EQU   13
+                              0000000E  00000001  1250 FPR14    EQU   14
+                              0000000F  00000001  1251 FPR15    EQU   15
+
+
+                                                  1253 ***********************************************************************
+                                                  1254 *        Register equates
+                                                  1255 ***********************************************************************
+
+
+                              00000000  00000001  1257 V0       EQU   0
+                              00000001  00000001  1258 V1       EQU   1
+                              00000002  00000001  1259 V2       EQU   2
+                              00000003  00000001  1260 V3       EQU   3
+                              00000004  00000001  1261 V4       EQU   4
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    31
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000005  00000001  1262 V5       EQU   5
+                              00000006  00000001  1263 V6       EQU   6
+                              00000007  00000001  1264 V7       EQU   7
+                              00000008  00000001  1265 V8       EQU   8
+                              00000009  00000001  1266 V9       EQU   9
+                              0000000A  00000001  1267 V10      EQU   10
+                              0000000B  00000001  1268 V11      EQU   11
+                              0000000C  00000001  1269 V12      EQU   12
+                              0000000D  00000001  1270 V13      EQU   13
+                              0000000E  00000001  1271 V14      EQU   14
+                              0000000F  00000001  1272 V15      EQU   15
+                              00000010  00000001  1273 V16      EQU   16
+                              00000011  00000001  1274 V17      EQU   17
+                              00000012  00000001  1275 V18      EQU   18
+                              00000013  00000001  1276 V19      EQU   19
+                              00000014  00000001  1277 V20      EQU   20
+                              00000015  00000001  1278 V21      EQU   21
+                              00000016  00000001  1279 V22      EQU   22
+                              00000017  00000001  1280 V23      EQU   23
+                              00000018  00000001  1281 V24      EQU   24
+                              00000019  00000001  1282 V25      EQU   25
+                              0000001A  00000001  1283 V26      EQU   26
+                              0000001B  00000001  1284 V27      EQU   27
+                              0000001C  00000001  1285 V28      EQU   28
+                              0000001D  00000001  1286 V29      EQU   29
+                              0000001E  00000001  1287 V30      EQU   30
+                              0000001F  00000001  1288 V31      EQU   31
+                                                  1289
+                                                  1290          END
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    32
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   164   129   160   161   162
+CTLR0               F    0000058C           4   436   174   175   176   177
+DECNUM              C    000010BB          16   507   284   286   293   295   319   321   328   330
+E6TEST              4    00000000          28   524   224
+E6TESTS             F    00001974           4  1179   217
+EDIT                X    0000108F          18   502   285   294   320   329
+ENDTEST             U    00000462           1   350   222
+EOJ                 I    00000570           4   426   209   353
+EOJPSW              D    00000560           8   424   426
+FAILCONT            U    00000452           1   340
+FAILED              F    00001000           4   466   342   351
+FAILMSG             U    00000408           1   317   238
+FAILPSW             D    00000578           8   428   430
+FAILTEST            I    00000588           4   430   354
+FB0001              F    000002A0           8   193   197   198   200
+FPR0                U    00000000           1  1236
+FPR1                U    00000001           1  1237
+FPR10               U    0000000A           1  1246
+FPR11               U    0000000B           1  1247
+FPR12               U    0000000C           1  1248
+FPR13               U    0000000D           1  1249
+FPR14               U    0000000E           1  1250
+FPR15               U    0000000F           1  1251
+FPR2                U    00000002           1  1238
+FPR3                U    00000003           1  1239
+FPR4                U    00000004           1  1240   265   273   275
+FPR5                U    00000005           1  1241
+FPR6                U    00000006           1  1242
+FPR7                U    00000007           1  1243
+FPR8                U    00000008           1  1244
+FPR9                U    00000009           1  1245
+IMAGE               1    00000000        6620     0
+K                   U    00000400           1   450   451   452   453
+K64                 U    00010000           1   452
+MB                  U    00100000           1   453
+MSG                 I    000004A8           4   386   208   369
+MSGCMD              C    000004F6           9   416   399   400
+MSGMSG              C    000004FF          95   417   393   414   391
+MSGMVC              I    000004F0           6   414   397
+MSGOK               I    000004BE           2   395   392
+MSGRET              I    000004DE           4   410   403   406
+MSGSAVE             F    000004E4           4   413   389   410
+NEXTE6              U    000002F4           1   219   241   345
+OPNAME              C    0000000C           8   530   289   324
+PAGE                U    00001000           1   451
+PRT3                C    000010A5          18   505   285   286   287   294   295   296   320   321   322   329   330   331
+PRTLINE             C    00001008          13   475   482   334
+PRTLNG              U    00000040           1   482   333
+PRTNAME             C    00001030           8   478   324
+PRTNUM              C    00001015           3   476   322
+PRTSCALE            C    00001044           3   480   331
+R0                  U    00000000           1  1215   123   174   177   197   199   200   201   206   226   227   257   265   274
+                                                      299   333   341   342   368   370   386   389   391   393   395   410
+R1                  U    00000001           1  1216   207   236   237   273   274   300   334   351   352   400   414
+R10                 U    0000000A           1  1225   162   171   172
+R11                 U    0000000B           1  1226   229   230   644   668   692   716   741   766   791   816   841   866   891
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    33
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                      920   944   968   992  1017  1042  1067  1092  1117  1142  1167
+R12                 U    0000000C           1  1227   217   220   240   344
+R13                 U    0000000D           1  1228
+R14                 U    0000000E           1  1229
+R15                 U    0000000F           1  1230   234   255   279   298   301   303   304   335   363   373   374
+R2                  U    00000002           1  1217   208   274   275   283   284   291   292   293   318   319   326   327   328
+                                                      368   369   370   387   389   395   396   397   399   405   410   411   640
+                                                      641   664   665   688   689   712   713   737   738   762   763   787   788
+                                                      812   813   837   838   862   863   887   888   916   917   940   941   964
+                                                      965   988   989  1013  1014  1038  1039  1063  1064  1088  1089  1113  1114
+                                                     1138  1139  1163  1164
+R3                  U    00000003           1  1218
+R4                  U    00000004           1  1219
+R5                  U    00000005           1  1220   220   221   224   364   372   628   646   652   670   676   694   700   718
+                                                      725   743   750   768   775   793   800   818   825   843   850   868   875
+                                                      893   904   922   928   946   952   970   976   994  1001  1019  1026  1044
+                                                     1051  1069  1076  1094  1101  1119  1126  1144  1151  1169
+R6                  U    00000006           1  1221
+R7                  U    00000007           1  1222
+R8                  U    00000008           1  1223   160   164   165   166   168
+R9                  U    00000009           1  1224   161   168   169   171
+RE1                 F    0000116C           4   645   633   636
+RE10                F    000014CC           4   867   855   858
+RE11                F    0000152C           4   892   880   883
+RE12                F    0000158C           4   921   909   912
+RE13                F    000015EC           4   945   933   936
+RE14                F    0000164C           4   969   957   960
+RE15                F    000016AC           4   993   981   984
+RE16                F    0000170C           4  1018  1006  1009
+RE17                F    0000176C           4  1043  1031  1034
+RE18                F    000017CC           4  1068  1056  1059
+RE19                F    0000182C           4  1093  1081  1084
+RE2                 F    000011CC           4   669   657   660
+RE20                F    0000188C           4  1118  1106  1109
+RE21                F    000018EC           4  1143  1131  1134
+RE22                F    0000194C           4  1168  1156  1159
+RE3                 F    0000122C           4   693   681   684
+RE4                 F    0000128C           4   717   705   708
+RE5                 F    000012EC           4   742   730   733
+RE6                 F    0000134C           4   767   755   758
+RE7                 F    000013AC           4   792   780   783
+RE8                 F    0000140C           4   817   805   808
+RE9                 F    0000146C           4   842   830   833
+READDR              A    00000018           4   532   236
+REG2LOW             U    000000DD           1   456
+REG2PATT            U    AABBCCDD           1   455
+RELEN               A    00000014           4   531
+RPTDWSAV            D    00000498           8   379   368   370
+RPTERROR            I    00000470           4   363   301   335
+RPTSAVE             F    00000490           4   376   363   373
+RPTSVR5             F    00000494           4   377   364   372
+SCALE               U    00000007           1   528   292   327
+SKL0001             U    0000006B           1   190   206
+SKT0001             C    0000022A          26   187   190   207
+SVOLDPSW            U    00000140           0   125
+T1                  A    00001130           4   629  1182
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    34
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+T10                 A    00001490           4   851  1191
+T11                 A    000014F0           4   876  1192
+T12                 A    00001550           4   905  1193
+T13                 A    000015B0           4   929  1194
+T14                 A    00001610           4   953  1195
+T15                 A    00001670           4   977  1196
+T16                 A    000016D0           4  1002  1197
+T17                 A    00001730           4  1027  1198
+T18                 A    00001790           4  1052  1199
+T19                 A    000017F0           4  1077  1200
+T2                  A    00001190           4   653  1183
+T20                 A    00001850           4  1102  1201
+T21                 A    000018B0           4  1127  1202
+T22                 A    00001910           4  1152  1203
+T3                  A    000011F0           4   677  1184
+T4                  A    00001250           4   701  1185
+T5                  A    000012B0           4   726  1186
+T6                  A    00001310           4   751  1187
+T7                  A    00001370           4   776  1188
+T8                  A    000013D0           4   801  1189
+T9                  A    00001430           4   826  1190
+TESTING             F    00001004           4   467   227
+TNUM                H    00000004           2   526   226   283   318
+TSUB                A    00000000           4   525   229
+TTABLE              F    00001974           4  1181
+V0                  U    00000000           1  1257
+V1                  U    00000001           1  1258   232   267   639   643   663   667   687   691   711   715   736   740   761
+                                                      765   786   790   811   815   836   840   861   865   886   890   915   919
+                                                      939   943   963   967   987   991  1012  1016  1037  1041  1062  1066  1087
+                                                     1091  1112  1116  1137  1141  1162  1166
+V10                 U    0000000A           1  1267   254   257
+V11                 U    0000000B           1  1268   253   254
+V12                 U    0000000C           1  1269
+V13                 U    0000000D           1  1270
+V14                 U    0000000E           1  1271
+V15                 U    0000000F           1  1272
+V16                 U    00000010           1  1273
+V17                 U    00000011           1  1274
+V18                 U    00000012           1  1275
+V19                 U    00000013           1  1276
+V1FUDGE             X    000010FC          16   516   639   663   687   711   736   761   786   811   836   861   886   915   939
+                                                      963   987  1012  1037  1062  1087  1112  1137  1162
+V1INPUT             X    0000110C          16   517
+V1OUTPUT            X    000010DC          16   514   232   237
+V2                  U    00000002           1  1259   253   641   643   665   667   689   691   713   715   738   740   763   765
+                                                      788   790   813   815   838   840   863   865   888   890   917   919   941
+                                                      943   965   967   989   991  1014  1016  1039  1041  1064  1066  1089  1091
+                                                     1114  1116  1139  1141  1164  1166
+V20                 U    00000014           1  1277
+V21                 U    00000015           1  1278
+V22                 U    00000016           1  1279
+V23                 U    00000017           1  1280
+V24                 U    00000018           1  1281
+V25                 U    00000019           1  1282
+V26                 U    0000001A           1  1283
+V27                 U    0000001B           1  1284
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    35
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V28                 U    0000001C           1  1285
+V29                 U    0000001D           1  1286
+V2ADDR              A    00000008           4   529
+V2_1                A    00001138           4   633   640
+V2_10               A    00001498           4   855   862
+V2_11               A    000014F8           4   880   887
+V2_12               A    00001558           4   909   916
+V2_13               A    000015B8           4   933   940
+V2_14               A    00001618           4   957   964
+V2_15               A    00001678           4   981   988
+V2_16               A    000016D8           4  1006  1013
+V2_17               A    00001738           4  1031  1038
+V2_18               A    00001798           4  1056  1063
+V2_19               A    000017F8           4  1081  1088
+V2_2                A    00001198           4   657   664
+V2_20               A    00001858           4  1106  1113
+V2_21               A    000018B8           4  1131  1138
+V2_22               A    00001918           4  1156  1163
+V2_3                A    000011F8           4   681   688
+V2_4                A    00001258           4   705   712
+V2_5                A    000012B8           4   730   737
+V2_6                A    00001318           4   755   762
+V2_7                A    00001378           4   780   787
+V2_8                A    000013D8           4   805   812
+V2_9                A    00001438           4   830   837
+V3                  U    00000003           1  1260   254   642   643   666   667   690   691   714   715   739   740   764   765
+                                                      789   790   814   815   839   840   864   865   889   890   918   919   942
+                                                      943   966   967   990   991  1015  1016  1040  1041  1065  1066  1090  1091
+                                                     1115  1116  1140  1141  1165  1166
+V30                 U    0000001E           1  1287
+V31                 U    0000001F           1  1288
+V3_1                U    00001137           1   632   642
+V3_10               U    00001497           1   854   864
+V3_11               U    000014F7           1   879   889
+V3_12               U    00001557           1   908   918
+V3_13               U    000015B7           1   932   942
+V3_14               U    00001617           1   956   966
+V3_15               U    00001677           1   980   990
+V3_16               U    000016D7           1  1005  1015
+V3_17               U    00001737           1  1030  1040
+V3_18               U    00001797           1  1055  1065
+V3_19               U    000017F7           1  1080  1090
+V3_2                U    00001197           1   656   666
+V3_20               U    00001857           1  1105  1115
+V3_21               U    000018B7           1  1130  1140
+V3_22               U    00001917           1  1155  1165
+V3_3                U    000011F7           1   680   690
+V3_4                U    00001257           1   704   714
+V3_5                U    000012B7           1   729   739
+V3_6                U    00001317           1   754   764
+V3_7                U    00001377           1   779   789
+V3_8                U    000013D7           1   804   814
+V3_9                U    00001437           1   829   839
+V4                  U    00000004           1  1261   260   266   276
+V5                  U    00000005           1  1262
+V6                  U    00000006           1  1263   261
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    36
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V7                  U    00000007           1  1264
+V8                  U    00000008           1  1265
+V9                  U    00000009           1  1266
+X0001               U    000002C8           1   196   184   197
+X1                  F    0000114C           4   638   629
+X10                 F    000014AC           4   860   851
+X11                 F    0000150C           4   885   876
+X12                 F    0000156C           4   914   905
+X13                 F    000015CC           4   938   929
+X14                 F    0000162C           4   962   953
+X15                 F    0000168C           4   986   977
+X16                 F    000016EC           4  1011  1002
+X17                 F    0000174C           4  1036  1027
+X18                 F    000017AC           4  1061  1052
+X19                 F    0000180C           4  1086  1077
+X2                  F    000011AC           4   662   653
+X20                 F    0000186C           4  1111  1102
+X21                 F    000018CC           4  1136  1127
+X22                 F    0000192C           4  1161  1152
+X3                  F    0000120C           4   686   677
+X4                  F    0000126C           4   710   701
+X5                  F    000012CC           4   735   726
+X6                  F    0000132C           4   760   751
+X7                  F    0000138C           4   785   776
+X8                  F    000013EC           4   810   801
+X9                  F    0000144C           4   835   826
+XC0001              U    000002F0           1   210   202
+XCFAIL              H    00000388           2   282   269   278
+XCHECK              U    0000032E           1   251   234
+XCPLINE             C    00001048          13   490   497   300
+XCPLNG              U    00000047           1   497   299
+XCPNAME             C    00001077           8   493   289
+XCPSCALE            C    0000108B           3   495   296
+XCPTNUM             C    00001055           3   491   287
+XCR15               F    00000400           8   309   298   303
+XCV1                X    000003F0          16   308   267   268   277
+XCV4                X    000003E0          16   307   266   268   276   277
+ZVE6TST             J    00000000        6620   122   125   127   131   135   465   123
+=A(E6TESTS)         A    00000598           4   442   217
+=AL2(L'MSGMSG)      R    000005A6           2   446   391
+=F'0'               F    0000059C           4   443   260   261
+=F'1'               F    000005A0           4   444   341
+=F'128'             F    00000594           4   441   201
+=H'0'               H    000005A4           2   445   386
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    37
+
+ MACRO   DEFN  REFERENCES
+
+FCHECK     74    183
+PTTABLE   588   1180
+VRR_B     548    626    650    674    698    723    748    773    798    823    848    873    902    926    950    974    999   1024
+                1049   1074   1099   1124   1149
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    38
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    6620  0000-19DB  0000-19DB
+  Region            6620  0000-19DB  0000-19DB
+    CSECT  ZVE6TST  6620  0000-19DB  0000-19DB
+ASMA Ver. 0.7.0  zvector-e6-18-VSCSHP (Zvector E6 VRR-b)                                            18 Jun 2024 18:58:41  Page    39
+
+   STMT                       FILE NAME
+
+1     /home/tn529/sharedvfp/tests/zvector-e6-18-VSCSHP.asm
+
+
+** NO ERRORS FOUND **
+
+

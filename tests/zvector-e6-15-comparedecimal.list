@@ -1,0 +1,1742 @@
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *        Zvector E6 instruction tests for VRR-h encoded:
+                                                     5 *
+                                                     6 *        E677 VCP     - VECTOR COMPARE DECIMAL
+                                                     7 *
+                                                     8 *        James Wekel June 2024
+                                                     9 ***********************************************************************
+                                                    10
+                                                    11 ***********************************************************************
+                                                    12 *
+                                                    13 *        basic instruction tests
+                                                    14 *
+                                                    15 ***********************************************************************
+                                                    16 *  This program tests proper functioning of the z/arch E6 VRR-h vector
+                                                    17 *  compare decimal. Exceptions are not tested.
+                                                    18 *
+                                                    19 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    20 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    21 *  NOT designed to test all aspects of any of the instructions.
+                                                    22 *
+                                                    23 ***********************************************************************
+                                                    24 *
+                                                    25 *   *Testcase zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction
+                                                    26 *   *
+                                                    27 *   *   Zvector E6 tests for VRR-h encoded instruction:
+                                                    28 *   *
+                                                    29 *   *   E677 VCP     - VECTOR COMPARE DECIMAL
+                                                    30 *   *
+                                                    31 *   *   # -------------------------------------------------------
+                                                    32 *   *   #  This tests only the basic function of the instruction.
+                                                    33 *   *   #  Exceptions are NOT tested.
+                                                    34 *   *   # -------------------------------------------------------
+                                                    35 *   *
+                                                    36 *   mainsize    2
+                                                    37 *   numcpu      1
+                                                    38 *   sysclear
+                                                    39 *   archlvl     z/Arch
+                                                    40 *
+                                                    41 *   diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    42 *   loadcore    "$(testpath)/zvector-e6-15-comparedecimal.core" 0x0
+                                                    43 *   diag8cmd    disable   # (reset back to default)
+                                                    44 *
+                                                    45 *   *Done
+                                                    46 *
+                                                    47 ***********************************************************************
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    49 ***********************************************************************
+                                                    50 *        FCHECK Macro - Is a Facility Bit set?
+                                                    51 *
+                                                    52 *        If the facility bit is NOT set, an message is issued and
+                                                    53 *        the test is skipped.
+                                                    54 *
+                                                    55 *        Fcheck uses R0, R1 and R2
+                                                    56 *
+                                                    57 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    58 ***********************************************************************
+                                                    59          MACRO
+                                                    60          FCHECK &BITNO,&NOTSETMSG
+                                                    61 .*                        &BITNO : facility bit number to check
+                                                    62 .*                        &NOTSETMSG : 'facility name'
+                                                    63          LCLA  &FBBYTE           Facility bit in Byte
+                                                    64          LCLA  &FBBIT            Facility bit within Byte
+                                                    65
+                                                    66          LCLA  &L(8)
+                                                    67 &L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+                                                    68
+                                                    69 &FBBYTE  SETA  &BITNO/8
+                                                    70 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    71 .*         MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    72
+                                                    73          B     X&SYSNDX
+                                                    74 *                                      Fcheck data area
+                                                    75 *                                      skip messgae
+                                                    76 SKT&SYSNDX DC  C'          Skipping tests: '
+                                                    77          DC    C&NOTSETMSG
+                                                    78          DC    C' facility (bit &BITNO) is not installed.'
+                                                    79 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                    80 *                                      facility bits
+                                                    81          DS    FD                      gap
+                                                    82 FB&SYSNDX DS   4FD
+                                                    83          DS    FD                      gap
+                                                    84 *
+                                                    85 X&SYSNDX EQU *
+                                                    86          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                    87          STFLE FB&SYSNDX               get facility bits
+                                                    88
+                                                    89          XGR   R0,R0
+                                                    90          IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+                                                    91          N     R0,=F'&FBBIT'           is bit set?
+                                                    92          BNZ   XC&SYSNDX
+                                                    93 *
+                                                    94 * facility bit not set, issue message and exit
+                                                    95 *
+                                                    96          LA    R0,SKL&SYSNDX           message length
+                                                    97          LA    R1,SKT&SYSNDX           message address
+                                                    98          BAL   R2,MSG
+                                                    99
+                                                   100          B     EOJ
+                                                   101 XC&SYSNDX EQU *
+                                                   102          MEND
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   104 ***********************************************************************
+                                                   105 *        Low core PSWs
+                                                   106 ***********************************************************************
+
+
+                              00000000  000019FF   108 ZVE6TST  START 0
+00000000                      00000000             109          USING ZVE6TST,R0            Low core addressability
+                                                   110
+                              00000140  00000000   111 SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   113          ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                        114          DC    X'0000000180000000'
+000001A8  00000000 00000200                        115          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   117          ORG   ZVE6TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        118          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        119          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   121          ORG   ZVE6TST+X'200'        Start of actual test program...
+                                                   122
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   124 ***********************************************************************
+                                                   125 *               The actual "ZVE6TST" program itself...
+                                                   126 ***********************************************************************
+                                                   127 *
+                                                   128 *  Architecture Mode: z/Arch
+                                                   129 *  Register Usage:
+                                                   130 *
+                                                   131 *   R0       (work)
+                                                   132 *   R1-4     (work)
+                                                   133 *   R5       Testing control table - current test base
+                                                   134 *   R6-R7    (work)
+                                                   135 *   R8       First base register
+                                                   136 *   R9       Second base register
+                                                   137 *   R10      Third base register
+                                                   138 *   R11      E6TEST call return
+                                                   139 *   R12      E6TESTS register
+                                                   140 *   R13      (work)
+                                                   141 *   R14      Subroutine call
+                                                   142 *   R15      Secondary Subroutine call or work
+                                                   143 *
+                                                   144 ***********************************************************************
+
+00000200                      00000200             146          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200             147          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00002200             148          USING  BEGIN+8192,R10  THIRD Base Register
+                                                   149
+00000200  0580                                     150 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                     151          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                     152          BCTR  R8,0             Initalize FIRST base register
+                                                   153
+00000206  4190 8800                     00000800   154          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800   155          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                   156
+0000020E  41A0 9800                     00000800   157          LA    R10,2048(,R9)    Initalize THIRD base register
+00000212  41A0 A800                     00000800   158          LA    R10,2048(,R10)   Initalize THIRD base register
+                                                   159
+00000216  B600 82C4                     000004C4   160          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
+0000021A  9604 82C5                     000004C5   161          OI    CTLR0+1,X'04'    Turn on AFP bit
+0000021E  9602 82C5                     000004C5   162          OI    CTLR0+1,X'02'    Turn on Vector bit
+00000222  B700 82C4                     000004C4   163          LCTL  R0,R0,CTLR0      Reload updated CR0
+                                                   164
+                                                   165 ***********************************************************************
+                                                   166 * Is Vector packed-decimal facility installed  (bit 134)
+                                                   167 ***********************************************************************
+                                                   168
+                                                   169          FCHECK 134,'vector-packed-decimal'
+00000226  47F0 80B0                     000002B0   170+         B     X0001
+                                                   171+*                                      Fcheck data area
+                                                   172+*                                      skip messgae
+0000022A  40404040 40404040                        173+SKT0001  DC    C'          Skipping tests: '
+00000244  A58583A3 96996097                        174+         DC    C'vector-packed-decimal'
+00000259  40868183 899389A3                        175+         DC    C' facility (bit 134) is not installed.'
+                              00000054  00000001   176+SKL0001  EQU   *-SKT0001
+                                                   177+*                                      facility bits
+00000280  00000000 00000000                        178+         DS    FD                      gap
+00000288  00000000 00000000                        179+FB0001   DS    4FD
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000002A8  00000000 00000000                        180+         DS    FD                      gap
+                                                   181+*
+                              000002B0  00000001   182+X0001    EQU   *
+000002B0  4100 0004                     00000004   183+         LA    R0,((X0001-FB0001)/8)-1
+000002B4  B2B0 8088                     00000288   184+         STFLE FB0001                  get facility bits
+000002B8  B982 0000                                185+         XGR   R0,R0
+000002BC  4300 8098                     00000298   186+         IC    R0,FB0001+16            get fbit byte
+000002C0  5400 82CC                     000004CC   187+         N     R0,=F'2'                is bit set?
+000002C4  4770 80D8                     000002D8   188+         BNZ   XC0001
+                                                   189+*
+                                                   190+* facility bit not set, issue message and exit
+                                                   191+*
+000002C8  4100 0054                     00000054   192+         LA    R0,SKL0001              message length
+000002CC  4110 802A                     0000022A   193+         LA    R1,SKT0001              message address
+000002D0  4520 81E0                     000003E0   194+         BAL   R2,MSG
+000002D4  47F0 82A8                     000004A8   195+         B     EOJ
+                              000002D8  00000001   196+XC0001   EQU   *
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   198 ***********************************************************************
+                                                   199 *              Do tests in the E6TESTS table
+                                                   200 ***********************************************************************
+                                                   201
+000002D8  58C0 82D0                     000004D0   202          L     R12,=A(E6TESTS)       get table of test addresses
+                                                   203
+                              000002DC  00000001   204 NEXTE6   EQU   *
+000002DC  5850 C000                     00000000   205          L     R5,0(0,R12)       get test address
+000002E0  1255                                     206          LTR   R5,R5                have a test?
+000002E2  4780 8196                     00000396   207          BZ    ENDTEST                 done?
+                                                   208
+000002E6  B982 0000                                209          XGR   R0,R0             no cc error
+                                                   210
+000002EA                      00000000             211          USING E6TEST,R5
+                                                   212
+000002EA  58B0 5000                     00000000   213          L     R11,TSUB          get address of test routine
+000002EE  05BB                                     214          BALR  R11,R11           do test
+                                                   215
+000002F0  E310 5009 0076                00000009   216          LB    R1,CCMASK         (failure CC mask)
+000002F6  8910 0004                     00000004   217          SLL   R1,4              (shift to BC instr CC position)
+000002FA  4410 8106                     00000306   218          EX    R1,TESTCC            fail if...
+                                                   219
+000002FE  41C0 C004                     00000004   220          LA    R12,4(0,R12)      next test address
+00000302  47F0 80DC                     000002DC   221          B     NEXTE6
+                                                   222
+00000306  4700 810A                     0000030A   223 TESTCC   BC    0,CCMSG          (fail if unexpected condition code)
+                                                   224
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   226 ***********************************************************************
+                                                   227 * cc was not as expected
+                                                   228 ***********************************************************************
+                              0000030A  00000001   229 CCMSG    EQU   *
+                                                   230 *
+                                                   231 * extract CC extracted PSW
+                                                   232 *
+0000030A  5810 8E9C                     0000109C   233          L     R1,CCPSW
+0000030E  8810 000C                     0000000C   234          SRL   R1,12
+00000312  5410 82D4                     000004D4   235          N     R1,=XL4'3'
+00000316  4210 8EA4                     000010A4   236          STC   R1,CCFOUND     save cc
+                                                   237 *
+                                                   238 * FILL IN MESSAGE
+                                                   239 *
+0000031A  4820 5004                     00000004   240          LH    R2,TNUM                 get test number and convert
+0000031E  4E20 8E89                     00001089   241          CVD   R2,DECNUM
+00000322  D211 8E73 8E5D      00001073  0000105D   242          MVC   PRT3,EDIT
+00000328  DE11 8E73 8E89      00001073  00001089   243          ED    PRT3,DECNUM
+0000032E  D202 8E18 8E80      00001018  00001080   244          MVC   CCPRTNUM(3),PRT3+13     fill in message with test #
+                                                   245
+00000334  D207 8E35 500A      00001035  0000000A   246          MVC   CCPRTNAME,OPNAME        fill in message with instruction
+                                                   247
+0000033A  B982 0022                                248          XGR   R2,R2                   get CC as U8
+0000033E  4320 5008                     00000008   249          IC    R2,CC
+00000342  4E20 8E89                     00001089   250          CVD   R2,DECNUM               and convert
+00000346  D211 8E73 8E5D      00001073  0000105D   251          MVC   PRT3,EDIT
+0000034C  DE11 8E73 8E89      00001073  00001089   252          ED    PRT3,DECNUM
+00000352  D200 8E4B 8E82      0000104B  00001082   253          MVC   CCPRTEXP(1),PRT3+15     fill in message with CC field
+                                                   254
+00000358  B982 0022                                255          XGR   R2,R2                   get CCFOUND as U8
+0000035C  4320 8EA4                     000010A4   256          IC    R2,CCFOUND
+00000360  4E20 8E89                     00001089   257          CVD   R2,DECNUM               and convert
+00000364  D211 8E73 8E5D      00001073  0000105D   258          MVC   PRT3,EDIT
+0000036A  DE11 8E73 8E89      00001073  00001089   259          ED    PRT3,DECNUM
+00000370  D200 8E5B 8E82      0000105B  00001082   260          MVC   CCPRTGOT(1),PRT3+15    fill in message with ccfound
+                                                   261
+00000376  4100 0055                     00000055   262          LA    R0,CCPRTLNG            message length
+0000037A  4110 8E08                     00001008   263          LA    R1,CCPRTLINE           messagfe address
+0000037E  45F0 81A4                     000003A4   264          BAL   R15,RPTERROR
+                                                   265
+00000382  47F0 8186                     00000386   266          B     FAILCONT
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   268 ***********************************************************************
+                                                   269 * continue after a failed test
+                                                   270 ***********************************************************************
+                              00000386  00000001   271 FAILCONT EQU   *
+00000386  5800 82D8                     000004D8   272          L     R0,=F'1'          set GLOBAL failed test indicator
+0000038A  5000 8E00                     00001000   273          ST    R0,FAILED
+                                                   274
+0000038E  41C0 C004                     00000004   275          LA    R12,4(0,R12)      next test address
+00000392  47F0 80DC                     000002DC   276          B     NEXTE6
+
+
+                                                   278 ***********************************************************************
+                                                   279 * end of testing; set ending psw
+                                                   280 ***********************************************************************
+                              00000396  00000001   281 ENDTEST  EQU   *
+00000396  5810 8E00                     00001000   282          L     R1,FAILED         did a test fail?
+0000039A  1211                                     283          LTR   R1,R1
+0000039C  4780 82A8                     000004A8   284          BZ    EOJ                  No, exit
+000003A0  47F0 82C0                     000004C0   285          B     FAILTEST             Yes, exit with BAD PSW
+                                                   286
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   288 ***********************************************************************
+                                                   289 *        RPTERROR          Report instruction test in error
+                                                   290 *                             R0 = MESSGAE LENGTH
+                                                   291 *                             R1 = ADDRESS OF MESSAGE
+                                                   292 ***********************************************************************
+
+000003A4  50F0 81C4                     000003C4   294 RPTERROR ST    R15,RPTSAVE          Save return address
+000003A8  5050 81C8                     000003C8   295          ST    R5,RPTSVR5           Save R5
+                                                   296 *
+                                                   297 *        Use Hercules Diagnose for Message to console
+                                                   298 *
+000003AC  9002 81D0                     000003D0   299          STM   R0,R2,RPTDWSAV       save regs used by MSG
+000003B0  4520 81E0                     000003E0   300          BAL   R2,MSG               call Hercules console MSG display
+000003B4  9802 81D0                     000003D0   301          LM    R0,R2,RPTDWSAV       restore regs
+
+
+000003B8  5850 81C8                     000003C8   303          L     R5,RPTSVR5           Restore R5
+000003BC  58F0 81C4                     000003C4   304          L     R15,RPTSAVE          Restore return address
+000003C0  07FF                                     305          BR    R15                  Return to caller
+
+000003C4  00000000                                 307 RPTSAVE  DC    F'0'                 R15 save area
+000003C8  00000000                                 308 RPTSVR5  DC    F'0'                 R5 save area
+
+000003D0  00000000 00000000                        310 RPTDWSAV DC    2D'0'                R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   312 ***********************************************************************
+                                                   313 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   314 *              R2 = return address
+                                                   315 ***********************************************************************
+                                                   316
+000003E0  4900 82DC                     000004DC   317 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000003E4  07D2                                     318          BNHR  R2                     No, ignore
+                                                   319
+000003E6  9002 821C                     0000041C   320          STM   R0,R2,MSGSAVE          Save registers
+                                                   321
+000003EA  4900 82DE                     000004DE   322          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000003EE  47D0 81F6                     000003F6   323          BNH   MSGOK                  Yes, continue
+000003F2  4100 005F                     0000005F   324          LA    R0,L'MSGMSG            No, set to maximum
+                                                   325
+000003F6  1820                                     326 MSGOK    LR    R2,R0                  Copy length to work register
+000003F8  0620                                     327          BCTR  R2,0                   Minus-1 for execute
+000003FA  4420 8228                     00000428   328          EX    R2,MSGMVC              Copy message to O/P buffer
+                                                   329
+000003FE  4120 200A                     0000000A   330          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+00000402  4110 822E                     0000042E   331          LA    R1,MSGCMD              Point to true command
+                                                   332
+00000406  83120008                                 333          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+0000040A  4780 8216                     00000416   334          BZ    MSGRET                 Return if successful
+                                                   335
+0000040E  1222                                     336          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+00000410  4780 8216                     00000416   337          BZ    MSGRET                   an error occurred but coninue
+                                                   338
+00000414  0000                                     339          DC    H'0'                   CRASH for debugging purposes
+                                                   340
+00000416  9802 821C                     0000041C   341 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+0000041A  07F2                                     342          BR    R2                     Return to caller
+
+
+
+
+0000041C  00000000 00000000                        344 MSGSAVE  DC    3F'0'                  Registers save area
+00000428  D200 8237 1000      00000437  00000000   345 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+0000042E  D4E2C7D5 D6C8405C                        347 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+00000437  40404040 40404040                        348 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   349
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   351 ***********************************************************************
+                                                   352 *        Normal completion or Abnormal termination PSWs
+                                                   353 ***********************************************************************
+
+
+
+
+00000498  00020001 80000000                        355 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+000004A8  B2B2 8298                     00000498   357 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+000004B0  00020001 80000000                        359 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+000004C0  B2B2 82B0                     000004B0   361 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+                                                   363 ***********************************************************************
+                                                   364 *        Working Storage
+                                                   365 ***********************************************************************
+
+
+000004C4  00000000                                 367 CTLR0    DS    F                CR0
+000004C8  00000000                                 368          DS    F
+
+
+000004CC                                           370          LTORG ,                Literals pool
+000004CC  00000002                                 371                =F'2'
+000004D0  00001990                                 372                =A(E6TESTS)
+000004D4  00000003                                 373                =XL4'3'
+000004D8  00000001                                 374                =F'1'
+000004DC  0000                                     375                =H'0'
+000004DE  005F                                     376                =AL2(L'MSGMSG)
+                                                   377
+                                                   378 *        some constants
+                                                   379
+                              00000400  00000001   380 K        EQU   1024             One KB
+                              00001000  00000001   381 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   382 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   383 MB       EQU   (K*K)             1 MB
+                                                   384
+                                                   385
+                              AABBCCDD  00000001   386 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   387 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   389 *======================================================================
+                                                   390 *
+                                                   391 *  NOTE: start data on an address that is easy to display
+                                                   392 *        within Hercules
+                                                   393 *
+                                                   394 *======================================================================
+                                                   395
+000004E0                      000004E0  00001000   396          ORG   ZVE6TST+X'1000'
+00001000  00000000                                 397 FAILED   DC    F'0'                     some test failed?
+00001004  00000000                                 398 TESTING  DC    F'0'                     current test number
+
+
+                                                   400 ***********************************************************************
+                                                   401 *        TEST failed : CC message
+                                                   402 ***********************************************************************
+                                                   403 *
+                                                   404 *        failed message and associated editting
+                                                   405 *
+00001008  40404040 40404040                        406 CCPRTLINE DC   C'         Test # '
+00001018  A7A7A7                                   407 CCPRTNUM DC    C'xxx'
+0000101B  40A69996 95874083                        408          DC    c' wrong cc for instruction '
+00001035  A7A7A7A7 A7A7A7A7                        409 CCPRTNAME DC    CL8'xxxxxxxx'
+0000103D  4085A797 8583A385                        410          DC    C' expected: cc='
+0000104B  A7                                       411 CCPRTEXP DC    C'x'
+0000104C  6B                                       412          DC    C','
+0000104D  40998583 8589A585                        413          DC    C' received: cc='
+0000105B  A7                                       414 CCPRTGOT DC    C'x'
+0000105C  4B                                       415          DC    C'.'
+                              00000055  00000001   416 CCPRTLNG   EQU   *-CCPRTLINE
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   418 ***********************************************************************
+                                                   419 *        TEST failed : message working storge
+                                                   420 ***********************************************************************
+0000105D  40212020 20202020                        421 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   422
+0000106F  7E7E7E6E                                 423          DC    C'===>'
+00001073  40404040 40404040                        424 PRT3     DC    CL18' '
+00001085  4C7E7E7E                                 425          DC    C'<==='
+00001089  00000000 00000000                        426 DECNUM   DS    CL16
+                                                   427 *
+                                                   428 *        CC extrtaction
+                                                   429 *
+0000109C  00000000 00000000                        430 CCPSW    DS    2F          extract PSW after test (has CC)
+000010A4  00                                       431 CCFOUND  DS    X           extracted cc
+
+
+                                                   433 ***********************************************************************
+                                                   434 *        Vector instruction results, pollution and input
+                                                   435 ***********************************************************************
+000010A8                                           436          DS    0FD
+000010A8  AABBCCDD EEFFAABB                        437 R1FUDGE  DC    XL8'AABBCCDDEEFFAABB'                     R1 FUDGE
+000010B0  00000000 00000000                        438          DS    XL16                                          gap
+000010C0  00000000 00000000                        439 V1OUTPUT DS    XL16                                      V1 OUTPUT
+000010D0  00000000 00000000                        440          DS    XL16                                          gap
+000010E0  00000000 00000000                        441 R1OUTPUT DS    FD                                        R1 OUTPUT
+000010E8  00000000 00000000                        442          DS    XL16                                          gap
+000010F8  FFFFFFFF FFFFFFFF                        443 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
+00001108  BBBBBBBB BBBBBBBB                        444 V1FUDGEB DC    XL16'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'    V1 FUDGE b
+00001118  F1F2F3F4 F5F6F7F8                        445 V1INPUT  DC    CL16'1234567890123456'                    V1 input
+00001128  F7F8F9F0 F1F2F3F4                        446          DC    CL14'78901234567890'
+00001136  D9                                       447          DC    X'D9'
+00001137  00000000 00000000                        448          DS    XL16                                          gap
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   450 ***********************************************************************
+                                                   451 *        E6TEST DSECT
+                                                   452 ***********************************************************************
+
+
+                                                   454 E6TEST   DSECT ,
+00000000  00000000                                 455 TSUB     DC    A(0)           pointer  to test
+00000004  0000                                     456 TNUM     DC    H'00'          Test Number
+00000006  00                                       457          DC    XL1'00'
+00000007  00                                       458 M3       DC    HL1'00'        m3
+00000008  00                                       459 CC       DC    HL1'00'        cc
+00000009  00                                       460 CCMASK   DC    HL1'00'        not expected CC mask
+                                                   461
+0000000A  40404040 40404040                        462 OPNAME   DC    CL8' '         E6 name
+                                                   463
+00000014  00000000                                 464 RELEN    DC    A(0)           RESULT LENGTH
+00000018  00000000                                 465 READDR   DC    A(0)           expected result address
+                                                   466
+                                                   467 **
+                                                   468 *        test routine will be here (from VRR_H  macro)
+                                                   469 * followed by
+                                                   470 *        16-byte v1 source
+                                                   471 *        16-byte v2 source
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   473 ***********************************************************************
+                                                   474 *     Macros to help build test tables
+                                                   475 *----------------------------------------------------------------------
+                                                   476 *     VRR_H Macro to help build test tables
+                                                   477 ***********************************************************************
+                                                   478          MACRO
+                                                   479          VRR_H &INST,&M3,&CC
+                                                   480 .*                               &INST  - instruction under test
+                                                   481 .*                               &CC    - expected CC
+                                                   482 .*
+                                                   483          LCLA  &XCC(4)  &CC has mask values for FAILED condition codes
+                                                   484 &XCC(1)  SETA  7                 CC != 0
+                                                   485 &XCC(2)  SETA  11                CC != 1
+                                                   486 &XCC(3)  SETA  13                CC != 2
+                                                   487 &XCC(4)  SETA  14                CC != 3
+                                                   488
+                                                   489          GBLA  &TNUM
+                                                   490 &TNUM    SETA  &TNUM+1
+                                                   491
+                                                   492          DS    0FD
+                                                   493          USING *,R5              base for test data and test routine
+                                                   494
+                                                   495 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   496          DC    H'&TNUM'          test number
+                                                   497          DC    XL1'00'
+                                                   498          DC    HL1'&M3'          m3
+                                                   499          DC    HL1'&CC'          cc
+                                                   500          DC    HL1'&XCC(&CC+1)'  cc failed mask
+                                                   501
+                                                   502          DC    CL8'&INST'        instruction name
+                                                   503
+                                                   504          DC    A(16)             result length
+                                                   505 REA&TNUM DC    A(RE&TNUM)        result address
+                                                   506 .*
+                                                   507 *                                INSTRUCTION UNDER TEST ROUTINE
+                                                   508 X&TNUM   DS    0F
+                                                   509          VL    V1,RE&TNUM        get V1 source
+                                                   510          VL    V2,RE&TNUM+16     get V2 source
+                                                   511
+                                                   512          &INST V1,V2,&M3         test instruction
+                                                   513
+                                                   514          EPSW  R2,R0             exptract psw
+                                                   515          ST    R2,CCPSW              to save CC
+                                                   516
+                                                   517          BR    R11               return
+                                                   518
+                                                   519 RE&TNUM  DC    0F
+                                                   520          DROP  R5
+                                                   521
+                                                   522          MEND
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   524 ***********************************************************************
+                                                   525 *     PTTABLE Macro to generate table of pointers to individual tests
+                                                   526 ***********************************************************************
+                                                   527
+                                                   528          MACRO
+                                                   529          PTTABLE
+                                                   530          GBLA  &TNUM
+                                                   531          LCLA  &CUR
+                                                   532 &CUR     SETA  1
+                                                   533 .*
+                                                   534 TTABLE   DS    0F
+                                                   535 .LOOP    ANOP
+                                                   536 .*
+                                                   537          DC    A(T&CUR)          address of test
+                                                   538 .*
+                                                   539 &CUR     SETA  &CUR+1
+                                                   540          AIF   (&CUR LE &TNUM).LOOP
+                                                   541 *
+                                                   542          DC    A(0)              END OF TABLE
+                                                   543          DC    A(0)
+                                                   544 .*
+                                                   545          MEND
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   547 ***********************************************************************
+                                                   548 *        E6 VRR_H tests
+                                                   549 ***********************************************************************
+                              00000000  000019FF   550 ZVE6TST  CSECT ,
+00001148                                           551          DS    0F
+
+
+                                                   553          PRINT DATA
+                                                   554 *
+                                                   555 *        E677 VCP     - VECTOR COMPARE DECIMAL
+                                                   556 *        VRR_H instr, m3, cc
+                                                   557 *              followed by
+                                                   558 *              v1     - 16 byte source
+                                                   559 *              v2     - 16 byte source
+                                                   560 *
+                                                   561 *---------------------------------------------------------------------
+                                                   562 * VCP     - VECTOR COMPARE DECIMAL
+                                                   563 *---------------------------------------------------------------------
+                                                   564 * VCP simple                                    m3= 0   (P1=0, P2=0)
+                                                   565 *                                               m3= 4   (P1=0, P2=1)
+                                                   566 *                                               m3= 8   (P1=1, P2=0)
+                                                   567 *                                               m3=12   (P1=1, P2=1)
+                                                   568 * m3= 0   (P1=0, P2=0)
+                                                   569          VRR_H VCP,0,0
+00001148                                           570+         DS    0FD
+00001148                      00001148             571+         USING *,R5              base for test data and test routine
+00001148  00001164                                 572+T1       DC    A(X1)             address of test routine
+0000114C  0001                                     573+         DC    H'1'              test number
+0000114E  00                                       574+         DC    XL1'00'
+0000114F  00                                       575+         DC    HL1'0'            m3
+00001150  00                                       576+         DC    HL1'0'            cc
+00001151  07                                       577+         DC    HL1'7'            cc failed mask
+00001152  E5C3D740 40404040                        578+         DC    CL8'VCP'          instruction name
+0000115C  00000010                                 579+         DC    A(16)             result length
+00001160  00001180                                 580+REA1     DC    A(RE1)            result address
+                                                   581+*                                INSTRUCTION UNDER TEST ROUTINE
+00001164                                           582+X1       DS    0F
+00001164  E710 5038 0006                00001180   583+         VL    V1,RE1            get V1 source
+0000116A  E720 5048 0006                00001190   584+         VL    V2,RE1+16         get V2 source
+00001170  E601 2000 0077                           585+         VCP   V1,V2,0           test instruction
+00001176  B98D 0020                                586+         EPSW  R2,R0             exptract psw
+0000117A  5020 8E9C                     0000109C   587+         ST    R2,CCPSW              to save CC
+0000117E  07FB                                     588+         BR    R11               return
+00001180                                           589+RE1      DC    0F
+00001180                                           590+         DROP  R5
+00001180  00000000 00000000                        591          DC    XL16'0000000000000000001234500000000D'   V1 source
+00001188  00123450 0000000D
+00001190  00000000 00000000                        592          DC    XL16'0000000000000000001234500000000D'   V2 source
+00001198  00123450 0000000D
+                                                   593
+                                                   594          VRR_H VCP,0,0
+000011A0                                           595+         DS    0FD
+000011A0                      000011A0             596+         USING *,R5              base for test data and test routine
+000011A0  000011BC                                 597+T2       DC    A(X2)             address of test routine
+000011A4  0002                                     598+         DC    H'2'              test number
+000011A6  00                                       599+         DC    XL1'00'
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000011A7  00                                       600+         DC    HL1'0'            m3
+000011A8  00                                       601+         DC    HL1'0'            cc
+000011A9  07                                       602+         DC    HL1'7'            cc failed mask
+000011AA  E5C3D740 40404040                        603+         DC    CL8'VCP'          instruction name
+000011B4  00000010                                 604+         DC    A(16)             result length
+000011B8  000011D8                                 605+REA2     DC    A(RE2)            result address
+                                                   606+*                                INSTRUCTION UNDER TEST ROUTINE
+000011BC                                           607+X2       DS    0F
+000011BC  E710 5038 0006                000011D8   608+         VL    V1,RE2            get V1 source
+000011C2  E720 5048 0006                000011E8   609+         VL    V2,RE2+16         get V2 source
+000011C8  E601 2000 0077                           610+         VCP   V1,V2,0           test instruction
+000011CE  B98D 0020                                611+         EPSW  R2,R0             exptract psw
+000011D2  5020 8E9C                     0000109C   612+         ST    R2,CCPSW              to save CC
+000011D6  07FB                                     613+         BR    R11               return
+000011D8                                           614+RE2      DC    0F
+000011D8                                           615+         DROP  R5
+000011D8  00000990 00000000                        616          DC    XL16'0000099000000000001234500000000C'   V1 source
+000011E0  00123450 0000000C
+000011E8  00000990 00000000                        617          DC    XL16'0000099000000000001234500000000C'   V2 source
+000011F0  00123450 0000000C
+                                                   618
+                                                   619          VRR_H VCP,0,1
+000011F8                                           620+         DS    0FD
+000011F8                      000011F8             621+         USING *,R5              base for test data and test routine
+000011F8  00001214                                 622+T3       DC    A(X3)             address of test routine
+000011FC  0003                                     623+         DC    H'3'              test number
+000011FE  00                                       624+         DC    XL1'00'
+000011FF  00                                       625+         DC    HL1'0'            m3
+00001200  01                                       626+         DC    HL1'1'            cc
+00001201  0B                                       627+         DC    HL1'11'           cc failed mask
+00001202  E5C3D740 40404040                        628+         DC    CL8'VCP'          instruction name
+0000120C  00000010                                 629+         DC    A(16)             result length
+00001210  00001230                                 630+REA3     DC    A(RE3)            result address
+                                                   631+*                                INSTRUCTION UNDER TEST ROUTINE
+00001214                                           632+X3       DS    0F
+00001214  E710 9030 0006                00001230   633+         VL    V1,RE3            get V1 source
+0000121A  E720 9040 0006                00001240   634+         VL    V2,RE3+16         get V2 source
+00001220  E601 2000 0077                           635+         VCP   V1,V2,0           test instruction
+00001226  B98D 0020                                636+         EPSW  R2,R0             exptract psw
+0000122A  5020 8E9C                     0000109C   637+         ST    R2,CCPSW              to save CC
+0000122E  07FB                                     638+         BR    R11               return
+00001230                                           639+RE3      DC    0F
+00001230                                           640+         DROP  R5
+00001230  00000000 00000000                        641          DC    XL16'0000000000000000001234500000000D'   V1 source
+00001238  00123450 0000000D
+00001240  00000000 00000000                        642          DC    XL16'0000000000000000001234500000000C'   V2 source
+00001248  00123450 0000000C
+                                                   643
+                                                   644          VRR_H VCP,0,1
+00001250                                           645+         DS    0FD
+00001250                      00001250             646+         USING *,R5              base for test data and test routine
+00001250  0000126C                                 647+T4       DC    A(X4)             address of test routine
+00001254  0004                                     648+         DC    H'4'              test number
+00001256  00                                       649+         DC    XL1'00'
+00001257  00                                       650+         DC    HL1'0'            m3
+00001258  01                                       651+         DC    HL1'1'            cc
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001259  0B                                       652+         DC    HL1'11'           cc failed mask
+0000125A  E5C3D740 40404040                        653+         DC    CL8'VCP'          instruction name
+00001264  00000010                                 654+         DC    A(16)             result length
+00001268  00001288                                 655+REA4     DC    A(RE4)            result address
+                                                   656+*                                INSTRUCTION UNDER TEST ROUTINE
+0000126C                                           657+X4       DS    0F
+0000126C  E710 5038 0006                00001288   658+         VL    V1,RE4            get V1 source
+00001272  E720 5048 0006                00001298   659+         VL    V2,RE4+16         get V2 source
+00001278  E601 2000 0077                           660+         VCP   V1,V2,0           test instruction
+0000127E  B98D 0020                                661+         EPSW  R2,R0             exptract psw
+00001282  5020 8E9C                     0000109C   662+         ST    R2,CCPSW              to save CC
+00001286  07FB                                     663+         BR    R11               return
+00001288                                           664+RE4      DC    0F
+00001288                                           665+         DROP  R5
+00001288  00000990 00000000                        666          DC    XL16'0000099000000000000234500000000C'   V1 source
+00001290  00023450 0000000C
+00001298  00000990 00000000                        667          DC    XL16'0000099000000000001234500000000C'   V2 source
+000012A0  00123450 0000000C
+                                                   668
+                                                   669          VRR_H VCP,0,2
+000012A8                                           670+         DS    0FD
+000012A8                      000012A8             671+         USING *,R5              base for test data and test routine
+000012A8  000012C4                                 672+T5       DC    A(X5)             address of test routine
+000012AC  0005                                     673+         DC    H'5'              test number
+000012AE  00                                       674+         DC    XL1'00'
+000012AF  00                                       675+         DC    HL1'0'            m3
+000012B0  02                                       676+         DC    HL1'2'            cc
+000012B1  0D                                       677+         DC    HL1'13'           cc failed mask
+000012B2  E5C3D740 40404040                        678+         DC    CL8'VCP'          instruction name
+000012BC  00000010                                 679+         DC    A(16)             result length
+000012C0  000012E0                                 680+REA5     DC    A(RE5)            result address
+                                                   681+*                                INSTRUCTION UNDER TEST ROUTINE
+000012C4                                           682+X5       DS    0F
+000012C4  E710 5038 0006                000012E0   683+         VL    V1,RE5            get V1 source
+000012CA  E720 5048 0006                000012F0   684+         VL    V2,RE5+16         get V2 source
+000012D0  E601 2000 0077                           685+         VCP   V1,V2,0           test instruction
+000012D6  B98D 0020                                686+         EPSW  R2,R0             exptract psw
+000012DA  5020 8E9C                     0000109C   687+         ST    R2,CCPSW              to save CC
+000012DE  07FB                                     688+         BR    R11               return
+000012E0                                           689+RE5      DC    0F
+000012E0                                           690+         DROP  R5
+000012E0  00000000 00000000                        691          DC    XL16'0000000000000000001234500000000C'   V1 source
+000012E8  00123450 0000000C
+000012F0  00000000 00000000                        692          DC    XL16'0000000000000000001234500000000D'   V2 source
+000012F8  00123450 0000000D
+                                                   693
+                                                   694          VRR_H VCP,0,2
+00001300                                           695+         DS    0FD
+00001300                      00001300             696+         USING *,R5              base for test data and test routine
+00001300  0000131C                                 697+T6       DC    A(X6)             address of test routine
+00001304  0006                                     698+         DC    H'6'              test number
+00001306  00                                       699+         DC    XL1'00'
+00001307  00                                       700+         DC    HL1'0'            m3
+00001308  02                                       701+         DC    HL1'2'            cc
+00001309  0D                                       702+         DC    HL1'13'           cc failed mask
+0000130A  E5C3D740 40404040                        703+         DC    CL8'VCP'          instruction name
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001314  00000010                                 704+         DC    A(16)             result length
+00001318  00001338                                 705+REA6     DC    A(RE6)            result address
+                                                   706+*                                INSTRUCTION UNDER TEST ROUTINE
+0000131C                                           707+X6       DS    0F
+0000131C  E710 5038 0006                00001338   708+         VL    V1,RE6            get V1 source
+00001322  E720 5048 0006                00001348   709+         VL    V2,RE6+16         get V2 source
+00001328  E601 2000 0077                           710+         VCP   V1,V2,0           test instruction
+0000132E  B98D 0020                                711+         EPSW  R2,R0             exptract psw
+00001332  5020 8E9C                     0000109C   712+         ST    R2,CCPSW              to save CC
+00001336  07FB                                     713+         BR    R11               return
+00001338                                           714+RE6      DC    0F
+00001338                                           715+         DROP  R5
+00001338  00000990 00000000                        716          DC    XL16'0000099000000000001234500000000C'   V1 source
+00001340  00123450 0000000C
+00001348  00000990 00000000                        717          DC    XL16'0000099000000000000234500000000C'   V2 source
+00001350  00023450 0000000C
+                                                   718
+                                                   719 * m3= 4   (P1=0, P2=1)
+                                                   720          VRR_H VCP,4,1
+00001358                                           721+         DS    0FD
+00001358                      00001358             722+         USING *,R5              base for test data and test routine
+00001358  00001374                                 723+T7       DC    A(X7)             address of test routine
+0000135C  0007                                     724+         DC    H'7'              test number
+0000135E  00                                       725+         DC    XL1'00'
+0000135F  04                                       726+         DC    HL1'4'            m3
+00001360  01                                       727+         DC    HL1'1'            cc
+00001361  0B                                       728+         DC    HL1'11'           cc failed mask
+00001362  E5C3D740 40404040                        729+         DC    CL8'VCP'          instruction name
+0000136C  00000010                                 730+         DC    A(16)             result length
+00001370  00001390                                 731+REA7     DC    A(RE7)            result address
+                                                   732+*                                INSTRUCTION UNDER TEST ROUTINE
+00001374                                           733+X7       DS    0F
+00001374  E710 5038 0006                00001390   734+         VL    V1,RE7            get V1 source
+0000137A  E720 5048 0006                000013A0   735+         VL    V2,RE7+16         get V2 source
+00001380  E601 2040 0077                           736+         VCP   V1,V2,4           test instruction
+00001386  B98D 0020                                737+         EPSW  R2,R0             exptract psw
+0000138A  5020 8E9C                     0000109C   738+         ST    R2,CCPSW              to save CC
+0000138E  07FB                                     739+         BR    R11               return
+00001390                                           740+RE7      DC    0F
+00001390                                           741+         DROP  R5
+00001390  00000000 00000000                        742          DC    XL16'0000000000000000001234500000000D'   V1 source
+00001398  00123450 0000000D
+000013A0  00000000 00000000                        743          DC    XL16'0000000000000000001234500000000D'   V2 source
+000013A8  00123450 0000000D
+                                                   744
+                                                   745          VRR_H VCP,4,0
+000013B0                                           746+         DS    0FD
+000013B0                      000013B0             747+         USING *,R5              base for test data and test routine
+000013B0  000013CC                                 748+T8       DC    A(X8)             address of test routine
+000013B4  0008                                     749+         DC    H'8'              test number
+000013B6  00                                       750+         DC    XL1'00'
+000013B7  04                                       751+         DC    HL1'4'            m3
+000013B8  00                                       752+         DC    HL1'0'            cc
+000013B9  07                                       753+         DC    HL1'7'            cc failed mask
+000013BA  E5C3D740 40404040                        754+         DC    CL8'VCP'          instruction name
+000013C4  00000010                                 755+         DC    A(16)             result length
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000013C8  000013E8                                 756+REA8     DC    A(RE8)            result address
+                                                   757+*                                INSTRUCTION UNDER TEST ROUTINE
+000013CC                                           758+X8       DS    0F
+000013CC  E710 5038 0006                000013E8   759+         VL    V1,RE8            get V1 source
+000013D2  E720 5048 0006                000013F8   760+         VL    V2,RE8+16         get V2 source
+000013D8  E601 2040 0077                           761+         VCP   V1,V2,4           test instruction
+000013DE  B98D 0020                                762+         EPSW  R2,R0             exptract psw
+000013E2  5020 8E9C                     0000109C   763+         ST    R2,CCPSW              to save CC
+000013E6  07FB                                     764+         BR    R11               return
+000013E8                                           765+RE8      DC    0F
+000013E8                                           766+         DROP  R5
+000013E8  00000990 00000000                        767          DC    XL16'0000099000000000001234500000000C'   V1 source
+000013F0  00123450 0000000C
+000013F8  00000990 00000000                        768          DC    XL16'0000099000000000001234500000000C'   V2 source
+00001400  00123450 0000000C
+                                                   769
+                                                   770          VRR_H VCP,4,1
+00001408                                           771+         DS    0FD
+00001408                      00001408             772+         USING *,R5              base for test data and test routine
+00001408  00001424                                 773+T9       DC    A(X9)             address of test routine
+0000140C  0009                                     774+         DC    H'9'              test number
+0000140E  00                                       775+         DC    XL1'00'
+0000140F  04                                       776+         DC    HL1'4'            m3
+00001410  01                                       777+         DC    HL1'1'            cc
+00001411  0B                                       778+         DC    HL1'11'           cc failed mask
+00001412  E5C3D740 40404040                        779+         DC    CL8'VCP'          instruction name
+0000141C  00000010                                 780+         DC    A(16)             result length
+00001420  00001440                                 781+REA9     DC    A(RE9)            result address
+                                                   782+*                                INSTRUCTION UNDER TEST ROUTINE
+00001424                                           783+X9       DS    0F
+00001424  E710 5038 0006                00001440   784+         VL    V1,RE9            get V1 source
+0000142A  E720 5048 0006                00001450   785+         VL    V2,RE9+16         get V2 source
+00001430  E601 2040 0077                           786+         VCP   V1,V2,4           test instruction
+00001436  B98D 0020                                787+         EPSW  R2,R0             exptract psw
+0000143A  5020 8E9C                     0000109C   788+         ST    R2,CCPSW              to save CC
+0000143E  07FB                                     789+         BR    R11               return
+00001440                                           790+RE9      DC    0F
+00001440                                           791+         DROP  R5
+00001440  00000000 00000000                        792          DC    XL16'0000000000000000001234500000000D'   V1 source
+00001448  00123450 0000000D
+00001450  00000000 00000000                        793          DC    XL16'0000000000000000001234500000000C'   V2 source
+00001458  00123450 0000000C
+                                                   794
+                                                   795          VRR_H VCP,4,1
+00001460                                           796+         DS    0FD
+00001460                      00001460             797+         USING *,R5              base for test data and test routine
+00001460  0000147C                                 798+T10      DC    A(X10)            address of test routine
+00001464  000A                                     799+         DC    H'10'             test number
+00001466  00                                       800+         DC    XL1'00'
+00001467  04                                       801+         DC    HL1'4'            m3
+00001468  01                                       802+         DC    HL1'1'            cc
+00001469  0B                                       803+         DC    HL1'11'           cc failed mask
+0000146A  E5C3D740 40404040                        804+         DC    CL8'VCP'          instruction name
+00001474  00000010                                 805+         DC    A(16)             result length
+00001478  00001498                                 806+REA10    DC    A(RE10)           result address
+                                                   807+*                                INSTRUCTION UNDER TEST ROUTINE
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000147C                                           808+X10      DS    0F
+0000147C  E710 5038 0006                00001498   809+         VL    V1,RE10           get V1 source
+00001482  E720 5048 0006                000014A8   810+         VL    V2,RE10+16        get V2 source
+00001488  E601 2040 0077                           811+         VCP   V1,V2,4           test instruction
+0000148E  B98D 0020                                812+         EPSW  R2,R0             exptract psw
+00001492  5020 8E9C                     0000109C   813+         ST    R2,CCPSW              to save CC
+00001496  07FB                                     814+         BR    R11               return
+00001498                                           815+RE10     DC    0F
+00001498                                           816+         DROP  R5
+00001498  00000990 00000000                        817          DC    XL16'0000099000000000000234500000000C'   V1 source
+000014A0  00023450 0000000C
+000014A8  00000990 00000000                        818          DC    XL16'0000099000000000001234500000000C'   V2 source
+000014B0  00123450 0000000C
+                                                   819
+                                                   820          VRR_H VCP,4,0
+000014B8                                           821+         DS    0FD
+000014B8                      000014B8             822+         USING *,R5              base for test data and test routine
+000014B8  000014D4                                 823+T11      DC    A(X11)            address of test routine
+000014BC  000B                                     824+         DC    H'11'             test number
+000014BE  00                                       825+         DC    XL1'00'
+000014BF  04                                       826+         DC    HL1'4'            m3
+000014C0  00                                       827+         DC    HL1'0'            cc
+000014C1  07                                       828+         DC    HL1'7'            cc failed mask
+000014C2  E5C3D740 40404040                        829+         DC    CL8'VCP'          instruction name
+000014CC  00000010                                 830+         DC    A(16)             result length
+000014D0  000014F0                                 831+REA11    DC    A(RE11)           result address
+                                                   832+*                                INSTRUCTION UNDER TEST ROUTINE
+000014D4                                           833+X11      DS    0F
+000014D4  E710 5038 0006                000014F0   834+         VL    V1,RE11           get V1 source
+000014DA  E720 5048 0006                00001500   835+         VL    V2,RE11+16        get V2 source
+000014E0  E601 2040 0077                           836+         VCP   V1,V2,4           test instruction
+000014E6  B98D 0020                                837+         EPSW  R2,R0             exptract psw
+000014EA  5020 8E9C                     0000109C   838+         ST    R2,CCPSW              to save CC
+000014EE  07FB                                     839+         BR    R11               return
+000014F0                                           840+RE11     DC    0F
+000014F0                                           841+         DROP  R5
+000014F0  00000000 00000000                        842          DC    XL16'0000000000000000001234500000000C'   V1 source
+000014F8  00123450 0000000C
+00001500  00000000 00000000                        843          DC    XL16'0000000000000000001234500000000D'   V2 source
+00001508  00123450 0000000D
+                                                   844
+                                                   845          VRR_H VCP,4,2
+00001510                                           846+         DS    0FD
+00001510                      00001510             847+         USING *,R5              base for test data and test routine
+00001510  0000152C                                 848+T12      DC    A(X12)            address of test routine
+00001514  000C                                     849+         DC    H'12'             test number
+00001516  00                                       850+         DC    XL1'00'
+00001517  04                                       851+         DC    HL1'4'            m3
+00001518  02                                       852+         DC    HL1'2'            cc
+00001519  0D                                       853+         DC    HL1'13'           cc failed mask
+0000151A  E5C3D740 40404040                        854+         DC    CL8'VCP'          instruction name
+00001524  00000010                                 855+         DC    A(16)             result length
+00001528  00001548                                 856+REA12    DC    A(RE12)           result address
+                                                   857+*                                INSTRUCTION UNDER TEST ROUTINE
+0000152C                                           858+X12      DS    0F
+0000152C  E710 5038 0006                00001548   859+         VL    V1,RE12           get V1 source
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001532  E720 5048 0006                00001558   860+         VL    V2,RE12+16        get V2 source
+00001538  E601 2040 0077                           861+         VCP   V1,V2,4           test instruction
+0000153E  B98D 0020                                862+         EPSW  R2,R0             exptract psw
+00001542  5020 8E9C                     0000109C   863+         ST    R2,CCPSW              to save CC
+00001546  07FB                                     864+         BR    R11               return
+00001548                                           865+RE12     DC    0F
+00001548                                           866+         DROP  R5
+00001548  00000990 00000000                        867          DC    XL16'0000099000000000001234500000000C'   V1 source
+00001550  00123450 0000000C
+00001558  00000990 00000000                        868          DC    XL16'0000099000000000000234500000000C'   V2 source
+00001560  00023450 0000000C
+                                                   869
+                                                   870 * m3= 8   (P1=1, P2=0)
+                                                   871          VRR_H VCP,8,2
+00001568                                           872+         DS    0FD
+00001568                      00001568             873+         USING *,R5              base for test data and test routine
+00001568  00001584                                 874+T13      DC    A(X13)            address of test routine
+0000156C  000D                                     875+         DC    H'13'             test number
+0000156E  00                                       876+         DC    XL1'00'
+0000156F  08                                       877+         DC    HL1'8'            m3
+00001570  02                                       878+         DC    HL1'2'            cc
+00001571  0D                                       879+         DC    HL1'13'           cc failed mask
+00001572  E5C3D740 40404040                        880+         DC    CL8'VCP'          instruction name
+0000157C  00000010                                 881+         DC    A(16)             result length
+00001580  000015A0                                 882+REA13    DC    A(RE13)           result address
+                                                   883+*                                INSTRUCTION UNDER TEST ROUTINE
+00001584                                           884+X13      DS    0F
+00001584  E710 5038 0006                000015A0   885+         VL    V1,RE13           get V1 source
+0000158A  E720 5048 0006                000015B0   886+         VL    V2,RE13+16        get V2 source
+00001590  E601 2080 0077                           887+         VCP   V1,V2,8           test instruction
+00001596  B98D 0020                                888+         EPSW  R2,R0             exptract psw
+0000159A  5020 8E9C                     0000109C   889+         ST    R2,CCPSW              to save CC
+0000159E  07FB                                     890+         BR    R11               return
+000015A0                                           891+RE13     DC    0F
+000015A0                                           892+         DROP  R5
+000015A0  00000000 00000000                        893          DC    XL16'0000000000000000001234500000000D'   V1 source
+000015A8  00123450 0000000D
+000015B0  00000000 00000000                        894          DC    XL16'0000000000000000001234500000000D'   V2 source
+000015B8  00123450 0000000D
+                                                   895
+                                                   896          VRR_H VCP,8,0
+000015C0                                           897+         DS    0FD
+000015C0                      000015C0             898+         USING *,R5              base for test data and test routine
+000015C0  000015DC                                 899+T14      DC    A(X14)            address of test routine
+000015C4  000E                                     900+         DC    H'14'             test number
+000015C6  00                                       901+         DC    XL1'00'
+000015C7  08                                       902+         DC    HL1'8'            m3
+000015C8  00                                       903+         DC    HL1'0'            cc
+000015C9  07                                       904+         DC    HL1'7'            cc failed mask
+000015CA  E5C3D740 40404040                        905+         DC    CL8'VCP'          instruction name
+000015D4  00000010                                 906+         DC    A(16)             result length
+000015D8  000015F8                                 907+REA14    DC    A(RE14)           result address
+                                                   908+*                                INSTRUCTION UNDER TEST ROUTINE
+000015DC                                           909+X14      DS    0F
+000015DC  E710 5038 0006                000015F8   910+         VL    V1,RE14           get V1 source
+000015E2  E720 5048 0006                00001608   911+         VL    V2,RE14+16        get V2 source
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000015E8  E601 2080 0077                           912+         VCP   V1,V2,8           test instruction
+000015EE  B98D 0020                                913+         EPSW  R2,R0             exptract psw
+000015F2  5020 8E9C                     0000109C   914+         ST    R2,CCPSW              to save CC
+000015F6  07FB                                     915+         BR    R11               return
+000015F8                                           916+RE14     DC    0F
+000015F8                                           917+         DROP  R5
+000015F8  00000990 00000000                        918          DC    XL16'0000099000000000001234500000000C'   V1 source
+00001600  00123450 0000000C
+00001608  00000990 00000000                        919          DC    XL16'0000099000000000001234500000000C'   V2 source
+00001610  00123450 0000000C
+                                                   920
+                                                   921          VRR_H VCP,8,0
+00001618                                           922+         DS    0FD
+00001618                      00001618             923+         USING *,R5              base for test data and test routine
+00001618  00001634                                 924+T15      DC    A(X15)            address of test routine
+0000161C  000F                                     925+         DC    H'15'             test number
+0000161E  00                                       926+         DC    XL1'00'
+0000161F  08                                       927+         DC    HL1'8'            m3
+00001620  00                                       928+         DC    HL1'0'            cc
+00001621  07                                       929+         DC    HL1'7'            cc failed mask
+00001622  E5C3D740 40404040                        930+         DC    CL8'VCP'          instruction name
+0000162C  00000010                                 931+         DC    A(16)             result length
+00001630  00001650                                 932+REA15    DC    A(RE15)           result address
+                                                   933+*                                INSTRUCTION UNDER TEST ROUTINE
+00001634                                           934+X15      DS    0F
+00001634  E710 5038 0006                00001650   935+         VL    V1,RE15           get V1 source
+0000163A  E720 5048 0006                00001660   936+         VL    V2,RE15+16        get V2 source
+00001640  E601 2080 0077                           937+         VCP   V1,V2,8           test instruction
+00001646  B98D 0020                                938+         EPSW  R2,R0             exptract psw
+0000164A  5020 8E9C                     0000109C   939+         ST    R2,CCPSW              to save CC
+0000164E  07FB                                     940+         BR    R11               return
+00001650                                           941+RE15     DC    0F
+00001650                                           942+         DROP  R5
+00001650  00000000 00000000                        943          DC    XL16'0000000000000000001234500000000D'   V1 source
+00001658  00123450 0000000D
+00001660  00000000 00000000                        944          DC    XL16'0000000000000000001234500000000C'   V2 source
+00001668  00123450 0000000C
+                                                   945
+                                                   946          VRR_H VCP,8,1
+00001670                                           947+         DS    0FD
+00001670                      00001670             948+         USING *,R5              base for test data and test routine
+00001670  0000168C                                 949+T16      DC    A(X16)            address of test routine
+00001674  0010                                     950+         DC    H'16'             test number
+00001676  00                                       951+         DC    XL1'00'
+00001677  08                                       952+         DC    HL1'8'            m3
+00001678  01                                       953+         DC    HL1'1'            cc
+00001679  0B                                       954+         DC    HL1'11'           cc failed mask
+0000167A  E5C3D740 40404040                        955+         DC    CL8'VCP'          instruction name
+00001684  00000010                                 956+         DC    A(16)             result length
+00001688  000016A8                                 957+REA16    DC    A(RE16)           result address
+                                                   958+*                                INSTRUCTION UNDER TEST ROUTINE
+0000168C                                           959+X16      DS    0F
+0000168C  E710 5038 0006                000016A8   960+         VL    V1,RE16           get V1 source
+00001692  E720 5048 0006                000016B8   961+         VL    V2,RE16+16        get V2 source
+00001698  E601 2080 0077                           962+         VCP   V1,V2,8           test instruction
+0000169E  B98D 0020                                963+         EPSW  R2,R0             exptract psw
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000016A2  5020 8E9C                     0000109C   964+         ST    R2,CCPSW              to save CC
+000016A6  07FB                                     965+         BR    R11               return
+000016A8                                           966+RE16     DC    0F
+000016A8                                           967+         DROP  R5
+000016A8  00000990 00000000                        968          DC    XL16'0000099000000000000234500000000C'   V1 source
+000016B0  00023450 0000000C
+000016B8  00000990 00000000                        969          DC    XL16'0000099000000000001234500000000C'   V2 source
+000016C0  00123450 0000000C
+                                                   970
+                                                   971          VRR_H VCP,8,2
+000016C8                                           972+         DS    0FD
+000016C8                      000016C8             973+         USING *,R5              base for test data and test routine
+000016C8  000016E4                                 974+T17      DC    A(X17)            address of test routine
+000016CC  0011                                     975+         DC    H'17'             test number
+000016CE  00                                       976+         DC    XL1'00'
+000016CF  08                                       977+         DC    HL1'8'            m3
+000016D0  02                                       978+         DC    HL1'2'            cc
+000016D1  0D                                       979+         DC    HL1'13'           cc failed mask
+000016D2  E5C3D740 40404040                        980+         DC    CL8'VCP'          instruction name
+000016DC  00000010                                 981+         DC    A(16)             result length
+000016E0  00001700                                 982+REA17    DC    A(RE17)           result address
+                                                   983+*                                INSTRUCTION UNDER TEST ROUTINE
+000016E4                                           984+X17      DS    0F
+000016E4  E710 5038 0006                00001700   985+         VL    V1,RE17           get V1 source
+000016EA  E720 5048 0006                00001710   986+         VL    V2,RE17+16        get V2 source
+000016F0  E601 2080 0077                           987+         VCP   V1,V2,8           test instruction
+000016F6  B98D 0020                                988+         EPSW  R2,R0             exptract psw
+000016FA  5020 8E9C                     0000109C   989+         ST    R2,CCPSW              to save CC
+000016FE  07FB                                     990+         BR    R11               return
+00001700                                           991+RE17     DC    0F
+00001700                                           992+         DROP  R5
+00001700  00000000 00000000                        993          DC    XL16'0000000000000000001234500000000C'   V1 source
+00001708  00123450 0000000C
+00001710  00000000 00000000                        994          DC    XL16'0000000000000000001234500000000D'   V2 source
+00001718  00123450 0000000D
+                                                   995
+                                                   996          VRR_H VCP,8,2
+00001720                                           997+         DS    0FD
+00001720                      00001720             998+         USING *,R5              base for test data and test routine
+00001720  0000173C                                 999+T18      DC    A(X18)            address of test routine
+00001724  0012                                    1000+         DC    H'18'             test number
+00001726  00                                      1001+         DC    XL1'00'
+00001727  08                                      1002+         DC    HL1'8'            m3
+00001728  02                                      1003+         DC    HL1'2'            cc
+00001729  0D                                      1004+         DC    HL1'13'           cc failed mask
+0000172A  E5C3D740 40404040                       1005+         DC    CL8'VCP'          instruction name
+00001734  00000010                                1006+         DC    A(16)             result length
+00001738  00001758                                1007+REA18    DC    A(RE18)           result address
+                                                  1008+*                                INSTRUCTION UNDER TEST ROUTINE
+0000173C                                          1009+X18      DS    0F
+0000173C  E710 5038 0006                00001758  1010+         VL    V1,RE18           get V1 source
+00001742  E720 5048 0006                00001768  1011+         VL    V2,RE18+16        get V2 source
+00001748  E601 2080 0077                          1012+         VCP   V1,V2,8           test instruction
+0000174E  B98D 0020                               1013+         EPSW  R2,R0             exptract psw
+00001752  5020 8E9C                     0000109C  1014+         ST    R2,CCPSW              to save CC
+00001756  07FB                                    1015+         BR    R11               return
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001758                                          1016+RE18     DC    0F
+00001758                                          1017+         DROP  R5
+00001758  00000990 00000000                       1018          DC    XL16'0000099000000000001234500000000C'   V1 source
+00001760  00123450 0000000C
+00001768  00000990 00000000                       1019          DC    XL16'0000099000000000000234500000000C'   V2 source
+00001770  00023450 0000000C
+                                                  1020
+                                                  1021 * m3=12   (P1=1, P2=1)
+                                                  1022          VRR_H VCP,12,0
+00001778                                          1023+         DS    0FD
+00001778                      00001778            1024+         USING *,R5              base for test data and test routine
+00001778  00001794                                1025+T19      DC    A(X19)            address of test routine
+0000177C  0013                                    1026+         DC    H'19'             test number
+0000177E  00                                      1027+         DC    XL1'00'
+0000177F  0C                                      1028+         DC    HL1'12'           m3
+00001780  00                                      1029+         DC    HL1'0'            cc
+00001781  07                                      1030+         DC    HL1'7'            cc failed mask
+00001782  E5C3D740 40404040                       1031+         DC    CL8'VCP'          instruction name
+0000178C  00000010                                1032+         DC    A(16)             result length
+00001790  000017B0                                1033+REA19    DC    A(RE19)           result address
+                                                  1034+*                                INSTRUCTION UNDER TEST ROUTINE
+00001794                                          1035+X19      DS    0F
+00001794  E710 5038 0006                000017B0  1036+         VL    V1,RE19           get V1 source
+0000179A  E720 5048 0006                000017C0  1037+         VL    V2,RE19+16        get V2 source
+000017A0  E601 20C0 0077                          1038+         VCP   V1,V2,12          test instruction
+000017A6  B98D 0020                               1039+         EPSW  R2,R0             exptract psw
+000017AA  5020 8E9C                     0000109C  1040+         ST    R2,CCPSW              to save CC
+000017AE  07FB                                    1041+         BR    R11               return
+000017B0                                          1042+RE19     DC    0F
+000017B0                                          1043+         DROP  R5
+000017B0  00000000 00000000                       1044          DC    XL16'0000000000000000001234500000000D'   V1 source
+000017B8  00123450 0000000D
+000017C0  00000000 00000000                       1045          DC    XL16'0000000000000000001234500000000D'   V2 source
+000017C8  00123450 0000000D
+                                                  1046
+                                                  1047          VRR_H VCP,12,0
+000017D0                                          1048+         DS    0FD
+000017D0                      000017D0            1049+         USING *,R5              base for test data and test routine
+000017D0  000017EC                                1050+T20      DC    A(X20)            address of test routine
+000017D4  0014                                    1051+         DC    H'20'             test number
+000017D6  00                                      1052+         DC    XL1'00'
+000017D7  0C                                      1053+         DC    HL1'12'           m3
+000017D8  00                                      1054+         DC    HL1'0'            cc
+000017D9  07                                      1055+         DC    HL1'7'            cc failed mask
+000017DA  E5C3D740 40404040                       1056+         DC    CL8'VCP'          instruction name
+000017E4  00000010                                1057+         DC    A(16)             result length
+000017E8  00001808                                1058+REA20    DC    A(RE20)           result address
+                                                  1059+*                                INSTRUCTION UNDER TEST ROUTINE
+000017EC                                          1060+X20      DS    0F
+000017EC  E710 5038 0006                00001808  1061+         VL    V1,RE20           get V1 source
+000017F2  E720 5048 0006                00001818  1062+         VL    V2,RE20+16        get V2 source
+000017F8  E601 20C0 0077                          1063+         VCP   V1,V2,12          test instruction
+000017FE  B98D 0020                               1064+         EPSW  R2,R0             exptract psw
+00001802  5020 8E9C                     0000109C  1065+         ST    R2,CCPSW              to save CC
+00001806  07FB                                    1066+         BR    R11               return
+00001808                                          1067+RE20     DC    0F
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001808                                          1068+         DROP  R5
+00001808  00000990 00000000                       1069          DC    XL16'0000099000000000001234500000000C'   V1 source
+00001810  00123450 0000000C
+00001818  00000990 00000000                       1070          DC    XL16'0000099000000000001234500000000C'   V2 source
+00001820  00123450 0000000C
+                                                  1071
+                                                  1072          VRR_H VCP,12,0
+00001828                                          1073+         DS    0FD
+00001828                      00001828            1074+         USING *,R5              base for test data and test routine
+00001828  00001844                                1075+T21      DC    A(X21)            address of test routine
+0000182C  0015                                    1076+         DC    H'21'             test number
+0000182E  00                                      1077+         DC    XL1'00'
+0000182F  0C                                      1078+         DC    HL1'12'           m3
+00001830  00                                      1079+         DC    HL1'0'            cc
+00001831  07                                      1080+         DC    HL1'7'            cc failed mask
+00001832  E5C3D740 40404040                       1081+         DC    CL8'VCP'          instruction name
+0000183C  00000010                                1082+         DC    A(16)             result length
+00001840  00001860                                1083+REA21    DC    A(RE21)           result address
+                                                  1084+*                                INSTRUCTION UNDER TEST ROUTINE
+00001844                                          1085+X21      DS    0F
+00001844  E710 5038 0006                00001860  1086+         VL    V1,RE21           get V1 source
+0000184A  E720 5048 0006                00001870  1087+         VL    V2,RE21+16        get V2 source
+00001850  E601 20C0 0077                          1088+         VCP   V1,V2,12          test instruction
+00001856  B98D 0020                               1089+         EPSW  R2,R0             exptract psw
+0000185A  5020 8E9C                     0000109C  1090+         ST    R2,CCPSW              to save CC
+0000185E  07FB                                    1091+         BR    R11               return
+00001860                                          1092+RE21     DC    0F
+00001860                                          1093+         DROP  R5
+00001860  00000000 00000000                       1094          DC    XL16'0000000000000000001234500000000D'   V1 source
+00001868  00123450 0000000D
+00001870  00000000 00000000                       1095          DC    XL16'0000000000000000001234500000000C'   V2 source
+00001878  00123450 0000000C
+                                                  1096
+                                                  1097          VRR_H VCP,12,1
+00001880                                          1098+         DS    0FD
+00001880                      00001880            1099+         USING *,R5              base for test data and test routine
+00001880  0000189C                                1100+T22      DC    A(X22)            address of test routine
+00001884  0016                                    1101+         DC    H'22'             test number
+00001886  00                                      1102+         DC    XL1'00'
+00001887  0C                                      1103+         DC    HL1'12'           m3
+00001888  01                                      1104+         DC    HL1'1'            cc
+00001889  0B                                      1105+         DC    HL1'11'           cc failed mask
+0000188A  E5C3D740 40404040                       1106+         DC    CL8'VCP'          instruction name
+00001894  00000010                                1107+         DC    A(16)             result length
+00001898  000018B8                                1108+REA22    DC    A(RE22)           result address
+                                                  1109+*                                INSTRUCTION UNDER TEST ROUTINE
+0000189C                                          1110+X22      DS    0F
+0000189C  E710 5038 0006                000018B8  1111+         VL    V1,RE22           get V1 source
+000018A2  E720 5048 0006                000018C8  1112+         VL    V2,RE22+16        get V2 source
+000018A8  E601 20C0 0077                          1113+         VCP   V1,V2,12          test instruction
+000018AE  B98D 0020                               1114+         EPSW  R2,R0             exptract psw
+000018B2  5020 8E9C                     0000109C  1115+         ST    R2,CCPSW              to save CC
+000018B6  07FB                                    1116+         BR    R11               return
+000018B8                                          1117+RE22     DC    0F
+000018B8                                          1118+         DROP  R5
+000018B8  00000990 00000000                       1119          DC    XL16'0000099000000000000234500000000C'   V1 source
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000018C0  00023450 0000000C
+000018C8  00000990 00000000                       1120          DC    XL16'0000099000000000001234500000000C'   V2 source
+000018D0  00123450 0000000C
+                                                  1121
+                                                  1122          VRR_H VCP,12,0
+000018D8                                          1123+         DS    0FD
+000018D8                      000018D8            1124+         USING *,R5              base for test data and test routine
+000018D8  000018F4                                1125+T23      DC    A(X23)            address of test routine
+000018DC  0017                                    1126+         DC    H'23'             test number
+000018DE  00                                      1127+         DC    XL1'00'
+000018DF  0C                                      1128+         DC    HL1'12'           m3
+000018E0  00                                      1129+         DC    HL1'0'            cc
+000018E1  07                                      1130+         DC    HL1'7'            cc failed mask
+000018E2  E5C3D740 40404040                       1131+         DC    CL8'VCP'          instruction name
+000018EC  00000010                                1132+         DC    A(16)             result length
+000018F0  00001910                                1133+REA23    DC    A(RE23)           result address
+                                                  1134+*                                INSTRUCTION UNDER TEST ROUTINE
+000018F4                                          1135+X23      DS    0F
+000018F4  E710 5038 0006                00001910  1136+         VL    V1,RE23           get V1 source
+000018FA  E720 5048 0006                00001920  1137+         VL    V2,RE23+16        get V2 source
+00001900  E601 20C0 0077                          1138+         VCP   V1,V2,12          test instruction
+00001906  B98D 0020                               1139+         EPSW  R2,R0             exptract psw
+0000190A  5020 8E9C                     0000109C  1140+         ST    R2,CCPSW              to save CC
+0000190E  07FB                                    1141+         BR    R11               return
+00001910                                          1142+RE23     DC    0F
+00001910                                          1143+         DROP  R5
+00001910  00000000 00000000                       1144          DC    XL16'0000000000000000001234500000000C'   V1 source
+00001918  00123450 0000000C
+00001920  00000000 00000000                       1145          DC    XL16'0000000000000000001234500000000D'   V2 source
+00001928  00123450 0000000D
+                                                  1146
+                                                  1147          VRR_H VCP,12,2
+00001930                                          1148+         DS    0FD
+00001930                      00001930            1149+         USING *,R5              base for test data and test routine
+00001930  0000194C                                1150+T24      DC    A(X24)            address of test routine
+00001934  0018                                    1151+         DC    H'24'             test number
+00001936  00                                      1152+         DC    XL1'00'
+00001937  0C                                      1153+         DC    HL1'12'           m3
+00001938  02                                      1154+         DC    HL1'2'            cc
+00001939  0D                                      1155+         DC    HL1'13'           cc failed mask
+0000193A  E5C3D740 40404040                       1156+         DC    CL8'VCP'          instruction name
+00001944  00000010                                1157+         DC    A(16)             result length
+00001948  00001968                                1158+REA24    DC    A(RE24)           result address
+                                                  1159+*                                INSTRUCTION UNDER TEST ROUTINE
+0000194C                                          1160+X24      DS    0F
+0000194C  E710 5038 0006                00001968  1161+         VL    V1,RE24           get V1 source
+00001952  E720 5048 0006                00001978  1162+         VL    V2,RE24+16        get V2 source
+00001958  E601 20C0 0077                          1163+         VCP   V1,V2,12          test instruction
+0000195E  B98D 0020                               1164+         EPSW  R2,R0             exptract psw
+00001962  5020 8E9C                     0000109C  1165+         ST    R2,CCPSW              to save CC
+00001966  07FB                                    1166+         BR    R11               return
+00001968                                          1167+RE24     DC    0F
+00001968                                          1168+         DROP  R5
+00001968  00000990 00000000                       1169          DC    XL16'0000099000000000001234500000000C'   V1 source
+00001970  00123450 0000000C
+00001978  00000990 00000000                       1170          DC    XL16'0000099000000000000234500000000C'   V2 source
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    29
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001980  00023450 0000000C
+                                                  1171
+00001988  00000000                                1172          DC    F'0'     END OF TABLE
+0000198C  00000000                                1173          DC    F'0'
+                                                  1174 *
+                                                  1175 * table of pointers to individual load test
+                                                  1176 *
+00001990                                          1177 E6TESTS  DS    0F
+                                                  1178          PTTABLE
+00001990                                          1179+TTABLE   DS    0F
+00001990  00001148                                1180+         DC    A(T1)             address of test
+00001994  000011A0                                1181+         DC    A(T2)             address of test
+00001998  000011F8                                1182+         DC    A(T3)             address of test
+0000199C  00001250                                1183+         DC    A(T4)             address of test
+000019A0  000012A8                                1184+         DC    A(T5)             address of test
+000019A4  00001300                                1185+         DC    A(T6)             address of test
+000019A8  00001358                                1186+         DC    A(T7)             address of test
+000019AC  000013B0                                1187+         DC    A(T8)             address of test
+000019B0  00001408                                1188+         DC    A(T9)             address of test
+000019B4  00001460                                1189+         DC    A(T10)            address of test
+000019B8  000014B8                                1190+         DC    A(T11)            address of test
+000019BC  00001510                                1191+         DC    A(T12)            address of test
+000019C0  00001568                                1192+         DC    A(T13)            address of test
+000019C4  000015C0                                1193+         DC    A(T14)            address of test
+000019C8  00001618                                1194+         DC    A(T15)            address of test
+000019CC  00001670                                1195+         DC    A(T16)            address of test
+000019D0  000016C8                                1196+         DC    A(T17)            address of test
+000019D4  00001720                                1197+         DC    A(T18)            address of test
+000019D8  00001778                                1198+         DC    A(T19)            address of test
+000019DC  000017D0                                1199+         DC    A(T20)            address of test
+000019E0  00001828                                1200+         DC    A(T21)            address of test
+000019E4  00001880                                1201+         DC    A(T22)            address of test
+000019E8  000018D8                                1202+         DC    A(T23)            address of test
+000019EC  00001930                                1203+         DC    A(T24)            address of test
+                                                  1204+*
+000019F0  00000000                                1205+         DC    A(0)              END OF TABLE
+000019F4  00000000                                1206+         DC    A(0)
+                                                  1207
+000019F8  00000000                                1208          DC    F'0'     END OF TABLE
+000019FC  00000000                                1209          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    30
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1211 ***********************************************************************
+                                                  1212 *        Register equates
+                                                  1213 ***********************************************************************
+
+
+                              00000000  00000001  1215 R0       EQU   0
+                              00000001  00000001  1216 R1       EQU   1
+                              00000002  00000001  1217 R2       EQU   2
+                              00000003  00000001  1218 R3       EQU   3
+                              00000004  00000001  1219 R4       EQU   4
+                              00000005  00000001  1220 R5       EQU   5
+                              00000006  00000001  1221 R6       EQU   6
+                              00000007  00000001  1222 R7       EQU   7
+                              00000008  00000001  1223 R8       EQU   8
+                              00000009  00000001  1224 R9       EQU   9
+                              0000000A  00000001  1225 R10      EQU   10
+                              0000000B  00000001  1226 R11      EQU   11
+                              0000000C  00000001  1227 R12      EQU   12
+                              0000000D  00000001  1228 R13      EQU   13
+                              0000000E  00000001  1229 R14      EQU   14
+                              0000000F  00000001  1230 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  1232 ***********************************************************************
+                                                  1233 *        Register equates
+                                                  1234 ***********************************************************************
+
+
+                              00000000  00000001  1236 V0       EQU   0
+                              00000001  00000001  1237 V1       EQU   1
+                              00000002  00000001  1238 V2       EQU   2
+                              00000003  00000001  1239 V3       EQU   3
+                              00000004  00000001  1240 V4       EQU   4
+                              00000005  00000001  1241 V5       EQU   5
+                              00000006  00000001  1242 V6       EQU   6
+                              00000007  00000001  1243 V7       EQU   7
+                              00000008  00000001  1244 V8       EQU   8
+                              00000009  00000001  1245 V9       EQU   9
+                              0000000A  00000001  1246 V10      EQU   10
+                              0000000B  00000001  1247 V11      EQU   11
+                              0000000C  00000001  1248 V12      EQU   12
+                              0000000D  00000001  1249 V13      EQU   13
+                              0000000E  00000001  1250 V14      EQU   14
+                              0000000F  00000001  1251 V15      EQU   15
+                              00000010  00000001  1252 V16      EQU   16
+                              00000011  00000001  1253 V17      EQU   17
+                              00000012  00000001  1254 V18      EQU   18
+                              00000013  00000001  1255 V19      EQU   19
+                              00000014  00000001  1256 V20      EQU   20
+                              00000015  00000001  1257 V21      EQU   21
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    31
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001  1258 V22      EQU   22
+                              00000017  00000001  1259 V23      EQU   23
+                              00000018  00000001  1260 V24      EQU   24
+                              00000019  00000001  1261 V25      EQU   25
+                              0000001A  00000001  1262 V26      EQU   26
+                              0000001B  00000001  1263 V27      EQU   27
+                              0000001C  00000001  1264 V28      EQU   28
+                              0000001D  00000001  1265 V29      EQU   29
+                              0000001E  00000001  1266 V30      EQU   30
+                              0000001F  00000001  1267 V31      EQU   31
+                                                  1268
+                                                  1269          END
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    32
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   150   115   146   147   148
+CC                  U    00000008           1   459   249
+CCFOUND             X    000010A4           1   431   236   256
+CCMASK              U    00000009           1   460   216
+CCMSG               U    0000030A           1   229   223
+CCPRTEXP            C    0000104B           1   411   253
+CCPRTGOT            C    0000105B           1   414   260
+CCPRTLINE           C    00001008          16   406   416   263
+CCPRTLNG            U    00000055           1   416   262
+CCPRTNAME           C    00001035           8   409   246
+CCPRTNUM            C    00001018           3   407   244
+CCPSW               F    0000109C           4   430   233   587   612   637   662   687   712   738   763   788   813   838   863
+                                                      889   914   939   964   989  1014  1040  1065  1090  1115  1140  1165
+CTLR0               F    000004C4           4   367   160   161   162   163
+DECNUM              C    00001089          16   426   241   243   250   252   257   259
+E6TEST              4    00000000          28   454   211
+E6TESTS             F    00001990           4  1177   202
+EDIT                X    0000105D          18   421   242   251   258
+ENDTEST             U    00000396           1   281   207
+EOJ                 I    000004A8           4   357   195   284
+EOJPSW              D    00000498           8   355   357
+FAILCONT            U    00000386           1   271   266
+FAILED              F    00001000           4   397   273   282
+FAILPSW             D    000004B0           8   359   361
+FAILTEST            I    000004C0           4   361   285
+FB0001              F    00000288           8   179   183   184   186
+IMAGE               1    00000000        6656     0
+K                   U    00000400           1   380   381   382   383
+K64                 U    00010000           1   382
+M3                  U    00000007           1   458
+MB                  U    00100000           1   383
+MSG                 I    000003E0           4   317   194   300
+MSGCMD              C    0000042E           9   347   330   331
+MSGMSG              C    00000437          95   348   324   345   322
+MSGMVC              I    00000428           6   345   328
+MSGOK               I    000003F6           2   326   323
+MSGRET              I    00000416           4   341   334   337
+MSGSAVE             F    0000041C           4   344   320   341
+NEXTE6              U    000002DC           1   204   221   276
+OPNAME              C    0000000A           8   462   246
+PAGE                U    00001000           1   381
+PRT3                C    00001073          18   424   242   243   244   251   252   253   258   259   260
+R0                  U    00000000           1  1215   109   160   163   183   185   186   187   192   209   262   272   273   299
+                                                      301   317   320   322   324   326   341   586   611   636   661   686   711
+                                                      737   762   787   812   837   862   888   913   938   963   988  1013  1039
+                                                     1064  1089  1114  1139  1164
+R1                  U    00000001           1  1216   193   216   217   218   233   234   235   236   263   282   283   331   345
+R10                 U    0000000A           1  1225   148   157   158
+R11                 U    0000000B           1  1226   213   214   588   613   638   663   688   713   739   764   789   814   839
+                                                      864   890   915   940   965   990  1015  1041  1066  1091  1116  1141  1166
+R12                 U    0000000C           1  1227   202   205   220   275
+R13                 U    0000000D           1  1228
+R14                 U    0000000E           1  1229
+R15                 U    0000000F           1  1230   264   294   304   305
+R1FUDGE             X    000010A8           8   437
+R1OUTPUT            F    000010E0           8   441
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    33
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+R2                  U    00000002           1  1217   194   240   241   248   249   250   255   256   257   299   300   301   318
+                                                      320   326   327   328   330   336   341   342   586   587   611   612   636
+                                                      637   661   662   686   687   711   712   737   738   762   763   787   788
+                                                      812   813   837   838   862   863   888   889   913   914   938   939   963
+                                                      964   988   989  1013  1014  1039  1040  1064  1065  1089  1090  1114  1115
+                                                     1139  1140  1164  1165
+R3                  U    00000003           1  1218
+R4                  U    00000004           1  1219
+R5                  U    00000005           1  1220   205   206   211   295   303   571   590   596   615   621   640   646   665
+                                                      671   690   696   715   722   741   747   766   772   791   797   816   822
+                                                      841   847   866   873   892   898   917   923   942   948   967   973   992
+                                                      998  1017  1024  1043  1049  1068  1074  1093  1099  1118  1124  1143  1149
+                                                     1168
+R6                  U    00000006           1  1221
+R7                  U    00000007           1  1222
+R8                  U    00000008           1  1223   146   150   151   152   154
+R9                  U    00000009           1  1224   147   154   155   157
+RE1                 F    00001180           4   589   580   583   584
+RE10                F    00001498           4   815   806   809   810
+RE11                F    000014F0           4   840   831   834   835
+RE12                F    00001548           4   865   856   859   860
+RE13                F    000015A0           4   891   882   885   886
+RE14                F    000015F8           4   916   907   910   911
+RE15                F    00001650           4   941   932   935   936
+RE16                F    000016A8           4   966   957   960   961
+RE17                F    00001700           4   991   982   985   986
+RE18                F    00001758           4  1016  1007  1010  1011
+RE19                F    000017B0           4  1042  1033  1036  1037
+RE2                 F    000011D8           4   614   605   608   609
+RE20                F    00001808           4  1067  1058  1061  1062
+RE21                F    00001860           4  1092  1083  1086  1087
+RE22                F    000018B8           4  1117  1108  1111  1112
+RE23                F    00001910           4  1142  1133  1136  1137
+RE24                F    00001968           4  1167  1158  1161  1162
+RE3                 F    00001230           4   639   630   633   634
+RE4                 F    00001288           4   664   655   658   659
+RE5                 F    000012E0           4   689   680   683   684
+RE6                 F    00001338           4   714   705   708   709
+RE7                 F    00001390           4   740   731   734   735
+RE8                 F    000013E8           4   765   756   759   760
+RE9                 F    00001440           4   790   781   784   785
+REA1                A    00001160           4   580
+REA10               A    00001478           4   806
+REA11               A    000014D0           4   831
+REA12               A    00001528           4   856
+REA13               A    00001580           4   882
+REA14               A    000015D8           4   907
+REA15               A    00001630           4   932
+REA16               A    00001688           4   957
+REA17               A    000016E0           4   982
+REA18               A    00001738           4  1007
+REA19               A    00001790           4  1033
+REA2                A    000011B8           4   605
+REA20               A    000017E8           4  1058
+REA21               A    00001840           4  1083
+REA22               A    00001898           4  1108
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    34
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+REA23               A    000018F0           4  1133
+REA24               A    00001948           4  1158
+REA3                A    00001210           4   630
+REA4                A    00001268           4   655
+REA5                A    000012C0           4   680
+REA6                A    00001318           4   705
+REA7                A    00001370           4   731
+REA8                A    000013C8           4   756
+REA9                A    00001420           4   781
+READDR              A    00000018           4   465
+REG2LOW             U    000000DD           1   387
+REG2PATT            U    AABBCCDD           1   386
+RELEN               A    00000014           4   464
+RPTDWSAV            D    000003D0           8   310   299   301
+RPTERROR            I    000003A4           4   294   264
+RPTSAVE             F    000003C4           4   307   294   304
+RPTSVR5             F    000003C8           4   308   295   303
+SKL0001             U    00000054           1   176   192
+SKT0001             C    0000022A          26   173   176   193
+SVOLDPSW            U    00000140           0   111
+T1                  A    00001148           4   572  1180
+T10                 A    00001460           4   798  1189
+T11                 A    000014B8           4   823  1190
+T12                 A    00001510           4   848  1191
+T13                 A    00001568           4   874  1192
+T14                 A    000015C0           4   899  1193
+T15                 A    00001618           4   924  1194
+T16                 A    00001670           4   949  1195
+T17                 A    000016C8           4   974  1196
+T18                 A    00001720           4   999  1197
+T19                 A    00001778           4  1025  1198
+T2                  A    000011A0           4   597  1181
+T20                 A    000017D0           4  1050  1199
+T21                 A    00001828           4  1075  1200
+T22                 A    00001880           4  1100  1201
+T23                 A    000018D8           4  1125  1202
+T24                 A    00001930           4  1150  1203
+T3                  A    000011F8           4   622  1182
+T4                  A    00001250           4   647  1183
+T5                  A    000012A8           4   672  1184
+T6                  A    00001300           4   697  1185
+T7                  A    00001358           4   723  1186
+T8                  A    000013B0           4   748  1187
+T9                  A    00001408           4   773  1188
+TESTCC              I    00000306           4   223   218
+TESTING             F    00001004           4   398
+TNUM                H    00000004           2   456   240
+TSUB                A    00000000           4   455   213
+TTABLE              F    00001990           4  1179
+V0                  U    00000000           1  1236
+V1                  U    00000001           1  1237   583   585   608   610   633   635   658   660   683   685   708   710   734
+                                                      736   759   761   784   786   809   811   834   836   859   861   885   887
+                                                      910   912   935   937   960   962   985   987  1010  1012  1036  1038  1061
+                                                     1063  1086  1088  1111  1113  1136  1138  1161  1163
+V10                 U    0000000A           1  1246
+V11                 U    0000000B           1  1247
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    35
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V12                 U    0000000C           1  1248
+V13                 U    0000000D           1  1249
+V14                 U    0000000E           1  1250
+V15                 U    0000000F           1  1251
+V16                 U    00000010           1  1252
+V17                 U    00000011           1  1253
+V18                 U    00000012           1  1254
+V19                 U    00000013           1  1255
+V1FUDGE             X    000010F8          16   443
+V1FUDGEB            X    00001108          16   444
+V1INPUT             C    00001118          16   445
+V1OUTPUT            X    000010C0          16   439
+V2                  U    00000002           1  1238   584   585   609   610   634   635   659   660   684   685   709   710   735
+                                                      736   760   761   785   786   810   811   835   836   860   861   886   887
+                                                      911   912   936   937   961   962   986   987  1011  1012  1037  1038  1062
+                                                     1063  1087  1088  1112  1113  1137  1138  1162  1163
+V20                 U    00000014           1  1256
+V21                 U    00000015           1  1257
+V22                 U    00000016           1  1258
+V23                 U    00000017           1  1259
+V24                 U    00000018           1  1260
+V25                 U    00000019           1  1261
+V26                 U    0000001A           1  1262
+V27                 U    0000001B           1  1263
+V28                 U    0000001C           1  1264
+V29                 U    0000001D           1  1265
+V3                  U    00000003           1  1239
+V30                 U    0000001E           1  1266
+V31                 U    0000001F           1  1267
+V4                  U    00000004           1  1240
+V5                  U    00000005           1  1241
+V6                  U    00000006           1  1242
+V7                  U    00000007           1  1243
+V8                  U    00000008           1  1244
+V9                  U    00000009           1  1245
+X0001               U    000002B0           1   182   170   183
+X1                  F    00001164           4   582   572
+X10                 F    0000147C           4   808   798
+X11                 F    000014D4           4   833   823
+X12                 F    0000152C           4   858   848
+X13                 F    00001584           4   884   874
+X14                 F    000015DC           4   909   899
+X15                 F    00001634           4   934   924
+X16                 F    0000168C           4   959   949
+X17                 F    000016E4           4   984   974
+X18                 F    0000173C           4  1009   999
+X19                 F    00001794           4  1035  1025
+X2                  F    000011BC           4   607   597
+X20                 F    000017EC           4  1060  1050
+X21                 F    00001844           4  1085  1075
+X22                 F    0000189C           4  1110  1100
+X23                 F    000018F4           4  1135  1125
+X24                 F    0000194C           4  1160  1150
+X3                  F    00001214           4   632   622
+X4                  F    0000126C           4   657   647
+X5                  F    000012C4           4   682   672
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    36
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+X6                  F    0000131C           4   707   697
+X7                  F    00001374           4   733   723
+X8                  F    000013CC           4   758   748
+X9                  F    00001424           4   783   773
+XC0001              U    000002D8           1   196   188
+ZVE6TST             J    00000000        6656   108   111   113   117   121   396   109
+=A(E6TESTS)         A    000004D0           4   372   202
+=AL2(L'MSGMSG)      R    000004DE           2   376   322
+=F'1'               F    000004D8           4   374   272
+=F'2'               F    000004CC           4   371   187
+=H'0'               H    000004DC           2   375   317
+=XL4'3'             X    000004D4           4   373   235
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    37
+
+ MACRO   DEFN  REFERENCES
+
+FCHECK     60    169
+PTTABLE   529   1178
+VRR_H     479    569    594    619    644    669    694    720    745    770    795    820    845    871    896    921    946    971
+                 996   1022   1047   1072   1097   1122   1147
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    38
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    6656  0000-19FF  0000-19FF
+  Region            6656  0000-19FF  0000-19FF
+    CSECT  ZVE6TST  6656  0000-19FF  0000-19FF
+ASMA Ver. 0.7.0  zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction                          18 Jun 2024 18:58:22  Page    39
+
+   STMT                           FILE NAME
+
+1     /home/tn529/sharedvfp/tests/zvector-e6-15-comparedecimal.asm
+
+
+** NO ERRORS FOUND **
+
+

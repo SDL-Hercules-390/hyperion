@@ -47,10 +47,13 @@
  typedef union {
                  struct { DW H; DW L; } D;
                  struct { FW HH; FW HL; FW LH; FW LL; } F;
-                 U64  d[2];            /* Note: Any code        */
-                 U32  f[4];            /* that uses these       */
-                 U16  h[8];            /* four variables must   */
-                 BYTE b[16];           /* allow for endianness. */
+#if defined(_M_X64) || defined( __SSE2__ )
+                 __m128i v;            /* SIMD 128 bit vector   */
+#endif
+                 U64     d[2];           /* Unsigned double words (2x64b) */
+                 U32     f[4];           /* Unsigned words        (4x32b) */
+                 U16     h[8];           /* Unsigned halfwords    (8x16b) */
+                 U8      b[16];          /* Unsigned bytes        (16x8b) */
                } QW;
 
 /*-------------------------------------------------------------------*/
@@ -72,10 +75,13 @@
  typedef union {
                  struct { DW L; DW H; } D;
                  struct { FW LL; FW LH; FW HL; FW HH; } F;
-                 U64  d[2];            /* Note: Any code        */
-                 U32  f[4];            /* that uses these       */
-                 U16  h[8];            /* four variables must   */
-                 BYTE b[16];           /* allow for endianness. */
+#if defined(_M_X64) || defined( __SSE2__ )
+                 __m128i v;              /* SIMD 128 bit vector   */
+#endif
+                 U64     d[2];           /* Unsigned double words (2x64b) */
+                 U32     f[4];           /* Unsigned words        (4x32b) */
+                 U16     h[8];           /* Unsigned halfwords    (8x16b) */
+                 U8      b[16];          /* Unsigned bytes        (16x8b) */
                } QW;
 
 #endif
@@ -94,6 +100,33 @@ typedef union {
                  DBLWRD D;
                  struct { FWORD_U H; FWORD_U L; } F;
                } DWORD_U;
+
+/*-------------------------------------------------------------------*/
+
+/*  Various zVector instructions use something called a "source      */
+/*  vector". A source vector is created by concatenating the         */
+/*  contents of two vector registers, creating a 256-bit value.      */
+/*  The 256-bit value is then indexed to obtain elements which       */
+/*  are placed in a results vector register.                         */
+
+typedef union {
+          U64    d[4];                      /* Doublewords  (4x64b)  */
+          U32    f[8];                      /* Fullwords    (8x32b)  */
+          U16    h[16];                     /* Halfwords    (16x16b) */
+          U8     b[32];                     /* Bytes        (32x8b)  */
+        } SV;
+
+#if defined( WORDS_BIGENDIAN )
+  #define SV_D(_sv,_i)  (_sv).d[(_i)]       /* Doubleword            */
+  #define SV_F(_sv,_i)  (_sv).f[(_i)]       /* Fullword              */
+  #define SV_H(_sv,_i)  (_sv).h[(_i)]       /* Halfword              */
+  #define SV_B(_sv,_i)  (_sv).b[(_i)]       /* Byte                  */
+#else
+  #define SV_D(_sv,_i)  (_sv).d[3-(_i)]     /* Doubleword            */
+  #define SV_F(_sv,_i)  (_sv).f[7-(_i)]     /* Fullword              */
+  #define SV_H(_sv,_i)  (_sv).h[15-(_i)]    /* Halfword              */
+  #define SV_B(_sv,_i)  (_sv).b[31-(_i)]    /* Byte                  */
+#endif
 
 /*-------------------------------------------------------------------*/
 /*           Internal-format PSW structure definition                */
@@ -2728,6 +2761,24 @@ typedef struct PTFFQSI PTFFQSI;
 #define DXC_COMPARE_AND_TRAP    0xFF    /* Compare-and-trap exception*/
 
 /*       (*) "IISE" = "IEEE-interruption-simulation event"           */
+
+/*-------------------------------------------------------------------*/
+/* Shift counts to allow alignment of each field in the              */
+/* Vector-Exception Code (VXC).                                      */
+/* Bits 0-3 of the VXC are the vector index (VIX).                   */
+/* Bits 4-7 of the VXC are the vector interrupt code (VIC).          */
+
+#define VXC_VIX_SHIFT        4
+#define VXC_VIC_SHIFT        0
+
+/*-------------------------------------------------------------------*/
+/* Vector interrupt codes                                            */
+
+#define VXC_IEEE_INVALID_OP     0x01    /* IEEE invalid operation    */
+#define VXC_IEEE_DIV_ZERO       0x02    /* IEEE division by zero     */
+#define VXC_IEEE_OVERFLOW       0x03    /* IEEE overflow             */
+#define VXC_IEEE_UNDERFLOW      0x04    /* IEEE underflow            */
+#define VXC_IEEE_INEXACT        0x05    /* IEEE inexact              */
 
 /*-------------------------------------------------------------------*/
 /* Decimal rounding modes */

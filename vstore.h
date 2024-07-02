@@ -22,6 +22,7 @@
 /*  vstore2      Store a two-byte integer into virtual storage       */
 /*  vstore4      Store a four-byte integer into virtual storage      */
 /*  vstore8      Store an eight-byte integer into virtual storage    */
+/*  vstore16     Store a sixteen-byte integer into virtual storage   */
 /*  vstorec      Store 1 to 256 characters into virtual storage      */
 /*                                                                   */
 /*  wstoreX      Address-wrapping version of the above               */
@@ -30,6 +31,7 @@
 /*  vfetch2      Fetch a two-byte integer from virtual storage       */
 /*  vfetch4      Fetch a four-byte integer from virtual storage      */
 /*  vfetch8      Fetch an eight-byte integer from virtual storage    */
+/*  vfetch16     Fetch a sixteen-byte integer from virtual storage   */
 /*  vfetchc      Fetch 1 to 256 characters from virtual storage      */
 /*                                                                   */
 /*  wfetchX      Address-wrapping version of the above               */
@@ -72,6 +74,8 @@
         s370_vstore4((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wstore8(_value, _addr, _arn, _regs) \
         s370_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wstore16(_value, _addr, _arn, _regs) \
+        s370_vstore16((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wfetchc(_dest, _len, _addr, _arn, _regs) \
         s370_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wfetchb(_addr, _arn, _regs) \
@@ -82,6 +86,8 @@
         s370_vfetch4(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wfetch8(_addr, _arn, _regs) \
         s370_vfetch8(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wfetch16(_addr, _arn, _regs) \
+        s370_vfetch16(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wmove_chars(_addr1, _arn1, _key1, _addr2, _arn2, _key2, _len, _regs) \
         s370_move_chars(((_addr1) & ADDRESS_MAXWRAP((_regs))), (_arn1), (_key1), \
                         ((_addr2) & ADDRESS_MAXWRAP((_regs))), (_arn2), (_key2), (_len), (_regs))
@@ -100,6 +106,8 @@
         s390_vstore4((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wstore8(_value, _addr, _arn, _regs) \
         s390_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wstore16(_value, _addr, _arn, _regs) \
+        s390_vstore16((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wfetchc(_dest, _len, _addr, _arn, _regs) \
         s390_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wfetchb(_addr, _arn, _regs) \
@@ -110,6 +118,8 @@
         s390_vfetch4(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wfetch8(_addr, _arn, _regs) \
         s390_vfetch8(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wfetch16(_addr, _arn, _regs) \
+        s390_vfetch16(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wmove_chars(_addr1, _arn1, _key1, _addr2, _arn2, _key2, _len, _regs) \
         s390_move_chars(((_addr1) & ADDRESS_MAXWRAP((_regs))), (_arn1), (_key1), \
                         ((_addr2) & ADDRESS_MAXWRAP((_regs))), (_arn2), (_key2), (_len), (_regs))
@@ -128,6 +138,8 @@
         z900_vstore4((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wstore8(_value, _addr, _arn, _regs) \
         z900_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wstore16(_value, _addr, _arn, _regs) \
+        z900_vstore16((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wfetchc(_dest, _len, _addr, _arn, _regs) \
         z900_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wfetchb(_addr, _arn, _regs) \
@@ -138,6 +150,8 @@
         z900_vfetch4(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wfetch8(_addr, _arn, _regs) \
         z900_vfetch8(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wfetch16(_addr, _arn, _regs) \
+        z900_vfetch16(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wmove_chars(_addr1, _arn1, _key1, _addr2, _arn2, _key2, _len, _regs) \
         z900_move_chars(((_addr1) & ADDRESS_MAXWRAP((_regs))), (_arn1), (_key1), \
                         ((_addr2) & ADDRESS_MAXWRAP((_regs))), (_arn2), (_key2), (_len), (_regs))
@@ -382,7 +396,39 @@ BYTE    temp[8];                        /* Copied value              */
     memcpy( main1, temp,       len );
     memcpy( main2, temp+len, 8-len );
 }
+/*-------------------------------------------------------------------*/
+/* Store a sixteen-byte integer into virtual storage operand         */
+/*                                                                   */
+/* Input:                                                            */
+/*      value   128-bit integer value to be stored                   */
+/*      addr    Logical address of leftmost operand byte             */
+/*      arn     Access register number                               */
+/*      regs    CPU register context                                 */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or protection             */
+/*      exception, and in this case the function does not return.    */
+/*                                                                   */
+/*      NOTE that vstore16_full should only be invoked when a page   */
+/*           boundary IS going to be crossed.                        */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( vstore16_full )( QW value, VADR addr, int arn, REGS* regs )
+{
+BYTE   *main1, * main2;                  /* Mainstor addresses        */
+BYTE   *sk;                             /* Storage key addresses     */
+int     len;                            /* Length to end of page     */
+BYTE    temp[16];                        /* Copied value              */
 
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+    main1 = MADDRL( addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+    sk = regs->dat.storkey;
+    main2 = MADDRL( (addr + len) & ADDRESS_MAXWRAP(regs), 16-len, arn, regs,
+                    ACCTYPE_WRITE, regs->psw.pkey);
+    *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    STORE_QW( temp, value );
+    memcpy( main1, temp, len );
+    memcpy( main2, temp + len, 16-len );
+}
 /*-------------------------------------------------------------------*/
 /* Fetch a two-byte integer operand from virtual storage             */
 /*                                                                   */
@@ -469,6 +515,35 @@ BYTE    temp[16];                       /* Copy destination          */
     return fetch_dw( temp );
 }
 
+/*-------------------------------------------------------------------*/
+/* Fetch a sixteen-byte integer operand from virtual storage         */
+/*                                                                   */
+/* Input:                                                            */
+/*      addr    Logical address of leftmost byte of operand          */
+/*      arn     Access register number                               */
+/*      regs    CPU register context                                 */
+/* Returns:                                                          */
+/*      Operand in 128-bit integer format                            */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or fetch protection       */
+/*      exception, and in this case the function does not return.    */
+/*-------------------------------------------------------------------*/
+inline QW ARCH_DEP( vfetch16_full )( VADR addr, int arn, REGS* regs )
+{
+BYTE   *mn;                             /* Main storage addresses    */
+int     len;                            /* Length to end of page     */
+BYTE    temp[32];                       /* Copy destination          */
+
+    /* Get absolute address of first byte of operand */
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+    mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp, mn, len);
+    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 16 - len, arn, regs,
+                 ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp+len, mn, 16 );
+    return fetch_qw( temp );
+}
 /*-------------------------------------------------------------------*/
 /* Store 1 to 256 characters into virtual storage operand            */
 /*                                                                   */
@@ -612,6 +687,46 @@ inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
 }
 
 /*-------------------------------------------------------------------*/
+/* vstore16 accelerator - Simple case only (better inline candidate) */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( vstore16 )( QW value, VADR addr, int arn, REGS* regs )
+{
+#if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
+    /* Check alignement. If aligned then we are guaranteed
+       not to cross a page boundary */
+    if (likely(!((VADR_L)addr & 0x0F)))
+    {
+        /* Most common case : Aligned */
+        QW *mn;
+        mn = (QW*)MADDRL( addr, 16, arn, regs, ACCTYPE_WRITE, regs->psw.pkey );
+        if (regs->cpubit == regs->sysblk->started_mask)
+            *mn = CSWAP128( value );
+        else
+            STORE_QW( mn, value );
+    }
+    else
+#endif
+    {
+        /* We're not aligned. So we have to check whether we are
+           crossing a page boundary. This cannot be the same
+           code as above because casting U64* to a non aligned
+           pointer may break on those architectures mandating
+           strict alignement */
+        if (likely(((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-15)))
+        {
+            /* Non aligned but not crossing page boundary */
+            BYTE *mn;
+            mn = MADDRL( addr, 16, arn, regs, ACCTYPE_WRITE, regs->psw.pkey );
+            /* invoking STORE_DW ensures endianness correctness */
+            STORE_QW( mn, value );
+        }
+        else
+            /* Crossing page boundary */
+            ARCH_DEP( vstore16_full )( value, addr, arn, regs );
+    }
+    ITIMER_UPDATE( addr, 16-1, regs );
+}
+/*-------------------------------------------------------------------*/
 /* Fetch a 1 to 256 character operand from virtual storage           */
 /*                                                                   */
 /* Input:                                                            */
@@ -734,6 +849,37 @@ inline U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
     }
     /* page crossing doubleword fetch */
     return ARCH_DEP( vfetch8_full )( addr, arn, regs );
+}
+/*-------------------------------------------------------------------*/
+/* vfetch16 accelerator - Simple case only (better inline candidate) */
+/*-------------------------------------------------------------------*/
+inline QW ARCH_DEP( vfetch16 )( VADR addr, int arn, REGS* regs )
+{
+#if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
+    if(likely(!((VADR_L)addr & 0x0F)))
+    {
+        /* quadword aligned fetch */
+        QW *mn;
+        ITIMER_SYNC( addr, 16-1, regs );
+        mn = (QW*)MADDRL( addr, 16, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+        if (regs->cpubit == regs->sysblk->started_mask)
+            return CSWAP128( *mn );
+        return fetch_qw( mn );
+    }
+    else
+#endif
+    {
+        if (likely(((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-15)))
+        {
+            /* unaligned, non-crossing doubleword fetch */
+            BYTE *mn;
+            ITIMER_SYNC( addr, 16-1, regs );
+            mn = MADDRL( addr, 16, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+            return fetch_qw( mn );
+        }
+    }
+    /* page crossing quadword fetch */
+    return ARCH_DEP( vfetch16_full )( addr, arn, regs );
 }
 
 /*-------------------------------------------------------------------*/

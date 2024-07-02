@@ -114,24 +114,25 @@ extern inline void ARCH_DEP( FPC_check )( REGS* regs, U32 fpc );
 /*                    Arithmetic functions                           */
 /*-------------------------------------------------------------------*/
 
-extern inline int  add_logical       ( U32* result, U32 op1, U32 op2 );
-extern inline int  add_signed        ( U32* result, U32 op1, U32 op2 );
+extern inline int   add_logical       ( U32* result, U32 op1, U32 op2 );
+extern inline int   add_signed        ( U32* result, U32 op1, U32 op2 );
 
-extern inline int  sub_logical       ( U32* result, U32 op1, U32 op2 );
-extern inline int  sub_signed        ( U32* result, U32 op1, U32 op2 );
+extern inline int   sub_logical       ( U32* result, U32 op1, U32 op2 );
+extern inline int   sub_signed        ( U32* result, U32 op1, U32 op2 );
 
-extern inline void mul_signed        ( U32* resulthi, U32* resultlo, U32 op1, U32 op2 );
-extern inline void mul_unsigned_long ( U64* resulthi, U64* resultlo, U64 op1, U64 op2 );
-extern inline void mul_signed_long   ( S64* resulthi, S64* resultlo, S64 op1, S64 op2 );
+extern inline void  mul_signed        ( U32* resulthi, U32* resultlo, U32 op1, U32 op2 );
+extern inline void  mul_unsigned_long ( U64* resulthi, U64* resultlo, U64 op1, U64 op2 );
+extern inline void  mul_signed_long   ( S64* resulthi, S64* resultlo, S64 op1, S64 op2 );
 
-extern inline int add_logical_long   ( U64* result, U64 op1, U64 op2 );
-extern inline int add_signed_long    ( U64* result, U64 op1, U64 op2 );
+extern inline int   add_logical_long  ( U64* result, U64 op1, U64 op2 );
+extern inline int   add_signed_long   ( U64* result, U64 op1, U64 op2 );
 
-extern inline int sub_logical_long   ( U64* result, U64 op1, U64 op2 );
-extern inline int sub_signed_long    ( U64* result, U64 op1, U64 op2 );
+extern inline int   sub_logical_long  ( U64* result, U64 op1, U64 op2 );
+extern inline int   sub_signed_long   ( U64* result, U64 op1, U64 op2 );
 
-extern inline int mult_logical_long  ( U64* high, U64* lo, U64 md, U64 mr );
-extern inline int div_signed         ( U32* rem, U32* quot, U32 high, U32 lo, U32 d );
-extern inline int div_logical_long   ( U64* rem, U64* quot, U64 high, U64 lo, U64 d );
+extern inline int   mult_logical_long ( U64* high, U64* lo, U64 md, U64 mr );
+extern inline int   div_signed        ( U32* rem, U32* quot, U32 high, U32 lo, U32 d );
+extern inline int   div_logical_long  ( U64* rem, U64* quot, U64 high, U64 lo, U64 d );
+extern inline QW    bswap_128         ( QW input );
 
 #endif /*!defined( _GEN_ARCH )*/

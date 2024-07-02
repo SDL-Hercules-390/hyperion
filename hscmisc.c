@@ -876,6 +876,7 @@ QWORD   qword;                          /* Doubleword work area      */
 BYTE    opcode;                         /* Instruction operation code*/
 int     ilc;                            /* Instruction length        */
 int     b1=-1, b2=-1, x1;               /* Register numbers          */
+int     v2, m3;                         /* zVector numbers           */
 U16     xcode = 0;                      /* Exception code            */
 VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
 char    buf[2048];                      /* Message buffer            */
@@ -891,6 +892,7 @@ char    op1_stor_msg[128]   = {0};
 char    op2_stor_msg[128]   = {0};
 char    regs_msg_buf[8*512] = {0};
 
+    PTT_PGM( "dinst", inst, 0, pgmint );
     PTT_PGM( "dinst", inst, 0, pgmint );
 
     OBTAIN_TRACEFILE_LOCK();
@@ -1016,21 +1018,41 @@ char    regs_msg_buf[8*512] = {0};
         && opcode != 0xEC   // RIE-x
     )
     {
-        /* Calculate the effective address of the first operand */
-        b1 = inst[2] >> 4;
-        addr1 = ((inst[2] & 0x0F) << 8) | inst[3];
-        if (b1 != 0)
+        if (0
+            ||   opcode != 0xE7
+            || ( opcode == 0xE7 && (  (inst[5] >= 0x00 && inst[5] <= 0x0B)     // VRX    (VLEB VLEH VLEG VLEF VLLEZ VLREP VL VLEB VSTEB VSTEH VSTEG VSTEF)
+                                    || inst[5] == 0x0E                         // VRX    (VST)
+                                    || inst[5] == 0x12                         // VRV    (VGEG)
+                                    || inst[5] == 0x13                         // VRV    (VGEF)
+                                    || inst[5] == 0x1A                         // VRV    (VSCEG)
+                                    || inst[5] == 0x1B                         // VRV    (VSCEF)
+                                    || inst[5] == 0x30                         // VRS-a  (VESL)
+                                    || inst[5] == 0x36                         // VRS-a  (VLM)
+                                    || inst[5] == 0x37                         // VRS-b  (VLL)
+                                    || inst[5] == 0x3E                         // VRS-a  (VSTM)
+                                    || inst[5] == 0x3F                         // VRS-b  (VSTL)
+                                   ) )
+        )
         {
-            addr1 += regs->GR( b1 );
-            addr1 &= ADDRESS_MAXWRAP( regs );
+            /* Calculate the effective address of the first operand */
+            b1 = inst[2] >> 4;
+            addr1 = ((inst[2] & 0x0F) << 8) | inst[3];
+            if (b1 != 0)
+            {
+                addr1 += regs->GR( b1 );
+                addr1 &= ADDRESS_MAXWRAP( regs );
+            }
         }
 
-        /* Apply indexing for RX/RXE/RXF instructions */
+        /* Apply indexing for RX/RXE/RXF/VRX instructions */
         if (0
-            || (opcode >= 0x40 && opcode <= 0x7F)
-            ||  opcode == 0xB1   // LRA
-            ||  opcode == 0xE3   // RXY-x
-            ||  opcode == 0xED   // RXE-x, RXF-x, RXY-x, RSL-x
+            || ( opcode >= 0x40 && opcode <= 0x7F )
+            ||   opcode == 0xB1   // LRA
+            ||   opcode == 0xE3   // RXY-x
+            ||   opcode == 0xED   // RXE-x, RXF-x, RXY-x, RSL-x
+            || ( opcode == 0xE7 && (  (inst[5] >= 0x00 && inst[5] <= 0x0B)     // VRX    (VLEB VLEH VLEG VLEF VLLEZ VLREP VL VLEB VSTEB VSTEH VSTEG VSTEF)
+                                    || inst[5] == 0x0E                         // VRX    (VST)
+                                   ) )
         )
         {
             x1 = inst[1] & 0x0F;
@@ -1039,6 +1061,28 @@ char    regs_msg_buf[8*512] = {0};
                 addr1 += regs->GR( x1 );
                 addr1 &= ADDRESS_MAXWRAP( regs );
             }
+        }
+
+        /* Apply indexing for VRV instructions */
+        if (0
+            || ( opcode == 0xE7 && (   inst[5] == 0x12                         // VRV    (VGEG)
+                                    || inst[5] == 0x13                         // VRV    (VGEF)
+                                    || inst[5] == 0x1A                         // VRV    (VSCEG)
+                                    || inst[5] == 0x1B                         // VRV    (VSCEF)
+                                   ) )
+        )
+        {
+            v2 = inst[1] & 0x0F;                           // zVector register number
+            m3 = ( inst[4] >> 4 ) & 0x0F;                  // zVector element number
+            if (inst[5] == 0x12 || inst[5] == 0x1A)
+            {
+                 addr1 += regs->VR_D( v2, m3 );
+            }
+            else
+            {
+                 addr1 += regs->VR_F( v2, m3 );
+            }
+            addr1 &= ADDRESS_MAXWRAP( regs );
         }
     }
 
@@ -1049,6 +1093,7 @@ char    regs_msg_buf[8*512] = {0};
         && opcode != 0xC4   // RIL-x    (relative)
         && opcode != 0xC6   // RIL-x    (relative)
         && opcode != 0xE3   // RXY-x
+        && opcode != 0xE7   // zVector
         && opcode != 0xEB   // RSY-x, SIY-x
         && opcode != 0xEC   // RIE-x
         && opcode != 0xED   // RXE-x, RXF-x, RXY-x, RSL-x
@@ -1847,7 +1892,7 @@ int display_inst_regs( bool trace2file, REGS *regs, BYTE *inst, BYTE opcode, cha
     }
 
     /* Display vector registers if appropriate */
-    if (opcode == 0xE7)
+    if (opcode == 0xE7 || ( opcode == 0xE6 && (regs->arch_mode == ARCH_900_IDX) ) )
     {
         if (trace2file)
             tf_2266( regs );
@@ -1989,7 +2034,7 @@ int display_vregs( REGS* regs, char* buf, int buflen, char* hdr )
 
     for (i = 0; i < 32; i += 2) {
         bufl += idx_snprintf(bufl, buf, buflen,
-            "%sVR%02d=%016" PRIx64 ".%016" PRIx64" VR%02d=%016" PRIx64 ".%016" PRIx64 "\n",
+            "%sVR%02d=%016" PRIX64 ".%016" PRIX64" VR%02d=%016" PRIX64 ".%016" PRIX64 "\n",
             cpustr,
             i,   regs->VR_D( i,   0),
                  regs->VR_D( i,   1),

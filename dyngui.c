@@ -335,6 +335,7 @@ BYTE   gui_wants_cregs64     = 0;
 BYTE   gui_wants_aregs       = 0;
 BYTE   gui_wants_fregs       = 0;
 BYTE   gui_wants_fregs64     = 0;
+BYTE   gui_wants_vregs       = 0;
 BYTE   gui_wants_devlist     = 0;
 BYTE   gui_wants_new_devlist = 1;       // (should always be initially on)
 
@@ -423,6 +424,12 @@ void*  gui_panel_command (char* pszCommand)
     if (strncasecmp(pszCommand,"FREGS64=",8) == 0)
     {
         gui_wants_fregs64 = atoi(pszCommand+8);
+        return NULL;
+    }
+
+    if (strncasecmp(pszCommand,"VREGS=",6) == 0)
+    {
+        gui_wants_vregs = atoi(pszCommand+6);
         return NULL;
     }
 
@@ -570,6 +577,8 @@ U32    prev_ar   [16];
 
 U64    prev_fpr  [4];
 U64    prev_fpr64[16];
+
+QW     prev_vr   [32];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send status information messages back to the gui...
@@ -739,29 +748,32 @@ void HandleForcedRefresh()
     prev_cpustate           = 0xFF;
     memset( prev_psw,         0xFF,  sizeof(prev_psw) );
 
-    memset(   &prev_gr   [0], 0xFF,
+    memset(   &prev_gr[0], 0xFF,
         sizeof(prev_gr) );
 
-    memset(   &prev_cr   [0], 0xFF,
+    memset(   &prev_cr[0], 0xFF,
         sizeof(prev_cr) );
 
-    memset(   &prev_ar   [0], 0xFF,
+    memset(   &prev_ar[0], 0xFF,
         sizeof(prev_ar) );
 
-    memset(   &prev_fpr  [0], 0xFF,
+    memset(   &prev_fpr[0], 0xFF,
         sizeof(prev_fpr) );
 
-    memset(   &prev_gr64 [0], 0xFF,
+    memset(   &prev_gr64[0], 0xFF,
         sizeof(prev_gr64) );
 
-    memset(   &prev_cr64 [0], 0xFF,
+    memset(   &prev_cr64[0], 0xFF,
         sizeof(prev_cr64) );
 
     memset(   &prev_fpr64[0], 0xFF,
         sizeof(prev_fpr64) );
 
-    memset(   &prev_cpupct   [0], 0xFF,
-        sizeof(prev_cpupct   ) );
+    memset(   &prev_cpupct[0], 0xFF,
+        sizeof(prev_cpupct) );
+
+    memset(   &prev_vr[0], 0xFF,
+        sizeof(prev_vr) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1615,6 +1627,42 @@ void  UpdateRegisters ()
                 ,pTargetCPU_REGS->FPR_L(14)
                 ,pTargetCPU_REGS->FPR_L(15)
             );
+        }
+    }
+
+    if (gui_wants_vregs)
+    {
+#define PREV_VR_D(_v,_i)    prev_vr[(_v)].d[1-(_i)]
+
+        int  r;
+
+        for (r=0; r < 32; r += 2)
+        {
+            if (0
+                || PREV_VR_D( r,   0 ) != pTargetCPU_REGS->VR_D( r,   0 )
+                || PREV_VR_D( r,   1 ) != pTargetCPU_REGS->VR_D( r,   1 )
+                || PREV_VR_D( r+1, 0 ) != pTargetCPU_REGS->VR_D( r+1, 0 )
+                || PREV_VR_D( r+1, 1 ) != pTargetCPU_REGS->VR_D( r+1, 1 )
+            )
+            {
+                PREV_VR_D( r,   0 ) = pTargetCPU_REGS->VR_D( r,   0 );
+                PREV_VR_D( r,   1 ) = pTargetCPU_REGS->VR_D( r,   1 );
+                PREV_VR_D( r+1, 0 ) = pTargetCPU_REGS->VR_D( r+1, 0 );
+                PREV_VR_D( r+1, 1 ) = pTargetCPU_REGS->VR_D( r+1, 1 );
+
+                gui_fprintf( fStatusStream,
+
+                    "VR%02d=%016" PRIX64 ".%016" PRIX64
+                    "               " // (make it look like other regs bars)
+                    "VR%02d=%016" PRIX64 ".%016" PRIX64 "\n",
+
+                    r,   pTargetCPU_REGS->VR_D( r,   0),
+                         pTargetCPU_REGS->VR_D( r,   1),
+
+                    r+1, pTargetCPU_REGS->VR_D( r+1, 0),
+                         pTargetCPU_REGS->VR_D( r+1, 1)
+                );
+            }
         }
     }
 }

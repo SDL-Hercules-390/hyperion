@@ -210,10 +210,10 @@ struct REGS {                           /* Processor registers       */
 
 #define VR_Q(_v)     vfp[(_v)]               /* Quadword             */
 #if defined(WORDS_BIGENDIAN)
-  #define VR_D(_v,_i)  vfp[(_v)].d[(_i)]     /* Doubleword           */
-  #define VR_F(_v,_i)  vfp[(_v)].f[(_i)]     /* Fullword             */
-  #define VR_H(_v,_i)  vfp[(_v)].h[(_i)]     /* Halfword             */
-  #define VR_B(_v,_i)  vfp[(_v)].b[(_i)]     /* Byte                 */
+  #define VR_D(_v,_i)  vfp[(_v)].d[(_i)]   /* Doubleword           */
+  #define VR_F(_v,_i)  vfp[(_v)].f[(_i)]   /* Fullword             */
+  #define VR_H(_v,_i)  vfp[(_v)].h[(_i)]   /* Halfword             */
+  #define VR_B(_v,_i)  vfp[(_v)].b[(_i)]   /* Byte                 */
 #else
   #define VR_D(_v,_i)  vfp[(_v)].d[1-(_i)]   /* Doubleword           */
   #define VR_F(_v,_i)  vfp[(_v)].f[3-(_i)]   /* Fullword             */
@@ -549,6 +549,7 @@ struct REGS {                           /* Processor registers       */
 
         const INSTR_FUNC    *s370_runtime_opcode_xxxx,
                             *s370_runtime_opcode_e3________xx,
+                            *s370_runtime_opcode_e6xx______xx,
                             *s370_runtime_opcode_e7________xx,
                             *s370_runtime_opcode_eb________xx,
                             *s370_runtime_opcode_ec________xx,
@@ -556,6 +557,7 @@ struct REGS {                           /* Processor registers       */
 
         const INSTR_FUNC    *s390_runtime_opcode_xxxx,
                             *s390_runtime_opcode_e3________xx,
+                            *s390_runtime_opcode_e6xx______xx,
                             *s390_runtime_opcode_e7________xx,
                             *s390_runtime_opcode_eb________xx,
                             *s390_runtime_opcode_ec________xx,
@@ -563,6 +565,7 @@ struct REGS {                           /* Processor registers       */
 
         const INSTR_FUNC    *z900_runtime_opcode_xxxx,
                             *z900_runtime_opcode_e3________xx,
+                            *z900_runtime_opcode_e6xx______xx,
                             *z900_runtime_opcode_e7________xx,
                             *z900_runtime_opcode_eb________xx,
                             *z900_runtime_opcode_ec________xx,

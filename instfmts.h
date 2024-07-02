@@ -112,17 +112,28 @@
 #undef VRI_C
 #undef VRI_D
 #undef VRI_E
-#undef VRR_F
+#undef VRI_F
+#undef VRI_G
+#undef VRI_H
+#undef VRI_I
 #undef VRR_A
 #undef VRR_B
 #undef VRR_C
 #undef VRR_D
 #undef VRR_E
+#undef VRR_F
+#undef VRR_G
+#undef VRR_H
+#undef VRR_I
+#undef VRR_J
+#undef VRR_K
 #undef VRS_A
 #undef VRS_B
 #undef VRS_C
+#undef VRS_D
 #undef VRV
 #undef VRX
+#undef VSI
 
 /*-------------------------------------------------------------------*/
 /*            E - implied operands and extended op code              */
@@ -1794,7 +1805,6 @@
 /*********************************************************************/
 /*********************************************************************/
 
-#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 
 #define VS( _inst, _regs, _rs2 )                                    \
 {                                                                   \
@@ -1819,7 +1829,7 @@
     INST_UPDATE_PSW( (_regs), 4, 4 );                               \
 }
 
-#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
+
 /*********************************************************************/
 /*********************************************************************/
 /**                                                                 **/
@@ -1828,7 +1838,6 @@
 /*********************************************************************/
 /*********************************************************************/
 
-#if defined( FEATURE_129_ZVECTOR_FACILITY )
 /*-------------------------------------------------------------------*/
 /*       VRI_A - vector register-and-immediate operation             */
 /*               and an extended opcode field.                       */
@@ -1959,6 +1968,115 @@
                                                                     \
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }
+
+
+/*-------------------------------------------------------------------*/
+/*       VRI_F - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+#define VRI_F( _inst, _regs, _v1, _v2, _v3, _m5, _i4 )  VRI_F_DECODER( _inst, _regs, _v1, _v2, _v3, _m5, _i4, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  | v3  |//// | m5  |    i4     | rxb |    XOP    |    VRI_F
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28          36    40         47
+
+#define VRI_F_DECODER( _inst, _regs, _v1, _v2, _v3, _m5, _i4, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_v3) = ((temp >> 20) & 0xf) | ((_rxb & 0x2) << 3);             \
+    (_m5) = (temp >> 12) & 0xf;                                     \
+    (_i4) = (temp >>  4) & 0x0fff;                                  \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRI_G - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRI_G( _inst, _regs, _v1, _v2, _i4, _m5, _i3 )  VRI_G_DECODER( _inst, _regs, _v1, _v2, _i4, _m5, _i3, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  |     i4    | m5  |    i3     | rxb |    XOP    |    VRI_G
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28          36    40         47
+
+#define VRI_G_DECODER( _inst, _regs, _v1, _v2, _i4, _m5, _i3, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_i4) = (temp >> 16) & 0x0ff;                                   \
+    (_m5) = (temp >> 12) & 0xf;                                     \
+    (_i3) = (temp >>  4) & 0x0ff;                                   \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRI_H - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRI_H( _inst, _regs, _v1, _i2, _i3 )  VRI_H_DECODER( _inst, _regs, _v1, _i2, _i3, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  |//// |           i2          | i3  | rxb |    XOP    |    VRI_H
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16                      32    36    40         47
+
+#define VRI_H_DECODER( _inst, _regs, _v1, _i2, _i3, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_i2) = (temp >>  8) & 0x0ffff;                                 \
+    (_i3) = (temp >>  4) & 0xf;                                     \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRI_I - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRI_I( _inst, _regs, _v1, _r2, _m4, _i3 )  VRI_I_DECODER( _inst, _regs, _v1, _r2, _m4, _i3, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | r2  | ////////  | m4  |    i3     | rxb |    XOP    |    VRI_I
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28          36    40         47
+
+#define VRI_I_DECODER( _inst, _regs, _v1, _r2, _m4, _i3, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_r2) = (temp >> 24) & 0xf;                                     \
+    (_m4) = (temp >> 12) & 0xf;                                     \
+    (_i3) = (temp >>  4) & 0x0ff;                                   \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
 
 /*-------------------------------------------------------------------*/
 /*       VRR_A - vector register-and-immediate operation             */
@@ -2125,6 +2243,137 @@
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }
 
+
+/*-------------------------------------------------------------------*/
+/*       VRR_G - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRR_G( _inst, _regs, _v1 )  VRR_G_DECODER( _inst, _regs, _v1, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | /// | v1  | /// | /// | /// | /// | /// | rxb |    XOP    |    VRR_G
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40         47
+
+#define VRR_G_DECODER( _inst, _regs, _v1, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRR_H - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRR_H( _inst, _regs, _v1, _v2, _m3 )  VRR_H_DECODER( _inst, _regs, _v1, _v2, _m3, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | /// | v1  |  v2 | /// | m3  | /// | /// | rxb |    XOP    |    VRR_H
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40         47
+
+#define VRR_H_DECODER( _inst, _regs, _v1, _v2, _m3, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_v2) = ((temp >> 20) & 0xf) | ((_rxb & 0x2) << 3);             \
+    (_m3) = (temp >>  12) & 0xf;                                    \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRR_I - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRR_I( _inst, _regs, _r1, _v2, _m3, _m4 )  VRR_I_DECODER( _inst, _regs, _r1, _v2, _m3, _m4, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | r1  | v2  | /// | /// | m3  | m4  | /// | rxb |    XOP    |    VRR_H
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40         47
+
+#define VRR_I_DECODER( _inst, _regs, _r1, _v2, _m3, _m4, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_r1) = (temp >>  28) & 0xf;                                    \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_m3) = (temp >>  12) & 0xf;                                    \
+    (_m4) = (temp >>   8) & 0xf;                                    \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRR_J - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRR_J( _inst, _regs, _v1, _v2, _v3, _m4 )  VRR_J_DECODER( _inst, _regs, _v1, _v2, _v3, _m4, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  | v3  | /// | m4  | /// | /// | rxb |    XOP    |    VRR_J
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40         47
+
+#define VRR_J_DECODER( _inst, _regs, _v1, _v2, _v3, _m4, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_v3) = ((temp >> 20) & 0xf) | ((_rxb & 0x2) << 3);             \
+    (_m4) = (temp >>  12) & 0xf;                                    \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRR_K - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRR_K( _inst, _regs, _v1, _v2, _m3 )  VRR_K_DECODER( _inst, _regs, _v1, _v2, _m3, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  | /// | /// | m3  | /// | /// | rxb |    XOP    |    VRR_K
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40         47
+
+#define VRR_K_DECODER( _inst, _regs, _v1, _v2, _m3, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_m3) = (temp >>  12) & 0xf;                                    \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
 /*-------------------------------------------------------------------*/
 /*       VRS_A - vector register-and-storage operation               */
 /*               and an extended opcode field.                       */
@@ -2222,6 +2471,38 @@
 }
 
 /*-------------------------------------------------------------------*/
+/*       VRS_D - vector register-and-storage operation               */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRS_D( _inst, _regs, _r3, _b2, _effective_addr2, _v1 )  VRS_D_DECODER( _inst, _regs, _r3, _b2, _effective_addr2, _v1, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | /// | r3  | b2  |       d2        | v1  | rxb |    XOP    |    VRS_D
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40         47
+
+#define VRS_D_DECODER( _inst, _regs, _r3, _b2, _effective_addr2, _v1, _len, _ilc ) \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_r3) = (temp >> 24) & 0xf;                                     \
+    (_b2) = (temp >> 20) & 0xf;                                     \
+    (_effective_addr2) = (temp >>  8) & 0xfff;                      \
+    (_v1) = ((temp >> 4) & 0xf) | ((_rxb & 0x1) << 4) ;             \
+                                                                    \
+    if (( _b2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+                                                                    \
+    (_effective_addr2) &= ADDRESS_MAXWRAP((_regs));                 \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
 /*       VRV - vector register-and-vector-indexstorage               */
 /*             operation and an extended op - code field.            */
 /*-------------------------------------------------------------------*/
@@ -2284,4 +2565,34 @@
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }
 
-#endif /* defined( FEATURE_129_ZVECTOR_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
+/*       VSI - vector register-and-storage operation                 */
+/*               and an extended op-code field                       */
+/*-------------------------------------------------------------------*/
+
+#define VSI( _inst, _regs, _i3, _b2, _effective_addr2, _v1 )  VSI_DECODER( _inst, _regs, _i3, _b2, _effective_addr2, _v1, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    |    i3     | b2  |       d2        | v1  | rxb |    XOP    |    VSI
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40         47
+
+#define VSI_DECODER( _inst, _regs, _i3, _b2, _effective_addr2, _v1, _len, _ilc ) \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_i3) = ((temp >> 24));                                         \
+    (_b2) = (temp >> 20) & 0xf;                                     \
+    (_effective_addr2) = (temp >>  8) & 0xfff;                      \
+    (_v1) = ((temp >>  4) & 0xf) | ((_rxb & 0x1) << 4);             \
+                                                                    \
+    if (( _b2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+                                                                    \
+    (_effective_addr2) &= ADDRESS_MAXWRAP((_regs));                 \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}

@@ -21,6 +21,7 @@
 /*     fetch_hw, fetch_hw_noswap, store_hw, store_hw_noswap          */
 /*     fetch_fw, fetch_fw_noswap, store_fw, store_fw_noswap          */
 /*     fetch_dw, fetch_dw_noswap, store_dw, store_dw_noswap          */
+/*     fetch_qw, fetch_qw_noswap, store_qw, store_qw_noswap          */
 /*                                                                   */
 /*   64-bit architectures would normally not need to specify any     */
 /*   of the fetch_ or store_ variants.                               */
@@ -841,6 +842,39 @@ inline void store_dw_e2k_noswap ( volatile void* ptr, U64 value )
   #define store_dw(_p, _v) store_dw_noswap((_p), CSWAP64((_v)))
 #endif
 
+/*-------------------------------------------------------------------
+ * fetch_qw_noswap and fetch_qw
+ *-------------------------------------------------------------------*/
+#if !defined(fetch_qw_noswap)
+  #if defined(fetch_qw)
+    #define fetch_qw_noswap(_p) CSWAP128(fetch_qw((_p)))
+  #else
+    inline QW fetch_qw_noswap(const void *ptr) {
+      QW value;
+      memcpy(&value, (BYTE *)ptr, 16);
+      return value;
+    }
+  #endif
+#endif
+#if !defined(fetch_qw)
+  #define fetch_qw(_p) CSWAP128(fetch_qw_noswap((_p)))
+#endif
+
+/*-------------------------------------------------------------------
+ * store_qw_noswap and store_qw
+ *-------------------------------------------------------------------*/
+#if !defined(store_qw_noswap)
+  #if defined(store_qw)
+    #define store_qw_noswap(_p, _v) store_qw((_p), CSWAP128(_v))
+  #else
+    inline void store_qw_noswap(void *ptr, QW value) {
+      memcpy((BYTE *)ptr, (BYTE *)&value, 16);
+    }
+  #endif
+#endif
+#if !defined(store_qw)
+  #define store_qw(_p, _v) store_qw_noswap((_p), CSWAP128((_v)))
+#endif
 /*-------------------------------------------------------------------
  * cmpxchg1
  *-------------------------------------------------------------------*/
