@@ -96,6 +96,12 @@
 #undef store_dw_noswap
 #undef store_dw
 
+#undef fetch_qw_noswap
+#undef fetch_qw
+
+#undef store_qw_noswap
+#undef store_qw
+
 /*-------------------------------------------------------------------*/
 /*  PROGRAMMING NOTE: the below code should be exactly the same as   */
 /*  the code in "machdep.h" except that where machdep.h defines the  */
