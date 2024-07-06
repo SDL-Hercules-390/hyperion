@@ -5462,8 +5462,8 @@ DEF_INST( vector_average_logical )
         for (i=0; i < 2; i++) {
             /* U128 a + U64 b */
             msa = 0;
-            lsa = regs->VR_B(v2, i);
-            lsb = regs->VR_B(v3, i);
+            lsa = regs->VR_D(v2, i);
+            lsb = regs->VR_D(v3, i);
 
             /* inline U128:  a + b */
             lsa += lsb;
@@ -5576,19 +5576,19 @@ DEF_INST( vector_average )
     {
     case 0:         /* Byte */
         for (i=0; i < 16; i++) {
-            regs->VR_B(v1, i) = (U8) ( ( (S16) regs->VR_B(v2, i) + (S16) regs->VR_B(v3, i) + 1) >> 1 );
+            regs->VR_B(v1, i) = ( (S16) ( (S8) regs->VR_B(v2, i) + (S8) regs->VR_B(v3, i) ) + 1) >> 1;
         }
         break;
 
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
-            regs->VR_H(v1, i) = (U16) ( ( (S32) regs->VR_H(v2, i) + (S32) regs->VR_H(v3, i) + 1) >> 1 );
+            regs->VR_H(v1, i) = ( (S32) ( (S16) regs->VR_H(v2, i) + (S16) regs->VR_H(v3, i) ) + 1) >> 1;
         }
         break;
 
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
-            regs->VR_F(v1, i) = (U32) ( ( (S64) regs->VR_F(v2, i) + (S64) regs->VR_F(v3, i) + 1) >> 1 );
+            regs->VR_F(v1, i) = ( (S64) ( (S32) regs->VR_F(v2, i) + (S32) regs->VR_F(v3, i) ) + 1) >> 1;
         }
         break;
 
@@ -5602,16 +5602,9 @@ DEF_INST( vector_average )
                 /* same sign: possible overflow */
                 if  ( regs->VR_D(v2, i) & 0x8000000000000000ULL )
                 {
-                    /* negative signs: allow overflow and force back to negative */
+                    /* negative signs: allow overflow, round and force back to negative */
                     temps64 = (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i);
-                    if ( temps64 < 0 )
-                    {   /* no overflow: still negative: round +1 */
-                        temps64++;
-                    }
-                    else
-                    {   /* overflow: now positive: round -1 */
-                        temps64--;
-                    }
+                    temps64++;
                     regs->VR_D(v1, i) = (U64) ( temps64 >> 1 ) | 0x8000000000000000ULL;
                 }
                 else
