@@ -88,6 +88,196 @@
 /* E7EF VFMAX  - Vector FP Maximum                                [VRR-c] */
 /*------------------------------------------------------------------------*/
 
+#undef __V128_SSE__
+
+/* INTEL X64 processor? */
+#if defined( __x86_64__ ) || defined( _M_X64 )
+    /* MSVC on X64: intrinsics are available and should be used for optimization */
+    #if defined( _MSC_VER ) || defined( _MSVC_ )
+        #define __V128_SSE__ 1
+
+    /* gcc/clang on X64: intrinsics are available and should be used for optimization */
+    /*                   Being conservative: require SSE 4.2 to be available to allow */
+    /*                   any SSE intrinsic to be used for optimization.               */
+    #elif defined( __GNUC__ ) && defined( __SSE4_2__ )
+        #define __V128_SSE__ 1
+
+    #endif
+
+#endif
+
+/* compile debug message: are we using intrinsics? */
+#if 0
+    #if defined(__V128_SSE__)
+        #pragma message("__V128_SSE__ is defined.  Using intrinsics." )
+    #else
+        #pragma message("No intrinsics are included for optimization; only compiler optimization")
+    #endif
+#endif
+
+/*===================================================================*/
+/* Achitecture Independent Routines                                  */
+/*===================================================================*/
+
+#if !defined(_ZVECTOR_ARCH_INDEPENDENT_)
+#define _ZVECTOR_ARCH_INDEPENDENT_
+
+/*-------------------------------------------------------------------*/
+/* Galois Field Multiply                                             */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* Galois Field(2) 32-bit Multiply                                   */
+/*                                                                   */
+/* Input:                                                            */
+/*      m1      32-bit multiply operand                              */
+/*      m2      32-bit multiply operand                              */
+/*                                                                   */
+/* Returns:                                                          */
+/*              64-bit GF(2) multiply result                         */
+/*                                                                   */
+/* version depends on whether intrinsics are being used              */
+/*-------------------------------------------------------------------*/
+static inline U64 gf_mul_32( U32 m1, U32 m2)
+{
+#if defined( __V128_SSE__ )
+    /* intrinsic GF 64-bit multiply */
+    QW  mm1;                      /* U128 m1                       */
+    QW  mm2;                      /* U128 m2                       */
+    QW  acc;                      /* U128 accumulator              */
+
+    mm1.v = _mm_setzero_si128();
+    mm1.D.L.D = m1;
+        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 mm1.v", mm1.D.H.D, mm1.D.L.D);
+
+    mm2.v = _mm_setzero_si128();
+    mm2.D.L.D = m2;
+        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 mm2.v", mm2.D.H.D, mm2.D.L.D);
+
+    acc.v =  _mm_clmulepi64_si128 ( mm1.v, mm2.v, 0);
+        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 acc.v", acc.D.H.D, acc.D.L.D);
+
+    return acc.D.L.D;
+
+#else
+    int     i;                    /* loop index                      */
+    U32     myerU32;              /* multiplier                      */
+    U64     mcandU64;             /* multiplicand                    */
+    U64     accu64;               /* accumulator                     */
+
+    accu64 = 0;
+
+    /* select muliplier with fewest 'right most' bits */
+    /* to exit loop soonest                           */
+    if (m1 < m2)
+    {
+        mcandU64 = m2;
+        myerU32  = m1;
+    }
+    else
+    {
+        mcandU64 = m1;
+        myerU32  = m2;
+    }
+
+    /* galois multiply - no overflow */
+    for (i=0; i < 32 && myerU32 !=0; i++)
+    {
+        if ( myerU32 & 0x01 )
+            accu64 ^= mcandU64;
+        myerU32  >>= 1;
+        mcandU64 <<=1;
+    }
+
+    return accu64;
+
+#endif
+
+}
+
+/*-------------------------------------------------------------------*/
+/* Galois Field(2) 64-bit Multiply                                   */
+/*                                                                   */
+/* Input:                                                            */
+/*      m1          64-bit multiply operand                          */
+/*      m2          64-bit multiply operand                          */
+/*      accu128h    pointer to high 64 bits of result                */
+/*      accu128l    pointer to low 64 bits of result                 */
+/*                                                                   */
+/* version depends on whether intrinsics are being used              */
+/*-------------------------------------------------------------------*/
+static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
+{
+#if defined( __V128_SSE__ )
+    /* intrinsic GF 64-bit multiply */
+    QW  mm1;                      /* U128 m1                       */
+    QW  mm2;                      /* U128 m2                       */
+    QW  acc;                      /* U128 accumulator              */
+
+    mm1.v = _mm_setzero_si128();
+    mm1.D.L.D = m1;
+        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 mm1.v", mm1.D.H.D, mm1.D.L.D);
+
+    mm2.v = _mm_setzero_si128();
+    mm2.D.L.D = m2;
+        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 mm2.v", mm2.D.H.D, mm2.D.L.D);
+
+    acc.v =  _mm_clmulepi64_si128 ( mm1.v, mm2.v, 0);
+        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 acc.v", acc.D.H.D, acc.D.L.D);
+
+    *accu128h = acc.D.H.D;
+    *accu128l = acc.D.L.D;
+
+#else
+    /* portable C: GF 64-bit multiply */
+    int     i;                    /* loop index                      */
+    U64     myerU64;              /* doublewword multiplier          */
+    U64     mcandU128h;           /* doublewword multiplicand - high */
+    U64     mcandU128l;           /* doublewword multiplicand - low  */
+
+    *accu128h = 0;
+    *accu128l = 0;
+
+    /* select muliplier with fewest 'right most' bits */
+    /* to exit loop soonest                           */
+    if (m1 < m2)
+    {
+        mcandU128h  = 0;
+        mcandU128l = m2;
+        myerU64  = m1;
+    }
+    else
+    {
+        mcandU128h  = 0;
+        mcandU128l = m1;
+        myerU64  = m2;
+    }
+
+    /* galois multiply - no overflow */
+    for (i=0; i < 64 && myerU64 !=0; i++)
+    {
+        if ( myerU64 & 0x01 )
+        {
+            *accu128h ^= mcandU128h;
+            *accu128l ^= mcandU128l;
+        }
+        myerU64  >>= 1;
+
+        /* U128: shift left 1 bit*/
+        mcandU128h = (mcandU128h << 1) | (mcandU128l >> 63);
+        mcandU128l <<= 1;
+    }
+
+#endif
+
+}
+
+#endif /*!defined(_ZVECTOR_ARCH_INDEPENDENT_)*/
+
+/*===================================================================*/
+/* Achitecture Dependent Routines / Instructions                     */
+/*===================================================================*/
+
 /*-------------------------------------------------------------------*/
 /* E700 VLEB   - Vector Load Element (8)                       [VRX] */
 /*-------------------------------------------------------------------*/
@@ -4555,22 +4745,9 @@ DEF_INST( vector_galois_field_multiply_sum )
     int     v1, v2, v3, m4, m5, m6;
 
     int     i, k;                 /* loop index                      */
-
-    U8      myerU8;               /* byte multiplier                 */
-    U16     mcandU16;             /* byte multiplicand               */
     U16     accu16[16];           /* byte accumulator                */
-
-    U16     myerU16;              /* halfword multiplier             */
-    U32     mcandU32;             /* halfword multiplicand           */
     U32     accu32[8];            /* halfword accumulator            */
-
-    U32     myerU32;              /* word multiplier                 */
-    U64     mcandU64;             /* word multiplicand               */
     U64     accu64[4];            /* word accumulator                */
-
-    U64     myerU64;              /* doublewword multiplier          */
-    U64     mcandU128h;           /* doublewword multiplicand - high */
-    U64     mcandU128l;           /* doublewword multiplicand - low  */
     U64     accu128h[2];          /* doublewword accumulator  - high */
     U64     accu128l[2];          /* doublewword accumulator  - low  */
 
@@ -4585,99 +4762,38 @@ DEF_INST( vector_galois_field_multiply_sum )
     switch (m4)
     {
     case 0:         /* Byte */
-
-        for (i=0; i < 16; i++) {
-            /* galois multiply - no overflow */
-            accu16[i] = 0;
-            mcandU16 = (U16) regs->VR_B(v2, i);
-            myerU8  = regs->VR_B(v3, i);
-
-            for (k=0; k < 8 && myerU8 !=0; k++)
-            {
-                if ( myerU8 & 0x01 )
-                    accu16[i] ^= mcandU16;
-                myerU8  >>= 1;
-                mcandU16 <<=1;
-            }
-        }
+        for (i=0; i < 16; i++)
+            accu16[i] = (U16) gf_mul_32( (U32) regs->VR_B(v2, i), (U32) regs->VR_B(v3, i) );
 
         /* sum even-odd pair */
         for ( i=0, k=0; i < 8; i++, k += 2)
-        {
             regs->VR_H( v1, i ) = accu16[k] ^ accu16[k+1];
-        }
+
         break;
 
     case 1:         /* Halfword */
-        for (i=0; i < 8; i++) {
-            /* galois multiply - no overflow */
-            accu32[i] = 0;
-            mcandU32 = (U32) regs->VR_H(v2, i);
-            myerU16  = regs->VR_H(v3, i);
-
-            for (k=0; k < 16 && myerU16 !=0; k++)
-            {
-                if ( myerU16 & 0x01 )
-                    accu32[i] ^= mcandU32;
-                myerU16  >>= 1;
-                mcandU32 <<=1;
-            }
-        }
+        for (i=0; i < 8; i++)
+            accu32[i] = (U32) gf_mul_32( (U32) regs->VR_H(v2, i), (U32) regs->VR_H(v3, i) );
 
         /* sum even-odd pair */
         for ( i=0, k=0; i < 4; i++, k += 2)
-        {
             regs->VR_F( v1, i ) = accu32[k] ^ accu32[k+1];
-        }
+
         break;
 
     case 2:         /* Word */
-        for (i=0; i < 4; i++) {
-            /* galois multiply - no overflow */
-            accu64[i] = 0;
-            mcandU64 = (U64) regs->VR_F(v2, i);
-            myerU32  = regs->VR_F(v3, i);
-
-            for (k=0; k < 32 && myerU32 !=0; k++)
-            {
-                if ( myerU32 & 0x01 )
-                    accu64[i] ^= mcandU64;
-                myerU32  >>= 1;
-                mcandU64 <<=1;
-            }
-        }
+        for (i=0; i < 4; i++)
+            accu64[i] = (U64) gf_mul_32( (U32) regs->VR_F(v2, i), (U32) regs->VR_F(v3, i) );
 
         /* sum even-odd pair */
         for ( i=0, k=0; i < 2; i++, k += 2)
-        {
             regs->VR_D( v1, i ) = accu64[k] ^ accu64[k+1];
-        }
+
         break;
 
     case 3:         /* Doubleword */
-        for (i=0; i < 2; i++) {
-            /* galois multiply - no overflow */
-            accu128h[i] = 0;
-            accu128l[i] = 0;
-            mcandU128h  = 0;
-            mcandU128l = (U64) regs->VR_D(v2, i);
-            myerU64  = regs->VR_D(v3, i);
-
-            for (k=0; k < 64 && myerU64 !=0; k++)
-            {
-                if ( myerU64 & 0x01 )
-                {
-                    accu128h[i] ^= mcandU128h;
-                    accu128l[i] ^= mcandU128l;
-                }
-                myerU64  >>= 1;
-
-                /* U128: shift left 1 bit*/
-                mcandU128h = (mcandU128h << 1) | (mcandU128l >> 63);
-                mcandU128l <<= 1;
-
-            }
-        }
+        for (i=0; i < 2; i++)
+            gf_mul_64( regs->VR_D(v2, i), regs->VR_D(v3, i), &accu128h[i], &accu128l[i]);
 
         /* sum even-odd pair */
         regs->VR_D( v1, 0 ) = accu128h[0] ^ accu128h[1];
@@ -4778,25 +4894,12 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 {
     int     v1, v2, v3, v4, m5, m6;
 
-    int     i, k;                 /* loop index                      */
-
-    U8      myerU8;               /* byte multiplier                 */
-    U16     mcandU16;             /* byte multiplicand               */
-    U16     accu16[16];           /* byte accumulator                */
-
-    U16     myerU16;              /* halfword multiplier             */
-    U32     mcandU32;             /* halfword multiplicand           */
-    U32     accu32[8];            /* halfword accumulator            */
-
-    U32     myerU32;              /* word multiplier                 */
-    U64     mcandU64;             /* word multiplicand               */
-    U64     accu64[4];            /* word accumulator                */
-
-    U64     myerU64;              /* doublewword multiplier          */
-    U64     mcandU128h;           /* doublewword multiplicand - high */
-    U64     mcandU128l;           /* doublewword multiplicand - low  */
-    U64     accu128h[2];          /* doublewword accumulator  - high */
-    U64     accu128l[2];          /* doublewword accumulator  - low  */;
+    int     i, k;                     /* loop index                      */
+    U16     accu16[16];               /* byte accumulator                */
+    U32     accu32[8];                /* halfword accumulator            */
+    U64     accu64[4];                /* word accumulator                */
+    U64     accu128h[2];              /* doublewword accumulator  - high */
+    U64     accu128l[2];              /* doublewword accumulator  - low  */
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -4808,99 +4911,38 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
     switch (m5)
     {
     case 0:         /* Byte */
-
-        for (i=0; i < 16; i++) {
-            /* galois multiply - no overflow */
-            accu16[i] = 0;
-            mcandU16 = (U16) regs->VR_B(v2, i);
-            myerU8  = regs->VR_B(v3, i);
-
-            for (k=0; k < 8 && myerU8 !=0; k++)
-            {
-                if ( myerU8 & 0x01 )
-                    accu16[i] ^= mcandU16;
-                myerU8  >>= 1;
-                mcandU16 <<=1;
-            }
-        }
+        for (i=0; i < 16; i++)
+            accu16[i] = (U16) gf_mul_32( (U32) regs->VR_B(v2, i), (U32) regs->VR_B(v3, i) );
 
         /* sum even-odd pair plus vector accumulate */
         for ( i=0, k=0; i < 8; i++, k += 2)
-        {
             regs->VR_H( v1, i ) = accu16[k] ^ accu16[k+1] ^ regs->VR_H( v4, i);
-        }
+
         break;
 
     case 1:         /* Halfword */
-        for (i=0; i < 8; i++) {
-            /* galois multiply - no overflow */
-            accu32[i] = 0;
-            mcandU32 = (U32) regs->VR_H(v2, i);
-            myerU16  = regs->VR_H(v3, i);
-
-            for (k=0; k < 16 && myerU16 !=0; k++)
-            {
-                if ( myerU16 & 0x01 )
-                    accu32[i] ^= mcandU32;
-                myerU16  >>= 1;
-                mcandU32 <<=1;
-            }
-        }
+        for (i=0; i < 8; i++)
+            accu32[i] = (U32) gf_mul_32( (U32) regs->VR_H(v2, i), (U32) regs->VR_H(v3, i) );
 
         /* sum even-odd pair plus vector accumulate */
         for ( i=0, k=0; i < 4; i++, k += 2)
-        {
             regs->VR_F( v1, i ) = accu32[k] ^ accu32[k+1] ^ regs->VR_F( v4, i);
-        }
+
         break;
 
     case 2:         /* Word */
-        for (i=0; i < 4; i++) {
-            /* galois multiply - no overflow */
-            accu64[i] = 0;
-            mcandU64 = (U64) regs->VR_F(v2, i);
-            myerU32  = regs->VR_F(v3, i);
-
-            for (k=0; k < 32 && myerU32 !=0; k++)
-            {
-                if ( myerU32 & 0x01 )
-                    accu64[i] ^= mcandU64;
-                myerU32  >>= 1;
-                mcandU64 <<=1;
-            }
-        }
+        for (i=0; i < 4; i++)
+            accu64[i] = (U64) gf_mul_32( (U32) regs->VR_F(v2, i), (U32) regs->VR_F(v3, i) );
 
         /* sum even-odd pair plus vector accumulate */
         for ( i=0, k=0; i < 2; i++, k += 2)
-        {
             regs->VR_D( v1, i ) = accu64[k] ^ accu64[k+1] ^ regs->VR_D( v4, i );
-        }
+
         break;
 
     case 3:         /* Doubleword */
-        for (i=0; i < 2; i++) {
-            /* galois multiply - no overflow */
-            accu128h[i] = 0;
-            accu128l[i] = 0;
-            mcandU128h  = 0;
-            mcandU128l = (U64) regs->VR_D(v2, i);
-            myerU64  = regs->VR_D(v3, i);
-
-            for (k=0; k < 64 && myerU64 !=0; k++)
-            {
-                if ( myerU64 & 0x01 )
-                {
-                    accu128h[i] ^= mcandU128h;
-                    accu128l[i] ^= mcandU128l;
-                }
-                myerU64  >>= 1;
-
-                /* U128: shift left 1 bit*/
-                mcandU128h = (mcandU128h << 1) | (mcandU128l >> 63);
-                mcandU128l <<= 1;
-
-            }
-        }
+        for (i=0; i < 2; i++)
+            gf_mul_64( regs->VR_D(v2, i), regs->VR_D(v3, i), &accu128h[i], &accu128l[i]);
 
         /* sum even-odd pair plus vector accumulate */
         regs->VR_D( v1, 0 ) = accu128h[0] ^ accu128h[1] ^ regs->VR_D( v4, 0);
@@ -4912,7 +4954,6 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
-
 
     ZVECTOR_END( regs );
 }
