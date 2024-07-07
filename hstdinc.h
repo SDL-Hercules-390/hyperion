@@ -99,6 +99,7 @@
   #include <dbghelp.h>
   #include <crtdbg.h>
   #include <intrin.h>
+  #include <wmmintrin.h>
 #else
   #include <libgen.h>
 #endif
