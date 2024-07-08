@@ -717,4 +717,19 @@ EXTRA_DIST =                    \
      zvector-e6-19-VCSPH.core               \
      zvector-e6-19-VCSPH.list               \
      zvector-e6-19-VCSPH.pdf                \
-     zvector-e6-19-VCSPH.tst
+     zvector-e6-19-VCSPH.tst                \
+     zvector-e7-01-MinMaxAvg.asm            \
+     zvector-e7-01-MinMaxAvg.core           \
+     zvector-e7-01-MinMaxAvg.list           \
+     zvector-e7-01-MinMaxAvg.pdf            \
+     zvector-e7-01-MinMaxAvg.tst            \
+     zvector-e7-02-VGFM.asm                 \
+     zvector-e7-02-VGFM.core                \
+     zvector-e7-02-VGFM.list                \
+     zvector-e7-02-VGFM.pdf                 \
+     zvector-e7-02-VGFM.tst                 \
+     zvector-e7-03-VGFMA.asm                \
+     zvector-e7-03-VGFMA.core               \
+     zvector-e7-03-VGFMA.list               \
+     zvector-e7-03-VGFMA.pdf                \
+     zvector-e7-03-VGFMA.tst
