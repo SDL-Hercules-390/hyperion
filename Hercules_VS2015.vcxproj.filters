@@ -2378,7 +2378,7 @@
     <None Include="tests\zvector-e6-16-VSRP-VPSOP.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\ zvector-e6-17-VSCHP.tst">
+    <None Include="tests\zvector-e6-17-VSCHP.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\zvector-e6-18-VSCSHP.tst">
