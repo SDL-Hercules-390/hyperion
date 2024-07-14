@@ -122,6 +122,238 @@
 #if !defined(_ZVECTOR_ARCH_INDEPENDENT_)
 #define _ZVECTOR_ARCH_INDEPENDENT_
 
+
+/*-------------------------------------------------------------------*/
+/* 128 bit types                                                     */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* are the compiler 128 bit types available?                         */
+/*-------------------------------------------------------------------*/
+#if defined( __SIZEOF_INT128__ )
+    #define _USE_128_
+#endif
+
+/*-------------------------------------------------------------------*/
+/* U128                                                              */
+/*-------------------------------------------------------------------*/
+typedef union {
+        QW   Q;
+#if defined( _USE_128_ )
+    unsigned __int128 u_128;
+#endif
+        U64  u_64[2];
+        U32  u_32[4];
+        U16  u_16[8];
+        U8   u_8[16];
+
+#if defined( _USE_128_ )
+    __int128 s_128;
+#endif
+        S64  s_64[2];
+        S32  s_32[4];
+        S16  s_16[8];
+        S8   s_8[16];
+
+#if defined(__V128_SSE__)
+        __m128i V; 			// intrinsic type vector
+#endif
+
+}  U128  ;
+
+/*===================================================================*/
+/* U128 Arithmetic (add, sub, mul)                                   */
+/*===================================================================*/
+
+/*-------------------------------------------------------------------*/
+/* U128 Add: return a + b                                            */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_add( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    U128 temp;                           /* temp (return) value      */
+
+    temp.u_128 =  a.u_128 + b.u_128;
+    return temp;
+
+#else
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  a.Q.D.H.D + b.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D + b.Q.D.L.D;
+    if (temp.Q.D.L.D < b.Q.D.L.D) temp.Q.D.H.D++;
+    return temp;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 Subtract: return a - b                                       */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_sub( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    U128 temp;                           /* temp (return) value      */
+
+    temp.u_128 =  a.u_128 - b.u_128;
+    return temp;
+
+#else
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  a.Q.D.H.D - b.Q.D.H.D;
+    if (a.Q.D.L.D < b.Q.D.L.D) temp.Q.D.H.D--;
+    temp.Q.D.L.D =  a.Q.D.L.D - b.Q.D.L.D;
+
+    return temp;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* U128: U64 * U64 Multiply: return a * b (overflow ignored)         */
+/*                                                                   */
+/* Very simple, standard approach to arithmetic multiply             */
+/*                                                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static inline U128 U64_mul (U64 aa, U64 bb)
+{
+#if defined( _USE_128_)
+    U128 temp;                           /* temp (return) value      */
+
+    temp.u_128 =  (unsigned __int128) aa * bb;
+    return temp;
+
+#else
+    DW a;                                /* arg 'aa' as DW            */
+    DW b;;                               /* arg 'bb' as DW            */
+    DW t64;                              /* temp                      */
+    U128 r;                              /* U128 multiply result      */
+    U128 t128;                           /* temp                      */
+
+    /* initialize result */
+    r.Q.D.H.D = 0UL;
+    r.Q.D.L.D = 0UL;
+
+    /* zero check */
+    if (aa == 0 || bb == 0) return r;
+
+    /* arguments as DWs */
+    a.D = aa;
+    b.D = bb;
+
+    /* a low 32 x b low 32 */
+    if ( a.F.L.F != 0 && b.F.L.F!= 0 )
+    {
+        r.Q.D.L.D = (U64) a.F.L.F * (U64) b.F.L.F;
+    }
+
+    /* a high 32 x b low 32 */
+    if ( a.F.H.F != 0 && b.F.L.F!= 0 )
+    {
+        t64.D =  (U64) a.F.H.F * (U64) b.F.L.F;
+        t128.Q.D.H.D = 0UL;
+        t128.Q.D.L.D = 0UL;
+        t128.Q.D.H.F.L.F = t64.F.H.F;
+        t128.Q.D.L.F.H.F = t64.F.L.F;
+        r = U128_add( r, t128 );
+    }
+
+    /* a low 32 x b high 32 */
+    if ( a.F.L.F != 0 && b.F.H.F!= 0 )
+    {
+        t64.D =  (U64) a.F.L.F * (U64) b.F.H.F;
+        t128.Q.D.H.D = 0UL;
+        t128.Q.D.L.D = 0UL;
+        t128.Q.D.H.F.L.F = t64.F.H.F;
+        t128.Q.D.L.F.H.F = t64.F.L.F;
+        r = U128_add( r, t128 );
+    }
+
+    /* a high 32 x b high 32 */
+    if ( a.F.H.F != 0 && b.F.H.F!= 0 )
+    {
+        t64.D =  (U64) a.F.H.F * (U64) b.F.H.F;
+        t128.Q.D.H.D = 0UL;
+        t128.Q.D.L.D = 0UL;
+        t128.Q.D.H.F.L.F = t64.F.L.F;
+        t128.Q.D.H.F.H.F = t64.F.H.F;
+        r = U128_add( r, t128 );
+    }
+
+    return r;
+#endif
+
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 * U32 Multiply: return a * b (overflow ignored)              */
+/*                                                                   */
+/* Very simple, standard approach to arithmetic multiply             */
+/*                                                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_U32_mul( U128 a, U32 b)
+{
+#if defined( _USE_128_ )
+    U128 temp;                           /* temp (return) value      */
+
+    temp.u_128 =  a.u_128 * b;
+    return temp;
+
+#else
+    U128 r;                           /* return value                */
+    U64 t;                            /* temp                        */
+
+
+    /* initialize result */
+    r.Q.D.H.D = 0UL;
+    r.Q.D.L.D = 0UL;
+
+    if (b == 0) return r;
+
+    /* 1st 32 bits : LL */
+    if (a.Q.F.LL.F != 0) r.Q.D.L.D = (U64) a.Q.F.LL.F * (U64) b;
+
+    /* 2nd 32 bits : LH */
+    if( a.Q.F.LH.F != 0)
+    {
+        t = (U64) a.Q.F.LH.F  * (U64) b  +  (U64) r.Q.F.LH.F;
+        r.Q.F.LH.F = t & 0xFFFFFFFFUL;
+        r.Q.F.HL.F = t >> 32;
+    }
+
+    /* 3rd 32 bits : HL */
+    if( a.Q.F.HL.F != 0)
+    {
+        t = (U64) a.Q.F.HL.F  * (U64) b  +  (U64) r.Q.F.HL.F;
+        r.Q.F.HL.F = t & 0xFFFFFFFFUL;
+        r.Q.F.HH.F = t >> 32;
+    }
+
+    /* 4th 32 bits : HH */
+    if( a.Q.F.HH.F != 0)
+    {
+        t = (U64) a.Q.F.HH.F  * (U64) b  +  (U64) r.Q.F.HH.F;
+        r.Q.F.HH.F = t & 0xFFFFFFFFUL;
+    }
+    return r;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* Debug helper for U128                                             */
+/*                                                                   */
+/* Input:                                                            */
+/*      msg     pointer to logmsg context string                     */
+/*      u       U128 number                                          */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static inline void u128_logmsg(const char * msg, U128 u)
+{
+    printf("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", msg, u.Q.D.H.D, u.Q.D.L.D);
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Galois Field Multiply                                             */
 /*-------------------------------------------------------------------*/
