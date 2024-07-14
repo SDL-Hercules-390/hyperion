@@ -842,6 +842,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
      UNDEF_INST(vector_shift_and_divide_decimal)
 #endif
 
+#if !defined( FEATURE_135_VECTOR_ENH_FACILITY_1 )
+     UNDEF_INST(vector_multiply_sum_logical);
+     UNDEF_INST(vector_fp_minimum);
+     UNDEF_INST(vector_fp_maximum);
+#endif
+
 #if !defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
  UNDEF_INST( insert_reference_bits_multiple )
 #endif
@@ -5379,7 +5385,7 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E7B5*/ GENx___x___x___ ,
  /*E7B6*/ GENx___x___x___ ,
  /*E7B7*/ GENx___x___x___ ,
- /*E7B8*/ GENx___x___x___ ,
+ /*E7B8*/ GENx___x___x900("VMSL"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_sum_logical                              ),
  /*E7B9*/ GENx___x___x900("VACCC"  , VRR_D  , ASMFMT_VRR_D  , vector_add_with_carry_compute_carry                      ),
  /*E7BA*/ GENx___x___x___ ,
  /*E7BB*/ GENx___x___x900("VAC"    , VRR_D  , ASMFMT_VRR_D  , vector_add_with_carry                                    ),
@@ -5433,8 +5439,8 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E7EB*/ GENx___x___x900("VFCH"   , VRR_C  , ASMFMT_VRR_C  , vector_fp_compare_high                                   ),
  /*E7EC*/ GENx___x___x___ ,
  /*E7ED*/ GENx___x___x___ ,
- /*E7EE*/ GENx___x___x___ ,
- /*E7EF*/ GENx___x___x___ ,
+ /*E7EE*/ GENx___x___x900("VFMIN"  , VRR_C  , ASMFMT_VRR_C  , vector_fp_minimum                                        ),
+ /*E7EF*/ GENx___x___x900("VFMAX"  , VRR_C  , ASMFMT_VRR_C  , vector_fp_maximum                                        ),
  /*E7F0*/ GENx___x___x900("VAVGL"  , VRR_C  , ASMFMT_VRR_C  , vector_average_logical                                   ),
  /*E7F1*/ GENx___x___x900("VACC"   , VRR_C  , ASMFMT_VRR_C  , vector_add_compute_carry                                 ),
  /*E7F2*/ GENx___x___x900("VAVG"   , VRR_C  , ASMFMT_VRR_C  , vector_average                                           ),

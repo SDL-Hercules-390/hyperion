@@ -4809,6 +4809,41 @@ DEF_INST( vector_galois_field_multiply_sum )
     ZVECTOR_END( regs );
 }
 
+#if defined( FEATURE_135_VECTOR_ENH_FACILITY_1 )
+/*-------------------------------------------------------------------*/
+/* E7B8 VMSL   - Vector Multiply Sum Logical                 [VRR-d] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_multiply_sum_logical )
+{
+    int     v1, v2, v3, v4, m5, m6;
+
+    VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+#define M6_ES ((m6 & 0x8) != 0) // Even Shift Indication
+#define M6_OS ((m6 & 0x4) != 0) // Odd Shift Indication
+
+    switch (m5)
+    {
+    case 3:  // Doubleword
+
+        /* FixMe! Write some code */
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+        break;
+    default:
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        break;
+    }
+
+#undef M6_ES
+#undef M6_OS
+
+    ZVECTOR_END( regs );
+}
+#endif /* defined( FEATURE_135_VECTOR_ENH_FACILITY_1 ) */
+
 /*-------------------------------------------------------------------*/
 /* E7B9 VACCC  - Vector Add With Carry Compute Carry         [VRR-d] */
 /*-------------------------------------------------------------------*/

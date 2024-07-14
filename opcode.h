@@ -3734,6 +3734,12 @@ DEF_INST(vector_remainder_decimal);
 DEF_INST(vector_shift_and_divide_decimal);
 #endif
 
+#if defined( FEATURE_135_VECTOR_ENH_FACILITY_1 )
+DEF_INST(vector_multiply_sum_logical);
+DEF_INST(vector_fp_minimum);
+DEF_INST(vector_fp_maximum);
+#endif
+
 #if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
 DEF_INST( insert_reference_bits_multiple );
 #endif

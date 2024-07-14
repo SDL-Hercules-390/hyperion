@@ -8859,6 +8859,7 @@ DEF_INST( vector_fp_compare_high )
     ZVECTOR_END( regs );
 }
 
+#if defined( FEATURE_135_VECTOR_ENH_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* E7EE VFMIN  - Vector FP Minimum                           [VRR-c] */
 /*                                                                   */
@@ -8896,13 +8897,8 @@ DEF_INST( vector_fp_minimum )
 //  #define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
 //  #define M5_RE ((m5 & 0x7) != 0) // Reserved
 //
-//      if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
-//      {
-//          if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
-//              ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
-//      }
-//      else
-//          ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
+//      if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
+//          ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 //
 //      if ( m4 == 3 )  // Long format
 //      {
@@ -9000,7 +8996,9 @@ DEF_INST( vector_fp_minimum )
 
     ZVECTOR_END( regs );
 }
+#endif /* defined( FEATURE_135_VECTOR_ENH_FACILITY_1 ) */
 
+#if defined( FEATURE_135_VECTOR_ENH_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* E7EF VFMAX  - Vector FP Maximum                           [VRR-c] */
 /*                                                                   */
@@ -9037,13 +9035,8 @@ DEF_INST( vector_fp_maximum )
 //  #define M5_SE ((m5 & 0x8) != 0) // Single-Element-Control (S)
 //  #define M5_RE ((m5 & 0x7) != 0) // Reserved
 //
-//      if ( FACILITY_ENABLED( 135_ZVECTOR_ENH_1, regs ) )
-//      {
-//          if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
-//              ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
-//      }
-//      else
-//          ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
+//      if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
+//          ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 //
 //      if ( m4 == 3 )  // Long format
 //      {
@@ -9119,6 +9112,7 @@ DEF_INST( vector_fp_maximum )
 
     ZVECTOR_END( regs );
 }
+#endif /* defined( FEATURE_135_VECTOR_ENH_FACILITY_1 ) */
 
 #endif /* defined( FEATURE_129_ZVECTOR_FACILITY ) */
 
