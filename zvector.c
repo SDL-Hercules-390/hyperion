@@ -156,7 +156,7 @@ typedef union {
         S8   s_8[16];
 
 #if defined(__V128_SSE__)
-        __m128i V; 			// intrinsic type vector
+        __m128i V;      // intrinsic type vector
 #endif
 
 }  U128  ;
@@ -2387,6 +2387,7 @@ DEF_INST( vector_nor )
     ZVECTOR_END( regs );
 }
 
+#if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* E76C VNX    - Vector Not Exclusive OR                     [VRR-c] */
 /*-------------------------------------------------------------------*/
@@ -2408,6 +2409,7 @@ DEF_INST( vector_not_exclusive_or )
 
     ZVECTOR_END( regs );
 }
+#endif /* defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) */
 
 /*-------------------------------------------------------------------*/
 /* E76D VX     - Vector Exclusive OR                         [VRR-c] */
@@ -2431,6 +2433,7 @@ DEF_INST( vector_exclusive_or )
     ZVECTOR_END( regs );
 }
 
+#if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* E76E VNN    - Vector NAND                                 [VRR-c] */
 /*-------------------------------------------------------------------*/
@@ -2452,7 +2455,9 @@ DEF_INST( vector_nand )
 
     ZVECTOR_END( regs );
 }
+#endif /* defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) */
 
+#if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* E76F VOC    - Vector OR with Complement                   [VRR-c] */
 /*-------------------------------------------------------------------*/
@@ -2474,6 +2479,7 @@ DEF_INST( vector_or_with_complement )
 
     ZVECTOR_END( regs );
 }
+#endif /* defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) */
 
 /*-------------------------------------------------------------------*/
 /* E770 VESLV  - Vector Element Shift Left Vector            [VRR-c] */
@@ -3502,6 +3508,7 @@ DEF_INST( vector_permute_doubleword_immediate )
     ZVECTOR_END( regs );
 }
 
+#if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* E785 VBPERM - Vector Bit Permute                          [VRR-c] */
 /*-------------------------------------------------------------------*/
@@ -3557,6 +3564,7 @@ DEF_INST( vector_bit_permute )
 
     ZVECTOR_END( regs );
 }
+#endif /* defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) */
 
 /*-------------------------------------------------------------------*/
 /* E786 VSLD   - Vector Shift Left Double By Bit             [VRI-d] */

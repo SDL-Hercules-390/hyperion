@@ -3614,10 +3614,7 @@ DEF_INST(vector_and);
 DEF_INST(vector_and_with_complement);
 DEF_INST(vector_or);
 DEF_INST(vector_nor);
-DEF_INST(vector_not_exclusive_or);
 DEF_INST(vector_exclusive_or);
-DEF_INST(vector_nand);
-DEF_INST(vector_or_with_complement);
 DEF_INST(vector_element_rotate_and_insert_under_mask);
 DEF_INST(vector_element_rotate_left_logical_vector);
 DEF_INST(vector_element_shift_left_vector);
@@ -3636,7 +3633,6 @@ DEF_INST(vector_find_element_equal);
 DEF_INST(vector_find_element_not_equal);
 DEF_INST(vector_find_any_element_equal);
 DEF_INST(vector_permute_doubleword_immediate);
-DEF_INST(vector_bit_permute);
 DEF_INST(vector_string_range_compare);
 DEF_INST(vector_string_search);
 DEF_INST(vector_permute);
@@ -3711,33 +3707,37 @@ DEF_INST(vector_maximum);
 #endif
 
 #if defined(FEATURE_134_ZVECTOR_PACK_DEC_FACILITY)
-DEF_INST(vector_packed_zoned);
-DEF_INST(vector_load_rightmost_with_length);
-DEF_INST(vector_unpack_zoned);
-DEF_INST(vector_store_rightmost_with_length);
-DEF_INST(vector_load_immediate_decimal);
+DEF_INST(vector_add_decimal);
+DEF_INST(vector_compare_decimal);
 DEF_INST(vector_convert_to_binary_32);
 DEF_INST(vector_convert_to_binary_64);
 DEF_INST(vector_convert_to_decimal_32);
 DEF_INST(vector_convert_to_decimal_64);
-DEF_INST(vector_perform_sign_operation_decimal);
-DEF_INST(vector_test_decimal);
-DEF_INST(vector_add_decimal);
-DEF_INST(vector_shift_and_round_decimal);
-DEF_INST(vector_shift_and_round_decimal_register);
-DEF_INST(vector_subtract_decimal);
-DEF_INST(vector_compare_decimal);
-DEF_INST(vector_multiply_decimal);
-DEF_INST(vector_multiply_and_shift_decimal);
 DEF_INST(vector_divide_decimal);
+DEF_INST(vector_load_immediate_decimal);
+DEF_INST(vector_load_rightmost_with_length);
+DEF_INST(vector_multiply_and_shift_decimal);
+DEF_INST(vector_multiply_decimal);
+DEF_INST(vector_packed_zoned);
+DEF_INST(vector_perform_sign_operation_decimal);
 DEF_INST(vector_remainder_decimal);
 DEF_INST(vector_shift_and_divide_decimal);
+DEF_INST(vector_shift_and_round_decimal);
+DEF_INST(vector_shift_and_round_decimal_register);
+DEF_INST(vector_store_rightmost_with_length);
+DEF_INST(vector_subtract_decimal);
+DEF_INST(vector_test_decimal);
+DEF_INST(vector_unpack_zoned);
 #endif
 
 #if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
+DEF_INST(vector_bit_permute);
 DEF_INST(vector_multiply_sum_logical);
-DEF_INST(vector_fp_minimum);
+DEF_INST(vector_not_exclusive_or);
+DEF_INST(vector_nand);
+DEF_INST(vector_or_with_complement);
 DEF_INST(vector_fp_maximum);
+DEF_INST(vector_fp_minimum);
 #endif
 
 #if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )

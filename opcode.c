@@ -748,7 +748,6 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
      UNDEF_INST(vector_find_element_not_equal)
      UNDEF_INST(vector_find_any_element_equal)
      UNDEF_INST(vector_permute_doubleword_immediate)
-     UNDEF_INST(vector_bit_permute)
      UNDEF_INST(vector_string_range_compare)
      UNDEF_INST(vector_permute)
      UNDEF_INST(vector_select)
@@ -843,9 +842,13 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 
 #if !defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
+     UNDEF_INST(vector_bit_permute);
      UNDEF_INST(vector_multiply_sum_logical);
-     UNDEF_INST(vector_fp_minimum);
+     UNDEF_INST(vector_not_exclusive_or);
+     UNDEF_INST(vector_nand);
+     UNDEF_INST(vector_or_with_complement);
      UNDEF_INST(vector_fp_maximum);
+     UNDEF_INST(vector_fp_minimum);
 #endif
 
 #if !defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
