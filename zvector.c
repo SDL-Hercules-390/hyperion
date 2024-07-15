@@ -5056,6 +5056,7 @@ DEF_INST( vector_galois_field_multiply_sum )
 DEF_INST( vector_multiply_sum_logical )
 {
     int     v1, v2, v3, v4, m5, m6;
+    U128    intere, intero;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -5067,10 +5068,15 @@ DEF_INST( vector_multiply_sum_logical )
     switch (m5)
     {
     case 3:  // Doubleword
-
-        /* FixMe! Write some code */
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-
+        intere = U64_mul( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
+        intero = U64_mul( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
+        if (M6_ES)
+            intere = U128_U32_mul( intere, 2 );  // Shift left
+        if (M6_OS)
+            intero = U128_U32_mul( intero, 2 );  // Shift left
+        intere = U128_add( intere, intero );
+        intere = U128_add( intere, (U128)regs->VR_Q(v4) );
+        memcpy(&regs->VR_Q(v1), &intere, 16);
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
