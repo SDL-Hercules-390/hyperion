@@ -1095,7 +1095,7 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             release_lock( &pLCSPORT->PortEventLock );
             PTT_DEBUG( "join_thread       ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             join_thread( tid, NULL );
-#if defined( OPTION_FTHREADS) 
+#if defined( OPTION_FTHREADS)
             PTT_DEBUG( "detach_thread     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             detach_thread( tid );   // only needed for Fish threads
 #endif
@@ -3548,7 +3548,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 #else /*defined(OPTION_W32_CTCI)*/
             /* The argument is not an IPv4 address. If the -x option was */
             /* specified, the argument shouldn't have been specified.    */
-            if (saw_if ) {
+            if (saw_if || saw_conf)
+            {
                 WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                        "IP address", *argv );
                 return -1;
