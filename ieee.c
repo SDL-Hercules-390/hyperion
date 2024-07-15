@@ -925,6 +925,95 @@ static int calculate_result_one( U32 op2_dataclass, U32 op3_dataclass )
 }
 
 /*
+ * Convert result for IEEE MaxNum
+ */
+static int convert_result_ieee_maxnum( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = -Fn   op3 = -Fn
+    case 44:  // op2 = +Fn   op3 = +Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 0:   // op2 = -inf  op3 = -inf
+    case 6:   // op2 = -inf  op3 = QNaN
+    case 16:  // op2 = -Fn   op3 = QNaN
+    case 20:  // op2 = -0    op3 = -inf
+    case 21:  // op2 = -0    op3 = -Fn
+    case 22:  // op2 = -0    op3 = -0
+    case 26:  // op2 = -0    op3 = QNaN
+    case 30:  // op2 = +0    op3 = -inf
+    case 31:  // op2 = +0    op3 = -Fn
+    case 32:  // op2 = +0    op3 = -0
+    case 33:  // op2 = +0    op3 = +0
+    case 36:  // op2 = +0    op3 = QNaN
+    case 40:  // op2 = +Fn   op3 = -inf
+    case 41:  // op2 = +Fn   op3 = -Fn
+    case 42:  // op2 = +Fn   op3 = -0
+    case 43:  // op2 = +Fn   op3 = +0
+    case 46:  // op2 = +Fn   op3 = QNaN
+    case 50:  // op2 = +inf  op3 = -inf
+    case 51:  // op2 = +inf  op3 = -Fn
+    case 52:  // op2 = +inf  op3 = -0
+    case 53:  // op2 = +inf  op3 = +0
+    case 54:  // op2 = +inf  op3 = +Fn
+    case 55:  // op2 = +inf  op3 = +inf
+    case 56:  // op2 = +inf  op3 = QNaN
+    case 60:  // op2 = QNaN  op3 = -inf
+    case 66:  // op2 = QNaN  op3 = QNaN
+        result_out = 2;  // T(op2)
+        break;
+    case 1:   // op2 = -inf  op3 = -Fn
+    case 2:   // op2 = -inf  op3 = -0
+    case 3:   // op2 = -inf  op3 = +0
+    case 4:   // op2 = -inf  op3 = +Fn
+    case 5:   // op2 = -inf  op3 = +inf
+    case 10:  // op2 = -Fn   op3 = -inf
+    case 12:  // op2 = -Fn   op3 = +0
+    case 13:  // op2 = -Fn   op3 = +0
+    case 14:  // op2 = -Fn   op3 = +Fn
+    case 15:  // op2 = -Fn   op3 = +inf
+    case 23:  // op2 = -0    op3 = +0
+    case 24:  // op2 = -0    op3 = +Fn
+    case 25:  // op2 = -0    op3 = +inf
+    case 34:  // op2 = +0    op3 = +Fn
+    case 35:  // op2 = +0    op3 = +inf
+    case 45:  // op2 = +Fn   op3 = +inf
+    case 61:  // op2 = QNaN  op3 = -Fn
+    case 62:  // op2 = QNaN  op3 = -0
+    case 63:  // op2 = QNaN  op3 = +0
+    case 64:  // op2 = QNaN  op3 = +Fn
+    case 65:  // op2 = QNaN  op3 = +inf
+        result_out = 3;  // T(op3)
+        break;
+    case 70:  // op2 = SNaN  op3 = -inf
+    case 71:  // op2 = SNaN  op3 = -Fn
+    case 72:  // op2 = SNaN  op3 = -0
+    case 73:  // op2 = SNaN  op3 = +0
+    case 74:  // op2 = SNaN  op3 = +Fn
+    case 75:  // op2 = SNaN  op3 = +inf
+    case 76:  // op2 = SNaN  op3 = QNaN
+    case 77:  // op2 = SNaN  op3 = SNaN
+        result_out = 4;  // XI: T(op2)
+        break;
+    case 7:   // op2 = -inf  op3 = SNaN
+    case 17:  // op2 = -Fn   op3 = SNaN
+    case 27:  // op2 = -0    op3 = SNaN
+    case 37:  // op2 = +0    op3 = SNaN
+    case 47:  // op2 = +Fn   op3 = SNaN
+    case 57:  // op2 = +inf  op3 = SNaN
+    case 67:  // op2 = QNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 5;  // XI: T(op3)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
  * Convert result for IEEE MinNum
  */
 static int convert_result_ieee_minnum( int result_in )
@@ -935,7 +1024,7 @@ static int convert_result_ieee_minnum( int result_in )
     {
     case 11:  // op2 = -Fn   op3 = -Fn
     case 44:  // op2 = +Fn   op3 = +Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 0:   // op2 = -inf  op3 = -inf
     case 1:   // op2 = -inf  op3 = -Fn
@@ -963,7 +1052,7 @@ static int convert_result_ieee_minnum( int result_in )
     case 55:  // op2 = +inf  op3 = +inf
     case 56:  // op2 = +inf  op3 = QNaN
     case 66:  // op2 = QNaN  op3 = QNaN
-        result_out = 2;
+        result_out = 2;  // T(op2)
         break;
     case 10:  // op2 = -Fn   op3 = -inf
     case 20:  // op2 = -0    op3 = -inf
@@ -986,7 +1075,7 @@ static int convert_result_ieee_minnum( int result_in )
     case 63:  // op2 = QNaN  op3 = +0
     case 64:  // op2 = QNaN  op3 = +Fn
     case 65:  // op2 = QNaN  op3 = +inf
-        result_out = 3;
+        result_out = 3;  // T(op3)
         break;
     case 70:  // op2 = SNaN  op3 = -inf
     case 71:  // op2 = SNaN  op3 = -Fn
@@ -995,7 +1084,7 @@ static int convert_result_ieee_minnum( int result_in )
     case 74:  // op2 = SNaN  op3 = +Fn
     case 75:  // op2 = SNaN  op3 = +inf
     case 76:  // op2 = SNaN  op3 = QNaN
-        result_out = 4;
+        result_out = 4;  // XI: T(op2)
         break;
     case 7:   // op2 = -inf  op3 = SNaN
     case 17:  // op2 = -Fn   op3 = SNaN
@@ -1006,7 +1095,96 @@ static int convert_result_ieee_minnum( int result_in )
     case 67:  // op2 = QNaN  op3 = SNaN
     case 77:  // op2 = SNaN  op3 = SNaN
     default:  // Should not occur!
-        result_out = 5;
+        result_out = 5;  // XI: T(op3)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
+ * Convert result for JAVA Math.Max()
+ */
+static int convert_result_java_max( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = -Fn   op3 = -Fn
+    case 44:  // op2 = +Fn   op3 = +Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 0:   // op2 = -inf  op3 = -inf
+    case 10:  // op2 = -Fn   op3 = -inf
+    case 20:  // op2 = -0    op3 = -inf
+    case 21:  // op2 = -0    op3 = -Fn
+    case 22:  // op2 = -0    op3 = -0
+    case 30:  // op2 = +0    op3 = -inf
+    case 31:  // op2 = +0    op3 = -Fn
+    case 32:  // op2 = +0    op3 = -0
+    case 33:  // op2 = +0    op3 = +0
+    case 40:  // op2 = +Fn   op3 = -inf
+    case 41:  // op2 = +Fn   op3 = -Fn
+    case 42:  // op2 = +Fn   op3 = -0
+    case 43:  // op2 = +Fn   op3 = +0
+    case 50:  // op2 = +inf  op3 = -inf
+    case 51:  // op2 = +inf  op3 = -Fn
+    case 52:  // op2 = +inf  op3 = -0
+    case 53:  // op2 = +inf  op3 = +0
+    case 54:  // op2 = +inf  op3 = +Fn
+    case 55:  // op2 = +inf  op3 = +inf
+    case 60:  // op2 = QNaN  op3 = -inf
+    case 61:  // op2 = QNaN  op3 = -Fn
+    case 62:  // op2 = QNaN  op3 = -0
+    case 63:  // op2 = QNaN  op3 = +0
+    case 64:  // op2 = QNaN  op3 = +Fn
+    case 65:  // op2 = QNaN  op3 = +inf
+    case 66:  // op2 = QNaN  op3 = QNaN
+        result_out = 2;  // T(op2)
+        break;
+    case 1:   // op2 = -inf  op3 = -Fn
+    case 2:   // op2 = -inf  op3 = -0
+    case 3:   // op2 = -inf  op3 = +0
+    case 4:   // op2 = -inf  op3 = +Fn
+    case 5:   // op2 = -inf  op3 = +inf
+    case 6:   // op2 = -inf  op3 = QNaN
+    case 12:  // op2 = -Fn   op3 = +0
+    case 13:  // op2 = -Fn   op3 = +0
+    case 14:  // op2 = -Fn   op3 = +Fn
+    case 15:  // op2 = -Fn   op3 = +inf
+    case 16:  // op2 = -Fn   op3 = QNaN
+    case 23:  // op2 = -0    op3 = +0
+    case 24:  // op2 = -0    op3 = +Fn
+    case 25:  // op2 = -0    op3 = +inf
+    case 26:  // op2 = -0    op3 = QNaN
+    case 34:  // op2 = +0    op3 = +Fn
+    case 35:  // op2 = +0    op3 = +inf
+    case 36:  // op2 = +0    op3 = QNaN
+    case 45:  // op2 = +Fn   op3 = +inf
+    case 46:  // op2 = +Fn   op3 = QNaN
+    case 56:  // op2 = +inf  op3 = QNaN
+        result_out = 3;  // T(op3)
+        break;
+    case 70:  // op2 = SNaN  op3 = -inf
+    case 71:  // op2 = SNaN  op3 = -Fn
+    case 72:  // op2 = SNaN  op3 = -0
+    case 73:  // op2 = SNaN  op3 = +0
+    case 74:  // op2 = SNaN  op3 = +Fn
+    case 75:  // op2 = SNaN  op3 = +inf
+    case 76:  // op2 = SNaN  op3 = QNaN
+    case 77:  // op2 = SNaN  op3 = SNaN
+        result_out = 4;  // XI: T(op2)
+        break;
+    case 7:   // op2 = -inf  op3 = SNaN
+    case 17:  // op2 = -Fn   op3 = SNaN
+    case 27:  // op2 = -0    op3 = SNaN
+    case 37:  // op2 = +0    op3 = SNaN
+    case 47:  // op2 = +Fn   op3 = SNaN
+    case 57:  // op2 = +inf  op3 = SNaN
+    case 67:  // op2 = QNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 5;  // XI: T(op3)
         break;
     }
 
@@ -1024,7 +1202,7 @@ static int convert_result_java_min( int result_in )
     {
     case 11:  // op2 = -Fn   op3 = -Fn
     case 44:  // op2 = +Fn   op3 = +Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 1:   // op2 = -inf  op3 = -Fn
     case 2:   // op2 = -inf  op3 = -0
@@ -1048,7 +1226,7 @@ static int convert_result_java_min( int result_in )
     case 64:  // op2 = QNaN  op3 = +Fn
     case 65:  // op2 = QNaN  op3 = +inf
     case 66:  // op2 = QNaN  op3 = QNaN
-        result_out = 2;
+        result_out = 2;  // T(op2)
         break;
     case 0:   // op2 = -inf  op3 = -inf
     case 6:   // op2 = -inf  op3 = QNaN
@@ -1075,7 +1253,7 @@ static int convert_result_java_min( int result_in )
     case 54:  // op2 = +inf  op3 = +Fn
     case 55:  // op2 = +inf  op3 = +inf
     case 56:  // op2 = +inf  op3 = QNaN
-        result_out = 3;
+        result_out = 3;  // T(op3)
         break;
     case 70:  // op2 = SNaN  op3 = -inf
     case 71:  // op2 = SNaN  op3 = -Fn
@@ -1084,7 +1262,7 @@ static int convert_result_java_min( int result_in )
     case 74:  // op2 = SNaN  op3 = +Fn
     case 75:  // op2 = SNaN  op3 = +inf
     case 76:  // op2 = SNaN  op3 = QNaN
-        result_out = 4;
+        result_out = 4;  // XI: T(op2)
         break;
     case 7:   // op2 = -inf  op3 = SNaN
     case 17:  // op2 = -Fn   op3 = SNaN
@@ -1095,7 +1273,94 @@ static int convert_result_java_min( int result_in )
     case 67:  // op2 = QNaN  op3 = SNaN
     case 77:  // op2 = SNaN  op3 = SNaN
     default:  // Should not occur!
-        result_out = 5;
+        result_out = 5;  // XI: T(op3)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
+ * Convert result for C-style Max Macro
+ */
+static int convert_result_cee_max( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = -Fn   op3 = -Fn
+    case 44:  // op2 = +Fn   op3 = +Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 10:  // op2 = -Fn   op3 = -inf
+    case 20:  // op2 = -0    op3 = -inf
+    case 21:  // op2 = -0    op3 = -Fn
+    case 30:  // op2 = +0    op3 = -inf
+    case 31:  // op2 = +0    op3 = -Fn
+    case 40:  // op2 = +Fn   op3 = -inf
+    case 41:  // op2 = +Fn   op3 = -Fn
+    case 42:  // op2 = +Fn   op3 = -0
+    case 43:  // op2 = +Fn   op3 = +0
+    case 50:  // op2 = +inf  op3 = -inf
+    case 51:  // op2 = +inf  op3 = -Fn
+    case 52:  // op2 = +inf  op3 = -0
+    case 53:  // op2 = +inf  op3 = +0
+    case 54:  // op2 = +inf  op3 = +Fn
+        result_out = 2;  // T(op2)
+        break;
+    case 0:   // op2 = -inf  op3 = -inf
+    case 1:   // op2 = -inf  op3 = -Fn
+    case 2:   // op2 = -inf  op3 = -0
+    case 3:   // op2 = -inf  op3 = +0
+    case 4:   // op2 = -inf  op3 = +Fn
+    case 5:   // op2 = -inf  op3 = +inf
+    case 12:  // op2 = -Fn   op3 = +0
+    case 13:  // op2 = -Fn   op3 = +0
+    case 14:  // op2 = -Fn   op3 = +Fn
+    case 15:  // op2 = -Fn   op3 = +inf
+    case 22:  // op2 = -0    op3 = -0
+    case 23:  // op2 = -0    op3 = +0
+    case 24:  // op2 = -0    op3 = +Fn
+    case 25:  // op2 = -0    op3 = +inf
+    case 32:  // op2 = +0    op3 = -0
+    case 33:  // op2 = +0    op3 = +0
+    case 34:  // op2 = +0    op3 = +Fn
+    case 35:  // op2 = +0    op3 = +inf
+    case 45:  // op2 = +Fn   op3 = +inf
+    case 55:  // op2 = +inf  op3 = +inf
+        result_out = 3;  // T(op3)
+        break;
+    case 6:   // op2 = -inf  op3 = QNaN
+    case 7:   // op2 = -inf  op3 = SNaN
+    case 16:  // op2 = -Fn   op3 = QNaN
+    case 17:  // op2 = -Fn   op3 = SNaN
+    case 26:  // op2 = -0    op3 = QNaN
+    case 27:  // op2 = -0    op3 = SNaN
+    case 36:  // op2 = +0    op3 = QNaN
+    case 37:  // op2 = +0    op3 = SNaN
+    case 46:  // op2 = +Fn   op3 = QNaN
+    case 47:  // op2 = +Fn   op3 = SNaN
+    case 56:  // op2 = +inf  op3 = QNaN
+    case 57:  // op2 = +inf  op3 = SNaN
+    case 60:  // op2 = QNaN  op3 = -inf
+    case 61:  // op2 = QNaN  op3 = -Fn
+    case 62:  // op2 = QNaN  op3 = -0
+    case 63:  // op2 = QNaN  op3 = +0
+    case 64:  // op2 = QNaN  op3 = +Fn
+    case 65:  // op2 = QNaN  op3 = +inf
+    case 66:  // op2 = QNaN  op3 = QNaN
+    case 67:  // op2 = QNaN  op3 = SNaN
+    case 70:  // op2 = SNaN  op3 = -inf
+    case 71:  // op2 = SNaN  op3 = -Fn
+    case 72:  // op2 = SNaN  op3 = -0
+    case 73:  // op2 = SNaN  op3 = +0
+    case 74:  // op2 = SNaN  op3 = +Fn
+    case 75:  // op2 = SNaN  op3 = +inf
+    case 76:  // op2 = SNaN  op3 = QNaN
+    case 77:  // op2 = SNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 5;  // XI: T(op3)
         break;
     }
 
@@ -1113,7 +1378,7 @@ static int convert_result_cee_min( int result_in )
     {
     case 11:  // op2 = -Fn   op3 = -Fn
     case 44:  // op2 = +Fn   op3 = +Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 1:   // op2 = -inf  op3 = -Fn
     case 2:   // op2 = -inf  op3 = -0
@@ -1130,7 +1395,7 @@ static int convert_result_cee_min( int result_in )
     case 35:  // op2 = +0    op3 = +inf
     case 45:  // op2 = +Fn   op3 = +inf
     case 55:  // op2 = +inf  op3 = +inf
-        result_out = 2;
+        result_out = 2;  // T(op2)
         break;
     case 0:   // op2 = -inf  op3 = -inf
     case 10:  // op2 = -Fn   op3 = -inf
@@ -1151,7 +1416,7 @@ static int convert_result_cee_min( int result_in )
     case 52:  // op2 = +inf  op3 = -0
     case 53:  // op2 = +inf  op3 = +0
     case 54:  // op2 = +inf  op3 = +Fn
-        result_out = 3;
+        result_out = 3;  // T(op3)
         break;
     case 6:   // op2 = -inf  op3 = QNaN
     case 7:   // op2 = -inf  op3 = SNaN
@@ -1182,7 +1447,94 @@ static int convert_result_cee_min( int result_in )
     case 76:  // op2 = SNaN  op3 = QNaN
     case 77:  // op2 = SNaN  op3 = SNaN
     default:  // Should not occur!
-        result_out = 5;
+        result_out = 5;  // XI: T(op3)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
+ * Convert result for C++ algorithm.max()
+ */
+static int convert_result_cpp_max( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = -Fn   op3 = -Fn
+    case 44:  // op2 = +Fn   op3 = +Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 0:   // op2 = -inf  op3 = -inf
+    case 10:  // op2 = -Fn   op3 = -inf
+    case 12:  // op2 = -Fn   op3 = +0
+    case 20:  // op2 = -0    op3 = -inf
+    case 21:  // op2 = -0    op3 = -Fn
+    case 22:  // op2 = -0    op3 = -0
+    case 23:  // op2 = -0    op3 = +0
+    case 30:  // op2 = +0    op3 = -inf
+    case 31:  // op2 = +0    op3 = -Fn
+    case 32:  // op2 = +0    op3 = -0
+    case 33:  // op2 = +0    op3 = +0
+    case 34:  // op2 = +0    op3 = +Fn
+    case 40:  // op2 = +Fn   op3 = -inf
+    case 41:  // op2 = +Fn   op3 = -Fn
+    case 42:  // op2 = +Fn   op3 = -0
+    case 43:  // op2 = +Fn   op3 = +0
+    case 50:  // op2 = +inf  op3 = -inf
+    case 51:  // op2 = +inf  op3 = -Fn
+    case 52:  // op2 = +inf  op3 = -0
+    case 53:  // op2 = +inf  op3 = +0
+    case 54:  // op2 = +inf  op3 = +Fn
+    case 55:  // op2 = +inf  op3 = +inf
+        result_out = 2;  // T(op2)
+        break;
+    case 1:   // op2 = -inf  op3 = -Fn
+    case 2:   // op2 = -inf  op3 = -0
+    case 3:   // op2 = -inf  op3 = +0
+    case 4:   // op2 = -inf  op3 = +Fn
+    case 5:   // op2 = -inf  op3 = +inf
+    case 13:  // op2 = -Fn   op3 = +0
+    case 14:  // op2 = -Fn   op3 = +Fn
+    case 15:  // op2 = -Fn   op3 = +inf
+    case 24:  // op2 = -0    op3 = +Fn
+    case 25:  // op2 = -0    op3 = +inf
+    case 35:  // op2 = +0    op3 = +inf
+    case 45:  // op2 = +Fn   op3 = +inf
+        result_out = 3;  // T(op3)
+        break;
+    case 6:   // op2 = -inf  op3 = QNaN
+    case 7:   // op2 = -inf  op3 = SNaN
+    case 16:  // op2 = -Fn   op3 = QNaN
+    case 17:  // op2 = -Fn   op3 = SNaN
+    case 26:  // op2 = -0    op3 = QNaN
+    case 27:  // op2 = -0    op3 = SNaN
+    case 36:  // op2 = +0    op3 = QNaN
+    case 37:  // op2 = +0    op3 = SNaN
+    case 46:  // op2 = +Fn   op3 = QNaN
+    case 47:  // op2 = +Fn   op3 = SNaN
+    case 56:  // op2 = +inf  op3 = QNaN
+    case 57:  // op2 = +inf  op3 = SNaN
+    case 60:  // op2 = QNaN  op3 = -inf
+    case 61:  // op2 = QNaN  op3 = -Fn
+    case 62:  // op2 = QNaN  op3 = -0
+    case 63:  // op2 = QNaN  op3 = +0
+    case 64:  // op2 = QNaN  op3 = +Fn
+    case 65:  // op2 = QNaN  op3 = +inf
+    case 66:  // op2 = QNaN  op3 = QNaN
+    case 67:  // op2 = QNaN  op3 = SNaN
+    case 70:  // op2 = SNaN  op3 = -inf
+    case 71:  // op2 = SNaN  op3 = -Fn
+    case 72:  // op2 = SNaN  op3 = -0
+    case 73:  // op2 = SNaN  op3 = +0
+    case 74:  // op2 = SNaN  op3 = +Fn
+    case 75:  // op2 = SNaN  op3 = +inf
+    case 76:  // op2 = SNaN  op3 = QNaN
+    case 77:  // op2 = SNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 4;  // XI: T(op2)
         break;
     }
 
@@ -1200,7 +1552,7 @@ static int convert_result_cpp_min( int result_in )
     {
     case 11:  // op2 = -Fn   op3 = -Fn
     case 44:  // op2 = +Fn   op3 = +Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 1:   // op2 = -inf  op3 = -Fn
     case 2:   // op2 = -inf  op3 = -0
@@ -1221,7 +1573,7 @@ static int convert_result_cpp_min( int result_in )
     case 35:  // op2 = +0    op3 = +inf
     case 45:  // op2 = +Fn   op3 = +inf
     case 55:  // op2 = +inf  op3 = +inf
-        result_out = 2;
+        result_out = 2;  // T(op2)
         break;
     case 0:   // op2 = -inf  op3 = -inf
     case 10:  // op2 = -Fn   op3 = -inf
@@ -1238,7 +1590,7 @@ static int convert_result_cpp_min( int result_in )
     case 52:  // op2 = +inf  op3 = -0
     case 53:  // op2 = +inf  op3 = +0
     case 54:  // op2 = +inf  op3 = +Fn
-        result_out = 3;
+        result_out = 3;  // T(op3)
         break;
     case 6:   // op2 = -inf  op3 = QNaN
     case 7:   // op2 = -inf  op3 = SNaN
@@ -1269,7 +1621,96 @@ static int convert_result_cpp_min( int result_in )
     case 76:  // op2 = SNaN  op3 = QNaN
     case 77:  // op2 = SNaN  op3 = SNaN
     default:  // Should not occur!
-        result_out = 4;
+        result_out = 4;  // XI: T(op2)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
+ * Convert result for fmax()
+ */
+static int convert_result_fmax( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = -Fn   op3 = -Fn
+    case 44:  // op2 = +Fn   op3 = +Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 0:   // op2 = -inf  op3 = -inf
+    case 6:   // op2 = -inf  op3 = QNaN
+    case 10:  // op2 = -Fn   op3 = -inf
+    case 16:  // op2 = -Fn   op3 = QNaN
+    case 20:  // op2 = -0    op3 = -inf
+    case 21:  // op2 = -0    op3 = -Fn
+    case 22:  // op2 = -0    op3 = -0
+    case 26:  // op2 = -0    op3 = QNaN
+    case 30:  // op2 = +0    op3 = -inf
+    case 31:  // op2 = +0    op3 = -Fn
+    case 32:  // op2 = +0    op3 = -0
+    case 33:  // op2 = +0    op3 = +0
+    case 36:  // op2 = +0    op3 = QNaN
+    case 40:  // op2 = +Fn   op3 = -inf
+    case 41:  // op2 = +Fn   op3 = -Fn
+    case 42:  // op2 = +Fn   op3 = -0
+    case 43:  // op2 = +Fn   op3 = +0
+    case 46:  // op2 = +Fn   op3 = QNaN
+    case 50:  // op2 = +inf  op3 = -inf
+    case 51:  // op2 = +inf  op3 = -Fn
+    case 52:  // op2 = +inf  op3 = -0
+    case 53:  // op2 = +inf  op3 = +0
+    case 54:  // op2 = +inf  op3 = +Fn
+    case 55:  // op2 = +inf  op3 = +inf
+    case 56:  // op2 = +inf  op3 = QNaN
+    case 66:  // op2 = QNaN  op3 = QNaN
+        result_out = 2;  // T(op2)
+        break;
+    case 1:   // op2 = -inf  op3 = -Fn
+    case 2:   // op2 = -inf  op3 = -0
+    case 3:   // op2 = -inf  op3 = +0
+    case 4:   // op2 = -inf  op3 = +Fn
+    case 5:   // op2 = -inf  op3 = +inf
+    case 12:  // op2 = -Fn   op3 = +0
+    case 13:  // op2 = -Fn   op3 = +0
+    case 14:  // op2 = -Fn   op3 = +Fn
+    case 15:  // op2 = -Fn   op3 = +inf
+    case 23:  // op2 = -0    op3 = +0
+    case 24:  // op2 = -0    op3 = +Fn
+    case 25:  // op2 = -0    op3 = +inf
+    case 34:  // op2 = +0    op3 = +Fn
+    case 35:  // op2 = +0    op3 = +inf
+    case 45:  // op2 = +Fn   op3 = +inf
+    case 60:  // op2 = QNaN  op3 = -inf
+    case 61:  // op2 = QNaN  op3 = -Fn
+    case 62:  // op2 = QNaN  op3 = -0
+    case 63:  // op2 = QNaN  op3 = +0
+    case 64:  // op2 = QNaN  op3 = +Fn
+    case 65:  // op2 = QNaN  op3 = +inf
+        result_out = 3;  // T(op3)
+        break;
+    case 7:   // op2 = -inf  op3 = SNaN
+    case 17:  // op2 = -Fn   op3 = SNaN
+    case 27:  // op2 = -0    op3 = SNaN
+    case 37:  // op2 = +0    op3 = SNaN
+    case 47:  // op2 = +Fn   op3 = SNaN
+    case 57:  // op2 = +inf  op3 = SNaN
+    case 67:  // op2 = QNaN  op3 = SNaN
+    case 76:  // op2 = SNaN  op3 = QNaN
+    case 77:  // op2 = SNaN  op3 = SNaN
+        result_out = 4;  // XI: T(op2)
+        break;
+    case 70:  // op2 = SNaN  op3 = -inf
+    case 71:  // op2 = SNaN  op3 = -Fn
+    case 72:  // op2 = SNaN  op3 = -0
+    case 73:  // op2 = SNaN  op3 = +0
+    case 74:  // op2 = SNaN  op3 = +Fn
+    case 75:  // op2 = SNaN  op3 = +inf
+    default:  // Should not occur!
+        result_out = 5;  // XI: T(op3)
         break;
     }
 
@@ -1287,7 +1728,7 @@ static int convert_result_fmin( int result_in )
     {
     case 11:  // op2 = -Fn   op3 = -Fn
     case 44:  // op2 = +Fn   op3 = +Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 0:   // op2 = -inf  op3 = -inf
     case 1:   // op2 = -inf  op3 = -Fn
@@ -1315,7 +1756,7 @@ static int convert_result_fmin( int result_in )
     case 55:  // op2 = +inf  op3 = +inf
     case 56:  // op2 = +inf  op3 = QNaN
     case 66:  // op2 = QNaN  op3 = QNaN
-        result_out = 2;
+        result_out = 2;  // T(op2)
         break;
     case 10:  // op2 = -Fn   op3 = -inf
     case 20:  // op2 = -0    op3 = -inf
@@ -1338,7 +1779,7 @@ static int convert_result_fmin( int result_in )
     case 63:  // op2 = QNaN  op3 = +0
     case 64:  // op2 = QNaN  op3 = +Fn
     case 65:  // op2 = QNaN  op3 = +inf
-        result_out = 3;
+        result_out = 3;  // T(op3)
         break;
     case 7:   // op2 = -inf  op3 = SNaN
     case 17:  // op2 = -Fn   op3 = SNaN
@@ -1349,7 +1790,7 @@ static int convert_result_fmin( int result_in )
     case 67:  // op2 = QNaN  op3 = SNaN
     case 76:  // op2 = SNaN  op3 = QNaN
     case 77:  // op2 = SNaN  op3 = SNaN
-        result_out = 4;
+        result_out = 4;  // XI: T(op2)
         break;
     case 70:  // op2 = SNaN  op3 = -inf
     case 71:  // op2 = SNaN  op3 = -Fn
@@ -1358,7 +1799,96 @@ static int convert_result_fmin( int result_in )
     case 74:  // op2 = SNaN  op3 = +Fn
     case 75:  // op2 = SNaN  op3 = +inf
     default:  // Should not occur!
-        result_out = 5;
+        result_out = 5;  // XI: T(op3)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
+ * Convert result for IEEE MaxNumMag
+ */
+static int convert_result_ieee_maxnummag( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = -Fn   op3 = -Fn
+    case 14:  // op2 = -Fn   op3 = +Fn
+    case 41:  // op2 = +Fn   op3 = -Fn
+    case 44:  // op2 = +Fn   op3 = +Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 0:   // op2 = -inf  op3 = -inf
+    case 1:   // op2 = -inf  op3 = -Fn
+    case 2:   // op2 = -inf  op3 = -0
+    case 3:   // op2 = -inf  op3 = +0
+    case 4:   // op2 = -inf  op3 = +Fn
+    case 6:   // op2 = -inf  op3 = QNaN
+    case 12:  // op2 = -Fn   op3 = +0
+    case 13:  // op2 = -Fn   op3 = +0
+    case 16:  // op2 = -Fn   op3 = QNaN
+    case 22:  // op2 = -0    op3 = -0
+    case 26:  // op2 = -0    op3 = QNaN
+    case 32:  // op2 = +0    op3 = -0
+    case 33:  // op2 = +0    op3 = +0
+    case 36:  // op2 = +0    op3 = QNaN
+    case 42:  // op2 = +Fn   op3 = -0
+    case 43:  // op2 = +Fn   op3 = +0
+    case 46:  // op2 = +Fn   op3 = QNaN
+    case 55:  // op2 = +inf  op3 = +inf
+    case 56:  // op2 = +inf  op3 = QNaN
+    case 66:  // op2 = QNaN  op3 = QNaN
+        result_out = 2;  // T(op2)
+        break;
+    case 5:   // op2 = -inf  op3 = +inf
+    case 10:  // op2 = -Fn   op3 = -inf
+    case 15:  // op2 = -Fn   op3 = +inf
+    case 20:  // op2 = -0    op3 = -inf
+    case 21:  // op2 = -0    op3 = -Fn
+    case 23:  // op2 = -0    op3 = +0
+    case 24:  // op2 = -0    op3 = +Fn
+    case 25:  // op2 = -0    op3 = +inf
+    case 30:  // op2 = +0    op3 = -inf
+    case 31:  // op2 = +0    op3 = -Fn
+    case 34:  // op2 = +0    op3 = +Fn
+    case 35:  // op2 = +0    op3 = +inf
+    case 40:  // op2 = +Fn   op3 = -inf
+    case 45:  // op2 = +Fn   op3 = +inf
+    case 50:  // op2 = +inf  op3 = -inf
+    case 51:  // op2 = +inf  op3 = -Fn
+    case 52:  // op2 = +inf  op3 = -0
+    case 53:  // op2 = +inf  op3 = +0
+    case 54:  // op2 = +inf  op3 = +Fn
+    case 60:  // op2 = QNaN  op3 = -inf
+    case 61:  // op2 = QNaN  op3 = -Fn
+    case 62:  // op2 = QNaN  op3 = -0
+    case 63:  // op2 = QNaN  op3 = +0
+    case 64:  // op2 = QNaN  op3 = +Fn
+    case 65:  // op2 = QNaN  op3 = +inf
+        result_out = 3;  // T(op3)
+        break;
+    case 70:  // op2 = SNaN  op3 = -inf
+    case 71:  // op2 = SNaN  op3 = -Fn
+    case 72:  // op2 = SNaN  op3 = -0
+    case 73:  // op2 = SNaN  op3 = +0
+    case 74:  // op2 = SNaN  op3 = +Fn
+    case 75:  // op2 = SNaN  op3 = +inf
+    case 76:  // op2 = SNaN  op3 = QNaN
+    case 77:  // op2 = SNaN  op3 = SNaN
+        result_out = 4;  // XI: T(op2)
+        break;
+    case 7:   // op2 = -inf  op3 = SNaN
+    case 17:  // op2 = -Fn   op3 = SNaN
+    case 27:  // op2 = -0    op3 = SNaN
+    case 37:  // op2 = +0    op3 = SNaN
+    case 47:  // op2 = +Fn   op3 = SNaN
+    case 57:  // op2 = +inf  op3 = SNaN
+    case 67:  // op2 = QNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 5;  // XI: T(op3)
         break;
     }
 
@@ -1378,7 +1908,7 @@ static int convert_result_ieee_minnummag( int result_in )
     case 14:  // op2 = -Fn   op3 = +Fn
     case 41:  // op2 = +Fn   op3 = -Fn
     case 44:  // op2 = +Fn   op3 = +Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 0:   // op2 = -inf  op3 = -inf
     case 5:   // op2 = -inf  op3 = +inf
@@ -1405,7 +1935,7 @@ static int convert_result_ieee_minnummag( int result_in )
     case 55:  // op2 = +inf  op3 = +inf
     case 56:  // op2 = +inf  op3 = QNaN
     case 66:  // op2 = QNaN  op3 = QNaN
-        result_out = 2;
+        result_out = 2;  // T(op2)
         break;
     case 1:   // op2 = -inf  op3 = -Fn
     case 2:   // op2 = -inf  op3 = -0
@@ -1427,7 +1957,7 @@ static int convert_result_ieee_minnummag( int result_in )
     case 63:  // op2 = QNaN  op3 = +0
     case 64:  // op2 = QNaN  op3 = +Fn
     case 65:  // op2 = QNaN  op3 = +inf
-        result_out = 3;
+        result_out = 3;  // T(op3)
         break;
     case 70:  // op2 = SNaN  op3 = -inf
     case 71:  // op2 = SNaN  op3 = -Fn
@@ -1437,7 +1967,7 @@ static int convert_result_ieee_minnummag( int result_in )
     case 75:  // op2 = SNaN  op3 = +inf
     case 76:  // op2 = SNaN  op3 = QNaN
     case 77:  // op2 = SNaN  op3 = SNaN
-        result_out = 4;
+        result_out = 4;  // XI: T(op2)
         break;
     case 7:   // op2 = -inf  op3 = SNaN
     case 17:  // op2 = -Fn   op3 = SNaN
@@ -1447,7 +1977,7 @@ static int convert_result_ieee_minnummag( int result_in )
     case 57:  // op2 = +inf  op3 = SNaN
     case 67:  // op2 = QNaN  op3 = SNaN
     default:  // Should not occur!
-        result_out = 5;
+        result_out = 5;  // XI: T(op3)
         break;
     }
 
@@ -1501,6 +2031,56 @@ static int calculate_result_two( U32 op2_dataclass, U32 op3_dataclass )
 }
 
 /*
+ * Convert result for JAVA Math.Max() of absolute value
+ */
+static int convert_result_java_max_abs( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = Fn    op3 = Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 00:  // op2 = 0     op3 = 0
+    case 10:  // op2 = Fn    op3 = 0
+    case 20:  // op2 = inf   op3 = 0
+    case 21:  // op2 = inf   op3 = Fn
+    case 22:  // op2 = inf   op3 = inf
+    case 30:  // op2 = QNaN  op3 = 0
+    case 31:  // op2 = QNaN  op3 = Fn
+    case 32:  // op2 = QNaN  op3 = inf
+    case 33:  // op2 = QNaN  op3 = QNaN
+        result_out = 2;  // T(op2)
+        break;
+    case 01:  // op2 = 0     op3 = Fn
+    case 02:  // op2 = 0     op3 = inf
+    case 03:  // op2 = 0     op3 = QNaN
+    case 12:  // op2 = Fn    op3 = inf
+    case 13:  // op2 = Fn    op3 = QNaN
+    case 23:  // op2 = inf   op3 = QNaN
+        result_out = 3;  // T(op3)
+        break;
+    case 40:  // op2 = SNaN  op3 = 0
+    case 41:  // op2 = SNaN  op3 = Fn
+    case 42:  // op2 = SNaN  op3 = inf
+    case 43:  // op2 = SNaN  op3 = QNaN
+    case 44:  // op2 = SNaN  op3 = SNaN
+        result_out = 4;  // XI: T(op2)
+        break;
+    case 04:  // op2 = 0     op3 = SNaN
+    case 14:  // op2 = Fn    op3 = SNaN
+    case 24:  // op2 = inf   op3 = SNaN
+    case 34:  // op2 = QNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 5;  // XI: T(op3)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
  * Convert result for JAVA Math.Min() of absolute value
  */
 static int convert_result_java_min_abs( int result_in )
@@ -1510,40 +2090,88 @@ static int convert_result_java_min_abs( int result_in )
     switch (result_in)
     {
     case 11:  // op2 = Fn    op3 = Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 00:  // op2 = 0     op3 = 0
     case 01:  // op2 = 0     op3 = Fn
     case 02:  // op2 = 0     op3 = inf
     case 12:  // op2 = Fn    op3 = inf
     case 22:  // op2 = inf   op3 = inf
-    case 30:  // op3 = QNaN  op3 = 0
-    case 31:  // op3 = QNaN  op3 = Fn
+    case 30:  // op2 = QNaN  op3 = 0
+    case 31:  // op2 = QNaN  op3 = Fn
     case 32:  // op2 = QNaN  op3 = inf
-    case 33:  // op3 = QNaN  op3 = QNaN
-        result_out = 2;
+    case 33:  // op2 = QNaN  op3 = QNaN
+        result_out = 2;  // T(op2)
         break;
     case 03:  // op2 = 0     op3 = QNaN
     case 10:  // op2 = Fn    op3 = 0
     case 13:  // op2 = Fn    op3 = QNaN
+    case 20:  // op2 = inf   op3 = 0
+    case 21:  // op2 = inf   op3 = Fn
+    case 23:  // op2 = inf   op3 = QNaN
+        result_out = 3;  // T(op3)
+        break;
+    case 40:  // op2 = SNaN  op3 = 0
+    case 41:  // op3 = SNaN  op3 = Fn
+    case 42:  // op2 = SNaN  op3 = inf
+    case 43:  // op2 = SNaN  op3 = QNaN
+    case 44:  // op2 = SNaN  op3 = SNaN
+        result_out = 4;  // XI: T(op2)
+        break;
+    case 04:  // op2 = 0     op3 = SNaN
+    case 14:  // op2 = Fn    op3 = SNaN
+    case 24:  // op2 = inf   op3 = SNaN
+    case 34:  // op2 = QNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 5;  // XI: T(op3)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
+ * Convert result for C-style Max Macro of absolute value
+ */
+static int convert_result_cee_max_abs( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = Fn    op3 = Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 10:  // op2 = Fn    op3 = 0
     case 20:  // op3 = inf   op3 = 0
     case 21:  // op3 = inf   op3 = Fn
-    case 23:  // op3 = inf   op3 = QNaN
-        result_out = 3;
+        result_out = 2;  // T(op2)
         break;
+    case 00:  // op2 = 0     op3 = 0
+    case 01:  // op2 = 0     op3 = Fn
+    case 02:  // op2 = 0     op3 = inf
+    case 12:  // op2 = Fn    op3 = inf
+    case 22:  // op2 = inf   op3 = inf
+        result_out = 3;  // T(op3)
+        break;
+    case 03:  // op2 = 0     op3 = QNaN
+    case 04:  // op2 = 0     op3 = SNaN
+    case 13:  // op2 = Fn    op3 = QNaN
+    case 14:  // op2 = Fn    op3 = SNaN
+    case 23:  // op3 = inf   op3 = QNaN
+    case 24:  // op3 = inf   op3 = SNaN
+    case 30:  // op3 = QNaN  op3 = 0
+    case 31:  // op3 = QNaN  op3 = Fn
+    case 32:  // op2 = QNaN  op3 = inf
+    case 33:  // op3 = QNaN  op3 = QNaN
+    case 34:  // op3 = QNaN  op3 = SNaN
     case 40:  // op3 = SNaN  op3 = 0
     case 41:  // op3 = SNaN  op3 = Fn
     case 42:  // op2 = SNaN  op3 = inf
     case 43:  // op3 = SNaN  op3 = QNaN
     case 44:  // op3 = SNaN  op3 = SNaN
-        result_out = 4;
-        break;
-    case 04:  // op2 = 0     op3 = SNaN
-    case 14:  // op2 = Fn    op3 = SNaN
-    case 24:  // op3 = inf   op3 = SNaN
-    case 34:  // op3 = QNaN  op3 = SNaN
     default:  // Should not occur!
-        result_out = 5;
+        result_out = 5;  // XI: T(op3)
         break;
     }
 
@@ -1560,19 +2188,67 @@ static int convert_result_cee_min_abs( int result_in )
     switch (result_in)
     {
     case 11:  // op2 = Fn    op3 = Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 01:  // op2 = 0     op3 = Fn
     case 02:  // op2 = 0     op3 = inf
     case 12:  // op2 = Fn    op3 = inf
-        result_out = 2;
+        result_out = 2;  // T(op2)
+        break;
+    case 00:  // op2 = 0     op3 = 0
+    case 10:  // op2 = Fn    op3 = 0
+    case 20:  // op2 = inf   op3 = 0
+    case 21:  // op2 = inf   op3 = Fn
+    case 22:  // op2 = inf   op3 = inf
+        result_out = 3;  // T(op3)
+        break;
+    case 03:  // op2 = 0     op3 = QNaN
+    case 04:  // op2 = 0     op3 = SNaN
+    case 13:  // op2 = Fn    op3 = QNaN
+    case 14:  // op2 = Fn    op3 = SNaN
+    case 23:  // op2 = inf   op3 = QNaN
+    case 24:  // op2 = inf   op3 = SNaN
+    case 30:  // op2 = QNaN  op3 = 0
+    case 31:  // op2 = QNaN  op3 = Fn
+    case 32:  // op2 = QNaN  op3 = inf
+    case 33:  // op2 = QNaN  op3 = QNaN
+    case 34:  // op2 = QNaN  op3 = SNaN
+    case 40:  // op2 = SNaN  op3 = 0
+    case 41:  // op2 = SNaN  op3 = Fn
+    case 42:  // op2 = SNaN  op3 = inf
+    case 43:  // op2 = SNaN  op3 = QNaN
+    case 44:  // op2 = SNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 5;  // XI: T(op3)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
+ * Convert result for C++ algorithm.max() of absolute value
+ */
+static int convert_result_cpp_max_abs( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = Fn    op3 = Fn
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 00:  // op2 = 0     op3 = 0
     case 10:  // op2 = Fn    op3 = 0
     case 20:  // op3 = inf   op3 = 0
     case 21:  // op3 = inf   op3 = Fn
     case 22:  // op2 = inf   op3 = inf
-        result_out = 3;
+        result_out = 2;  // T(op2)
+        break;
+    case 01:  // op2 = 0     op3 = Fn
+    case 02:  // op2 = 0     op3 = inf
+    case 12:  // op2 = Fn    op3 = inf
+        result_out = 3;  // T(op3)
         break;
     case 03:  // op2 = 0     op3 = QNaN
     case 04:  // op2 = 0     op3 = SNaN
@@ -1591,7 +2267,7 @@ static int convert_result_cee_min_abs( int result_in )
     case 43:  // op3 = SNaN  op3 = QNaN
     case 44:  // op3 = SNaN  op3 = SNaN
     default:  // Should not occur!
-        result_out = 5;
+        result_out = 4;  // XI: T(op2)
         break;
     }
 
@@ -1608,38 +2284,88 @@ static int convert_result_cpp_min_abs( int result_in )
     switch (result_in)
     {
     case 11:  // op2 = Fn    op3 = Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 00:  // op2 = 0     op3 = 0
     case 01:  // op2 = 0     op3 = Fn
     case 02:  // op2 = 0     op3 = inf
     case 12:  // op2 = Fn    op3 = inf
     case 22:  // op2 = inf   op3 = inf
-        result_out = 2;
+        result_out = 2;  // T(op2)
         break;
     case 10:  // op2 = Fn    op3 = 0
-    case 20:  // op3 = inf   op3 = 0
-    case 21:  // op3 = inf   op3 = Fn
-        result_out = 3;
+    case 20:  // op2 = inf   op3 = 0
+    case 21:  // op2 = inf   op3 = Fn
+        result_out = 3;  // T(op3)
         break;
     case 03:  // op2 = 0     op3 = QNaN
     case 04:  // op2 = 0     op3 = SNaN
     case 13:  // op2 = Fn    op3 = QNaN
     case 14:  // op2 = Fn    op3 = SNaN
+    case 23:  // op2 = inf   op3 = QNaN
+    case 24:  // op2 = inf   op3 = SNaN
+    case 30:  // op2 = QNaN  op3 = 0
+    case 31:  // op2 = QNaN  op3 = Fn
+    case 32:  // op2 = QNaN  op3 = inf
+    case 33:  // op2 = QNaN  op3 = QNaN
+    case 34:  // op2 = QNaN  op3 = SNaN
+    case 40:  // op2 = SNaN  op3 = 0
+    case 41:  // op2 = SNaN  op3 = Fn
+    case 42:  // op2 = SNaN  op3 = inf
+    case 43:  // op2 = SNaN  op3 = QNaN
+    case 44:  // op2 = SNaN  op3 = SNaN
+    default:  // Should not occur!
+        result_out = 4;  // XI: T(op2)
+        break;
+    }
+
+    return result_out;
+}
+
+/*
+ * Convert result for fmax() of absolute value
+ */
+static int convert_result_fmax_abs( int result_in )
+{
+    int result_out;
+
+    switch (result_in)
+    {
+    case 11:  // op2 = Fn    op3 = Fn
+        result_out = 1;  // T((M(op2,op3))
+        break;
+    case 00:  // op2 = 0     op3 = 0
+    case 10:  // op2 = Fn    op3 = 0
+    case 13:  // op2 = Fn    op3 = QNaN
+    case 20:  // op3 = inf   op3 = 0
+    case 21:  // op3 = inf   op3 = Fn
+    case 22:  // op2 = inf   op3 = inf
     case 23:  // op3 = inf   op3 = QNaN
-    case 24:  // op3 = inf   op3 = SNaN
+    case 33:  // op3 = QNaN  op3 = QNaN
+        result_out = 2;  // T(op2)
+        break;
+    case 01:  // op2 = 0     op3 = Fn
+    case 02:  // op2 = 0     op3 = inf
+    case 03:  // op2 = 0     op3 = QNaN
+    case 12:  // op2 = Fn    op3 = inf
     case 30:  // op3 = QNaN  op3 = 0
     case 31:  // op3 = QNaN  op3 = Fn
     case 32:  // op2 = QNaN  op3 = inf
-    case 33:  // op3 = QNaN  op3 = QNaN
+        result_out = 3;  // T(op3)
+        break;
+    case 04:  // op2 = 0     op3 = SNaN
+    case 14:  // op2 = Fn    op3 = SNaN
+    case 24:  // op3 = inf   op3 = SNaN
     case 34:  // op3 = QNaN  op3 = SNaN
+    case 43:  // op3 = SNaN  op3 = QNaN
+    case 44:  // op3 = SNaN  op3 = SNaN
+        result_out = 4;  // XI: T(op2)
+        break;
     case 40:  // op3 = SNaN  op3 = 0
     case 41:  // op3 = SNaN  op3 = Fn
     case 42:  // op2 = SNaN  op3 = inf
-    case 43:  // op3 = SNaN  op3 = QNaN
-    case 44:  // op3 = SNaN  op3 = SNaN
     default:  // Should not occur!
-        result_out = 4;
+        result_out = 5;  // XI: T(op3)
         break;
     }
 
@@ -1656,7 +2382,7 @@ static int convert_result_fmin_abs( int result_in )
     switch (result_in)
     {
     case 11:  // op2 = Fn    op3 = Fn
-        result_out = 1;
+        result_out = 1;  // T((M(op2,op3))
         break;
     case 00:  // op2 = 0     op3 = 0
     case 01:  // op2 = 0     op3 = Fn
@@ -1665,36 +2391,37 @@ static int convert_result_fmin_abs( int result_in )
     case 12:  // op2 = Fn    op3 = inf
     case 13:  // op2 = Fn    op3 = QNaN
     case 22:  // op2 = inf   op3 = inf
-    case 23:  // op3 = inf   op3 = QNaN
-    case 33:  // op3 = QNaN  op3 = QNaN
-        result_out = 2;
+    case 23:  // op2 = inf   op3 = QNaN
+    case 33:  // op2 = QNaN  op3 = QNaN
+        result_out = 2;  // T(op2)
         break;
     case 10:  // op2 = Fn    op3 = 0
     case 20:  // op3 = inf   op3 = 0
-    case 21:  // op3 = inf   op3 = Fn
-    case 30:  // op3 = QNaN  op3 = 0
-    case 31:  // op3 = QNaN  op3 = Fn
+    case 21:  // op2 = inf   op3 = Fn
+    case 30:  // op2 = QNaN  op3 = 0
+    case 31:  // op2 = QNaN  op3 = Fn
     case 32:  // op2 = QNaN  op3 = inf
-        result_out = 3;
+        result_out = 3;  // T(op3)
         break;
     case 04:  // op2 = 0     op3 = SNaN
     case 14:  // op2 = Fn    op3 = SNaN
-    case 24:  // op3 = inf   op3 = SNaN
-    case 34:  // op3 = QNaN  op3 = SNaN
-    case 43:  // op3 = SNaN  op3 = QNaN
-    case 44:  // op3 = SNaN  op3 = SNaN
-        result_out = 4;
+    case 24:  // op2 = inf   op3 = SNaN
+    case 34:  // op2 = QNaN  op3 = SNaN
+    case 43:  // op2 = SNaN  op3 = QNaN
+    case 44:  // op2 = SNaN  op3 = SNaN
+        result_out = 4;  // XI: T(op2)
         break;
-    case 40:  // op3 = SNaN  op3 = 0
-    case 41:  // op3 = SNaN  op3 = Fn
+    case 40:  // op2 = SNaN  op3 = 0
+    case 41:  // op2 = SNaN  op3 = Fn
     case 42:  // op2 = SNaN  op3 = inf
     default:  // Should not occur!
-        result_out = 5;
+        result_out = 5;  // XI: T(op3)
         break;
     }
 
     return result_out;
 }
+
 //  #endif /* defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) */
 
 #endif /* !defined( _IEEE_NONARCHDEP_ ) */
@@ -9713,7 +10440,7 @@ DEF_INST( vector_fp_minimum )
     if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if (m6 == 0 || m6 == 1 || m6 == 8 || m6 == 9)
+    if ( m6 == 0 || m6 == 1 || m6 == 8 || m6 == 9 )
         toqnan = TRUE;
     else
         toqnan = FALSE;
@@ -9731,8 +10458,6 @@ DEF_INST( vector_fp_minimum )
 
                 op2_dataclass = float64_class( op2 );
                 op3_dataclass = float64_class( op3 );
-
-                softfloat_exceptionFlags = 0;
 
                 switch (m6)
                 {
@@ -9777,6 +10502,8 @@ DEF_INST( vector_fp_minimum )
                     result = convert_result_fmin_abs( result );
                     break;
                 }
+
+                softfloat_exceptionFlags = 0;
 
                 switch (result)
                 {
@@ -9834,8 +10561,6 @@ DEF_INST( vector_fp_minimum )
                 op2_dataclass = float32_class( op2 );
                 op3_dataclass = float32_class( op3 );
 
-                softfloat_exceptionFlags = 0;
-
                 switch (m6)
                 {
                 case 0:   // IEEE MinNum
@@ -9879,6 +10604,8 @@ DEF_INST( vector_fp_minimum )
                     result = convert_result_fmin_abs( result );
                     break;
                 }
+
+                softfloat_exceptionFlags = 0;
 
                 switch (result)
                 {
@@ -9932,8 +10659,6 @@ DEF_INST( vector_fp_minimum )
         op2_dataclass = float128_class( op2 );
         op3_dataclass = float128_class( op3 );
 
-        softfloat_exceptionFlags = 0;
-
         switch (m6)
         {
         case 0:   // IEEE MinNum
@@ -9977,6 +10702,8 @@ DEF_INST( vector_fp_minimum )
             result = convert_result_fmin_abs( result );
             break;
         }
+
+        softfloat_exceptionFlags = 0;
 
         switch (result)
         {
@@ -10049,7 +10776,7 @@ DEF_INST( vector_fp_maximum )
     if ( (m6 >= 5 && m6 <= 7) || m6 > 12 || M5_RE || m4 < 2 || m4 > 4 )
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if (m6 == 0 || m6 == 1 || m6 == 8 || m6 == 9)
+    if ( m6 == 0 || m6 == 1 || m6 == 8 || m6 == 9 )
         toqnan = TRUE;
     else
         toqnan = FALSE;
@@ -10068,51 +10795,51 @@ DEF_INST( vector_fp_maximum )
                 op2_dataclass = float64_class( op2 );
                 op3_dataclass = float64_class( op3 );
 
-                softfloat_exceptionFlags = 0;
-
                 switch (m6)
                 {
                 case 0:   // IEEE MaxNum
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_minnum( result );
+                    result = convert_result_ieee_maxnum( result );
                     break;
                 case 1:   // Java Math.Max()
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_min( result );
+                    result = convert_result_java_max( result );
                     break;
                 case 2:   // C-Style Max Macro
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_min( result );
+                    result = convert_result_cee_max( result );
                     break;
                 case 3:   // C++ algorithm.max()
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_min( result );
+                    result = convert_result_cpp_max( result );
                     break;
                 case 4:   // fmax()
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmin( result );
+                    result = convert_result_fmax( result );
                     break;
                 case 8:   // IEEE MaxNumMag
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_minnummag( result );
+                    result = convert_result_ieee_maxnummag( result );
                     break;
                 case 9:   // Java Math.Max() of absolute values
                     result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_min_abs( result );
+                    result = convert_result_java_max_abs( result );
                     break;
                 case 10:  // C-Style Max Macro of absolute values
                     result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_min_abs( result );
+                    result = convert_result_cee_max_abs( result );
                     break;
                 case 11:  // C++ algorithm.max() of absolute values
                     result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_min_abs( result );
+                    result = convert_result_cpp_max_abs( result );
                     break;
                 case 12:  // fmax() of absolute values
                     result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmin_abs( result );
+                    result = convert_result_fmax_abs( result );
                     break;
                 }
+
+                softfloat_exceptionFlags = 0;
 
                 switch (result)
                 {
@@ -10170,51 +10897,51 @@ DEF_INST( vector_fp_maximum )
                 op2_dataclass = float32_class( op2 );
                 op3_dataclass = float32_class( op3 );
 
-                softfloat_exceptionFlags = 0;
-
                 switch (m6)
                 {
                 case 0:   // IEEE MaxNum
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_minnum( result );
+                    result = convert_result_ieee_maxnum( result );
                     break;
                 case 1:   // Java Math.Max()
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_min( result );
+                    result = convert_result_java_max( result );
                     break;
                 case 2:   // C-Style Max Macro
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_min( result );
+                    result = convert_result_cee_max( result );
                     break;
                 case 3:   // C++ algorithm.max()
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_min( result );
+                    result = convert_result_cpp_max( result );
                     break;
                 case 4:   // fmax()
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmin( result );
+                    result = convert_result_fmax( result );
                     break;
                 case 8:   // IEEE MaxNumMag
                     result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_minnummag( result );
+                    result = convert_result_ieee_maxnummag( result );
                     break;
                 case 9:   // Java Math.Max() of absolute values
                     result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_min_abs( result );
+                    result = convert_result_java_max_abs( result );
                     break;
                 case 10:  // C-Style Max Macro of absolute values
                     result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_min_abs( result );
+                    result = convert_result_cee_max_abs( result );
                     break;
                 case 11:  // C++ algorithm.max() of absolute values
                     result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_min_abs( result );
+                    result = convert_result_cpp_max_abs( result );
                     break;
                 case 12:  // fmax() of absolute values
                     result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmin_abs( result );
+                    result = convert_result_fmax_abs( result );
                     break;
                 }
+
+                softfloat_exceptionFlags = 0;
 
                 switch (result)
                 {
@@ -10268,51 +10995,51 @@ DEF_INST( vector_fp_maximum )
         op2_dataclass = float128_class( op2 );
         op3_dataclass = float128_class( op3 );
 
-        softfloat_exceptionFlags = 0;
-
         switch (m6)
         {
         case 0:   // IEEE MaxNum
             result = calculate_result_one( op2_dataclass, op3_dataclass );
-            result = convert_result_ieee_minnum( result );
+            result = convert_result_ieee_maxnum( result );
             break;
         case 1:   // Java Math.Max()
             result = calculate_result_one( op2_dataclass, op3_dataclass );
-            result = convert_result_java_min( result );
+            result = convert_result_java_max( result );
             break;
         case 2:   // C-Style Max Macro
             result = calculate_result_one( op2_dataclass, op3_dataclass );
-            result = convert_result_cee_min( result );
+            result = convert_result_cee_max( result );
             break;
         case 3:   // C++ algorithm.max()
             result = calculate_result_one( op2_dataclass, op3_dataclass );
-            result = convert_result_cpp_min( result );
+            result = convert_result_cpp_max( result );
             break;
         case 4:   // fmax()
             result = calculate_result_one( op2_dataclass, op3_dataclass );
-            result = convert_result_fmin( result );
+            result = convert_result_fmax( result );
             break;
         case 8:   // IEEE MaxNumMag
             result = calculate_result_one( op2_dataclass, op3_dataclass );
-            result = convert_result_ieee_minnummag( result );
+            result = convert_result_ieee_maxnummag( result );
             break;
         case 9:   // Java Math.Max() of absolute values
             result = calculate_result_two( op2_dataclass, op3_dataclass );
-            result = convert_result_java_min_abs( result );
+            result = convert_result_java_max_abs( result );
             break;
         case 10:  // C-Style Max Macro of absolute values
             result = calculate_result_two( op2_dataclass, op3_dataclass );
-            result = convert_result_cee_min_abs( result );
+            result = convert_result_cee_max_abs( result );
             break;
         case 11:  // C++ algorithm.max() of absolute values
             result = calculate_result_two( op2_dataclass, op3_dataclass );
-            result = convert_result_cpp_min_abs( result );
+            result = convert_result_cpp_max_abs( result );
             break;
         case 12:  // fmax() of absolute values
             result = calculate_result_two( op2_dataclass, op3_dataclass );
-            result = convert_result_fmin_abs( result );
+            result = convert_result_fmax_abs( result );
             break;
         }
+
+        softfloat_exceptionFlags = 0;
 
         switch (result)
         {
