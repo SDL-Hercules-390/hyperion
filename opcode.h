@@ -3734,7 +3734,7 @@ DEF_INST(vector_remainder_decimal);
 DEF_INST(vector_shift_and_divide_decimal);
 #endif
 
-#if defined( FEATURE_135_VECTOR_ENH_FACILITY_1 )
+#if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
 DEF_INST(vector_multiply_sum_logical);
 DEF_INST(vector_fp_minimum);
 DEF_INST(vector_fp_maximum);

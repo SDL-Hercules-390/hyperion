@@ -4809,7 +4809,7 @@ DEF_INST( vector_galois_field_multiply_sum )
     ZVECTOR_END( regs );
 }
 
-#if defined( FEATURE_135_VECTOR_ENH_FACILITY_1 )
+#if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* E7B8 VMSL   - Vector Multiply Sum Logical                 [VRR-d] */
 /*-------------------------------------------------------------------*/
@@ -4842,7 +4842,7 @@ DEF_INST( vector_multiply_sum_logical )
 
     ZVECTOR_END( regs );
 }
-#endif /* defined( FEATURE_135_VECTOR_ENH_FACILITY_1 ) */
+#endif /* defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) */
 
 /*-------------------------------------------------------------------*/
 /* E7B9 VACCC  - Vector Add With Carry Compute Carry         [VRR-d] */
