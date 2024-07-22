@@ -234,6 +234,26 @@
 #define FEATURE_TRACING
 #define FEATURE_VIRTUAL_ARCHITECTURE_LEVEL
 #define FEATURE_VM_BLOCKIO
+/* INTEL X64 processor? */
+#if defined( __x86_64__ ) || defined( _M_X64 )
+  /* MSVC on X64: intrinsics are available and should be used for optimization */
+  #if defined( _MSC_VER ) || defined( _MSVC_ )
+    #define FEATURE_V128_SSE  1
+  /* gcc/clang on X64: intrinsics are available and should be used for optimization */
+  /*                   Being conservative: require SSE 4.2 to be available to allow */
+  /*                   any SSE intrinsic to be used for optimization.               */
+  #elif defined( __GNUC__ ) && defined( __SSE4_2__ )
+    #define FEATURE_V128_SSE  1
+  #endif
+  /* compile debug message: are we using intrinsics? */
+  #if 0
+    #if defined( FEATURE_V128_SSE )
+      #pragma message("FEATURE_V128_SSE is defined.  Using intrinsics." )
+    #else
+      #pragma message("No intrinsics are included for optimization; only compiler optimization")
+    #endif
+  #endif
+#endif
 #define FEATURE_WAITSTATE_ASSIST
 #define FEATURE_ZVM_ESSA
 

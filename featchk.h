@@ -652,6 +652,10 @@
  #define    _FEATURE_TCPIP_EXTENSION
 #endif
 
+#if defined( FEATURE_V128_SSE )
+ #define    _FEATURE_V128_SSE
+#endif
+
 #if defined( FEATURE_ZVM_ESSA )
  #define    _FEATURE_ZVM_ESSA
 #endif

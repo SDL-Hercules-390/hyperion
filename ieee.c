@@ -10427,7 +10427,7 @@ DEF_INST( vector_fp_compare_high )
 DEF_INST( vector_fp_minimum )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     i, toqnan, result;
+    int     i, toqnan, result = 0;
     U32     op2_dataclass, op3_dataclass;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -10763,7 +10763,7 @@ DEF_INST( vector_fp_minimum )
 DEF_INST( vector_fp_maximum )
 {
     int     v1, v2, v3, m4, m5, m6;
-    int     i, toqnan, result;
+    int     i, toqnan, result = 0;
     U32     op2_dataclass, op3_dataclass;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );

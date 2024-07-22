@@ -1020,7 +1020,7 @@ char    regs_msg_buf[8*512] = {0};
     {
         if (0
             ||   opcode != 0xE7
-            || ( opcode == 0xE7 && (  (inst[5] >= 0x00 && inst[5] <= 0x0B)     // VRX    (VLEB VLEH VLEG VLEF VLLEZ VLREP VL VLEB VSTEB VSTEH VSTEG VSTEF)
+            || ( opcode == 0xE7 && ((/*inst[5] >= 0x00 &&*/ inst[5] <= 0x0B)   // VRX    (VLEB VLEH VLEG VLEF VLLEZ VLREP VL VLEB VSTEB VSTEH VSTEG VSTEF)
                                     || inst[5] == 0x0E                         // VRX    (VST)
                                     || inst[5] == 0x12                         // VRV    (VGEG)
                                     || inst[5] == 0x13                         // VRV    (VGEF)
@@ -1050,7 +1050,7 @@ char    regs_msg_buf[8*512] = {0};
             ||   opcode == 0xB1   // LRA
             ||   opcode == 0xE3   // RXY-x
             ||   opcode == 0xED   // RXE-x, RXF-x, RXY-x, RSL-x
-            || ( opcode == 0xE7 && (  (inst[5] >= 0x00 && inst[5] <= 0x0B)     // VRX    (VLEB VLEH VLEG VLEF VLLEZ VLREP VL VLEB VSTEB VSTEH VSTEG VSTEF)
+            || ( opcode == 0xE7 && ((/*inst[5] >= 0x00 &&*/ inst[5] <= 0x0B)   // VRX    (VLEB VLEH VLEG VLEF VLLEZ VLREP VL VLEB VSTEB VSTEH VSTEG VSTEF)
                                     || inst[5] == 0x0E                         // VRX    (VST)
                                    ) )
         )

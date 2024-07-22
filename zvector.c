@@ -88,33 +88,6 @@
 /* E7EF VFMAX  - Vector FP Maximum                                [VRR-c] */
 /*------------------------------------------------------------------------*/
 
-#undef __V128_SSE__
-
-/* INTEL X64 processor? */
-#if defined( __x86_64__ ) || defined( _M_X64 )
-    /* MSVC on X64: intrinsics are available and should be used for optimization */
-    #if defined( _MSC_VER ) || defined( _MSVC_ )
-        #define __V128_SSE__ 1
-
-    /* gcc/clang on X64: intrinsics are available and should be used for optimization */
-    /*                   Being conservative: require SSE 4.2 to be available to allow */
-    /*                   any SSE intrinsic to be used for optimization.               */
-    #elif defined( __GNUC__ ) && defined( __SSE4_2__ )
-        #define __V128_SSE__ 1
-
-    #endif
-
-#endif
-
-/* compile debug message: are we using intrinsics? */
-#if 0
-    #if defined(__V128_SSE__)
-        #pragma message("__V128_SSE__ is defined.  Using intrinsics." )
-    #else
-        #pragma message("No intrinsics are included for optimization; only compiler optimization")
-    #endif
-#endif
-
 /*===================================================================*/
 /* Achitecture Independent Routines                                  */
 /*===================================================================*/
@@ -225,7 +198,7 @@ static inline U128 U64_mul (U64 aa, U64 bb)
 
 #else
     DW a;                                /* arg 'aa' as DW            */
-    DW b;;                               /* arg 'bb' as DW            */
+    DW b;                                /* arg 'bb' as DW            */
     DW t64;                              /* temp                      */
     U128 r;                              /* U128 multiply result      */
     U128 t128;                           /* temp                      */
@@ -372,7 +345,7 @@ static inline void u128_logmsg(const char * msg, U128 u)
 /*-------------------------------------------------------------------*/
 static inline U64 gf_mul_32( U32 m1, U32 m2)
 {
-#if defined( __V128_SSE__ )
+#if defined( FEATURE_V128_SSE )
     /* intrinsic GF 64-bit multiply */
     QW  mm1;                      /* U128 m1                       */
     QW  mm2;                      /* U128 m2                       */
@@ -391,7 +364,8 @@ static inline U64 gf_mul_32( U32 m1, U32 m2)
 
     return acc.D.L.D;
 
-#else
+#else  //  !defined( FEATURE_V128_SSE )
+
     int     i;                    /* loop index                      */
     U32     myerU32;              /* multiplier                      */
     U64     mcandU64;             /* multiplicand                    */
@@ -423,7 +397,7 @@ static inline U64 gf_mul_32( U32 m1, U32 m2)
 
     return accu64;
 
-#endif
+#endif /* defined( FEATURE_V128_SSE ) */
 
 }
 
@@ -440,7 +414,7 @@ static inline U64 gf_mul_32( U32 m1, U32 m2)
 /*-------------------------------------------------------------------*/
 static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
 {
-#if defined( __V128_SSE__ )
+#if defined( FEATURE_V128_SSE )
     /* intrinsic GF 64-bit multiply */
     QW  mm1;                      /* U128 m1                       */
     QW  mm2;                      /* U128 m2                       */
@@ -460,7 +434,8 @@ static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
     *accu128h = acc.D.H.D;
     *accu128l = acc.D.L.D;
 
-#else
+#else   //  !defined( FEATURE_V128_SSE )
+
     /* portable C: GF 64-bit multiply */
     int     i;                    /* loop index                      */
     U64     myerU64;              /* doublewword multiplier          */
@@ -500,7 +475,7 @@ static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
         mcandU128l <<= 1;
     }
 
-#endif
+#endif /* defined( FEATURE_V128_SSE ) */
 
 }
 
@@ -5075,7 +5050,12 @@ DEF_INST( vector_multiply_sum_logical )
         if (M6_OS)
             intero = U128_U32_mul( intero, 2 );  // Shift left
         intere = U128_add( intere, intero );
-        intere = U128_add( intere, (U128)regs->VR_Q(v4) );
+        {
+            U128  temp;
+            temp.Q = regs->VR_Q(v4);
+//          intere = U128_add( intere, (U128)regs->VR_Q(v4) );
+            intere = U128_add( intere, temp );
+        }
         memcpy(&regs->VR_Q(v1), &intere, 16);
         break;
     default:
