@@ -128,7 +128,7 @@ typedef union {
         S16  s_16[8];
         S8   s_8[16];
 
-#if defined(__V128_SSE__)
+#if defined( FEATURE_V128_SSE )
         __m128i V;      // intrinsic type vector
 #endif
 
@@ -346,59 +346,63 @@ static inline void u128_logmsg(const char * msg, U128 u)
 static inline U64 gf_mul_32( U32 m1, U32 m2)
 {
 #if defined( FEATURE_V128_SSE )
-    /* intrinsic GF 64-bit multiply */
-    QW  mm1;                      /* U128 m1                       */
-    QW  mm2;                      /* U128 m2                       */
-    QW  acc;                      /* U128 accumulator              */
 
-    mm1.v = _mm_setzero_si128();
-    mm1.D.L.D = m1;
-        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 mm1.v", mm1.D.H.D, mm1.D.L.D);
-
-    mm2.v = _mm_setzero_si128();
-    mm2.D.L.D = m2;
-        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 mm2.v", mm2.D.H.D, mm2.D.L.D);
-
-    acc.v =  _mm_clmulepi64_si128 ( mm1.v, mm2.v, 0);
-        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 acc.v", acc.D.H.D, acc.D.L.D);
-
-    return acc.D.L.D;
-
-#else  //  !defined( FEATURE_V128_SSE )
-
-    int     i;                    /* loop index                      */
-    U32     myerU32;              /* multiplier                      */
-    U64     mcandU64;             /* multiplicand                    */
-    U64     accu64;               /* accumulator                     */
-
-    accu64 = 0;
-
-    /* select muliplier with fewest 'right most' bits */
-    /* to exit loop soonest                           */
-    if (m1 < m2)
+    if (sysblk.have_PCLMULQDQ)
     {
-        mcandU64 = m2;
-        myerU32  = m1;
+        /* intrinsic GF 64-bit multiply */
+        QW  mm1;                      /* U128 m1                       */
+        QW  mm2;                      /* U128 m2                       */
+        QW  acc;                      /* U128 accumulator              */
+
+        mm1.v = _mm_setzero_si128();
+        mm1.D.L.D = m1;
+            //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 mm1.v", mm1.D.H.D, mm1.D.L.D);
+
+        mm2.v = _mm_setzero_si128();
+        mm2.D.L.D = m2;
+            //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 mm2.v", mm2.D.H.D, mm2.D.L.D);
+
+        acc.v =  _mm_clmulepi64_si128 ( mm1.v, mm2.v, 0);
+            //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_32 acc.v", acc.D.H.D, acc.D.L.D);
+
+        return acc.D.L.D;
     }
     else
+
+#endif  //  !defined( FEATURE_V128_SSE ), or
+        // "PCLMULQDQ" instruction unavailable
     {
-        mcandU64 = m1;
-        myerU32  = m2;
+        int     i;                    /* loop index                      */
+        U32     myerU32;              /* multiplier                      */
+        U64     mcandU64;             /* multiplicand                    */
+        U64     accu64;               /* accumulator                     */
+
+        accu64 = 0;
+
+        /* select muliplier with fewest 'right most' bits */
+        /* to exit loop soonest                           */
+        if (m1 < m2)
+        {
+            mcandU64 = m2;
+            myerU32  = m1;
+        }
+        else
+        {
+            mcandU64 = m1;
+            myerU32  = m2;
+        }
+
+        /* galois multiply - no overflow */
+        for (i=0; i < 32 && myerU32 !=0; i++)
+        {
+            if ( myerU32 & 0x01 )
+                accu64 ^= mcandU64;
+            myerU32  >>= 1;
+            mcandU64 <<=1;
+        }
+
+        return accu64;
     }
-
-    /* galois multiply - no overflow */
-    for (i=0; i < 32 && myerU32 !=0; i++)
-    {
-        if ( myerU32 & 0x01 )
-            accu64 ^= mcandU64;
-        myerU32  >>= 1;
-        mcandU64 <<=1;
-    }
-
-    return accu64;
-
-#endif /* defined( FEATURE_V128_SSE ) */
-
 }
 
 /*-------------------------------------------------------------------*/
@@ -415,68 +419,72 @@ static inline U64 gf_mul_32( U32 m1, U32 m2)
 static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
 {
 #if defined( FEATURE_V128_SSE )
-    /* intrinsic GF 64-bit multiply */
-    QW  mm1;                      /* U128 m1                       */
-    QW  mm2;                      /* U128 m2                       */
-    QW  acc;                      /* U128 accumulator              */
 
-    mm1.v = _mm_setzero_si128();
-    mm1.D.L.D = m1;
-        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 mm1.v", mm1.D.H.D, mm1.D.L.D);
-
-    mm2.v = _mm_setzero_si128();
-    mm2.D.L.D = m2;
-        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 mm2.v", mm2.D.H.D, mm2.D.L.D);
-
-    acc.v =  _mm_clmulepi64_si128 ( mm1.v, mm2.v, 0);
-        //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 acc.v", acc.D.H.D, acc.D.L.D);
-
-    *accu128h = acc.D.H.D;
-    *accu128l = acc.D.L.D;
-
-#else   //  !defined( FEATURE_V128_SSE )
-
-    /* portable C: GF 64-bit multiply */
-    int     i;                    /* loop index                      */
-    U64     myerU64;              /* doublewword multiplier          */
-    U64     mcandU128h;           /* doublewword multiplicand - high */
-    U64     mcandU128l;           /* doublewword multiplicand - low  */
-
-    *accu128h = 0;
-    *accu128l = 0;
-
-    /* select muliplier with fewest 'right most' bits */
-    /* to exit loop soonest                           */
-    if (m1 < m2)
+    if (sysblk.have_PCLMULQDQ)
     {
-        mcandU128h  = 0;
-        mcandU128l = m2;
-        myerU64  = m1;
+        /* intrinsic GF 64-bit multiply */
+        QW  mm1;                      /* U128 m1                       */
+        QW  mm2;                      /* U128 m2                       */
+        QW  acc;                      /* U128 accumulator              */
+
+        mm1.v = _mm_setzero_si128();
+        mm1.D.L.D = m1;
+            //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 mm1.v", mm1.D.H.D, mm1.D.L.D);
+
+        mm2.v = _mm_setzero_si128();
+        mm2.D.L.D = m2;
+            //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 mm2.v", mm2.D.H.D, mm2.D.L.D);
+
+        acc.v =  _mm_clmulepi64_si128 ( mm1.v, mm2.v, 0);
+            //logmsg("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", "gf_mul_64 acc.v", acc.D.H.D, acc.D.L.D);
+
+        *accu128h = acc.D.H.D;
+        *accu128l = acc.D.L.D;
     }
     else
-    {
-        mcandU128h  = 0;
-        mcandU128l = m1;
-        myerU64  = m2;
-    }
 
-    /* galois multiply - no overflow */
-    for (i=0; i < 64 && myerU64 !=0; i++)
+#endif  //  !defined( FEATURE_V128_SSE ), or
+        // "PCLMULQDQ" instruction unavailable
     {
-        if ( myerU64 & 0x01 )
+        /* portable C: GF 64-bit multiply */
+        int     i;                    /* loop index                      */
+        U64     myerU64;              /* doublewword multiplier          */
+        U64     mcandU128h;           /* doublewword multiplicand - high */
+        U64     mcandU128l;           /* doublewword multiplicand - low  */
+
+        *accu128h = 0;
+        *accu128l = 0;
+
+        /* select muliplier with fewest 'right most' bits */
+        /* to exit loop soonest                           */
+        if (m1 < m2)
         {
-            *accu128h ^= mcandU128h;
-            *accu128l ^= mcandU128l;
+            mcandU128h  = 0;
+            mcandU128l = m2;
+            myerU64  = m1;
         }
-        myerU64  >>= 1;
+        else
+        {
+            mcandU128h  = 0;
+            mcandU128l = m1;
+            myerU64  = m2;
+        }
 
-        /* U128: shift left 1 bit*/
-        mcandU128h = (mcandU128h << 1) | (mcandU128l >> 63);
-        mcandU128l <<= 1;
+        /* galois multiply - no overflow */
+        for (i=0; i < 64 && myerU64 !=0; i++)
+        {
+            if ( myerU64 & 0x01 )
+            {
+                *accu128h ^= mcandU128h;
+                *accu128l ^= mcandU128l;
+            }
+            myerU64  >>= 1;
+
+            /* U128: shift left 1 bit*/
+            mcandU128h = (mcandU128h << 1) | (mcandU128l >> 63);
+            mcandU128l <<= 1;
+        }
     }
-
-#endif /* defined( FEATURE_V128_SSE ) */
-
 }
 
 #endif /*!defined(_ZVECTOR_ARCH_INDEPENDENT_)*/

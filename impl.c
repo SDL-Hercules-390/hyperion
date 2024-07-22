@@ -805,6 +805,118 @@ extern BYTE s390_get_storage_key( U64 abs );
 extern BYTE z900_get_storage_key( U64 abs );
 
 /*-------------------------------------------------------------------*/
+/* Check if host "PCLMULQDQ" instruction is available                */
+/*-------------------------------------------------------------------*/
+#if defined( _MSVC_ )
+
+static void is_PCLMULQDQ_available()
+{
+    QW  mm1, mm2, acc;
+    U64 m1 = 1, m2 = 2;
+
+    mm1.v = _mm_setzero_si128();
+    mm1.D.L.D = m1;
+    mm2.v = _mm_setzero_si128();
+    mm2.D.L.D = m2;
+
+    __try
+    {
+        acc.v =  _mm_clmulepi64_si128 ( mm1.v, mm2.v, 0);
+        sysblk.have_PCLMULQDQ = true;
+    }
+    __except( EXCEPTION_EXECUTE_HANDLER )
+    {
+        sysblk.have_PCLMULQDQ = false;
+    }
+}
+
+#else // !defined( _MSVC_ ), i.e. Linux
+
+#if defined( HAVE_SIGNAL_HANDLING )
+
+static struct sigaction  sa_CRASH   = {0};
+static struct sigaction  sa_SIGILL  = {0};
+static jmp_buf jmpbuff;
+
+static void crash_signal_handler( int signo )
+{
+    UNREFERENCED( signo );
+    sysblk.have_PCLMULQDQ = false;
+    longjmp( jmpbuff, 4 );
+}
+
+/* Disable optimization */
+#if defined( __clang__ )
+  #pragma clang optimize off
+#else
+  #pragma GCC push_options
+  #pragma GCC diagnostic push
+  #pragma GCC optimize ("-O0")
+  #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#endif
+
+static void is_PCLMULQDQ_available()
+{
+    /* Install Illegal-Instruction (SIGILL) crash handler */
+    sa_CRASH.sa_handler = &crash_signal_handler;
+    sigaction( SIGILL, &sa_CRASH, &sa_SIGILL );
+
+    /* Try the problematic code... */
+    if (setjmp( jmpbuff ) == 0)
+    {
+        /* PROGRAMMING NOTE! Optimizations MUST be disabled for this
+           section of code in order for it to work correctly! Otherwise
+           the optimizer will elide the intrinsic altogether due to the
+           'acc' variable never being referenced! (causing the 'have'
+           flag to incorrectly be always set to true!)
+        */
+        QW  mm1, mm2, acc;
+        U64 m1 = 1, m2 = 2;
+
+        mm1.v = _mm_setzero_si128();
+        mm1.D.L.D = m1;
+        mm2.v = _mm_setzero_si128();
+        mm2.D.L.D = m2;
+
+        acc.v = _mm_clmulepi64_si128 ( mm1.v, mm2.v, 0);
+        sysblk.have_PCLMULQDQ = true;
+    }
+    else // (only executed if we crashed)
+    {
+        sysblk.have_PCLMULQDQ = false;
+    }
+
+    /* Restore original Illegal-Instruction (SIGILL) crash handler */
+    sigaction( SIGILL, &sa_SIGILL, 0 );
+}
+
+/* Re-enable optimization */
+#if defined( __clang__ )
+  #pragma clang optimize on
+#else
+  #pragma GCC diagnostic pop
+  #pragma GCC pop_options
+#endif
+
+#else // !defined( HAVE_SIGNAL_HANDLING )
+
+/* No way to know without signal handling, so play it safe! */
+static void is_PCLMULQDQ_available()
+{
+    sysblk.have_PCLMULQDQ = false;  /* (safest default) */
+}
+
+#endif // defined( HAVE_SIGNAL_HANDLING )
+#endif /* Windows or Linux */
+
+/* Check if various host instructions are available or not */
+static void check_host_instruction_availability()
+{
+    /* Right now, this is the only one we care about */
+    is_PCLMULQDQ_available();
+}
+
+/*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int impl( int argc, char* argv[] )
@@ -1585,6 +1697,9 @@ int     rc, maxprio, minprio;
         txf_set_timerint( false );
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+    /* Check if various host instructions are available or not */
+    check_host_instruction_availability();
 
     /* Process the .rc file synchronously when in daemon mode. */
     /* Otherwise Start up the RC file processing thread.       */

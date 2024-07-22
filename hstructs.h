@@ -735,7 +735,7 @@ struct SYSBLK {
         U8      cpccr;                  /* Dynamic CP change reason  */
         U8      cpcai;                  /* Dynamic CP capacity adj.  */
         U8      hhc_111_112;            /* HHC00111/HHC00112 issued  */
-        U8      unused1;                /* (pad/align/unused/avail)  */
+        U8      have_PCLMULQDQ:1;       /* Host PCLMULQDQ available  */
 
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[ MAX_CPU_ENGS ];/* CPU lock               */
