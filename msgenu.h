@@ -257,7 +257,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00023 "Invalid/unsupported option: %s"
 #define HHC00024 "Unrecognized option: %s"
 #define HHC00025 "Invalid help option argument: %s"
-//efine HHC00026 - HHC00069 (available)
+#define HHC00026 "WARNING: Host does not support the '%s' instruction"
+//efine HHC00027 - HHC00069 (available)
 
 // HHC0007x, HHC0008x and HHC0009x reserved for hao.c. (to recognize own messages)
 #define HHC00070 "Unknown hao command, valid commands are:\n" \

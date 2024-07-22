@@ -912,8 +912,14 @@ static void is_PCLMULQDQ_available()
 /* Check if various host instructions are available or not */
 static void check_host_instruction_availability()
 {
-    /* Right now, this is the only one we care about */
+    /* Check availability of each individual host instruction first */
     is_PCLMULQDQ_available();
+//  is_XXXXXXXXX_available();
+
+    /* Then report all of the ones that aren't available */
+    // "WARNING: Host does not support the '%s' instruction"
+    if (!sysblk.have_PCLMULQDQ) WRMSG( HHC00026, "W", "PCLMULQDQ" );
+//  if (!sysblk.have_XXXXXXXXX) WRMSG( HHC00026, "W", "XXXXXXXXX" );
 }
 
 /*-------------------------------------------------------------------*/
