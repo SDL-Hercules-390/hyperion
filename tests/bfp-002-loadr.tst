@@ -1,4 +1,6 @@
-*Testcase bfp-002-loadr: Test IEEE Load Rounded
+*Testcase bfp-002-loadr
+
+# Test IEEE Load Rounded
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

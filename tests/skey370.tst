@@ -1,4 +1,5 @@
-*Testcase Storage Keys: pure System/370 only
+*Testcase skey370
+# Storage Keys: pure System/370 only
 mainsize    3
 numcpu      1
 sysclear

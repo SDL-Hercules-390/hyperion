@@ -1,4 +1,4 @@
-*Testcase zvector-e6-13-converttodecimal: VECTOR E6 VRI-i instructions
+*Testcase zvector-e6-13-converttodecimal
 *
 *    Zvector E6 tests for VRI-i encoded instructions:
 *

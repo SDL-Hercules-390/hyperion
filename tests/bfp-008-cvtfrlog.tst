@@ -1,4 +1,6 @@
-*Testcase bfp-008-cvtfrlog: Test IEEE Convert From Fixed (uint-32)
+*Testcase bfp-008-cvtfrlog
+
+# Test IEEE Convert From Fixed (uint-32)
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

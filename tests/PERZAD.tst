@@ -1,4 +1,5 @@
-*Testcase PERZAD: Quick PER Zero-Address Detection test
+*Testcase PERZAD
+# Quick PER Zero-Address Detection test
 sysclear
 archlvl z/Arch
 loadcore "$(testpath)/PERZAD.core"

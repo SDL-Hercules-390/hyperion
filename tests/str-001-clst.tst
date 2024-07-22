@@ -1,4 +1,6 @@
-*Testcase str-001-clst: Test CLST Instruction
+*Testcase str-001-clst
+
+# Test CLST Instruction
 
 # Created and placed into public domain 2018-12-27 by Bob Polmanter.
 # Runtest *Compare dependency removed on 2022-03-08 by Fish.

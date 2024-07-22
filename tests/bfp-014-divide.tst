@@ -1,4 +1,6 @@
-*Testcase bfp-014-divide: Test IEEE Divide
+*Testcase bfp-014-divide
+
+# Test IEEE Divide
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

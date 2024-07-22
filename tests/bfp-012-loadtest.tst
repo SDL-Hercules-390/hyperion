@@ -1,4 +1,6 @@
-*Testcase bfp-012-loadtest: Test IEEE Test Data Class, Load And Test
+*Testcase bfp-012-loadtest
+
+# Test IEEE Test Data Class, Load And Test
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

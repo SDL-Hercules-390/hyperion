@@ -1,4 +1,4 @@
-*Testcase zvector-e6-14-testdecimal: VECTOR E6 VRR-g instruction
+*Testcase zvector-e6-14-testdecimal
 *
 *   Zvector E6 tests for VRR-g encoded instruction:
 *

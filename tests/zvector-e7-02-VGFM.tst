@@ -1,4 +1,4 @@
-*Testcase zvector-e7-02-VGFM: VECTOR E7 VRR-c instructions
+*Testcase zvector-e7-02-VGFM
 *
 *   Zvector E7 instruction tests for VRR-c encoded:
 *
@@ -17,7 +17,7 @@ archlvl     z/Arch
 loadcore    "$(testpath)/zvector-e7-02-VGFM.core" 0x0
 
 diag8cmd    enable    # (needed for messages to Hercules console)
-runtest     2
+runtest     10        # (2 secs if intrinsic used, 10 otherwise!)
 diag8cmd    disable   # (reset back to default)
 
 *Done

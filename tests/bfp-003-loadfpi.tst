@@ -1,4 +1,6 @@
-*Testcase bfp-003-loadfpi: Test IEEE Load FP Integer
+*Testcase bfp-003-loadfpi
+
+# Test IEEE Load FP Integer
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

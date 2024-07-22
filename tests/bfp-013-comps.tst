@@ -1,4 +1,6 @@
-*Testcase bfp-013-comps: Test IEEE Compare, Compare And Signal
+*Testcase bfp-013-comps
+
+# Test IEEE Compare, Compare And Signal
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

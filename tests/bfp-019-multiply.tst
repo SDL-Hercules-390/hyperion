@@ -1,4 +1,6 @@
-*Testcase bfp-019-multiply: Test IEEE Multiply
+*Testcase bfp-019-multiply
+
+# Test IEEE Multiply
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

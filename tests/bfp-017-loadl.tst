@@ -1,4 +1,6 @@
-*Testcase bfp-017-loadl: Test IEEE Load Lengthened
+*Testcase bfp-017-loadl
+
+# Test IEEE Load Lengthened
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

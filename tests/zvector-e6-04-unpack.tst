@@ -1,6 +1,6 @@
-*Testcase zvector-e6-04-unpack: VECTOR E6 VSI unpack/store instructions
+*Testcase zvector-e6-04-unpack
 *
-*    Zvector E6 instruction tests for VSI encoded:
+*    Zvector E6 instruction tests for VSI unpack/store encoded:
 *
 *    E63C VUPKZ   - VECTOR UNPACK ZONED
 *    E63D VSTRL   - VECTOR STORE RIGHTMOST WITH LENGTH

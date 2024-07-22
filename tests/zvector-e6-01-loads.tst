@@ -1,4 +1,4 @@
-*Testcase zvector-e6-01-loads: VECTOR E6 VRX load instructions
+*Testcase zvector-e6-01-loads
 *
 *   Zvector E6 instruction tests for VRX encoded:
 *

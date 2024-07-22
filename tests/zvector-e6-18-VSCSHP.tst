@@ -1,4 +1,4 @@
-*Testcase zvector-e6-18-VSCSHP: VECTOR E6 VRR-b VSCSHP instruction
+*Testcase zvector-e6-18-VSCSHP
 *
 *        Zvector E6 instruction tests for VRR-b encoded:
 *

@@ -1,4 +1,6 @@
-*Testcase bfp-016-add: Test IEEE Add
+*Testcase bfp-016-add
+
+# Test IEEE Add
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

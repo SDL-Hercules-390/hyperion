@@ -1,4 +1,4 @@
-*Testcase mvcos-001.tst:
+*Testcase mvcos-001.tst
 
 # Created and placed into the public domain 27 JAN 2021 by Bob Polmanter.
 

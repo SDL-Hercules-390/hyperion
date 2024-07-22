@@ -1,4 +1,6 @@
-*Testcase bfp-022-multsub: Test IEEE Multiply And Subtract
+*Testcase bfp-022-multsub
+
+# Test IEEE Multiply And Subtract
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

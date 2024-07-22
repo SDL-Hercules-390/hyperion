@@ -1,4 +1,6 @@
-*Testcase bfp-020-multlonger: Test IEEE Multiply
+*Testcase bfp-020-multlonger
+
+# Test IEEE Multiply
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

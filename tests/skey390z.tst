@@ -1,4 +1,5 @@
-*Testcase Storage Keys: S/390 then z/Arch
+*Testcase skey390-9z
+# Storage Keys: S/390 then z/Arch
 mainsize    3
 numcpu      1
 sysclear
@@ -14,7 +15,8 @@ f-          B000
 runtest     0.2
 *Done
 
-*Testcase Storage Keys: Pure z/Arch only
+*Testcase skey390-z
+# Storage Keys: Pure z/Arch only
 mainsize    3
 numcpu      1
 sysclear

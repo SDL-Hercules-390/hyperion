@@ -1,4 +1,6 @@
-*Testcase bfp-021-multadd: Test IEEE Multiply And Add
+*Testcase bfp-021-multadd
+
+# Test IEEE Multiply And Add
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

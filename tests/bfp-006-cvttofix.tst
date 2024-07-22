@@ -1,4 +1,6 @@
-*Testcase bfp-006-cvttofix: Test IEEE Convert To Fixed (int-32)
+*Testcase bfp-006-cvttofix
+
+# Test IEEE Convert To Fixed (int-32)
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

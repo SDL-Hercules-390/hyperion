@@ -1,4 +1,5 @@
-*Testcase TXFPER: Test PER Tracing of TXF Transactions
+*Testcase TXFPER
+# Test PER Tracing of TXF Transactions
 sysclear
 archlvl z/Arch
 diag8cmd enable

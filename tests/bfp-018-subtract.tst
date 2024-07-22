@@ -1,4 +1,6 @@
-*Testcase bfp-018-subtract: Test IEEE Subtract
+*Testcase bfp-018-subtract
+
+# Test IEEE Subtract
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

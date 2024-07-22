@@ -1,4 +1,4 @@
-*Testcase zvector-e6-11-convertbinary: VECTOR E6 VRR-i instructions
+*Testcase zvector-e6-11-convertbinary
 *
 *   Zvector E6 tests for VRR-i encoded instructions:
 *

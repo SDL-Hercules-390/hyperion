@@ -1,6 +1,6 @@
-*Testcase zvector-e6-03-pack: VECTOR E6 VSI pack/load instructions
+*Testcase zvector-e6-03-pack
 *
-*   Zvector E6 instruction tests for VSI encoded:
+*   Zvector E6 instruction tests for VSI pack/load encoded:
 *
 *   E634 VPKZ    - VECTOR PACK ZONED
 *   E635 VLRL    - VECTOR LOAD RIGHTMOST WITH LENGTH

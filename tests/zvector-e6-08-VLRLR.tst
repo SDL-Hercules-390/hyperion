@@ -1,4 +1,4 @@
-*Testcase zvector-e6-08-VLRLR: VECTOR E6 VRS-d VLRLR instruction
+*Testcase zvector-e6-08-VLRLR
 *
 *   Zvector E6 tests for VRS-d encoded instructions:
 *

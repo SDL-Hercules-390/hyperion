@@ -1,4 +1,6 @@
-*Testcase bfp-011-cvtfrfix64: Test IEEE Cvt From Fixed (int-64)
+*Testcase bfp-011-cvtfrfix64
+
+# Test IEEE Cvt From Fixed (int-64)
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

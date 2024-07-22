@@ -1,4 +1,4 @@
-*Testcase zvector-e6-10-VLIP: VECTOR E6 VRI-h VLIP instruction
+*Testcase zvector-e6-10-VLIP
 *
 *   Zvector E6 tests for VRI-h encoded instruction:
 *

@@ -1,4 +1,6 @@
-*Testcase bim-001-add-sub: Test Basic Integer Math Add & Subtract
+*Testcase bim-001-add-sub
+
+# Test Basic Integer Math Add & Subtract
 
 # Copyright 2018 Stephen R. Orso.
 # Distributed under the Boost Software License, Version 1.0.

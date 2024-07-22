@@ -1,4 +1,4 @@
-*Testcase zvector-e7-01-MinMaxAvg: VECTOR E7 VRR-c instructions
+*Testcase zvector-e7-01-MinMaxAvg
 *
 *   Zvector E7 instruction tests for VRR-c encoded:
 *

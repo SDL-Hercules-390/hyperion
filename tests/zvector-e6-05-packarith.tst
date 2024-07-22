@@ -1,4 +1,4 @@
-*Testcase zvector-e6-05-packarith: VECTOR E6 VRI-f packed arithmetic instructions
+*Testcase zvector-e6-05-packarith
 *
 *   Zvector E6 tests for VRI-f encoded packed decimal
 *   arithmetic instructions:

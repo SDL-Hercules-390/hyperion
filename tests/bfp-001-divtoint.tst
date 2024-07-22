@@ -1,4 +1,6 @@
-*Testcase bfp-001-divtoint: Test IEEE Divide To Integer
+*Testcase bfp-001-divtoint
+
+# Test IEEE Divide To Integer
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

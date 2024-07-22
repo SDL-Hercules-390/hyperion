@@ -1,6 +1,6 @@
-*Testcase zvector-e6-06-VPKZR: VECTOR E6 VPKZR: packed zoned register instruction
+*Testcase zvector-e6-06-VPKZR
 *
-*   Zvector E6 tests for VRI-f encoded pack instructions:
+*   Zvector E6 tests for VRI-f encoded pack zoned registe instructions:
 *
 *   E670 VPKZR  - VECTOR PACK ZONED REGISTER VPKZR
 *

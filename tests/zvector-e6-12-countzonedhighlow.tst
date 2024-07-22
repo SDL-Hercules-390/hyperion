@@ -1,4 +1,4 @@
-*Testcase zvector-e6-12-countzonedhighlow: VECTOR E6 VRR-k instructions
+*Testcase zvector-e6-12-countzonedhighlow
 *
 *   Zvector E6 tests for VRR-k encoded instructions:
 *

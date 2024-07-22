@@ -1,4 +1,6 @@
-*Testcase bfp-005-cvttolog64: Test IEEE Cvt To Logical (uint-64)
+*Testcase bfp-005-cvttolog64
+
+# Test IEEE Cvt To Logical (uint-64)
 
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 

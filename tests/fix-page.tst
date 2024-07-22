@@ -1,4 +1,6 @@
-*Testcase fix-page: Test the Fix Page E502 Assist
+*Testcase fix-page
+
+# Test the Fix Page E502 Assist
 
 # Created and placed into the public domain 09 OCT 2020 by Bob Polmanter.
 # Runtest *Compare dependency removed on 2022-03-08 by Fish.

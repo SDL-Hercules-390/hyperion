@@ -1,4 +1,4 @@
-*Testcase zvector-e6-15-comparedecimal: VECTOR E6 VRR-h instruction
+*Testcase zvector-e6-15-comparedecimal
 *
 *   Zvector E6 tests for VRR-h encoded instruction:
 *

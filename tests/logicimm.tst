@@ -2,7 +2,8 @@
 # by bldhtc.rexx 12 Nov 2015 12:36:58
 # Treat as object code.  That is, modifications will be lost.
 # assemble and listing files are provided for information only.
-*Testcase logicImmediate processed 12 Nov 2015 12:36:58 by bldhtc.rexx
+*Testcase logicImmediate
+# processed 12 Nov 2015 12:36:58 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200

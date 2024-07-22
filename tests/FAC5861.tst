@@ -1,4 +1,7 @@
-*Testcase FAC5861: Quick Test of Misc. Instr. Ext. 2 & 3
+*Testcase FAC5861
+
+# Quick Test of Misc. Instr. Ext. 2 & 3
+
 mainsize    2
 numcpu      1
 sysclear

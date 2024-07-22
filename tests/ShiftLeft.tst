@@ -1,4 +1,6 @@
-*Testcase ShiftLeft: Test Algebraic "Shift Left" Instructions
+*Testcase ShiftLeft
+
+# Test Algebraic "Shift Left" Instructions
 
 sysclear
 archlvl z/Arch

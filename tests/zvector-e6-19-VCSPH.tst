@@ -1,4 +1,4 @@
-*Testcase zvector-e6-19-VCSPH: VECTOR E6 VRR-j VCSPH instruction
+*Testcase zvector-e6-19-VCSPH
 *
 *        Zvector E6 instruction tests for VRR-j encoded:
 *

@@ -1,4 +1,4 @@
-*Testcase zvector-e6-07-VSRPR: VECTOR E6 VSRPR instruction
+*Testcase zvector-e6-07-VSRPR
 *
 *   Zvector E6 tests for VRI-f encoded pack instructions:
 *

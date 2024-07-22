@@ -1,4 +1,4 @@
-*Testcase zvector-e6-02-stores: VECTOR E6 VRX store instructions
+*Testcase zvector-e6-02-stores
 *
 *   Zvector E6 instruction tests for VRX encoded:
 *

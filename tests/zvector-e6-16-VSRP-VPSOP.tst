@@ -1,4 +1,4 @@
-*Testcase zvector-e6-16-VSRP-VPSOP: VECTOR E6 VRI-g instructions
+*Testcase zvector-e6-16-VSRP-VPSOP
 *
 *    Zvector E6 tests for VRI-g encoded instruction:
 *

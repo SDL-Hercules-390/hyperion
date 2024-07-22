@@ -2,7 +2,8 @@
 msglvl +verbose +emsgloc
 
 * ----------------------------------------------------------------------------
-*Testcase runtest0: all cpus 0 seconds
+*Testcase runtest0
+# all cpus 0 seconds
 * ----------------------------------------------------------------------------
 *
 numcpu      4           #  Total CPUs needed for this test...
