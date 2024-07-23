@@ -19629,6 +19629,8 @@ else
                             -g -O2 -fomit-frame-pointer
                     */
 
+                    #include <string.h>
+
                     int foo ()
                     {
                         char a[50000+16];
@@ -19990,6 +19992,7 @@ int
 main ()
 {
 
+                    #include <unistd.h>
                     extern int optreset;
                     optreset=1;
                     getopt(0,0,0);
