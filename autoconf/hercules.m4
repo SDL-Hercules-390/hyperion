@@ -380,6 +380,7 @@ AC_DEFUN([HC_CHECK_NEED_GETOPT_OPTRESET],
             AC_TRY_LINK(
                 [],
                 [
+                    #include <unistd.h>
                     extern int optreset;
                     optreset=1;
                     getopt(0,0,0);
