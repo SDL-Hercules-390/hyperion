@@ -148,6 +148,11 @@
   DISABLE_GCC_WARNING( "-Wundefined-inline" )
   #endif
 
+  /* Silence yet ANOTHER annoying NOT-a-problem warning! */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 140101 /* gcc >= 14.1.1 */
+  DISABLE_GCC_WARNING( "-Wcalloc-transposed-args" )
+  #endif
+
   /*-----------------------------------------------------------------*/
   /*            define support for other compilers here              */
   /*-----------------------------------------------------------------*/
