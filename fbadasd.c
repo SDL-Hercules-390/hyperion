@@ -9,6 +9,8 @@
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
 /* fixed block architecture direct access storage devices.           */
+/* Ref:  SA22-1025-00  "System/390 Internal Disk Subsystem           */
+/*                      Reference Guide (Multiprise 3000)"           */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -29,17 +31,60 @@
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
-/*-------------------------------------------------------------------*/
-/* Bit definitions for Define Extent file mask                       */
-/*-------------------------------------------------------------------*/
-#define FBAMASK_CTL             0xC0    /* Operation control bits... */
-#define FBAMASK_CTL_INHFMT      0x00    /* ...inhibit format writes  */
-#define FBAMASK_CTL_INHWRT      0x40    /* ...inhibit all writes     */
-#define FBAMASK_CTL_ALLWRT      0xC0    /* ...allow all writes       */
-#define FBAMASK_CTL_RESV        0x80    /* ...reserved bit setting   */
-#define FBAMASK_CE              0x08    /* CE field extent           */
-#define FBAMASK_DIAG            0x04    /* Permit diagnostic command */
+
+
+
+#define FISHTEST // (temporary)
+
+
+#if defined( FISHTEST ) // OLD WAY
 #define FBAMASK_RESV            0x33    /* Reserved bits - must be 0 */
+#define FBAMASK_CE              0x08    /* CE field extent           */
+#define FBAMASK_CTL             0xC0    /* Operation control bits... */
+#define FBAMASK_CTL_RESV        0x80    /* ...reserved bit setting   */
+#endif // FISHTEST
+
+
+
+
+
+
+/*-------------------------------------------------------------------*/
+/* Bit definitions for Define Extent mask byte                       */
+/*-------------------------------------------------------------------*/
+#define FBAMASK_WR_RSHIFT       6       /* Write Control bits        */
+#define FBAMASK_WR_MASK         0x03    /* Write Control bits        */
+#define FBAMASK_WR_NOFMT        0       /* All writes except HA/R0   */
+#define FBAMASK_WR_NONE         1       /* Inhibit ALL writes        */
+#define FBAMASK_WR_UPDONLY      2       /* Update writes only        */
+#define FBAMASK_WR_ALL          3       /* Permit ALL writes         */
+/*-------------------------------------------------------------------*/
+#define FBAMASK_RSRVD           0x20    /* Reserved bit - must be 0  */
+/*-------------------------------------------------------------------*/
+#define FBAMASK_SK_RSHIFT       3       /* Seek Control bits         */
+#define FBAMASK_SK_MASK         0x03    /* Seek Control bits         */
+#define FBAMASK_SK_ALL          0       /* Permit all seeks          */
+#define FBAMASK_SK_CYLHD        1       /* Seek Cyl or Head only     */
+#define FBAMASK_SK_HEAD         2       /* Seek Head only            */
+#define FBAMASK_SK_NONE         3       /* Inhibit ALL seeks/MulTrk  */
+/*-------------------------------------------------------------------*/
+#define FBAMASK_AUTH_RSHIFT     1       /* Access Authorization bits */
+#define FBAMASK_AUTH_MASK       0x03    /* Access Authorization bits */
+#define FBAMASK_AUTH_NORMAL     0       /* Normal authorization      */
+#define FBAMASK_AUTH_DEV        1       /* Device Support Auth.      */
+#define FBAMASK_AUTH_DIAG       2       /* Diagnostic Authorization  */
+#define FBAMASK_AUTH_NORETRY    3       /* Device Support, NO retry  */
+/*-------------------------------------------------------------------*/
+#define FBAMASK_PCI_RSHIFT      0       /* PCI mode bits             */
+#define FBAMASK_PCI_MASK        0x01    /* PCI mode bits             */
+#define FBAMASK_PCI_NOFETCH     0       /* NOT PCI fetch mode        */
+#define FBAMASK_PCI_FETCH       1       /* PCI fetch mode            */
+/*-------------------------------------------------------------------*/
+#define FBAMASK_BITS( field )           /* Helper macro helper macro */ \
+    ((dev->fbamask >> FBAMASK_ ## field ## _RSHIFT) & FBAMASK_ ## field ## _MASK)
+#define IS_FBAMASK( field, value )      /* Helper macro              */ \
+    (FBAMASK_BITS( field ) == FBAMASK_ ## field ## _ ## value)
+/*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Locate operation byte                         */
@@ -1058,8 +1103,8 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbaoper & FBAOPER_CODE) == FBAOPER_WRITE
             || (dev->fbaoper & FBAOPER_CODE) == FBAOPER_WRTVRFY)
         {
-            /* Reject command if file mask inhibits all writes */
-            if ((dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_INHWRT)
+            /* Reject command if mask inhibits all writes */
+            if (IS_FBAMASK( WR, NONE ))
             {
                 dev->sense[0] = SENSE_CR;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1073,7 +1118,7 @@ int     repcnt;                         /* Replication count         */
         else if ((dev->fbaoper & FBAOPER_CODE) == FBAOPER_FMTDEFC)
         {
             /* Reject command if file mask inhibits format writes */
-            if ((dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_INHFMT)
+            if (IS_FBAMASK( WR, NOFMT ))
             {
                 dev->sense[0] = SENSE_CR;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1165,10 +1210,42 @@ int     repcnt;                         /* Replication count         */
             break;
         }
 
-        /* Save and validate the file mask */
+        /* Save DX mask byte*/
         dev->fbamask = iobuf[0];
-        if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
-            || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
+
+
+
+
+#if defined( FISHTEST ) // OLD WAY
+        if (0
+            || (dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
+            || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV
+        )
+        {
+            static BYTE didthis[64] =
+            {
+                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
+                ,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
+                ,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
+                ,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
+            };
+            if (1
+                && dev->subchan < arraysize( didthis )
+                && didthis[ dev->subchan ] != dev->fbamask
+            )
+            {
+                didthis[ dev->subchan ] = dev->fbamask;
+                LOGMSG( "+++ OLD WAY: HHC00511E %1d:%04X FBA file %s: invalid file mask 0x%2.2X\n",
+                    LCSS_DEVNUM, dev->filename, dev->fbamask );
+            }
+        }
+#endif // FISHTEST
+
+
+
+
+        /* validate the DX mask byte */
+        if (dev->fbamask & FBAMASK_RSRVD)
         {
             // "%1d:%04X FBA file %s: invalid file mask %2.2X"
             WRMSG( HHC00511, "E", LCSS_DEVNUM, dev->filename, dev->fbamask );
