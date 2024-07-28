@@ -31,24 +31,6 @@
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
-
-
-
-#define FISHTEST // (temporary)
-
-
-#if defined( FISHTEST ) // OLD WAY
-#define FBAMASK_RESV            0x33    /* Reserved bits - must be 0 */
-#define FBAMASK_CE              0x08    /* CE field extent           */
-#define FBAMASK_CTL             0xC0    /* Operation control bits... */
-#define FBAMASK_CTL_RESV        0x80    /* ...reserved bit setting   */
-#endif // FISHTEST
-
-
-
-
-
-
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Define Extent mask byte                       */
 /*-------------------------------------------------------------------*/
@@ -1212,37 +1194,6 @@ int     repcnt;                         /* Replication count         */
 
         /* Save DX mask byte*/
         dev->fbamask = iobuf[0];
-
-
-
-
-#if defined( FISHTEST ) // OLD WAY
-        if (0
-            || (dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
-            || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV
-        )
-        {
-            static BYTE didthis[64] =
-            {
-                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
-                ,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
-                ,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
-                ,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
-            };
-            if (1
-                && dev->subchan < arraysize( didthis )
-                && didthis[ dev->subchan ] != dev->fbamask
-            )
-            {
-                didthis[ dev->subchan ] = dev->fbamask;
-                LOGMSG( "+++ OLD WAY: HHC00511E %1d:%04X FBA file %s: invalid file mask 0x%2.2X\n",
-                    LCSS_DEVNUM, dev->filename, dev->fbamask );
-            }
-        }
-#endif // FISHTEST
-
-
-
 
         /* validate the DX mask byte */
         if (dev->fbamask & FBAMASK_RSRVD)
