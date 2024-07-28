@@ -3230,7 +3230,6 @@ int sclproot_cmd( int argc, char* argv[], char* cmdline )
         if (CMD( argv[1], NONE, 4 ))
             set_sce_dir( NULL );
         else
-
             set_sce_dir( p = argv[1] );
 
         // "%-14s set to %s"

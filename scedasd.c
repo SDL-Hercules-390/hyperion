@@ -57,8 +57,10 @@ char tempdir[ MAX_PATH ];
         }
         else
         {
+            size_t len;
             hostpath( realdir, tempdir, sizeof( realdir ));
-            STRLCAT( realdir, PATHSEPS );
+            if (realdir[(len = strlen( realdir ))-1] != PATHSEPC)
+                STRLCAT( realdir, PATHSEPS );
             sce_basedir = strdup( realdir );
         }
     }
