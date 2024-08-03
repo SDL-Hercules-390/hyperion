@@ -1009,7 +1009,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 // reserve 01250 - 01299 for Generic device messages
 #define HHC01250 "%1d:%04X %s: error in function %s: %s"
 #define HHC01251 "%1d:%04X %s: option '%s' has been deprecated"
-//efine HHC01252 - HHC01299 (available)
+//BEGIN added by WED
+// range 01252 - 01290 available
+#define HHC01291 "%1d:%04X %s: writing to file %s"
+#define HHC01292 "%1d:%04X %s: renaming output file %s to %s"
+//efine HHC01293 - HHC01299 (available)
+//END added by WED
 
 // reserve 013xx for channel related messages
 #define HHC01300 "%1d:%04X CHAN: halt subchannel: cc=%d"

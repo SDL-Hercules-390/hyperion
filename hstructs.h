@@ -1509,9 +1509,8 @@ struct DEVBLK {                         /* Device configuration block*/
                 reinit:1,               /* 1=devinit, not attach     */
 				handshake:1;            /* 1='handshake' option   WED*/
 										/* (print/punch only)     WED*/
-#define HANDSHAKE_OPEN       0xF1       /* CCW opcode: open file  WED*/
+#define HANDSHAKE_OPEN       0xF7       /* CCW opcode: open file  WED*/
 #define HANDSHAKE_CLOSE      0xFF       /*  "     "    close file WED*/
-#define HANDSHAKE_CLOSE_NAME 0xF9       /*  "     "    close/name WED*/
 
         unsigned int                    /* Device state - serialized
                                             by dev->lock             */
@@ -2009,12 +2008,13 @@ struct GUISTAT
 /*-------------------------------------------------------------------*/
 struct UROUTBLK
 {
-											/* file from devinit  WED*/
-	char    cmd_filename[PATH_MAX + 1];		/* .. full path/name  WED*/
-	char	cmd_pathpart[DIR_MAX + 1];		/* .. path part       WED*/
-	char	cmd_namepart[FNAME_MAX + 1];	/* .. name part       WED*/
-	char	cmd_extpart[EXT_MAX + 1];		/* .. extension part  WED*/
-	char	cur_filename[PATH_MAX + 1];		/* current output fileWED*/
+										/* file arg from devinit  WED*/
+	char *cmd_filename;		            /* .. full path/name      WED*/
+	char *cmd_pathpart;		            /* .. path part with /    WED*/
+	char *cmd_namepart;	                /* .. name part           WED*/
+	char *cmd_extpart;		            /* .. exten part with .   WED*/
+	char *cur_namepart;		            /* current handshake name WED*/
+	char *cur_filename;		            /* current output file    WED*/
 };
 #define UROUT(dev) ((struct UROUTBLK *)((dev)->dev_data))
 

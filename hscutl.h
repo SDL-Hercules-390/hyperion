@@ -44,44 +44,6 @@
   */
   char *hostpath( char *outpath, const char *inpath, size_t buffsize );
 
-  /*BEGIN changes by WED: 
-
-    Retrieves parts of the filename path after it has been parsed
-	and normalized by a call to 'hostpath'
-	getPathPart: returns the part of 'inpath' up to and including the
-	             last path separator character ('/' or '\')
-	getNamePart: returns the part of 'inpath' between the last path
-	             separator character and the last dot (without either
-	             delimiter
-	getExtPart:  returns the part of 'inpath' from the last dot to
-	             the end (including the last dot)
-  */
-  char *getPathPart( char *outpath, const char *inpath, size_t outsize );
-  char *getNamePart( char *outname, const char *inpath, size_t outsize );
-  char *getExtPart( char *outext, const char *inpath, size_t outsize );
-
-  /*
-	 These methods are used in unit-record out drivers 
-	 (printer.c,cardpch.c)
-	 in processing the names of the output files
-	 initUROfile:       initialize the UROUTBLK with the filename 
-	                    components for handling files created by
-						the unit record output devices
-	 openUROFile:    Open/create a new URO file optionally with
-	                 a filename supplied by the handskake CCW
-	 closeUROFile:   Flush and close URO file optionally renamed
-	                 to a filename supplied by the handskake CCW
-	 finishUROFile:  Flush and close the current URO file with no
-	                 changed to the name. 'append' option applys.
-  */
-  int initUROfile( DEVBLK *dev, const char *namearg );
-  int openUROfile( DEVBLK *dev, const char *ccwName );
-  int finishUROfile( DEVBLK *dev );
-  int closeUROfile( DEVBLK *dev, const char *ccwName );
-
-  /*END changes by WED */
-
-
   /* Poor man's  "fcntl( fd, F_GETFL )"... */
   /* (only returns access-mode flags and not any others) */
   int get_file_accmode_flags( int fd );
@@ -444,6 +406,38 @@ HUT_DLL_IMPORT const char* FormatORB( ORB* orb, char* buf, size_t bufsz );
 /*      Determine if running on a big endian system or not           */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT bool are_big_endian();
+
+/*BEGIN changes by WED:
+/*-------------------------------------------------------------------*/
+/*      Methods to help with URO file naming for HANDSHAKE option    */
+/*-------------------------------------------------------------------*/
+/*
+    These methods are used in unit-record out drivers
+    (printer.c,cardpch.c)
+    in processing the names of the output files
+
+    uro_initfile:
+        initialize the UROUTBLK with the filename
+        components for handling files created by
+        the unit record output devices
+    uro_namefromccw:
+        Process the file name from a CCW and save it in
+        the UROUTBLK.
+    uro_resolvefilename:
+        Determine the full name of the output file.
+        This might involve reenaming existing files
+		if the 'append' option is not specified.
+	uri_closefromccw:
+	    Resets any device fields when the close
+		handshake ccw is issued. The caller is
+		responsible for actually closing the file.
+*/
+HUT_DLL_IMPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char *namearg, const char *defaultExt );
+HUT_DLL_IMPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *ccwdata, int ccwlen );
+HUT_DLL_IMPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype );
+HUT_DLL_IMPORT int uro_closefromccw ( DEVBLK* dev, const char * urotype );
+
+/*END changes by WED */
 
 
 

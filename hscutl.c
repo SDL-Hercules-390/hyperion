@@ -754,42 +754,25 @@ DLL_EXPORT int timed_wait_condition_relative_usecs_impl
 
 /*BEGIN changes by WED:
 
-  Retrieves parts of the filename path after it has been parsed
-  and normalized by a call to 'hostpath'
-  getPathPart: returns the part of 'inpath' up to and including the
-               last path separator character ('/' or '\') as a new
-               null-terminated string.
-  getNamePart: returns the part of 'inpath' between the last path
-               separator character and the last dot (without either
-               delimiter
-  getExtPart:  returns the part of 'inpath' from the last dot to
-               the end (including the last dot)
-*/
-DLL_EXPORT char* getPathPart(char* outPath, const char* inpath, size_t outSize)
-{
+    These methods are used in unit-record out drivers
+    (printer.c,cardpch.c)
+    in processing the names of the output files
 
-}
-DLL_EXPORT char* getNamePart(char* outname, const char* inpath, size_t buffsize)
-{
-
-}
-DLL_EXPORT char* getExtPart(char* outext, const char* inpath, size_t buffsize)
-{
-
-}
-
-/*
-   These methods are used in unit-record out drivers
-   (printer.c,cardpch.c) in processing the names of the output files
-     initUROfile:    initialize the UROUTBLK with the filename
-                     components for handling files created by
-                     the unit record output devices
-     openUROFile:    Open/create a new URO file optionally with
-                     a filename supplied by the handskake CCW
-     closeUROFile:   Flush and close URO file optionally renamed
-                     to a filename supplied by the handskake CCW
-     finishUROFile:  Flush and close the current URO file with no
-                     changed to the name. 'append' option applys.
+    uro_initfile:
+        initialize the UROUTBLK with the filename
+        components for handling files created by
+        the unit record output devices
+    uro_namefromccw:
+        Process the file name from a CCW and save it in
+        the UROUTBLK.
+    uro_resolvefilename:
+        Determine the full name of the output file.
+        This might involve renaming existing files
+		if the 'append' option is not specified.
+	uri_closefromccw:
+	    Resets any device fields when the close
+		handshake ccw is issued. The caller is
+		responsible for actually closing the file.
 */
 
 /**
@@ -798,50 +781,279 @@ DLL_EXPORT char* getExtPart(char* outext, const char* inpath, size_t buffsize)
  * UROUTBLK that is attached to the DEVBLK.
  *
  * Parameters:
- *    dev:     pointer to the DEVBLK for the URO device
- *    namearg: pointer to the 'devinit' filename argument
+ *    dev:         pointer to the DEVBLK for the URO device
+ *                 N.B. the dev->filename field must have been populated
+ *                      with the target file name parameter from the
+ *                      'devinit' command as processed by the
+ *                      'hostpath()' method.
+ *    urotype:     The device type name (PRinter/Card) to include
+ *                 in logged messages
+ *    namearg:     pointer to the 'devinit' filename argument. This
+ *                 should be dev->filename as pre the note above
+ *    defaultExt:  the default extension (including '.')
  *
  * Returns:
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int initUROfile(DEVBLK* dev, const char* namearg)
+DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* namearg, const char* defaultExt )
 {
     struct UROUTBLK* urOutBlk;
-    char* p1, * p2;
+    const char* p1, * p2;
     int ix;
 
+	WRMSG ("%1d:%04X %s uro_initfile: initdev name [%s]", "D", LCSS_DEVNUM, urotype, namearg);
+
     if (dev->dev_data != NULL) {
-        free(dev->dev_data);
+    	WRMSG ("%1d:%04X %s uro_initfile: release existing UROUTBLK content", "D", LCSS_DEVNUM, urotype);
+        urOutBlk = (struct UROUTBLK*)dev->dev_data;
+        if (urOutBlk->cmd_filename != NULL) {
+            free(urOutBlk->cmd_filename);
+        }
+        if (urOutBlk->cmd_pathpart != NULL) {
+            free(urOutBlk->cmd_pathpart);
+        }
+        if (urOutBlk->cmd_namepart != NULL) {
+            free(urOutBlk->cmd_namepart);
+        }
+        if (urOutBlk->cmd_extpart != NULL) {
+            free(urOutBlk->cmd_extpart);
+        }
+        if (urOutBlk->cur_filename != NULL) {
+            free(urOutBlk->cur_filename);
+        }
+        if (urOutBlk->cur_namepart != NULL) {
+            free(urOutBlk->cur_namepart);
+        }
     }
-    dev->dev_data = urOutBlk = (struct UROUTBLK *)malloc(sizeof(struct UROUTBLK));
+    else {
+    	WRMSG ("%1d:%04X %s uro_initfile: malloc new UROUTBLK", "D", LCSS_DEVNUM, urotype);
+        dev->dev_data = urOutBlk = (struct UROUTBLK*)malloc(sizeof(struct UROUTBLK));
+    }
     memset(urOutBlk, 0, sizeof(struct UROUTBLK));
 
-    /* Save the file name in the device block */
-    hostpath(dev->filename, namearg, sizeof(dev->filename)); // save as default name
-    strlcpy(urOutBlk->cmd_filename, dev->filename, sizeof(urOutBlk->cmd_filename));
-
-    p1 = strrchr(urOutBlk->cmd_filename, '/');
-    p2 = strrchr(urOutBlk->cmd_filename, '\\');
-    p1 = MAX(p1, p2);
-    ix = p1 - urOutBlk->cmd_filename;
-
-
-
-    UROUT(dev)->cmd_filename = hostpath(UROUT(dev)->cmd_filename, namearg, sizeof(UROUT(dev)->cmd_filename));
-    hostpath(dev->filename, namearg, sizeof(dev->filename)); // save as default name
+    /* Save the whole file name arg in the device block */
+    urOutBlk->cmd_filename = strdup(namearg);
 
     /* Get/save full path part (up to & including last / or \ */
-    getPathPart(UROUT(dev)->cmd_pathpart, namearg, sizeof(UROUT(dev)->cmd_pathpart));
+    p1 = strrchr(namearg, '/');
+    p2 = strrchr(namearg, '\\');
+    p1 = MAX(p1, p2);
+    if (p1 > 0) {
+        ix = p1 - namearg;
+        urOutBlk->cmd_pathpart = (char*)malloc(ix + 1);
+        strlcpy(urOutBlk->cmd_pathpart, namearg, ix + 1);
+        ix++; // name starts here
+    	WRMSG ("%1d:%04X %s uro_initfile: path part [%s]", "D", LCSS_DEVNUM, urotype, urOutBlk->cmd_pathpart);
+    }
+    else {
+        // no path in initdev arg... use cwd instead
+        static char cwd[MAX_PATH];
+        VERIFY(getcwd(cwd, sizeof(cwd)) != NULL);
+        ix = (int)strlen(cwd);
+        if (cwd[ix - 1] != *PATH_SEP) {
+            STRLCAT(cwd, PATH_SEP);
+        }
+        urOutBlk->cmd_pathpart = strdup(cwd);
+        ix = 0; // take name from here
+    	WRMSG ("%1d:%04X %s uro_initfile: use cwd for path [%s]", "D", LCSS_DEVNUM, urotype, urOutBlk->cmd_pathpart);
+    }
 
     /* Get/save the file extnesion (starting with & including the last . */
-    getExtPart(UROUT(dev)->cmd_extpart, namearg, sizeof(UROUT(dev)->cmd_extpart));
+    static char* pname;
+    pname = (char*)namearg + ix;
+    static char* pext;
+    pext = (char*)strrchr(namearg, '.');
+    if (pext > 0) {
+        ix = pext - pname + 1;
+        urOutBlk->cmd_namepart = (char*)malloc(ix);
+        strlcpy(urOutBlk->cmd_namepart, pname, ix);
+        urOutBlk->cmd_extpart = strdup(pext);
+    }
+    else {
+        urOutBlk->cmd_namepart = strdup(pname);
+        urOutBlk->cmd_extpart = strdup(defaultExt);
+    }
+	WRMSG ("%1d:%04X %s uro_initfile: name part [%s]", "D", LCSS_DEVNUM, urotype, urOutBlk->cmd_namepart);
+	WRMSG ("%1d:%04X %s uro_initfile: ext part [%s]", "D", LCSS_DEVNUM, urotype, urOutBlk->cmd_extpart);
+    return 0;
 }
 
-DLL_EXPORT int makeNewFilename(DEVBLK* dev, const char* ccwD9name)
-{
-
+/**
+ * Process the file name from a CCW and save it in
+ * the UROUTBLK.
+ *
+ * Parameters:
+ *    dev:         pointer to the DEVBLK for the URO device
+ *                 N.B. uro_initfile must have been previously
+ *                      called so the UROUTBLK exists.
+ *                      Also, this assumes that uro_closefromccw
+ *                      has already been called to clear out
+ *                      any data from the previous file.
+ *    urotype:     The device type name (PRinter/Card) to include
+ *                 in logged messages
+ *    ccwdata:     data from the Open Printer CCW translated
+ *                 to this host's code page.
+ *    ccwlen:      the length of the ccwdata
+ *
+ * Returns:
+ *    0 = success
+ *   !0 = failure. error message already issued
+ */
+DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *ccwdata, int ccwlen ) {
+	if (ccwlen > 0) {
+		char *work = (char*)malloc(ccwlen+1);
+		char *ip = (char*)ccwdata;
+		char *op = work;
+		int insp = 0;
+		for (int i = 0; i < ccwlen; i++) {
+			if (*ip == ' ') {
+				insp = 1;
+				ip++;
+			} else {
+				if (insp > 0) {
+					*op++ = '-';
+					insp = 0;
+				} else {
+					*op++ = *ip++;
+				}
+			}
+		}
+		*op = '\0';
+		UROUT(dev)->cur_namepart = strdup(work);
+		WRMSG ("%1d:%04X %s uro_initfile: name from ccw [%s]", "D", LCSS_DEVNUM, urotype, UROUT(dev)->cur_namepart);
+		free(work);
+	}
+	return 0;
 }
+
+/*
+ * Recursive routine to deal with the renaming of
+ * the target file with _1, _2, etc suffix
+ *
+ * Parameters:
+ *    dev:         pointer to the DEVBLK for the URO device
+ *    urotype:     The device type name (Printer/Card) to include
+ *                 in logged messages
+ *    fullname:    the current full filename to test for existance.
+ *                 If it exists, it will be renamed
+ *    rootname:    The path/name parat of the target file. This is the
+ *                 part of fullname that will have a suffix attached
+ *    ext:         the file extension (with the dot separator)
+ *    suffix:      the integer number to be added as a suffix
+ */
+static /*recursive*/ void pushFileStack (
+		DEVBLK *dev,
+		const char * urotype,
+		const char *fullname,
+		const char *rootname,
+		const char *ext,
+		int suffix
+) {
+	struct stat st;
+	if (stat(fullname, &st) >= 0) {
+		char work[MAX_PATH];
+		sprintf(work, "%s_%d%s", rootname, suffix, ext);
+		pushFileStack(dev, urotype, work, rootname, ext, suffix + 1);
+		// "%1d:%04X %s: renaming output file [%s] to [%s]"
+		WRMSG (HHC01292, "I", LCSS_DEVNUM, urotype, fullname, work);
+		rename(fullname, work);
+	}
+}
+
+/**
+ * Determine the full name of the output file.
+ * This might involve renaming existing files
+ * if the 'append' option is not specified.
+ *
+ * Parameters:
+ *    dev:         pointer to the DEVBLK for the URO device
+ *                 N.B. uro_initfile must have been previously
+ *                      called so the UROUTBLK exists.
+ *    urotype:     The device type name (PRinter/Card) to include
+ *                 in logged messages
+ *
+ * Returns:
+ *    0 = success
+ *   !0 = failure. error message already issued
+ */
+DLL_EXPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype ) {
+
+	// name is from Open Printer CCW or initdev command
+	char * name = UROUT(dev)->cur_namepart != NULL
+			    ? UROUT(dev)->cur_namepart
+			    : UROUT(dev)->cmd_namepart;
+	int len = strlen(UROUT(dev)->cmd_pathpart) + strlen(name);
+	char *rootname = (char*)malloc(len + 1);
+    strcpy(rootname, UROUT(dev)->cmd_pathpart);
+	strcat(rootname, name);
+
+	// add in extension from initdev command
+	len = strlen(UROUT(dev)->cmd_extpart);
+	UROUT(dev)->cur_filename = (char*)malloc(len + 1);
+	strcpy(UROUT(dev)->cur_filename, rootname);
+	strcat(UROUT(dev)->cur_filename, UROUT(dev)->cmd_extpart);
+
+	/*
+	 * if not appending to existing file, make sure we are
+	 * starting a new, empty file. If the target file currently
+	 * exists, then it is renamed to: <rootname>_1<ext>. if
+	 * the "_1" file currently exists, it is renamed to
+	 * <rootname>_2<ext> and if that exists, it is renamed
+	 * with a "_3" suffix and so on.
+	 */
+	if (!dev->append) {
+		pushFileStack(dev, urotype, UROUT(dev)->cur_filename, rootname, UROUT(dev)->cmd_extpart, 1);
+	}
+	free(rootname);
+
+	/**
+	 * set the computed target filenbame into the DEVBLK
+	 */
+    strcpy(dev->filename, UROUT(dev)->cur_filename);
+	// "%1d:%04X %s: writing to file [%s]"
+	WRMSG (HHC01291, "I", LCSS_DEVNUM, urotype, dev->filename);
+
+	return 0;
+}
+
+/**
+ * Resets any device fields when the close
+ * handshake ccw is issued. The caller is
+ * responsible for actually closing the file.
+ *
+ * Parameters:
+ *    dev:         pointer to the DEVBLK for the URO device
+ *                 N.B. uro_initfile must have been previously
+ *                      called so the UROUTBLK exists.
+ *    urotype:     The device type name (PRinter/Card) to include
+ *                 in logged messages
+ *
+ * Returns:
+ *    0 = success
+ *   !0 = failure. error message already issued
+ */
+DLL_EXPORT int uro_closefromccw ( DEVBLK* dev, const char * urotype ) {
+
+	/*
+	 * clear prior name from Open Printer handshake CCW
+	 */
+	if (UROUT(dev)->cur_namepart != NULL) {
+		free(UROUT(dev)->cur_namepart);
+		UROUT(dev)->cur_namepart = NULL;
+	}
+
+	/*
+	 * clear the computed name of the prior file
+	 */
+	if (UROUT(dev)->cur_filename != NULL) {
+		free(UROUT(dev)->cur_filename);
+		UROUT(dev)->cur_filename = NULL;
+	}
+
+	return 0;
+}
+
 /*END changes by WED */
 
 /*********************************************************************
@@ -872,37 +1084,6 @@ DLL_EXPORT char *hostpath( char *outpath, const char *inpath, size_t buffsize )
         *outpath = 0;
     return outpath;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* Poor man's  "fcntl( fd, F_GETFL )"... */
 /* (only returns access-mode flags and not any others) */
