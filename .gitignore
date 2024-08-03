@@ -187,3 +187,6 @@ allTests.*
 /tests/3330-shadow_1.cckd64
 /tests/3380-shadow_1.cckd64
 /tests/3390-shadow_1.cckd64
+/msvc.debug.AMD64.bin/
+/msvc.debug.AMD64.map/
+/msvc.debug.AMD64.obj/
