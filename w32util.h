@@ -244,7 +244,7 @@ W32_DLL_IMPORT void   w32_set_thread_name( TID tid, const char* name );
 W32_DLL_IMPORT unsigned long  w32_hpagesize();
 
 W32_DLL_IMPORT int   w32_mlock   ( void *addr, size_t len );
-W32_DLL_IMPORT int   w32_munlock ( void *addr, size_t len ); 
+W32_DLL_IMPORT int   w32_munlock ( void *addr, size_t len );
 
 // Hercules low-level file open...
 W32_DLL_IMPORT int    w32_hopen ( const char* path, int oflag, ... );

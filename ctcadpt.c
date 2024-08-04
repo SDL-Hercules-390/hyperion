@@ -1721,7 +1721,7 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
             pDEVBLK->sense[0] = ( SENSE_IR | SENSE_OC );
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
 
-            // A state mismatch tracing does not apply in this case.         
+            // A state mismatch tracing does not apply in this case.
             CTCE_Info.state_new = pDEVBLK->ctcexState;
 
             // Produce a CTCE Trace logging if requested.
@@ -1878,7 +1878,7 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     // We merge a Unit Check in case the Y state is Not Ready.
     // But only when pUnitStat is still 0 or Unit Check or Busy (no Attn).
     // sense byte 0 bit 1 (Intervention Required) will be set,
-    // and also bit 7 (Interface Discconect / Operation Check).    
+    // and also bit 7 (Interface Discconect / Operation Check).
     if( IS_CTCE_YNR( pDEVBLK -> ctceyState ) &&
         ( ( *pUnitStat & (~ ( CSW_BUSY | CSW_UC ) ) ) == 0 ) )
     {
@@ -1962,7 +1962,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
 //  But the orignal CTCX_init had this :
 //  SetSIDInfo( dev, 0x3088, 0x08, 0x3088, 0x01 );
 //  Which is what we used until we made the VM TSAF connection work as well which needed :
-    SetSIDInfo( dev, 0x3088, 0x08, 0x0000, 0x01 );    
+    SetSIDInfo( dev, 0x3088, 0x08, 0x0000, 0x01 );
 
     dev->numsense = 2;
     // A version 4 only feature ...
@@ -3085,7 +3085,7 @@ static void CTCE_Reset( DEVBLK* pDEVBLK )
 
     // A system reset at power up initialisation must result in
     // sense byte 0 bit 1 (Intervention Required) to be set,
-    // and also bit 7 (Interface Discconect / Operation Check).    
+    // and also bit 7 (Interface Discconect / Operation Check).
     if( pDEVBLK->ctce_system_reset )
     {
         pDEVBLK->sense[0] = ( SENSE_IR | SENSE_OC );

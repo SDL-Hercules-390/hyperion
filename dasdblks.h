@@ -200,7 +200,7 @@ struct FORMAT1_DSCB                     /* DSCB1: Dataset descriptor */
     high-order bytes of DS1LSTAR (just like you do for for normal
     format datasets), but in addition to that, the high-order byte
     of the 3-byte TTT is kept in the DS1TTTHI field.
-   
+
     For DSNTYPE=EXTENDED, the size of the dataset in tracks is of
     course 4 bytes in size (TTTT), with the low-order 2 bytes of
     that 4-byte TTTT coming from the high-order two bytes of the
