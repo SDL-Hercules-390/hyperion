@@ -234,7 +234,7 @@ typedef union {
         S8   s_8[16];
 
 #if defined(__V128_SSE__)
-        __m128i V; 			// intrinsic type vector
+        __m128i V;          // intrinsic type vector
 #endif
 
 }  U128  ;
