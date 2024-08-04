@@ -419,6 +419,7 @@
     <ClCompile Include="memrchr.c" />
     <ClCompile Include="mpc.c" />
     <ClCompile Include="netsupp.c" />
+    <ClCompile Include="nnpa.c" />
     <ClCompile Include="omatape.c" />
     <ClCompile Include="opcode.c" />
     <ClCompile Include="panel.c" />

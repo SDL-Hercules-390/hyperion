@@ -717,6 +717,9 @@
     <ClCompile Include="mpc.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="nnpa.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="opcode.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>

@@ -1108,6 +1108,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\nnpa.c"
+							>
+						</File>
+						<File
 							RelativePath=".\opcode.c"
 							>
 						</File>

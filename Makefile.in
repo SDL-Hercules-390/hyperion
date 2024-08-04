@@ -307,7 +307,7 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	hconsole.lo hdiagf18.lo history.lo hRexx.lo hRexx_o.lo \
 	hRexx_r.lo hsccmd.lo hscemode.lo hscloc.lo hscmisc.lo \
 	hscpufun.lo httpserv.lo ieee.lo impl.lo inline.lo io.lo ipl.lo \
-	loadmem.lo loadparm.lo losc.lo machchk.lo machdep.lo opcode.lo \
+	loadmem.lo loadparm.lo losc.lo machchk.lo machdep.lo nnpa.lo opcode.lo \
 	panel.lo pfpo.lo plo.lo qdio.lo scedasd.lo scescsi.lo \
 	script.lo service.lo sie.lo skey.lo sr.lo stack.lo \
 	strsignal.lo tcpip.lo timer.lo trace.lo transact.lo vector.lo \
@@ -678,7 +678,7 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/losc.Plo ./$(DEPDIR)/machchk.Plo \
 	./$(DEPDIR)/machdep.Plo ./$(DEPDIR)/maketape.Po \
 	./$(DEPDIR)/memrchr.Plo ./$(DEPDIR)/mpc.Plo \
-	./$(DEPDIR)/netsupp.Plo ./$(DEPDIR)/omatape.Plo \
+	./$(DEPDIR)/netsupp.Plo ./$(DEPDIR)/nnpa.Plo ./$(DEPDIR)/omatape.Plo \
 	./$(DEPDIR)/opcode.Plo ./$(DEPDIR)/panel.Plo \
 	./$(DEPDIR)/parser.Plo ./$(DEPDIR)/pfpo.Plo \
 	./$(DEPDIR)/plo.Plo ./$(DEPDIR)/printer.Plo \
@@ -1420,6 +1420,7 @@ libherc_la_SOURCES = \
   losc.c             \
   machchk.c          \
   machdep.c          \
+  nnpa.c             \
   opcode.c           \
   panel.c            \
   pfpo.c             \
@@ -2561,6 +2562,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memrchr.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mpc.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netsupp.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nnpa.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/omatape.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opcode.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/panel.Plo@am__quote@ # am--include-marker
@@ -3164,6 +3166,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/memrchr.Plo
 	-rm -f ./$(DEPDIR)/mpc.Plo
 	-rm -f ./$(DEPDIR)/netsupp.Plo
+	-rm -f ./$(DEPDIR)/nnpa.Plo
 	-rm -f ./$(DEPDIR)/omatape.Plo
 	-rm -f ./$(DEPDIR)/opcode.Plo
 	-rm -f ./$(DEPDIR)/panel.Plo
@@ -3401,6 +3404,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/memrchr.Plo
 	-rm -f ./$(DEPDIR)/mpc.Plo
 	-rm -f ./$(DEPDIR)/netsupp.Plo
+	-rm -f ./$(DEPDIR)/nnpa.Plo
 	-rm -f ./$(DEPDIR)/omatape.Plo
 	-rm -f ./$(DEPDIR)/opcode.Plo
 	-rm -f ./$(DEPDIR)/panel.Plo
@@ -3607,7 +3611,9 @@ uninstall-hook:
 
 .libs/dfp.o:  $(decnumber_headers)
 .libs/pfpo.o: $(decnumber_headers)
+.libs/zvector2.o: $(decnumber_headers)
 .libs/ieee.o: $(softfloat_headers)
+.libs/nnpa.o: $(softfloat_headers)
 
 #---------------------------------------------------------------------------
 

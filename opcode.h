@@ -3765,6 +3765,7 @@ DEF_INST(vector_store_rightmost_with_length_reg);
 #endif
 
 #if defined(FEATURE_165_NNET_ASSIST_FACILITY)
+DEF_INST(neural_network_processing_assist);
 DEF_INST(vector_fp_convert_nnp);
 DEF_INST(vector_fp_convert_and_lengthen_from_nnp_high);
 DEF_INST(vector_fp_convert_from_nnp);

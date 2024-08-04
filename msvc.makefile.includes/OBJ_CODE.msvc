@@ -127,6 +127,7 @@ hengine_OBJ = \
     $(O)losc.obj     \
     $(O)machchk.obj  \
     $(O)machdep.obj  \
+    $(O)nnpa.obj     \
     $(O)opcode.obj   \
     $(O)panel.obj    \
     $(O)pfpo.obj     \

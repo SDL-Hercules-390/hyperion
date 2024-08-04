@@ -40,22 +40,17 @@ facility  code  test#   Instruction                                             
     vd2      x   12     E651 VECTOR COUNT LEADING ZERO DIGITS                   VCLZDP      VRR-k
     vd       x   11     E652 VECTOR CONVERT TO BINARY (64)                      VCVBG       VRR-i
     vd2      x   12     E654 VECTOR UNPACK ZONED HIGH                           VUPKZH      VRR-k
-    nn                  E655 VECTOR FP CONVERT TO NNP                           VCNF        VRR-a
-    nn                  E656 VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH       VCLFNH      VRR-a
     vd       x   13     E658 VECTOR CONVERT TO DECIMAL (32)                     VCVD        VRI-i
     vd       x   16     E659 VECTOR SHIFT AND ROUND DECIMAL                     VSRP        VRI-g
     vd       x   13     E65A VECTOR CONVERT TO DECIMAL (64)                     VCVDG       VRI-i
     vd       x   16     E65B VECTOR PERFORM SIGN OPERATION DECIMAL              VPSOP       VRI-g
     vd2      x   12     E65C VECTOR UNPACK ZONED LOW                            VUPKZL      VRR-k
-    nn                  E65D VECTOR FP CONVERT FROM NNP                         VCFN        VRR-a
-    nn                  E65E VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW        VCLFNL      VRR-a
     vd       x   14     E65F VECTOR TEST DECIMAL                                VTP         VRR-g
     vd2      x   06     E670 VECTOR PACK ZONED REGISTER                         VPKZR       VRI-f
     vd       x   05     E671 VECTOR ADD DECIMAL                                 VAP         VRI-f
     vd2      x   07     E672 VECTOR SHIFT AND ROUND DECIMAL REGISTER            VSRPR       VRI-f
     vd       x   05     E673 VECTOR SUBTRACT DECIMAL                            VSP         VRI-f
     vd2      x   17     E674 DECIMAL SCALE AND CONVERT TO HFP                   VSCHP       VRR-b
-    nn                  E675 VECTOR FP CONVERT AND ROUND TO NNP                 VCRNF       VRR-c
     vd       x   15     E677 VECTOR COMPARE DECIMAL                             VCP         VRR-h
     vd       x   05     E678 VECTOR MULTIPLY DECIMAL                            VMP         VRI-f
     vd       x   05     E679 VECTOR MULTIPLY AND SHIFT DECIMAL                  VMSP        VRI-f
@@ -64,6 +59,13 @@ facility  code  test#   Instruction                                             
     vd2      x   18     E67C DECIMAL SCALE AND CONVERT AND SPLIT TO HFP         VSCSHP      VRR-b
     vd2      x   19     E67D VECTOR CONVERT HFP TO SCALED DECIMAL               VCSPH       VRR-j
     vd       x   05     E67E VECTOR SHIFT AND DIVIDE DECIMAL                    VSDP        VRI-f
+
+    The following E6 z/arch vector instructions are implemented in nnpa.c:
+    nn                  E655 VECTOR FP CONVERT TO NNP                           VCNF        VRR-a
+    nn                  E656 VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH       VCLFNH      VRR-a
+    nn                  E65D VECTOR FP CONVERT FROM NNP                         VCFN        VRR-a
+    nn                  E65E VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW        VCLFNL      VRR-a
+    nn                  E675 VECTOR FP CONVERT AND ROUND TO NNP                 VCRNF       VRR-c
 
   facility (bit):
     nn  -   165 - Neural-network-processing-assist facility
@@ -4566,129 +4568,6 @@ DEF_INST( vector_shift_and_divide_decimal )
 }
 
 #endif /* defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) */
-
-/*===================================================================*/
-/* Vector Floating Point                                             */
-/*===================================================================*/
-
-/* ============================================= */
-/* TEMPORARY while zvector2.c is being developed */
-#if defined(__clang__)
-    #pragma clang diagnostic ignored "-Wunused-variable"
-    #pragma clang diagnostic ignored "-Wunused-but-set-variable"
-    #pragma clang diagnostic ignored "-Wcomment"
-    #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
-    #pragma clang diagnostic ignored "-Wmacro-redefined"
-#elif defined(__GNUC__)
-    #pragma GCC diagnostic ignored "-Wunused-variable"
-    #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-    #pragma GCC diagnostic ignored "-Wcomment"
-    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
-/* ============================================= */
-
-#if defined( FEATURE_165_NNET_ASSIST_FACILITY )
-/*-------------------------------------------------------------------*/
-/* E655 VCNF   - VECTOR FP CONVERT TO NNP                    [VRR-a] */
-/*-------------------------------------------------------------------*/
-DEF_INST( vector_fp_convert_nnp )
-{
-    int     v1, v2, m3, m4, m5;           /* instruction parts       */
-
-    VRR_A(inst, regs, v1, v2, m3, m4, m5);
-
-    ZVECTOR_CHECK( regs );
-
-    /* note: m5 is not used in this instruction                     */
-
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-    //
-    ZVECTOR_END( regs );
-}
-
-
-/*--------------------------------------------------------------------*/
-/* E656 VCLFNH - VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH [VRR_a] */
-/*--------------------------------------------------------------------*/
-DEF_INST( vector_fp_convert_and_lengthen_from_nnp_high )
-{
-    int     v1, v2, m3, m4, m5;
-
-    VRR_A(inst, regs, v1, v2, m3, m4, m5);
-
-    ZVECTOR_CHECK( regs );
-
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-    //
-    ZVECTOR_END( regs );
-}
-
-
-/*-------------------------------------------------------------------*/
-/* E65D VCFN   - VECTOR FP CONVERT FROM NNP                  [VRR-a] */
-/*-------------------------------------------------------------------*/
-DEF_INST( vector_fp_convert_from_nnp )
-{
-    int     v1, v2, m3, m4, m5;
-
-    VRR_A( inst, regs, v1, v2, m3, m4, m5 );
-
-    ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-    //
-    ZVECTOR_END( regs );
-}
-
-
-/*-------------------------------------------------------------------*/
-/* E65E VCLFNL - VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW [VRR-a] */
-/*-------------------------------------------------------------------*/
-DEF_INST( vector_fp_convert_and_lengthen_from_nnp_low )
-{
-    int     v1, v2, m3, m4, m5;
-
-    VRR_A( inst, regs, v1, v2, m3, m4, m5 );
-
-    ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-    //
-    ZVECTOR_END( regs );
-}
-
-#endif /* defined( FEATURE_165_NNET_ASSIST_FACILITY ) */
-
-
-#if defined( FEATURE_165_NNET_ASSIST_FACILITY )
-/*-------------------------------------------------------------------*/
-/* E675 VCRNF  - VECTOR FP CONVERT AND ROUND TO NNP          [VRR-c] */
-/*-------------------------------------------------------------------*/
-DEF_INST( vector_fp_convert_and_round_to_nnp )
-{
-    int     v1, v2, v3, m4, m5, m6;
-
-    VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
-    ZVECTOR_CHECK( regs );
-    //
-    // TODO: insert code here
-    //
-    if (1) ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-    //
-    ZVECTOR_END( regs );
-}
-
-#endif /* defined( FFEATURE_165_NNET_ASSIST_FACILITY ) */
 
 
 #endif /* defined(FEATURE_129_ZVECTOR_FACILITY) */

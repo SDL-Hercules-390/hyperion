@@ -497,6 +497,7 @@ libherc_la_SOURCES = \
   losc.c             \
   machchk.c          \
   machdep.c          \
+  nnpa.c             \
   opcode.c           \
   panel.c            \
   pfpo.c             \
