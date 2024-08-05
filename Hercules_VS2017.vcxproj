@@ -1305,6 +1305,16 @@
     <None Include="tests\zvector-e6-19-VCSPH.list" />
     <None Include="tests\zvector-e6-19-VCSPH.pdf" />
     <None Include="tests\zvector-e6-19-VCSPH.tst" />
+    <None Include="tests\zvector-e6-20-NNPconvert.asm" />
+    <None Include="tests\zvector-e6-20-NNPconvert.core" />
+    <None Include="tests\zvector-e6-20-NNPconvert.list" />
+    <None Include="tests\zvector-e6-20-NNPconvert.pdf" />
+    <None Include="tests\zvector-e6-20-NNPconvert.tst" />
+    <None Include="tests\zvector-e6-21-VCRNF.asm" />
+    <None Include="tests\zvector-e6-21-VCRNF.core" />
+    <None Include="tests\zvector-e6-21-VCRNF.list" />
+    <None Include="tests\zvector-e6-21-VCRNF.pdf" />
+    <None Include="tests\zvector-e6-21-VCRNF.tst" />
     <None Include="tests\zvector-e7-01-MinMaxAvg.asm" />
     <None Include="tests\zvector-e7-01-MinMaxAvg.core" />
     <None Include="tests\zvector-e7-01-MinMaxAvg.list" />

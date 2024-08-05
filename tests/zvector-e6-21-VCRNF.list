@@ -1,0 +1,2029 @@
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *        EXPERIMENTAL pending further PoP definition
+                                                     5 *
+                                                     6 *        Zvector E6 instruction tests for VRR-c encoded:
+                                                     7 *
+                                                     8 *        E675  VCRNF   - VECTOR FP CONVERT AND ROUND TO NNP
+                                                     9 *
+                                                    10 *        and partial testing of
+                                                    11 *
+                                                    12 *        E656 VCLFNH   - VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH
+                                                    13 *        E65E VCLFNL   - VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW
+                                                    14 *
+                                                    15 *        during cross check tests for VCRNF
+                                                    16 *
+                                                    17 *        James Wekel August 2024
+                                                    18 ***********************************************************************
+
+
+                                                    20 ***********************************************************************
+                                                    21 *
+                                                    22 *        basic instruction tests
+                                                    23 *
+                                                    24 ***********************************************************************
+                                                    25 *  This program tests EXPERIMENTAL functioning of the z/arch E6 VRR-c
+                                                    26 *  Neural-network-processing-assist facility vector instructions.
+                                                    27 *  These test are EXPERIMENTAL pending further PoP definition of
+                                                    28 *  NNP-data-type-1.
+                                                    29 *
+                                                    30 *  If requested and if VXC == 0 after test instruction execution,
+                                                    31 *  a cross check test is performed. A cross check uses the result
+                                                    32 *  of the instruction test to recreate the test source.
+                                                    33 *
+                                                    34 *  Exceptions (including trapable IEEE exceptions) are not tested.
+                                                    35 *
+                                                    36 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    37 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    38 *  NOT designed to test all aspects of any of the instructions.
+                                                    39 *
+                                                    40 ***********************************************************************
+                                                    41 *
+                                                    42 *   *Testcase zvector-e6-21-VCRNF
+                                                    43 *   *
+                                                    44 *   *        EXPERIMENTAL pending further PoP definition
+                                                    45 *   *
+                                                    46 *   *        Zvector E6 instruction tests for VRR-c encoded:
+                                                    47 *   *
+                                                    48 *   *        E675 VCRNF   - VECTOR FP CONVERT AND ROUND TO NNP
+                                                    49 *   *
+                                                    50 *   *        # -------------------------------------------------------
+                                                    51 *   *        #  This tests only the basic function of the instruction.
+                                                    52 *   *        #  Exceptions are NOT tested.
+                                                    53 *   *        # -------------------------------------------------------
+                                                    54 *   *
+                                                    55 *   mainsize    2
+                                                    56 *   numcpu      1
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    57 *   sysclear
+                                                    58 *   archlvl     z/Arch
+                                                    59 *
+                                                    60 *   loadcore    "$(testpath)/zvector-e6-21-VCRNF.core" 0x0
+                                                    61 *
+                                                    62 *   diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    63 *   runtest 5
+                                                    64 *   diag8cmd    disable   # (reset back to default)
+                                                    65 *
+                                                    66 *   *Done
+                                                    67 *
+                                                    68 ***********************************************************************
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    70 ***********************************************************************
+                                                    71 *        FCHECK Macro - Is a Facility Bit set?
+                                                    72 *
+                                                    73 *        If the facility bit is NOT set, an message is issued and
+                                                    74 *        the test is skipped.
+                                                    75 *
+                                                    76 *        Fcheck uses R0, R1 and R2
+                                                    77 *
+                                                    78 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    79 ***********************************************************************
+                                                    80          MACRO
+                                                    81          FCHECK &BITNO,&NOTSETMSG
+                                                    82 .*                        &BITNO : facility bit number to check
+                                                    83 .*                        &NOTSETMSG : 'facility name'
+                                                    84          LCLA  &FBBYTE           Facility bit in Byte
+                                                    85          LCLA  &FBBIT            Facility bit within Byte
+                                                    86
+                                                    87          LCLA  &L(8)
+                                                    88 &L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+                                                    89
+                                                    90 &FBBYTE  SETA  &BITNO/8
+                                                    91 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    92 .*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    93
+                                                    94          B     X&SYSNDX
+                                                    95 *                                      Fcheck data area
+                                                    96 *                                      skip messgae
+                                                    97 SKT&SYSNDX DC  C'          Skipping tests: '
+                                                    98          DC    C&NOTSETMSG
+                                                    99          DC    C' facility (bit &BITNO) is not installed.'
+                                                   100 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                   101 *                                      facility bits
+                                                   102          DS    FD                      gap
+                                                   103 FB&SYSNDX DS   4FD
+                                                   104          DS    FD                      gap
+                                                   105 *
+                                                   106 X&SYSNDX EQU *
+                                                   107          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                   108          STFLE FB&SYSNDX               get facility bits
+                                                   109
+                                                   110          XGR   R0,R0
+                                                   111          IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+                                                   112          N     R0,=F'&FBBIT'           is bit set?
+                                                   113          BNZ   XC&SYSNDX
+                                                   114 *
+                                                   115 * facility bit not set, issue message and exit
+                                                   116 *
+                                                   117          LA    R0,SKL&SYSNDX           message length
+                                                   118          LA    R1,SKT&SYSNDX           message address
+                                                   119          BAL   R2,MSG
+                                                   120
+                                                   121          B     EOJ
+                                                   122 XC&SYSNDX EQU *
+                                                   123          MEND
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   125 ***********************************************************************
+                                                   126 *        Low core PSWs
+                                                   127 ***********************************************************************
+
+
+                              00000000  00001DFF   129 ZVE6TST  START 0
+00000000                      00000000             130          USING ZVE6TST,R0            Low core addressability
+                                                   131
+                              00000140  00000000   132 SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   134          ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                        135          DC    X'0000000180000000'
+000001A8  00000000 00000200                        136          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   138          ORG   ZVE6TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        139          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        140          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   142          ORG   ZVE6TST+X'200'        Start of actual test program...
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   144
+                                                   145 ***********************************************************************
+                                                   146 *               The actual "ZVE6TST" program itself...
+                                                   147 ***********************************************************************
+                                                   148 *
+                                                   149 *  Architecture Mode: z/Arch
+                                                   150 *  Register Usage:
+                                                   151 *
+                                                   152 *   R0       (work)
+                                                   153 *   R1-4     (work)
+                                                   154 *   R5       Testing control table - current test base
+                                                   155 *   R6-R7    (work)
+                                                   156 *   R8       First base register
+                                                   157 *   R9       Second base register
+                                                   158 *   R10      Third base register
+                                                   159 *   R11      E6TEST call return
+                                                   160 *   R12      E6TESTS register
+                                                   161 *   R13      (work)
+                                                   162 *   R14      Subroutine call
+                                                   163 *   R15      Secondary Subroutine call or work
+                                                   164 *
+                                                   165 ***********************************************************************
+
+00000200                      00000200             167          USING  BEGIN,R8               FIRST Base Register
+00000200                      00001200             168          USING  BEGIN+4096,R9          SECOND Base Register
+00000200                      00002200             169          USING  BEGIN+8192,R10         THIRD Base Register
+                                                   170
+00000200  0580                                     171 BEGIN    BALR  R8,0                    Initalize FIRST base register
+00000202  0680                                     172          BCTR  R8,0                    Initalize FIRST base register
+00000204  0680                                     173          BCTR  R8,0                    Initalize FIRST base register
+                                                   174
+00000206  4190 8800                     00000800   175          LA    R9,2048(,R8)            Initalize SECOND base register
+0000020A  4190 9800                     00000800   176          LA    R9,2048(,R9)            Initalize SECOND base register
+                                                   177
+0000020E  41A0 9800                     00000800   178          LA    R10,2048(,R9)           Initalize THIRD base register
+00000212  41A0 A800                     00000800   179          LA    R10,2048(,R10)          Initalize THIRD base register
+                                                   180
+00000216  B600 8424                     00000624   181          STCTL R0,R0,CTLR0             Store CR0 to enable AFP
+0000021A  9604 8425                     00000625   182          OI    CTLR0+1,X'04'           Turn on AFP bit
+0000021E  9602 8425                     00000625   183          OI    CTLR0+1,X'02'           Turn on Vector bit
+00000222  B700 8424                     00000624   184          LCTL  R0,R0,CTLR0             Reload updated CR0
+                                                   185
+                                                   186 ***********************************************************************
+                                                   187 * Is Neural-network-processing-assist facility 2 installed  (bit 165)
+                                                   188 ***********************************************************************
+                                                   189
+                                                   190          FCHECK 165,'Neural-network-processing-assist'
+00000226  47F0 80C0                     000002C0   191+         B     X0001
+                                                   192+*                                      Fcheck data area
+                                                   193+*                                      skip messgae
+0000022A  40404040 40404040                        194+SKT0001  DC    C'          Skipping tests: '
+00000244  D585A499 81936095                        195+         DC    C'Neural-network-processing-assist'
+00000264  40868183 899389A3                        196+         DC    C' facility (bit 165) is not installed.'
+                              0000005F  00000001   197+SKL0001  EQU   *-SKT0001
+                                                   198+*                                      facility bits
+00000290  00000000 00000000                        199+         DS    FD                      gap
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000298  00000000 00000000                        200+FB0001   DS    4FD
+000002B8  00000000 00000000                        201+         DS    FD                      gap
+                                                   202+*
+                              000002C0  00000001   203+X0001    EQU   *
+000002C0  4100 0004                     00000004   204+         LA    R0,((X0001-FB0001)/8)-1
+000002C4  B2B0 8098                     00000298   205+         STFLE FB0001                  get facility bits
+000002C8  B982 0000                                206+         XGR   R0,R0
+000002CC  4300 80AC                     000002AC   207+         IC    R0,FB0001+20            get fbit byte
+000002D0  5400 8448                     00000648   208+         N     R0,=F'4'                is bit set?
+000002D4  4770 80E8                     000002E8   209+         BNZ   XC0001
+                                                   210+*
+                                                   211+* facility bit not set, issue message and exit
+                                                   212+*
+000002D8  4100 005F                     0000005F   213+         LA    R0,SKL0001              message length
+000002DC  4110 802A                     0000022A   214+         LA    R1,SKT0001              message address
+000002E0  4520 8340                     00000540   215+         BAL   R2,MSG
+000002E4  47F0 8408                     00000608   216+         B     EOJ
+                              000002E8  00000001   217+XC0001   EQU   *
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   219 ***********************************************************************
+                                                   220 *              Do tests in the E6TESTS table
+                                                   221 ***********************************************************************
+                                                   222
+000002E8  58C0 844C                     0000064C   223          L     R12,=A(E6TESTS)        get table of test addresses
+                                                   224
+                              000002EC  00000001   225 NEXTE6   EQU   *
+000002EC  5850 C000                     00000000   226          L     R5,0(0,R12)            get test address
+000002F0  1255                                     227          LTR   R5,R5                     have a test?
+000002F2  4780 82F8                     000004F8   228          BZ    ENDTEST                      done?
+                                                   229
+000002F6                      00000000             230          USING E6TEST,R5
+                                                   231
+000002F6  4800 5004                     00000004   232          LH    R0,TNUM                save current test number
+000002FA  5000 8E04                     00001004   233          ST    R0,TESTING             for easy reference
+                                                   234
+000002FE  58B0 5000                     00000000   235          L     R11,TSUB               get address of test routine
+00000302  05BB                                     236          BALR  R11,R11                do test
+                                                   237
+00000304  45F0 8146                     00000346   238          BAL   R15,XCHECK
+                                                   239 *
+                                                   240 * validate FPC first
+                                                   241 *
+00000308  D500 500A 5041                00000041   242          CLC   FLG(1),FPC_R+1         expected FPC flags?
+0000030E  4770 8280                     00000480   243          BNE   FAILMSG                no, issue failed message
+00000312  D500 500B 5042                00000042   244          CLC   VXC(1),FPC_R+2         expected VXC?
+00000318  4770 8280                     00000480   245          BNE   FAILMSG                no, issue failed message
+                                                   246
+                                                   247 * then validate results, if not inexact
+                                                   248
+0000031C  B982 0011                                249          XGR   R1,R1
+00000320  4310 5041                     00000041   250          IC    R1,FPC_R+1             FPC flags
+00000324  5410 8450                     00000650   251          N     R1,=XL4'00000008'      check inexact flag
+00000328  1211                                     252          LTR   R1,R1
+0000032A  4770 813E                     0000033E   253          BNZ   DONEXT
+                                                   254
+0000032E  E310 501C 0014                0000001C   255          LGF   R1,READDR              expected result address
+00000334  D50F 5028 1000      00000028  00000000   256          CLC   V1OUTPUT,0(R1)
+0000033A  4770 8280                     00000480   257          BNE   FAILMSG                no, issue failed message
+                                                   258
+                              0000033E  00000001   259 DONEXT   EQU   *
+0000033E  41C0 C004                     00000004   260          LA    R12,4(0,R12)           next test address
+00000342  47F0 80EC                     000002EC   261          B     NEXTE6
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   263 *----------------------------------------------------------------------
+                                                   264 * cross check that the result can be converted back to the source
+                                                   265 * where there were NO exceptions (DXC/VXC = 0)
+                                                   266 *----------------------------------------------------------------------
+                              00000346  00000001   267 XCHECK   EQU   *
+00000346  D207 5050 8430      00000050  00000630   268          MVC   SKIPXC,=CL8'SKIP XC '
+0000034C  D500 5007 845C      00000007  0000065C   269          CLC   XCSKIP,=CL1'S'         skip xcheck requested
+00000352  478F 0000                     00000000   270          BE    0(R15)                 skip = S, so exit
+00000356  9500 5042                     00000042   271          CLI   FPC_R+2,0             Only Xcheck no VXC error
+0000035A  477F 0000                     00000000   272          BNZ   0(R15)                 some VXC error , so exit
+                                                   273 *
+                                                   274 *        cross check depends on the instruction
+                                                   275 *
+0000035E  D207 5050 8438      00000050  00000638   276          MVC   SKIPXC,=CL8'        '
+00000364  D507 5010 8440      00000010  00000640   277          CLC   OPNAME,=CL8'VCRNF'
+0000036A  4780 8178                     00000378   278          BE    XCVCRNF
+                                                   279
+                                                   280
+0000036E  D207 5050 8430      00000050  00000630   281          MVC   SKIPXC,=CL8'SKIP XC '
+00000374  07FF                                     282          BR    R15                  return from xcheck
+                                                   283
+                                                   284 * cross check: VCRNF   - VECTOR FP CONVERT AND ROUND TO NNP
+                                                   285 *
+00000378                                           286 XCVCRNF  DS    0F
+00000378  B29D 842C                     0000062C   287          LFPC  FPCINIT              initialize FPC
+                                                   288
+0000037C  E700 5028 0806                00000028   289          VL    V16,V1OUTPUT
+00000382  E6F0 0000 2456                           290          VCLFNH V15,V16,2,0
+00000388  B29C 5088                     00000088   291          STFPC FPC_XC1              save 1st FPC
+0000038C  E7F0 5060 000E                00000060   292          VST   V15,XCOUTPUT
+                                                   293
+00000392  B29D 842C                     0000062C   294          LFPC  FPCINIT              initialize FPC
+                                                   295
+00000396  E700 5028 0806                00000028   296          VL    V16,V1OUTPUT
+0000039C  E6F0 0000 245E                           297          VCLFNL V15,V16,2,0
+000003A2  B29C 508C                     0000008C   298          STFPC FPC_XC2              save 2nd FPC
+000003A6  E7F0 5070 000E                00000070   299          VST   V15,XCOUTPUT+16
+                                                   300
+000003AC  9500 508A                     0000008A   301          CLI   FPC_XC1+2,0          1st FPC
+000003B0  477F 0000                     00000000   302          BNZ   0(R15)               some VXC error , so exit
+                                                   303
+000003B4  9500 508E                     0000008E   304          CLI   FPC_XC2+2,0          2nd FPC
+000003B8  477F 0000                     00000000   305          BNZ   0(R15)               some VXC error , so exit
+                                                   306
+000003BC  E310 500C 0014                0000000C   307          LGF   R1,V2ADDR            expected source address
+000003C2  D51F 5060 1000                00000000   308          CLC   XCOUTPUT(32),0(R1)
+000003C8  4770 81CE                     000003CE   309          BNE   XCFAILMSG
+000003CC  07FF                                     310          BR    R15                  return from xcheck
+                                                   311
+                                                   312
+                                                   313 * xcheck failed message
+000003CE                                           314 XCFAILMSG DS   0H
+000003CE  4820 5004                     00000004   315          LH    R2,TNUM              get test number and convert
+000003D2  4E20 8ECA                     000010CA   316          CVD   R2,DECNUM
+000003D6  D211 8EB4 8E9E      000010B4  0000109E   317          MVC   PRT3,EDIT
+000003DC  DE11 8EB4 8ECA      000010B4  000010CA   318          ED    PRT3,DECNUM
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000003E2  D202 8E5D 8EC1      0000105D  000010C1   319          MVC   XCPTNUM(3),PRT3+13   fill in message with test #
+                                                   320
+000003E8  D207 8E7F 5010      0000107F  00000010   321          MVC   XCPNAME,OPNAME       fill in message with instruction
+                                                   322
+000003EE  B982 0022                                323          XGR   R2,R2
+000003F2  4320 5008                     00000008   324          IC    R2,M4                get m3 and convert
+000003F6  4E20 8ECA                     000010CA   325          CVD   R2,DECNUM
+000003FA  D211 8EB4 8E9E      000010B4  0000109E   326          MVC   PRT3,EDIT
+00000400  DE11 8EB4 8ECA      000010B4  000010CA   327          ED    PRT3,DECNUM
+00000406  D201 8E90 8EC2      00001090  000010C2   328          MVC   XCPM4(2),PRT3+14     fill in message with m3 field
+                                                   329 *
+0000040C  B982 0022                                330          XGR   R2,R2
+00000410  4320 5009                     00000009   331          IC    R2,M5                get m4 and convert
+00000414  4E20 8ECA                     000010CA   332          CVD   R2,DECNUM
+00000418  D211 8EB4 8E9E      000010B4  0000109E   333          MVC   PRT3,EDIT
+0000041E  DE11 8EB4 8ECA      000010B4  000010CA   334          ED    PRT3,DECNUM
+00000424  D201 8E9B 8EC2      0000109B  000010C2   335          MVC   XCPM5(2),PRT3+14     fill in message with m4 field
+                                                   336
+0000042A  50F0 8278                     00000478   337          ST    R15,XCR15            save r15
+0000042E  4100 004E                     0000004E   338          LA    R0,XCPLNG            message length
+00000432  4110 8E50                     00001050   339          LA    R1,XCPLINE           messagfe address
+00000436  45F0 8306                     00000506   340          BAL   R15,RPTERROR
+0000043A  58F0 8278                     00000478   341          L     R15,XCR15
+                                                   342
+0000043E  5800 8454                     00000654   343          L     R0,=F'1'             set failed test indicator
+00000442  5000 8E00                     00001000   344          ST    R0,FAILED
+00000446  07FF                                     345          BR    R15                  return from xcheck
+                                                   346
+00000448                                           347          DS    0FD
+00000448  00000000 00000000                        348 XCRESULT DS    XL16
+00000458  00000000 00000000                        349 XCV1     DS    XL16
+00000468  00000000 00000000                        350 XCV2     DS    XL16
+00000478  00000000 00000000                        351 XCR15    DS    FD
+                                                   352
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   354 ***********************************************************************
+                                                   355 * result not as expected:
+                                                   356 *        issue message with test number, instruction under test
+                                                   357 *              and instruction m4
+                                                   358 ***********************************************************************
+                              00000480  00000001   359 FAILMSG  EQU   *
+00000480  4820 5004                     00000004   360          LH    R2,TNUM              get test number and convert
+00000484  4E20 8ECA                     000010CA   361          CVD   R2,DECNUM
+00000488  D211 8EB4 8E9E      000010B4  0000109E   362          MVC   PRT3,EDIT
+0000048E  DE11 8EB4 8ECA      000010B4  000010CA   363          ED    PRT3,DECNUM
+00000494  D202 8E15 8EC1      00001015  000010C1   364          MVC   PRTNUM(3),PRT3+13    fill in message with test #
+                                                   365
+0000049A  D207 8E30 5010      00001030  00000010   366          MVC   PRTNAME,OPNAME       fill in message with instruction
+                                                   367 *
+000004A0  B982 0022                                368          XGR   R2,R2
+000004A4  4320 5008                     00000008   369          IC    R2,M4                get m3 and convert
+000004A8  4E20 8ECA                     000010CA   370          CVD   R2,DECNUM
+000004AC  D211 8EB4 8E9E      000010B4  0000109E   371          MVC   PRT3,EDIT
+000004B2  DE11 8EB4 8ECA      000010B4  000010CA   372          ED    PRT3,DECNUM
+000004B8  D201 8E41 8EC2      00001041  000010C2   373          MVC   PRTM4(2),PRT3+14     fill in message with m3 field
+                                                   374 *
+000004BE  B982 0022                                375          XGR   R2,R2
+000004C2  4320 5009                     00000009   376          IC    R2,M5                get m4 and convert
+000004C6  4E20 8ECA                     000010CA   377          CVD   R2,DECNUM
+000004CA  D211 8EB4 8E9E      000010B4  0000109E   378          MVC   PRT3,EDIT
+000004D0  DE11 8EB4 8ECA      000010B4  000010CA   379          ED    PRT3,DECNUM
+000004D6  D201 8E4D 8EC2      0000104D  000010C2   380          MVC   PRTM5(2),PRT3+14     fill in message with m4 field
+                                                   381 *
+000004DC  4100 0048                     00000048   382          LA    R0,PRTLNG            message length
+000004E0  4110 8E08                     00001008   383          LA    R1,PRTLINE           messagfe address
+000004E4  45F0 8306                     00000506   384          BAL   R15,RPTERROR
+
+
+                                                   386 ***********************************************************************
+                                                   387 * continue after a failed test
+                                                   388 ***********************************************************************
+                              000004E8  00000001   389 FAILCONT EQU   *
+000004E8  5800 8454                     00000654   390          L     R0,=F'1'          set failed test indicator
+000004EC  5000 8E00                     00001000   391          ST    R0,FAILED
+                                                   392
+000004F0  41C0 C004                     00000004   393          LA    R12,4(0,R12)      next test address
+000004F4  47F0 80EC                     000002EC   394          B     NEXTE6
+
+
+                                                   396 ***********************************************************************
+                                                   397 * end of testing; set ending psw
+                                                   398 ***********************************************************************
+                              000004F8  00000001   399 ENDTEST  EQU   *
+000004F8  5810 8E00                     00001000   400          L     R1,FAILED         did a test fail?
+000004FC  1211                                     401          LTR   R1,R1
+000004FE  4780 8408                     00000608   402          BZ    EOJ                  No, exit
+00000502  47F0 8420                     00000620   403          B     FAILTEST             Yes, exit with BAD PSW
+                                                   404
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   406 ***********************************************************************
+                                                   407 *        RPTERROR          Report instruction test in error
+                                                   408 *                             R0 = MESSGAE LENGTH
+                                                   409 *                             R1 = ADDRESS OF MESSAGE
+                                                   410 ***********************************************************************
+
+00000506  50F0 8324                     00000524   412 RPTERROR ST    R15,RPTSAVE          Save return address
+0000050A  5050 8328                     00000528   413          ST    R5,RPTSVR5           Save R5
+                                                   414 *
+                                                   415 *        Use Hercules Diagnose for Message to console
+                                                   416 *
+0000050E  9002 8330                     00000530   417          STM   R0,R2,RPTDWSAV       save regs used by MSG
+00000512  4520 8340                     00000540   418          BAL   R2,MSG               call Hercules console MSG display
+00000516  9802 8330                     00000530   419          LM    R0,R2,RPTDWSAV       restore regs
+
+
+0000051A  5850 8328                     00000528   421          L     R5,RPTSVR5           Restore R5
+0000051E  58F0 8324                     00000524   422          L     R15,RPTSAVE          Restore return address
+00000522  07FF                                     423          BR    R15                  Return to caller
+
+00000524  00000000                                 425 RPTSAVE  DC    F'0'                 R15 save area
+00000528  00000000                                 426 RPTSVR5  DC    F'0'                 R5 save area
+
+00000530  00000000 00000000                        428 RPTDWSAV DC    2D'0'                R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   430 ***********************************************************************
+                                                   431 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   432 *              R2 = return address
+                                                   433 ***********************************************************************
+
+00000540  4900 8458                     00000658   435 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+00000544  07D2                                     436          BNHR  R2                     No, ignore
+
+00000546  9002 837C                     0000057C   438          STM   R0,R2,MSGSAVE          Save registers
+
+0000054A  4900 845A                     0000065A   440          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+0000054E  47D0 8356                     00000556   441          BNH   MSGOK                  Yes, continue
+00000552  4100 005F                     0000005F   442          LA    R0,L'MSGMSG            No, set to maximum
+
+00000556  1820                                     444 MSGOK    LR    R2,R0                  Copy length to work register
+00000558  0620                                     445          BCTR  R2,0                   Minus-1 for execute
+0000055A  4420 8388                     00000588   446          EX    R2,MSGMVC              Copy message to O/P buffer
+
+0000055E  4120 200A                     0000000A   448          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+00000562  4110 838E                     0000058E   449          LA    R1,MSGCMD              Point to true command
+
+00000566  83120008                                 451          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+0000056A  4780 8376                     00000576   452          BZ    MSGRET                 Return if successful
+                                                   453
+0000056E  1222                                     454          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+00000570  4780 8376                     00000576   455          BZ    MSGRET                   an error occurred but coninue
+                                                   456
+00000574  0000                                     457          DC    H'0'                   CRASH for debugging purposes
+
+00000576  9802 837C                     0000057C   459 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+0000057A  07F2                                     460          BR    R2                     Return to caller
+
+
+
+
+
+
+0000057C  00000000 00000000                        462 MSGSAVE  DC    3F'0'                  Registers save area
+00000588  D200 8397 1000      00000597  00000000   463 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+0000058E  D4E2C7D5 D6C8405C                        465 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+00000597  40404040 40404040                        466 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   467
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   469 ***********************************************************************
+                                                   470 *        Normal completion or Abnormal termination PSWs
+                                                   471 ***********************************************************************
+
+
+
+
+
+000005F8  00020001 80000000                        473 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+00000608  B2B2 83F8                     000005F8   475 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+00000610  00020001 80000000                        477 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+00000620  B2B2 8410                     00000610   479 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                                   481 ***********************************************************************
+                                                   482 *        Working Storage
+                                                   483 ***********************************************************************
+
+
+00000624  00000000                                 485 CTLR0    DS    F                CR0
+00000628  00000000                                 486          DS    F
+0000062C  00000000                                 487 FPCINIT  DC    XL4'00000000'    FPC before test
+
+
+                                                   489
+00000630                                           490          LTORG ,                Literals pool
+00000630  E2D2C9D7 40E7C340                        491                =CL8'SKIP XC '
+00000638  40404040 40404040                        492                =CL8'        '
+00000640  E5C3D9D5 C6404040                        493                =CL8'VCRNF'
+00000648  00000004                                 494                =F'4'
+0000064C  00001DBC                                 495                =A(E6TESTS)
+00000650  00000008                                 496                =XL4'00000008'
+00000654  00000001                                 497                =F'1'
+00000658  0000                                     498                =H'0'
+0000065A  005F                                     499                =AL2(L'MSGMSG)
+0000065C  E2                                       500                =CL1'S'
+                                                   501
+                                                   502 *        some constants
+                                                   503
+                              00000400  00000001   504 K        EQU   1024             One KB
+                              00001000  00000001   505 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   506 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   507 MB       EQU   (K*K)             1 MB
+                                                   508
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   509
+                              AABBCCDD  00000001   510 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   511 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   513 *======================================================================
+                                                   514 *
+                                                   515 *  NOTE: start data on an address that is easy to display
+                                                   516 *        within Hercules
+                                                   517 *
+                                                   518 *======================================================================
+                                                   519
+0000065D                      0000065D  00001000   520          ORG   ZVE6TST+X'1000'
+00001000  00000000                                 521 FAILED   DC    F'0'                     some test failed?
+00001004  00000000                                 522 TESTING  DC    F'0'                     current test #
+
+
+                                                   524 ***********************************************************************
+                                                   525 *        TEST failed : result messgae
+                                                   526 ***********************************************************************
+                                                   527 *
+                                                   528 *        failed message and associated editting
+                                                   529 *
+00001008  40404040 4040E385                        530 PRTLINE  DC    C'      Test # '
+00001015  A7A7A7                                   531 PRTNUM   DC    C'xxx'
+00001018  40868189 93858440                        532          DC    c' failed for instruction '
+00001030  A7A7A7A7 A7A7A7A7                        533 PRTNAME  DC    CL8'xxxxxxxx'
+00001038  40A689A3 884094F4                        534          DC    C' with m4='
+00001041  A7A7                                     535 PRTM4    DC    C'xx'
+00001043  6B                                       536          DC    C','
+00001044  40A689A3 884094F5                        537          DC    C' with m5='
+0000104D  A7A7                                     538 PRTM5    DC    C'xx'
+0000104F  4B                                       539          DC    C'.'
+                              00000048  00000001   540 PRTLNG   EQU   *-PRTLINE
+
+
+                                                   542 ***********************************************************************
+                                                   543 *        TEST failed : XCHECK
+                                                   544 ***********************************************************************
+                                                   545 *
+                                                   546 *        XCHECK failed message
+                                                   547 *
+00001050  40404040 4040E385                        548 XCPLINE  DC    C'      Test # '
+0000105D  A7A7A7                                   549 XCPTNUM  DC    C'xxx'
+00001060  40E7C3C8 C5C3D240                        550          DC    c' XCHECK failed for instruction '
+0000107F  A7A7A7A7 A7A7A7A7                        551 XCPNAME  DC    CL8'xxxxxxxx'
+00001087  40A689A3 884094F4                        552          DC    C' with m4='
+00001090  A7A7                                     553 XCPM4    DC    C'xx'
+00001092  40A689A3 884094F5                        554          DC    C' with m5='
+0000109B  A7A7                                     555 XCPM5    DC    C'xx'
+0000109D  4B                                       556          DC    C'.'
+                              0000004E  00000001   557 XCPLNG   EQU   *-XCPLINE
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   559 ***********************************************************************
+                                                   560 *        TEST failed : message working storge
+                                                   561 ***********************************************************************
+0000109E  40212020 20202020                        562 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   563
+000010B0  7E7E7E6E                                 564          DC    C'===>'
+000010B4  40404040 40404040                        565 PRT3     DC    CL18' '
+000010C6  4C7E7E7E                                 566          DC    C'<==='
+000010CA  00000000 00000000                        567 DECNUM   DS    CL16
+
+
+                                                   569 *
+                                                   570 *        Vector instruction results, pollution and input
+                                                   571 *
+000010DA  00000000 00000000                        572          DS    XL16                                        gap
+000010EA  FFFFFFFF FFFFFFFF                        573 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
+000010FA  12345678 90123456                        574 V1INPUT  DC    XL16'1234567890123456789012345678901D'    V1 input
+0000110A  00000000 00000000                        575          DS    XL16
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   577 ***********************************************************************
+                                                   578 *        E6TEST DSECT
+                                                   579 ***********************************************************************
+
+
+                                                   581 E6TEST   DSECT ,
+00000000  00000000                                 582 TSUB     DC    A(0)              pointer  to test
+00000004  0000                                     583 TNUM     DC    H'00'             Test Number
+00000006  00                                       584          DC    X'00'
+00000007  40                                       585 XCSKIP   DC    CL1' '            Y = skip cross check
+00000008  00                                       586 M4       DC    HL1'00'           m4 used
+00000009  00                                       587 M5       DC    HL1'00'           m5 used
+0000000A  00                                       588 FLG      DC    X'00'             expected FPC flags
+0000000B  00                                       589 VXC      DC    X'00'             VXC expected
+0000000C  00000000                                 590 V2ADDR   DC    A(0)              address of v2: 16-byte packed decimal
+00000010  40404040 40404040                        591 OPNAME   DC    CL8' '            E6 name
+00000018  00000000                                 592 RELEN    DC    A(0)              result length
+0000001C  00000000                                 593 READDR   DC    A(0)              expected result address
+00000020  00000000 00000000                        594          DS    FD                   gap
+00000028  00000000 00000000                        595 V1OUTPUT DS    XL16              V1 Output
+00000038  00000000 00000000                        596          DS    FD                   gap
+00000040  00000000                                 597 FPC_R    DS    F                 FPC after instruction
+00000048  00000000 00000000                        598          DS    FD                   gap
+00000050  40404040 40404040                        599 SKIPXC   DC    CL8' '            was cross check skipped?
+00000058  00000000 00000000                        600          DS    FD                   gap
+00000060  00000000 00000000                        601 XCOUTPUT DS    XL16              Cross check Output
+00000070  00000000 00000000                        602          DS    XL16
+00000080  00000000 00000000                        603          DS    FD                   gap
+00000088  00000000                                 604 FPC_XC1  DS    F                 1st cross check FPC
+0000008C  00000000                                 605 FPC_XC2  DS    F                 2nd cross check FPC
+00000090  00000000 00000000                        606          DS    FD                   gap
+00000098  00000000                                 607 WK1      DS    F                 debug area
+0000009C  00000000                                 608 WK2      DS    F
+000000A0                                           609          DS    0F
+                                                   610 **
+                                                   611 *        test routine will be here (from VRR-c macro)
+
+
+                              00000000  00001DFF   613 ZVE6TST  CSECT ,
+0000111C                                           614          DS    0F
+
+
+                                                   616 ***********************************************************************
+                                                   617 *     Macros to help build test tables
+                                                   618 ***********************************************************************
+
+
+
+                                                   620 *
+                                                   621 * macro to generate individual test
+                                                   622 *
+                                                   623          MACRO
+                                                   624          VRR_C &INST,&M4,&M5,&FLAGS,&VXC,&SKIP
+                                                   625 .*                               &INST  - VRR-c instruction under test
+                                                   626 .*                               &m4    - m4 field
+                                                   627 .*                               &m5    - m5 field
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   628 .*                               &flags - expected FPC flags
+                                                   629 .*                               &VXC   - expected VXC
+                                                   630 .*                               &SKIP  - S = skip cross check
+                                                   631          GBLA  &TNUM
+                                                   632 &TNUM    SETA  &TNUM+1
+                                                   633
+                                                   634          DS    0FD
+                                                   635          USING *,R5              base for test data and test routine
+                                                   636
+                                                   637 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   638          DC    H'&TNUM'          test number
+                                                   639          DC    X'00'
+                                                   640          DC    CL1'&SKIP'        Y = skip cross check
+                                                   641          DC    HL1'&M4'          m4
+                                                   642          DC    HL1'&M5'          m5
+                                                   643 FLG&TNUM DC    X'&FLAGS'         expected FPC flags
+                                                   644 VXC&TNUM DC    X'&VXC'           expected VXC
+                                                   645 V2_&TNUM DC    A(RE&TNUM+16)     address of v2: 16-byte packed decimal
+                                                   646          DC    CL8'&INST'        instruction name
+                                                   647          DC    A(16)             result length
+                                                   648          DC    A(RE&TNUM)        address of expected resul
+                                                   649          DS    FD                gap
+                                                   650 V1O&TNUM DS    XL16              V1 output
+                                                   651          DS    FD                   gap
+                                                   652 FPC_R_&TNUM DS F                 FPC after instruction
+                                                   653          DS    FD                   gap
+                                                   654          DC    CL8' '            was cross check skipped?
+                                                   655          DS    FD                   gap
+                                                   656 XCO&TNUM DS    XL16              Cross check Output
+                                                   657          DS    XL16
+                                                   658          DS    FD                   gap
+                                                   659 FPC_XC_&TNUM DS F               1st cross check FPC
+                                                   660          DS    F                2nd cross check FPC
+                                                   661          DS    FD                   gap
+                                                   662          DS    F                 debug area
+                                                   663          DS    F
+                                                   664 .*
+                                                   665 *
+                                                   666 X&TNUM   DS    0F
+                                                   667          LFPC  FPCINIT           initialize FPC
+                                                   668
+                                                   669          LGF   R2,V2_&TNUM       get v2
+                                                   670          VLM   V22,V23,0(R2)
+                                                   671
+                                                   672          &INST V22,V22,V23,&M4,&M5   test instruction (dest is source)
+                                                   673
+                                                   674          STFPC FPC_R_&TNUM       save FPC
+                                                   675          VST   V22,V1O&TNUM      save instruction result
+                                                   676
+                                                   677          BR    R11               return
+                                                   678
+                                                   679 RE&TNUM  DS    0F                expected 16 byte result
+                                                   680          DROP  R5
+                                                   681
+                                                   682          MEND
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   684 *
+                                                   685 * macro to generate table of pointers to individual tests
+                                                   686 *
+                                                   687          MACRO
+                                                   688          PTTABLE
+                                                   689          GBLA  &TNUM
+                                                   690          LCLA  &CUR
+                                                   691 &CUR     SETA  1
+                                                   692 .*
+                                                   693 TTABLE   DS    0F
+                                                   694 .LOOP    ANOP
+                                                   695 .*
+                                                   696          DC    A(T&CUR)          TEST &CUR
+                                                   697 .*
+                                                   698 &CUR     SETA  &CUR+1
+                                                   699          AIF   (&CUR LE &TNUM).LOOP
+                                                   700 *
+                                                   701          DC    A(0)              END OF TABLE
+                                                   702          DC    A(0)
+                                                   703 .*
+                                                   704          MEND
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   706 ***********************************************************************
+                                                   707 *        E6 VRR-c tests
+                                                   708 ***********************************************************************
+                                                   709          PRINT DATA
+                                                   710 *
+                                                   711 *        E675  VCRNF   - VECTOR FP CONVERT AND ROUND TO NNP
+                                                   712 *
+                                                   713 *----------------------------------------------------------------------
+                                                   714 *   VRR-c   instruction, m4, m5, flags, VXC, SKIP
+                                                   715 *   followed by
+                                                   716 *              followed by
+                                                   717 *              v1 - 16 byte expected result
+                                                   718 *              v2 - 32 byte source
+                                                   719 *----------------------------------------------------------------------
+                                                   720 * VCRNF   - VECTOR FP CONVERT AND ROUND TO NNP
+                                                   721 *----------------------------------------------------------------------
+                                                   722 * Short Float -> dlfloat  (with cross check dlfloat -> short float)
+                                                   723 *
+                                                   724 * some of these tests use numbers from PoP SA22-7832-13,
+                                                   725 * Figure 9-2. Examples of Floating-Point Numbers ( page 9-6 )
+                                                   726 *
+                                                   727 * +0     simple instruction test and 'test' test
+                                                   728          VRR_C VCRNF,0,2,00,00,N
+00001120                                           729+         DS    0FD
+00001120                      00001120             730+         USING *,R5              base for test data and test routine
+00001120  000011C0                                 731+T1       DC    A(X1)             address of test routine
+00001124  0001                                     732+         DC    H'1'              test number
+00001126  00                                       733+         DC    X'00'
+00001127  D5                                       734+         DC    CL1'N'            Y = skip cross check
+00001128  00                                       735+         DC    HL1'0'            m4
+00001129  02                                       736+         DC    HL1'2'            m5
+0000112A  00                                       737+FLG1     DC    X'00'             expected FPC flags
+0000112B  00                                       738+VXC1     DC    X'00'             expected VXC
+0000112C  000011F4                                 739+V2_1     DC    A(RE1+16)         address of v2: 16-byte packed decimal
+00001130  E5C3D9D5 C6404040                        740+         DC    CL8'VCRNF'        instruction name
+00001138  00000010                                 741+         DC    A(16)             result length
+0000113C  000011E4                                 742+         DC    A(RE1)            address of expected resul
+00001140  00000000 00000000                        743+         DS    FD                gap
+00001148  00000000 00000000                        744+V1O1     DS    XL16              V1 output
+00001150  00000000 00000000
+00001158  00000000 00000000                        745+         DS    FD                   gap
+00001160  00000000                                 746+FPC_R_1  DS    F                 FPC after instruction
+00001168  00000000 00000000                        747+         DS    FD                   gap
+00001170  40404040 40404040                        748+         DC    CL8' '            was cross check skipped?
+00001178  00000000 00000000                        749+         DS    FD                   gap
+00001180  00000000 00000000                        750+XCO1     DS    XL16              Cross check Output
+00001188  00000000 00000000
+00001190  00000000 00000000                        751+         DS    XL16
+00001198  00000000 00000000
+000011A0  00000000 00000000                        752+         DS    FD                   gap
+000011A8  00000000                                 753+FPC_XC_1 DS    F                1st cross check FPC
+000011AC  00000000                                 754+         DS    F                2nd cross check FPC
+000011B0  00000000 00000000                        755+         DS    FD                   gap
+000011B8  00000000                                 756+         DS    F                 debug area
+000011BC  00000000                                 757+         DS    F
+                                                   758+*
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000011C0                                           759+X1       DS    0F
+000011C0  B29D 842C                     0000062C   760+         LFPC  FPCINIT           initialize FPC
+000011C4  E320 500C 0014                0000112C   761+         LGF   R2,V2_1           get v2
+000011CA  E767 2000 0C36                00000000   762+         VLM   V22,V23,0(R2)
+000011D0  E666 7002 0E75                           763+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+000011D6  B29C 5040                     00001160   764+         STFPC FPC_R_1           save FPC
+000011DA  E760 5028 080E                00001148   765+         VST   V22,V1O1          save instruction result
+000011E0  07FB                                     766+         BR    R11               return
+000011E4                                           767+RE1      DS    0F                expected 16 byte result
+000011E4                                           768+         DROP  R5
+000011E4  00000000 00000000                        769          DC    XL16'00000000000000000000000000000000'
+000011EC  00000000 00000000
+000011F4  00000000 00000000                        770          DC    XL16'00000000000000000000000000000000'
+000011FC  00000000 00000000
+00001204  00000000 00000000                        771          DC    XL16'00000000000000000000000000000000'
+0000120C  00000000 00000000
+                                                   772
+                                                   773 * +1, -1
+                                                   774          VRR_C VCRNF,0,2,00,00,N
+00001218                                           775+         DS    0FD
+00001218                      00001218             776+         USING *,R5              base for test data and test routine
+00001218  000012B8                                 777+T2       DC    A(X2)             address of test routine
+0000121C  0002                                     778+         DC    H'2'              test number
+0000121E  00                                       779+         DC    X'00'
+0000121F  D5                                       780+         DC    CL1'N'            Y = skip cross check
+00001220  00                                       781+         DC    HL1'0'            m4
+00001221  02                                       782+         DC    HL1'2'            m5
+00001222  00                                       783+FLG2     DC    X'00'             expected FPC flags
+00001223  00                                       784+VXC2     DC    X'00'             expected VXC
+00001224  000012EC                                 785+V2_2     DC    A(RE2+16)         address of v2: 16-byte packed decimal
+00001228  E5C3D9D5 C6404040                        786+         DC    CL8'VCRNF'        instruction name
+00001230  00000010                                 787+         DC    A(16)             result length
+00001234  000012DC                                 788+         DC    A(RE2)            address of expected resul
+00001238  00000000 00000000                        789+         DS    FD                gap
+00001240  00000000 00000000                        790+V1O2     DS    XL16              V1 output
+00001248  00000000 00000000
+00001250  00000000 00000000                        791+         DS    FD                   gap
+00001258  00000000                                 792+FPC_R_2  DS    F                 FPC after instruction
+00001260  00000000 00000000                        793+         DS    FD                   gap
+00001268  40404040 40404040                        794+         DC    CL8' '            was cross check skipped?
+00001270  00000000 00000000                        795+         DS    FD                   gap
+00001278  00000000 00000000                        796+XCO2     DS    XL16              Cross check Output
+00001280  00000000 00000000
+00001288  00000000 00000000                        797+         DS    XL16
+00001290  00000000 00000000
+00001298  00000000 00000000                        798+         DS    FD                   gap
+000012A0  00000000                                 799+FPC_XC_2 DS    F                1st cross check FPC
+000012A4  00000000                                 800+         DS    F                2nd cross check FPC
+000012A8  00000000 00000000                        801+         DS    FD                   gap
+000012B0  00000000                                 802+         DS    F                 debug area
+000012B4  00000000                                 803+         DS    F
+                                                   804+*
+000012B8                                           805+X2       DS    0F
+000012B8  B29D 842C                     0000062C   806+         LFPC  FPCINIT           initialize FPC
+000012BC  E320 500C 0014                00001224   807+         LGF   R2,V2_2           get v2
+000012C2  E767 2000 0C36                00000000   808+         VLM   V22,V23,0(R2)
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000012C8  E666 7002 0E75                           809+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+000012CE  B29C 5040                     00001258   810+         STFPC FPC_R_2           save FPC
+000012D2  E760 5028 080E                00001240   811+         VST   V22,V1O2          save instruction result
+000012D8  07FB                                     812+         BR    R11               return
+000012DC                                           813+RE2      DS    0F                expected 16 byte result
+000012DC                                           814+         DROP  R5
+000012DC  3E000000 00000000                        815          DC    XL16'3E00000000000000BE00000000000000'
+000012E4  BE000000 00000000
+000012EC  3F800000 00000000                        816          DC    XL16'3F800000000000000000000000000000'
+000012F4  00000000 00000000
+000012FC  BF800000 00000000                        817          DC    XL16'BF800000000000000000000000000000'
+00001304  00000000 00000000
+                                                   818
+                                                   819 * +.5, -.5
+                                                   820          VRR_C VCRNF,0,2,00,00,N
+00001310                                           821+         DS    0FD
+00001310                      00001310             822+         USING *,R5              base for test data and test routine
+00001310  000013B0                                 823+T3       DC    A(X3)             address of test routine
+00001314  0003                                     824+         DC    H'3'              test number
+00001316  00                                       825+         DC    X'00'
+00001317  D5                                       826+         DC    CL1'N'            Y = skip cross check
+00001318  00                                       827+         DC    HL1'0'            m4
+00001319  02                                       828+         DC    HL1'2'            m5
+0000131A  00                                       829+FLG3     DC    X'00'             expected FPC flags
+0000131B  00                                       830+VXC3     DC    X'00'             expected VXC
+0000131C  000013E4                                 831+V2_3     DC    A(RE3+16)         address of v2: 16-byte packed decimal
+00001320  E5C3D9D5 C6404040                        832+         DC    CL8'VCRNF'        instruction name
+00001328  00000010                                 833+         DC    A(16)             result length
+0000132C  000013D4                                 834+         DC    A(RE3)            address of expected resul
+00001330  00000000 00000000                        835+         DS    FD                gap
+00001338  00000000 00000000                        836+V1O3     DS    XL16              V1 output
+00001340  00000000 00000000
+00001348  00000000 00000000                        837+         DS    FD                   gap
+00001350  00000000                                 838+FPC_R_3  DS    F                 FPC after instruction
+00001358  00000000 00000000                        839+         DS    FD                   gap
+00001360  40404040 40404040                        840+         DC    CL8' '            was cross check skipped?
+00001368  00000000 00000000                        841+         DS    FD                   gap
+00001370  00000000 00000000                        842+XCO3     DS    XL16              Cross check Output
+00001378  00000000 00000000
+00001380  00000000 00000000                        843+         DS    XL16
+00001388  00000000 00000000
+00001390  00000000 00000000                        844+         DS    FD                   gap
+00001398  00000000                                 845+FPC_XC_3 DS    F                1st cross check FPC
+0000139C  00000000                                 846+         DS    F                2nd cross check FPC
+000013A0  00000000 00000000                        847+         DS    FD                   gap
+000013A8  00000000                                 848+         DS    F                 debug area
+000013AC  00000000                                 849+         DS    F
+                                                   850+*
+000013B0                                           851+X3       DS    0F
+000013B0  B29D 842C                     0000062C   852+         LFPC  FPCINIT           initialize FPC
+000013B4  E320 500C 0014                0000131C   853+         LGF   R2,V2_3           get v2
+000013BA  E767 2000 0C36                00000000   854+         VLM   V22,V23,0(R2)
+000013C0  E666 7002 0E75                           855+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+000013C6  B29C 5040                     00001350   856+         STFPC FPC_R_3           save FPC
+000013CA  E760 5028 080E                00001338   857+         VST   V22,V1O3          save instruction result
+000013D0  07FB                                     858+         BR    R11               return
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000013D4                                           859+RE3      DS    0F                expected 16 byte result
+000013D4                                           860+         DROP  R5
+000013D4  3C000000 00000000                        861          DC    XL16'3C00000000000000BC00000000000000'
+000013DC  BC000000 00000000
+000013E4  3F000000 00000000                        862          DC    XL16'3F000000000000000000000000000000'
+000013EC  00000000 00000000
+000013F4  BF000000 00000000                        863          DC    XL16'BF000000000000000000000000000000'
+000013FC  00000000 00000000
+                                                   864
+                                                   865 * +1/64, -1/64
+                                                   866          VRR_C VCRNF,0,2,00,00,N
+00001408                                           867+         DS    0FD
+00001408                      00001408             868+         USING *,R5              base for test data and test routine
+00001408  000014A8                                 869+T4       DC    A(X4)             address of test routine
+0000140C  0004                                     870+         DC    H'4'              test number
+0000140E  00                                       871+         DC    X'00'
+0000140F  D5                                       872+         DC    CL1'N'            Y = skip cross check
+00001410  00                                       873+         DC    HL1'0'            m4
+00001411  02                                       874+         DC    HL1'2'            m5
+00001412  00                                       875+FLG4     DC    X'00'             expected FPC flags
+00001413  00                                       876+VXC4     DC    X'00'             expected VXC
+00001414  000014DC                                 877+V2_4     DC    A(RE4+16)         address of v2: 16-byte packed decimal
+00001418  E5C3D9D5 C6404040                        878+         DC    CL8'VCRNF'        instruction name
+00001420  00000010                                 879+         DC    A(16)             result length
+00001424  000014CC                                 880+         DC    A(RE4)            address of expected resul
+00001428  00000000 00000000                        881+         DS    FD                gap
+00001430  00000000 00000000                        882+V1O4     DS    XL16              V1 output
+00001438  00000000 00000000
+00001440  00000000 00000000                        883+         DS    FD                   gap
+00001448  00000000                                 884+FPC_R_4  DS    F                 FPC after instruction
+00001450  00000000 00000000                        885+         DS    FD                   gap
+00001458  40404040 40404040                        886+         DC    CL8' '            was cross check skipped?
+00001460  00000000 00000000                        887+         DS    FD                   gap
+00001468  00000000 00000000                        888+XCO4     DS    XL16              Cross check Output
+00001470  00000000 00000000
+00001478  00000000 00000000                        889+         DS    XL16
+00001480  00000000 00000000
+00001488  00000000 00000000                        890+         DS    FD                   gap
+00001490  00000000                                 891+FPC_XC_4 DS    F                1st cross check FPC
+00001494  00000000                                 892+         DS    F                2nd cross check FPC
+00001498  00000000 00000000                        893+         DS    FD                   gap
+000014A0  00000000                                 894+         DS    F                 debug area
+000014A4  00000000                                 895+         DS    F
+                                                   896+*
+000014A8                                           897+X4       DS    0F
+000014A8  B29D 842C                     0000062C   898+         LFPC  FPCINIT           initialize FPC
+000014AC  E320 500C 0014                00001414   899+         LGF   R2,V2_4           get v2
+000014B2  E767 2000 0C36                00000000   900+         VLM   V22,V23,0(R2)
+000014B8  E666 7002 0E75                           901+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+000014BE  B29C 5040                     00001448   902+         STFPC FPC_R_4           save FPC
+000014C2  E760 5028 080E                00001430   903+         VST   V22,V1O4          save instruction result
+000014C8  07FB                                     904+         BR    R11               return
+000014CC                                           905+RE4      DS    0F                expected 16 byte result
+000014CC                                           906+         DROP  R5
+000014CC  32000000 00000000                        907          DC    XL16'3200000000000000B200000000000000'
+000014D4  B2000000 00000000
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000014DC  3C800000 00000000                        908          DC    XL16'3C800000000000000000000000000000'
+000014E4  00000000 00000000
+000014EC  BC800000 00000000                        909          DC    XL16'BC800000000000000000000000000000'
+000014F4  00000000 00000000
+                                                   910
+                                                   911 * +0, -0
+                                                   912          VRR_C VCRNF,0,2,00,00,N
+00001500                                           913+         DS    0FD
+00001500                      00001500             914+         USING *,R5              base for test data and test routine
+00001500  000015A0                                 915+T5       DC    A(X5)             address of test routine
+00001504  0005                                     916+         DC    H'5'              test number
+00001506  00                                       917+         DC    X'00'
+00001507  D5                                       918+         DC    CL1'N'            Y = skip cross check
+00001508  00                                       919+         DC    HL1'0'            m4
+00001509  02                                       920+         DC    HL1'2'            m5
+0000150A  00                                       921+FLG5     DC    X'00'             expected FPC flags
+0000150B  00                                       922+VXC5     DC    X'00'             expected VXC
+0000150C  000015D4                                 923+V2_5     DC    A(RE5+16)         address of v2: 16-byte packed decimal
+00001510  E5C3D9D5 C6404040                        924+         DC    CL8'VCRNF'        instruction name
+00001518  00000010                                 925+         DC    A(16)             result length
+0000151C  000015C4                                 926+         DC    A(RE5)            address of expected resul
+00001520  00000000 00000000                        927+         DS    FD                gap
+00001528  00000000 00000000                        928+V1O5     DS    XL16              V1 output
+00001530  00000000 00000000
+00001538  00000000 00000000                        929+         DS    FD                   gap
+00001540  00000000                                 930+FPC_R_5  DS    F                 FPC after instruction
+00001548  00000000 00000000                        931+         DS    FD                   gap
+00001550  40404040 40404040                        932+         DC    CL8' '            was cross check skipped?
+00001558  00000000 00000000                        933+         DS    FD                   gap
+00001560  00000000 00000000                        934+XCO5     DS    XL16              Cross check Output
+00001568  00000000 00000000
+00001570  00000000 00000000                        935+         DS    XL16
+00001578  00000000 00000000
+00001580  00000000 00000000                        936+         DS    FD                   gap
+00001588  00000000                                 937+FPC_XC_5 DS    F                1st cross check FPC
+0000158C  00000000                                 938+         DS    F                2nd cross check FPC
+00001590  00000000 00000000                        939+         DS    FD                   gap
+00001598  00000000                                 940+         DS    F                 debug area
+0000159C  00000000                                 941+         DS    F
+                                                   942+*
+000015A0                                           943+X5       DS    0F
+000015A0  B29D 842C                     0000062C   944+         LFPC  FPCINIT           initialize FPC
+000015A4  E320 500C 0014                0000150C   945+         LGF   R2,V2_5           get v2
+000015AA  E767 2000 0C36                00000000   946+         VLM   V22,V23,0(R2)
+000015B0  E666 7002 0E75                           947+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+000015B6  B29C 5040                     00001540   948+         STFPC FPC_R_5           save FPC
+000015BA  E760 5028 080E                00001528   949+         VST   V22,V1O5          save instruction result
+000015C0  07FB                                     950+         BR    R11               return
+000015C4                                           951+RE5      DS    0F                expected 16 byte result
+000015C4                                           952+         DROP  R5
+000015C4  00000000 00000000                        953          DC    XL16'00000000000000008000000000000000'
+000015CC  80000000 00000000
+000015D4  00000000 00000000                        954          DC    XL16'00000000000000000000000000000000'
+000015DC  00000000 00000000
+000015E4  80000000 00000000                        955          DC    XL16'80000000000000000000000000000000'
+000015EC  00000000 00000000
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   956
+                                                   957 * +15, -15
+                                                   958          VRR_C VCRNF,0,2,00,00,N
+000015F8                                           959+         DS    0FD
+000015F8                      000015F8             960+         USING *,R5              base for test data and test routine
+000015F8  00001698                                 961+T6       DC    A(X6)             address of test routine
+000015FC  0006                                     962+         DC    H'6'              test number
+000015FE  00                                       963+         DC    X'00'
+000015FF  D5                                       964+         DC    CL1'N'            Y = skip cross check
+00001600  00                                       965+         DC    HL1'0'            m4
+00001601  02                                       966+         DC    HL1'2'            m5
+00001602  00                                       967+FLG6     DC    X'00'             expected FPC flags
+00001603  00                                       968+VXC6     DC    X'00'             expected VXC
+00001604  000016CC                                 969+V2_6     DC    A(RE6+16)         address of v2: 16-byte packed decimal
+00001608  E5C3D9D5 C6404040                        970+         DC    CL8'VCRNF'        instruction name
+00001610  00000010                                 971+         DC    A(16)             result length
+00001614  000016BC                                 972+         DC    A(RE6)            address of expected resul
+00001618  00000000 00000000                        973+         DS    FD                gap
+00001620  00000000 00000000                        974+V1O6     DS    XL16              V1 output
+00001628  00000000 00000000
+00001630  00000000 00000000                        975+         DS    FD                   gap
+00001638  00000000                                 976+FPC_R_6  DS    F                 FPC after instruction
+00001640  00000000 00000000                        977+         DS    FD                   gap
+00001648  40404040 40404040                        978+         DC    CL8' '            was cross check skipped?
+00001650  00000000 00000000                        979+         DS    FD                   gap
+00001658  00000000 00000000                        980+XCO6     DS    XL16              Cross check Output
+00001660  00000000 00000000
+00001668  00000000 00000000                        981+         DS    XL16
+00001670  00000000 00000000
+00001678  00000000 00000000                        982+         DS    FD                   gap
+00001680  00000000                                 983+FPC_XC_6 DS    F                1st cross check FPC
+00001684  00000000                                 984+         DS    F                2nd cross check FPC
+00001688  00000000 00000000                        985+         DS    FD                   gap
+00001690  00000000                                 986+         DS    F                 debug area
+00001694  00000000                                 987+         DS    F
+                                                   988+*
+00001698                                           989+X6       DS    0F
+00001698  B29D 842C                     0000062C   990+         LFPC  FPCINIT           initialize FPC
+0000169C  E320 500C 0014                00001604   991+         LGF   R2,V2_6           get v2
+000016A2  E767 2000 0C36                00000000   992+         VLM   V22,V23,0(R2)
+000016A8  E666 7002 0E75                           993+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+000016AE  B29C 5040                     00001638   994+         STFPC FPC_R_6           save FPC
+000016B2  E760 5028 080E                00001620   995+         VST   V22,V1O6          save instruction result
+000016B8  07FB                                     996+         BR    R11               return
+000016BC                                           997+RE6      DS    0F                expected 16 byte result
+000016BC                                           998+         DROP  R5
+000016BC  45C00000 00000000                        999          DC    XL16'45C0000000000000C5C0000000000000'
+000016C4  C5C00000 00000000
+000016CC  41700000 00000000                       1000          DC    XL16'41700000000000000000000000000000'
+000016D4  00000000 00000000
+000016DC  C1700000 00000000                       1001          DC    XL16'C1700000000000000000000000000000'
+000016E4  00000000 00000000
+                                                  1002
+                                                  1003 * +20/7, - 20/7
+                                                  1004          VRR_C VCRNF,0,2,00,00,S                 skip xc: lost digits
+000016F0                                          1005+         DS    0FD
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000016F0                      000016F0            1006+         USING *,R5              base for test data and test routine
+000016F0  00001790                                1007+T7       DC    A(X7)             address of test routine
+000016F4  0007                                    1008+         DC    H'7'              test number
+000016F6  00                                      1009+         DC    X'00'
+000016F7  E2                                      1010+         DC    CL1'S'            Y = skip cross check
+000016F8  00                                      1011+         DC    HL1'0'            m4
+000016F9  02                                      1012+         DC    HL1'2'            m5
+000016FA  00                                      1013+FLG7     DC    X'00'             expected FPC flags
+000016FB  00                                      1014+VXC7     DC    X'00'             expected VXC
+000016FC  000017C4                                1015+V2_7     DC    A(RE7+16)         address of v2: 16-byte packed decimal
+00001700  E5C3D9D5 C6404040                       1016+         DC    CL8'VCRNF'        instruction name
+00001708  00000010                                1017+         DC    A(16)             result length
+0000170C  000017B4                                1018+         DC    A(RE7)            address of expected resul
+00001710  00000000 00000000                       1019+         DS    FD                gap
+00001718  00000000 00000000                       1020+V1O7     DS    XL16              V1 output
+00001720  00000000 00000000
+00001728  00000000 00000000                       1021+         DS    FD                   gap
+00001730  00000000                                1022+FPC_R_7  DS    F                 FPC after instruction
+00001738  00000000 00000000                       1023+         DS    FD                   gap
+00001740  40404040 40404040                       1024+         DC    CL8' '            was cross check skipped?
+00001748  00000000 00000000                       1025+         DS    FD                   gap
+00001750  00000000 00000000                       1026+XCO7     DS    XL16              Cross check Output
+00001758  00000000 00000000
+00001760  00000000 00000000                       1027+         DS    XL16
+00001768  00000000 00000000
+00001770  00000000 00000000                       1028+         DS    FD                   gap
+00001778  00000000                                1029+FPC_XC_7 DS    F                1st cross check FPC
+0000177C  00000000                                1030+         DS    F                2nd cross check FPC
+00001780  00000000 00000000                       1031+         DS    FD                   gap
+00001788  00000000                                1032+         DS    F                 debug area
+0000178C  00000000                                1033+         DS    F
+                                                  1034+*
+00001790                                          1035+X7       DS    0F
+00001790  B29D 842C                     0000062C  1036+         LFPC  FPCINIT           initialize FPC
+00001794  E320 500C 0014                000016FC  1037+         LGF   R2,V2_7           get v2
+0000179A  E767 2000 0C36                00000000  1038+         VLM   V22,V23,0(R2)
+000017A0  E666 7002 0E75                          1039+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+000017A6  B29C 5040                     00001730  1040+         STFPC FPC_R_7           save FPC
+000017AA  E760 5028 080E                00001718  1041+         VST   V22,V1O7          save instruction result
+000017B0  07FB                                    1042+         BR    R11               return
+000017B4                                          1043+RE7      DS    0F                expected 16 byte result
+000017B4                                          1044+         DROP  R5
+000017B4  40DB0000 00000000                       1045          DC    XL16'40DB000000000000C0DB000000000000'
+000017BC  C0DB0000 00000000
+000017C4  4036DB6E 00000000                       1046          DC    XL16'4036DB6E000000000000000000000000'
+000017CC  00000000 00000000
+000017D4  C036DB6E 00000000                       1047          DC    XL16'C036DB6E000000000000000000000000'
+000017DC  00000000 00000000
+                                                  1048
+                                                  1049 * +2^(-126), -2^(-126)
+                                                  1050          VRR_C VCRNF,0,2,10,44,S                 skip xc: underflow
+000017E8                                          1051+         DS    0FD
+000017E8                      000017E8            1052+         USING *,R5              base for test data and test routine
+000017E8  00001888                                1053+T8       DC    A(X8)             address of test routine
+000017EC  0008                                    1054+         DC    H'8'              test number
+000017EE  00                                      1055+         DC    X'00'
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000017EF  E2                                      1056+         DC    CL1'S'            Y = skip cross check
+000017F0  00                                      1057+         DC    HL1'0'            m4
+000017F1  02                                      1058+         DC    HL1'2'            m5
+000017F2  10                                      1059+FLG8     DC    X'10'             expected FPC flags
+000017F3  44                                      1060+VXC8     DC    X'44'             expected VXC
+000017F4  000018BC                                1061+V2_8     DC    A(RE8+16)         address of v2: 16-byte packed decimal
+000017F8  E5C3D9D5 C6404040                       1062+         DC    CL8'VCRNF'        instruction name
+00001800  00000010                                1063+         DC    A(16)             result length
+00001804  000018AC                                1064+         DC    A(RE8)            address of expected resul
+00001808  00000000 00000000                       1065+         DS    FD                gap
+00001810  00000000 00000000                       1066+V1O8     DS    XL16              V1 output
+00001818  00000000 00000000
+00001820  00000000 00000000                       1067+         DS    FD                   gap
+00001828  00000000                                1068+FPC_R_8  DS    F                 FPC after instruction
+00001830  00000000 00000000                       1069+         DS    FD                   gap
+00001838  40404040 40404040                       1070+         DC    CL8' '            was cross check skipped?
+00001840  00000000 00000000                       1071+         DS    FD                   gap
+00001848  00000000 00000000                       1072+XCO8     DS    XL16              Cross check Output
+00001850  00000000 00000000
+00001858  00000000 00000000                       1073+         DS    XL16
+00001860  00000000 00000000
+00001868  00000000 00000000                       1074+         DS    FD                   gap
+00001870  00000000                                1075+FPC_XC_8 DS    F                1st cross check FPC
+00001874  00000000                                1076+         DS    F                2nd cross check FPC
+00001878  00000000 00000000                       1077+         DS    FD                   gap
+00001880  00000000                                1078+         DS    F                 debug area
+00001884  00000000                                1079+         DS    F
+                                                  1080+*
+00001888                                          1081+X8       DS    0F
+00001888  B29D 842C                     0000062C  1082+         LFPC  FPCINIT           initialize FPC
+0000188C  E320 500C 0014                000017F4  1083+         LGF   R2,V2_8           get v2
+00001892  E767 2000 0C36                00000000  1084+         VLM   V22,V23,0(R2)
+00001898  E666 7002 0E75                          1085+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+0000189E  B29C 5040                     00001828  1086+         STFPC FPC_R_8           save FPC
+000018A2  E760 5028 080E                00001810  1087+         VST   V22,V1O8          save instruction result
+000018A8  07FB                                    1088+         BR    R11               return
+000018AC                                          1089+RE8      DS    0F                expected 16 byte result
+000018AC                                          1090+         DROP  R5
+000018AC  00000000 00000000                       1091          DC    XL16'00000000000000008000000000000000'
+000018B4  80000000 00000000
+000018BC  00800000 00000000                       1092          DC    XL16'00800000000000000000000000000000'
+000018C4  00000000 00000000
+000018CC  80800000 00000000                       1093          DC    XL16'80800000000000000000000000000000'
+000018D4  00000000 00000000
+                                                  1094
+                                                  1095 * +2^(-149), -2^(-149) - subnormal
+                                                  1096          VRR_C VCRNF,0,2,10,44,S                 skip xc: underflow
+000018E0                                          1097+         DS    0FD
+000018E0                      000018E0            1098+         USING *,R5              base for test data and test routine
+000018E0  00001980                                1099+T9       DC    A(X9)             address of test routine
+000018E4  0009                                    1100+         DC    H'9'              test number
+000018E6  00                                      1101+         DC    X'00'
+000018E7  E2                                      1102+         DC    CL1'S'            Y = skip cross check
+000018E8  00                                      1103+         DC    HL1'0'            m4
+000018E9  02                                      1104+         DC    HL1'2'            m5
+000018EA  10                                      1105+FLG9     DC    X'10'             expected FPC flags
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000018EB  44                                      1106+VXC9     DC    X'44'             expected VXC
+000018EC  000019B4                                1107+V2_9     DC    A(RE9+16)         address of v2: 16-byte packed decimal
+000018F0  E5C3D9D5 C6404040                       1108+         DC    CL8'VCRNF'        instruction name
+000018F8  00000010                                1109+         DC    A(16)             result length
+000018FC  000019A4                                1110+         DC    A(RE9)            address of expected resul
+00001900  00000000 00000000                       1111+         DS    FD                gap
+00001908  00000000 00000000                       1112+V1O9     DS    XL16              V1 output
+00001910  00000000 00000000
+00001918  00000000 00000000                       1113+         DS    FD                   gap
+00001920  00000000                                1114+FPC_R_9  DS    F                 FPC after instruction
+00001928  00000000 00000000                       1115+         DS    FD                   gap
+00001930  40404040 40404040                       1116+         DC    CL8' '            was cross check skipped?
+00001938  00000000 00000000                       1117+         DS    FD                   gap
+00001940  00000000 00000000                       1118+XCO9     DS    XL16              Cross check Output
+00001948  00000000 00000000
+00001950  00000000 00000000                       1119+         DS    XL16
+00001958  00000000 00000000
+00001960  00000000 00000000                       1120+         DS    FD                   gap
+00001968  00000000                                1121+FPC_XC_9 DS    F                1st cross check FPC
+0000196C  00000000                                1122+         DS    F                2nd cross check FPC
+00001970  00000000 00000000                       1123+         DS    FD                   gap
+00001978  00000000                                1124+         DS    F                 debug area
+0000197C  00000000                                1125+         DS    F
+                                                  1126+*
+00001980                                          1127+X9       DS    0F
+00001980  B29D 842C                     0000062C  1128+         LFPC  FPCINIT           initialize FPC
+00001984  E320 500C 0014                000018EC  1129+         LGF   R2,V2_9           get v2
+0000198A  E767 2000 0C36                00000000  1130+         VLM   V22,V23,0(R2)
+00001990  E666 7002 0E75                          1131+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+00001996  B29C 5040                     00001920  1132+         STFPC FPC_R_9           save FPC
+0000199A  E760 5028 080E                00001908  1133+         VST   V22,V1O9          save instruction result
+000019A0  07FB                                    1134+         BR    R11               return
+000019A4                                          1135+RE9      DS    0F                expected 16 byte result
+000019A4                                          1136+         DROP  R5
+000019A4  00000000 00000000                       1137          DC    XL16'00000000000000008000000000000000'
+000019AC  80000000 00000000
+000019B4  00000001 00000000                       1138          DC    XL16'00000001000000000000000000000000'
+000019BC  00000000 00000000
+000019C4  80800001 00000000                       1139          DC    XL16'80800001000000000000000000000000'
+000019CC  00000000 00000000
+                                                  1140
+                                                  1141 * +2^(128) * (1 - 2^(-24)) , - +2^(128) * (1 - 2^(-24))
+                                                  1142          VRR_C VCRNF,0,2,20,43,S                 skip xc: overflow
+000019D8                                          1143+         DS    0FD
+000019D8                      000019D8            1144+         USING *,R5              base for test data and test routine
+000019D8  00001A78                                1145+T10      DC    A(X10)            address of test routine
+000019DC  000A                                    1146+         DC    H'10'             test number
+000019DE  00                                      1147+         DC    X'00'
+000019DF  E2                                      1148+         DC    CL1'S'            Y = skip cross check
+000019E0  00                                      1149+         DC    HL1'0'            m4
+000019E1  02                                      1150+         DC    HL1'2'            m5
+000019E2  20                                      1151+FLG10    DC    X'20'             expected FPC flags
+000019E3  43                                      1152+VXC10    DC    X'43'             expected VXC
+000019E4  00001AAC                                1153+V2_10    DC    A(RE10+16)        address of v2: 16-byte packed decimal
+000019E8  E5C3D9D5 C6404040                       1154+         DC    CL8'VCRNF'        instruction name
+000019F0  00000010                                1155+         DC    A(16)             result length
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    29
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000019F4  00001A9C                                1156+         DC    A(RE10)           address of expected resul
+000019F8  00000000 00000000                       1157+         DS    FD                gap
+00001A00  00000000 00000000                       1158+V1O10    DS    XL16              V1 output
+00001A08  00000000 00000000
+00001A10  00000000 00000000                       1159+         DS    FD                   gap
+00001A18  00000000                                1160+FPC_R_10 DS    F                 FPC after instruction
+00001A20  00000000 00000000                       1161+         DS    FD                   gap
+00001A28  40404040 40404040                       1162+         DC    CL8' '            was cross check skipped?
+00001A30  00000000 00000000                       1163+         DS    FD                   gap
+00001A38  00000000 00000000                       1164+XCO10    DS    XL16              Cross check Output
+00001A40  00000000 00000000
+00001A48  00000000 00000000                       1165+         DS    XL16
+00001A50  00000000 00000000
+00001A58  00000000 00000000                       1166+         DS    FD                   gap
+00001A60  00000000                                1167+FPC_XC_10 DS   F                1st cross check FPC
+00001A64  00000000                                1168+         DS    F                2nd cross check FPC
+00001A68  00000000 00000000                       1169+         DS    FD                   gap
+00001A70  00000000                                1170+         DS    F                 debug area
+00001A74  00000000                                1171+         DS    F
+                                                  1172+*
+00001A78                                          1173+X10      DS    0F
+00001A78  B29D 842C                     0000062C  1174+         LFPC  FPCINIT           initialize FPC
+00001A7C  E320 500C 0014                000019E4  1175+         LGF   R2,V2_10          get v2
+00001A82  E767 2000 0C36                00000000  1176+         VLM   V22,V23,0(R2)
+00001A88  E666 7002 0E75                          1177+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+00001A8E  B29C 5040                     00001A18  1178+         STFPC FPC_R_10          save FPC
+00001A92  E760 5028 080E                00001A00  1179+         VST   V22,V1O10         save instruction result
+00001A98  07FB                                    1180+         BR    R11               return
+00001A9C                                          1181+RE10     DS    0F                expected 16 byte result
+00001A9C                                          1182+         DROP  R5
+00001A9C  7FFE0000 00000000                       1183          DC    XL16'7FFE000000000000FFFE000000000000'
+00001AA4  FFFE0000 00000000
+00001AAC  7F7FFFFF 00000000                       1184          DC    XL16'7F7FFFFF000000000000000000000000'
+00001AB4  00000000 00000000
+00001ABC  FF7FFFFF 00000000                       1185          DC    XL16'FF7FFFFF000000000000000000000000'
+00001AC4  00000000 00000000
+                                                  1186
+                                                  1187 * NAN, -NAN
+                                                  1188          VRR_C VCRNF,0,2,00,00,S                 skip xc: invalid on XC
+00001AD0                                          1189+         DS    0FD
+00001AD0                      00001AD0            1190+         USING *,R5              base for test data and test routine
+00001AD0  00001B70                                1191+T11      DC    A(X11)            address of test routine
+00001AD4  000B                                    1192+         DC    H'11'             test number
+00001AD6  00                                      1193+         DC    X'00'
+00001AD7  E2                                      1194+         DC    CL1'S'            Y = skip cross check
+00001AD8  00                                      1195+         DC    HL1'0'            m4
+00001AD9  02                                      1196+         DC    HL1'2'            m5
+00001ADA  00                                      1197+FLG11    DC    X'00'             expected FPC flags
+00001ADB  00                                      1198+VXC11    DC    X'00'             expected VXC
+00001ADC  00001BA4                                1199+V2_11    DC    A(RE11+16)        address of v2: 16-byte packed decimal
+00001AE0  E5C3D9D5 C6404040                       1200+         DC    CL8'VCRNF'        instruction name
+00001AE8  00000010                                1201+         DC    A(16)             result length
+00001AEC  00001B94                                1202+         DC    A(RE11)           address of expected resul
+00001AF0  00000000 00000000                       1203+         DS    FD                gap
+00001AF8  00000000 00000000                       1204+V1O11    DS    XL16              V1 output
+00001B00  00000000 00000000
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    30
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001B08  00000000 00000000                       1205+         DS    FD                   gap
+00001B10  00000000                                1206+FPC_R_11 DS    F                 FPC after instruction
+00001B18  00000000 00000000                       1207+         DS    FD                   gap
+00001B20  40404040 40404040                       1208+         DC    CL8' '            was cross check skipped?
+00001B28  00000000 00000000                       1209+         DS    FD                   gap
+00001B30  00000000 00000000                       1210+XCO11    DS    XL16              Cross check Output
+00001B38  00000000 00000000
+00001B40  00000000 00000000                       1211+         DS    XL16
+00001B48  00000000 00000000
+00001B50  00000000 00000000                       1212+         DS    FD                   gap
+00001B58  00000000                                1213+FPC_XC_11 DS   F                1st cross check FPC
+00001B5C  00000000                                1214+         DS    F                2nd cross check FPC
+00001B60  00000000 00000000                       1215+         DS    FD                   gap
+00001B68  00000000                                1216+         DS    F                 debug area
+00001B6C  00000000                                1217+         DS    F
+                                                  1218+*
+00001B70                                          1219+X11      DS    0F
+00001B70  B29D 842C                     0000062C  1220+         LFPC  FPCINIT           initialize FPC
+00001B74  E320 500C 0014                00001ADC  1221+         LGF   R2,V2_11          get v2
+00001B7A  E767 2000 0C36                00000000  1222+         VLM   V22,V23,0(R2)
+00001B80  E666 7002 0E75                          1223+         VCRNF V22,V22,V23,0,2       test instruction (dest is source)
+00001B86  B29C 5040                     00001B10  1224+         STFPC FPC_R_11          save FPC
+00001B8A  E760 5028 080E                00001AF8  1225+         VST   V22,V1O11         save instruction result
+00001B90  07FB                                    1226+         BR    R11               return
+00001B94                                          1227+RE11     DS    0F                expected 16 byte result
+00001B94                                          1228+         DROP  R5
+00001B94  7FFF0000 00000000                       1229          DC    XL16'7FFF000000000000FFFF000000000000'
+00001B9C  FFFF0000 00000000
+00001BA4  7FC00000 00000000                       1230          DC    XL16'7FC00000000000000000000000000000'
+00001BAC  00000000 00000000
+00001BB4  FFC00000 00000000                       1231          DC    XL16'FFC00000000000000000000000000000'
+00001BBC  00000000 00000000
+                                                  1232
+                                                  1233 * bad m4 - inexact
+                                                  1234          VRR_C VCRNF,2,2,08,05,S                 skip xc: inexact
+00001BC8                                          1235+         DS    0FD
+00001BC8                      00001BC8            1236+         USING *,R5              base for test data and test routine
+00001BC8  00001C68                                1237+T12      DC    A(X12)            address of test routine
+00001BCC  000C                                    1238+         DC    H'12'             test number
+00001BCE  00                                      1239+         DC    X'00'
+00001BCF  E2                                      1240+         DC    CL1'S'            Y = skip cross check
+00001BD0  02                                      1241+         DC    HL1'2'            m4
+00001BD1  02                                      1242+         DC    HL1'2'            m5
+00001BD2  08                                      1243+FLG12    DC    X'08'             expected FPC flags
+00001BD3  05                                      1244+VXC12    DC    X'05'             expected VXC
+00001BD4  00001C9C                                1245+V2_12    DC    A(RE12+16)        address of v2: 16-byte packed decimal
+00001BD8  E5C3D9D5 C6404040                       1246+         DC    CL8'VCRNF'        instruction name
+00001BE0  00000010                                1247+         DC    A(16)             result length
+00001BE4  00001C8C                                1248+         DC    A(RE12)           address of expected resul
+00001BE8  00000000 00000000                       1249+         DS    FD                gap
+00001BF0  00000000 00000000                       1250+V1O12    DS    XL16              V1 output
+00001BF8  00000000 00000000
+00001C00  00000000 00000000                       1251+         DS    FD                   gap
+00001C08  00000000                                1252+FPC_R_12 DS    F                 FPC after instruction
+00001C10  00000000 00000000                       1253+         DS    FD                   gap
+00001C18  40404040 40404040                       1254+         DC    CL8' '            was cross check skipped?
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    31
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001C20  00000000 00000000                       1255+         DS    FD                   gap
+00001C28  00000000 00000000                       1256+XCO12    DS    XL16              Cross check Output
+00001C30  00000000 00000000
+00001C38  00000000 00000000                       1257+         DS    XL16
+00001C40  00000000 00000000
+00001C48  00000000 00000000                       1258+         DS    FD                   gap
+00001C50  00000000                                1259+FPC_XC_12 DS   F                1st cross check FPC
+00001C54  00000000                                1260+         DS    F                2nd cross check FPC
+00001C58  00000000 00000000                       1261+         DS    FD                   gap
+00001C60  00000000                                1262+         DS    F                 debug area
+00001C64  00000000                                1263+         DS    F
+                                                  1264+*
+00001C68                                          1265+X12      DS    0F
+00001C68  B29D 842C                     0000062C  1266+         LFPC  FPCINIT           initialize FPC
+00001C6C  E320 500C 0014                00001BD4  1267+         LGF   R2,V2_12          get v2
+00001C72  E767 2000 0C36                00000000  1268+         VLM   V22,V23,0(R2)
+00001C78  E666 7002 2E75                          1269+         VCRNF V22,V22,V23,2,2       test instruction (dest is source)
+00001C7E  B29C 5040                     00001C08  1270+         STFPC FPC_R_12          save FPC
+00001C82  E760 5028 080E                00001BF0  1271+         VST   V22,V1O12         save instruction result
+00001C88  07FB                                    1272+         BR    R11               return
+00001C8C                                          1273+RE12     DS    0F                expected 16 byte result
+00001C8C                                          1274+         DROP  R5
+00001C8C  7FFF0000 00000000                       1275          DC    XL16'7FFF000000000000FFFF000000000000'
+00001C94  FFFF0000 00000000
+00001C9C  7FC00000 00000000                       1276          DC    XL16'7FC00000000000000000000000000000'
+00001CA4  00000000 00000000
+00001CAC  FFC00000 00000000                       1277          DC    XL16'FFC00000000000000000000000000000'
+00001CB4  00000000 00000000
+                                                  1278
+                                                  1279 * bad m5 - inexact
+                                                  1280          VRR_C VCRNF,0,3,08,05,S                 skip xc: inexact
+00001CC0                                          1281+         DS    0FD
+00001CC0                      00001CC0            1282+         USING *,R5              base for test data and test routine
+00001CC0  00001D60                                1283+T13      DC    A(X13)            address of test routine
+00001CC4  000D                                    1284+         DC    H'13'             test number
+00001CC6  00                                      1285+         DC    X'00'
+00001CC7  E2                                      1286+         DC    CL1'S'            Y = skip cross check
+00001CC8  00                                      1287+         DC    HL1'0'            m4
+00001CC9  03                                      1288+         DC    HL1'3'            m5
+00001CCA  08                                      1289+FLG13    DC    X'08'             expected FPC flags
+00001CCB  05                                      1290+VXC13    DC    X'05'             expected VXC
+00001CCC  00001D94                                1291+V2_13    DC    A(RE13+16)        address of v2: 16-byte packed decimal
+00001CD0  E5C3D9D5 C6404040                       1292+         DC    CL8'VCRNF'        instruction name
+00001CD8  00000010                                1293+         DC    A(16)             result length
+00001CDC  00001D84                                1294+         DC    A(RE13)           address of expected resul
+00001CE0  00000000 00000000                       1295+         DS    FD                gap
+00001CE8  00000000 00000000                       1296+V1O13    DS    XL16              V1 output
+00001CF0  00000000 00000000
+00001CF8  00000000 00000000                       1297+         DS    FD                   gap
+00001D00  00000000                                1298+FPC_R_13 DS    F                 FPC after instruction
+00001D08  00000000 00000000                       1299+         DS    FD                   gap
+00001D10  40404040 40404040                       1300+         DC    CL8' '            was cross check skipped?
+00001D18  00000000 00000000                       1301+         DS    FD                   gap
+00001D20  00000000 00000000                       1302+XCO13    DS    XL16              Cross check Output
+00001D28  00000000 00000000
+00001D30  00000000 00000000                       1303+         DS    XL16
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    32
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001D38  00000000 00000000
+00001D40  00000000 00000000                       1304+         DS    FD                   gap
+00001D48  00000000                                1305+FPC_XC_13 DS   F                1st cross check FPC
+00001D4C  00000000                                1306+         DS    F                2nd cross check FPC
+00001D50  00000000 00000000                       1307+         DS    FD                   gap
+00001D58  00000000                                1308+         DS    F                 debug area
+00001D5C  00000000                                1309+         DS    F
+                                                  1310+*
+00001D60                                          1311+X13      DS    0F
+00001D60  B29D 842C                     0000062C  1312+         LFPC  FPCINIT           initialize FPC
+00001D64  E320 500C 0014                00001CCC  1313+         LGF   R2,V2_13          get v2
+00001D6A  E767 2000 0C36                00000000  1314+         VLM   V22,V23,0(R2)
+00001D70  E666 7003 0E75                          1315+         VCRNF V22,V22,V23,0,3       test instruction (dest is source)
+00001D76  B29C 5040                     00001D00  1316+         STFPC FPC_R_13          save FPC
+00001D7A  E760 5028 080E                00001CE8  1317+         VST   V22,V1O13         save instruction result
+00001D80  07FB                                    1318+         BR    R11               return
+00001D84                                          1319+RE13     DS    0F                expected 16 byte result
+00001D84                                          1320+         DROP  R5
+00001D84  7FFF0000 00000000                       1321          DC    XL16'7FFF000000000000FFFF000000000000'
+00001D8C  FFFF0000 00000000
+00001D94  7FC00000 00000000                       1322          DC    XL16'7FC00000000000000000000000000000'
+00001D9C  00000000 00000000
+00001DA4  FFC00000 00000000                       1323          DC    XL16'FFC00000000000000000000000000000'
+00001DAC  00000000 00000000
+                                                  1324
+                                                  1325
+00001DB4  00000000                                1326          DC    F'0'     END OF TABLE
+00001DB8  00000000                                1327          DC    F'0'
+                                                  1328 *
+                                                  1329 * table of pointers to individual tests
+                                                  1330 *
+00001DBC                                          1331 E6TESTS  DS    0F
+                                                  1332          PTTABLE
+00001DBC                                          1333+TTABLE   DS    0F
+00001DBC  00001120                                1334+         DC    A(T1)             TEST &CUR
+00001DC0  00001218                                1335+         DC    A(T2)             TEST &CUR
+00001DC4  00001310                                1336+         DC    A(T3)             TEST &CUR
+00001DC8  00001408                                1337+         DC    A(T4)             TEST &CUR
+00001DCC  00001500                                1338+         DC    A(T5)             TEST &CUR
+00001DD0  000015F8                                1339+         DC    A(T6)             TEST &CUR
+00001DD4  000016F0                                1340+         DC    A(T7)             TEST &CUR
+00001DD8  000017E8                                1341+         DC    A(T8)             TEST &CUR
+00001DDC  000018E0                                1342+         DC    A(T9)             TEST &CUR
+00001DE0  000019D8                                1343+         DC    A(T10)            TEST &CUR
+00001DE4  00001AD0                                1344+         DC    A(T11)            TEST &CUR
+00001DE8  00001BC8                                1345+         DC    A(T12)            TEST &CUR
+00001DEC  00001CC0                                1346+         DC    A(T13)            TEST &CUR
+                                                  1347+*
+00001DF0  00000000                                1348+         DC    A(0)              END OF TABLE
+00001DF4  00000000                                1349+         DC    A(0)
+                                                  1350
+00001DF8  00000000                                1351          DC    F'0'     END OF TABLE
+00001DFC  00000000                                1352          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    33
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1354 ***********************************************************************
+                                                  1355 *        Register equates
+                                                  1356 ***********************************************************************
+
+
+                              00000000  00000001  1358 R0       EQU   0
+                              00000001  00000001  1359 R1       EQU   1
+                              00000002  00000001  1360 R2       EQU   2
+                              00000003  00000001  1361 R3       EQU   3
+                              00000004  00000001  1362 R4       EQU   4
+                              00000005  00000001  1363 R5       EQU   5
+                              00000006  00000001  1364 R6       EQU   6
+                              00000007  00000001  1365 R7       EQU   7
+                              00000008  00000001  1366 R8       EQU   8
+                              00000009  00000001  1367 R9       EQU   9
+                              0000000A  00000001  1368 R10      EQU   10
+                              0000000B  00000001  1369 R11      EQU   11
+                              0000000C  00000001  1370 R12      EQU   12
+                              0000000D  00000001  1371 R13      EQU   13
+                              0000000E  00000001  1372 R14      EQU   14
+                              0000000F  00000001  1373 R15      EQU   15
+
+
+                                                  1375 ***********************************************************************
+                                                  1376 *        Register equates
+                                                  1377 ***********************************************************************
+
+
+                              00000000  00000001  1379 FPR0     EQU   0
+                              00000001  00000001  1380 FPR1     EQU   1
+                              00000002  00000001  1381 FPR2     EQU   2
+                              00000003  00000001  1382 FPR3     EQU   3
+                              00000004  00000001  1383 FPR4     EQU   4
+                              00000005  00000001  1384 FPR5     EQU   5
+                              00000006  00000001  1385 FPR6     EQU   6
+                              00000007  00000001  1386 FPR7     EQU   7
+                              00000008  00000001  1387 FPR8     EQU   8
+                              00000009  00000001  1388 FPR9     EQU   9
+                              0000000A  00000001  1389 FPR10    EQU   10
+                              0000000B  00000001  1390 FPR11    EQU   11
+                              0000000C  00000001  1391 FPR12    EQU   12
+                              0000000D  00000001  1392 FPR13    EQU   13
+                              0000000E  00000001  1393 FPR14    EQU   14
+                              0000000F  00000001  1394 FPR15    EQU   15
+
+
+                                                  1396 ***********************************************************************
+                                                  1397 *        Register equates
+                                                  1398 ***********************************************************************
+
+
+                              00000000  00000001  1400 V0       EQU   0
+                              00000001  00000001  1401 V1       EQU   1
+                              00000002  00000001  1402 V2       EQU   2
+                              00000003  00000001  1403 V3       EQU   3
+                              00000004  00000001  1404 V4       EQU   4
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    34
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000005  00000001  1405 V5       EQU   5
+                              00000006  00000001  1406 V6       EQU   6
+                              00000007  00000001  1407 V7       EQU   7
+                              00000008  00000001  1408 V8       EQU   8
+                              00000009  00000001  1409 V9       EQU   9
+                              0000000A  00000001  1410 V10      EQU   10
+                              0000000B  00000001  1411 V11      EQU   11
+                              0000000C  00000001  1412 V12      EQU   12
+                              0000000D  00000001  1413 V13      EQU   13
+                              0000000E  00000001  1414 V14      EQU   14
+                              0000000F  00000001  1415 V15      EQU   15
+                              00000010  00000001  1416 V16      EQU   16
+                              00000011  00000001  1417 V17      EQU   17
+                              00000012  00000001  1418 V18      EQU   18
+                              00000013  00000001  1419 V19      EQU   19
+                              00000014  00000001  1420 V20      EQU   20
+                              00000015  00000001  1421 V21      EQU   21
+                              00000016  00000001  1422 V22      EQU   22
+                              00000017  00000001  1423 V23      EQU   23
+                              00000018  00000001  1424 V24      EQU   24
+                              00000019  00000001  1425 V25      EQU   25
+                              0000001A  00000001  1426 V26      EQU   26
+                              0000001B  00000001  1427 V27      EQU   27
+                              0000001C  00000001  1428 V28      EQU   28
+                              0000001D  00000001  1429 V29      EQU   29
+                              0000001E  00000001  1430 V30      EQU   30
+                              0000001F  00000001  1431 V31      EQU   31
+                                                  1432
+                                                  1433          END
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    35
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   171   136   167   168   169
+CTLR0               F    00000624           4   485   181   182   183   184
+DECNUM              C    000010CA          16   567   316   318   325   327   332   334   361   363   370   372   377   379
+DONEXT              U    0000033E           1   259   253
+E6TEST              4    00000000         160   581   230
+E6TESTS             F    00001DBC           4  1331   223
+EDIT                X    0000109E          18   562   317   326   333   362   371   378
+ENDTEST             U    000004F8           1   399   228
+EOJ                 I    00000608           4   475   216   402
+EOJPSW              D    000005F8           8   473   475
+FAILCONT            U    000004E8           1   389
+FAILED              F    00001000           4   521   344   391   400
+FAILMSG             U    00000480           1   359   243   245   257
+FAILPSW             D    00000610           8   477   479
+FAILTEST            I    00000620           4   479   403
+FB0001              F    00000298           8   200   204   205   207
+FLG                 X    0000000A           1   588   242
+FLG1                X    0000112A           1   737
+FLG10               X    000019E2           1  1151
+FLG11               X    00001ADA           1  1197
+FLG12               X    00001BD2           1  1243
+FLG13               X    00001CCA           1  1289
+FLG2                X    00001222           1   783
+FLG3                X    0000131A           1   829
+FLG4                X    00001412           1   875
+FLG5                X    0000150A           1   921
+FLG6                X    00001602           1   967
+FLG7                X    000016FA           1  1013
+FLG8                X    000017F2           1  1059
+FLG9                X    000018EA           1  1105
+FPCINIT             X    0000062C           4   487   287   294   760   806   852   898   944   990  1036  1082  1128  1174  1220
+                                                     1266  1312
+FPC_R               F    00000040           4   597   242   244   250   271
+FPC_R_1             F    00001160           4   746   764
+FPC_R_10            F    00001A18           4  1160  1178
+FPC_R_11            F    00001B10           4  1206  1224
+FPC_R_12            F    00001C08           4  1252  1270
+FPC_R_13            F    00001D00           4  1298  1316
+FPC_R_2             F    00001258           4   792   810
+FPC_R_3             F    00001350           4   838   856
+FPC_R_4             F    00001448           4   884   902
+FPC_R_5             F    00001540           4   930   948
+FPC_R_6             F    00001638           4   976   994
+FPC_R_7             F    00001730           4  1022  1040
+FPC_R_8             F    00001828           4  1068  1086
+FPC_R_9             F    00001920           4  1114  1132
+FPC_XC1             F    00000088           4   604   291   301
+FPC_XC2             F    0000008C           4   605   298   304
+FPC_XC_1            F    000011A8           4   753
+FPC_XC_10           F    00001A60           4  1167
+FPC_XC_11           F    00001B58           4  1213
+FPC_XC_12           F    00001C50           4  1259
+FPC_XC_13           F    00001D48           4  1305
+FPC_XC_2            F    000012A0           4   799
+FPC_XC_3            F    00001398           4   845
+FPC_XC_4            F    00001490           4   891
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    36
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+FPC_XC_5            F    00001588           4   937
+FPC_XC_6            F    00001680           4   983
+FPC_XC_7            F    00001778           4  1029
+FPC_XC_8            F    00001870           4  1075
+FPC_XC_9            F    00001968           4  1121
+FPR0                U    00000000           1  1379
+FPR1                U    00000001           1  1380
+FPR10               U    0000000A           1  1389
+FPR11               U    0000000B           1  1390
+FPR12               U    0000000C           1  1391
+FPR13               U    0000000D           1  1392
+FPR14               U    0000000E           1  1393
+FPR15               U    0000000F           1  1394
+FPR2                U    00000002           1  1381
+FPR3                U    00000003           1  1382
+FPR4                U    00000004           1  1383
+FPR5                U    00000005           1  1384
+FPR6                U    00000006           1  1385
+FPR7                U    00000007           1  1386
+FPR8                U    00000008           1  1387
+FPR9                U    00000009           1  1388
+IMAGE               1    00000000        7680     0
+K                   U    00000400           1   504   505   506   507
+K64                 U    00010000           1   506
+M4                  U    00000008           1   586   324   369
+M5                  U    00000009           1   587   331   376
+MB                  U    00100000           1   507
+MSG                 I    00000540           4   435   215   418
+MSGCMD              C    0000058E           9   465   448   449
+MSGMSG              C    00000597          95   466   442   463   440
+MSGMVC              I    00000588           6   463   446
+MSGOK               I    00000556           2   444   441
+MSGRET              I    00000576           4   459   452   455
+MSGSAVE             F    0000057C           4   462   438   459
+NEXTE6              U    000002EC           1   225   261   394
+OPNAME              C    00000010           8   591   277   321   366
+PAGE                U    00001000           1   505
+PRT3                C    000010B4          18   565   317   318   319   326   327   328   333   334   335   362   363   364   371
+                                                      372   373   378   379   380
+PRTLINE             C    00001008          13   530   540   383
+PRTLNG              U    00000048           1   540   382
+PRTM4               C    00001041           2   535   373
+PRTM5               C    0000104D           2   538   380
+PRTNAME             C    00001030           8   533   366
+PRTNUM              C    00001015           3   531   364
+R0                  U    00000000           1  1358   130   181   184   204   206   207   208   213   232   233   338   343   344
+                                                      382   390   391   417   419   435   438   440   442   444   459
+R1                  U    00000001           1  1359   214   249   250   251   252   255   256   307   308   339   383   400   401
+                                                      449   463
+R10                 U    0000000A           1  1368   169   178   179
+R11                 U    0000000B           1  1369   235   236   766   812   858   904   950   996  1042  1088  1134  1180  1226
+                                                     1272  1318
+R12                 U    0000000C           1  1370   223   226   260   393
+R13                 U    0000000D           1  1371
+R14                 U    0000000E           1  1372
+R15                 U    0000000F           1  1373   238   270   272   282   302   305   310   337   340   341   345   384   412
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    37
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                      422   423
+R2                  U    00000002           1  1360   215   315   316   323   324   325   330   331   332   360   361   368   369
+                                                      370   375   376   377   417   418   419   436   438   444   445   446   448
+                                                      454   459   460   761   762   807   808   853   854   899   900   945   946
+                                                      991   992  1037  1038  1083  1084  1129  1130  1175  1176  1221  1222  1267
+                                                     1268  1313  1314
+R3                  U    00000003           1  1361
+R4                  U    00000004           1  1362
+R5                  U    00000005           1  1363   226   227   230   413   421   730   768   776   814   822   860   868   906
+                                                      914   952   960   998  1006  1044  1052  1090  1098  1136  1144  1182  1190
+                                                     1228  1236  1274  1282  1320
+R6                  U    00000006           1  1364
+R7                  U    00000007           1  1365
+R8                  U    00000008           1  1366   167   171   172   173   175
+R9                  U    00000009           1  1367   168   175   176   178
+RE1                 F    000011E4           4   767   739   742
+RE10                F    00001A9C           4  1181  1153  1156
+RE11                F    00001B94           4  1227  1199  1202
+RE12                F    00001C8C           4  1273  1245  1248
+RE13                F    00001D84           4  1319  1291  1294
+RE2                 F    000012DC           4   813   785   788
+RE3                 F    000013D4           4   859   831   834
+RE4                 F    000014CC           4   905   877   880
+RE5                 F    000015C4           4   951   923   926
+RE6                 F    000016BC           4   997   969   972
+RE7                 F    000017B4           4  1043  1015  1018
+RE8                 F    000018AC           4  1089  1061  1064
+RE9                 F    000019A4           4  1135  1107  1110
+READDR              A    0000001C           4   593   255
+REG2LOW             U    000000DD           1   511
+REG2PATT            U    AABBCCDD           1   510
+RELEN               A    00000018           4   592
+RPTDWSAV            D    00000530           8   428   417   419
+RPTERROR            I    00000506           4   412   340   384
+RPTSAVE             F    00000524           4   425   412   422
+RPTSVR5             F    00000528           4   426   413   421
+SKIPXC              C    00000050           8   599   268   276   281
+SKL0001             U    0000005F           1   197   213
+SKT0001             C    0000022A          26   194   197   214
+SVOLDPSW            U    00000140           0   132
+T1                  A    00001120           4   731  1334
+T10                 A    000019D8           4  1145  1343
+T11                 A    00001AD0           4  1191  1344
+T12                 A    00001BC8           4  1237  1345
+T13                 A    00001CC0           4  1283  1346
+T2                  A    00001218           4   777  1335
+T3                  A    00001310           4   823  1336
+T4                  A    00001408           4   869  1337
+T5                  A    00001500           4   915  1338
+T6                  A    000015F8           4   961  1339
+T7                  A    000016F0           4  1007  1340
+T8                  A    000017E8           4  1053  1341
+T9                  A    000018E0           4  1099  1342
+TESTING             F    00001004           4   522   233
+TNUM                H    00000004           2   583   232   315   360
+TSUB                A    00000000           4   582   235
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    38
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+TTABLE              F    00001DBC           4  1333
+V0                  U    00000000           1  1400
+V1                  U    00000001           1  1401
+V10                 U    0000000A           1  1410
+V11                 U    0000000B           1  1411
+V12                 U    0000000C           1  1412
+V13                 U    0000000D           1  1413
+V14                 U    0000000E           1  1414
+V15                 U    0000000F           1  1415   290   292   297   299
+V16                 U    00000010           1  1416   289   290   296   297
+V17                 U    00000011           1  1417
+V18                 U    00000012           1  1418
+V19                 U    00000013           1  1419
+V1FUDGE             X    000010EA          16   573
+V1INPUT             X    000010FA          16   574
+V1O1                X    00001148          16   744   765
+V1O10               X    00001A00          16  1158  1179
+V1O11               X    00001AF8          16  1204  1225
+V1O12               X    00001BF0          16  1250  1271
+V1O13               X    00001CE8          16  1296  1317
+V1O2                X    00001240          16   790   811
+V1O3                X    00001338          16   836   857
+V1O4                X    00001430          16   882   903
+V1O5                X    00001528          16   928   949
+V1O6                X    00001620          16   974   995
+V1O7                X    00001718          16  1020  1041
+V1O8                X    00001810          16  1066  1087
+V1O9                X    00001908          16  1112  1133
+V1OUTPUT            X    00000028          16   595   256   289   296
+V2                  U    00000002           1  1402
+V20                 U    00000014           1  1420
+V21                 U    00000015           1  1421
+V22                 U    00000016           1  1422   762   763   765   808   809   811   854   855   857   900   901   903   946
+                                                      947   949   992   993   995  1038  1039  1041  1084  1085  1087  1130  1131
+                                                     1133  1176  1177  1179  1222  1223  1225  1268  1269  1271  1314  1315  1317
+V23                 U    00000017           1  1423   762   763   808   809   854   855   900   901   946   947   992   993  1038
+                                                     1039  1084  1085  1130  1131  1176  1177  1222  1223  1268  1269  1314  1315
+V24                 U    00000018           1  1424
+V25                 U    00000019           1  1425
+V26                 U    0000001A           1  1426
+V27                 U    0000001B           1  1427
+V28                 U    0000001C           1  1428
+V29                 U    0000001D           1  1429
+V2ADDR              A    0000000C           4   590   307
+V2_1                A    0000112C           4   739   761
+V2_10               A    000019E4           4  1153  1175
+V2_11               A    00001ADC           4  1199  1221
+V2_12               A    00001BD4           4  1245  1267
+V2_13               A    00001CCC           4  1291  1313
+V2_2                A    00001224           4   785   807
+V2_3                A    0000131C           4   831   853
+V2_4                A    00001414           4   877   899
+V2_5                A    0000150C           4   923   945
+V2_6                A    00001604           4   969   991
+V2_7                A    000016FC           4  1015  1037
+V2_8                A    000017F4           4  1061  1083
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    39
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V2_9                A    000018EC           4  1107  1129
+V3                  U    00000003           1  1403
+V30                 U    0000001E           1  1430
+V31                 U    0000001F           1  1431
+V4                  U    00000004           1  1404
+V5                  U    00000005           1  1405
+V6                  U    00000006           1  1406
+V7                  U    00000007           1  1407
+V8                  U    00000008           1  1408
+V9                  U    00000009           1  1409
+VXC                 X    0000000B           1   589   244
+VXC1                X    0000112B           1   738
+VXC10               X    000019E3           1  1152
+VXC11               X    00001ADB           1  1198
+VXC12               X    00001BD3           1  1244
+VXC13               X    00001CCB           1  1290
+VXC2                X    00001223           1   784
+VXC3                X    0000131B           1   830
+VXC4                X    00001413           1   876
+VXC5                X    0000150B           1   922
+VXC6                X    00001603           1   968
+VXC7                X    000016FB           1  1014
+VXC8                X    000017F3           1  1060
+VXC9                X    000018EB           1  1106
+WK1                 F    00000098           4   607
+WK2                 F    0000009C           4   608
+X0001               U    000002C0           1   203   191   204
+X1                  F    000011C0           4   759   731
+X10                 F    00001A78           4  1173  1145
+X11                 F    00001B70           4  1219  1191
+X12                 F    00001C68           4  1265  1237
+X13                 F    00001D60           4  1311  1283
+X2                  F    000012B8           4   805   777
+X3                  F    000013B0           4   851   823
+X4                  F    000014A8           4   897   869
+X5                  F    000015A0           4   943   915
+X6                  F    00001698           4   989   961
+X7                  F    00001790           4  1035  1007
+X8                  F    00001888           4  1081  1053
+X9                  F    00001980           4  1127  1099
+XC0001              U    000002E8           1   217   209
+XCFAILMSG           H    000003CE           2   314   309
+XCHECK              U    00000346           1   267   238
+XCO1                X    00001180          16   750
+XCO10               X    00001A38          16  1164
+XCO11               X    00001B30          16  1210
+XCO12               X    00001C28          16  1256
+XCO13               X    00001D20          16  1302
+XCO2                X    00001278          16   796
+XCO3                X    00001370          16   842
+XCO4                X    00001468          16   888
+XCO5                X    00001560          16   934
+XCO6                X    00001658          16   980
+XCO7                X    00001750          16  1026
+XCO8                X    00001848          16  1072
+XCO9                X    00001940          16  1118
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    40
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+XCOUTPUT            X    00000060          16   601   292   299   308
+XCPLINE             C    00001050          13   548   557   339
+XCPLNG              U    0000004E           1   557   338
+XCPM4               C    00001090           2   553   328
+XCPM5               C    0000109B           2   555   335
+XCPNAME             C    0000107F           8   551   321
+XCPTNUM             C    0000105D           3   549   319
+XCR15               F    00000478           8   351   337   341
+XCRESULT            X    00000448          16   348
+XCSKIP              C    00000007           1   585   269
+XCV1                X    00000458          16   349
+XCV2                X    00000468          16   350
+XCVCRNF             F    00000378           4   286   278
+ZVE6TST             J    00000000        7680   129   132   134   138   142   520   130
+=A(E6TESTS)         A    0000064C           4   495   223
+=AL2(L'MSGMSG)      R    0000065A           2   499   440
+=CL1'S'             C    0000065C           1   500   269
+=CL8'        '      C    00000638           8   492   276
+=CL8'SKIP XC '      C    00000630           8   491   268   281
+=CL8'VCRNF'         C    00000640           8   493   277
+=F'1'               F    00000654           4   497   343   390
+=F'4'               F    00000648           4   494   208
+=H'0'               H    00000658           2   498   435
+=XL4'00000008'      X    00000650           4   496   251
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    41
+
+ MACRO   DEFN  REFERENCES
+
+FCHECK     81    190
+PTTABLE   688   1332
+VRR_C     624    728    774    820    866    912    958   1004   1050   1096   1142   1188   1234   1280
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    42
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    7680  0000-1DFF  0000-1DFF
+  Region            7680  0000-1DFF  0000-1DFF
+    CSECT  ZVE6TST  7680  0000-1DFF  0000-1DFF
+ASMA Ver. 0.7.0  zvector-e6-20-NNPconvert (Zvector E6 VRR-c)                                        05 Aug 2024 11:02:53  Page    43
+
+   STMT                       FILE NAME
+
+1     /home/tn529/sharedvfp/tests/zvector-e6-21-VCRNF.asm
+
+
+** NO ERRORS FOUND **
+
+

@@ -1880,6 +1880,12 @@
     <None Include="tests\zvector-e6-19-VCSPH.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\zvector-e6-20-NNPconvert.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e6-21-VCRNF.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\zvector-e7-01-MinMaxAvg.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -2390,6 +2396,12 @@
     <None Include="tests\zvector-e6-19-VCSPH.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\zvector-e6-20-NNPconvert.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e6-21-VCRNF.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\zvector-e7-01-MinMaxAvg.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2640,6 +2652,12 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\zvector-e6-19-VCSPH.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e6-20-NNPconvert.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e6-21-VCRNF.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\zvector-e7-01-MinMaxAvg.asm">
@@ -3048,6 +3066,18 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\zvector-e6-19-VCSPH.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-20-NNPconvert.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-20-NNPconvert.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-21-VCRNF.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-21-VCRNF.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\zvector-e7-01-MinMaxAvg.list">

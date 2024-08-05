@@ -718,6 +718,15 @@ EXTRA_DIST =                    \
      zvector-e6-19-VCSPH.list               \
      zvector-e6-19-VCSPH.pdf                \
      zvector-e6-19-VCSPH.tst                \
+     zvector-e6-20-NNPconvert.asm           \
+     zvector-e6-20-NNPconvert.core          \
+     zvector-e6-20-NNPconvert.pdf           \
+     zvector-e6-20-NNPconvert.tst           \
+     zvector-e6-21-VCRNF.asm                \
+     zvector-e6-21-VCRNF.core               \
+     zvector-e6-21-VCRNF.list               \
+     zvector-e6-21-VCRNF.pdf                \
+     zvector-e6-21-VCRNF.tst                \
      zvector-e7-01-MinMaxAvg.asm            \
      zvector-e7-01-MinMaxAvg.core           \
      zvector-e7-01-MinMaxAvg.list           \

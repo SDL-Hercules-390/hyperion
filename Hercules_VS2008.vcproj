@@ -3751,6 +3751,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\zvector-e6-20-NNPconvert.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e6-21-VCRNF.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\zvector-e7-01-MinMaxAvg.core"
 						>
 					</File>
@@ -5046,6 +5054,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\zvector-e6-20-NNPconvert.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e6-21-VCRNF.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\zvector-e7-01-MinMaxAvg.tst"
 							>
 						</File>
@@ -5495,6 +5511,14 @@
 						</File>
 						<File
 						RelativePath=".\tests\zvector-e6-19-VCSPH.asm"
+						>
+						</File>
+						<File
+						RelativePath=".\tests\zvector-e6-20-NNPconvert.asm"
+						>
+						</File>
+						<File
+						RelativePath=".\tests\zvector-e6-21-VCRNF.asm"
 						>
 						</File>
 						<File
@@ -6234,6 +6258,22 @@
 							</File>
 							<File
 							RelativePath=".\tests\zvector-e6-19-VCSPH.pdf"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-20-NNPconvert.list"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-20-NNPconvert.pdf"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-21-VCRNF.list"
+							>
+							</File>
+							<File
+							RelativePath=".\tests\zvector-e6-21-VCRNF.pdf"
 							>
 							</File>
 							<File
