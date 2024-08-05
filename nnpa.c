@@ -931,7 +931,7 @@ DEF_INST( vector_fp_convert_and_round_to_nnp )
         /*      the conversion itself.                               */
         softfloat_exceptionFlags &= ~(softfloat_flag_inexact);
         if (softfloat_exceptionFlags)
-            vector_softfloat_conditional( regs, i );
+            vector_softfloat_conditional( regs, k );
 
         regs->VR_H( v1, k)  = n1f.v;
     }
@@ -946,7 +946,7 @@ DEF_INST( vector_fp_convert_and_round_to_nnp )
         /*      the conversion itself.                               */
         softfloat_exceptionFlags &= ~(softfloat_flag_inexact);
         if (softfloat_exceptionFlags)
-            vector_softfloat_conditional( regs, i );
+            vector_softfloat_conditional( regs, k );
 
         regs->VR_H( v1, k)  = n1f.v;
     }
