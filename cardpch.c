@@ -497,6 +497,7 @@ static void cardpch_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
 int             rc;                                            // WED
+BYTE*           work;                   // string manipulation // WED
 U32             i;                      /* Loop counter              */
 U32             num;                    /* Number of bytes to move   */
 BYTE            c;                      /* Output character          */
@@ -528,7 +529,7 @@ BYTE            c;                      /* Output character          */
         	cardpch_close_device(dev);                         // WED
 
             /* Translate CCW data from EBCDIC */               // WED
-        	static BYTE *work = NULL;                          // WED
+        	work = NULL;                                       // WED
         	if (count > 0) {                                   // WED
         		work = malloc(count);                          // WED
         		buf_guest_to_host(iobuf, work, count);         // WED

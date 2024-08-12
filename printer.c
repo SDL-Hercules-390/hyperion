@@ -1861,6 +1861,7 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
     int  rc;
+	BYTE* work;                   // string manipulation       // WED
     U32  num, fcbsize, ucbsize, plbsize;
 
     UNREFERENCED( prevcode );
@@ -1896,7 +1897,7 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         	printer_close_device(dev);                         // WED
 
             /* Translate CCW data from EBCDIC */               // WED
-        	static BYTE *work = NULL;                          // WED
+        	work = NULL;                                       // WED
         	if (count > 0) {                                   // WED
         		work = malloc(count);                          // WED
         		buf_guest_to_host(iobuf, work, count);         // WED
@@ -2693,7 +2694,7 @@ static DEVHND printer_device_hndinfo =
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };
-DEVHND prt3203_device_hndinfo = {
+static DEVHND prt3203_device_hndinfo = {
         &printer_init_handler,         /* Device Initialization      */
         &printer_execute_ccw,          /* Device CCW execute         */
         &printer_close_device,         /* Device Close               */
