@@ -752,7 +752,7 @@ DLL_EXPORT int timed_wait_condition_relative_usecs_impl
     return hthread_timed_wait_condition( pCOND, pLOCK, &timeout_timespec, loc );
 }
 
-/*BEGIN changes by WED:
+/*BEGIN additions by WED:
 
     These methods are used in unit-record out drivers
     (printer.c,cardpch.c)
@@ -800,12 +800,10 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
 {
     struct UROUTBLK* urOutBlk;
     const char* p1, * p2;
+	char* pname, * pext;
     int ix;
 
-	WRMSG ("%1d:%04X %s uro_initfile: initdev name [%s]", "D", LCSS_DEVNUM, urotype, namearg);
-
     if (dev->dev_data != NULL) {
-    	WRMSG ("%1d:%04X %s uro_initfile: release existing UROUTBLK content", "D", LCSS_DEVNUM, urotype);
         urOutBlk = (struct UROUTBLK*)dev->dev_data;
         if (urOutBlk->cmd_filename != NULL) {
             free(urOutBlk->cmd_filename);
@@ -827,7 +825,6 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
         }
     }
     else {
-    	WRMSG ("%1d:%04X %s uro_initfile: malloc new UROUTBLK", "D", LCSS_DEVNUM, urotype);
         dev->dev_data = urOutBlk = (struct UROUTBLK*)malloc(sizeof(struct UROUTBLK));
     }
     memset(urOutBlk, 0, sizeof(struct UROUTBLK));
@@ -840,11 +837,9 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
     p2 = strrchr(namearg, '\\');
     p1 = MAX(p1, p2);
     if (p1 > 0) {
-        ix = p1 - namearg;
+        ix = p1 - namearg + 1;
         urOutBlk->cmd_pathpart = (char*)malloc(ix + 1);
         strlcpy(urOutBlk->cmd_pathpart, namearg, ix + 1);
-        ix++; // name starts here
-    	WRMSG ("%1d:%04X %s uro_initfile: path part [%s]", "D", LCSS_DEVNUM, urotype, urOutBlk->cmd_pathpart);
     }
     else {
         // no path in initdev arg... use cwd instead
@@ -856,13 +851,10 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
         }
         urOutBlk->cmd_pathpart = strdup(cwd);
         ix = 0; // take name from here
-    	WRMSG ("%1d:%04X %s uro_initfile: use cwd for path [%s]", "D", LCSS_DEVNUM, urotype, urOutBlk->cmd_pathpart);
     }
 
     /* Get/save the file extnesion (starting with & including the last . */
-    static char* pname;
     pname = (char*)namearg + ix;
-    static char* pext;
     pext = (char*)strrchr(namearg, '.');
     if (pext > 0) {
         ix = pext - pname + 1;
@@ -874,8 +866,6 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
         urOutBlk->cmd_namepart = strdup(pname);
         urOutBlk->cmd_extpart = strdup(defaultExt);
     }
-	WRMSG ("%1d:%04X %s uro_initfile: name part [%s]", "D", LCSS_DEVNUM, urotype, urOutBlk->cmd_namepart);
-	WRMSG ("%1d:%04X %s uro_initfile: ext part [%s]", "D", LCSS_DEVNUM, urotype, urOutBlk->cmd_extpart);
     return 0;
 }
 
@@ -893,7 +883,7 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
  *    urotype:     The device type name (PRinter/Card) to include
  *                 in logged messages
  *    ccwdata:     data from the Open Printer CCW translated
- *                 to this host's code page.
+ *                 to this host's code page. (NOT a C string)
  *    ccwlen:      the length of the ccwdata
  *
  * Returns:
@@ -901,12 +891,15 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
  *   !0 = failure. error message already issued
  */
 DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *ccwdata, int ccwlen ) {
+	char *work, *ip, *op;
+	int insp, i;
+
 	if (ccwlen > 0) {
-		char *work = (char*)malloc(ccwlen+1);
-		char *ip = (char*)ccwdata;
-		char *op = work;
-		int insp = 0;
-		for (int i = 0; i < ccwlen; i++) {
+		work = (char*)malloc(ccwlen+1);
+		ip = (char*)ccwdata;
+		op = work;
+		insp = 0;
+		for (i = 0; i < ccwlen; i++) {
 			if (*ip == ' ') {
 				insp = 1;
 				ip++;
@@ -921,7 +914,6 @@ DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *
 		}
 		*op = '\0';
 		UROUT(dev)->cur_namepart = strdup(work);
-		WRMSG ("%1d:%04X %s uro_initfile: name from ccw [%s]", "D", LCSS_DEVNUM, urotype, UROUT(dev)->cur_namepart);
 		free(work);
 	}
 	return 0;
@@ -951,8 +943,8 @@ static /*recursive*/ void pushFileStack (
 		int suffix
 ) {
 	struct stat st;
+	char work[MAX_PATH];
 	if (stat(fullname, &st) >= 0) {
-		char work[MAX_PATH];
 		sprintf(work, "%s_%d%s", rootname, suffix, ext);
 		pushFileStack(dev, urotype, work, rootname, ext, suffix + 1);
 		// "%1d:%04X %s: renaming output file [%s] to [%s]"
@@ -978,18 +970,20 @@ static /*recursive*/ void pushFileStack (
  *   !0 = failure. error message already issued
  */
 DLL_EXPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype ) {
+	char *name, *rootname;
+	int len;
 
-	// name is from Open Printer CCW or initdev command
-	char * name = UROUT(dev)->cur_namepart != NULL
-			    ? UROUT(dev)->cur_namepart
-			    : UROUT(dev)->cmd_namepart;
-	int len = strlen(UROUT(dev)->cmd_pathpart) + strlen(name);
-	char *rootname = (char*)malloc(len + 1);
+	// name is from Open Printer CCW or devinit command
+	name = UROUT(dev)->cur_namepart != NULL
+	     ? UROUT(dev)->cur_namepart
+	     : UROUT(dev)->cmd_namepart;
+	len = strlen(UROUT(dev)->cmd_pathpart) + strlen(name);
+	rootname = (char*)malloc(len + 1);
     strcpy(rootname, UROUT(dev)->cmd_pathpart);
 	strcat(rootname, name);
 
-	// add in extension from initdev command
-	len = strlen(UROUT(dev)->cmd_extpart);
+	// add in extension from devinit command
+	len += strlen(UROUT(dev)->cmd_extpart);
 	UROUT(dev)->cur_filename = (char*)malloc(len + 1);
 	strcpy(UROUT(dev)->cur_filename, rootname);
 	strcat(UROUT(dev)->cur_filename, UROUT(dev)->cmd_extpart);
