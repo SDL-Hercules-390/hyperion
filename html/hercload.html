@@ -73,13 +73,15 @@ what the rules are. I don't. &nbsp;<tt>:-(</tt>
 <p><hr><a name="dasdinit"></a>
 <h4>Creating an empty DASD volume</h4>
 <p>
-The dasdinit or dasdinit64 utility must first be run from the Unix shell
-prompt to create a file containing an empty DASD volume.
-If you are going to be creating <a href="cckddasd.html">compressed dasd images</a>,
-it is recommended that you use the new <u>dasdinit64</u> utility as it is
-able to create <a href="hercrnot.html#CCKD64">CCKD64 format</a> dasd images
-which are highly advantageous over the old 32-bit CCKD images that plain
-dasdinit creates.
+To create an empty DASD volume, simply run the <code>dasdinit</code> or
+<b><code>dasdinit64</code></b> utility from your host system's shell (command prompt)
+to create a file that emulates (represents) the empty DASD volume. If you
+are going to be creating <a href="cckddasd.html">compressed dasd images</a>,
+it is recommended that you use the new <b><code>dasdinit64</code></b> utility,
+as it is able to create the emulated dasd image files in the new
+<a href="hercrnot.html#CCKD64">CCKD64 format</a>, which are highly advantageous
+over the old 32-bit CCKD images that plain <code>dasdinit</code> creates in that
+it is able to create images that represent very large capacity DASDs.
 <p>
 The format of the command is:
 <br><br>
@@ -93,15 +95,15 @@ The format of the command is:
       -0        build <a href="cckddasd.html"><b>compressed dasd image</b></a> file with no compression
       -lfs      build a large (uncompressed) dasd file (if supported)
       -a        build dasd image file that includes alternate cylinders
-                (option ignored if size is manually specified)
+                <i>(option ignored if size is manually specified)</i>
       -r        build 'raw' dasd image file
-                (no VOL1 or IPL track)
+                <i>(no VOL1 or IPL track)</i>
       -b        make wait PSW in IPL1 record a BC-mode PSW
-                (default is EC-mode PSW)
+                <i>(default is EC-mode PSW)</i>
       -m        enable wait PSW in IPL1 record for machine checks
-                (default is disabled for machine checks)
+                <i>(default is disabled for machine checks)</i>
       -linux    null track images will look like Linux dasdfmt'ed images
-                (3390 device type only)
+                <i>(3390 device type only)</i>
 
       filename  name of dasd image file to be created
       devtype   CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
@@ -109,9 +111,9 @@ The format of the command is:
 
       model     device model (implies size) (opt)
       volser    volume serial number (1-6 characters)
-                (specified only if '-r' option not used)
+                <i>(specified only if <b>'-r'</b> option is <b><u>not</u></b> used)</i>
       size      number of CKD cylinders or 512-byte FBA sectors
-                (required if model not specified else optional)
+                <i>(required if model not specified, else optional)</i>
 </pre>
 
 <p><br>
@@ -122,6 +124,7 @@ the wait PSW is EC-mode, disabled for machine checks.  To obtain the earlier
 behavior, run dasdinit with the "-b" and "-m" flags.
 </p>
 <a name="models">
+<p>
 The current list of device types and models supported is:
 </p>
 <pre>
@@ -130,6 +133,10 @@ The current list of device types and models supported is:
 
                                alt
         devtype-model    cyls  cyls</b>
+
+        2305              [<b>*</b>]
+        2305-1            48    6
+        2305-2            96    12
 
         2311              [<b>*</b>]
         2311-1            200   2
@@ -339,8 +346,8 @@ volume.
 <h2>Building a DASD volume from unloaded PDS files</h2>
 <h3>dasdload / dasdload64</h3>
 <p>
-The dasdload program can be run from the Unix shell prompt
-to create a new DASD image file and load it with data from unloaded
+The dasdload program can be run from your host system's shell (command
+prompt) to create a new DASD image file and load it with data from unloaded
 PDS files.
 <p>
 The format of the dasdload / dasdload64 command is:
@@ -554,10 +561,11 @@ to perform this function, but the catch-22 situation is that you can't run
 IEHIOSUP until you have the system up and running, and you can't IPL
 until you have fixed the XCTL tables!
 <p>
-To solve this dilemma, Hercules provides a program called dasdisup
-which can be run from the Unix command line after running dasdload / dasdload64.
+To solve this dilemma, Hercules provides a utility program called <code>dasdisup</code>
+which can be run from your host's command line after running either <code>dasdload</code>
+or <code>dasdload64</code>.
 <p>
-The format of the dasdisup command is:
+The format of the <code>dasdisup</code> command is:
 <p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdisup <em>outfile [sf=shadow-file-name]</em></code>
 <p>
 where
@@ -578,7 +586,8 @@ Other operating systems do not have XCTL tables!</em>
 <h2>Other DASD utilities</h2>
 <p>
 These programs can be used to extract data from CKD DASD images
-by means of commands issued at the Unix shell prompt.
+by means of commands issued from your host system's shell prompt
+(i.e. command line).
 
 <h3>DASDLS: &nbsp; List datasets on volume</h3>
 <p>
@@ -588,7 +597,7 @@ to let you list the names of the datasets contained in disk images.
 The command format is:
 <p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdls [-option [-option ... ]] ckdfile [sf=sfile]  [...]</em></code>
 <p>
-where <em>ckdfile</em> is the name of a Unix file containing a CKD volume
+where <em>ckdfile</em> is the name of the file containing a CKD volume
 and <em>sfile</em> (optional) is the name of the associated shadow file.
 <p>
 <em>-option</em> can be:
@@ -617,7 +626,7 @@ datasets from disk images.
 The command format is:
 <p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdcat -i <em>ckdfile [sf=shadow-file-name] dsname1 dsname2 ...</em> -i <em>ckdfile2 dsname10 ...</em></code>
 <p>
-where <em>ckdfile</em> is the name of a Unix file containing a CKD volume,
+where <em>ckdfile</em> is the name of the file containing a CKD volume,
 <em>shadow-file-name</em> (optional) is the name of the associated shadow file,
 and <em>dsname</em> can be a plain (non-partitioned) dataset name
 (which is currently not handled) or of the form <em>pdsname</em>/<em>memname</em>

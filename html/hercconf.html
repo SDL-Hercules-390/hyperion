@@ -1323,15 +1323,38 @@ a real System/390.  The configuration file is an ASCII text file.
     for information regarding modifying Windows's "Adapter Binding Order" and/or defining
     a preferred CTCI-WIN default host network adapter.
     <p>
+<a name="netpriv"></a>
     <center>
     <table width=95%>
       <tr><td>
+        <p class="box">
         <i>
-        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
-        to your host's networking devices. If Hercules is not started with
-        <u>Administrative (root) privileges</u> then initialization of your
-        networking devices will fail and your guest's networking will not work.
+        <b>Note:</b> Hercules's networking support <u>MAY</u> require <u>privileged access</u>
+        to your host's networking devices, depending on whether you use pre-configured interfaces
+        or not. If you do not use pre-configured interfaces and Hercules is not started with
+        <u>Administrative (root) privileges</u>, then initialization of your networking devices
+        will fail and your guest's networking will not work!
+        </br></br>
+        If one uses pre-configured interfaces on Linux et al. however <b>(recommended!)</b>,
+        then Hercules does <u>not</u> need to run as root, because the network interface it needs
+        to use already exists and is already properly configured (because you already created
+        and configured it yourself before you even started Hercules! So there's nothing Hercules
+        needs to do before it can use it!).
+        </br></br>
+        If you <u>don't</u> use pre-configured interfaces however (and instead rely on Hercules
+        itself to both create and configure your networking interface for you), then
+        <b><u>yes</u></b>, Hercules will obviously need to be started as root in order to be able
+        to do that for you.
+        </br></br>
+        This is why using pre-configured interfaces on *Nix et al. is so highly recommended: so
+        that you <b>don't</b> need to run Hercules as root.
+        </br></br>
+        On Windows however, due to the way CTCI-WIN works, Administrative privileges is
+        <b><u>always</u></b> required, as CTCI-WIN hooks directly into Windows's real network
+        adapter's networking stack to be able to read packets directly from and write packets
+        directly to the real physical adapter's networking stack.
         </i>
+        </p>
       </td></tr>
     </table>
     </center>
@@ -3630,25 +3653,31 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <p>
 
+        <p class="box">
         <i>
-        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
-        to your host's networking devices. The easiest way to do this on Linux is
-        to enable setuid of hercifc using the <tt>--enable-setuid-hercifc</tt>
-        configure option. If that's not an option, or you're not running under
-        Linux, using Administrative (root) privileges when running Hercules will
-        work as well.
+        <b>Note:</b> Hercules's networking support <u>MAY</u> require <u>privileged access</u>
+        to your host's networking devices depending on whether you use pre-configured networking
+        interfaces or not, which means Hercules itself <u>MAY</u> need to be started with
+        Administrative (root) privileges. (Refer to the discussion in the
+        <a href=#netpriv>NETDEV</a> statement.)
+        </br></br>
+        The easiest way to do this on Linux et al. is to enable setuid for hercifc using the
+        <tt>--enable-setuid-hercifc</tt> configure option. If that's not possible (or
+        you're not running Hercules under Linux et al), then Hercules <u>must</u> be started
+        with Administrative (root) privileges or your Hercules networking devices will not work.
         </i>
 
         <br><br>
 
         <i>
-        <b>Please note</b> that this is still considered to be an experimental
+        <b>Please also note</b> that the QETH (OSA) device is still considered to be an experimental
         driver still under development. Not all of the features or functionality
         that real OSA devices have are currently supported. For example, the
         current implementation only supports three devices: the read device,
         the write device and the datapath device. Real OSA devices support
         multiple datapath devices. Support for this feature is planned, but is
-        not yet implemented.
+        not yet implemented. Regardless, QETH (OSA) device support appears to be stable
+        and has been working fine without any problems for several years now.
         </i>
 
         </p>
@@ -3821,14 +3850,13 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <p>
 
+        <p class="box">
         <i>
-        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
-        to your host's networking devices. If Hercules is not started with
-        <u>Administrative (root) privileges</u> then initialization of your
-        networking devices will fail and your guest's networking will not work.
+        <b>Note:</b> Refer to the discussion in the <a href=#netpriv>NETDEV</a> statement
+        for important information regarding elevated privileges that <u>may</u> be required
+        for networking devices.
         </i>
-
-        <p>
+        </p>
 
         Rather than a point-to-point link, this emulation creates a
         virtual ethernet adapter through which the guest operating system
@@ -4081,12 +4109,13 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
         <p>
 
+        <p class="box">
         <i>
-        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
-        to your host's networking devices. If Hercules is not started with
-        <u>Administrative (root) privileges</u> then initialization of your
-        networking devices will fail and your guest's networking will not work.
+        <b>Note:</b> Refer to the discussion in the <a href=#netpriv>NETDEV</a> statement
+        for important information regarding elevated privileges that <u>may</u> be required
+        for networking devices.
         </i>
+        </p>
 
         <p>
         The Windows implementation is different from the unix one. See
@@ -4232,12 +4261,13 @@ ROUTE  00  172.21.3.32  255.255.255.224
         two or more Hercules instances.
         <p>
 
+        <p class="box">
         <i>
-        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
-        to your host's networking devices. If Hercules is not started with
-        <u>Administrative (root) privileges</u> then initialization of your
-        networking devices will fail and your guest's networking will not work.
+        <b>Note:</b> Refer to the discussion in the <a href=#netpriv>NETDEV</a> statement
+        for important information regarding elevated privileges that <u>may</u> be required
+        for networking devices.
         </i>
+        </p>
 
         <p>
         A Hercules CTCE device requires two even-odd pairs of devices, one for
@@ -4440,12 +4470,13 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
         <p>
 
+        <p class="box">
         <i>
-        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
-        to your host's networking devices. If Hercules is not started with
-        <u>Administrative (root) privileges</u> then initialization of your
-        networking devices will fail and your guest's networking will not work.
+        <b>Note:</b> Refer to the discussion in the <a href=#netpriv>NETDEV</a> statement
+        for important information regarding elevated privileges that <u>may</u> be required
+        for networking devices.
         </i>
+        </p>
 
         <p>
         For *nix systems, such as Linux, BSD, and OSX, you may use
