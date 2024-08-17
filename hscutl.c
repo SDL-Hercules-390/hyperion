@@ -892,18 +892,20 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
  */
 DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *ccwdata, int ccwlen ) {
 	char *work, *ip, *op;
-	int insp, i;
+	int nchars, insp, i;
 
 	if (ccwlen > 0) {
 		work = (char*)malloc(ccwlen+1);
 		ip = (char*)ccwdata;
 		op = work;
 		insp = 0;
+		nchars = 0;
 		for (i = 0; i < ccwlen; i++) {
 			if (*ip == ' ') {
 				insp = 1;
 				ip++;
 			} else {
+				nchars++;
 				if (insp > 0) {
 					*op++ = '-';
 					insp = 0;
@@ -912,8 +914,10 @@ DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *
 				}
 			}
 		}
-		*op = '\0';
-		UROUT(dev)->cur_namepart = strdup(work);
+		if (nchars > 0) {
+			*op = '\0';
+			UROUT(dev)->cur_namepart = strdup(work);
+		}
 		free(work);
 	}
 	return 0;
