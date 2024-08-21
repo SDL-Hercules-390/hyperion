@@ -412,6 +412,7 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
 
 #if defined( _FEATURE_SIE )
 
+  #define SIE_ACTIVE( _regs )       ((_regs)->sie_active)
   #define SIE_MODE( _regs )         ((_regs)->sie_mode)
   #define SIE_STATE( _regs )        ((_regs)->sie_state)
 
@@ -453,6 +454,7 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
 
 #else // !defined( _FEATURE_SIE )
 
+  #define SIE_ACTIVE(        _regs )                (0)
   #define SIE_MODE(          _regs )                (0)
   #define SIE_STATE(         _regs )                (0)
 
@@ -477,13 +479,6 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
   #define MULTIPLE_CONTROLLED_DATA_SPACE( _regs )   (0)
 #endif
 
-#if defined( FEATURE_SIE )
-  #undef  SIE_ACTIVE
-  #define SIE_ACTIVE( _regs )     ((_regs)->sie_active)
-#else
-  #undef  SIE_ACTIVE
-  #define SIE_ACTIVE( _regs )     (0)
-#endif
 
 /*-------------------------------------------------------------------*/
 /*                   Instruction "FOOTPRINT"                         */
