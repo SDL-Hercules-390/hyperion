@@ -22,25 +22,13 @@ Hercules: Release Notes
 <dl>
 
 
-  <dt>z/Architecture Vector Registers Support
+  <dt><u><i>Experimental</i></u> &nbsp;z/Architecture Vector Registers Support
   <dd>
   <p>
-    All zVector instructions (except the below 5) have now been coded and tested and appear to be
-    functioning properly.
+    All zVector instructions have now been coded and lightly tested and appear to be functioning
+    normally. Nevertheless, Vector Facility support is still considered to be <i><b>experimental</b></i>
+    given that this feature is brand new to Hercules and has only been <i>very lightly</i> tested.
   </p>
-  <p>
-    The only 5 instructions that have <i>not</i> been coded yet <i>(but which we hope to complete soon)</i>
-    are the following:
-  </p>
-<blockquote>
-<code>
-            E655 VCNF   - VECTOR FP CONVERT TO NNP</br>
-            E656 VCLFNH - VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH</br>
-            E65D VCFN   - VECTOR FP CONVERT FROM NNP</br>
-            E65E VCLFNL - VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW</br>
-            E675 VCRNF  - VECTOR FP CONVERT AND ROUND TO NNP</br>
-</code>
-</blockquote>
 
 
   <dt>(description...)
