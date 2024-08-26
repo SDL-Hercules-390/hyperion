@@ -1,0 +1,18 @@
+This directory contains a couple of updates to VM370CE that
+go along with the Print/Punch File Handshake modification
+to Hercules. Specifically, when these updates are applied
+to the CP component of VM370CE v1.1.2, you will be able to
+utilize the new Hercules "handshake" option for printer and 
+punch devices.
+
+There are two updates that need to be applied to CP:
+
+* WED002DK - allows program control of Command-Reject error
+             handling. The next update uses this to prevent
+             I/O errors being posted when the Hercules
+             "handshake" option is not in force.
+
+* WED003DK - updates the spooled print/punch processing to
+             utilize the new File-Open/Close CCWs to create
+             individual native files for each VM spool file.
+                 
