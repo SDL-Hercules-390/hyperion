@@ -144,7 +144,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     0000      <a href="#SYSG">SYSG</a>    SYSGCONS
 
-    0100      <a href="#ckddasd">3390</a>    disks/linux.dsk  <a href="#shadow">sf=shadows/linux_*.dsk</a>  <a href="#ckdser">ser=000000000001</a>
+    0100      <a href="#ckddasd">3390</a>    disks/linux.dsk  <a href="#shadow">sf=shadows/linux_*.dsk</a>  <a href="#ckdser">ser=000000000001</a>  <a href="#cu">cu=3990-6</a>
 
     0120      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5r.120
     0121      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5d.121
@@ -4833,14 +4833,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
     <dd><p>
         Specifies the type of control unit to which this device is attached.
         The use of this parameter does not necessarily imply that
-        all functions of the specified control unit are emulated,
-        its only purpose is to force a particular control unit type
+        all functions of the specified control unit are emulated.
+        Its sole purpose is to force a particular control unit type
         to be indicated in the data returned by SENSE ID and similar CCW's.
         <p>
         The default value depends on the device type:
         <blockquote>
             <table border=1 cellpadding=3>
-            <tr align="center"><th>Device type</th><th>Default CU type</dev></th></tr>
+            <tr align="center"><th>&nbsp;Dasd Device type&nbsp;</th><th>&nbsp;Default 'cu=' Control Unit Type&nbsp;</th></tr>
             <tr align="center"><td>2311</td><td>2841</td></tr>
             <tr align="center"><td>2314</td><td>2314</td></tr>
             <tr align="center"><td>3330 3340<br>3350 3375<br>3380</td><td>3880</td></tr>
@@ -4849,11 +4849,16 @@ ROUTE  00  172.21.3.32  255.255.255.224
             </table>
         </blockquote>
         <p>
-        Other values which may be specified are:
-        3990-3 and 3990-6.
+        Other values which may be specified for 3390 dasd device types are
+        <code>3990-3</code> and <code>3990-6</code>.
         <p>
-        Normally the default value is appropriate and this parameter need
-        not be specified.
+        For modern "z" operating systems such as z/OS and z/VM using 3390 dasds,
+        <code>cu=3990-6</code> should be specified. For older legacy type operating
+        systems, <code>cu=3990-3</code> is probably what should be specified instead.
+        The default control unit type of <code>cu=3990</code> is rarely what you actually want.
+        <p>
+        <i>Please note</i> that this option must be specified in lower case "<code>cu=</code>".
+        Using upper case "<code>CU=</code>" will not be recognized and will result in an error.
         <p>
 
 <a name="ckdser"></a>
