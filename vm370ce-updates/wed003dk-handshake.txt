@@ -1,0 +1,91 @@
+USERID MAINT
+:READ DMKRSP AUXWED A
+WED501DK V01 Hercules UR Output Handshake
+:READ DMKRSP WED003DK A
+./ * WED003DK - Hercules Unit Record Output File Handshake
+./ *
+./ * Enhance unit record output when running under Hercules
+./ * to issue "File Open" and "file Close" CCWS aat the
+./ * beginning and end of each spool file. The "File Open"
+./ * CCW will include the spool file's name/type to allow
+./ * Hercules to appropriately name each output file.
+./ *
+./ * PREREQUISITES:
+./ * DMKTBL HRC010DK - Adds EBCDIC Upper-to-Lower translate table
+./ *
+./ * HISTORY:
+./ * 16-Aug-2024 WDENTON  Initial version for VM370CE V1 R1.2
+./ *
+./ I 00101000 $ 00101050 10 
+*        DMKTBLLC - EBCDIC Upper-to-Lower xlate table          WED003DK 00101050
+./ I 00188100 $ 00188110 10
+         EXTRN DMKTBLLC                                        WED003DK 00188110
+./ I 00867000 $ 00867010 10
+         SPACE 1                                               WED003DK 00867010
+         CLI   CPUID,X'FD'         Running on Hercules?        WED003DK 00867020
+         BNE   NOTHRC1             No, skip                    WED003DK 00867030
+         MVC   0(LHRCDVOP,R2),HRCDVOPN  Move in the model CCWs WED003DK 00867040
+         LR    R1,R2               Relocate the fname arg      WED003DK 00867050
+         AL    R1,0(,R2)           ...                         WED003DK 00867060
+         ST    R1,0(,R2)           ...                         WED003DK 00867070
+         MVC   0(HRCNAMLN,R1),SFBFNAME Move in file name       WED003DK 00867080
+         L     R15,=A(DMKTBLLC)    HRC likes lower case names  WED003DK 00867090
+         TR    0(HRCNAMLN,R1),0(R15) ...                       WED003DK 00867100
+         LR    R1,R2               Issue the I/O               WED003DK 00867110
+         BAL   R14,HRCDOIO         ... (returns back here)     WED003DK 00867120
+         L     R2,RSPRPAGE         Restore buffer address      WED003DK 00867130
+NOTHRC1  DS    0H                                              WED003DK 00867140         
+         SPACE 1                                               WED003DK 00867150
+./ R 01458875 $ 01458876 1
+         BO    PRDELET2            XFER IF SO                  WED003DK 01458876
+./ R 01459600 $ 01459521 10
+         SPACE 1                                               WED003DK 01459521
+PRDELET2 DS    0H                                              WED003DK 01459531
+         CLI   CPUID,X'FD'         Running on Hercules?        WED003DK 01459541
+         BNE   NOTHRC2             No, skip                    WED003DK 01459551
+         LA    R1,HRCDVCLS         Issue FileClose CCW         WED003DK 01459561
+         BAL   R14,HRCDOIO         ... (returns back here)     WED003DK 01459571
+NOTHRC2  DS    0H                                              WED003DK 01459581
+         SPACE 1                                               WED003DK 01459591
+         TM    SFBFLAG,SFBSHOLD    IS THE FILE TO BE SAVED ??  WED003DK 01459601
+./ I 01601000 $ 01601100 10
+         SPACE 1                                               WED003DK 01601100
+HRCDOIO  DS    0H                                              WED003DK 01601110
+         ST    R1,IOBCAW                                       WED003DK 01601120
+         ST    R8,IOBMISC        Save RDEVBLOK addr            WED003DK 01601130  
+         ST    R14,IOBMISC2      Save return addr              WED003DK 01601140
+         LA    R14,HRCIRA        Set IRA                       WED003DK 01601150
+         ST    R14,IOBIRA        ...                           WED003DK 01601160
+         OI    IOBSPEC3,IOBIGNCR IOS should ignore Cmd-Rej     WED500DM 01601170   
+         B     SIO               and let 'er rip               WED003DK 01601180
+         SPACE 1                                               WED003DK 01101190
+         DROP  R12,R13                                         WED003DK 01601200
+HRCIRA   DS    0H                HRC I/O is complete           WED003DK 01601210
+         USING *,R12             Reestablish addressability    WED003DK 01601220
+         S     R12,HRCIODSP      ...                           WED003DK 01601230
+         USING DMKRSP,R12,R13    ...                           WED003DK 01601240
+         LR    R13,R12           ...                           WED003DK 01601250
+         A     R13,F4096         ...                           WED003DK 01601260
+         ST    R12,IOBIRA        Restore standard IRA          WED003DK 01601270
+         L     R8,IOBMISC        Restore addr of RDEVBLOK      WED003DK 01601280
+         L     R9,RDEVSPL        ...     ...     RSPLCTL       WED003DK 01601290
+         L     R7,RSPSFBLK       ...     ...     SFBLOK        WED003DK 01601300
+         L     R14,IOBMISC2      Return to HRCDOIO caller      WED003DK 01601310
+         BR    R14               ... (ignoring all errors)     WED003DK 01601320
+         SPACE 1                                               WED003DK 01601330
+HRCIODSP DC    A(HRCIRA-DMKRSP)  Addressability displacement   WED003DK 01601340
+         SPACE 1                                               WED003DK 01601350
+HRCDVOPN DS    0D                HRC FileOpen handshake CCW    WED003DK 01601360
+         CCW   X'F7',HRCFNAME,CC+SILI,HRCNAMLN                 WED003DK 01601370
+         CCW   X'04',*-*,SKIP+SILI,1 dummy sense               WED003DK 01601380
+*        dummy sense CCW is so that CE+DE present together     WED003DK 01601390
+HRCFNAME EQU   *-HRCDVOPN        Displacement to name data     WED003DK 01601400
+LHRCDVOP EQU   *-HRCDVOPN        Length of CCW chain           WED003DK 01601410
+         SPACE 1                                               WED003DK 01601420
+HRCDVCLS DS    0D                HRC FileClose handshake CCW   WED003DK 01601430
+         CCW   X'FF',0,CC+SILI,1                               WED003DK 01601440
+         CCW   X'04',*-*,SKIP+SILI,1 dummy sense               WED003DK 01601450
+./ I 01798000 $ 01798010 10
+         SPACE 1                                               WED003DK 01798010
+SFBLOK   DSECT ,                 Add something to the SFBLOK   WED003DK 01798020
+HRCNAMLN EQU   L'SFBFNAME+L'SFBFTYPE Total file name length    WED003DK 01798030

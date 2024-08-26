@@ -1,0 +1,66 @@
+USERID MAINT
+:READ IOBLOKS AUXWED A
+WED002DK V01 Allow Command-Reject errors to be ignored
+:READ IOBLOKS WED002DK A
+./ * WED002DK - Allow Command-Rejcts errors to be ignored
+./ *
+./ * Sometimes a CP process needs to issue a CCW that might
+./ * or might not be supported by a device but it doesn't
+./ * matter if it is not. For instance, the 3270 code might
+./ * want to issue a Write-Structured-Field but, if it isn't 
+./ * supported, just continue on without the optional features
+./ * without any error messages or recovery processing.
+./ *
+./ * This update adds two new flags to IOBSPEC3:
+./ * -- IOBIGNCR - ignore CR errors
+./ * -- IOBHADCR - operation resulted in a CR 
+./ *
+./ * HISTORY:
+./ * 20-Aug-2024 WDENTON  Initial version for VM370CE V1 R1.2
+./ *
+./ R 00082950 $ 00083005 25
+IOBIGNCR EQU   X'20'          Bypass ERP for CR errors         WED002DK 00083005
+IOBHADCR EQU   X'10'          Task resulted in CmdRej error    WED002DK 00083030
+         EJECT ,                                               WED002DK 00083055
+:READ DMKIOS AUXWED A
+WED002DK V01 Allow Command-Reject errors to be ignored
+:READ DMKIOS WED002DK A
+./ * WED002DK - Allow Command-Rejects errors to be ignored
+./ *
+./ * Allow device support to issue a CCW that might or might
+./ * not be supported by a device and bypass the standard         
+./ * error reporting and recovery in the case of a Cmd-Rej.
+./ * The CRR will just result in the IOBLOK being stacked'to
+./ * dispatcher for return to the IOBIRA address. In this case,
+./ * the new IOBHADCR flag will also be set to the device support
+./ * can take action like fencing off an optional feature.
+./ *
+./ * HISTORY:
+./ * 20-Aug-2024 WDENTON  Initial version for VM370CE V1 R1.2
+./ *
+./ I 00934000 $ 00934020 20
+         SPACE 1
+         TM    IOERDATA,CMDREJ   Is it Command-Reject?         WED002DK 00934020
+         BNO   NOTCR             ..no, continue normally       WED002DK 00934040
+         TM    IOBSPEC3,IOBIGNCR Caller wants CRs ignored??    WED002DK 00934060
+         BNO   NOTCR             ..no, continue with ERP       WED002DK 00934080
+         OI    IOBSPEC3,IOBHADCR ..yes, tell caller about it   WED002DK 00934100
+         NI    IOBFLAG,255-IOBERP ..    done with any ERP      WED002DK 00934120
+         NI    IOBSTAT,255-IOBFATAL and reset the fatal flag   WED002DK 00934140
+         LR    R1,R15            Release the IOERBLOK          WED002DK 00934160
+         LA    R0,IOERSIZE       IOERBLOK size in dwords       WED002DK 00934180
+         AH    R0,IOEREXT-IOERBLOK(,R1) ...plUS extension      WED002DK 00934200
+         CALL  DMKFRET           Release the storage           WED002DK 00934220
+         SR    R0,R0             Clear some fields             WED002DK 00934240
+         ST    R0,IOBIOER        .. to avoid double FRET       WED002DK 00934260
+         ST    R0,RDEVIOER       .. also in RDEVBLOK           WED002DK 00934280
+         ST    R0,RDEVAIOB       .. and no more active IOB     WED002DK 00934300
+         NI    RDEVSTAT,255-RDEVBUSY Device available          WED002DK 00934320
+         B     IGNCR1            and continue below            WED002DK 00934340
+NOTCR    DS    0H                                              WED002DK 00934360
+         SPACE 1                                               WED002DK 00934380
+./ I 00954000 $ 00954100 100
+IGNCR1   DS    0H                rejoining from ignoring CR    WED002DK 00954100
+./ I 00961000 $ 00961100 10
+         TM    IOBSPEC3,IOBHADCR Ignoring Cmd-Rej??            WED002DK 00961100
+         BO    IOSSTACK          ..yes, just stack for return  WED002DK 00961110
