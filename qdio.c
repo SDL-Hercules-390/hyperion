@@ -161,6 +161,25 @@ DEVBLK *dev;                            /* -> device block           */
 
 
 #if defined(FEATURE_QEBSM)
+/*----------------------------------------------------------------------------------*/
+/* Aug 2024: Update to match current zLinux                                         */
+/*      https://github.com/torvalds/linux/blob/master/drivers/s390/cio/qdio.h       */
+/*      https://github.com/torvalds/linux/blob/master/drivers/s390/cio/qdio_main.c  */
+/*                                                                                  */
+/* SQBS  - Set Queue Buffer State                                                   */
+/*                                                                                  */
+/* SQSB sets a return code in bits 24-31 of r3 as follows (decimal):                */
+/*    rc =  0:      no error, all buffer states changed                             */
+/*    rc =  3:      device error. Value in Zlinux is UNDEFINED.                     */
+/*    rc = 32:      buffer error. A buffer owned by the adapter was encounterd      */
+/*    rc = 96:      incomplete error. A buffer owned by the OS was encounterd       */
+/*                  with a different state. Try the operation again.                */
+/*----------------------------------------------------------------------------------*/
+/*                                                                                  */
+/* Note: rc 3 is an artificial rc as zLinux does not specify the rc equivalent to   */
+/*       CC 2.                                                                      */
+/*----------------------------------------------------------------------------------*/
+
 /*-------------------------------------------------------------------*/
 /* EB8A SQBS  - Set Queue Buffer State                       [RSY-a] */
 /*-------------------------------------------------------------------*/
@@ -197,7 +216,7 @@ U64     slsba;                 /* Storage list state block address   */
 
     dev = find_device_by_subchan(TKN2IOID(regs->GR_G(1)));
 
-    /* Condition code 3 if subchannel does not exist,
+    /* Condition code 2 if subchannel does not exist,
        is not valid, or is not enabled or is not a QDIO subchannel */
     if (dev == NULL
         || (dev->pmcw.flag5 & PMCW5_V) == 0
@@ -209,6 +228,7 @@ U64     slsba;                 /* Storage list state block address   */
         SIE_INTERCEPT(regs);
 #endif
         regs->psw.cc = 2;
+        regs->GR_HHLCL(r3) = 3;     /* device error: set rc */
         return;
     }
 
@@ -239,22 +259,64 @@ U64     slsba;                 /* Storage list state block address   */
 
     oldstate = nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
 
-    while (count && oldstate == nextstate)
+    /* Note: SQBS can only set buffers that are not control unit owned, i.e.    */
+    /*       the buffer is in an initial state (not owned by either the         */
+    /*       OS/Program or the control unit); or owned by the OS/Program        */
+    if ( !( nextstate & SLSBE_OWNER_CU ) )
     {
-        ARCH_DEP(wstoreb)(state, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);
+        while (count && oldstate == nextstate)
+        {
+            ARCH_DEP(wstoreb)(state, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);
 
-        bidx++; bidx &= 0x7F;              /* Advance and wrap index */
-        count--;
+            bidx++; bidx &= 0x7F;              /* Advance and wrap index */
+            count--;
 
-        if(count)
-            nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
+            if(count)
+                nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
+        }
     }
 
     regs->GR_L(r1) = bidx;              /* Return buffer state index */
     regs->GR_L(r3) = count;    /* Return number of unchanged buffers */
     regs->psw.cc = count ? 1 : 0;
+
+    /* set return code in bits 24-31 of r3 */
+    if ( nextstate & SLSBE_OWNER_CU )   regs->GR_HHLCL(r3) = 32;    /* buffer owned by adapter          */
+    else if ( count == 0 )              regs->GR_HHLCL(r3) = 0;     /* no error                         */
+    else                                regs->GR_HHLCL(r3) = 96;    /* count>0: incomplete, try again   */
 }
 
+/*----------------------------------------------------------------------------------*/
+/* Aug 2024: Update to match current zLinux                                         */
+/*      https://github.com/torvalds/linux/blob/master/drivers/s390/cio/qdio.h       */
+/*      https://github.com/torvalds/linux/blob/master/drivers/s390/cio/qdio_main.c  */
+/*                                                                                  */
+/*  EQBS  - Extract Queue Buffer State                                              */
+/*                                                                                  */
+/* EQBS sets a return code in bits 24-31 of r3 as follows (decimal):                */
+/*    rc =  0:      no error                                                        */
+/*    rc =  3:      device error. Value in Zlinux is UNDEFINED.                     */
+/*                                                                                  */
+/*----------------------------------------------------------------------------------*/
+/* Note: This instruction only returns return codes: 0, and 3. The current          */
+/*       implementation does not return other rc's identified in zLinux source.     */
+/*       Further zLinux source code analysis is required.                           */
+/*                                                                                  */
+/*       rc 32: assumption: this is an error situation where the buffer state is    */
+/*              unexpected; likely an adapter owned buffer state.                   */
+/*                                                                                  */
+/*       rc 96: under what conditions should rc 96 be returned? A buffer state      */
+/*              change was identified, currenlty just returning rc=0.               */
+/*                                                                                  */
+/*       rc 97: assumption: this is a hardware state 'problem' were the instruction */
+/*              can not currently be executed. For example, the adapter is in some  */
+/*              initialization state. zLinux source does not identify the cause     */
+/*              and just retries the instruction waiting for the condition to be    */
+/*              resolved.                                                           */
+/*                                                                                  */
+/* Note: rc 3 is an artificial rc as zLinux does not specify the rc equivalent to   */
+/*       CC 2.                                                                      */
+/*----------------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
 /* B99C EQBS  - Extract Queue Buffer State                   [RRF-a] */
@@ -291,7 +353,7 @@ U64     slsba;                /* Storage list state block address    */
 
     dev = find_device_by_subchan(TKN2IOID(regs->GR_G(1)));
 
-    /* Condition code 3 if subchannel does not exist,
+    /* Condition code 2 if subchannel does not exist,
        is not valid, or is not enabled or is not a QDIO subchannel */
     if (dev == NULL
         || (dev->pmcw.flag5 & PMCW5_V) == 0
@@ -303,6 +365,7 @@ U64     slsba;                /* Storage list state block address    */
         SIE_INTERCEPT(regs);
 #endif
         regs->psw.cc = 2;
+        regs->GR_HHLCL(r3) = 3;     /* rc: device error */
         return;
     }
 
@@ -316,7 +379,7 @@ U64     slsba;                /* Storage list state block address    */
     }
 #endif
 
-    qidx  = regs->GR_H(r1);                           /* Queue index */
+    qidx  = regs->GR_H(r1);                          /* Queue index  */
     bidx  = regs->GR_L(r1);                          /* Buffer index */
     autoack = (regs->GR_H(r2) & 0x80000000);
     count = regs->GR_L(r3) < 128 ? regs->GR_L(r3) : 128; /* Number of buffers */
@@ -361,6 +424,10 @@ U64     slsba;                /* Storage list state block address    */
     regs->GR_LHLCL(r2) = state;
     regs->GR_L(r3) = count;
     regs->psw.cc = count ? 1 : 0;
+
+    /* set return code in bits 24-31 of r3 */
+    /* pending further zlinux analysis, just return - 0: ok */
+    regs->GR_HHLCL(r3) = 0;
 }
 #endif /*defined(FEATURE_QEBSM)*/
 
