@@ -3163,12 +3163,13 @@ crypto_libname="lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   crypto_pkgdir="${hc_cv_extpkg_dir}"
+  crypto_libdir="${crypto_pkgdir}/lib"
 else
   crypto_pkgdir="${srcdir}/${crypto_pkgname}"
+  crypto_libdir="${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 fi
 
 crypto_incdir="${crypto_pkgdir}/include"
-crypto_libdir="${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
 crypto_headers="${crypto_incdir}/aes.h      \
                 ${crypto_incdir}/crypto.h   \
@@ -3185,12 +3186,13 @@ decnumber_libname="lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   decnumber_pkgdir="${hc_cv_extpkg_dir}"
+  decnumber_libdir="${decnumber_pkgdir}/lib$"
 else
   decnumber_pkgdir="${srcdir}/${decnumber_pkgname}"
+  decnumber_libdir="${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 fi
 
 decnumber_incdir="${decnumber_pkgdir}/include"
-decnumber_libdir="${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
 decnumber_headers="${decnumber_incdir}/aes.h        \
                    ${decnumber_incdir}/decnumber.h  \
@@ -3207,12 +3209,13 @@ softfloat_libname="lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   softfloat_pkgdir="${hc_cv_extpkg_dir}"
+  softfloat_libdir="${softfloat_pkgdir}/lib"
 else
   softfloat_pkgdir="${srcdir}/${softfloat_pkgname}"
+  softfloat_libdir="${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 fi
 
 softfloat_incdir="${softfloat_pkgdir}/include"
-softfloat_libdir="${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
 softfloat_headers="${softfloat_incdir}/aes.h        \
                    ${softfloat_incdir}/softfloat.h  \
@@ -3229,12 +3232,13 @@ telnet_libname="lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   telnet_pkgdir="${hc_cv_extpkg_dir}"
+  telnet_libdir="${telnet_pkgdir}/lib"
 else
   telnet_pkgdir="${srcdir}/${telnet_pkgname}"
+  telnet_libdir="${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 fi
 
 telnet_incdir="${telnet_pkgdir}/include"
-telnet_libdir="${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
 telnet_headers="${telnet_incdir}/aes.h      \
                 ${telnet_incdir}/telnet.h   \
