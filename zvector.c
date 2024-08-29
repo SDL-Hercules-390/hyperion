@@ -6076,7 +6076,7 @@ DEF_INST(vector_subtract)
         break;
     case 4:  // Quadword
         high = regs->VR_D(v2, 0) - regs->VR_D(v3, 0);
-        low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 0);
+        low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 1);
         if (low > regs->VR_D(v2, 1))
             high--;
         regs->VR_D(v1, 0) = high;
