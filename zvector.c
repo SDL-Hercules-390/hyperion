@@ -3470,6 +3470,7 @@ DEF_INST( vector_find_any_element_equal )
 DEF_INST( vector_permute_doubleword_immediate )
 {
     int     v1, v2, v3, m4, m5, m6;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -3482,8 +3483,11 @@ DEF_INST( vector_permute_doubleword_immediate )
 #define M4_SO ((m4 & 0x4) != 0)  // Second operand index
 #define M4_TO ((m4 & 0x1) != 0)  // Third operand index
 
-    regs->VR_D( v1, 0 ) = regs->VR_D( v2, M4_SO );
-    regs->VR_D( v1, 1 ) = regs->VR_D( v3, M4_TO );
+    SV_D( temp, 0 ) = regs->VR_D( v2, M4_SO );
+    SV_D( temp, 1 ) = regs->VR_D( v3, M4_TO );
+
+    regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
+    regs->VR_D( v1, 1 ) = SV_D( temp, 1 );
 
 #undef M4_SO
 #undef M4_TO
