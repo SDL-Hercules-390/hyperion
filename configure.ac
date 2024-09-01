@@ -2128,6 +2128,38 @@ esac
 
 AC_MSG_RESULT( [$hc_cv_asm_byteswap] )
 
+#--------------------------------------------------------------#
+#  Check if GCC supports -msse4.1 -msse4.2 -mpclmul compiler   #
+#  options needed by Herc 4.8 z/Arch vector registers support  #
+#--------------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [whether compiler supports '-msse4.1 -msse4.2 -mpclmul' options],
+
+        [hc_cv_sse4_pclmul_support],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-msse4.1 -msse4.2 -mpclmul"
+
+            AC_COMPILE_IFELSE(
+                [
+                    int main(int argc, char **argv)
+                    {
+                        return 0;
+                    }
+                ],
+                [hc_cv_sse4_pclmul_support=yes],
+                [hc_cv_sse4_pclmul_support=no]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_sse4_pclmul_support=no
+fi
+
 #------------------------------------------------------------------
 #  The logic to test whether optreset is needed for getopt use is
 #  defined in the 'HC_CHECK_NEED_GETOPT_OPTRESET' macro in the
@@ -2848,6 +2880,10 @@ if test "$hc_cv_auto_optimize" = "yes"; then
                AS_VERSION_COMPARE( $hc_gcc_level, "4.2.0", [hc_cv_intel_cpu_type=k8],
                                                            [hc_cv_intel_cpu_type=native],
                                                            [hc_cv_intel_cpu_type=native] )
+            fi
+
+            if test "$hc_cv_sse4_pclmul_support" = "yes"; then
+                hc_cv_optimization_flags="$hc_cv_optimization_flags -msse4.1 -msse4.2 -mpclmul"
             fi
             ;;
 
