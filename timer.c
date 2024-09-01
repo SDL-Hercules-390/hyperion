@@ -421,7 +421,7 @@ void* rubato_thread( void* argp )
             new_timerint_usecs = (int) (286000.0 * log( ((double) max_tps_rate + 200.0) / 100.0 ) - 212180.0);
 
             /* MINMAX(x,y,z): ensure x remains within range y to z */
-            MINMAX( new_timerint_usecs, MIN_TOD_UPDATE_USECS, MAX_TOD_UPDATE_USECS );
+            MINMAX( new_timerint_usecs, MIN_TXF_TIMERINT, MAX_TOD_UPDATE_USECS );
 
             sysblk.txf_timerint = new_timerint_usecs;
             intervals_per_second = MAX_TOD_UPDATE_USECS / sysblk.txf_timerint;
