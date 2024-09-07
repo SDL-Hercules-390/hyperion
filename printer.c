@@ -927,7 +927,7 @@ static void format_sense( const DEVBLK* dev, char* buf, size_t bufsz )
 
 // (forward reference)
 static int open_printer( DEVBLK* dev );
-static int printer_close_device ( DEVBLK *dev );               // WED
+static int printer_close_device ( DEVBLK *dev );
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -945,7 +945,7 @@ int   fcbsize;                          /* FCB size for this devtype */
     /* For re-initialisation, close the existing file, if any, and raise attention */
     if (dev->fd >= 0)
     {
-        printer_close_device( dev );                           // WED
+        printer_close_device( dev );
 
         RELEASE_DEVLOCK( dev );
         {
@@ -972,7 +972,11 @@ int   fcbsize;                          /* FCB size for this devtype */
     hostpath( dev->filename, argv[0], sizeof( dev->filename ));
 
 	/* Prepare the UROUTBLK for use with output file naming */
-	uro_initfile(dev, URO_TYPE, dev->filename, DEFAULT_PRINTER_FILE_EXTENSION); //WED
+    if (!(uro_initfile(dev, dev->filename, DEFAULT_PRINTER_FILE_EXTENSION)))
+    {
+        // error already issued
+        return -1;
+    }
 
     /* Save the device type */
     sscanf( dev->typname, "%hx", &dev->devtype );
@@ -999,11 +1003,11 @@ int   fcbsize;                          /* FCB size for this devtype */
     dev->devid[6] = 0x01;
     dev->numdevid = 7;
 
-    // change ctlunit type for 3211                               //WED
-    if (dev->devtype == 0x3211) {                                 //WED
-        dev->devid[1] = 0x38; /* Control unit type is 3811-1 */   //WED
-        dev->devid[2] = 0x11;                                     //WED
-    }                                                             //WED
+    // change ctlunit type for 3211
+    if (dev->devtype == 0x3211) {
+        dev->devid[1] = 0x38; /* Control unit type is 3811-1 */
+        dev->devid[2] = 0x11;
+    }
 
     /* Set number of sense bytes */
     dev->numsense = 2;
@@ -1014,7 +1018,7 @@ int   fcbsize;                          /* FCB size for this devtype */
     dev->stopdev  = FALSE;
     dev->append   = 0;
     dev->ispiped  = (dev->filename[0] == '|');
-	dev->handshake = 0; // 'handshake' option                     //WED
+    dev->handshake = 0; // 'handshake' option
 
     /* Set length of print buffer */
     dev->bufsize = BUFF_SIZE;
@@ -1519,16 +1523,16 @@ int   fcbsize;                          /* FCB size for this devtype */
             continue;
         }
 
-		/* 'handshake' option: default=false                         //WED
-		   this enables the use of the x'f7' and x'ff'               //WED
-		   CCW opcodes that are the file open/close                  //WED
-		   handshaking interface with the guest O/S                  //WED
-		*/                                                           //WED
-		if (strcasecmp(argv[iarg], "handshake") == 0)                //WED
-		{                                                            //WED
-			dev->handshake = 1;                                      //WED
-			continue;                                                //WED
-		}                                                            //WED
+        /* 'handshake' option: default=false
+           this enables the use of the x'f7' and x'ff'
+           CCW opcodes that are the file open/close
+           handshaking interface with the guest O/S
+        */
+        if (strcasecmp(argv[iarg], "handshake") == 0)
+        {
+            dev->handshake = 1;
+            continue;
+        }
 
         // "%1d:%04X Printer: argument %d parameter '%s' is invalid"
         WRMSG( HHC01102, "E", LCSS_DEVNUM,
@@ -1570,21 +1574,21 @@ int   fcbsize;                          /* FCB size for this devtype */
         return -1;
     }
 
-	if (sockdev && dev->handshake)                                //WED
-	{                                                             //WED
-		// "%1d:%04X Printer: option %s is incompatible"          //WED
-		WRMSG(HHC01104, "E", LCSS_DEVNUM,                         //WED
-			"sockdev/handshake");                                 //WED
-		return -1;                                                //WED
-	}                                                             //WED
+    if (sockdev && dev->handshake)
+    {
+        // "%1d:%04X Printer: option %s is incompatible"
+        WRMSG(HHC01104, "E", LCSS_DEVNUM,
+            "sockdev/handshake");
+        return -1;
+    }
 
-	if (dev->ispiped && dev->handshake)                           //WED
-	{                                                             //WED
-		// "%1d:%04X Printer: option %s is incompatible"          //WED
-		WRMSG(HHC01104, "E", LCSS_DEVNUM,                         //WED
-			"piped/handshake");                                   //WED
-		return -1;                                                //WED
-	}                                                             //WED
+    if (dev->ispiped && dev->handshake)
+    {
+        // "%1d:%04X Printer: option %s is incompatible"
+        WRMSG(HHC01104, "E", LCSS_DEVNUM,
+            "piped/handshake");
+        return -1;
+    }
 
     /* If socket device, create a listening socket
        to accept connections on.
@@ -1594,11 +1598,6 @@ int   fcbsize;                          /* FCB size for this devtype */
     {
         return -1;  // (error msg already issued)
     }
-
-	//WED: defer file open until first data xfer CCW              //WED
-    // /* Open the device file right away */                      //WED
-    // if (!sockdev && open_printer( dev ) != 0)                  //WED
-    //     return -1;  // (error msg already issued)              //WED
 
     return 0;
 } /* end function printer_init_handler */
@@ -1618,8 +1617,8 @@ static void printer_query_device (DEVBLK *dev, char **devclass,
                 (dev->bs      ? " sockdev"   : ""),
                 (dev->crlf    ? " crlf"      : ""),
                 (dev->append  ? " append"    : ""),
-		        (dev->handshake ? " handshake" : ""),          //WED
-		        (dev->stopdev ? " (stopped)" : ""),
+                (dev->handshake ? " handshake" : ""),
+                (dev->stopdev ? " (stopped)" : ""),
                  dev->excps );
 
 } /* end function printer_query_device */
@@ -1652,8 +1651,12 @@ off_t           filesize = 0;           /* file size for ftruncate   */
         if (!dev->append)
             open_flags |= O_TRUNC;
 
-        // Resolve the name of the ourput file                 // WED
-        uro_resolvefilename(dev, URO_TYPE);                    // WED
+        // Resolve the name of the ourput file
+        if (!(uro_resolvefilename(dev, URO_TYPE)))
+        {
+            // error already issued
+            return -1;
+        }
 
         if ((fd = HOPEN( dev->filename, open_flags, S_IRUSR | S_IWUSR | S_IRGRP )) < 0)
         {
@@ -1805,10 +1808,10 @@ int fd = dev->fd;
     dev->fd      = -1;
     dev->stopdev =  FALSE;
 
-    /*                                                         //WED
-     * Clear out any other residual from prior file            //WED
-     */                                                        //WED
-    uro_closefromccw(dev, URO_TYPE);                           //WED
+    /*
+     * Clear out any other residual from prior file
+     */
+    uro_closefromccw(dev);
 
     /* Close the device file */
     if ( dev->ispiped )
@@ -1841,18 +1844,6 @@ int fd = dev->fd;
 
 } /* end function printer_close_device */
 
-static int ForHandshakeOnly (DEVBLK *dev, BYTE *unitstat)      // WED
-{                                                              // WED
-	if (dev->handshake) {                                      // WED
-		return 1;                                              // WED
-	} else {                                                   // WED
-        /* Command Reject */                                   // WED
-        dev->sense[0] = SENSE_CR;                              // WED
-        *unitstat = CSW_UC;                                    // WED
-        return 0;                                              // WED
-	}                                                          // WED
-}                                                              // WED
-
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
@@ -1861,7 +1852,7 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
     int  rc;
-	BYTE* work;                   // string manipulation       // WED
+    BYTE* work;                   // string manipulation
     U32  num, fcbsize, ucbsize, plbsize;
 
     UNREFERENCED( prevcode );
@@ -1874,80 +1865,95 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
     if (!ccwseq)
         dev->diaggate = 0;
 
-    /* If printer stopped, return intervention required */     // WED
-    if (dev->stopdev && !IS_CCW_SENSE(code)) {                 // WED
-        /* Set unit check with intervention required */        // WED
-        dev->sense[0] = SENSE_IR;                              // WED
-        *unitstat = CSW_UC;                                    // WED
-        return;                                                // WED
-    }                                                          // WED
-
-    /* Handle the VM Handshake CCWs first since they           // WED
-       will have an impact on how the output file              // WED
-       gets opened on the first data xfer CCW                  // WED
-    */
-    switch (code) {                                            // WED
-
-    case HANDSHAKE_OPEN:                                       // WED
-	/*---------------------------------------------------------------*/
-	/* OPEN & NAME A NEW FILE                         (VM Handshake) */
-	/*---------------------------------------------------------------*/
-        if (ForHandshakeOnly(dev, unitstat)) {                 // WED
-            /* Close any existing file */                      // WED
-        	printer_close_device(dev);                         // WED
-
-            /* Translate CCW data from EBCDIC */               // WED
-        	work = NULL;                                       // WED
-        	if (count > 0) {                                   // WED
-        		work = malloc(count);                          // WED
-        		buf_guest_to_host(iobuf, work, count);         // WED
-        	}                                                  // WED
-
-            /* Save the name of the new file */                // WED
-        	uro_namefromccw(dev, URO_TYPE, work, count);       // WED
-        	free(work);                                        // WED
-
-            /* Return normal status */                         // WED
-            *unitstat = CSW_CE | CSW_DE;                       // WED
-        }                                                      // WED
-        break;                                                 // WED
-
-    case HANDSHAKE_CLOSE:                                      // WED
-	/*---------------------------------------------------------------*/
-	/* CLOSE CURRENT FILE                             (VM Handshake) */
-	/*---------------------------------------------------------------*/
-        if (ForHandshakeOnly(dev, unitstat)) {                 // WED
-            /* Close the existing file */                      // WED
-        	printer_close_device(dev);                         // WED
-
-            /* Return normal status */                         // WED
-            *unitstat = CSW_CE | CSW_DE;                       // WED
-        }                                                      // WED
-        break;                                                 // WED
-
-	/*                                                         // WED
-	  proceed normally for non-handshake CCWs                  // WED
-	*/                                                         // WED
-    default:                                                   // WED
-
-    /* Open the device file if necessary */
-    if (dev->fd < 0 && !IS_CCW_SENSE( code ))
-        rc = open_printer( dev );
-    else
-    {
-        /* If printer stopped, return intervention required */
-        if (dev->stopdev && !IS_CCW_SENSE( code ))
-            rc = -1;
-        else
-            rc = 0;
-    }
-
-    if (rc < 0)
+    /* If printer stopped, return intervention required */
+    if (dev->stopdev && !IS_CCW_SENSE(code)) 
     {
         /* Set unit check with intervention required */
         dev->sense[0] = SENSE_IR;
         *unitstat = CSW_UC;
         return;
+    }
+
+    /* Handle the VM Handshake CCWs first since they
+       will have an impact on how the output file
+       gets opened on the first data xfer CCW
+    */
+    if (code == HANDSHAKE_OPEN)  // CCW code X'F7'
+    {
+        /*---------------------------------------------------------------*/
+        /* OPEN & NAME A NEW FILE                         (VM Handshake) */
+        /*---------------------------------------------------------------*/
+        if (dev->handshake)
+        {
+            /* Close any existing file */
+            printer_close_device(dev);
+
+            /* Translate CCW data from EBCDIC */
+            work = NULL;
+            if (count > 0) 
+            {
+                work = malloc(count);
+                buf_guest_to_host(iobuf, work, count);
+            }
+
+            /* Save the name of the new file */
+            rc = uro_namefromccw(dev, work, count);
+            free(work); work = NULL;
+
+        	if (rc < 0)
+            {
+                // return DATACHK (oom on new file name)
+                dev->sense[0] = SENSE_DC;
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            }
+        	else
+        	{
+                /* Return normal status */
+                *unitstat = CSW_CE | CSW_DE;
+        	}
+        }
+        else  // handshake not enabled 
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        return;
+    }
+    
+    if (code == HANDSHAKE_CLOSE)  // CCW code X'FF'
+    {
+        /*---------------------------------------------------------------*/
+        /* CLOSE CURRENT FILE                             (VM Handshake) */
+        /*---------------------------------------------------------------*/
+        if (dev->handshake)
+        {
+            /* Close the existing file */
+            printer_close_device(dev);
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
+        else  // handshake not enabled 
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        return;
+    }
+
+    /* Open the device file if necessary */
+    if (dev->fd < 0 && !IS_CCW_SENSE( code ))
+    {
+        rc = open_printer( dev );
+        if (rc < 0)
+        {
+            /* Set unit check with intervention required */
+            dev->sense[0] = SENSE_IR;
+            *unitstat = CSW_UC;
+            return;
+        }
     }
 
     /* Reset skip immediate flag before processing CCW opcode */
@@ -2661,7 +2667,6 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         *unitstat = CSW_UC;
 
     } /* end switch(code) */
-    } /* end non-Handshake CCW */                              // WED
 
 } /* end function printer_execute_ccw */
 

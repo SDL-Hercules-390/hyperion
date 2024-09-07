@@ -752,29 +752,6 @@ DLL_EXPORT int timed_wait_condition_relative_usecs_impl
     return hthread_timed_wait_condition( pCOND, pLOCK, &timeout_timespec, loc );
 }
 
-/*BEGIN additions by WED:
-
-    These methods are used in unit-record out drivers
-    (printer.c,cardpch.c)
-    in processing the names of the output files
-
-    uro_initfile:
-        initialize the UROUTBLK with the filename
-        components for handling files created by
-        the unit record output devices
-    uro_namefromccw:
-        Process the file name from a CCW and save it in
-        the UROUTBLK.
-    uro_resolvefilename:
-        Determine the full name of the output file.
-        This might involve renaming existing files
-		if the 'append' option is not specified.
-	uri_closefromccw:
-	    Resets any device fields when the close
-		handshake ccw is issued. The caller is
-		responsible for actually closing the file.
-*/
-
 /**
  * Process the file name argument from the initdev command
  * breaking it into its parts. These are used to fill in the
@@ -786,8 +763,6 @@ DLL_EXPORT int timed_wait_condition_relative_usecs_impl
  *                      with the target file name parameter from the
  *                      'devinit' command as processed by the
  *                      'hostpath()' method.
- *    urotype:     The device type name (PRinter/Card) to include
- *                 in logged messages
  *    namearg:     pointer to the 'devinit' filename argument. This
  *                 should be dev->filename as pre the note above
  *    defaultExt:  the default extension (including '.')
@@ -796,52 +771,52 @@ DLL_EXPORT int timed_wait_condition_relative_usecs_impl
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* namearg, const char* defaultExt )
+DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char* namearg, const char* defaultExt )
 {
-    struct UROUTBLK* urOutBlk;
     const char* p1, * p2;
-	char* pname, * pext;
+    char* pname, * pext;
     int ix;
 
-    if (dev->dev_data != NULL) {
-        urOutBlk = (struct UROUTBLK*)dev->dev_data;
-        if (urOutBlk->cmd_filename != NULL) {
-            free(urOutBlk->cmd_filename);
-        }
-        if (urOutBlk->cmd_pathpart != NULL) {
-            free(urOutBlk->cmd_pathpart);
-        }
-        if (urOutBlk->cmd_namepart != NULL) {
-            free(urOutBlk->cmd_namepart);
-        }
-        if (urOutBlk->cmd_extpart != NULL) {
-            free(urOutBlk->cmd_extpart);
-        }
-        if (urOutBlk->cur_filename != NULL) {
-            free(urOutBlk->cur_filename);
-        }
-        if (urOutBlk->cur_namepart != NULL) {
-            free(urOutBlk->cur_namepart);
-        }
+    if (dev->dev_data != NULL) 
+    {
+        free(UROUT(dev)->cmd_filename); UROUT(dev)->cmd_filename = NULL;
+        free(UROUT(dev)->cmd_pathpart); UROUT(dev)->cmd_pathpart = NULL;
+        free(UROUT(dev)->cmd_namepart); UROUT(dev)->cmd_namepart = NULL;
+        free(UROUT(dev)->cmd_extpart);  UROUT(dev)->cmd_extpart  = NULL;
+        free(UROUT(dev)->cur_filename); UROUT(dev)->cur_filename = NULL;
+        free(UROUT(dev)->cur_namepart); UROUT(dev)->cur_namepart = NULL;
     }
-    else {
-        dev->dev_data = urOutBlk = (struct UROUTBLK*)malloc(sizeof(struct UROUTBLK));
+    else 
+    {
+        if (!(dev->dev_data = malloc(sizeof(UROUTBLK))))
+        {
+            // "Out of memory"
+            WRMSG( HHC00152, "E" );
+            return -1;
+        }
+        UROUT(dev)->cmd_filename = NULL;
+        UROUT(dev)->cmd_pathpart = NULL;
+        UROUT(dev)->cmd_namepart = NULL;
+        UROUT(dev)->cmd_extpart  = NULL;
+        UROUT(dev)->cur_filename = NULL;
+        UROUT(dev)->cur_namepart = NULL; 
     }
-    memset(urOutBlk, 0, sizeof(struct UROUTBLK));
 
     /* Save the whole file name arg in the device block */
-    urOutBlk->cmd_filename = strdup(namearg);
+    UROUT(dev)->cmd_filename = strdup(namearg);
 
     /* Get/save full path part (up to & including last / or \ */
     p1 = strrchr(namearg, '/');
     p2 = strrchr(namearg, '\\');
     p1 = MAX(p1, p2);
-    if (p1 > 0) {
+    if (p1 > 0) 
+    {
         ix = p1 - namearg + 1;
-        urOutBlk->cmd_pathpart = (char*)malloc(ix + 1);
-        strlcpy(urOutBlk->cmd_pathpart, namearg, ix + 1);
+        UROUT(dev)->cmd_pathpart = (char*)malloc(ix + 1);
+        strlcpy(UROUT(dev)->cmd_pathpart, namearg, ix + 1);
     }
-    else {
+    else 
+    {
         // no path in initdev arg... use cwd instead
         static char cwd[MAX_PATH];
         VERIFY(getcwd(cwd, sizeof(cwd)) != NULL);
@@ -849,22 +824,29 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
         if (cwd[ix - 1] != *PATH_SEP) {
             STRLCAT(cwd, PATH_SEP);
         }
-        urOutBlk->cmd_pathpart = strdup(cwd);
+        UROUT(dev)->cmd_pathpart = strdup(cwd);
         ix = 0; // take name from here
     }
 
     /* Get/save the file extnesion (starting with & including the last . */
     pname = (char*)namearg + ix;
     pext = (char*)strrchr(namearg, '.');
-    if (pext > 0) {
+    if (pext > 0) 
+    {
         ix = pext - pname + 1;
-        urOutBlk->cmd_namepart = (char*)malloc(ix);
-        strlcpy(urOutBlk->cmd_namepart, pname, ix);
-        urOutBlk->cmd_extpart = strdup(pext);
+        if (!(UROUT(dev)->cmd_namepart = (char*)malloc(ix)))
+        {
+            // "Out of memory"
+            WRMSG( HHC00152, "E" );
+            return -1;
+        }
+        strlcpy(UROUT(dev)->cmd_namepart, pname, ix);
+        UROUT(dev)->cmd_extpart = strdup(pext);
     }
-    else {
-        urOutBlk->cmd_namepart = strdup(pname);
-        urOutBlk->cmd_extpart = strdup(defaultExt);
+    else 
+    {
+        UROUT(dev)->cmd_namepart = strdup(pname);
+        UROUT(dev)->cmd_extpart = strdup(defaultExt);
     }
     return 0;
 }
@@ -880,8 +862,6 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
  *                      Also, this assumes that uro_closefromccw
  *                      has already been called to clear out
  *                      any data from the previous file.
- *    urotype:     The device type name (PRinter/Card) to include
- *                 in logged messages
  *    ccwdata:     data from the Open Printer CCW translated
  *                 to this host's code page. (NOT a C string)
  *    ccwlen:      the length of the ccwdata
@@ -890,37 +870,59 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char* nam
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *ccwdata, int ccwlen ) {
-	char *work, *ip, *op;
-	int nchars, insp, i;
+DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen ) 
+{
+    char *work, *ip, *op;
+    int nchars, insp, i;
+    
+    // clear any prior ccw name
+    free(UROUT(dev)->cur_namepart);
+    UROUT(dev)->cur_namepart = NULL;
 
-	if (ccwlen > 0) {
-		work = (char*)malloc(ccwlen+1);
-		ip = (char*)ccwdata;
-		op = work;
-		insp = 0;
-		nchars = 0;
-		for (i = 0; i < ccwlen; i++) {
-			if (*ip == ' ') {
-				insp = 1;
-				ip++;
-			} else {
-				nchars++;
-				if (insp > 0) {
-					*op++ = '-';
-					insp = 0;
-				} else {
-					*op++ = *ip++;
-				}
-			}
-		}
-		if (nchars > 0) {
-			*op = '\0';
-			UROUT(dev)->cur_namepart = strdup(work);
-		}
-		free(work);
-	}
-	return 0;
+    if (ccwlen > 0) 
+    {
+        if (!(work = (char*)malloc(ccwlen+1)))
+        {
+            // "Out of memory"
+            WRMSG( HHC00152, "E" );
+            return -1;
+        }
+        ip = (char*)ccwdata;
+        op = work;
+        insp = 0;
+        nchars = 0;
+        for (i = 0; i < ccwlen; i++) 
+        {
+            if (*ip == ' ') 
+            {
+                insp = 1;
+                ip++;
+            } 
+            else 
+            {
+                if (insp > 0) 
+                {
+                    if (nchars > 0) // ignoring leading blanks
+                    {
+                        *op++ = '-';
+                    }
+                    insp = 0;
+                }
+                else 
+                {
+                    nchars++;
+                    *op++ = *ip++;
+                }
+            }
+        }
+        if (nchars > 0) 
+        {
+            *op = '\0';
+            UROUT(dev)->cur_namepart = strdup(work);
+        }
+        free(work);
+    }
+    return 0;
 }
 
 /*
@@ -939,22 +941,23 @@ DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *
  *    suffix:      the integer number to be added as a suffix
  */
 static /*recursive*/ void pushFileStack (
-		DEVBLK *dev,
-		const char * urotype,
-		const char *fullname,
-		const char *rootname,
-		const char *ext,
-		int suffix
-) {
-	struct stat st;
-	char work[MAX_PATH];
-	if (stat(fullname, &st) >= 0) {
-		sprintf(work, "%s_%d%s", rootname, suffix, ext);
-		pushFileStack(dev, urotype, work, rootname, ext, suffix + 1);
-		// "%1d:%04X %s: renaming output file [%s] to [%s]"
-		WRMSG (HHC01292, "I", LCSS_DEVNUM, urotype, fullname, work);
-		rename(fullname, work);
-	}
+        DEVBLK *dev,
+        const char * urotype,
+        const char *fullname,
+        const char *rootname,
+        const char *ext,
+        int suffix ) 
+{
+    struct stat st;
+    char work[MAX_PATH];
+    if (stat(fullname, &st) >= 0) 
+    {
+        MSGBUF(work, "%s_%d%s", rootname, suffix, ext);
+        pushFileStack(dev, urotype, work, rootname, ext, suffix + 1);
+        // "%1d:%04X %s: renaming output file [%s] to [%s]"
+        WRMSG (HHC01292, "I", LCSS_DEVNUM, urotype, fullname, work);
+        rename(fullname, work);
+    }
 }
 
 /**
@@ -973,46 +976,58 @@ static /*recursive*/ void pushFileStack (
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype ) {
-	char *name, *rootname;
-	int len;
+DLL_EXPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype ) 
+{
+    char *name, *rootname;
+    int len;
 
-	// name is from Open Printer CCW or devinit command
-	name = UROUT(dev)->cur_namepart != NULL
-	     ? UROUT(dev)->cur_namepart
-	     : UROUT(dev)->cmd_namepart;
-	len = strlen(UROUT(dev)->cmd_pathpart) + strlen(name);
-	rootname = (char*)malloc(len + 1);
+    // name is from Open Printer CCW or devinit command
+    name = UROUT(dev)->cur_namepart != NULL
+         ? UROUT(dev)->cur_namepart
+         : UROUT(dev)->cmd_namepart;
+    len = strlen(UROUT(dev)->cmd_pathpart) + strlen(name);
+    if (!(rootname = (char*)malloc(len + 1)))
+    {
+        // "Out of memory"
+        WRMSG( HHC00152, "E" );
+        return -1;
+    }
     strcpy(rootname, UROUT(dev)->cmd_pathpart);
-	strcat(rootname, name);
+    strcat(rootname, name);
 
-	// add in extension from devinit command
-	len += strlen(UROUT(dev)->cmd_extpart);
-	UROUT(dev)->cur_filename = (char*)malloc(len + 1);
-	strcpy(UROUT(dev)->cur_filename, rootname);
-	strcat(UROUT(dev)->cur_filename, UROUT(dev)->cmd_extpart);
+    // add in extension from devinit command
+    len += strlen(UROUT(dev)->cmd_extpart);
+    if (!(UROUT(dev)->cur_filename = (char*)malloc(len + 1)))
+    {
+        // "Out of memory"
+        WRMSG( HHC00152, "E" );
+        return false;
+    }
+    strcpy(UROUT(dev)->cur_filename, rootname);
+    strcat(UROUT(dev)->cur_filename, UROUT(dev)->cmd_extpart);
 
-	/*
-	 * if not appending to existing file, make sure we are
-	 * starting a new, empty file. If the target file currently
-	 * exists, then it is renamed to: <rootname>_1<ext>. if
-	 * the "_1" file currently exists, it is renamed to
-	 * <rootname>_2<ext> and if that exists, it is renamed
-	 * with a "_3" suffix and so on.
-	 */
-	if (!dev->append) {
-		pushFileStack(dev, urotype, UROUT(dev)->cur_filename, rootname, UROUT(dev)->cmd_extpart, 1);
-	}
-	free(rootname);
+    /*
+     * if not appending to existing file, make sure we are
+     * starting a new, empty file. If the target file currently
+     * exists, then it is renamed to: <rootname>_1<ext>. if
+     * the "_1" file currently exists, it is renamed to
+     * <rootname>_2<ext> and if that exists, it is renamed
+     * with a "_3" suffix and so on.
+     */
+    if (!dev->append) 
+    {
+        pushFileStack(dev, urotype, UROUT(dev)->cur_filename, rootname, UROUT(dev)->cmd_extpart, 1);
+    }
+    free(rootname);
 
-	/**
-	 * set the computed target filenbame into the DEVBLK
-	 */
+    /**
+     * set the computed target filenbame into the DEVBLK
+     */
     strcpy(dev->filename, UROUT(dev)->cur_filename);
-	// "%1d:%04X %s: writing to file [%s]"
-	WRMSG (HHC01291, "I", LCSS_DEVNUM, urotype, dev->filename);
+    // "%1d:%04X %s: writing to file [%s]"
+    WRMSG (HHC01291, "I", LCSS_DEVNUM, urotype, dev->filename);
 
-	return 0;
+    return 0;
 }
 
 /**
@@ -1024,35 +1039,28 @@ DLL_EXPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype ) {
  *    dev:         pointer to the DEVBLK for the URO device
  *                 N.B. uro_initfile must have been previously
  *                      called so the UROUTBLK exists.
- *    urotype:     The device type name (PRinter/Card) to include
- *                 in logged messages
  *
  * Returns:
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int uro_closefromccw ( DEVBLK* dev, const char * urotype ) {
+DLL_EXPORT int uro_closefromccw ( DEVBLK* dev ) 
+{
 
-	/*
-	 * clear prior name from Open Printer handshake CCW
-	 */
-	if (UROUT(dev)->cur_namepart != NULL) {
-		free(UROUT(dev)->cur_namepart);
-		UROUT(dev)->cur_namepart = NULL;
-	}
+    /*
+     * clear prior name from Open Printer handshake CCW
+     */
+    free(UROUT(dev)->cur_namepart);
+    UROUT(dev)->cur_namepart = NULL;
 
-	/*
-	 * clear the computed name of the prior file
-	 */
-	if (UROUT(dev)->cur_filename != NULL) {
-		free(UROUT(dev)->cur_filename);
-		UROUT(dev)->cur_filename = NULL;
-	}
+    /*
+     * clear the computed name of the prior file
+     */
+    free(UROUT(dev)->cur_filename);
+    UROUT(dev)->cur_filename = NULL;
 
-	return 0;
+    return 0;
 }
-
-/*END changes by WED */
 
 /*********************************************************************
   The following couple of Hercules 'utility' functions may be defined

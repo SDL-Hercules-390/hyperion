@@ -407,7 +407,6 @@ HUT_DLL_IMPORT const char* FormatORB( ORB* orb, char* buf, size_t bufsz );
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT bool are_big_endian();
 
-/*BEGIN changes by WED:
 /*-------------------------------------------------------------------*/
 /*      Methods to help with URO file naming for HANDSHAKE option    */
 /*-------------------------------------------------------------------*/
@@ -432,12 +431,10 @@ HUT_DLL_IMPORT bool are_big_endian();
 		handshake ccw is issued. The caller is
 		responsible for actually closing the file.
 */
-HUT_DLL_IMPORT int uro_initfile ( DEVBLK* dev, const char * urotype, const char *namearg, const char *defaultExt );
-HUT_DLL_IMPORT int uro_namefromccw ( DEVBLK* dev, const char * urotype, const BYTE *ccwdata, int ccwlen );
+HUT_DLL_IMPORT int uro_initfile ( DEVBLK* dev, const char *namearg, const char *defaultExt );
+HUT_DLL_IMPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen );
 HUT_DLL_IMPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype );
-HUT_DLL_IMPORT int uro_closefromccw ( DEVBLK* dev, const char * urotype );
-
-/*END changes by WED */
+HUT_DLL_IMPORT int uro_closefromccw ( DEVBLK* dev );
 
 
 
