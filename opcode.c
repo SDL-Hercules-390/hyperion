@@ -594,6 +594,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( load_and_zero_rightmost_byte );
 #endif
 
+#if !defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) || defined( DYNINST_057_MSA_EXTENSION_FACILITY_5 )
+ UNDEF_INST( perform_random_number_operation );
+#endif
+
 #if !defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
  UNDEF_INST( branch_indirect_on_condition )
  UNDEF_INST( add_long_halfword )
@@ -4337,7 +4341,7 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B939*/ GENx___x___x___ ,
  /*B93A*/ GENx___x___x___ ,
  /*B93B*/ GENx___x___x900 ( "NNPA"      , RRE  , ASMFMT_RRE      ,  neural_network_processing_assist                   ),
- /*B93C*/ GENx___x___x___ ,
+ /*B93C*/ GENx37Xx390x900 ( "PRNO"      , RRE  , ASMFMT_RRE      , perform_random_number_operation                     ),
  /*B93D*/ GENx___x___x___ ,
  /*B93E*/ GENx37Xx390x900 ( "KIMD"      , RRE  , ASMFMT_RRE      , compute_intermediate_message_digest                 ),
  /*B93F*/ GENx37Xx390x900 ( "KLMD"      , RRE  , ASMFMT_RRE      , compute_last_message_digest                         ),

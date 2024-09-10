@@ -3474,6 +3474,10 @@ DEF_INST( load_logical_and_zero_rightmost_byte );
 DEF_INST( load_and_zero_rightmost_byte );
 #endif
 
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+DEF_INST( perform_random_number_operation );
+#endif
+
 #if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
 DEF_INST( branch_indirect_on_condition );
 DEF_INST( add_long_halfword );

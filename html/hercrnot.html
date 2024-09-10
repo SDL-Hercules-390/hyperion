@@ -31,6 +31,31 @@ Hercules: Release Notes
   </p>
 
 
+  <dt><u><i>Temporary</i></u> &nbsp;Dummy PRNO Instruction available
+  <dd>
+  <p>
+    Message-Security-Assist Extensions 5 and 7 provide a cryptographically secure deterministic
+    random number generator (DRNG) and a true random number generator (TRNG) through the PRNO
+    instruction. On real hardware, entropy for the TRNG is obtained using sources external to
+    the CP. Data obtained from the TRNG is intended to be used to seed the DRNG. Both facilities
+    are currently not provided by Hercules.
+  <p>
+  </p>
+    There are, however, applications that ignore the facility bit assigned to MSA 5 by using the
+    PRNO instruction even if the facility bit is not set. So far, we've seen that those
+    applications use the PRNO QUERY function only, i.e., they don't use the DRNG or the TRNG
+    functions.
+  <p>
+  </p>
+    To allow such applications to run nonetheless, a version of the PRNO instruction has been
+    implemented that supports only the QUERY function. Temporarily, this instruction has been
+    added to Message-Security-Assist Extension 4, thus making it available without facility
+    057_MSA_EXTENSION_5 being enabled. Once a fully functional PRNO instruction has been
+    developed, the dummy instruction will be removed from MSA 4 and the full one will be added
+    to MSA 5 instead.
+  </p>
+
+
   <dt>(description...)
   <dd>
   <p>

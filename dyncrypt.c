@@ -49,6 +49,7 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 #define OPTION_KMO_DEBUG
 #define OPTION_PCC_DEBUG
 #define OPTION_PCKMO_DEBUG
+#define OPTION_PRNO_DEBUG
 #endif
 
 #ifndef KMCTR_PBLENS
@@ -291,6 +292,8 @@ void xts_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
 /*----------------------------------------------------------------------------*/
 static int get_msa(REGS *regs)
 {
+  if (FACILITY_ENABLED( 057_MSA_EXTENSION_5,  regs ))
+    return(5);
   if (FACILITY_ENABLED( 077_MSA_EXTENSION_4,  regs ))
     return(4);
   if (FACILITY_ENABLED( 076_MSA_EXTENSION_3,  regs ))
@@ -5019,6 +5022,62 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
 }
 #endif /* defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
 
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+/*----------------------------------------------------------------------------*/
+/* B93C PRNO - Perform random number operation                          [RRE] */
+/*----------------------------------------------------------------------------*/
+DEF_INST(dyn_perform_random_number_operation)
+{
+  int fc;
+  int modifier_bit;
+  int r1;
+  int r2;
+  BYTE query_bits[16] = { 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+  RRE(inst, regs, r1, r2);
+  PER_ZEROADDR_CHECK( regs, 1 );
+  TXF_INSTR_CHECK( regs );
+
+#ifdef OPTION_PRNO_DEBUG
+  WRMSG(HHC90100, "D", "PRNO: perform random number operation");
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
+  WRMSG(HHC90104, "D", r1, regs->GR(r1));
+  WRMSG(HHC90104, "D", r1 + 1, regs->GR(r1+1));
+  WRMSG(HHC90104, "D", r2, regs->GR(r2));
+  WRMSG(HHC90104, "D", r2 + 1, regs->GR(r2+1));
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+  /* Initialize values */
+  fc = GR0_fc(regs);
+  modifier_bit = GR0_m(regs);
+
+  switch(fc)
+  {
+    case 0: /* Query */
+    {
+      /* Store the parameter block */
+      ARCH_DEP(vstorec)(query_bits, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+#ifdef OPTION_PRNO_DEBUG
+      LOGBYTE("output feature string:", query_bits, 16);
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+      /* Set condition code 0 */
+      regs->psw.cc = 0;
+
+      return;
+    }
+    default:
+    {
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+  }
+}
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
+
 #endif /* defined( FEATURE_017_MSA_FACILITY ) */
 
 /*----------------------------------------------------------------------------*/
@@ -5042,6 +5101,10 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
  HDL_UNDEF_INST( dyn_cipher_message_with_cipher_feedback )
  HDL_UNDEF_INST( dyn_cipher_message_with_output_feedback )
  HDL_UNDEF_INST( dyn_cipher_message_with_counter         )
+#endif
+
+#if !defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+ HDL_UNDEF_INST( dyn_perform_random_number_operation )
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -5125,6 +5188,14 @@ HDL_INSTRUCTION_SECTION;
   HDL_INST( ARCH_370_____900, OPCODE( B92C ), dyn_perform_cryptographic_computation   );
   #endif
 #endif
+
+#if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+  #if !defined( _FEATURE_370_EXTENSION )
+  HDL_INST( ARCH_________900, OPCODE( B93C ), dyn_perform_random_number_operation );
+  #else
+  HDL_INST( ARCH_370_____900, OPCODE( B93C ), dyn_perform_random_number_operation );
+  #endif
+#endif
 }
 END_INSTRUCTION_SECTION;
 
@@ -5135,26 +5206,30 @@ HDL_REGISTER_SECTION;
   UNREFERENCED( regsym );   // (HDL_REGISTER_SECTION parameter)
 
   // "%s module loaded%s"
-  WRMSG( HHC00150, "I", "Crypto", " (C) Copyright 2003-2016 by Bernard van der Helm");
+  WRMSG( HHC00150, "I", "Crypto", " (C) Copyright 2003-2024 by Bernard van der Helm & Juergen Winkelmann");
 
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist");
 
-#if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
-  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4");
+#if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4 and 5");
 #else
-  #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-    WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2 and 3");
+  #if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
+    WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4");
   #else
-    #if defined( _FEATURE_MSA_EXTENSION_FACILITY_2 )
-      WRMSG( HHC00151, "I", "Message Security Assist Extension 1 and 2");
+    #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+      WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2 and 3");
     #else
-      #if defined( _FEATURE_MSA_EXTENSION_FACILITY_1 )
-        WRMSG( HHC00151, "I", "Message Security Assist Extension 1");
-      #endif /* defined( _FEATURE_MSA_EXTENSION_FACILITY_1 ) */
-    #endif /* defined( _FEATURE_MSA_EXTENSION_FACILITY_2 ) */
-  #endif /* defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
-#endif /* defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
+      #if defined( _FEATURE_MSA_EXTENSION_FACILITY_2 )
+        WRMSG( HHC00151, "I", "Message Security Assist Extension 1 and 2");
+      #else
+        #if defined( _FEATURE_MSA_EXTENSION_FACILITY_1 )
+          WRMSG( HHC00151, "I", "Message Security Assist Extension 1");
+        #endif /* defined( _FEATURE_MSA_EXTENSION_FACILITY_1 ) */
+      #endif /* defined( _FEATURE_MSA_EXTENSION_FACILITY_2 ) */
+    #endif /* defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
+  #endif /* defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
+#endif /* defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
 }
 END_REGISTER_SECTION;
 
