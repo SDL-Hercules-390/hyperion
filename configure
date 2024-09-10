@@ -22415,7 +22415,7 @@ if test "${hc_cv_extpkg_dir}" != ""; then
   crypto_libdir="${crypto_pkgdir}/lib"
 else
   crypto_pkgdir="${srcdir}/${crypto_pkgname}"
-  crypto_libdir="${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+  crypto_libdir="${crypto_pkgdir}/lib"
 fi
 
 crypto_incdir="${crypto_pkgdir}/include"
@@ -22435,10 +22435,10 @@ decnumber_libname="lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   decnumber_pkgdir="${hc_cv_extpkg_dir}"
-  decnumber_libdir="${decnumber_pkgdir}/lib$"
+  decnumber_libdir="${decnumber_pkgdir}/lib"
 else
   decnumber_pkgdir="${srcdir}/${decnumber_pkgname}"
-  decnumber_libdir="${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+  decnumber_libdir="${decnumber_pkgdir}/lib"
 fi
 
 decnumber_incdir="${decnumber_pkgdir}/include"
@@ -22461,7 +22461,7 @@ if test "${hc_cv_extpkg_dir}" != ""; then
   softfloat_libdir="${softfloat_pkgdir}/lib"
 else
   softfloat_pkgdir="${srcdir}/${softfloat_pkgname}"
-  softfloat_libdir="${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+  softfloat_libdir="${softfloat_pkgdir}/lib"
 fi
 
 softfloat_incdir="${softfloat_pkgdir}/include"
@@ -22484,7 +22484,7 @@ if test "${hc_cv_extpkg_dir}" != ""; then
   telnet_libdir="${telnet_pkgdir}/lib"
 else
   telnet_pkgdir="${srcdir}/${telnet_pkgname}"
-  telnet_libdir="${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+  telnet_libdir="${telnet_pkgdir}/lib"
 fi
 
 telnet_incdir="${telnet_pkgdir}/include"
@@ -22550,17 +22550,32 @@ END
 fi
 
 LIBS="$LIBS -l${crypto_pkgname}${hc_cv_pkg_lib_suffix}"
-LDFLAGS="$LDFLAGS -L${crypto_libdir}"
+if test -z "${hc_cv_pkg_lib_subdir}"; then
+  LDFLAGS="$LDFLAGS -L${crypto_libdir}"
+else
+  LDFLAGS="$LDFLAGS -L${crypto_libdir}${hc_cv_pkg_lib_subdir}"
+fi
 
 LIBS="$LIBS -l${decnumber_pkgname}${hc_cv_pkg_lib_suffix}"
-LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
-
+if test -z "${hc_cv_pkg_lib_subdir}"; then
+  LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
+else
+  LDFLAGS="$LDFLAGS -L${decnumber_libdir}${hc_cv_pkg_lib_subdir}"
+fi
 
 LIBS="$LIBS -l${softfloat_pkgname}${hc_cv_pkg_lib_suffix}"
-LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
+if test -z "${hc_cv_pkg_lib_subdir}"; then
+  LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
+else
+  LDFLAGS="$LDFLAGS -L${softfloat_libdir}${hc_cv_pkg_lib_subdir}"
+fi
 
 LIBS="$LIBS -l${telnet_pkgname}${hc_cv_pkg_lib_suffix}"
-LDFLAGS="$LDFLAGS -L${telnet_libdir}"
+if test -z "${hc_cv_pkg_lib_subdir}"; then
+  LDFLAGS="$LDFLAGS -L${telnet_libdir}"
+else
+  LDFLAGS="$LDFLAGS -L${telnet_libdir}${hc_cv_pkg_lib_subdir}"
+fi
 
 ###############################################################################
 #          Pass values to other subdirectory Makefile.am files
