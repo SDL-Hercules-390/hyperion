@@ -3343,7 +3343,7 @@ DEF_INST( vector_find_any_element_equal )
         }
         if (M5_RT)                     // if M5_RT (Result Type)
         {
-            for (j=0; j<8; j++)
+            for (i=0; i<8; i++)
             {
                 if (irt1[i] == TRUE)
                     regs->VR_H(v1,i) = 0xFFFF;
@@ -3391,7 +3391,7 @@ DEF_INST( vector_find_any_element_equal )
         }
         if (M5_RT)                     // if M5_RT (Result Type)
         {
-            for (j=0; j<4; j++)
+            for (i=0; i<4; i++)
             {
                 if (irt1[i] == TRUE)
                     regs->VR_F(v1,i) = 0xFFFFFFFF;
