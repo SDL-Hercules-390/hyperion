@@ -3245,18 +3245,12 @@ salva - 2023, feb,27.
 
 DEF_INST( vector_find_any_element_equal )
 {
-// Overkill to prevent erroneous "may be used uninitialized" warnings
-#if defined(__clang__)
-    #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
-#elif defined(__GNUC__)
-    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
 
     int     v1, v2, v3, m4, m5;
     int     i, j;
-    BYTE    irt1[16], irt2[16];        // First and second intermediate results
     int     lxt1, lxt2;                // Lowest indexed true
     int     mxt;                       // Maximum indexed true
+    BYTE    irt1[16], irt2[16];        // First and second intermediate results
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -3430,6 +3424,9 @@ DEF_INST( vector_find_any_element_equal )
             break;
         case 2:  // Word
             lxt1 = lxt2 = mxt = 4;
+            break;
+        default:  // Prevent erroneous "may be used uninitialized" warnings
+            lxt1 = lxt2 = mxt = 0;
             break;
         }
 
@@ -3632,7 +3629,13 @@ DEF_INST( vector_shift_right_double_by_bit )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_string_range_compare )
 {
-    int     v1, v2, v3, v4, m5, m6, max, low1, low2, result1[16], result2[16], i, j, lr, rr;
+    int     v1, v2, v3, v4, m5, m6;
+    int     i, j;
+    int     elh;                       // Even Low High indicator
+    int     lxt1, lxt2;                // Lowest indexed true
+    int     mxt;                       // Maximum indexed true
+    BYTE    irt1[16], irt2[16];        // First and second intermediate results
+    BYTE    erc, orc;                  // Even and Odd range comparison results
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -3643,94 +3646,379 @@ DEF_INST( vector_string_range_compare )
 #define M6_ZS ((m6 & 0x2) != 0) // Zero Search
 #define M6_CS ((m6 & 0x1) != 0) // Condition Code Set
 
-    regs->VR_D(v1, 0) = 0x00;
-    regs->VR_D(v1, 1) = 0x00;
-
     switch (m5)
     {
-    case 0:
-        max = 16, low1 = max, low2 = max;
-        for (i=0; i < max; i++) {
-            result1[i] = 0;
-            result2[i] = M6_ZS & (regs->VR_B(v2, i) == 0x00);
-            for (j=0; j < max; j+=2) {
-                lr = 0, rr = 0;
-                if ((regs->VR_B(v4, j)   & 0x80) && regs->VR_B(v2, i) == regs->VR_B(v3, j))   lr = 1;
-                if ((regs->VR_B(v4, j)   & 0x40) && regs->VR_B(v2, i) <  regs->VR_B(v3, j))   lr = 1;
-                if ((regs->VR_B(v4, j)   & 0x20) && regs->VR_B(v2, i) >  regs->VR_B(v3, j))   lr = 1;
-                if ((regs->VR_B(v4, j+1) & 0x80) && regs->VR_B(v2, i) == regs->VR_B(v3, j+1)) rr = 1;
-                if ((regs->VR_B(v4, j+1) & 0x40) && regs->VR_B(v2, i) <  regs->VR_B(v3, j+1)) rr = 1;
-                if ((regs->VR_B(v4, j+1) & 0x20) && regs->VR_B(v2, i) >  regs->VR_B(v3, j+1)) rr = 1;
-                result1[i] = (lr & rr) ^ M6_IN;
+    case 0:  // Byte
+        for (i=0; i<16; i++)
+        {
+            irt1[i] = irt2[i] = FALSE;
+            // Compare the element of the second operand with the ranges
+            for (j=0; j<16; j+=2)
+            {
+                erc = orc = FALSE;
+                // Compare the element of the second operand
+                // with the even element of the third operand.
+                elh = regs->VR_B(v4,j) >> 5;
+                switch (elh)
+                {
+                case 7:  // E = 1, L = 1, H = 1
+                    erc = TRUE;
+                    break;
+                case 6:  // E = 1, L = 1, H = 0
+                    if (regs->VR_B(v2,i) <= regs->VR_B(v3,j)) erc = TRUE;
+                    break;
+                case 5:  // E = 1, L = 0, H = 1
+                    if (regs->VR_B(v2,i) >= regs->VR_B(v3,j)) erc = TRUE;
+                    break;
+                case 4:  // E = 1, L = 0, H = 0
+                    if (regs->VR_B(v2,i) == regs->VR_B(v3,j)) erc = TRUE;
+                    break;
+                case 3:  // E = 0, L = 1, H = 1
+                    if (regs->VR_B(v2,i) != regs->VR_B(v3,j)) erc = TRUE;
+                    break;
+                case 2:  // E = 0, L = 1, H = 0
+                    if (regs->VR_B(v2,i) < regs->VR_B(v3,j)) erc = TRUE;
+                    break;
+                case 1:  // E = 0, L = 0, H = 1
+                    if (regs->VR_B(v2,i) > regs->VR_B(v3,j)) erc = TRUE;
+                    break;
+                default: // E = 0, L = 0, H = 0
+                    break;
+                }
+                // Compare the element of the second operand
+                // with the odd element of the third operand.
+                elh = regs->VR_B(v4,j+1) >> 5;
+                switch (elh)
+                {
+                case 7:  // E = 1, L = 1, H = 1
+                    orc = TRUE;
+                    break;
+                case 6:  // E = 1, L = 1, H = 0
+                    if (regs->VR_B(v2,i) <= regs->VR_B(v3,j+1)) orc = TRUE;
+                    break;
+                case 5:  // E = 1, L = 0, H = 1
+                    if (regs->VR_B(v2,i) >= regs->VR_B(v3,j+1)) orc = TRUE;
+                    break;
+                case 4:  // E = 1, L = 0, H = 0
+                    if (regs->VR_B(v2,i) == regs->VR_B(v3,j+1)) orc = TRUE;
+                    break;
+                case 3:  // E = 0, L = 1, H = 1
+                    if (regs->VR_B(v2,i) != regs->VR_B(v3,j+1)) orc = TRUE;
+                    break;
+                case 2:  // E = 0, L = 1, H = 0
+                    if (regs->VR_B(v2,i) < regs->VR_B(v3,j+1)) orc = TRUE;
+                    break;
+                case 1:  // E = 0, L = 0, H = 1
+                    if (regs->VR_B(v2,i) > regs->VR_B(v3,j+1)) orc = TRUE;
+                    break;
+                default: // E = 0, L = 0, H = 0
+                    break;
+                }
+                // Determine the result of the range comparison of the element of the second operand 
+                if (erc == TRUE && orc == TRUE)
+                {
+                    irt1[i] = TRUE;
+                }
             }
-            if (M6_RT) {
-                regs->VR_B(v1, i) = result1[i] ? 0xff : 0x00;
+            // Compare the element of the second operand with zero
+            if (M6_ZS)                 // if M6_ZS (Zero Search)
+            {
+                if (regs->VR_B(v2,i) == 0)
+                {
+                    irt2[i] = TRUE;
+                }
             }
-            if (result1[i]) low1 = min(low1, i);
-            if (result2[i]) low2 = min(low2, i);
+            if (M6_IN)                 // if M6_IN (Invert Result)
+            {
+                irt1[i] ^= TRUE;
+            }
+        }
+        if (M6_RT)                     // if M6_RT (Result Type)
+        {
+            for (i=0; i<16; i++)
+            {
+                if (irt1[i] == TRUE)
+                    regs->VR_B(v1,i) = 0xFF;
+                else
+                    regs->VR_B(v1,i) = 0x00;
+            }
+        }
+        else                           // else !M6_RT
+        {
+            lxt1 = lxt2 = 16;
+            for (i=0; i<16; i++)
+            {
+                if (irt1[i] == TRUE && lxt1 == 16)
+                    lxt1 = i;
+                if (irt2[i] == TRUE && lxt2 == 16)
+                    lxt2 = i;
+            }
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
+            regs->VR_D(v1, 1) = 0;
         }
         break;
-    case 1:
-        max = 8, low1 = max, low2 = max;
-        for (i=0; i < max; i++) {
-            result1[i] = 0;
-            result2[i] = M6_ZS & (regs->VR_H(v2, i) == 0x00);
-            for (j=0; j < max; j+=2) {
-                lr = 0, rr = 0;
-                if ((regs->VR_H(v4, j)   & 0x8000) && regs->VR_H(v2, i) == regs->VR_H(v3, j))   lr = 1;
-                if ((regs->VR_H(v4, j)   & 0x4000) && regs->VR_H(v2, i) <  regs->VR_H(v3, j))   lr = 1;
-                if ((regs->VR_H(v4, j)   & 0x2000) && regs->VR_H(v2, i) >  regs->VR_H(v3, j))   lr = 1;
-                if ((regs->VR_H(v4, j+1) & 0x8000) && regs->VR_H(v2, i) == regs->VR_H(v3, j+1)) rr = 1;
-                if ((regs->VR_H(v4, j+1) & 0x4000) && regs->VR_H(v2, i) <  regs->VR_H(v3, j+1)) rr = 1;
-                if ((regs->VR_H(v4, j+1) & 0x2000) && regs->VR_H(v2, i) >  regs->VR_H(v3, j+1)) rr = 1;
-                result1[i] = (lr & rr) ^ M6_IN;
+    case 1:  //Halfword
+        for (i=0; i<8; i++)
+        {
+            irt1[i] = irt2[i] = FALSE;
+            // Compare the element of the second operand with the ranges
+            for (j=0; j<8; j+=2)
+            {
+                erc = orc = FALSE;
+                // Compare the element of the second operand
+                // with the even element of the third operand.
+                elh = regs->VR_H(v4,j) >> 13;
+                switch (elh)
+                {
+                case 7:  // E = 1, L = 1, H = 1
+                    erc = TRUE;
+                    break;
+                case 6:  // E = 1, L = 1, H = 0
+                    if (regs->VR_H(v2,i) <= regs->VR_H(v3,j)) erc = TRUE;
+                    break;
+                case 5:  // E = 1, L = 0, H = 1
+                    if (regs->VR_H(v2,i) >= regs->VR_H(v3,j)) erc = TRUE;
+                    break;
+                case 4:  // E = 1, L = 0, H = 0
+                    if (regs->VR_H(v2,i) == regs->VR_H(v3,j)) erc = TRUE;
+                    break;
+                case 3:  // E = 0, L = 1, H = 1
+                    if (regs->VR_H(v2,i) != regs->VR_H(v3,j)) erc = TRUE;
+                    break;
+                case 2:  // E = 0, L = 1, H = 0
+                    if (regs->VR_H(v2,i) < regs->VR_H(v3,j)) erc = TRUE;
+                    break;
+                case 1:  // E = 0, L = 0, H = 1
+                    if (regs->VR_H(v2,i) > regs->VR_H(v3,j)) erc = TRUE;
+                    break;
+                default: // E = 0, L = 0, H = 0
+                    break;
+                }
+                // Compare the element of the second operand
+                // with the odd element of the third operand.
+                elh = regs->VR_H(v4,j+1) >> 13;
+                switch (elh)
+                {
+                case 7:  // E = 1, L = 1, H = 1
+                    orc = TRUE;
+                    break;
+                case 6:  // E = 1, L = 1, H = 0
+                    if (regs->VR_H(v2,i) <= regs->VR_H(v3,j+1)) orc = TRUE;
+                    break;
+                case 5:  // E = 1, L = 0, H = 1
+                    if (regs->VR_H(v2,i) >= regs->VR_H(v3,j+1)) orc = TRUE;
+                    break;
+                case 4:  // E = 1, L = 0, H = 0
+                    if (regs->VR_H(v2,i) == regs->VR_H(v3,j+1)) orc = TRUE;
+                    break;
+                case 3:  // E = 0, L = 1, H = 1
+                    if (regs->VR_H(v2,i) != regs->VR_H(v3,j+1)) orc = TRUE;
+                    break;
+                case 2:  // E = 0, L = 1, H = 0
+                    if (regs->VR_H(v2,i) < regs->VR_H(v3,j+1)) orc = TRUE;
+                    break;
+                case 1:  // E = 0, L = 0, H = 1
+                    if (regs->VR_H(v2,i) > regs->VR_H(v3,j+1)) orc = TRUE;
+                    break;
+                default: // E = 0, L = 0, H = 0
+                    break;
+                }
+                // Determine the result of the range comparison of the element of the second operand 
+                if (erc == TRUE && orc == TRUE)
+                {
+                    irt1[i] = TRUE;
+                }
             }
-            if (M6_RT) {
-                regs->VR_H(v1, i) = result1[i] ? 0xffff : 0x0000;
+            // Compare the element of the second operand with zero
+            if (M6_ZS)                 // if M6_ZS (Zero Search)
+            {
+                if (regs->VR_H(v2,i) == 0)
+                {
+                    irt2[i] = TRUE;
+                }
             }
-            if (result1[i]) low1 = min(low1, i);
-            if (result2[i]) low2 = min(low2, i);
+            if (M6_IN)                 // if M6_IN (Invert Result)
+            {
+                irt1[i] ^= TRUE;
+            }
+        }
+        if (M6_RT)                     // if M6_RT (Result Type)
+        {
+            for (i=0; i<8; i++)
+            {
+                if (irt1[i] == TRUE)
+                    regs->VR_H(v1,i) = 0xFFFF;
+                else
+                    regs->VR_H(v1,i) = 0x0000;
+            }
+        }
+        else                           // else !M6_RT
+        {
+            lxt1 = lxt2 = 16;
+            for (i=0; i<8; i++)
+            {
+                if (irt1[i] == TRUE && lxt1 == 16)
+                    lxt1 = i * 2;
+                if (irt2[i] == TRUE && lxt2 == 16)
+                    lxt2 = i * 2;
+            }
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
+            regs->VR_D(v1, 1) = 0;
         }
         break;
-    case 2:
-        max = 4, low1 = max, low2 = max;
-        for (i=0; i < max; i++) {
-            result1[i] = 0;
-            result2[i] = M6_ZS & (regs->VR_F(v2, i) == 0x00);
-            for (j=0; j < max; j+=2) {
-                lr = 0, rr = 0;
-                if ((regs->VR_F(v4, j)   & 0x8000) && regs->VR_F(v2, i) == regs->VR_F(v3, j))   lr = 1;
-                if ((regs->VR_F(v4, j)   & 0x4000) && regs->VR_F(v2, i) <  regs->VR_F(v3, j))   lr = 1;
-                if ((regs->VR_F(v4, j)   & 0x2000) && regs->VR_F(v2, i) >  regs->VR_F(v3, j))   lr = 1;
-                if ((regs->VR_F(v4, j+1) & 0x8000) && regs->VR_F(v2, i) == regs->VR_F(v3, j+1)) rr = 1;
-                if ((regs->VR_F(v4, j+1) & 0x4000) && regs->VR_F(v2, i) <  regs->VR_F(v3, j+1)) rr = 1;
-                if ((regs->VR_F(v4, j+1) & 0x2000) && regs->VR_F(v2, i) >  regs->VR_F(v3, j+1)) rr = 1;
-                result1[i] = (lr & rr) ^ M6_IN;
+    case 2:  // Word
+        for (i=0; i<4; i++)
+        {
+            irt1[i] = irt2[i] = FALSE;
+            // Compare the element of the second operand with the ranges
+            for (j=0; j<4; j+=2)
+            {
+                erc = orc = FALSE;
+                // Compare the element of the second operand
+                // with the even element of the third operand.
+                elh = regs->VR_F(v4,j) >> 29;
+                switch (elh)
+                {
+                case 7:  // E = 1, L = 1, H = 1
+                    erc = TRUE;
+                    break;
+                case 6:  // E = 1, L = 1, H = 0
+                    if (regs->VR_F(v2,i) <= regs->VR_F(v3,j)) erc = TRUE;
+                    break;
+                case 5:  // E = 1, L = 0, H = 1
+                    if (regs->VR_F(v2,i) >= regs->VR_F(v3,j)) erc = TRUE;
+                    break;
+                case 4:  // E = 1, L = 0, H = 0
+                    if (regs->VR_F(v2,i) == regs->VR_F(v3,j)) erc = TRUE;
+                    break;
+                case 3:  // E = 0, L = 1, H = 1
+                    if (regs->VR_F(v2,i) != regs->VR_F(v3,j)) erc = TRUE;
+                    break;
+                case 2:  // E = 0, L = 1, H = 0
+                    if (regs->VR_F(v2,i) < regs->VR_F(v3,j)) erc = TRUE;
+                    break;
+                case 1:  // E = 0, L = 0, H = 1
+                    if (regs->VR_F(v2,i) > regs->VR_F(v3,j)) erc = TRUE;
+                    break;
+                default: // E = 0, L = 0, H = 0
+                    break;
+                }
+                // Compare the element of the second operand
+                // with the odd element of the third operand.
+                elh = regs->VR_F(v4,j+1) >> 29;
+                switch (elh)
+                {
+                case 7:  // E = 1, L = 1, H = 1
+                    orc = TRUE;
+                    break;
+                case 6:  // E = 1, L = 1, H = 0
+                    if (regs->VR_F(v2,i) <= regs->VR_F(v3,j+1)) orc = TRUE;
+                    break;
+                case 5:  // E = 1, L = 0, H = 1
+                    if (regs->VR_F(v2,i) >= regs->VR_F(v3,j+1)) orc = TRUE;
+                    break;
+                case 4:  // E = 1, L = 0, H = 0
+                    if (regs->VR_F(v2,i) == regs->VR_F(v3,j+1)) orc = TRUE;
+                    break;
+                case 3:  // E = 0, L = 1, H = 1
+                    if (regs->VR_F(v2,i) != regs->VR_F(v3,j+1)) orc = TRUE;
+                    break;
+                case 2:  // E = 0, L = 1, H = 0
+                    if (regs->VR_F(v2,i) < regs->VR_F(v3,j+1)) orc = TRUE;
+                    break;
+                case 1:  // E = 0, L = 0, H = 1
+                    if (regs->VR_F(v2,i) > regs->VR_F(v3,j+1)) orc = TRUE;
+                    break;
+                default: // E = 0, L = 0, H = 0
+                    break;
+                }
+                // Determine the result of the range comparison of the element of the second operand 
+                if (erc == TRUE && orc == TRUE)
+                {
+                    irt1[i] = TRUE;
+                }
             }
-            if (M6_RT) {
-                regs->VR_F(v1, i) = result1[i] ? 0xffffffff : 0x00000000;
+            // Compare the element of the second operand with zero
+            if (M6_ZS)                 // if M6_ZS (Zero Search)
+            {
+                if (regs->VR_F(v2,i) == 0)
+                {
+                    irt2[i] = TRUE;
+                }
             }
-            if (result1[i]) low1 = min(low1, i);
-            if (result2[i]) low2 = min(low2, i);
+            if (M6_IN)                 // if M6_IN (Invert Result)
+            {
+                irt1[i] ^= TRUE;
+            }
+        }
+        if (M6_RT)                     // if M6_RT (Result Type)
+        {
+            for (i=0; i<4; i++)
+            {
+                if (irt1[i] == TRUE)
+                    regs->VR_F(v1,i) = 0xFFFFFFFF;
+                else
+                    regs->VR_F(v1,i) = 0x00000000;
+            }
+        }
+        else                           // else !M6_RT
+        {
+            lxt1 = lxt2 = 16;
+            for (i=0; i<4; i++)
+            {
+                if (irt1[i] == TRUE && lxt1 == 16)
+                    lxt1 = i * 4;
+                if (irt2[i] == TRUE && lxt2 == 16)
+                    lxt2 = i * 4;
+            }
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
+            regs->VR_D(v1, 1) = 0;
         }
         break;
     default:
-        /* remove initialization warnings */
-        max = 0, low1 = max, low2 = max;
-
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
-    if (!M6_RT) regs->VR_B(v1, 7) = min(low1, low2) * (1 << m5);;
-    if (M6_CS) {               // if M6_CS (Condition Code Set)
-        if (M6_ZS && (low1 >= low2))
-            regs->psw.cc = 0;
-        else if ((low1 < max) && (low2 == max))
-            regs->psw.cc = 1;
-        else if (M6_ZS && (low1 < max) && low1 < low2)
-            regs->psw.cc = 2;
-        else if ((low1 == max) && (low2 == max))
+
+    if (M6_CS)                         // if M6_CS (Condition Code Set)
+    {
+        switch (m5)
+        {
+        case 0:  // Byte
+            lxt1 = lxt2 = mxt = 16;
+            break;
+        case 1:  // Halfword
+            lxt1 = lxt2 = mxt = 8;
+            break;
+        case 2:  // Word
+            lxt1 = lxt2 = mxt = 4;
+            break;
+        default:  // Prevent erroneous "may be used uninitialized" warnings
+            lxt1 = lxt2 = mxt = 0;
+            break;
+        }
+
+        for (i = 0; i < mxt; i++)
+        {
+            if (irt1[i] == TRUE && lxt1 == mxt)
+                lxt1 = i;
+            if (M6_ZS)                 // if M6_ZS (Zero Search)
+            {
+                if (irt2[i] == TRUE && lxt2 == mxt)
+                    lxt2 = i;
+            }
+        }
+
+        // cc 1 and 3 are possible when M6_ZS is 0 or 1.
+        if (lxt1 == mxt && lxt2 == mxt)
             regs->psw.cc = 3;
+        else if (lxt1 < mxt && lxt2 == mxt )
+            regs->psw.cc = 1;
+        // cc 0 and 2 are only possible when M6_ZS is 1.
+        else if (lxt1 < lxt2)
+            regs->psw.cc = 2;
+        else
+            regs->psw.cc = 0;
     }
 
 #undef M6_IN
