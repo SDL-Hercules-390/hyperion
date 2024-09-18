@@ -3810,12 +3810,22 @@ DEF_INST( vector_string_range_compare )
 /*-------------------------------------------------------------------*/
 /* E78B VSTRS  - Vector String Search                        [VRR-d] */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* In PoP (SA22-7832-15), for VSTRS we can read:                     */
+/*   Byte element seven of the fourth operand specifies              */
+/*   the length of the substring in bytes and must be in             */
+/*   the range of 0-16. Other values will result in an               */
+/*   unpredictable result.                                           */
+/*                                                                   */
+/* However, empirical evidence suggest that any value larger than    */ 
+/* 16 is treated as 16. This may be model dependant behaviour, but   */
+/* this implementation will follow a models (z15) behaviour.         */
+/*                                                                   */
 DEF_INST( vector_string_search )
 {
     int     v1, v2, v3, v4, m5, m6;
     char    v2_temp[16], v3_temp[16], nulls[16];
-    int     substr_len, str_len, i, k, eos;
-    int     char_size = 1; /* initialize to remove warning */
+    int     substr_len, char_size, str_len, eos, i, k;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -3830,9 +3840,12 @@ DEF_INST( vector_string_search )
     /* Get the contents of v2 and v3 as a string of bytes arranged */
     /* as they would be if they were in the guests storage.        */
     for (i = 0; i < 16; i++)
-        v2_temp[i] = regs->VR_B(v2, i);
-    for (i = 0; i < 16; i++)
+    {
+        v2_temp[i] = regs->VR_B( v2, i );
         v3_temp[i] = regs->VR_B( v3, i );
+    }
+
+    substr_len = regs->VR_B( v4, 7 );
 
     switch (m5)
     {
@@ -3845,13 +3858,12 @@ DEF_INST( vector_string_search )
     case 2:
         char_size = 4;
         break;
+    default:  // Prevent erroneous "may be used uninitialized" warnings
+        char_size = 1;
+        break;
     }
 
-    substr_len = regs->VR_B( v4, 7 );
-    if (substr_len < 0 || substr_len > 16)
-        goto vector_string_search_mdresult;
-
-    str_len = i = k = eos = 0;
+    str_len = eos = i = k = 0;
 
     if (M6_ZS)
     {
@@ -3876,6 +3888,11 @@ DEF_INST( vector_string_search )
         }
         else
         {
+            if (substr_len > 16)
+            {
+                substr_len = 16;
+            }
+
             for ( ; k < 16 ; k += char_size )
             {
                 if ( memcmp(&v2_temp[k], &nulls, char_size) == 0 )
@@ -3908,7 +3925,7 @@ DEF_INST( vector_string_search )
                         }
                         else
                         {
-                            if ( memcmp(&v2_temp[k], &v3_temp[0], k + substr_len - 16) == 0 )
+                            if ( memcmp(&v2_temp[k], &v3_temp[0], str_len - k ) == 0 )
                             {
                                 goto vector_string_search_partial_match;
                             }
@@ -3938,7 +3955,10 @@ DEF_INST( vector_string_search )
             {
                 goto vector_string_search_mdresult;
             }
-
+            if (substr_len > 16)
+            {
+                substr_len = 16;
+            }
             for ( ; ; k += char_size )
             {
                 if (k == 16)
@@ -3955,7 +3975,7 @@ DEF_INST( vector_string_search )
                 }
                 else
                 {
-                    if ( memcmp(&v2_temp[k], &v3_temp[0], k + substr_len - 16) == 0 )
+                    if ( memcmp(&v2_temp[k], &v3_temp[0], 16 - k) == 0 )
                     {
                         goto vector_string_search_partial_match;
                     }
@@ -3967,7 +3987,7 @@ DEF_INST( vector_string_search )
     UNREACHABLE_CODE( goto vector_string_search_mdresult );
 
 vector_string_search_mdresult:
-    regs->VR_D( v1, 0 ) = 0;                     /* Model dependant */
+    regs->VR_D( v1, 0 ) = 16;                    /* Model dependant */
     regs->VR_D( v1, 1 ) = 0;                     /* results are     */
     regs->psw.cc = 0;  /* no match */            /* unpredictable   */
     goto vector_string_search_end;
