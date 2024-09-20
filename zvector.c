@@ -2980,8 +2980,7 @@ DEF_INST( vector_find_element_equal )
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     zf = ef = FALSE;
-    ei = 16;    // Number of bytes in vector
-    newcc = 3;  // No equal, no zero
+    zi = ei = 16;     // Number of bytes in vector
 
     switch (m4)
     {
@@ -2992,7 +2991,6 @@ DEF_INST( vector_find_element_equal )
             {
                 ef = TRUE;
                 ei = i;     // Element index in bytes
-                newcc = 1;  // Equal, no zero
                 break;
             }
         }
@@ -3016,7 +3014,6 @@ DEF_INST( vector_find_element_equal )
             {
                 ef = TRUE;
                 ei = i * 2;  // Element index in bytes
-                newcc = 1;   // Equal, no zero
                 break;
             }
         }
@@ -3040,7 +3037,6 @@ DEF_INST( vector_find_element_equal )
             {
                 ef = TRUE;
                 ei = i * 4;  // Element index in bytes
-                newcc = 1;   // Equal, no zero
                 break;
             }
         }
@@ -3059,24 +3055,35 @@ DEF_INST( vector_find_element_equal )
         break;
     }
 
-    if (zf)
+    if (ef == TRUE)
     {
-        if (ef)
+        if (zf == TRUE)
         {
-            if (zi < ei)
+            if (zi <= ei)
             {
-                ei = zi;    // Element index in bytes
-                newcc = 0;  // Zero before equal
+                newcc = 0;   // Equal element follows zero element, or equal element is zero element
+                ei = zi;     // Element index in bytes
             }
             else
             {
-                newcc = 2;  // Zero not before equal
+                newcc = 2;   // Equal element before zero element
             }
         }
-        else
+        else /* zf == FALSE */
         {
-            ei = zi;        // Element index in bytes
-            newcc = 0;      // Zero before equal
+            newcc = 1;       // Equal element and, if M5_ZS, no zero element
+        }
+    }
+    else  /* ef == FALSE */
+    {
+        if (zf == TRUE)
+        {
+            newcc = 0;       // No equal element and a zero element
+            ei = zi;         // Element index in bytes
+        }
+        else /* zf == FALSE */
+        {
+            newcc = 3;       // No equal element and, if M5_ZS, no zero element
         }
     }
 
@@ -3114,7 +3121,7 @@ DEF_INST( vector_find_element_not_equal )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     zf = nef = FALSE;
-    nei = 16;   // Number of bytes in vector
+    zf = nei = 16;  // Number of bytes in vector
     newcc = 3;  // All equal, no zero
 
     switch (m4)
@@ -3193,20 +3200,35 @@ DEF_INST( vector_find_element_not_equal )
         break;
     }
 
-    if (zf)
+    if (nef == TRUE)
     {
-        if (nef)
+        if (zf == TRUE)
         {
             if (zi < nei)
             {
-                nei = zi;   // Element index in bytes
-                newcc = 0;  // Zero before not equal
+                newcc = 0;   // Not equal element follows zero element
+                nei = zi;    // Element index in bytes
+            }
+            else
+            {
+             /* newcc = 1 or 2; */     // Not equal element before zero element, or not equal element is zero element
             }
         }
-        else
+        else /* zf == FALSE */
         {
-            nei = zi;       // Element index in bytes
-            newcc = 0;      // Zero before equal
+         /* newcc = 1 or 2; */         // Not equal element and, if M5_ZS, no zero element
+        }
+    }
+    else  /* nef == FALSE */
+    {
+        if (zf == TRUE)
+        {
+            newcc = 0;       // No not equal (i.e. all equal) element and a zero element
+            nei = zi;        // Element index in bytes
+        }
+        else /* zf == FALSE */
+        {
+         /* newcc = 3; */    // No not equal (i.e. all equal) element and, if M5_ZS, no zero element
         }
     }
 
@@ -3684,7 +3706,7 @@ DEF_INST( vector_string_range_compare )
                 if ((regs->VR_H(v4, j+1) & 0x8000) && regs->VR_H(v2, i) == regs->VR_H(v3, j+1)) orc = TRUE;
                 if ((regs->VR_H(v4, j+1) & 0x4000) && regs->VR_H(v2, i) <  regs->VR_H(v3, j+1)) orc = TRUE;
                 if ((regs->VR_H(v4, j+1) & 0x2000) && regs->VR_H(v2, i) >  regs->VR_H(v3, j+1)) orc = TRUE;
-                // Determine the result of the range comparison 
+                // Determine the result of the range comparison
                 if (erc == TRUE && orc == TRUE) irt1[i] = TRUE;
             }
             // Invert the ranges result if required
@@ -3817,7 +3839,7 @@ DEF_INST( vector_string_range_compare )
 /*   the range of 0-16. Other values will result in an               */
 /*   unpredictable result.                                           */
 /*                                                                   */
-/* However, empirical evidence suggest that any value larger than    */ 
+/* However, empirical evidence suggest that any value larger than    */
 /* 16 is treated as 16. This may be model dependant behaviour, but   */
 /* this implementation will follow a models (z15) behaviour.         */
 /*                                                                   */
