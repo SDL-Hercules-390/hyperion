@@ -1974,6 +1974,7 @@ DEF_INST( vector_merge_low )
 {
     int     v1, v2, v3, m4, m5, m6;
     int     i, j;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -1988,32 +1989,35 @@ DEF_INST( vector_merge_low )
     case 0:  // Byte
         for ( i=0, j=8; i<16; i+=2, j++ )
         {
-            regs->VR_B( v1, i   ) = regs->VR_B( v2, j );
-            regs->VR_B( v1, i+1 ) = regs->VR_B( v3, j );
+            SV_B( temp, i   ) = regs->VR_B( v2, j );
+            SV_B( temp, i+1 ) = regs->VR_B( v3, j );
         }
         break;
     case 1:  // Halfword
         for ( i=0, j=4; i<8; i+=2, j++ )
         {
-            regs->VR_H( v1, i   ) = regs->VR_H( v2, j );
-            regs->VR_H( v1, i+1 ) = regs->VR_H( v3, j );
+            SV_H( temp, i   ) = regs->VR_H( v2, j );
+            SV_H( temp, i+1 ) = regs->VR_H( v3, j );
         }
         break;
     case 2:  // Word
         for ( i=0, j=2; i<4; i+=2, j++ )
         {
-            regs->VR_F( v1, i   ) = regs->VR_F( v2, j );
-            regs->VR_F( v1, i+1 ) = regs->VR_F( v3, j );
+            SV_F( temp, i   ) = regs->VR_F( v2, j );
+            SV_F( temp, i+1 ) = regs->VR_F( v3, j );
         }
         break;
     case 3:  // Doubleword
-        regs->VR_D( v1, 0 ) = regs->VR_D( v2, 1 );
-        regs->VR_D( v1, 1 ) = regs->VR_D( v3, 1 );
+        SV_D( temp, 0 ) = regs->VR_D( v2, 1 );
+        SV_D( temp, 1 ) = regs->VR_D( v3, 1 );
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
     }
+
+    regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
+    regs->VR_D( v1, 1 ) = SV_D( temp, 1 );
 
     ZVECTOR_END( regs );
 }
@@ -2025,6 +2029,7 @@ DEF_INST( vector_merge_high )
 {
     int     v1, v2, v3, m4, m5, m6;
     int     i, j;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -2039,32 +2044,35 @@ DEF_INST( vector_merge_high )
     case 0:  // Byte
         for ( i=0, j=0; i<16; i+=2, j++ )
         {
-            regs->VR_B( v1, i   ) = regs->VR_B( v2, j );
-            regs->VR_B( v1, i+1 ) = regs->VR_B( v3, j );
+            SV_B( temp, i   ) = regs->VR_B( v2, j );
+            SV_B( temp, i+1 ) = regs->VR_B( v3, j );
         }
         break;
     case 1:  // Halfword
         for ( i=0, j=0; i<8; i+=2, j++ )
         {
-            regs->VR_H( v1, i   ) = regs->VR_H( v2, j );
-            regs->VR_H( v1, i+1 ) = regs->VR_H( v3, j );
+            SV_H( temp, i   ) = regs->VR_H( v2, j );
+            SV_H( temp, i+1 ) = regs->VR_H( v3, j );
         }
         break;
     case 2:  // Word
         for ( i=0, j=0; i<4; i+=2, j++ )
         {
-            regs->VR_F( v1, i   ) = regs->VR_F( v2, j );
-            regs->VR_F( v1, i+1 ) = regs->VR_F( v3, j );
+            SV_F( temp, i   ) = regs->VR_F( v2, j );
+            SV_F( temp, i+1 ) = regs->VR_F( v3, j );
         }
         break;
     case 3:  // Doubleword
-        regs->VR_D( v1, 0 ) = regs->VR_D( v2, 0 );
-        regs->VR_D( v1, 1 ) = regs->VR_D( v3, 0 );
+        SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+        SV_D( temp, 1 ) = regs->VR_D( v3, 0 );
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
     }
+
+    regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
+    regs->VR_D( v1, 1 ) = SV_D( temp, 1 );
 
     ZVECTOR_END( regs );
 }
