@@ -6171,8 +6171,16 @@ DEF_INST( vector_subtract_compute_borrow_indication )
             regs->VR_D( v1, i ) = (regs->VR_D( v2, i ) < regs->VR_D( v3, i )) ? 0 : 1;
         break;
     case 4:  // Quadword
-        regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 0 ) < regs->VR_D( v3, 0 )) ? 0 : 1;
-        regs->VR_D( v1, 0 ) = 0;
+        if (regs->VR_D( v2, 0 ) == regs->VR_D( v3, 0 ))
+        {
+            regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 1 ) < regs->VR_D( v3, 1 )) ? 0 : 1;
+            regs->VR_D( v1, 0 ) = 0;
+        }
+        else
+        {
+            regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 0 ) < regs->VR_D( v3, 0 )) ? 0 : 1;
+            regs->VR_D( v1, 0 ) = 0;
+        }
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
