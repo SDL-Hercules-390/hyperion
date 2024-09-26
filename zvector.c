@@ -928,6 +928,18 @@ DEF_INST( vector_scatter_element_32 )
 /*-------------------------------------------------------------------*/
 /* E721 VLGV   - Vector Load GR from VR Element              [VRS-c] */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* In PoP (SA22-7832-13), for VLGV we can read:                      */
+/*   If the index specified by the second-operand address is         */
+/*   greater than the highest numbered element in the third          */
+/*   operand, of the specified element size, the result in the       */
+/*   first operand is unpredictable.                                 */
+/*                                                                   */
+/* However, empirical evidence suggests that any index larger than   */
+/* the highest numbered element is treated as the modulo of the      */
+/* highest numbered element. This may be model dependant behaviour,  */
+/* but this implementation will follow a models (z15) behaviour.     */
+/*                                                                   */
 DEF_INST( vector_load_gr_from_vr_element )
 {
     int     r1, v3, b2, m4;
@@ -942,20 +954,20 @@ DEF_INST( vector_load_gr_from_vr_element )
 
     switch (m4)
     {
-    case 0:
-        if ( i > 15 ) break;
+    case 0:  // Byte
+        i %= 16;
         regs->GR( r1 ) = regs->VR_B( v3, i );
         break;
-    case 1:
-        if ( i > 7 ) break;
+    case 1:  // Halfword
+        i %= 8;
         regs->GR( r1 ) = regs->VR_H( v3, i );
         break;
-    case 2:
-        if ( i > 3 ) break;
+    case 2:  // Word
+        i %= 4;
         regs->GR( r1 ) = regs->VR_F( v3, i );
         break;
-    case 3:
-        if ( i > 1 ) break;
+    case 3:  // Doubleword
+        i %= 2;
         regs->GR( r1 ) = regs->VR_D( v3, i );
         break;
     default:
@@ -969,6 +981,18 @@ DEF_INST( vector_load_gr_from_vr_element )
 /*-------------------------------------------------------------------*/
 /* E722 VLVG   - Vector Load VR Element from GR              [VRS-b] */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* In PoP (SA22-7832-13), for VLVG we can read:                      */
+/*   If the index, specified by the second-operand address, is       */
+/*   greater than the highest numbered element in the first          */
+/*   operand, of the specified element size, it is unpredictable     */
+/*   which element, if any, is replaced.                             */
+/*                                                                   */
+/* However, empirical evidence suggests that any index larger than   */
+/* the highest numbered element is treated as the modulo of the      */
+/* highest numbered element. This may be model dependant behaviour,  */
+/* but this implementation will follow a models (z15) behaviour.     */
+/*                                                                   */
 DEF_INST( vector_load_vr_element_from_gr )
 {
     int     v1, r3, b2, m4;
@@ -983,20 +1007,20 @@ DEF_INST( vector_load_vr_element_from_gr )
 
     switch (m4)
     {
-    case 0:
-        if ( i > 15 ) break;
+    case 0:  // Byte
+        i %= 16;
         regs->VR_B( v1, i ) = regs->GR_LHLCL( r3 );
         break;
-    case 1:
-        if ( i > 7 ) break;
+    case 1:  // Halfword
+        i %= 8;
         regs->VR_H( v1, i ) = regs->GR_LHL  ( r3 );
         break;
-    case 2:
-        if ( i > 3 ) break;
+    case 2:  // Word
+        i %= 4;
         regs->VR_F( v1, i ) = regs->GR_L    ( r3 );
         break;
-    case 3:
-        if ( i > 1 ) break;
+    case 3:  // Doubleword
+        i %= 2;
         regs->VR_D( v1, i ) = regs->GR_G    ( r3 );
         break;
     default:
@@ -3841,13 +3865,13 @@ DEF_INST( vector_string_range_compare )
 /* E78B VSTRS  - Vector String Search                        [VRR-d] */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* In PoP (SA22-7832-15), for VSTRS we can read:                     */
+/* In PoP (SA22-7832-13), for VSTRS we can read:                     */
 /*   Byte element seven of the fourth operand specifies              */
 /*   the length of the substring in bytes and must be in             */
 /*   the range of 0-16. Other values will result in an               */
 /*   unpredictable result.                                           */
 /*                                                                   */
-/* However, empirical evidence suggest that any value larger than    */
+/* However, empirical evidence suggests that any value larger than   */
 /* 16 is treated as 16. This may be model dependant behaviour, but   */
 /* this implementation will follow a models (z15) behaviour.         */
 /*                                                                   */
