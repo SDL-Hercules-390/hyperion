@@ -2763,7 +2763,7 @@ DEF_INST( vector_shift_left_by_byte )
 }
 
 /*-------------------------------------------------------------------*/
-/* git7 VSLDB  - Vector Shift Left Double By Byte            [VRI-d] */
+/* E777 VSLDB  - Vector Shift Left Double By Byte            [VRI-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_shift_left_double_by_byte )
 {
