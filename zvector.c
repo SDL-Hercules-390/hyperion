@@ -1510,28 +1510,68 @@ DEF_INST( vector_generate_mask )
     case 0:
         i2 &= 7;
         i3 &= 7;
-        bitmask = (i2 <= i3) ? (1u << (8 - i2)) - (1u << (7 - i3)) : 0xffu - (1u << (7 - i3)) + (1u << (8 - i2));
+        if (i2 <= i3) {
+            if (i2 == 0)
+                bitmask = 0u - (1u << (7 - i3));
+            else
+                bitmask = (1u << (8 - i2)) - (1u << (7 - i3));
+        } else {
+            if (i2 == 0)
+                bitmask = 0xFFu - (1u << (7 - i3));
+            else
+                bitmask = 0xFFu - (1u << (7 - i3)) + (1u << (8 - i2));
+        }
         for (i=0; i < 16; i++)
             regs->VR_B(v1, i) = bitmask;
         break;
     case 1:
         i2 &= 15;
         i3 &= 15;
-        bitmask = (i2 <= i3) ? (1u << (16 - i2)) - (1u << (15 - i3)) : 0xffffu - (1u << (15 - i3)) + (1u << (16 - i2));
+        if (i2 <= i3) {
+            if (i2 == 0)
+                bitmask = 0u - (1u << (15 - i3));
+            else
+                bitmask = (1u << (16 - i2)) - (1u << (15 - i3));
+        } else {
+            if (i2 == 0)
+                bitmask = 0xFFFFu - (1u << (15 - i3));
+            else
+                bitmask = 0xFFFFu - (1u << (15 - i3)) + (1u << (16 - i2));
+        }
         for (i=0; i < 8; i++)
             regs->VR_H(v1, i) = bitmask;
         break;
     case 2:
         i2 &= 31;
         i3 &= 31;
-        bitmask = (i2 <= i3) ? (1u << (32 - i2)) - (1u << (31 - i3)) : 0xffffffffu - (1u << (31 - i3)) + (1u << (32 - i2));
+        if (i2 <= i3) {
+            if (i2 == 0)
+                bitmask = 0u - (1u << (31 - i3));
+            else
+                bitmask = (1u << (32 - i2)) - (1u << (31 - i3));
+        } else {
+            if (i2 == 0)
+                bitmask = 0xFFFFFFFFu - (1u << (31 - i3));
+            else
+                bitmask = 0xFFFFFFFFu - (1u << (31 - i3)) + (1u << (32 - i2));
+        }
         for (i=0; i < 4; i++)
             regs->VR_F(v1, i) = bitmask;
         break;
     case 3:
         i2 &= 63;
         i3 &= 63;
-        bitmask = (i2 <= i3) ? (1ull << (64 - i2)) - (1ull << (63 - i3)) : 0xffffffffffffffffull - (1ull << (63 - i3)) + (1ull << (64 - i2));
+        if (i2 <= i3) {
+            if (i2 == 0)
+                bitmask = 0ull - (1ull << (63 - i3));
+            else
+                bitmask = (1ull << (64 - i2)) - (1ull << (63 - i3));
+        } else {
+            if (i2 == 0)
+                bitmask = 0xFFFFFFFFFFFFFFFFull - (1ull << (63 - i3));
+            else
+                bitmask = 0xFFFFFFFFFFFFFFFFull - (1ull << (63 - i3)) + (1ull << (64 - i2));
+        }
         for (i=0; i < 2; i++)
             regs->VR_D(v1, i) = bitmask;
         break;
@@ -4188,9 +4228,7 @@ DEF_INST( vector_pack )
 DEF_INST(vector_pack_logical_saturate)
 {
     int     v1, v2, v3, m4, m5;
-    int     sat = 0;
-    int     allsat = 0;
-    int     i;
+    int     sat, allsat, i;
     BYTE    newcc;
     SV      temp;
 
@@ -4205,19 +4243,21 @@ DEF_INST(vector_pack_logical_saturate)
     SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
+    sat = allsat = 0;
+
     switch (m4)
     {
     case 1:  // Low-order bytes from 16 halfwords
         for ( i = 0; i < 16; i++ )
         {
-            if ( SV_H( temp, i ) > 0x00FF )
+            if ( SV_H( temp, i ) <= 0x00FF )
             {
-                regs->VR_B( v1, i ) = 0xFF;
-                sat++;
+                regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
             }
             else
             {
-                regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+                regs->VR_B( v1, i ) = 0xFF;
+                sat++;
             }
         }
         allsat = 16;
@@ -4225,14 +4265,14 @@ DEF_INST(vector_pack_logical_saturate)
     case 2:  // Low-order halfwords from 8 fullwords
         for ( i = 0; i < 8; i++ )
         {
-            if ( SV_F( temp, i ) > 0x0000FFFF )
+            if ( SV_F( temp, i ) <= 0x0000FFFF )
             {
-                regs->VR_H( v1, i ) = 0xFFFF;
-                sat++;
+                regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
             }
             else
             {
-                regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+                regs->VR_H( v1, i ) = 0xFFFF;
+                sat++;
             }
         }
         allsat = 8;
@@ -4240,14 +4280,14 @@ DEF_INST(vector_pack_logical_saturate)
     case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
-            if ( SV_D( temp, i ) > 0x00000000FFFFFFFFull )
+            if ( SV_D( temp, i ) <= 0x00000000FFFFFFFFull )
             {
-                regs->VR_F( v1, i ) = 0xFFFFFFFF;
-                sat++;
+                regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
             }
             else
             {
-                regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+                regs->VR_F( v1, i ) = 0xFFFFFFFF;
+                sat++;
             }
         }
         allsat = 4;
@@ -4285,9 +4325,7 @@ DEF_INST(vector_pack_logical_saturate)
 DEF_INST( vector_pack_saturate )
 {
     int     v1, v2, v3, m4, m5;
-    int     sat = 0;
-    int     allsat = 0;
-    int     i;
+    int     sat, allsat, i;
     BYTE    newcc;
     SV      temp;
 
@@ -4302,19 +4340,36 @@ DEF_INST( vector_pack_saturate )
     SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
+    sat = allsat = 0;
+
     switch (m4)
     {
     case 1:  // Low-order bytes from 16 halfwords
         for ( i = 0; i < 16; i++ )
         {
-            if ( SV_H( temp, i ) > 0x007F )
+            if ( !( SV_H( temp, i ) & 0x8000 ) )
             {
-                regs->VR_B( v1, i ) = 0x7F;
-                sat++;
+                if ( SV_H( temp, i ) <= 0x007F )
+                {
+                    regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_B( v1, i ) = 0x7F;
+                    sat++;
+                }
             }
             else
             {
-                regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+                if ( (S16)SV_H( temp, i ) >= (S16)0xFF80 )
+                {
+                    regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_B( v1, i ) = 0x80;
+                    sat++;
+                }
             }
         }
         allsat = 16;
@@ -4322,14 +4377,29 @@ DEF_INST( vector_pack_saturate )
     case 2:  // Low-order halfwords from 8 fullwords
         for ( i = 0; i < 8; i++ )
         {
-            if ( SV_F( temp, i ) > 0x00007FFF )
+            if ( !( SV_F( temp, i ) & 0x80000000 ) )
             {
-                regs->VR_H( v1, i ) = 0x7FFF;
-                sat++;
+                if ( SV_F( temp, i ) <= 0x00007FFF )
+                {
+                    regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_H( v1, i ) = 0x7FFF;
+                    sat++;
+                }
             }
             else
             {
-                regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+                if ( (S32)SV_F( temp, i ) >= (S32)0xFFFF8000 )
+                {
+                    regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_H( v1, i ) = 0x8000;
+                    sat++;
+                }
             }
         }
         allsat = 8;
@@ -4337,14 +4407,29 @@ DEF_INST( vector_pack_saturate )
     case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
-            if ( SV_D( temp, i ) > 0x000000007FFFFFFFull )
+            if ( !( SV_D( temp, i ) & 0x8000000000000000ull ) )
             {
-                regs->VR_F( v1, i ) = 0x7FFFFFFF;
-                sat++;
+                if ( SV_D( temp, i ) <= 0x000000007FFFFFFFull )
+                {
+                    regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_F( v1, i ) = 0x7FFFFFFF;
+                    sat++;
+                }
             }
             else
             {
-                regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+                if ( (S64)SV_D( temp, i ) >= (S64)0xFFFFFFFF80000000ull )
+                {
+                    regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_F( v1, i ) = 0x80000000;
+                    sat++;
+                }
             }
         }
         allsat = 4;
