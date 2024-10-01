@@ -8696,7 +8696,6 @@ DEF_INST( vector_fp_load_rounded )
         VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
 
         VECTOR_PUT_FLOAT64_NOCC( op1, v1, 0, regs );
-        VECTOR_PUT_FLOAT64_NOCC( op1, v1, 1, regs );
 
         if (softfloat_exceptionFlags)
         {
