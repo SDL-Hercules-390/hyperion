@@ -10351,12 +10351,12 @@ DEF_INST( vector_fp_compare_high )
                 if (newcc == 2)
                 {
                     greater_than_found = TRUE;
-                    regs->VR_D( v1, i ) = 0xFFFFFFFF;
+                    regs->VR_F( v1, i ) = 0xFFFFFFFF;
                 }
                 else
                 {
                     not_greater_than_or_unordered_found = TRUE;
-                    regs->VR_D( v1, i ) = 0x00000000;
+                    regs->VR_F( v1, i ) = 0x00000000;
                 }
             }
         }
