@@ -7180,30 +7180,34 @@ DEF_INST( divide_integer_bfp_short_reg )
 #undef IEEE_EXCEPTION_TRAP
 
 // Vector processing with VXC for IEEE exception and element index
-static void vector_ieee_trap( REGS *regs, BYTE vxc)
+// Bits 0-3 of the VXC are the vector index (VIX).
+// Bits 4-7 of the VXC are the vector interrupt code (VIC).
+static void vector_ieee_trap( REGS *regs, int vix, U32 vic )
 {
-    regs->dxc = vxc;                   /*  Save VXC in PSA         */
-    regs->fpc &= ~FPC_DXC;             /*  Clear previous DXC/VXC  */
-    regs->fpc |= ((U32)vxc << FPC_DXC_SHIFT);
+    U32 vxc;
+    vxc = ( vix << VXC_VIX_SHIFT ) | vic;  /* Build VXC            */
+    regs->dxc = vxc;                       /* Save VXC in PSA      */
+    regs->fpc &= ~FPC_DXC;                 /* Clear DXC/VXC in FPC */
+    regs->fpc |= (vxc << FPC_DXC_SHIFT);   /* Insert VXC into FPC  */
     regs->program_interrupt( regs, PGM_VECTOR_PROCESSING_EXCEPTION );
 }
 
 static void vector_ieee_cond_trap( int vix, REGS *regs, U32 ieee_traps )
 {
     if (ieee_traps & FPC_MASK_IMI)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_INVALID_OP) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_INVALID_OP );
 
     else if (ieee_traps & FPC_MASK_IMZ)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_DIV_ZERO) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_DIV_ZERO );
 
     else if (ieee_traps & FPC_MASK_IMO)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_OVERFLOW) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_OVERFLOW );
 
     else if (ieee_traps & FPC_MASK_IMU)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_UNDERFLOW) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_UNDERFLOW );
 
     else if (ieee_traps & FPC_MASK_IMX)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_INEXACT) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_INEXACT );
 }
 
 /* fastpath test for Xi trap; many instructions only return Xi */
@@ -7213,7 +7217,7 @@ static void vector_ieee_cond_trap( int vix, REGS *regs, U32 ieee_traps )
         && (softfloat_exceptionFlags & softfloat_flag_invalid)       \
         && (_regs->fpc & FPC_MASK_IMI)                               \
     )                                                                \
-        vector_ieee_trap( _regs, VXC_IEEE_INVALID_OP )
+        vector_ieee_trap( _regs, _vix, VXC_IEEE_INVALID_OP )
 
 /* fastpath test for Xz trap; only Divide returns Xz  */
 #define VECTOR_IEEE_EXCEPTION_TRAP_XZ( _vix, _regs )                 \
@@ -7222,7 +7226,7 @@ static void vector_ieee_cond_trap( int vix, REGS *regs, U32 ieee_traps )
         && (softfloat_exceptionFlags & softfloat_flag_infinite)      \
         && (_regs->fpc & FPC_MASK_IMZ)                               \
     )                                                                \
-        vector_ieee_trap( _regs, VXC_IEEE_DIV_ZERO )
+        vector_ieee_trap( _regs, _vix, VXC_IEEE_DIV_ZERO )
 
 /* trap if any provided exception has been previously detected */
 #define VECTOR_IEEE_EXCEPTION_TRAP( _vix, _regs, _ieee_trap_conds, _exceptions )  \
@@ -8847,7 +8851,7 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
     }
     else if ( m3 == 2 )  // Short format
     {
@@ -8862,7 +8866,7 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
     }
     else if ( m3 == 4 )  // Extended format
     {
@@ -8877,7 +8881,7 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
     }
 
     //  Resulting Condition Code:
@@ -8935,7 +8939,7 @@ DEF_INST( vector_fp_compare_scalar )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT64_COMPARE( op1, op2 );
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
         if (softfloat_exceptionFlags & softfloat_flag_invalid)
         {
             SET_FPC_FLAGS_FROM_SF( regs );
@@ -8950,7 +8954,7 @@ DEF_INST( vector_fp_compare_scalar )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT32_COMPARE( op1, op2 );
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
         if (softfloat_exceptionFlags & softfloat_flag_invalid)
         {
             SET_FPC_FLAGS_FROM_SF( regs );
@@ -8965,7 +8969,7 @@ DEF_INST( vector_fp_compare_scalar )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT128_COMPARE( op1, op2 );
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
         if (softfloat_exceptionFlags & softfloat_flag_invalid)
         {
             SET_FPC_FLAGS_FROM_SF( regs );
