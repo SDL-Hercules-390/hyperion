@@ -1247,7 +1247,11 @@ bool    intercept;                      /* False for virtual pgmint  */
         realregs->TEA = 0;
 
         /* Store Data exception code in PSA */
-        if (code == PGM_DATA_EXCEPTION)
+        if (code == PGM_DATA_EXCEPTION
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+                                       || code == PGM_VECTOR_PROCESSING_EXCEPTION
+#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+                                                                                 )
         {
             STORE_FW( psa->DXC, regs->dxc );
 
