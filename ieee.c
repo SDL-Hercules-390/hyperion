@@ -7180,30 +7180,34 @@ DEF_INST( divide_integer_bfp_short_reg )
 #undef IEEE_EXCEPTION_TRAP
 
 // Vector processing with VXC for IEEE exception and element index
-static void vector_ieee_trap( REGS *regs, BYTE vxc)
+// Bits 0-3 of the VXC are the vector index (VIX).
+// Bits 4-7 of the VXC are the vector interrupt code (VIC).
+static void vector_ieee_trap( REGS *regs, int vix, U32 vic )
 {
-    regs->dxc = vxc;                   /*  Save VXC in PSA         */
-    regs->fpc &= ~FPC_DXC;             /*  Clear previous DXC/VXC  */
-    regs->fpc |= ((U32)vxc << FPC_DXC_SHIFT);
+    U32 vxc;
+    vxc = ( vix << VXC_VIX_SHIFT ) | vic;  /* Build VXC            */
+    regs->dxc = vxc;                       /* Save VXC in PSA      */
+    regs->fpc &= ~FPC_DXC;                 /* Clear DXC/VXC in FPC */
+    regs->fpc |= (vxc << FPC_DXC_SHIFT);   /* Insert VXC into FPC  */
     regs->program_interrupt( regs, PGM_VECTOR_PROCESSING_EXCEPTION );
 }
 
 static void vector_ieee_cond_trap( int vix, REGS *regs, U32 ieee_traps )
 {
     if (ieee_traps & FPC_MASK_IMI)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_INVALID_OP) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_INVALID_OP );
 
     else if (ieee_traps & FPC_MASK_IMZ)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_DIV_ZERO) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_DIV_ZERO );
 
     else if (ieee_traps & FPC_MASK_IMO)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_OVERFLOW) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_OVERFLOW );
 
     else if (ieee_traps & FPC_MASK_IMU)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_UNDERFLOW) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_UNDERFLOW );
 
     else if (ieee_traps & FPC_MASK_IMX)
-        vector_ieee_trap( regs, ((vix << VXC_VIX_SHIFT) | VXC_IEEE_INEXACT) );
+        vector_ieee_trap( regs, vix, VXC_IEEE_INEXACT );
 }
 
 /* fastpath test for Xi trap; many instructions only return Xi */
@@ -7213,7 +7217,7 @@ static void vector_ieee_cond_trap( int vix, REGS *regs, U32 ieee_traps )
         && (softfloat_exceptionFlags & softfloat_flag_invalid)       \
         && (_regs->fpc & FPC_MASK_IMI)                               \
     )                                                                \
-        vector_ieee_trap( _regs, VXC_IEEE_INVALID_OP )
+        vector_ieee_trap( _regs, _vix, VXC_IEEE_INVALID_OP )
 
 /* fastpath test for Xz trap; only Divide returns Xz  */
 #define VECTOR_IEEE_EXCEPTION_TRAP_XZ( _vix, _regs )                 \
@@ -7222,7 +7226,7 @@ static void vector_ieee_cond_trap( int vix, REGS *regs, U32 ieee_traps )
         && (softfloat_exceptionFlags & softfloat_flag_infinite)      \
         && (_regs->fpc & FPC_MASK_IMZ)                               \
     )                                                                \
-        vector_ieee_trap( _regs, VXC_IEEE_DIV_ZERO )
+        vector_ieee_trap( _regs, _vix, VXC_IEEE_DIV_ZERO )
 
 /* trap if any provided exception has been previously detected */
 #define VECTOR_IEEE_EXCEPTION_TRAP( _vix, _regs, _ieee_trap_conds, _exceptions )  \
@@ -7290,22 +7294,20 @@ DEF_INST( vector_fp_test_data_class_immediate )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+            op2_dataclass = float64_class( op2 );
+            softfloat_exceptionFlags = 0;
+            if (op2_dataclass & i3)
             {
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-                op2_dataclass = float64_class( op2 );
-                softfloat_exceptionFlags = 0;
-                if (op2_dataclass & i3)
-                {
-                    one_bit_found = TRUE;
-                    regs->VR_D( v1, i ) = 0xFFFFFFFFFFFFFFFFULL;
-                }
-                else
-                {
-                    zero_bit_found = TRUE;
-                    regs->VR_D( v1, i ) = 0x0000000000000000ULL;
-                }
+                one_bit_found = TRUE;
+                regs->VR_D( v1, i ) = 0xFFFFFFFFFFFFFFFFULL;
             }
+            else
+            {
+                zero_bit_found = TRUE;
+                regs->VR_D( v1, i ) = 0x0000000000000000ULL;
+            }
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
@@ -7314,22 +7316,20 @@ DEF_INST( vector_fp_test_data_class_immediate )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+            op2_dataclass = float32_class( op2 );
+            softfloat_exceptionFlags = 0;
+            if (op2_dataclass & i3)
             {
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-                op2_dataclass = float32_class( op2 );
-                softfloat_exceptionFlags = 0;
-                if (op2_dataclass & i3)
-                {
-                    one_bit_found = TRUE;
-                    regs->VR_F( v1, i ) = 0xFFFFFFFF;
-                }
-                else
-                {
-                    zero_bit_found = TRUE;
-                    regs->VR_F( v1, i ) = 0x00000000;
-                }
+                one_bit_found = TRUE;
+                regs->VR_F( v1, i ) = 0xFFFFFFFF;
             }
+            else
+            {
+                zero_bit_found = TRUE;
+                regs->VR_F( v1, i ) = 0x00000000;
+            }
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -7410,94 +7410,97 @@ DEF_INST( vector_fp_multiply_and_subtract )
 
     if ( m6 == 3 )  // Long format
     {
-        float64_t  op1, op2, op3, op4;
+        float64_t  op1[2], op2, op3, op4;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            /* if Operand 4 is not a NaN, the sign bit is inverted */
+            if (0
+                || !(op4.v & 0x000FFFFFFFFFFFFF)
+                || ((op4.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+            )
+                op4.v ^= 0x8000000000000000ULL;
+
+            ieee_trap_conds = 0;
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_mulAdd( op2, op3, op4 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                /* if Operand 4 is not a NaN, the sign bit is inverted */
-                if (0
-                    || !(op4.v & 0x000FFFFFFFFFFFFF)
-                    || ((op4.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
-                )
-                    op4.v ^= 0x8000000000000000ULL;
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_LONG :
+                        SCALE_FACTOR_ARITH_UFLOW_LONG );
+           }
 
-                ieee_trap_conds = 0;
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
-                op1 = f64_mulAdd( op2, op3, op4 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-               }
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
-            }
+            if (M5_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m6 == 2 )  // Short format
     {
-        float32_t  op1, op2, op3, op4;
+        float32_t  op1[4], op2, op3, op4;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            /* if Operand 4 is not a NaN, the sign bit is inverted */
+            if (0
+                || !(op4.v & 0x007FFFFF)
+                || ((op4.v & 0x7F800000) ^ 0x7F800000)
+            )
+                op4.v ^= 0x80000000;
+
+            ieee_trap_conds = 0;
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_mulAdd( op2, op3, op4 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                /* if Operand 4 is not a NaN, the sign bit is inverted */
-                if (0
-                    || !(op4.v & 0x007FFFFF)
-                    || ((op4.v & 0x7F800000) ^ 0x7F800000)
-                )
-                    op4.v ^= 0x80000000;
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_SHORT :
+                        SCALE_FACTOR_ARITH_UFLOW_SHORT );
+            }
 
-                ieee_trap_conds = 0;
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
-                op1 = f32_mulAdd( op2, op3, op4 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-               }
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
-           }
+            if (M5_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m6 == 4 )  // Extended format
     {
         float128_t  op1, op2, op3, op4;
-
 
         VECTOR_GET_FLOAT128_OP( op4, v4, regs );
         VECTOR_GET_FLOAT128_OP( op3, v3, regs );
@@ -7523,16 +7526,14 @@ DEF_INST( vector_fp_multiply_and_subtract )
 
             if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
                 op1 = f128_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                    SCALE_FACTOR_ARITH_OFLOW_LONG :
-                    SCALE_FACTOR_ARITH_UFLOW_LONG );
+                    SCALE_FACTOR_ARITH_OFLOW_EXTD :
+                    SCALE_FACTOR_ARITH_UFLOW_EXTD );
         }
-
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
 
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
-
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M5_SE
@@ -7578,80 +7579,83 @@ DEF_INST( vector_fp_multiply_and_add )
 
     if ( m6 == 3 )  // Long format
     {
-        float64_t  op1, op2, op3, op4;
+        float64_t  op1[2], op2, op3, op4;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            ieee_trap_conds = 0;
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_mulAdd( op2, op3, op4 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                ieee_trap_conds = 0;
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_LONG :
+                        SCALE_FACTOR_ARITH_UFLOW_LONG );
+           }
 
-                op1 = f64_mulAdd( op2, op3, op4 );
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-               }
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
-            }
+            if (M5_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m6 == 2 )  // Short format
     {
-        float32_t  op1, op2, op3, op4;
+        float32_t  op1[4], op2, op3, op4;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            ieee_trap_conds = 0;
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_mulAdd( op2, op3, op4 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                ieee_trap_conds = 0;
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_SHORT :
+                        SCALE_FACTOR_ARITH_UFLOW_SHORT );
+            }
 
-                op1 = f32_mulAdd( op2, op3, op4 );
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-               }
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
-           }
+            if (M5_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m6 == 4 )  // Extended format
     {
         float128_t  op1, op2, op3, op4;
-
 
         VECTOR_GET_FLOAT128_OP( op4, v4, regs );
         VECTOR_GET_FLOAT128_OP( op3, v3, regs );
@@ -7670,14 +7674,14 @@ DEF_INST( vector_fp_multiply_and_add )
 
             if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
                 op1 = f128_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                    SCALE_FACTOR_ARITH_OFLOW_LONG :
-                    SCALE_FACTOR_ARITH_UFLOW_LONG );
+                    SCALE_FACTOR_ARITH_OFLOW_EXTD :
+                    SCALE_FACTOR_ARITH_UFLOW_EXTD );
         }
-
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
 
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M5_SE
@@ -7723,108 +7727,111 @@ DEF_INST( vector_fp_negative_multiply_and_subtract )
 
     if ( m6 == 3 )  // Long format
     {
-        float64_t  op1, op2, op3, op4;
+        float64_t  op1[2], op2, op3, op4;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            /* if Operand 4 is not a NaN, the sign bit is inverted */
+            if (0
+                || !(op4.v & 0x000FFFFFFFFFFFFF)
+                || ((op4.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+            )
+                op4.v ^= 0x8000000000000000ULL;
+
+            ieee_trap_conds = 0;
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_mulAdd( op2, op3, op4 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                /* if Operand 4 is not a NaN, the sign bit is inverted */
-                if (0
-                    || !(op4.v & 0x000FFFFFFFFFFFFF)
-                    || ((op4.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
-                )
-                    op4.v ^= 0x8000000000000000ULL;
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_LONG :
+                        SCALE_FACTOR_ARITH_UFLOW_LONG );
+           }
 
-                ieee_trap_conds = 0;
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
+            /* if Operand 1 is not a NaN, the sign bit is inverted */
+            if (0
+                || !(op1[i].v & 0x000FFFFFFFFFFFFF)
+                || ((op1[i].v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+            )
+                op1[i].v ^= 0x8000000000000000ULL;
 
-                op1 = f64_mulAdd( op2, op3, op4 );
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-               }
-
-                /* if Operand 1 is not a NaN, the sign bit is inverted */
-                if (0
-                    || !(op1.v & 0x000FFFFFFFFFFFFF)
-                    || ((op1.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
-                )
-                    op1.v ^= 0x8000000000000000ULL;
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
-            }
+            if (M5_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m6 == 2 )  // Short format
     {
-        float32_t  op1, op2, op3, op4;
+        float32_t  op1[4], op2, op3, op4;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            /* if Operand 4 is not a NaN, the sign bit is inverted */
+            if (0
+                || !(op4.v & 0x007FFFFF)
+                || ((op4.v & 0x7F800000) ^ 0x7F800000)
+            )
+                op4.v ^= 0x80000000;
+
+            ieee_trap_conds = 0;
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_mulAdd( op2, op3, op4 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                /* if Operand 4 is not a NaN, the sign bit is inverted */
-                if (0
-                    || !(op4.v & 0x007FFFFF)
-                    || ((op4.v & 0x7F800000) ^ 0x7F800000)
-                )
-                    op4.v ^= 0x80000000;
-
-                ieee_trap_conds = 0;
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f32_mulAdd( op2, op3, op4 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-               }
-
-                /* if Operand 1 is not a NaN, the sign bit is inverted */
-                if (0
-                    || !(op1.v & 0x007FFFFF)
-                    || ((op1.v & 0x7F800000) ^ 0x7F800000)
-                )
-                    op1.v ^= 0x80000000;
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_SHORT :
+                        SCALE_FACTOR_ARITH_UFLOW_SHORT );
            }
+
+            /* if Operand 1 is not a NaN, the sign bit is inverted */
+            if (0
+                || !(op1[i].v & 0x007FFFFF)
+                || ((op1[i].v & 0x7F800000) ^ 0x7F800000)
+            )
+                op1[i].v ^= 0x80000000;
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m6 == 4 )  // Extended format
     {
         float128_t  op1, op2, op3, op4;
-
 
         VECTOR_GET_FLOAT128_OP( op4, v4, regs );
         VECTOR_GET_FLOAT128_OP( op3, v3, regs );
@@ -7850,8 +7857,8 @@ DEF_INST( vector_fp_negative_multiply_and_subtract )
 
             if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
                 op1 = f128_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                    SCALE_FACTOR_ARITH_OFLOW_LONG :
-                    SCALE_FACTOR_ARITH_UFLOW_LONG );
+                    SCALE_FACTOR_ARITH_OFLOW_EXTD :
+                    SCALE_FACTOR_ARITH_UFLOW_EXTD );
         }
 
         /* if Operand 1 is not a NaN, the sign bit is inverted */
@@ -7861,12 +7868,10 @@ DEF_INST( vector_fp_negative_multiply_and_subtract )
         )
             op1.v[FLOAT128_HI] ^= 0x8000000000000000ULL;
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
-
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
-
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M5_SE
@@ -7912,94 +7917,97 @@ DEF_INST( vector_fp_negative_multiply_and_add )
 
     if ( m6 == 3 )  // Long format
     {
-        float64_t  op1, op2, op3, op4;
+        float64_t  op1[2], op2, op3, op4;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            ieee_trap_conds = 0;
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_mulAdd( op2, op3, op4 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op4, v4, i, regs );
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                ieee_trap_conds = 0;
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_LONG :
+                        SCALE_FACTOR_ARITH_UFLOW_LONG );
+           }
 
-                op1 = f64_mulAdd( op2, op3, op4 );
+            /* if Operand 1 is not a NaN, the sign bit is inverted */
+            if (0
+                || !(op1[i].v & 0x000FFFFFFFFFFFFF)
+                || ((op1[i].v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
+            )
+                op1[i].v ^= 0x8000000000000000ULL;
 
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
 
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-               }
-
-                /* if Operand 1 is not a NaN, the sign bit is inverted */
-                if (0
-                    || !(op1.v & 0x000FFFFFFFFFFFFF)
-                    || ((op1.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)
-                )
-                    op1.v ^= 0x8000000000000000ULL;
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
-            }
+            if (M5_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m6 == 2 )  // Short format
     {
-        float32_t  op1, op2, op3, op4;
+        float32_t  op1[4], op2, op3, op4;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            ieee_trap_conds = 0;
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_mulAdd( op2, op3, op4 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op4, v4, i, regs );
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                ieee_trap_conds = 0;
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f32_mulAdd( op2, op3, op4 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-               }
-
-                /* if Operand 1 is not a NaN, the sign bit is inverted */
-                if (0
-                    || !(op1.v & 0x007FFFFF)
-                    || ((op1.v & 0x7F800000) ^ 0x7F800000)
-                )
-                    op1.v ^= 0x80000000;
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_SHORT :
+                        SCALE_FACTOR_ARITH_UFLOW_SHORT );
            }
+
+            /* if Operand 1 is not a NaN, the sign bit is inverted */
+            if (0
+                || !(op1[i].v & 0x007FFFFF)
+                || ((op1[i].v & 0x7F800000) ^ 0x7F800000)
+            )
+                op1[i].v ^= 0x80000000;
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m6 == 4 )  // Extended format
     {
         float128_t  op1, op2, op3, op4;
-
 
         VECTOR_GET_FLOAT128_OP( op4, v4, regs );
         VECTOR_GET_FLOAT128_OP( op3, v3, regs );
@@ -8018,8 +8026,8 @@ DEF_INST( vector_fp_negative_multiply_and_add )
 
             if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
                 op1 = f128_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                    SCALE_FACTOR_ARITH_OFLOW_LONG :
-                    SCALE_FACTOR_ARITH_UFLOW_LONG );
+                    SCALE_FACTOR_ARITH_OFLOW_EXTD :
+                    SCALE_FACTOR_ARITH_UFLOW_EXTD );
         }
 
         /* if Operand 1 is not a NaN, the sign bit is inverted */
@@ -8029,10 +8037,10 @@ DEF_INST( vector_fp_negative_multiply_and_add )
         )
             op1.v[FLOAT128_HI] ^= 0x8000000000000000ULL;
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
-
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M5_SE
@@ -8080,82 +8088,86 @@ DEF_INST( vector_fp_convert_to_logical )
 
     if ( m3 == 3 )  /* BFP long format to doubleword */
     {
-        U64         op1;
+        U64         op1[2];
         float64_t   op2;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M4_SE)
+            SET_SF_RM_FROM_MASK( m5 );
+
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+            softfloat_exceptionFlags = 0;
+
+            if (FLOAT64_ISNAN( op2 ))
             {
-                SET_SF_RM_FROM_MASK( m5 );
-
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-                softfloat_exceptionFlags = 0;
-
-                if (FLOAT64_ISNAN( op2 ))
-                {
-                    op1 = 0;
-                    softfloat_raiseFlags( softfloat_flag_invalid );
-                }
-                else
-                {
-                    SET_SF_RM_FROM_MASK( m3 );
-                    op1 = f64_to_ui64( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
-                }
-
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    if (!SUPPRESS_INEXACT( m4 ))
-                        softfloat_exceptionFlags |= softfloat_flag_inexact;
-                }
-
-                regs->VR_D( v1, i ) = op1;
-
-                ieee_trap_conds = ieee_exception_test_oux( regs );
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+                op1[i] = 0;
+                softfloat_raiseFlags( softfloat_flag_invalid );
             }
+            else
+            {
+                SET_SF_RM_FROM_MASK( m3 );
+                op1[i] = f64_to_ui64( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
+            }
+
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                if (!SUPPRESS_INEXACT( m4 ))
+                    softfloat_exceptionFlags |= softfloat_flag_inexact;
+            }
+
+            ieee_trap_conds = ieee_exception_test_oux( regs );
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            regs->VR_D( v1, i ) = op1[i];
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 2 )  /* BFP short format to word */
     {
-        U32         op1;
+        U32         op1[4];
         float32_t   op2;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M4_SE)
+            SET_SF_RM_FROM_MASK( m5 );
+
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+            softfloat_exceptionFlags = 0;
+
+            if (FLOAT32_ISNAN( op2 ))
             {
-                SET_SF_RM_FROM_MASK( m5 );
-
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-                softfloat_exceptionFlags = 0;
-
-                if (FLOAT32_ISNAN( op2 ))
-                {
-                    op1 = 0;
-                    softfloat_raiseFlags( softfloat_flag_invalid );
-                }
-                else
-                {
-                    SET_SF_RM_FROM_MASK( m3 );
-                    op1 = f32_to_ui32( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
-                }
-
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    if (!SUPPRESS_INEXACT( m4 ))
-                        softfloat_exceptionFlags |= softfloat_flag_inexact;
-                }
-
-                regs->VR_F( v1, i ) = op1;
-
-                ieee_trap_conds = ieee_exception_test_oux( regs );
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+                op1[i] = 0;
+                softfloat_raiseFlags( softfloat_flag_invalid );
             }
+            else
+            {
+                SET_SF_RM_FROM_MASK( m3 );
+                op1[i] = f32_to_ui32( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
+            }
+
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                if (!SUPPRESS_INEXACT( m4 ))
+                    softfloat_exceptionFlags |= softfloat_flag_inexact;
+            }
+
+            ieee_trap_conds = ieee_exception_test_oux( regs );
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            regs->VR_F( v1, i ) = op1[i];
+            if (M4_SE) break;
         }
     }
 
@@ -8205,54 +8217,58 @@ DEF_INST( vector_fp_convert_from_logical )
 
     if ( m3 == 3 )  // Doubleword to BFP long format
     {
-        float64_t  op1;
+        float64_t  op1[2];
         U64        op2;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M4_SE)
+            SET_SF_RM_FROM_MASK( m5 );
+
+            op2 = regs->VR_D(  v2, i );
+            softfloat_exceptionFlags = 0;
+
+            op1[i] = ui64_to_f64( op2 );
+
+            if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
             {
-                SET_SF_RM_FROM_MASK( m5 );
-
-                op2 = regs->VR_D(  v2, i );
-                softfloat_exceptionFlags = 0;
-
-                op1 = ui64_to_f64( op2 );
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
-                {
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
-                }
+                ieee_trap_conds = ieee_exception_test_oux( regs );
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 2 )  // Word to BFP short format
     {
-        float32_t  op1;
+        float32_t  op1[4];
         U32        op2;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M4_SE)
+            SET_SF_RM_FROM_MASK( m5 );
+
+            op2 = regs->VR_F(  v2, i );
+            softfloat_exceptionFlags = 0;
+
+            op1[i] = ui32_to_f32( op2 );
+
+            if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
             {
-                SET_SF_RM_FROM_MASK( m5 );
-
-                op2 = regs->VR_F(  v2, i );
-                softfloat_exceptionFlags = 0;
-
-                op1 = ui32_to_f32( op2 );
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
-                {
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
-                }
+                ieee_trap_conds = ieee_exception_test_oux( regs );
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M4_SE) break;
         }
     }
 
@@ -8303,108 +8319,112 @@ DEF_INST( vector_fp_convert_to_fixed )
 
     if ( m3 == 3 )  /* BFP long format to doubleword */
     {
-        S64         op1;
+        S64         op1[2];
         float64_t   op2;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M4_SE)
-            {
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-                op2_dataclass = float64_class( op2 );
-                softfloat_exceptionFlags = 0;
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+            op2_dataclass = float64_class( op2 );
+            softfloat_exceptionFlags = 0;
 
-                if (op2_dataclass & (float_class_neg_signaling_nan |
-                                     float_class_pos_signaling_nan |
-                                     float_class_neg_quiet_nan     |
-                                     float_class_pos_quiet_nan ))
-                {
-                    /* NaN input always returns maximum negative integer,
-                       cc3, and IEEE invalid exception */
-                    op1 = -(0x7FFFFFFFFFFFFFFFULL) - 1;
-                    softfloat_raiseFlags( softfloat_flag_invalid );
-                }
-                else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
-                {
-                    op1 = 0;
-                }
+            if (op2_dataclass & (float_class_neg_signaling_nan |
+                                 float_class_pos_signaling_nan |
+                                 float_class_neg_quiet_nan     |
+                                 float_class_pos_quiet_nan ))
+            {
+                /* NaN input always returns maximum negative integer,
+                   cc3, and IEEE invalid exception */
+                op1[i] = -(0x7FFFFFFFFFFFFFFFULL) - 1;
+                softfloat_raiseFlags( softfloat_flag_invalid );
+            }
+            else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
+            {
+                op1[i] = 0;
+            }
+            else
+            {
+                if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
+                    op1[i] = 0;
                 else
                 {
-                    if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
-                        op1 = 0;
-                    else
-                    {
-                        SET_SF_RM_FROM_MASK( m5 );
-                        op1 = f64_to_i64( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
-                    }
+                    SET_SF_RM_FROM_MASK( m5 );
+                    op1[i] = f64_to_i64( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
                 }
-
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    if (!SUPPRESS_INEXACT( m4 ))
-                        softfloat_exceptionFlags |= softfloat_flag_inexact;
-                }
-
-                regs->VR_D( v1, i ) = op1;
-
-                ieee_trap_conds = ieee_exception_test_oux( regs );
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                if (!SUPPRESS_INEXACT( m4 ))
+                    softfloat_exceptionFlags |= softfloat_flag_inexact;
+            }
+
+            ieee_trap_conds = ieee_exception_test_oux( regs );
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            regs->VR_D( v1, i ) = op1[i];
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 2 )  /* BFP short format to word */
     {
-        S32         op1;
+        S32         op1[4];
         float32_t   op2;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M4_SE)
-            {
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-                op2_dataclass = float32_class( op2 );
-                softfloat_exceptionFlags = 0;
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+            op2_dataclass = float32_class( op2 );
+            softfloat_exceptionFlags = 0;
 
-                if (op2_dataclass & (float_class_neg_signaling_nan |
-                                     float_class_pos_signaling_nan |
-                                     float_class_neg_quiet_nan     |
-                                     float_class_pos_quiet_nan ))
-                {
-                    /* NaN input always returns maximum negative integer,
-                       cc3, and IEEE invalid exception */
-                    op1 = -0x7FFFFFFF - 1;
-                    softfloat_raiseFlags( softfloat_flag_invalid );
-                }
-                else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
-                {
-                    op1 = 0;
-                }
+            if (op2_dataclass & (float_class_neg_signaling_nan |
+                                 float_class_pos_signaling_nan |
+                                 float_class_neg_quiet_nan     |
+                                 float_class_pos_quiet_nan ))
+            {
+                /* NaN input always returns maximum negative integer,
+                   cc3, and IEEE invalid exception */
+                op1[i] = -0x7FFFFFFF - 1;
+                softfloat_raiseFlags( softfloat_flag_invalid );
+            }
+            else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
+            {
+                op1[i] = 0;
+            }
+            else
+            {
+                if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
+                    op1[i] = 0;
                 else
                 {
-                    if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
-                        op1 = 0;
-                    else
-                    {
-                        SET_SF_RM_FROM_MASK( m3 );
-                        op1 = f32_to_i32( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
-                    }
+                    SET_SF_RM_FROM_MASK( m3 );
+                    op1[i] = f32_to_i32( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
                 }
-
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    if (!SUPPRESS_INEXACT( m4 ))
-                        softfloat_exceptionFlags |= softfloat_flag_inexact;
-                }
-
-                regs->VR_F( v1, i ) = op1;
-
-                ieee_trap_conds = ieee_exception_test_oux( regs );
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                if (!SUPPRESS_INEXACT( m4 ))
+                    softfloat_exceptionFlags |= softfloat_flag_inexact;
+            }
+
+            ieee_trap_conds = ieee_exception_test_oux( regs );
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            regs->VR_F( v1, i ) = op1[i];
+            if (M4_SE) break;
         }
     }
 
@@ -8458,28 +8478,31 @@ DEF_INST( vector_fp_convert_from_fixed )
         /* long BFP, IEEE Inexact exceptions are possible. If m4     */
         /* Inexact suppression control (XxC)  See SUPPRESS_INEXACT is on, then no Inexact  */
         /* exceptions recognized (no trap nor flag set).             */
-        float64_t   op1;
+        float64_t   op1[2];
         S64         op2;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M4_SE)
+            SET_SF_RM_FROM_MASK( m5 );
+
+            op2 = regs->VR_D( v2, i );
+            softfloat_exceptionFlags = 0;
+            op1[i] = i64_to_f64( op2);
+
+            /* Inexact occurred and not masked by m4? */
+            if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
             {
-                SET_SF_RM_FROM_MASK( m5 );
-
-                op2 = regs->VR_D( v2, i );
-                softfloat_exceptionFlags = 0;
-                op1 = i64_to_f64( op2);
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                /* Inexact occurred and not masked by m4? */
-                if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
-                {
-                    /* Yes, set FPC flags and test for a trap */
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
-                }
+                /* Yes, set FPC flags and test for a trap */
+                ieee_trap_conds = ieee_exception_test_oux( regs );
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 2 )  // Word to BFP short format
@@ -8488,28 +8511,31 @@ DEF_INST( vector_fp_convert_from_fixed )
         /* bits available in a short BFP, IEEE Inexact may be        */
         /* raised. If m4 Inexact suppression (XxC)  See SUPPRESS_INEXACT is on, then no    */
         /* inexact exception is recognized (no trap nor flag set).   */
-        float32_t   op1;
+        float32_t   op1[4];
         S32         op2;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M4_SE)
+            SET_SF_RM_FROM_MASK( m5 );
+
+            op2 = regs->VR_F( v2, i );
+            softfloat_exceptionFlags = 0;
+            op1[i] = i32_to_f32( op2 );
+
+            /* Inexact occurred and not masked by m4? */
+            if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
             {
-                SET_SF_RM_FROM_MASK( m5 );
-
-                op2 = regs->VR_F( v2, i );
-                softfloat_exceptionFlags = 0;
-                op1 = i32_to_f32( op2 );
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                /* Inexact occurred and not masked by m4? */
-                if (softfloat_exceptionFlags && !SUPPRESS_INEXACT( m4 ))
-                {
-                    /* Yes, set FPC flags and test for a trap */
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
-                }
+                /* Yes, set FPC flags and test for a trap */
+                ieee_trap_conds = ieee_exception_test_oux( regs );
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M4_SE) break;
         }
     }
 
@@ -8576,27 +8602,29 @@ DEF_INST( vector_fp_load_lengthened )
     }
     else if ( m3 == 2 )  /* Short format to Long format, i.e. 32-bit to 64-bit */
     {
-        float64_t   op1;
+        float64_t   op1[2];
         float32_t   op2;
         int         j;
 
         for (i=0, j=0; i < 4; i+=2, j++)
         {
-            if (i == 0 || !M4_SE)
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+            softfloat_exceptionFlags = 0;
+            if (f32_isSignalingNaN( op2 ))
             {
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-                softfloat_exceptionFlags = 0;
-                if (f32_isSignalingNaN( op2 ))
-                {
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
 
-                    FLOAT32_MAKE_QNAN( op2 );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                }
-                op1 = f32_to_f64( op2 );
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, j, regs );
+                FLOAT32_MAKE_QNAN( op2 );
+                SET_FPC_FLAGS_FROM_SF( regs );
             }
+            op1[j] = f32_to_f64( op2 );
+            if (M4_SE) break;
+        }
+        for (i=0, j=0; i < 4; i+=2, j++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[j], v1, j, regs );
+            if (M4_SE) break;
         }
     }
 
@@ -8645,36 +8673,38 @@ DEF_INST( vector_fp_load_rounded )
 
     if ( m3 == 3 )  // Long format
     {
-        float32_t   op1;
+        float32_t   op1[4];
         float64_t   op2;
 
         for (i=0, j=0; i < 2; i++, j+=2)
         {
-            if (i == 0 || !M4_SE)
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            SET_SF_RM_FROM_MASK( m5 );
+
+            softfloat_exceptionFlags = 0;
+
+            op1[j] = f64_to_f32( op2 );
+
+            if (SUPPRESS_INEXACT( m4 ))
+                softfloat_exceptionFlags &= ~softfloat_flag_inexact;
+
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                SET_SF_RM_FROM_MASK( m5 );
-
-                softfloat_exceptionFlags = 0;
-
-                op1 = f64_to_f32( op2 );
-
-                if (SUPPRESS_INEXACT( m4 ))
-                    softfloat_exceptionFlags &= ~softfloat_flag_inexact;
-
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, j, regs );
-
-                if (softfloat_exceptionFlags)
-                {
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                        FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
-                }
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
             }
+
+            if (M4_SE) break;
+        }
+        for (i=0, j=0; i < 2; i++, j+=2)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[j], v1, j, regs );
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 4 )  // Extended format
@@ -8695,8 +8725,6 @@ DEF_INST( vector_fp_load_rounded )
 
         VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
 
-        VECTOR_PUT_FLOAT64_NOCC( op1, v1, 0, regs );
-
         if (softfloat_exceptionFlags)
         {
             ieee_trap_conds = ieee_exception_test_oux( regs );
@@ -8704,6 +8732,8 @@ DEF_INST( vector_fp_load_rounded )
             VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
                 FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
         }
+
+        VECTOR_PUT_FLOAT64_NOCC( op1, v1, 0, regs );
     }
 
 #undef M4_SE
@@ -8751,56 +8781,60 @@ DEF_INST( vector_load_fp_integer )
 
     if ( m3 == 3 )  // Long format
     {
-        float64_t   op1, op2;
+        float64_t   op1[2], op2;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M4_SE)
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_MASK( m5 );
+
+            op1[i] = f64_roundToInt( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
+
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_MASK( m5 );
-
-                op1 = f64_roundToInt( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
-
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                if (softfloat_exceptionFlags)
-                {
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
-                }
+                ieee_trap_conds = ieee_exception_test_oux( regs );
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 2 )  // Short format
     {
-        float32_t   op1, op2;
+        float32_t   op1[4], op2;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M4_SE)
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_MASK( m5 );
+
+            op1[i] = f32_roundToInt( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
+
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_MASK( m5 );
-
-                op1 = f32_roundToInt( op2, softfloat_roundingMode, !SUPPRESS_INEXACT( m4 ));
-
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                if (softfloat_exceptionFlags)
-                {
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-                    VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
-                }
+                ieee_trap_conds = ieee_exception_test_oux( regs );
+                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 4 )  // Extended format
@@ -8816,13 +8850,13 @@ DEF_INST( vector_load_fp_integer )
 
         VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
-
         if (softfloat_exceptionFlags)
         {
             ieee_trap_conds = ieee_exception_test_oux( regs );
             VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds, FPC_MASK_IMX );
         }
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M4_SE
@@ -8879,7 +8913,7 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
     }
     else if ( m3 == 2 )  // Short format
     {
@@ -8894,7 +8928,7 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
     }
     else if ( m3 == 4 )  // Extended format
     {
@@ -8909,7 +8943,7 @@ DEF_INST( vector_fp_compare_and_signal_scalar )
         {
             softfloat_exceptionFlags = softfloat_flag_invalid;
         }
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
     }
 
     //  Resulting Condition Code:
@@ -8967,7 +9001,7 @@ DEF_INST( vector_fp_compare_scalar )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT64_COMPARE( op1, op2 );
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
         if (softfloat_exceptionFlags & softfloat_flag_invalid)
         {
             SET_FPC_FLAGS_FROM_SF( regs );
@@ -8982,7 +9016,7 @@ DEF_INST( vector_fp_compare_scalar )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT32_COMPARE( op1, op2 );
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
         if (softfloat_exceptionFlags & softfloat_flag_invalid)
         {
             SET_FPC_FLAGS_FROM_SF( regs );
@@ -8997,7 +9031,7 @@ DEF_INST( vector_fp_compare_scalar )
 
         softfloat_exceptionFlags = 0;
         newcc = FLOAT128_COMPARE( op1, op2 );
-        VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+        VECTOR_IEEE_EXCEPTION_TRAP_XI( 0, regs );
         if (softfloat_exceptionFlags & softfloat_flag_invalid)
         {
             SET_FPC_FLAGS_FROM_SF( regs );
@@ -9071,25 +9105,24 @@ DEF_INST( vector_fp_perform_sign_operation )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M4_SE)
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            switch (m5)
             {
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-
-                switch (m5)
-                {
-                case 0:  // Complement
-                    op2.v ^= 0x8000000000000000ULL;
-                    break;
-                case 1:  // Negative
-                    op2.v |= 0x8000000000000000ULL;
-                    break;
-                case 2:  // Positive
-                    op2.v &= ~0x8000000000000000ULL;
-                    break;
-                }
-
-                VECTOR_PUT_FLOAT64_NOCC( op2, v1, i, regs );
+            case 0:  // Complement
+                op2.v ^= 0x8000000000000000ULL;
+                break;
+            case 1:  // Negative
+                op2.v |= 0x8000000000000000ULL;
+                break;
+            case 2:  // Positive
+                op2.v &= ~0x8000000000000000ULL;
+                break;
             }
+
+            VECTOR_PUT_FLOAT64_NOCC( op2, v1, i, regs );
+
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 2 )  // Short format
@@ -9098,25 +9131,24 @@ DEF_INST( vector_fp_perform_sign_operation )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M4_SE)
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            switch (m5)
             {
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-
-                switch (m5)
-                {
-                case 0:  // Complement
-                    op2.v ^= 0x80000000;
-                    break;
-                case 1:  // Negative
-                    op2.v |= 0x80000000;
-                    break;
-                case 2:  // Positive
-                    op2.v &= ~0x80000000;
-                    break;
-                }
-
-                VECTOR_PUT_FLOAT32_NOCC( op2, v1, i, regs );
+            case 0:  // Complement
+                op2.v ^= 0x80000000;
+                break;
+            case 1:  // Negative
+                op2.v |= 0x80000000;
+                break;
+            case 2:  // Positive
+                op2.v &= ~0x80000000;
+                break;
             }
+
+            VECTOR_PUT_FLOAT32_NOCC( op2, v1, i, regs );
+
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 4 )  // Extended format
@@ -9187,58 +9219,62 @@ DEF_INST( vector_fp_square_root )
 
     if ( m3 == 3 )  // Long format
     {
-        float64_t   op1, op2;
+        float64_t   op1[2], op2;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M4_SE)
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_sqrt( op2 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f64_sqrt( op2 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    IEEE_EXCEPTION_TEST_TRAPS( regs, ieee_trap_conds, FPC_MASK_IMX );
-                }
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
-                SET_FPC_FLAGS_FROM_SF( regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                IEEE_EXCEPTION_TEST_TRAPS( regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+            SET_FPC_FLAGS_FROM_SF( regs );
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 2 )  // Short format
     {
-        float32_t   op1, op2;
+        float32_t   op1[4], op2;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M4_SE)
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_sqrt( op2 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f32_sqrt( op2 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    IEEE_EXCEPTION_TEST_TRAPS( regs, ieee_trap_conds, FPC_MASK_IMX );
-                }
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
-                SET_FPC_FLAGS_FROM_SF( regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                IEEE_EXCEPTION_TEST_TRAPS( regs, ieee_trap_conds, FPC_MASK_IMX );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds, FPC_MASK_IMX );
+            SET_FPC_FLAGS_FROM_SF( regs );
+
+            if (M4_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M4_SE) break;
         }
     }
     else if ( m3 == 4 )  // Extended format
@@ -9258,10 +9294,10 @@ DEF_INST( vector_fp_square_root )
             IEEE_EXCEPTION_TEST_TRAPS( regs, ieee_trap_conds, FPC_MASK_IMX );
         }
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
-
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds, FPC_MASK_IMX );
         SET_FPC_FLAGS_FROM_SF( regs );
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M4_SE
@@ -9310,70 +9346,74 @@ DEF_INST( vector_fp_subtract )
 
     if ( m4 == 3 )  // Long format
     {
-        float64_t   op1, op2, op3;
+        float64_t   op1[2], op2, op3;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_sub( op2, op3 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f64_sub( op2, op3 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-                }
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_LONG :
+                        SCALE_FACTOR_ARITH_UFLOW_LONG );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
     {
-        float32_t   op1, op2, op3;
+        float32_t   op1[4], op2, op3;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_sub( op2, op3 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f32_sub( op2, op3 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_SHORT :
-                            SCALE_FACTOR_ARITH_UFLOW_SHORT );
-                }
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_SHORT :
+                        SCALE_FACTOR_ARITH_UFLOW_SHORT );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -9399,10 +9439,10 @@ DEF_INST( vector_fp_subtract )
                     SCALE_FACTOR_ARITH_UFLOW_EXTD );
         }
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
-
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M5_SE
@@ -9451,70 +9491,74 @@ DEF_INST( vector_fp_add )
 
     if ( m4 == 3 )  // Long format
     {
-        float64_t   op1, op2, op3;
+        float64_t   op1[2], op2, op3;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_add( op2, op3 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f64_add( op2, op3 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-                }
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_LONG :
+                        SCALE_FACTOR_ARITH_UFLOW_LONG );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
     {
-        float32_t   op1, op2, op3;
+        float32_t   op1[4], op2, op3;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_add( op2, op3 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f32_add( op2, op3 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_SHORT :
-                            SCALE_FACTOR_ARITH_UFLOW_SHORT );
-                }
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_SHORT :
+                        SCALE_FACTOR_ARITH_UFLOW_SHORT );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -9541,10 +9585,10 @@ DEF_INST( vector_fp_add )
                     SCALE_FACTOR_ARITH_UFLOW_EXTD );
         }
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
-
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M5_SE
@@ -9593,74 +9637,78 @@ DEF_INST( vector_fp_divide )
 
     if ( m4 == 3 )  // Long format
     {
-        float64_t   op1, op2, op3;
+        float64_t   op1[2], op2, op3;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_div( op2, op3 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XZ( i, regs );
 
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                op1 = f64_div( op2, op3 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    VECTOR_IEEE_EXCEPTION_TRAP_XZ( i, regs );
-
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-                }
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_LONG :
+                        SCALE_FACTOR_ARITH_UFLOW_LONG );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
     {
-        float32_t   op1, op2, op3;
+        float32_t   op1[4], op2, op3;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_div( op2, op3 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XZ( i, regs );
 
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                op1 = f32_div( op2, op3 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    VECTOR_IEEE_EXCEPTION_TRAP_XZ( i, regs );
-
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_SHORT :
-                            SCALE_FACTOR_ARITH_UFLOW_SHORT );
-                }
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_SHORT :
+                        SCALE_FACTOR_ARITH_UFLOW_SHORT );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -9688,10 +9736,10 @@ DEF_INST( vector_fp_divide )
                     SCALE_FACTOR_ARITH_UFLOW_EXTD );
         }
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
-
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M5_SE
@@ -9740,70 +9788,74 @@ DEF_INST( vector_fp_multiply )
 
     if ( m4 == 3 )  // Long format
     {
-        float64_t   op1, op2, op3;
+        float64_t   op1[2], op2, op3;
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f64_mul( op2, op3 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f64_mul( op2, op3 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_LONG :
-                            SCALE_FACTOR_ARITH_UFLOW_LONG );
-                }
-
-                VECTOR_PUT_FLOAT64_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f64_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_LONG :
+                        SCALE_FACTOR_ARITH_UFLOW_LONG );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 2; i++)
+        {
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
     {
-        float32_t   op1, op2, op3;
+        float32_t   op1[4], op2, op3;
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            SET_SF_RM_FROM_FPC;
+
+            op1[i] = f32_mul( op2, op3 );
+
+            if (softfloat_exceptionFlags)
             {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                ieee_trap_conds = ieee_exception_test_oux( regs );
 
-                softfloat_exceptionFlags = 0;
-                SET_SF_RM_FROM_FPC;
-
-                op1 = f32_mul( op2, op3 );
-
-                if (softfloat_exceptionFlags)
-                {
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    ieee_trap_conds = ieee_exception_test_oux( regs );
-
-                    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-                        op1 = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
-                            SCALE_FACTOR_ARITH_OFLOW_SHORT :
-                            SCALE_FACTOR_ARITH_UFLOW_SHORT );
-                }
-
-                VECTOR_PUT_FLOAT32_NOCC( op1, v1, i, regs );
-
-                VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
-                    FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+                if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
+                    op1[i] = f32_scaledResult( ieee_trap_conds & FPC_MASK_IMO ?
+                        SCALE_FACTOR_ARITH_OFLOW_SHORT :
+                        SCALE_FACTOR_ARITH_UFLOW_SHORT );
             }
+
+            VECTOR_IEEE_EXCEPTION_TRAP( i, regs, ieee_trap_conds,
+                FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+            if (M5_SE) break;
+        }
+        for (i=0; i < 4; i++)
+        {
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -9829,10 +9881,10 @@ DEF_INST( vector_fp_multiply )
                     SCALE_FACTOR_ARITH_UFLOW_EXTD );
         }
 
-        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
-
         VECTOR_IEEE_EXCEPTION_TRAP( 0, regs, ieee_trap_conds,
             FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX );
+
+        VECTOR_PUT_FLOAT128_NOCC( op1, v1, regs );
     }
 
 #undef M5_SE
@@ -9900,36 +9952,35 @@ DEF_INST( vector_fp_compare_equal )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            newcc = FLOAT64_COMPARE( op2, op3 );
+            if (newcc == 3 && M5_SQ)
             {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                newcc = FLOAT64_COMPARE( op2, op3 );
-                if (newcc == 3 && M5_SQ)
-                {
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                }
-                /* Xi is only trap that suppresses result, no return */
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                }
-
-                if (newcc == 0)
-                {
-                    equal_found = TRUE;
-                    regs->VR_D( v1, i ) = 0xFFFFFFFFFFFFFFFFULL;
-                }
-                else
-                {
-                    not_equal_or_unordered_found = TRUE;
-                    regs->VR_D( v1, i ) = 0x0000000000000000ULL;
-                }
+                softfloat_exceptionFlags = softfloat_flag_invalid;
             }
+            /* Xi is only trap that suppresses result, no return */
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                SET_FPC_FLAGS_FROM_SF( regs );
+            }
+
+            if (newcc == 0)
+            {
+                equal_found = TRUE;
+                regs->VR_D( v1, i ) = 0xFFFFFFFFFFFFFFFFULL;
+            }
+            else
+            {
+                not_equal_or_unordered_found = TRUE;
+                regs->VR_D( v1, i ) = 0x0000000000000000ULL;
+            }
+
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
@@ -9938,36 +9989,35 @@ DEF_INST( vector_fp_compare_equal )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            newcc = FLOAT32_COMPARE( op2, op3 );
+            if (newcc == 3 && M5_SQ)
             {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                newcc = FLOAT32_COMPARE( op2, op3 );
-                if (newcc == 3 && M5_SQ)
-                {
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                }
-                /* Xi is only trap that suppresses result, no return */
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                }
-
-                if (newcc == 0)
-                {
-                    equal_found = TRUE;
-                    regs->VR_F( v1, i ) = 0xFFFFFFFF;
-                }
-                else
-                {
-                    not_equal_or_unordered_found = TRUE;
-                    regs->VR_F( v1, i ) = 0x00000000;
-                }
+                softfloat_exceptionFlags = softfloat_flag_invalid;
             }
+            /* Xi is only trap that suppresses result, no return */
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                SET_FPC_FLAGS_FROM_SF( regs );
+            }
+
+            if (newcc == 0)
+            {
+                equal_found = TRUE;
+                regs->VR_F( v1, i ) = 0xFFFFFFFF;
+            }
+            else
+            {
+                not_equal_or_unordered_found = TRUE;
+                regs->VR_F( v1, i ) = 0x00000000;
+            }
+
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -10094,36 +10144,35 @@ DEF_INST( vector_fp_compare_high_or_equal )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            newcc = FLOAT64_COMPARE( op2, op3 );
+            if (newcc == 3 && M5_SQ)
             {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                newcc = FLOAT64_COMPARE( op2, op3 );
-                if (newcc == 3 && M5_SQ)
-                {
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                }
-                /* Xi is only trap that suppresses result, no return */
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                }
-
-                if (newcc == 0 || newcc == 2)
-                {
-                    greater_than_or_equal_found = TRUE;
-                    regs->VR_D( v1, i ) = 0xFFFFFFFFFFFFFFFFULL;
-                }
-                else
-                {
-                    less_than_or_unordered_found = TRUE;
-                    regs->VR_D( v1, i ) = 0x0000000000000000ULL;
-                }
+                softfloat_exceptionFlags = softfloat_flag_invalid;
             }
+            /* Xi is only trap that suppresses result, no return */
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                SET_FPC_FLAGS_FROM_SF( regs );
+            }
+
+            if (newcc == 0 || newcc == 2)
+            {
+                greater_than_or_equal_found = TRUE;
+                regs->VR_D( v1, i ) = 0xFFFFFFFFFFFFFFFFULL;
+            }
+            else
+            {
+                less_than_or_unordered_found = TRUE;
+                regs->VR_D( v1, i ) = 0x0000000000000000ULL;
+            }
+
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
@@ -10132,36 +10181,35 @@ DEF_INST( vector_fp_compare_high_or_equal )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            newcc = FLOAT32_COMPARE( op2, op3 );
+            if (newcc == 3 && M5_SQ)
             {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                newcc = FLOAT32_COMPARE( op2, op3 );
-                if (newcc == 3 && M5_SQ)
-                {
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                }
-                /* Xi is only trap that suppresses result, no return */
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                }
-
-                if (newcc == 0 || newcc == 2)
-                {
-                    greater_than_or_equal_found = TRUE;
-                    regs->VR_F( v1, i ) = 0xFFFFFFFF;
-                }
-                else
-                {
-                    less_than_or_unordered_found = TRUE;
-                    regs->VR_F( v1, i ) = 0x00000000;
-                }
+                softfloat_exceptionFlags = softfloat_flag_invalid;
             }
+            /* Xi is only trap that suppresses result, no return */
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                SET_FPC_FLAGS_FROM_SF( regs );
+            }
+
+            if (newcc == 0 || newcc == 2)
+            {
+                greater_than_or_equal_found = TRUE;
+                regs->VR_F( v1, i ) = 0xFFFFFFFF;
+            }
+            else
+            {
+                less_than_or_unordered_found = TRUE;
+                regs->VR_F( v1, i ) = 0x00000000;
+            }
+
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -10290,36 +10338,35 @@ DEF_INST( vector_fp_compare_high )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            newcc = FLOAT64_COMPARE( op2, op3 );
+            if (newcc == 3 && M5_SQ)
             {
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                newcc = FLOAT64_COMPARE( op2, op3 );
-                if (newcc == 3 && M5_SQ)
-                {
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                }
-                /* Xi is only trap that suppresses result, no return */
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                }
-
-                if (newcc == 2)
-                {
-                    greater_than_found = TRUE;
-                    regs->VR_D( v1, i ) = 0xFFFFFFFFFFFFFFFFULL;
-                }
-                else
-                {
-                    not_greater_than_or_unordered_found = TRUE;
-                    regs->VR_D( v1, i ) = 0x0000000000000000ULL;
-                }
+                softfloat_exceptionFlags = softfloat_flag_invalid;
             }
+            /* Xi is only trap that suppresses result, no return */
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                SET_FPC_FLAGS_FROM_SF( regs );
+            }
+
+            if (newcc == 2)
+            {
+                greater_than_found = TRUE;
+                regs->VR_D( v1, i ) = 0xFFFFFFFFFFFFFFFFULL;
+            }
+            else
+            {
+                not_greater_than_or_unordered_found = TRUE;
+                regs->VR_D( v1, i ) = 0x0000000000000000ULL;
+            }
+
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
@@ -10328,36 +10375,35 @@ DEF_INST( vector_fp_compare_high )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+
+            softfloat_exceptionFlags = 0;
+            newcc = FLOAT32_COMPARE( op2, op3 );
+            if (newcc == 3 && M5_SQ)
             {
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-
-                softfloat_exceptionFlags = 0;
-                newcc = FLOAT32_COMPARE( op2, op3 );
-                if (newcc == 3 && M5_SQ)
-                {
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                }
-                /* Xi is only trap that suppresses result, no return */
-                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-
-                if (softfloat_exceptionFlags & softfloat_flag_invalid)
-                {
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                }
-
-                if (newcc == 2)
-                {
-                    greater_than_found = TRUE;
-                    regs->VR_F( v1, i ) = 0xFFFFFFFF;
-                }
-                else
-                {
-                    not_greater_than_or_unordered_found = TRUE;
-                    regs->VR_F( v1, i ) = 0x00000000;
-                }
+                softfloat_exceptionFlags = softfloat_flag_invalid;
             }
+            /* Xi is only trap that suppresses result, no return */
+            VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                SET_FPC_FLAGS_FROM_SF( regs );
+            }
+
+            if (newcc == 2)
+            {
+                greater_than_found = TRUE;
+                regs->VR_F( v1, i ) = 0xFFFFFFFF;
+            }
+            else
+            {
+                not_greater_than_or_unordered_found = TRUE;
+                regs->VR_F( v1, i ) = 0x00000000;
+            }
+
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -10463,100 +10509,97 @@ DEF_INST( vector_fp_minimum )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+
+            op2_dataclass = float64_class( op2 );
+            op3_dataclass = float64_class( op3 );
+
+            switch (m6)
             {
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-
-                op2_dataclass = float64_class( op2 );
-                op3_dataclass = float64_class( op3 );
-
-                switch (m6)
-                {
-                case 0:   // IEEE MinNum
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_minnum( result );
-                    break;
-                case 1:   // Java Math.Min()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_min( result );
-                    break;
-                case 2:   // C-Style Min Macro
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_min( result );
-                    break;
-                case 3:   // C++ algorithm.min()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_min( result );
-                    break;
-                case 4:   // fmin()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmin( result );
-                    break;
-                case 8:   // IEEE MinNumMag
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_minnummag( result );
-                    break;
-                case 9:   // Java Math.Min() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_min_abs( result );
-                    break;
-                case 10:  // C-Style Min Macro of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_min_abs( result );
-                    break;
-                case 11:  // C++ algorithm.min() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_min_abs( result );
-                    break;
-                case 12:  // fmin() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmin_abs( result );
-                    break;
-                }
-
-                softfloat_exceptionFlags = 0;
-
-                switch (result)
-                {
-                case 1:
-                    if (f64_le_quiet( op2, op3 ))
-                        op1[i] = op2;
-                    else
-                        op1[i] = op3;
-                    break;
-                case 2:
-                    op1[i] = op2;
-                    break;
-                case 3:
-                    op1[i] = op3;
-                    break;
-                case 4:
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                    if (toqnan)
-                        FLOAT64_MAKE_QNAN( op2 );
-                    op1[i] = op2;
-                    break;
-                case 5:
-                default:  // Should not occur!
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                    if (toqnan)
-                        FLOAT64_MAKE_QNAN( op3 );
-                    op1[i] = op3;
-                    break;
-                }
+            case 0:   // IEEE MinNum
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_ieee_minnum( result );
+                break;
+            case 1:   // Java Math.Min()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_java_min( result );
+                break;
+            case 2:   // C-Style Min Macro
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_cee_min( result );
+                break;
+            case 3:   // C++ algorithm.min()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_cpp_min( result );
+                break;
+            case 4:   // fmin()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_fmin( result );
+                break;
+            case 8:   // IEEE MinNumMag
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_ieee_minnummag( result );
+                break;
+            case 9:   // Java Math.Min() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_java_min_abs( result );
+                break;
+            case 10:  // C-Style Min Macro of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_cee_min_abs( result );
+                break;
+            case 11:  // C++ algorithm.min() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_cpp_min_abs( result );
+                break;
+            case 12:  // fmin() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_fmin_abs( result );
+                break;
             }
+
+            softfloat_exceptionFlags = 0;
+
+            switch (result)
+            {
+            case 1:
+                if (f64_le_quiet( op2, op3 ))
+                    op1[i] = op2;
+                else
+                    op1[i] = op3;
+                break;
+            case 2:
+                op1[i] = op2;
+                break;
+            case 3:
+                op1[i] = op3;
+                break;
+            case 4:
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                SET_FPC_FLAGS_FROM_SF( regs );
+                if (toqnan)
+                    FLOAT64_MAKE_QNAN( op2 );
+                op1[i] = op2;
+                break;
+            case 5:
+            default:  // Should not occur!
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                SET_FPC_FLAGS_FROM_SF( regs );
+                if (toqnan)
+                    FLOAT64_MAKE_QNAN( op3 );
+                op1[i] = op3;
+                break;
+            }
+
+            if (M5_SE) break;
         }
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
-            {
-                VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
-            }
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
@@ -10565,100 +10608,97 @@ DEF_INST( vector_fp_minimum )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+
+            op2_dataclass = float32_class( op2 );
+            op3_dataclass = float32_class( op3 );
+
+            switch (m6)
             {
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-
-                op2_dataclass = float32_class( op2 );
-                op3_dataclass = float32_class( op3 );
-
-                switch (m6)
-                {
-                case 0:   // IEEE MinNum
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_minnum( result );
-                    break;
-                case 1:   // Java Math.Min()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_min( result );
-                    break;
-                case 2:   // C-Style Min Macro
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_min( result );
-                    break;
-                case 3:   // C++ algorithm.min()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_min( result );
-                    break;
-                case 4:   // fmin()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmin( result );
-                    break;
-                case 8:   // IEEE MinNumMag
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_minnummag( result );
-                    break;
-                case 9:   // Java Math.Min() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_min_abs( result );
-                    break;
-                case 10:  // C-Style Min Macro of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_min_abs( result );
-                    break;
-                case 11:  // C++ algorithm.min() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_min_abs( result );
-                    break;
-                case 12:  // fmin() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmin_abs( result );
-                    break;
-                }
-
-                softfloat_exceptionFlags = 0;
-
-                switch (result)
-                {
-                case 1:
-                    if (f32_le_quiet( op2, op3 ))
-                        op1[i] = op2;
-                    else
-                        op1[i] = op3;
-                    break;
-                case 2:
-                    op1[i] = op2;
-                    break;
-                case 3:
-                    op1[i] = op3;
-                    break;
-                case 4:
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                    if (toqnan)
-                        FLOAT32_MAKE_QNAN( op2 );
-                    op1[i] = op2;
-                    break;
-                case 5:
-                default:  // Should not occur!
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                    if (toqnan)
-                        FLOAT32_MAKE_QNAN( op3 );
-                    op1[i] = op3;
-                    break;
-                }
+            case 0:   // IEEE MinNum
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_ieee_minnum( result );
+                break;
+            case 1:   // Java Math.Min()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_java_min( result );
+                break;
+            case 2:   // C-Style Min Macro
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_cee_min( result );
+                break;
+            case 3:   // C++ algorithm.min()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_cpp_min( result );
+                break;
+            case 4:   // fmin()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_fmin( result );
+                break;
+            case 8:   // IEEE MinNumMag
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_ieee_minnummag( result );
+                break;
+            case 9:   // Java Math.Min() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_java_min_abs( result );
+                break;
+            case 10:  // C-Style Min Macro of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_cee_min_abs( result );
+                break;
+            case 11:  // C++ algorithm.min() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_cpp_min_abs( result );
+                break;
+            case 12:  // fmin() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_fmin_abs( result );
+                break;
             }
+
+            softfloat_exceptionFlags = 0;
+
+            switch (result)
+            {
+            case 1:
+                if (f32_le_quiet( op2, op3 ))
+                    op1[i] = op2;
+                else
+                    op1[i] = op3;
+                break;
+            case 2:
+                op1[i] = op2;
+                break;
+            case 3:
+                op1[i] = op3;
+                break;
+            case 4:
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                SET_FPC_FLAGS_FROM_SF( regs );
+                if (toqnan)
+                    FLOAT32_MAKE_QNAN( op2 );
+                op1[i] = op2;
+                break;
+            case 5:
+            default:  // Should not occur!
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                SET_FPC_FLAGS_FROM_SF( regs );
+                if (toqnan)
+                    FLOAT32_MAKE_QNAN( op3 );
+                op1[i] = op3;
+                break;
+            }
+
+            if (M5_SE) break;
         }
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
-            {
-                VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
-            }
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format
@@ -10799,100 +10839,97 @@ DEF_INST( vector_fp_maximum )
 
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
+            VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
+
+            op2_dataclass = float64_class( op2 );
+            op3_dataclass = float64_class( op3 );
+
+            switch (m6)
             {
-                VECTOR_GET_FLOAT64_OP( op2, v2, i, regs );
-                VECTOR_GET_FLOAT64_OP( op3, v3, i, regs );
-
-                op2_dataclass = float64_class( op2 );
-                op3_dataclass = float64_class( op3 );
-
-                switch (m6)
-                {
-                case 0:   // IEEE MaxNum
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_maxnum( result );
-                    break;
-                case 1:   // Java Math.Max()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_max( result );
-                    break;
-                case 2:   // C-Style Max Macro
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_max( result );
-                    break;
-                case 3:   // C++ algorithm.max()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_max( result );
-                    break;
-                case 4:   // fmax()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmax( result );
-                    break;
-                case 8:   // IEEE MaxNumMag
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_maxnummag( result );
-                    break;
-                case 9:   // Java Math.Max() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_max_abs( result );
-                    break;
-                case 10:  // C-Style Max Macro of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_max_abs( result );
-                    break;
-                case 11:  // C++ algorithm.max() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_max_abs( result );
-                    break;
-                case 12:  // fmax() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmax_abs( result );
-                    break;
-                }
-
-                softfloat_exceptionFlags = 0;
-
-                switch (result)
-                {
-                case 1:
-                    if (f64_le_quiet( op3, op2 ))
-                        op1[i] = op2;
-                    else
-                        op1[i] = op3;
-                    break;
-                case 2:
-                    op1[i] = op2;
-                    break;
-                case 3:
-                    op1[i] = op3;
-                    break;
-                case 4:
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                    if (toqnan)
-                        FLOAT64_MAKE_QNAN( op2 );
-                    op1[i] = op2;
-                    break;
-                case 5:
-                default:  // Should not occur!
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                    if (toqnan)
-                        FLOAT64_MAKE_QNAN( op3 );
-                    op1[i] = op3;
-                    break;
-                }
+            case 0:   // IEEE MaxNum
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_ieee_maxnum( result );
+                break;
+            case 1:   // Java Math.Max()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_java_max( result );
+                break;
+            case 2:   // C-Style Max Macro
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_cee_max( result );
+                break;
+            case 3:   // C++ algorithm.max()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_cpp_max( result );
+                break;
+            case 4:   // fmax()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_fmax( result );
+                break;
+            case 8:   // IEEE MaxNumMag
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_ieee_maxnummag( result );
+                break;
+            case 9:   // Java Math.Max() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_java_max_abs( result );
+                break;
+            case 10:  // C-Style Max Macro of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_cee_max_abs( result );
+                break;
+            case 11:  // C++ algorithm.max() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_cpp_max_abs( result );
+                break;
+            case 12:  // fmax() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_fmax_abs( result );
+                break;
             }
+
+            softfloat_exceptionFlags = 0;
+
+            switch (result)
+            {
+            case 1:
+                if (f64_le_quiet( op3, op2 ))
+                    op1[i] = op2;
+                else
+                    op1[i] = op3;
+                break;
+            case 2:
+                op1[i] = op2;
+                break;
+            case 3:
+                op1[i] = op3;
+                break;
+            case 4:
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                SET_FPC_FLAGS_FROM_SF( regs );
+                if (toqnan)
+                    FLOAT64_MAKE_QNAN( op2 );
+                op1[i] = op2;
+                break;
+            case 5:
+            default:  // Should not occur!
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                SET_FPC_FLAGS_FROM_SF( regs );
+                if (toqnan)
+                    FLOAT64_MAKE_QNAN( op3 );
+                op1[i] = op3;
+                break;
+            }
+
+            if (M5_SE) break;
         }
         for (i=0; i < 2; i++)
         {
-            if (i == 0 || !M5_SE)
-            {
-                VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
-            }
+            VECTOR_PUT_FLOAT64_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 2 )  // Short format
@@ -10901,100 +10938,97 @@ DEF_INST( vector_fp_maximum )
 
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
+            VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
+            VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
+
+            op2_dataclass = float32_class( op2 );
+            op3_dataclass = float32_class( op3 );
+
+            switch (m6)
             {
-                VECTOR_GET_FLOAT32_OP( op2, v2, i, regs );
-                VECTOR_GET_FLOAT32_OP( op3, v3, i, regs );
-
-                op2_dataclass = float32_class( op2 );
-                op3_dataclass = float32_class( op3 );
-
-                switch (m6)
-                {
-                case 0:   // IEEE MaxNum
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_maxnum( result );
-                    break;
-                case 1:   // Java Math.Max()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_max( result );
-                    break;
-                case 2:   // C-Style Max Macro
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_max( result );
-                    break;
-                case 3:   // C++ algorithm.max()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_max( result );
-                    break;
-                case 4:   // fmax()
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmax( result );
-                    break;
-                case 8:   // IEEE MaxNumMag
-                    result = calculate_result_one( op2_dataclass, op3_dataclass );
-                    result = convert_result_ieee_maxnummag( result );
-                    break;
-                case 9:   // Java Math.Max() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_java_max_abs( result );
-                    break;
-                case 10:  // C-Style Max Macro of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cee_max_abs( result );
-                    break;
-                case 11:  // C++ algorithm.max() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_cpp_max_abs( result );
-                    break;
-                case 12:  // fmax() of absolute values
-                    result = calculate_result_two( op2_dataclass, op3_dataclass );
-                    result = convert_result_fmax_abs( result );
-                    break;
-                }
-
-                softfloat_exceptionFlags = 0;
-
-                switch (result)
-                {
-                case 1:
-                    if (f32_le_quiet( op3, op2 ))
-                        op1[i] = op2;
-                    else
-                        op1[i] = op3;
-                    break;
-                case 2:
-                    op1[i] = op2;
-                    break;
-                case 3:
-                    op1[i] = op3;
-                    break;
-                case 4:
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                    if (toqnan)
-                        FLOAT32_MAKE_QNAN( op2 );
-                    op1[i] = op2;
-                    break;
-                case 5:
-                default:  // Should not occur!
-                    softfloat_exceptionFlags = softfloat_flag_invalid;
-                    VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
-                    SET_FPC_FLAGS_FROM_SF( regs );
-                    if (toqnan)
-                        FLOAT32_MAKE_QNAN( op3 );
-                    op1[i] = op3;
-                    break;
-                }
+            case 0:   // IEEE MaxNum
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_ieee_maxnum( result );
+                break;
+            case 1:   // Java Math.Max()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_java_max( result );
+                break;
+            case 2:   // C-Style Max Macro
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_cee_max( result );
+                break;
+            case 3:   // C++ algorithm.max()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_cpp_max( result );
+                break;
+            case 4:   // fmax()
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_fmax( result );
+                break;
+            case 8:   // IEEE MaxNumMag
+                result = calculate_result_one( op2_dataclass, op3_dataclass );
+                result = convert_result_ieee_maxnummag( result );
+                break;
+            case 9:   // Java Math.Max() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_java_max_abs( result );
+                break;
+            case 10:  // C-Style Max Macro of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_cee_max_abs( result );
+                break;
+            case 11:  // C++ algorithm.max() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_cpp_max_abs( result );
+                break;
+            case 12:  // fmax() of absolute values
+                result = calculate_result_two( op2_dataclass, op3_dataclass );
+                result = convert_result_fmax_abs( result );
+                break;
             }
+
+            softfloat_exceptionFlags = 0;
+
+            switch (result)
+            {
+            case 1:
+                if (f32_le_quiet( op3, op2 ))
+                    op1[i] = op2;
+                else
+                    op1[i] = op3;
+                break;
+            case 2:
+                op1[i] = op2;
+                break;
+            case 3:
+                op1[i] = op3;
+                break;
+            case 4:
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                SET_FPC_FLAGS_FROM_SF( regs );
+                if (toqnan)
+                    FLOAT32_MAKE_QNAN( op2 );
+                op1[i] = op2;
+                break;
+            case 5:
+            default:  // Should not occur!
+                softfloat_exceptionFlags = softfloat_flag_invalid;
+                VECTOR_IEEE_EXCEPTION_TRAP_XI( i, regs );
+                SET_FPC_FLAGS_FROM_SF( regs );
+                if (toqnan)
+                    FLOAT32_MAKE_QNAN( op3 );
+                op1[i] = op3;
+                break;
+            }
+
+            if (M5_SE) break;
         }
         for (i=0; i < 4; i++)
         {
-            if (i == 0 || !M5_SE)
-            {
-                VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
-            }
+            VECTOR_PUT_FLOAT32_NOCC( op1[i], v1, i, regs );
+            if (M5_SE) break;
         }
     }
     else if ( m4 == 4 )  // Extended format

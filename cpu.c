@@ -449,6 +449,7 @@ DLL_EXPORT void ARCH_DEP( trace_program_interrupt )( REGS* regs, int pcode, int 
     char sie_debug_arch  [ 32]  = {0};  // "370", "390" or "900" if defined( SIE_DEBUG )
     char txf_why         [256]  = {0};  // TXF "why" string if txf pgmint
     char dxcstr          [  8]  = {0};  // data exception code if PGM_DATA_EXCEPTION
+                                        //                     or PGM_VECTOR_PROCESSING_EXCEPTION
 
     BYTE* ip;      /* ptr to instr that program checked or NULL  */
 
@@ -549,6 +550,9 @@ DLL_EXPORT void ARCH_DEP( trace_program_interrupt )( REGS* regs, int pcode, int 
 
     if (code == PGM_DATA_EXCEPTION)
        MSGBUF( dxcstr, " DXC=%2.2X", regs->dxc );
+
+    if (code == PGM_VECTOR_PROCESSING_EXCEPTION)
+       MSGBUF( dxcstr, " VXC=%2.2X", regs->dxc );
 
     if (regs->insttrace && sysblk.traceFILE)
         tf_0801( regs, pcode, ilc );
@@ -1243,7 +1247,11 @@ bool    intercept;                      /* False for virtual pgmint  */
         realregs->TEA = 0;
 
         /* Store Data exception code in PSA */
-        if (code == PGM_DATA_EXCEPTION)
+        if (code == PGM_DATA_EXCEPTION
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+                                       || code == PGM_VECTOR_PROCESSING_EXCEPTION
+#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+                                                                                 )
         {
             STORE_FW( psa->DXC, regs->dxc );
 
