@@ -1019,18 +1019,21 @@ char    regs_msg_buf[8*512] = {0};
     )
     {
         if (0
-            ||   opcode != 0xE7
-            || ( opcode == 0xE7 && ((/*inst[5] >= 0x00 &&*/ inst[5] <= 0x0B)   // VRX    (VLEB VLEH VLEG VLEF VLLEZ VLREP VL VLEB VSTEB VSTEH VSTEG VSTEF)
-                                    || inst[5] == 0x0E                         // VRX    (VST)
-                                    || inst[5] == 0x12                         // VRV    (VGEG)
-                                    || inst[5] == 0x13                         // VRV    (VGEF)
-                                    || inst[5] == 0x1A                         // VRV    (VSCEG)
-                                    || inst[5] == 0x1B                         // VRV    (VSCEF)
-                                    || inst[5] == 0x30                         // VRS-a  (VESL)
-                                    || inst[5] == 0x36                         // VRS-a  (VLM)
-                                    || inst[5] == 0x37                         // VRS-b  (VLL)
-                                    || inst[5] == 0x3E                         // VRS-a  (VSTM)
-                                    || inst[5] == 0x3F                         // VRS-b  (VSTL)
+            || ( opcode != 0xE7 && opcode != 0xE6 )
+            || ( opcode == 0xE7 && (   inst[5] <= 0x0B     // VRX    (VLEB VLEH VLEG VLEF VLLEZ VLREP VL VLEB VSTEB VSTEH VSTEG VSTEF)
+                                    || inst[5] == 0x0E     // VRX    (VST)
+                                    || inst[5] == 0x12     // VRV    (VGEG)
+                                    || inst[5] == 0x13     // VRV    (VGEF)
+                                    || inst[5] == 0x1A     // VRV    (VSCEG)
+                                    || inst[5] == 0x1B     // VRV    (VSCEF)
+                                    || inst[5] == 0x30     // VRS-a  (VESL)
+                                    || inst[5] == 0x36     // VRS-a  (VLM)
+                                    || inst[5] == 0x37     // VRS-b  (VLL)
+                                    || inst[5] == 0x3E     // VRS-a  (VSTM)
+                                    || inst[5] == 0x3F     // VRS-b  (VSTL)
+                                   ) )
+            || ( opcode == 0xE6 && (   inst[5] == 0x34     // VSI    (VPKZ)
+                                    || inst[5] == 0x3C     // VSI    (VUPKZ)
                                    ) )
         )
         {
@@ -1093,6 +1096,7 @@ char    regs_msg_buf[8*512] = {0};
         && opcode != 0xC4   // RIL-x    (relative)
         && opcode != 0xC6   // RIL-x    (relative)
         && opcode != 0xE3   // RXY-x
+        && opcode != 0xE6   // zVector
         && opcode != 0xE7   // zVector
         && opcode != 0xEB   // RSY-x, SIY-x
         && opcode != 0xEC   // RIE-x
