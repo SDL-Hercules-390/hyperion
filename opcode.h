@@ -3717,7 +3717,7 @@ DEF_INST(vector_load_immediate_decimal);
 DEF_INST(vector_load_rightmost_with_length);
 DEF_INST(vector_multiply_and_shift_decimal);
 DEF_INST(vector_multiply_decimal);
-DEF_INST(vector_packed_zoned);
+DEF_INST(vector_pack_zoned);
 DEF_INST(vector_perform_sign_operation_decimal);
 DEF_INST(vector_remainder_decimal);
 DEF_INST(vector_shift_and_divide_decimal);
@@ -3765,7 +3765,7 @@ DEF_INST(vector_store_rightmost_with_length_reg);
 
 #if defined(FEATURE_165_NNET_ASSIST_FACILITY)
 DEF_INST(neural_network_processing_assist);
-DEF_INST(vector_fp_convert_nnp);
+DEF_INST(vector_fp_convert_to_nnp);
 DEF_INST(vector_fp_convert_and_lengthen_from_nnp_high);
 DEF_INST(vector_fp_convert_from_nnp);
 DEF_INST(vector_fp_convert_and_lengthen_from_nnp_low);

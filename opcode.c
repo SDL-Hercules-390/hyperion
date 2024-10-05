@@ -825,7 +825,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 
 #if !defined(FEATURE_134_ZVECTOR_PACK_DEC_FACILITY)
-     UNDEF_INST(vector_packed_zoned)
+     UNDEF_INST(vector_pack_zoned)
      UNDEF_INST(vector_load_rightmost_with_length)
      UNDEF_INST(vector_unpack_zoned)
      UNDEF_INST(vector_store_rightmost_with_length)
@@ -884,7 +884,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 #if !defined(FEATURE_165_NNET_ASSIST_FACILITY)
      UNDEF_INST(neural_network_processing_assist)
-     UNDEF_INST(vector_fp_convert_nnp)
+     UNDEF_INST(vector_fp_convert_to_nnp)
      UNDEF_INST(vector_fp_convert_and_lengthen_from_nnp_high)
      UNDEF_INST(vector_fp_convert_from_nnp)
      UNDEF_INST(vector_fp_convert_and_lengthen_from_nnp_low)
@@ -2146,7 +2146,7 @@ static INSTR_FUNC ARCH_DEP( gen_opcode_e6xx )[256][NUM_INSTR_TAB_PTRS] =
  /*E631*/ AD_GENx___x___x___ ,
  /*E632*/ AD_GENx___x___x___ ,
  /*E633*/ AD_GENx___x___x___ ,
- /*E634*/ AD_GENx___x___x900 ("VPKZ"     , VSI    , ASMFMT_VSI    , vector_packed_zoned                                   ),
+ /*E634*/ AD_GENx___x___x900 ("VPKZ"     , VSI    , ASMFMT_VSI    , vector_pack_zoned                                     ),
  /*E635*/ AD_GENx___x___x900 ("VLRL"     , VSI    , ASMFMT_VSI    , vector_load_rightmost_with_length                     ),
  /*E636*/ AD_GENx___x___x___ ,
  /*E637*/ AD_GENx___x___x900 ("VLRLR"    , VRS_D  , ASMFMT_VRS_D  , vector_load_rightmost_with_length_reg                 ),
@@ -2179,7 +2179,7 @@ static INSTR_FUNC ARCH_DEP( gen_opcode_e6xx )[256][NUM_INSTR_TAB_PTRS] =
  /*E652*/ AD_GENx___x___x900 ("VCVBG"    , VRR_I  , ASMFMT_VRR_I  , vector_convert_to_binary_64                           ),
  /*E653*/ AD_GENx___x___x___ ,
  /*E654*/ AD_GENx___x___x900 ("VUPKZH"   , VRR_K  , ASMFMT_VRR_K  , vector_unpack_zoned_high                              ),
- /*E655*/ AD_GENx___x___x900 ("VCNF"     , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_nnp                                 ),
+ /*E655*/ AD_GENx___x___x900 ("VCNF"     , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_to_nnp                              ),
  /*E656*/ AD_GENx___x___x900 ("VCLFNH"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_and_lengthen_from_nnp_high          ),
  /*E657*/ AD_GENx___x___x___ ,
  /*E658*/ AD_GENx___x___x900 ("VCVD"     , VRI_I  , ASMFMT_VRI_I  , vector_convert_to_decimal_32                          ),

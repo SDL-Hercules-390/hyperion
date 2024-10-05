@@ -1908,7 +1908,7 @@ DEF_INST( vector_store_reversed_elements )
 /*-------------------------------------------------------------------*/
 /* E634 VPKZ  - VECTOR PACK ZONED                              [VSI] */
 /*-------------------------------------------------------------------*/
-DEF_INST( vector_packed_zoned )
+DEF_INST( vector_pack_zoned )
 {
     int     v1, b2, i3;                /* Instruction parts          */
     VADR    effective_addr2;           /* Effective address          */

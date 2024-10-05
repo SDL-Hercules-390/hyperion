@@ -659,7 +659,7 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
 /*-------------------------------------------------------------------*/
 /* E655 VCNF   - VECTOR FP CONVERT TO NNP                    [VRR-a] */
 /*-------------------------------------------------------------------*/
-DEF_INST( vector_fp_convert_nnp )
+DEF_INST( vector_fp_convert_to_nnp )
 {
     int     v1, v2, m3, m4, m5;           /* instruction parts       */
 
