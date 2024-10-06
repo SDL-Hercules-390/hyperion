@@ -863,15 +863,15 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
      UNDEF_INST(vector_load_byte_reversed_element_16)
      UNDEF_INST(vector_load_byte_reversed_element_64)
      UNDEF_INST(vector_load_byte_reversed_element_32)
-     UNDEF_INST(vector_load_byte_reversed_and_zero)
-     UNDEF_INST(vector_load_byte_reversed_and_replicate)
+     UNDEF_INST(vector_load_byte_reversed_element_and_zero)
+     UNDEF_INST(vector_load_byte_reversed_element_and_replicate)
      UNDEF_INST(vector_load_byte_reversed_elements)
      UNDEF_INST(vector_load_elements_reversed)
      UNDEF_INST(vector_store_byte_reversed_element_16)
      UNDEF_INST(vector_store_byte_reversed_element_64)
      UNDEF_INST(vector_store_byte_reversed_element_32)
      UNDEF_INST(vector_store_byte_reversed_elements)
-     UNDEF_INST(vector_store_reversed_elements)
+     UNDEF_INST(vector_store_elements_reversed)
      UNDEF_INST(vector_shift_and_round_decimal)
      UNDEF_INST(vector_convert_to_decimal_64)
      UNDEF_INST(vector_perform_sign_operation_decimal)
@@ -2096,8 +2096,8 @@ static INSTR_FUNC ARCH_DEP( gen_opcode_e6xx )[256][NUM_INSTR_TAB_PTRS] =
  /*E601*/ AD_GENx___x___x900 ("VLEBRH"   , VRX    , ASMFMT_VRX    , vector_load_byte_reversed_element_16                  ),
  /*E602*/ AD_GENx___x___x900 ("VLEBRG"   , VRX    , ASMFMT_VRX    , vector_load_byte_reversed_element_64                  ),
  /*E603*/ AD_GENx___x___x900 ("VLEBRF"   , VRX    , ASMFMT_VRX    , vector_load_byte_reversed_element_32                  ),
- /*E604*/ AD_GENx___x___x900 ("VLLEBRZ"  , VRX    , ASMFMT_VRX    , vector_load_byte_reversed_and_zero                    ),
- /*E605*/ AD_GENx___x___x900 ("VLBRREP"  , VRX    , ASMFMT_VRX    , vector_load_byte_reversed_and_replicate               ),
+ /*E604*/ AD_GENx___x___x900 ("VLLEBRZ"  , VRX    , ASMFMT_VRX    , vector_load_byte_reversed_element_and_zero            ),
+ /*E605*/ AD_GENx___x___x900 ("VLBRREP"  , VRX    , ASMFMT_VRX    , vector_load_byte_reversed_element_and_replicate       ),
  /*E606*/ AD_GENx___x___x900 ("VLBR"     , VRX    , ASMFMT_VRX    , vector_load_byte_reversed_elements                    ),
  /*E607*/ AD_GENx___x___x900 ("VLER"     , VRX    , ASMFMT_VRX    , vector_load_elements_reversed                         ),
  /*E608*/ AD_GENx___x___x___ ,
@@ -2107,7 +2107,7 @@ static INSTR_FUNC ARCH_DEP( gen_opcode_e6xx )[256][NUM_INSTR_TAB_PTRS] =
  /*E60C*/ AD_GENx___x___x___ ,
  /*E60D*/ AD_GENx___x___x___ ,
  /*E60E*/ AD_GENx___x___x900 ("VSTBR"    , VRX    , ASMFMT_VRX    , vector_store_byte_reversed_elements                   ),
- /*E60F*/ AD_GENx___x___x900 ("VSTER"    , VRX    , ASMFMT_VRX    , vector_store_reversed_elements                        ),
+ /*E60F*/ AD_GENx___x___x900 ("VSTER"    , VRX    , ASMFMT_VRX    , vector_store_elements_reversed                        ),
  /*E610*/ AD_GENx___x___x___ ,
  /*E611*/ AD_GENx___x___x___ ,
  /*E612*/ AD_GENx___x___x___ ,

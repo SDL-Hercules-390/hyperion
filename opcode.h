@@ -3747,15 +3747,15 @@ DEF_INST( insert_reference_bits_multiple );
 DEF_INST(vector_load_byte_reversed_element_16);
 DEF_INST(vector_load_byte_reversed_element_64);
 DEF_INST(vector_load_byte_reversed_element_32);
-DEF_INST(vector_load_byte_reversed_and_zero);
-DEF_INST(vector_load_byte_reversed_and_replicate);
+DEF_INST(vector_load_byte_reversed_element_and_zero);
+DEF_INST(vector_load_byte_reversed_element_and_replicate);
 DEF_INST(vector_load_byte_reversed_elements);
 DEF_INST(vector_load_elements_reversed);
 DEF_INST(vector_store_byte_reversed_element_16);
 DEF_INST(vector_store_byte_reversed_element_64);
 DEF_INST(vector_store_byte_reversed_element_32);
 DEF_INST(vector_store_byte_reversed_elements);
-DEF_INST(vector_store_reversed_elements);
+DEF_INST(vector_store_elements_reversed);
 #endif
 
 #if defined(FEATURE_152_VECT_PACKDEC_ENH_FACILITY)

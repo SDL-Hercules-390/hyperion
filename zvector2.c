@@ -1600,7 +1600,7 @@ DEF_INST( vector_load_byte_reversed_element_32 )
 /*-------------------------------------------------------------------*/
 /* E604 VLLEBRZ - VECTOR LOAD BYTE REVERSED ELEMENT AND ZERO   [VRX] */
 /*-------------------------------------------------------------------*/
-DEF_INST( vector_load_byte_reversed_and_zero )
+DEF_INST( vector_load_byte_reversed_element_and_zero )
 {
     int     v1, m3, x2, b2;             /* Instruction parts         */
     VADR    effective_addr2;            /* Effective address         */
@@ -1633,7 +1633,7 @@ DEF_INST( vector_load_byte_reversed_and_zero )
 /*----------------------------------------------------------------------*/
 /* E605 VLBRREP - VECTOR LOAD BYTE REVERSED ELEMENT AND REPLICATE [VRX] */
 /*----------------------------------------------------------------------*/
-DEF_INST( vector_load_byte_reversed_and_replicate )
+DEF_INST( vector_load_byte_reversed_element_and_replicate )
 {
     int     v1, m3, x2, b2;                /* Instruction parts         */
     VADR    effective_addr2;               /* Effective address         */
@@ -1866,7 +1866,7 @@ DEF_INST( vector_store_byte_reversed_elements )
 /*-------------------------------------------------------------------*/
 /* E60F VSTER  - VECTOR STORE ELEMENTS REVERSED                [VRX] */
 /*-------------------------------------------------------------------*/
-DEF_INST( vector_store_reversed_elements )
+DEF_INST( vector_store_elements_reversed )
 {
     int     v1, m3, x2, b2;             /* Instruction parts         */
     VADR    effective_addr2;            /* Effective address         */
