@@ -18,44 +18,85 @@
 #include "inline.h"
 
 /* ====================================================================== */
-/* TEMPORARY while zVector instructions are being developed */
 
-//  #if defined(__clang__)
-//      #pragma clang diagnostic ignored "-Wunused-variable"
-//      #pragma clang diagnostic ignored "-Wunused-but-set-variable"
-//      #pragma clang diagnostic ignored "-Wcomment"
-//      #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
-//      #pragma clang diagnostic ignored "-Wmacro-redefined"
-//  #elif defined(__GNUC__)
-//      #pragma GCC diagnostic ignored "-Wunused-variable"
-//      #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-//      #pragma GCC diagnostic ignored "-Wcomment"
-//      #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-//  #endif
-
-//  #undef ZVECTOR_CHECK
-
-//  #define ZVECTOR_CHECK(_regs)  /* (do nothing) */
+// To display the results of all Vector instructions, uncomment the
+// following three lines:-
 
 //  #undef ZVECTOR_END
-
-/* remove GCC: warning: multi-line comment [-Wcomment]
-
 //  #define ZVECTOR_END(_regs)                                      \
 //              ARCH_DEP(display_inst) (_regs, inst);
 
-//  #define ZVECTOR_END(_regs)                                      \
-//          if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36)  \
-//              ARCH_DEP(display_inst) (_regs, inst);
+// To display the results of specific Vector instructions, uncomment
+// and modify the following four lines:-
 
-*/ /*end remove GCC: warning: multi-line comment [-Wcomment] */
+//  #undef ZVECTOR_END
+//  #define ZVECTOR_END(_regs)                                      \
+//          if (inst[5] == 0x3E || inst[5] == 0x36)                 \
+//              ARCH_DEP(display_inst) (_regs, inst);
 
 /* ====================================================================== */
 
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
 
 /*------------------------------------------------------------------------*/
-/* See ieee.c for the following Vector Floating-Point Instructions.       */
+/* See zvector2.c for the following Vector instructions.                  */
+/*------------------------------------------------------------------------*/
+/* E601 VLEBRH  - VECTOR LOAD BYTE REVERSED ELEMENT (16)          [VRX]   */
+/* E602 VLEBRG  - VECTOR LOAD BYTE REVERSED ELEMENT (64)          [VRX]   */
+/* E603 VLEBRF  - VECTOR LOAD BYTE REVERSED ELEMENT (32)          [VRX]   */
+/* E604 VLLEBRZ - VECTOR LOAD BYTE REVERSED ELEMENT AND ZERO      [VRX]   */
+/* E605 VLBRREP - VECTOR LOAD BYTE REVERSED ELEMENT AND REPLICATE [VRX]   */
+/* E606 VLBR    - VECTOR LOAD BYTE REVERSED ELEMENTS              [VRX]   */
+/* E607 VLER    - VECTOR LOAD ELEMENTS REVERSED                   [VRX]   */
+/* E609 VSTEBRH - VECTOR STORE BYTE REVERSED ELEMENT (16)         [VRX]   */
+/* E60A VSTEBRG - VECTOR STORE BYTE REVERSED ELEMENT (64)         [VRX]   */
+/* E60B VSTEBRF - VECTOR STORE BYTE REVERSED ELEMENT (32)         [VRX]   */
+/* E60E VSTBR   - VECTOR STORE BYTE REVERSED ELEMENTS             [VRX]   */
+/* E60F VSTER   - VECTOR STORE ELEMENTS REVERSED                  [VRX]   */
+/* E634 VPKZ    - VECTOR PACK ZONED                               [VSI]   */
+/* E635 VLRL    - VECTOR LOAD RIGHTMOST WITH LENGTH               [VSI]   */
+/* E637 VLRLR   - VECTOR LOAD RIGHTMOST WITH LENGTH (reg)         [VRS-d] */
+/* E63C VUPKZ   - VECTOR UNPACK ZONED                             [VSI]   */
+/* E63D VSTRL   - VECTOR STORE RIGHTMOST WITH LENGTH              [VSI]   */
+/* E63F VSTRLR  - VECTOR STORE RIGHTMOST WITH LENGTH (reg)        [VRS-d] */
+/* E649 VLIP    - VECTOR LOAD IMMEDIATE DECIMAL                   [VRI-h] */
+/* E650 VCVB    - VECTOR CONVERT TO BINARY (32)                   [VRR-i] */
+/* E651 VCLZDP  - VECTOR COUNT LEADING ZERO DIGITS                [VRR-k] */
+/* E652 VCVBG   - VECTOR CONVERT TO BINARY (64)                   [VRR-i] */
+/* E654 VUPKZH  - VECTOR UNPACK ZONED HIGH                        [VRR-k] */
+/* E658 VCVD    - VECTOR CONVERT TO DECIMAL (32)                  [VRI-i] */
+/* E659 VSRP    - VECTOR SHIFT AND ROUND DECIMAL                  [VRi-g] */
+/* E65A VCVDG   - VECTOR CONVERT TO DECIMAL (64)                  [VRI-i] */
+/* E65B VPSOP   - VECTOR PERFORM SIGN OPERATION DECIMAL           [VRI-g] */
+/* E65C VUPKZL  - VECTOR UNPACK ZONED LOW                         [VRR-k] */
+/* E65F VTP     - VECTOR TEST DECIMAL                             [VRR-g] */
+/* E670 VPKZR   - VECTOR PACK ZONED REGISTER                      [VRI-f] */
+/* E671 VAP     - VECTOR ADD DECIMAL                              [VRI-f] */
+/* E672 VSRPR   - VECTOR SHIFT AND ROUND DECIMAL REGISTER         [VRI-f] */
+/* E673 VSP     - VECTOR SUBTRACT DECIMAL                         [VRI-f] */
+/* E674 VSCHP   - DECIMAL SCALE AND CONVERT TO HFP                [VRR-b] */
+/* E677 VCP     - VECTOR COMPARE DECIMAL                          [VRR-h] */
+/* E678 VMP     - VECTOR MULTIPLY DECIMAL                         [VRI-f] */
+/* E679 VMSP    - VECTOR MULTIPLY AND SHIFT DECIMAL               [VRI-f] */
+/* E67A VDP     - VECTOR DIVIDE DECIMAL                           [VRI-f] */
+/* E67B VRP     - VECTOR REMAINDER DECIMAL                        [VRI-f] */
+/* E67C VSCSHP  - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP      [VRR-b] */
+/* E67D VCSPH   - VECTOR CONVERT HFP TO SCALED DECIMAL            [VRR-j] */
+/* E67E VSDP    - VECTOR SHIFT AND DIVIDE DECIMAL                 [VRI-f] */
+/*------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------*/
+/* See nnpa.c for the following Specialized-Function-Assist instructions. */
+/*------------------------------------------------------------------------*/
+/* E655 VCNF   - VECTOR FP CONVERT TO NNP                         [VRR-a] */
+/* E656 VCLFNH - VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH     [VRR_a] */
+/* E65D VCFN   - VECTOR FP CONVERT FROM NNP                       [VRR-a] */
+/* E65E VCLFNL - VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW      [VRR-a] */
+/* E675 VCRNF  - VECTOR FP CONVERT AND ROUND TO NNP               [VRR-c] */
+/*------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------*/
+/* See ieee.c for the following Vector Floating-Point instructions.       */
 /*------------------------------------------------------------------------*/
 /* E74A VFTCI  - Vector FP Test Data Class Immediate              [VRI-e] */
 /* E78E VFMS   - Vector FP Multiply and Subtract                  [VRR-e] */

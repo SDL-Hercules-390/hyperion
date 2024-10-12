@@ -106,10 +106,10 @@ facility  code  test#   Instruction                                             
 #endif
 
 /* Debug end of vector instruction execution                     */
-#undef  ZVECTOR_END
-#define ZVECTOR_END(_regs) \
-        if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
-            ARCH_DEP(display_inst) (_regs, inst);
+// #undef  ZVECTOR_END
+// #define ZVECTOR_END(_regs) \
+//         if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
+//             ARCH_DEP(display_inst) (_regs, inst);
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
