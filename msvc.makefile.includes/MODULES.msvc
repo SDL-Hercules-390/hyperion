@@ -25,6 +25,7 @@ MODULES = \
     $(X)hdteq.dll       \
     $(X)hdtptp.dll      \
     $(X)hdtqeth.dll     \
+    $(X)hdttcph.dll     \
     $(X)hdttcpnje.dll   \
     $(X)hdtzfcp.dll
 

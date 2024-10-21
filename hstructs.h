@@ -1505,6 +1505,7 @@ struct DEVBLK {                         /* Device configuration block*/
                 ccwopstrace:1,          /* 1=trace CCW opcodes       */
                 cdwmerge:1,             /* 1=Channel will merge data
                                              chained write CCWs      */
+                himdev:1,               /* 1=is a HIM device         */
                 debug:1,                /* 1=generic debug flag      */
                 reinit:1;               /* 1=devinit, not attach     */
 

@@ -179,6 +179,9 @@ a real System/390.  The configuration file is an ASCII text file.
     0023      <a href="#2703">2703</a>    lport=3780 rhost=localhost rport=3781 dial=no
     0045      <a href="#2703">2703</a>    lport=32003 dial=IN lnctl=ibm1 term=2741 skip=5EDE code=ebcd
 
+    621-62B   <a href="#HIMdevice">UDPH</a>     10.0.0.46
+    62C-643   <a href="#HIMdevice">TLNT</a>     10.0.0.46
+    644-64F   <a href="#HIMdevice">TCPH</a>     10.0.0.46
 
 </pre></code>
 </td></tr></table>
@@ -2436,6 +2439,11 @@ a real System/390.  The configuration file is an ASCII text file.
             <tr><td>2703</td>
                 <td><a href="#2703">Communication Line</a>, <a href="#2703">Remote Teletype</a>, etc.</td>
                 <td>TCP Socket</td>
+            </tr>
+
+            <tr><td>TLNT, TCPH, UDPH</td>
+                <td>MTS HIM network interface</td>
+                <td><a href="#HIMdevice">MTS Host Interface Machine emulator</a></td>
             </tr>
 
             </table>
@@ -5184,6 +5192,29 @@ ROUTE  00  172.21.3.32  255.255.255.224
         <p>
 
     </dl> <!-- end Addtional 2703 options -->
+
+<hr width="50%"><p>
+
+<a name="HIMdevice"></a>
+<dt><em>Host Interface Machine (HIM) device</em>
+<dd><p>
+
+    These device types emulate the Host Interface Machine (HIM) devices that 
+    are used to connect a host running The Michigan Terminal System (MTS)
+    to the Internet.  The device type (TLNT, TCPH, or UDPH) should match
+    the device type configured into MTS.
+    <p>
+
+    The only parameter is the IP address the emulated interface 
+    should bind to.
+    <p>
+
+    Note that HIM emulation requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        HIM devices will fail and MTS will not be able to connect to the
+        network.
+        <p>
 
 
 </dl> <!-- end Arguments for each device type -->
