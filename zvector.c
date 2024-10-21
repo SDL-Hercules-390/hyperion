@@ -702,7 +702,7 @@ DEF_INST( vector_load )
 
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3);
 
-    /* m3 is not part of this instruction */
+    /* m3 - Alignment Hint: not used */
     UNREFERENCED( m3 );
 
     ZVECTOR_CHECK( regs );
@@ -835,7 +835,7 @@ DEF_INST( vector_store )
 
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
 
-    /* m3 is not part of this instruction */
+    /* m3 - Alignment Hint: not used */
     UNREFERENCED( m3 );
 
     ZVECTOR_CHECK( regs );
@@ -1202,7 +1202,7 @@ DEF_INST( vector_load_multiple )
 
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
 
-    /* m4 is not part of this instruction */
+    /* m4 - Alignment Hint: not used */
     UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
@@ -1232,7 +1232,7 @@ DEF_INST( vector_load_with_length )
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
 
-    /* m4 is not part of this instruction */
+    /* m4 - Alignment Hint: not used */
     UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
@@ -1346,7 +1346,7 @@ DEF_INST( vector_store_multiple )
 
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
 
-    /* m4 is not part of this instruction */
+    /* m4 - Alignment Hint: not used */
     UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
