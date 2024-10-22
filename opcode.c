@@ -1738,6 +1738,7 @@ FWD_REF_IPRINT_FUNC( ASMFMT_SSF );
 FWD_REF_IPRINT_FUNC( ASMFMT_SSF_RSS );
 FWD_REF_IPRINT_FUNC( ASMFMT_VS );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRI_A_VI );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_B );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_C );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_D );
@@ -1759,6 +1760,7 @@ FWD_REF_IPRINT_FUNC( ASMFMT_VRR_J );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_K );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRS_A );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRS_B );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRS_B_VRDB );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRS_C );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRS_D );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRV );
@@ -3206,6 +3208,14 @@ IPRINT_FUNC(ASMFMT_VRI_A);
     m3 = inst[4] >> 4;
     IPRINT_PRINT("%d,%d,%d", v1, i2, m3)
 
+// "Mnemonic   V1,I2"
+IPRINT_FUNC(ASMFMT_VRI_A_VI);
+    int v1, i2;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    i2 = inst[2] << 8 | inst[3];
+    IPRINT_PRINT("%d,%d", v1, i2)
+
 IPRINT_FUNC(ASMFMT_VRI_B);
     int v1, i2, i3, m4;
     UNREFERENCED(regs);
@@ -3401,6 +3411,16 @@ IPRINT_FUNC(ASMFMT_VRS_B);
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     m4 = inst[4] >> 4;
     IPRINT_PRINT("%d,%d,%d(%d),%d", v1, r3, d2, b2, m4)
+
+// "Mnemonic   V1,R3,D2(B2)"
+IPRINT_FUNC(ASMFMT_VRS_B_VRDB);
+    int v1, r3, b2, d2;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    r3 = ((inst[1] >> 0) & 0x0F);
+    b2 = inst[2] >> 4;
+    d2 = (inst[2] & 0x0F) << 8 | inst[3];
+    IPRINT_PRINT("%d,%d,%d(%d)", v1, r3, d2, b2)
 
 IPRINT_FUNC(ASMFMT_VRS_C);
     int r1, v3, b2, d2, m4;
@@ -5272,12 +5292,12 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E73C*/ GENx___x___x___ ,
  /*E73D*/ GENx___x___x___ ,
  /*E73E*/ GENx___x___x900("VSTM"   , VRS_A  , ASMFMT_VRS_A  , vector_store_multiple                                    ),
- /*E73F*/ GENx___x___x900("VSTL"   , VRS_B  , ASMFMT_VRS_B  , vector_store_with_length                                 ),
+ /*E73F*/ GENx___x___x900("VSTL"   , VRS_B  , ASMFMT_VRS_B_VRDB  , vector_store_with_length                            ),
  /*E740*/ GENx___x___x900("VLEIB"  , VRI_A  , ASMFMT_VRI_A  , vector_load_element_immediate_8                          ),
  /*E741*/ GENx___x___x900("VLEIH"  , VRI_A  , ASMFMT_VRI_A  , vector_load_element_immediate_16                         ),
  /*E742*/ GENx___x___x900("VLEIG"  , VRI_A  , ASMFMT_VRI_A  , vector_load_element_immediate_64                         ),
  /*E743*/ GENx___x___x900("VLEIF"  , VRI_A  , ASMFMT_VRI_A  , vector_load_element_immediate_32                         ),
- /*E744*/ GENx___x___x900("VGBM"   , VRI_A  , ASMFMT_VRI_A  , vector_generate_byte_mask                                ),
+ /*E744*/ GENx___x___x900("VGBM"   , VRI_A  , ASMFMT_VRI_A_VI  , vector_generate_byte_mask                             ),
  /*E745*/ GENx___x___x900("VREPI"  , VRI_A  , ASMFMT_VRI_A  , vector_replicate_immediate                               ),
  /*E746*/ GENx___x___x900("VGM"    , VRI_B  , ASMFMT_VRI_B  , vector_generate_mask                                     ),
  /*E747*/ GENx___x___x___ ,
