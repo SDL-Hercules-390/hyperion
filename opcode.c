@@ -1748,6 +1748,9 @@ FWD_REF_IPRINT_FUNC( ASMFMT_VRI_G );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_H );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_I );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VV );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VVM3 );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VVM3M5 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_B );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_D );
@@ -3300,6 +3303,33 @@ IPRINT_FUNC(ASMFMT_VRR_A);
     m4 = inst[3] & 0x0f;
     m5 = inst[3] >> 4;
     IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, m3, m4, m5)
+
+// "Mnemonic   V1,V2"
+IPRINT_FUNC(ASMFMT_VRR_A_VV);
+    int v1, v2;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    IPRINT_PRINT("%d,%d", v1, v2)
+
+// "Mnemonic   V1,V2,M3"
+IPRINT_FUNC(ASMFMT_VRR_A_VVM3);
+    int v1, v2, m3;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    m3 = inst[4] >> 4;
+    IPRINT_PRINT("%d,%d,%d", v1, v2, m3)
+
+// "Mnemonic   V1,V2,M3,M5"
+IPRINT_FUNC(ASMFMT_VRR_A_VVM3M5);
+    int v1, v2, m3, m5;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    m3 = inst[4] >> 4;
+    m5 = inst[3] >> 4;
+    IPRINT_PRINT("%d,%d,%d,%d", v1, v2, m3, m5)
 
 IPRINT_FUNC(ASMFMT_VRR_B);
     int v1, v2, v3, m4, m5;
@@ -5309,22 +5339,22 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E74D*/ GENx___x___x900("VREP"   , VRI_C  , ASMFMT_VRI_C  , vector_replicate                                         ),
  /*E74E*/ GENx___x___x___ ,
  /*E74F*/ GENx___x___x___ ,
- /*E750*/ GENx___x___x900("VPOPCT" , VRR_A  , ASMFMT_VRR_A  , vector_population_count                                  ),
+ /*E750*/ GENx___x___x900("VPOPCT" , VRR_A  , ASMFMT_VRR_A_VVM3  , vector_population_count                             ),
  /*E751*/ GENx___x___x___ ,
- /*E752*/ GENx___x___x900("VCTZ"   , VRR_A  , ASMFMT_VRR_A  , vector_count_trailing_zeros                              ),
- /*E753*/ GENx___x___x900("VCLZ"   , VRR_A  , ASMFMT_VRR_A  , vector_count_leading_zeros                               ),
+ /*E752*/ GENx___x___x900("VCTZ"   , VRR_A  , ASMFMT_VRR_A_VVM3  , vector_count_trailing_zeros                         ),
+ /*E753*/ GENx___x___x900("VCLZ"   , VRR_A  , ASMFMT_VRR_A_VVM3  , vector_count_leading_zeros                          ),
  /*E754*/ GENx___x___x___ ,
  /*E755*/ GENx___x___x___ ,
- /*E756*/ GENx___x___x900("VLR"    , VRR_A  , ASMFMT_VRR_A  , vector_load_vector                                       ),
+ /*E756*/ GENx___x___x900("VLR"    , VRR_A  , ASMFMT_VRR_A_VV  , vector_load_vector                                    ),
  /*E757*/ GENx___x___x___ ,
  /*E758*/ GENx___x___x___ ,
  /*E759*/ GENx___x___x___ ,
  /*E75A*/ GENx___x___x___ ,
  /*E75B*/ GENx___x___x___ ,
- /*E75C*/ GENx___x___x900("VISTR"  , VRR_A  , ASMFMT_VRR_A  , vector_isolate_string                                    ),
+ /*E75C*/ GENx___x___x900("VISTR"  , VRR_A  , ASMFMT_VRR_A_VVM3M5  , vector_isolate_string                             ),
  /*E75D*/ GENx___x___x___ ,
  /*E75E*/ GENx___x___x___ ,
- /*E75F*/ GENx___x___x900("VSEG"   , VRR_A  , ASMFMT_VRR_A  , vector_sign_extend_to_doubleword                         ),
+ /*E75F*/ GENx___x___x900("VSEG"   , VRR_A  , ASMFMT_VRR_A_VVM3  , vector_sign_extend_to_doubleword                    ),
  /*E760*/ GENx___x___x900("VMRL"   , VRR_C  , ASMFMT_VRR_C  , vector_merge_low                                         ),
  /*E761*/ GENx___x___x900("VMRH"   , VRR_C  , ASMFMT_VRR_C  , vector_merge_high                                        ),
  /*E762*/ GENx___x___x900("VLVGP"  , VRR_F  , ASMFMT_VRR_F  , vector_load_vr_from_grs_disjoint                         ),
