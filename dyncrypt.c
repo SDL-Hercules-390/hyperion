@@ -31,6 +31,7 @@
 #include "sha1.h"
 #include "sha2.h"
 #include "sshdes.h"
+#include "hcrypto.h"            // CSRNG constants and functions
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
@@ -293,7 +294,7 @@ void xts_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
 static int get_msa(REGS *regs)
 {
   if (FACILITY_ENABLED( 057_MSA_EXTENSION_5,  regs ))
-    return(5);
+    return(4);
   if (FACILITY_ENABLED( 077_MSA_EXTENSION_4,  regs ))
     return(4);
   if (FACILITY_ENABLED( 076_MSA_EXTENSION_3,  regs ))
@@ -5030,13 +5031,82 @@ DEF_INST(dyn_perform_random_number_operation)
 {
   int fc;
   int modifier_bit;
+  int msa;
+#ifdef OPTION_PRNO_DEBUG
+  uint n;
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+  U64 randbytes;
+  U64 randnum;
+  U64 randidx;
+  U64 randaddr;
+  BYTE entropy_input[512];
+  char * randbuf;
+  struct DRNG_parmblock {
+    BYTE rsvd1[4];
+    U32  rc;
+    U64  sb;
+    BYTE rsvd2[1];
+    BYTE V[111];
+    BYTE rsvd3[1];
+    BYTE C[111];};
+  union DRNG {
+    struct DRNG_parmblock drng;
+    BYTE drng_parmblock[240];};
+  union DRNG DRNG;
+  BYTE query_bits[16] = { 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa0, 0x00 };
   int r1;
   int r2;
-  BYTE query_bits[16] = { 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  /* TRNG Query Raw to Conditioned Ratio -- hardcoded for now */
+  BYTE trng_query_bits[8] = { 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x20 };
+  /* FIPS-140 known answer test data -- hardcoded for now */
+  BYTE entropy[64] =              { 0x32, 0x95, 0x11, 0x7f, 0x02, 0x37, 0x12, 0x70, 0x10, 0x5a, 0x37, 0x83, 0xcf, 0xe0, 0xbf, 0x5a,
+                                    0xc1, 0x40, 0x8e, 0x6c, 0xea, 0xc5, 0xae, 0xeb, 0xd6, 0xd8, 0x14, 0xbc, 0x82, 0x7d, 0xc0, 0x4d,
+                                    0x21, 0xa1, 0xe4, 0x80, 0xe3, 0xd5, 0xf2, 0xe3, 0x78, 0x31, 0x9a, 0xde, 0x9b, 0xdd, 0xda, 0x4c,
+                                    0x2e, 0x93, 0xb7, 0x4e, 0x34, 0x8d, 0x5e, 0xe3, 0x2e, 0xd4, 0x6a, 0x1a, 0xe6, 0x25, 0x66, 0xe0 };
+  BYTE generated[64] =            { 0xf1, 0xdf, 0xe8, 0x33, 0x08, 0x11, 0xec, 0xd1, 0x0a, 0xeb, 0x68, 0x72, 0x8f, 0xac, 0x57, 0xb0,
+                                    0x5d, 0xc8, 0xb4, 0x11, 0x6d, 0xfc, 0xc0, 0x66, 0xc4, 0xfb, 0xb6, 0x54, 0xb3, 0x17, 0xfb, 0x0e,
+                                    0x01, 0x12, 0x65, 0x74, 0x8f, 0x79, 0x29, 0xb0, 0x18, 0x03, 0x66, 0x62, 0x5d, 0xe0, 0x66, 0x5b,
+                                    0x11, 0x6c, 0x87, 0x8b, 0x0f, 0x05, 0xba, 0xd8, 0x31, 0x94, 0x16, 0x25, 0x88, 0x24, 0xdf, 0xdc };
+  BYTE parmblock_seeded[240] =    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                    0x00, 0x41, 0xf5, 0x9e, 0xd5, 0x80, 0x25, 0xaa, 0x04, 0x0e, 0x42, 0x04, 0x3c, 0xa5, 0xd1, 0x21,
+                                    0xb4, 0x94, 0x20, 0x25, 0xe6, 0x16, 0xb0, 0x95, 0xb7, 0xfb, 0x26, 0x6d, 0xdb, 0x63, 0x65, 0xb6,
+                                    0x9b, 0xa6, 0x09, 0xc0, 0xbb, 0x9f, 0xfe, 0x2c, 0xb7, 0xdc, 0x31, 0x33, 0x87, 0xb0, 0x0c, 0x09,
+                                    0x5f, 0xbb, 0x2d, 0x2b, 0x80, 0x1a, 0xff, 0xfb, 0x12, 0x97, 0x9f, 0xbf, 0x42, 0x1b, 0x3a, 0x4d,
+                                    0xbc, 0x7b, 0x21, 0x41, 0x9e, 0x7c, 0x62, 0x20, 0xd5, 0x08, 0xfe, 0x94, 0xf8, 0xa2, 0x5f, 0xee,
+                                    0xbe, 0x07, 0x9c, 0x1d, 0x02, 0xc0, 0xcd, 0x96, 0x5b, 0x3e, 0x51, 0x84, 0x4e, 0x5b, 0xfb, 0x22,
+                                    0xf4, 0xd1, 0x90, 0xfd, 0x57, 0x73, 0x86, 0xd1, 0x96, 0xac, 0x1b, 0xba, 0x14, 0xda, 0x99, 0x64,
+                                    0x00, 0x4b, 0xf2, 0x22, 0x39, 0xf6, 0xeb, 0xf3, 0xc2, 0xe4, 0xed, 0xf6, 0xa5, 0x3a, 0x7d, 0x82,
+                                    0x14, 0xda, 0x99, 0x64, 0x7c, 0xc1, 0xfc, 0x3b, 0xd9, 0x0d, 0xb2, 0x49, 0xcf, 0x0b, 0x82, 0x53,
+                                    0x1c, 0x30, 0xe5, 0x2d, 0x5e, 0xd3, 0x11, 0xb5, 0xaa, 0xc5, 0x2c, 0xf9, 0xe7, 0x67, 0x81, 0xc8,
+                                    0x84, 0x14, 0xb2, 0x36, 0x59, 0xf5, 0x5f, 0x54, 0xfa, 0x28, 0xa9, 0x08, 0x81, 0x46, 0xcd, 0x2d,
+                                    0x37, 0xaa, 0x9c, 0x0e, 0xa3, 0xfd, 0x06, 0xce, 0x26, 0x75, 0xf8, 0x95, 0x49, 0xb2, 0xa4, 0xcb,
+                                    0xb0, 0xd8, 0x53, 0xc3, 0xc6, 0xa0, 0x09, 0xf7, 0x33, 0xc5, 0xb3, 0xd2, 0xb3, 0x29, 0xd8, 0x9c,
+                                    0x60, 0xef, 0x29, 0xb9, 0x02, 0xf1, 0x39, 0x42, 0x49, 0xb1, 0x94, 0x18, 0xcd, 0xab, 0xf6, 0x28 };
+  BYTE parmblock_generated[240] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+                                    0x00, 0x8d, 0xe7, 0xc1, 0x0f, 0x77, 0x11, 0x9d, 0xc6, 0xf3, 0x2f, 0xfa, 0xe1, 0xe0, 0x4e, 0xa3,
+                                    0xf1, 0x41, 0xc2, 0xfc, 0x62, 0xd8, 0xac, 0xd1, 0x91, 0x08, 0xd8, 0xb7, 0xaa, 0x6e, 0xe8, 0x09,
+                                    0xb7, 0xd6, 0xee, 0xee, 0x1a, 0x73, 0x0f, 0xe2, 0x62, 0xa1, 0x5e, 0x2d, 0x6f, 0x17, 0x8d, 0xd1,
+                                    0xf4, 0x09, 0xa9, 0x0e, 0x43, 0x50, 0x71, 0xd4, 0x7f, 0xa4, 0x7c, 0x5f, 0x67, 0x0f, 0x03, 0x14,
+                                    0x42, 0xbb, 0x6b, 0x11, 0x69, 0xf7, 0xdf, 0xb2, 0xf0, 0x36, 0xed, 0x5a, 0x15, 0x71, 0x9f, 0x08,
+                                    0xef, 0xd4, 0x94, 0x42, 0xf5, 0x49, 0x91, 0x93, 0x51, 0x1b, 0x92, 0x4f, 0xc1, 0x96, 0xaa, 0xb3,
+                                    0xa7, 0xc2, 0xbb, 0x8c, 0xaa, 0x8b, 0xae, 0xd2, 0x0f, 0x45, 0xd0, 0x3d, 0xff, 0xb8, 0x74, 0x6e,
+                                    0x00, 0x4b, 0xf2, 0x22, 0x39, 0xf6, 0xeb, 0xf3, 0xc2, 0xe4, 0xed, 0xf6, 0xa5, 0x3a, 0x7d, 0x82,
+                                    0xff, 0xb8, 0x74, 0x6e, 0x7c, 0xc1, 0xfc, 0x3b, 0xd9, 0x0d, 0xb2, 0x49, 0xcf, 0x0b, 0x82, 0x53,
+                                    0x1c, 0x30, 0xe5, 0x2d, 0x5e, 0xd3, 0x11, 0xb5, 0xaa, 0xc5, 0x2c, 0xf9, 0xe7, 0x67, 0x81, 0xc8,
+                                    0x84, 0x14, 0xb2, 0x36, 0x59, 0xf5, 0x5f, 0x54, 0xfa, 0x28, 0xa9, 0x08, 0x81, 0x46, 0xcd, 0x2d,
+                                    0x37, 0xaa, 0x9c, 0x0e, 0xa3, 0xfd, 0x06, 0xce, 0x26, 0x75, 0xf8, 0x95, 0x49, 0xb2, 0xa4, 0xcb,
+                                    0xb0, 0xd8, 0x53, 0xc3, 0xc6, 0xa0, 0x09, 0xf7, 0x33, 0xc5, 0xb3, 0xd2, 0xb3, 0x29, 0xd8, 0x9c,
+                                    0x60, 0xef, 0x29, 0xb9, 0x02, 0xf1, 0x39, 0x42, 0x49, 0xb1, 0x94, 0x18, 0xcd, 0xab, 0xf6, 0x28 };
 
   RRE(inst, regs, r1, r2);
   PER_ZEROADDR_CHECK( regs, 1 );
   TXF_INSTR_CHECK( regs );
+
+  msa = get_msa(regs);
+  if (FACILITY_ENABLED( 057_MSA_EXTENSION_5,  regs ))
+    msa = 5;
+  if (msa < 5)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_PRNO_DEBUG
   WRMSG(HHC90100, "D", "PRNO: perform random number operation");
@@ -5050,23 +5120,193 @@ DEF_INST(dyn_perform_random_number_operation)
   WRMSG(HHC90104, "D", r2 + 1, regs->GR(r2+1));
 #endif /* #ifdef OPTION_PRNO_DEBUG */
 
+  if (!sysblk.PRNOrandhand)
+    VERIFY( hopen_CSRNG( &sysblk.PRNOrandhand ) );
+
   /* Initialize values */
   fc = GR0_fc(regs);
   modifier_bit = GR0_m(regs);
-
   switch(fc)
   {
     case 0: /* Query */
     {
-      /* Store the parameter block */
       ARCH_DEP(vstorec)(query_bits, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-#ifdef OPTION_PRNO_DEBUG
-      LOGBYTE("output feature string:", query_bits, 16);
-#endif /* #ifdef OPTION_PRNO_DEBUG */
-
       /* Set condition code 0 */
       regs->psw.cc = 0;
+      return;
+    }
+    case 3: /* DRNG */
+    {
+      /* Fetch the parameter block */
+      ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+      /*      */
+      /* seed */
+      /*      */
+      if (GR0_m(regs))
+      {
 
+        randbytes = regs->GR( r2 + 1 );
+        randaddr = GR_A(r2, regs);
+        randnum = min(256, randbytes);
+        ARCH_DEP(vfetchc)(entropy_input, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+	if (randbytes > 256) ARCH_DEP(vfetchc)(entropy_input + 256, randbytes - 257, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_PRNO_DEBUG
+        logmsg("DRNG Seed: Input Parmblock = ");
+        for(n=0; n < 240; n++)
+          logmsg("%02x",(unsigned char) DRNG.drng_parmblock[n]);
+        logmsg("\n");
+        logmsg("DRNG Seed: Entropy Size = %lu\n", (U64) (regs->GR( r2 + 1 )));
+        logmsg("DRNG Seed: Entropy Data = ");
+        for(n=0; n < randbytes; n++)
+          logmsg("%02x",entropy_input[n]);
+        logmsg("\n");
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+        /* known answer test */
+        if ((randbytes == 64) && (!memcmp(entropy, entropy_input, 64)))
+        {
+          ARCH_DEP(vstorec)(parmblock_seeded, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+          ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+        }
+        else
+        /* pseudo seed */
+        {
+          if (!DRNG.drng.rc) DRNG.drng.sb = 0;
+          DRNG.drng.rc = CSWAP32( 1 );
+          VERIFY( hget_random_bytes( DRNG.drng.V, 111, &sysblk.PRNOrandhand ) );
+          VERIFY( hget_random_bytes( DRNG.drng.C, 111, &sysblk.PRNOrandhand ) );
+          ARCH_DEP(vstorec)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+        }
+
+#ifdef OPTION_PRNO_DEBUG
+      logmsg("DRNG Seed: Output Parmblock = ");
+      for(n=0; n < 240; n++)
+        logmsg("%02x",(unsigned char) DRNG.drng_parmblock[n]);
+      logmsg("\n");
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+      }
+      else
+      /*          */
+      /* generate */
+      /*          */
+      {
+        randbytes = regs->GR( r1 + 1 );
+        randaddr = GR_A(r1, regs);
+
+#ifdef OPTION_PRNO_DEBUG
+        logmsg("DRNG Generate: randbytes = %lu\n", (U64) (regs->GR( r1 + 1 )));
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+        /* known answer test */
+        if ((randbytes == 64) && (!memcmp(parmblock_seeded, DRNG.drng_parmblock, 240)))
+        {
+          ARCH_DEP(vstorec)(generated, 63, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+          ARCH_DEP(vstorec)(parmblock_generated, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+          ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+        }
+        else
+        /* real generate */
+        {
+          randbuf = (char *) malloc(randbytes);
+          VERIFY( hget_random_bytes( randbuf, randbytes, &sysblk.PRNOrandhand ) );
+          randidx = 0;
+          do
+          {
+            randnum = min(256, randbytes);
+            ARCH_DEP(vstorec)(randbuf + randidx, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+	    if (randbytes > 256)
+            {
+              randbytes -= 256;
+              randaddr += 256;
+              randidx += 256;
+            }
+	    else randbytes = 0;
+          }
+          while (randbytes);
+          free(randbuf);
+          DRNG.drng.rc = ARCH_DEP(vfetch4) ( regs->GR( 1 ) + 4, regs->GR( 1 ), regs ) + 1;
+          DRNG.drng.rc = CSWAP32( DRNG.drng.rc );
+          DRNG.drng.sb = ARCH_DEP(vfetch8) ( regs->GR( 1 ) + 8, regs->GR( 1 ), regs ) + regs->GR( r1 + 1 );
+	  DRNG.drng.sb = CSWAP64( DRNG.drng.sb );
+          VERIFY( hget_random_bytes( DRNG.drng.V, 111, &sysblk.PRNOrandhand ) );
+          ARCH_DEP(vstorec)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+        }
+	SET_GR_A(r1 + 1, regs, 0);
+      }
+      /* Set condition code 0 */
+      regs->psw.cc = 0;
+      return;
+    }
+    case 112: /* TRNG-Query-Raw-to-Conditioned-Ratio */
+    {
+      /* Store the parameter block -- hardcoded for now */
+      ARCH_DEP(vstorec)(trng_query_bits, 7, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+      /* Set condition code 0 */
+      regs->psw.cc = 0;
+      return;
+    }
+    case 114: /* TRNG */
+    {
+      if ( regs->GR(r1 + 1) != 0 )
+      {
+        randbytes = regs->GR( r1 + 1 );
+	randaddr = GR_A(r1, regs);
+        randbuf = (char *) malloc(randbytes);
+        VERIFY( hget_random_bytes( randbuf, randbytes, &sysblk.PRNOrandhand ) );
+        randidx = 0;
+        do
+        {
+          randnum = min(256, randbytes);
+          ARCH_DEP(vstorec)(randbuf + randidx, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+	  if (randbytes > 256)
+          {
+            randbytes -= 256;
+            randaddr += 256;
+            randidx += 256;
+          }
+	  else randbytes = 0;
+        }
+        while (randbytes);
+        free(randbuf);
+
+#ifdef OPTION_PRNO_DEBUG
+        logmsg("TRNG Raw        : randbytes = %lu\n", (U64) (regs->GR( r1 + 1 )));
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+        SET_GR_A(r1, regs, regs->GR(r1) + regs->GR(r1 + 1));
+        SET_GR_A(r1 + 1, regs, 0);
+      }
+      if ( regs->GR(r2 + 1) != 0 )
+      {
+        randbytes = regs->GR( r2 + 1 );
+	randaddr = GR_A(r2, regs);
+        randbuf = (char *) malloc(randbytes);
+        VERIFY( hget_random_bytes( randbuf, randbytes, &sysblk.PRNOrandhand ) );
+        randidx = 0;
+        do
+        {
+          randnum = min(256, randbytes);
+          ARCH_DEP(vstorec)(randbuf + randidx, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+	  if (randbytes > 256)
+          {
+            randbytes -= 256;
+            randaddr += 256;
+            randidx += 256;
+          }
+	  else randbytes = 0;
+        }
+        while (randbytes);
+        free(randbuf);
+
+#ifdef OPTION_PRNO_DEBUG
+        logmsg("TRNG Conditioned: randbytes = %lu\n", (U64) (regs->GR( r2 + 1 )));
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+        SET_GR_A(r2, regs, regs->GR(r2) + regs->GR(r2 + 1));
+        SET_GR_A(r2 + 1, regs, 0);
+      }
+      /* Set condition code 0 */
+      regs->psw.cc = 0;
       return;
     }
     default:
@@ -5212,7 +5452,7 @@ HDL_REGISTER_SECTION;
   WRMSG( HHC00151, "I", "Message Security Assist");
 
 #if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
-  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4 and 5");
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5 and 7");
 #else
   #if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
     WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4");

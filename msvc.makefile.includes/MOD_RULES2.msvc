@@ -17,6 +17,10 @@ $(O)htape.lib:      $(X)htape.dll
 
 $(O)hutil.lib:      $(X)hutil.dll
 
+$(O)crypto.lib:     $(X)crypto.dll
+
+$(O)loadparm.lib:   $(X)loadparm.dll
+
 $(O)hengine.lib:    $(X)hengine.dll
 
 $(O)hsys.lib:       $(X)hsys.dll
@@ -45,8 +49,18 @@ $(X)htape.dll:    $(htape_OBJ) \
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib $(O)w32ctca.obj \
-                  $(O)hutil.lib  $(O)hsys.lib  $(O)hercprod.res
+$(X)loadparm.dll: $(loadparm_OBJ) \
+                  $(O)hutil.lib $(O)hsys.lib   $(O)hercprod.res
+    $(linkdll)
+    $(MT_DLL_CMD)
+
+$(X)crypto.dll:   $(crypto_OBJ) \
+                  $(loadparm_OBJ) $(O)hutil.lib $(O)hsys.lib   $(O)hercprod.res
+    $(linkdll)
+    $(MT_DLL_CMD)
+
+$(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib    $(O)htape.lib  $(O)w32ctca.obj \
+                  $(crypto_OBJ) $(loadparm_OBJ) $(O)hutil.lib $(O)hsys.lib   $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
 
@@ -142,17 +156,16 @@ $(X)hdtzfcp.dll:  $(O)zfcp.obj \
 # Additional loadable modules
 
 $(X)dyncrypt.dll: $(O)dyncrypt.obj \
-                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
+                  $(O)hengine.lib $(crypto_OBJ) $(loadparm_OBJ) $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
 
 # ---------------------------------------------------------------------
 # Main product executables
 
-$(X)hercules.exe: $(O)bootstrap.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
+$(X)hercules.exe: $(O)bootstrap.obj $(O)hengine.lib $(O)crypto.lib $(O)loadparm.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
     $(linkexe)
     $(MT_EXE_CMD)
-
 
 $(X)herclin.exe:  $(O)herclin.obj   $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
     $(linkexe)
