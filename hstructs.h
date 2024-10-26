@@ -816,6 +816,10 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         Load Program Parameter facility */
         U64     program_parameter;      /* Program Parameter Register*/
 
+#if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+        HRANDHAND  PRNOrandhand;        /* secure random api handle  */
+#endif /* defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
+
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
         HRANDHAND  wkrandhand;          /* secure random api handle  */
         BYTE    wkaes_reg[32];          /* Wrapping-key registers    */

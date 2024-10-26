@@ -433,11 +433,7 @@ FT( NONE, NONE, NONE, 055_IBM_INTERNAL )
 FT( NONE, NONE, NONE, 056_UNDEFINED )
 
 #if defined(  FEATURE_057_MSA_EXTENSION_FACILITY_5 )
-/* for the time being MSA_EXTENSION_FACILITY_5 is a dummy implementation only */
-/* the following line needs to be uncommented for the real implementation */
-/* FT( Z90X, Z900, NONE, 057_MSA_EXTENSION_5 ) */
-/* the following line needs to be deleted for the real implementation */
-FT( Z90X, NONE, NONE, 057_MSA_EXTENSION_5 )
+FT( Z90X, Z900, NONE, 057_MSA_EXTENSION_5 )
 #endif
 
 #if defined(  FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
@@ -964,9 +960,7 @@ static  void  instr48   ( int arch, bool enable );
 static  void  instr49   ( int arch, bool enable );
 static  void  instr50   ( int arch, bool enable );
 static  void  instr53   ( int arch, bool enable );
-/* for the time being MSA_EXTENSION_FACILITY_5 is a dummy implementation only */
-/* the following line needs to be uncommented for the real implementation */
-/* static  void  instr57   ( int arch, bool enable ); */
+static  void  instr57   ( int arch, bool enable );
 static  void  instr58   ( int arch, bool enable );
 static  void  instr61   ( int arch, bool enable );
 static  void  instr66   ( int arch, bool enable );
@@ -1090,11 +1084,7 @@ FT2( NULL,      instr53,   053_LOAD_ZERO_RIGHTMOST,    "Load-and-Zero-Rightmost-
 FT2( NULL,      NULL,      054_EE_CMPSC,               "Entropy-Encoding-Compression Facility" )
 FT2( NULL,      NULL,      055_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      NULL,      056_UNDEFINED,              "Undefined" )
-/* for the time being MSA_EXTENSION_FACILITY_5 is a dummy implementation only */
-/* the following line needs to be uncommented for the real implementation */
-/* FT2( NULL,      instr57,   057_MSA_EXTENSION_5,        "Message-Security-Assist Extension 5" ) */
-/* the following line needs to be deleted for the real implementation */
-FT2( NULL,      NULL,      057_MSA_EXTENSION_5,        "Message-Security-Assist Extension 5" )
+FT2( NULL,      instr57,   057_MSA_EXTENSION_5,        "Message-Security-Assist Extension 5" )
 FT2( NULL,      instr58,   058_MISC_INSTR_EXT_2,       "Miscellaneous-Instruction-Extensions Facility 2" )
 FT2( NULL,      NULL,      059_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      NULL,      060_IBM_INTERNAL,           "Assigned to IBM internal use" )
@@ -3710,15 +3700,13 @@ BEG_DIS_FAC_INS_FUNC( instr53 )
 END_DIS_FAC_INS_FUNC()
 
 /*-------------------------------------------------------------------*/
-/* for the time being MSA_EXTENSION_FACILITY_5 is a dummy implementation only */
-/* the following block needs to be uncommented for the real implementation */
-/*
+
 BEG_DIS_FAC_INS_FUNC( instr57 )
 {
     DIS_FAC_INS( B93C, "PRNO    B93C  PERFORM RANDOM NUMBER OPERATION" );
 }
 END_DIS_FAC_INS_FUNC()
-*/
+
 /*-------------------------------------------------------------------*/
 
 BEG_DIS_FAC_INS_FUNC( instr58 )
@@ -3825,10 +3813,6 @@ BEG_DIS_FAC_INS_FUNC( instr77 )
     DIS_FAC_INS( B92D, "KMCTR   B92D  CIPHER MESSAGE WITH COUNTER" );
     DIS_FAC_INS( B92B, "KMO     B92B  CIPHER MESSAGE WITH OUTPUT FEEDBACK" );
     DIS_FAC_INS( B92C, "PCC     B92C  PERFORM CRYPTOGRAPHIC COMPUTATION" );
-/* for the time being MSA_EXTENSION_FACILITY_5 is a dummy implementation only */
-/* a dummy PRNO instruction is provided through facility 77, MSA_4 */
-/* the following line needs to be deleted for the real implementation */
-    DIS_FAC_INS( B93C, "PRNO    B93C  PERFORM RANDOM NUMBER OPERATION" );
 }
 END_DIS_FAC_INS_FUNC()
 

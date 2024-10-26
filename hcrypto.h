@@ -60,8 +60,8 @@
 
 #define DUMMY_CYRPTO_HANDLE         0x7FD9D5C7
 
-extern bool hopen_CSRNG();
-extern bool hclose_CSRNG();
-extern bool hget_random_bytes( BYTE* buf, size_t amt );
+extern bool hopen_CSRNG( HRANDHAND* randhand );
+extern bool hclose_CSRNG( HRANDHAND* randhand );
+extern bool hget_random_bytes( BYTE* buf, size_t amt, HRANDHAND* randhand );
 
 #endif // _HCRYPTO_H_
