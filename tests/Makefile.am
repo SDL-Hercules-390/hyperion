@@ -470,6 +470,11 @@ EXTRA_DIST =                    \
      privop.core                \
      privop.list                \
      privop.tst                 \
+     prno.asm                   \
+     prno.core                  \
+     prno.list                  \
+     prno.pdf                   \
+     prno.tst                   \
      problem.asm                \
      problem.core               \
      problem.list               \

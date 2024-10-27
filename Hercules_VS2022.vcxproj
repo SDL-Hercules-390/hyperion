@@ -1079,6 +1079,11 @@
     <None Include="tests\privop.core" />
     <None Include="tests\privop.list" />
     <None Include="tests\privop.tst" />
+    <None Include="tests\prno.asm" />
+    <None Include="tests\prno.core" />
+    <None Include="tests\prno.list" />
+    <None Include="tests\prno.pdf" />
+    <None Include="tests\prno.tst" />
     <None Include="tests\problem.asm" />
     <None Include="tests\problem.core" />
     <None Include="tests\problem.list" />

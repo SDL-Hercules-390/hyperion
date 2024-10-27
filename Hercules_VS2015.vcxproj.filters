@@ -3146,6 +3146,9 @@
     <None Include="tests\privop.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\prno.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\problem.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -3182,6 +3185,9 @@
     <None Include="tests\privop.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\prno.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\problem.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -3215,6 +3221,9 @@
     <None Include="tests\privop.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\prno.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\problem.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -3243,6 +3252,12 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\privop.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\prno.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\prno.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\problem.list">

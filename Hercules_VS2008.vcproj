@@ -3591,6 +3591,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\prno.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\problem.core"
 						>
 					</File>
@@ -4850,6 +4854,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\prno.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\problem.tst"
 							>
 						</File>
@@ -5358,6 +5366,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\prno.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\problem.asm"
 							>
 						</File>
@@ -5438,100 +5450,100 @@
 							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-01-loads.asm"
-						>
+							RelativePath=".\tests\zvector-e6-01-loads.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-02-stores.asm"
-						>
+							RelativePath=".\tests\zvector-e6-02-stores.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-03-pack.asm"
-						>
+							RelativePath=".\tests\zvector-e6-03-pack.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-04-unpack.asm"
-						>
+							RelativePath=".\tests\zvector-e6-04-unpack.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-05-packarith.asm"
-						>
+							RelativePath=".\tests\zvector-e6-05-packarith.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-06-VPKZR.asm"
-						>
+							RelativePath=".\tests\zvector-e6-06-VPKZR.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-07-VSRPR.asm"
-						>
+							RelativePath=".\tests\zvector-e6-07-VSRPR.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-08-VLRLR.asm"
-						>
+							RelativePath=".\tests\zvector-e6-08-VLRLR.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-09-VSTRLR.asm"
-						>
+							RelativePath=".\tests\zvector-e6-09-VSTRLR.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-10-VLIP.asm"
-						>
+							RelativePath=".\tests\zvector-e6-10-VLIP.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-11-convertbinary.asm"
-						>
+							RelativePath=".\tests\zvector-e6-11-convertbinary.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-12-countzonedhighlow.asm"
-						>
+							RelativePath=".\tests\zvector-e6-12-countzonedhighlow.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-13-converttodecimal.asm"
-						>
+							RelativePath=".\tests\zvector-e6-13-converttodecimal.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-14-testdecimal.asm"
-						>
+							RelativePath=".\tests\zvector-e6-14-testdecimal.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-15-comparedecimal.asm"
-						>
+							RelativePath=".\tests\zvector-e6-15-comparedecimal.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.asm"
-						>
+							RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-17-VSCHP.asm"
-						>
+							RelativePath=".\tests\zvector-e6-17-VSCHP.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-18-VSCSHP.asm"
-						>
+							RelativePath=".\tests\zvector-e6-18-VSCSHP.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-19-VCSPH.asm"
-						>
+							RelativePath=".\tests\zvector-e6-19-VCSPH.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-20-NNPconvert.asm"
-						>
+							RelativePath=".\tests\zvector-e6-20-NNPconvert.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e6-21-VCRNF.asm"
-						>
+							RelativePath=".\tests\zvector-e6-21-VCRNF.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e7-01-MinMaxAvg.asm"
-						>
+							RelativePath=".\tests\zvector-e7-01-MinMaxAvg.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e7-02-VGFM.asm"
-						>
+							RelativePath=".\tests\zvector-e7-02-VGFM.asm"
+							>
 						</File>
 						<File
-						RelativePath=".\tests\zvector-e7-03-VGFMA.tst"
-						>
+							RelativePath=".\tests\zvector-e7-03-VGFMA.tst"
+							>
 						</File>
 						<Filter
 							Name="list"
@@ -5957,6 +5969,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\prno.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\prno.pdf"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\problem.list"
 								>
 							</File>
@@ -6109,196 +6129,196 @@
 								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-01-loads.list"
-							>
+								RelativePath=".\tests\zvector-e6-01-loads.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-01-loads.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-01-loads.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-02-stores.list"
-							>
+								RelativePath=".\tests\zvector-e6-02-stores.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-02-stores.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-02-stores.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-03-pack.list"
-							>
+								RelativePath=".\tests\zvector-e6-03-pack.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-03-pack.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-03-pack.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-04-unpack.list"
-							>
+								RelativePath=".\tests\zvector-e6-04-unpack.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-04-unpack.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-04-unpack.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-05-packarith.list"
-							>
+								RelativePath=".\tests\zvector-e6-05-packarith.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-05-packarith.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-05-packarith.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-06-VPKZR.list"
-							>
+								RelativePath=".\tests\zvector-e6-06-VPKZR.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-06-VPKZR.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-06-VPKZR.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-07-VSRPR.list"
-							>
+								RelativePath=".\tests\zvector-e6-07-VSRPR.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-07-VSRPR.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-07-VSRPR.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-08-VLRLR.list"
-							>
+								RelativePath=".\tests\zvector-e6-08-VLRLR.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-08-VLRLR.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-08-VLRLR.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-09-VSTRLR.list"
-							>
+								RelativePath=".\tests\zvector-e6-09-VSTRLR.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-09-VSTRLR.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-09-VSTRLR.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-10-VLIP.list"
-							>
+								RelativePath=".\tests\zvector-e6-10-VLIP.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-10-VLIP.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-10-VLIP.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-11-convertbinary.list"
-							>
+								RelativePath=".\tests\zvector-e6-11-convertbinary.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-11-convertbinary.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-11-convertbinary.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-12-countzonedhighlow.list"
-							>
+								RelativePath=".\tests\zvector-e6-12-countzonedhighlow.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-12-countzonedhighlow.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-12-countzonedhighlow.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-13-converttodecimal.list"
-							>
+								RelativePath=".\tests\zvector-e6-13-converttodecimal.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-13-converttodecimal.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-13-converttodecimal.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-14-testdecimal.list"
-							>
+								RelativePath=".\tests\zvector-e6-14-testdecimal.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-14-testdecimal.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-14-testdecimal.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-15-comparedecimal.list"
-							>
+								RelativePath=".\tests\zvector-e6-15-comparedecimal.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-15-comparedecimal.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-15-comparedecimal.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.list"
-							>
+								RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-16-VSRP-VPSOP.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-17-VSCHP.list"
-							>
+								RelativePath=".\tests\zvector-e6-17-VSCHP.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-17-VSCHP.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-17-VSCHP.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-18-VSCSHP.list"
-							>
+								RelativePath=".\tests\zvector-e6-18-VSCSHP.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-18-VSCSHP.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-18-VSCSHP.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-19-VCSPH.list"
-							>
+								RelativePath=".\tests\zvector-e6-19-VCSPH.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-19-VCSPH.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-19-VCSPH.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-20-NNPconvert.list"
-							>
+								RelativePath=".\tests\zvector-e6-20-NNPconvert.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-20-NNPconvert.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-20-NNPconvert.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-21-VCRNF.list"
-							>
+								RelativePath=".\tests\zvector-e6-21-VCRNF.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e6-21-VCRNF.pdf"
-							>
+								RelativePath=".\tests\zvector-e6-21-VCRNF.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e7-01-MinMaxAvg.list"
-							>
+								RelativePath=".\tests\zvector-e7-01-MinMaxAvg.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e7-01-MinMaxAvg.pdf"
-							>
+								RelativePath=".\tests\zvector-e7-01-MinMaxAvg.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e7-02-VGFM.list"
-							>
+								RelativePath=".\tests\zvector-e7-02-VGFM.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e7-02-VGFM.pdf"
-							>
+								RelativePath=".\tests\zvector-e7-02-VGFM.pdf"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e7-03-VGFMA.list"
-							>
+								RelativePath=".\tests\zvector-e7-03-VGFMA.list"
+								>
 							</File>
 							<File
-							RelativePath=".\tests\zvector-e7-03-VGFMA.pdf"
-							>
+								RelativePath=".\tests\zvector-e7-03-VGFMA.pdf"
+								>
 							</File>
 						</Filter>
 					</Filter>
