@@ -1742,6 +1742,7 @@ FWD_REF_IPRINT_FUNC( ASMFMT_VRI_A_VI );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_B );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_C );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_D );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRI_D_VVVI4 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_E );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_F );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRI_G );
@@ -3248,6 +3249,16 @@ IPRINT_FUNC(ASMFMT_VRI_D);
     i4 = inst[3];
     m5 = inst[4] >> 4;
     IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, v3, i4, m5)
+
+// "Mnemonic   V1,V2,V3,I4"
+IPRINT_FUNC(ASMFMT_VRI_D_VVVI4);
+    int v1, v2, v3, i4;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    i4 = inst[3];
+    IPRINT_PRINT("%d,%d,%d,%d", v1, v2, v3, i4)
 
 IPRINT_FUNC(ASMFMT_VRI_E);
     int v1, v2, i3, m4, m5;
@@ -5392,22 +5403,22 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E76D*/ GENx___x___x900("VX"     , VRR_C  , ASMFMT_VRR_C_VVV  , vector_exclusive_or                                  ),
  /*E76E*/ GENx___x___x900("VNN"    , VRR_C  , ASMFMT_VRR_C_VVV  , vector_nand                                          ),
  /*E76F*/ GENx___x___x900("VOC"    , VRR_C  , ASMFMT_VRR_C_VVV  , vector_or_with_complement                            ),
- /*E770*/ GENx___x___x900("VESLV"  , VRR_C  , ASMFMT_VRR_C  , vector_element_shift_left_vector                         ),
+ /*E770*/ GENx___x___x900("VESLV"  , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_element_shift_left_vector                   ),
  /*E771*/ GENx___x___x___ ,
  /*E772*/ GENx___x___x900("VERIM"  , VRI_D  , ASMFMT_VRI_D  , vector_element_rotate_and_insert_under_mask              ),
- /*E773*/ GENx___x___x900("VERLLV" , VRR_C  , ASMFMT_VRR_C  , vector_element_rotate_left_logical_vector                ),
- /*E774*/ GENx___x___x900("VSL"    , VRR_C  , ASMFMT_VRR_C  , vector_shift_left                                        ),
- /*E775*/ GENx___x___x900("VSLB"   , VRR_C  , ASMFMT_VRR_C  , vector_shift_left_by_byte                                ),
+ /*E773*/ GENx___x___x900("VERLLV" , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_element_rotate_left_logical_vector          ),
+ /*E774*/ GENx___x___x900("VSL"    , VRR_C  , ASMFMT_VRR_C_VVV  , vector_shift_left                                    ),
+ /*E775*/ GENx___x___x900("VSLB"   , VRR_C  , ASMFMT_VRR_C_VVV  , vector_shift_left_by_byte                            ),
  /*E776*/ GENx___x___x___ ,
- /*E777*/ GENx___x___x900("VSLDB"  , VRI_D  , ASMFMT_VRI_D  , vector_shift_left_double_by_byte                         ),
- /*E778*/ GENx___x___x900("VESRLV" , VRR_C  , ASMFMT_VRR_C  , vector_element_shift_right_logical_vector                ),
+ /*E777*/ GENx___x___x900("VSLDB"  , VRI_D  , ASMFMT_VRI_D_VVVI4  , vector_shift_left_double_by_byte                   ),
+ /*E778*/ GENx___x___x900("VESRLV" , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_element_shift_right_logical_vector          ),
  /*E779*/ GENx___x___x___ ,
- /*E77A*/ GENx___x___x900("VESRAV" , VRR_C  , ASMFMT_VRR_C  , vector_element_shift_right_arithmetic_vector             ),
+ /*E77A*/ GENx___x___x900("VESRAV" , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_element_shift_right_arithmetic_vector       ),
  /*E77B*/ GENx___x___x___ ,
- /*E77C*/ GENx___x___x900("VSRL"   , VRR_C  , ASMFMT_VRR_C  , vector_shift_right_logical                               ),
- /*E77D*/ GENx___x___x900("VSRLB"  , VRR_C  , ASMFMT_VRR_C  , vector_shift_right_logical_by_byte                       ),
- /*E77E*/ GENx___x___x900("VSRA"   , VRR_C  , ASMFMT_VRR_C  , vector_shift_right_arithmetic                            ),
- /*E77F*/ GENx___x___x900("VSRAB"  , VRR_C  , ASMFMT_VRR_C  , vector_shift_right_arithmetic_by_byte                    ),
+ /*E77C*/ GENx___x___x900("VSRL"   , VRR_C  , ASMFMT_VRR_C_VVV  , vector_shift_right_logical                           ),
+ /*E77D*/ GENx___x___x900("VSRLB"  , VRR_C  , ASMFMT_VRR_C_VVV  , vector_shift_right_logical_by_byte                   ),
+ /*E77E*/ GENx___x___x900("VSRA"   , VRR_C  , ASMFMT_VRR_C_VVV  , vector_shift_right_arithmetic                        ),
+ /*E77F*/ GENx___x___x900("VSRAB"  , VRR_C  , ASMFMT_VRR_C_VVV  , vector_shift_right_arithmetic_by_byte                ),
  /*E780*/ GENx___x___x900("VFEE"   , VRR_B  , ASMFMT_VRR_B  , vector_find_element_equal                                ),
  /*E781*/ GENx___x___x900("VFENE"  , VRR_B  , ASMFMT_VRR_B  , vector_find_element_not_equal                            ),
  /*E782*/ GENx___x___x900("VFAE"   , VRR_B  , ASMFMT_VRR_B  , vector_find_any_element_equal                            ),
