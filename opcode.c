@@ -1757,6 +1757,7 @@ FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C_VVV );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C_VVVM4 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_D );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_D_VVVVM5 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_E );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_E_VVVV );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_F );
@@ -3395,6 +3396,17 @@ IPRINT_FUNC(ASMFMT_VRR_D);
     m5 = inst[2] & 0x0f;
     m6 = inst[3] >> 4;
     IPRINT_PRINT("%d,%d,%d,%d,%d,%d", v1, v2, v3, v4, m5, m6)
+
+// "Mnemonic   V1,V2,V3,V4,M5"
+IPRINT_FUNC(ASMFMT_VRR_D_VVVVM5);
+    int v1, v2, v3, v4, m5;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    v4 = ((inst[4] >> 4) & 0x0F) | ((inst[4] & 0x01) << 4);
+    m5 = inst[2] & 0x0f;
+    IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, v3, v4, m5)
 
 IPRINT_FUNC(ASMFMT_VRR_E);
     int v1, v2, v3, v4, m5, m6;
@@ -5450,7 +5462,7 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E791*/ GENx___x___x___ ,
  /*E792*/ GENx___x___x___ ,
  /*E793*/ GENx___x___x___ ,
- /*E794*/ GENx___x___x900("VPK"    , VRR_C  , ASMFMT_VRR_C  , vector_pack                                              ),
+ /*E794*/ GENx___x___x900("VPK"    , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_pack                                        ),
  /*E795*/ GENx___x___x900("VPKLS"  , VRR_B  , ASMFMT_VRR_B  , vector_pack_logical_saturate                             ),
  /*E796*/ GENx___x___x___ ,
  /*E797*/ GENx___x___x900("VPKS"   , VRR_B  , ASMFMT_VRR_B  , vector_pack_saturate                                     ),
@@ -5463,21 +5475,21 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E79E*/ GENx___x___x900("VFNMS"  , VRR_E  , ASMFMT_VRR_E  , vector_fp_negative_multiply_and_subtract                 ),
  /*E79F*/ GENx___x___x900("VFNMA"  , VRR_E  , ASMFMT_VRR_E  , vector_fp_negative_multiply_and_add                      ),
  /*E7A0*/ GENx___x___x___ ,
- /*E7A1*/ GENx___x___x900("VMLH"   , VRR_C  , ASMFMT_VRR_C  , vector_multiply_logical_high                             ),
- /*E7A2*/ GENx___x___x900("VML"    , VRR_C  , ASMFMT_VRR_C  , vector_multiply_low                                      ),
- /*E7A3*/ GENx___x___x900("VMH"    , VRR_C  , ASMFMT_VRR_C  , vector_multiply_high                                     ),
- /*E7A4*/ GENx___x___x900("VMLE"   , VRR_C  , ASMFMT_VRR_C  , vector_multiply_logical_even                             ),
- /*E7A5*/ GENx___x___x900("VMLO"   , VRR_C  , ASMFMT_VRR_C  , vector_multiply_logical_odd                              ),
- /*E7A6*/ GENx___x___x900("VME"    , VRR_C  , ASMFMT_VRR_C  , vector_multiply_even                                     ),
- /*E7A7*/ GENx___x___x900("VMO"    , VRR_C  , ASMFMT_VRR_C  , vector_multiply_odd                                      ),
+ /*E7A1*/ GENx___x___x900("VMLH"   , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_multiply_logical_high                       ),
+ /*E7A2*/ GENx___x___x900("VML"    , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_multiply_low                                ),
+ /*E7A3*/ GENx___x___x900("VMH"    , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_multiply_high                               ),
+ /*E7A4*/ GENx___x___x900("VMLE"   , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_multiply_logical_even                       ),
+ /*E7A5*/ GENx___x___x900("VMLO"   , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_multiply_logical_odd                        ),
+ /*E7A6*/ GENx___x___x900("VME"    , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_multiply_even                               ),
+ /*E7A7*/ GENx___x___x900("VMO"    , VRR_C  , ASMFMT_VRR_C_VVVM4  , vector_multiply_odd                                ),
  /*E7A8*/ GENx___x___x___ ,
- /*E7A9*/ GENx___x___x900("VMALH"  , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_logical_high                     ),
- /*E7AA*/ GENx___x___x900("VMAL"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_low                              ),
- /*E7AB*/ GENx___x___x900("VMAH"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_high                             ),
- /*E7AC*/ GENx___x___x900("VMALE"  , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_logical_even                     ),
- /*E7AD*/ GENx___x___x900("VMALO"  , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_logical_odd                      ),
- /*E7AE*/ GENx___x___x900("VMAE"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_even                             ),
- /*E7AF*/ GENx___x___x900("VMAO"   , VRR_D  , ASMFMT_VRR_D  , vector_multiply_and_add_odd                              ),
+ /*E7A9*/ GENx___x___x900("VMALH"  , VRR_D  , ASMFMT_VRR_D_VVVVM5  , vector_multiply_and_add_logical_high              ),
+ /*E7AA*/ GENx___x___x900("VMAL"   , VRR_D  , ASMFMT_VRR_D_VVVVM5  , vector_multiply_and_add_low                       ),
+ /*E7AB*/ GENx___x___x900("VMAH"   , VRR_D  , ASMFMT_VRR_D_VVVVM5  , vector_multiply_and_add_high                      ),
+ /*E7AC*/ GENx___x___x900("VMALE"  , VRR_D  , ASMFMT_VRR_D_VVVVM5  , vector_multiply_and_add_logical_even              ),
+ /*E7AD*/ GENx___x___x900("VMALO"  , VRR_D  , ASMFMT_VRR_D_VVVVM5  , vector_multiply_and_add_logical_odd               ),
+ /*E7AE*/ GENx___x___x900("VMAE"   , VRR_D  , ASMFMT_VRR_D_VVVVM5  , vector_multiply_and_add_even                      ),
+ /*E7AF*/ GENx___x___x900("VMAO"   , VRR_D  , ASMFMT_VRR_D_VVVVM5  , vector_multiply_and_add_odd                       ),
  /*E7B0*/ GENx___x___x___ ,
  /*E7B1*/ GENx___x___x___ ,
  /*E7B2*/ GENx___x___x___ ,
