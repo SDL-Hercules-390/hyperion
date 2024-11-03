@@ -1751,11 +1751,13 @@ FWD_REF_IPRINT_FUNC( ASMFMT_VRI_I );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VV );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VVM3 );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VVM3M4 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VVM3M5 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_B );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C_VVV );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C_VVVM4 );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C_VVVM4M5 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_D );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_D_VVVVM5 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_E );
@@ -3336,6 +3338,16 @@ IPRINT_FUNC(ASMFMT_VRR_A_VVM3);
     m3 = inst[4] >> 4;
     IPRINT_PRINT("%d,%d,%d", v1, v2, m3)
 
+// "Mnemonic   V1,V2,M3,M4"
+IPRINT_FUNC(ASMFMT_VRR_A_VVM3M4);
+    int v1, v2, m3, m4;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    m3 = inst[4] >> 4;
+    m4 = inst[3] & 0x0f;
+    IPRINT_PRINT("%d,%d,%d,%d", v1, v2, m3, m4)
+
 // "Mnemonic   V1,V2,M3,M5"
 IPRINT_FUNC(ASMFMT_VRR_A_VVM3M5);
     int v1, v2, m3, m5;
@@ -3385,6 +3397,17 @@ IPRINT_FUNC(ASMFMT_VRR_C_VVVM4);
     v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
     m4 = inst[4] >> 4;
     IPRINT_PRINT("%d,%d,%d,%d", v1, v2, v3, m4)
+
+// "Mnemonic   V1,V2,V3,M4,M5"
+IPRINT_FUNC(ASMFMT_VRR_C_VVVM4M5);
+    int v1, v2, v3, m4, m5;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    m4 = inst[4] >> 4;
+    m5 = inst[3] & 0x0f;
+    IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, v3, m4, m5)
 
 IPRINT_FUNC(ASMFMT_VRR_D);
     int v1, v2, v3, v4, m5, m6;
@@ -5510,17 +5533,17 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E7C1*/ GENx___x___x900("VCDLG"  , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_from_logical                           ),
  /*E7C2*/ GENx___x___x900("VCGD"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_to_fixed                               ),
  /*E7C3*/ GENx___x___x900("VCDG"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_from_fixed                             ),
- /*E7C4*/ GENx___x___x900("VFLL"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_load_lengthened                                ),
+ /*E7C4*/ GENx___x___x900("VFLL"   , VRR_A  , ASMFMT_VRR_A_VVM3M4  , vector_fp_load_lengthened                         ),
  /*E7C5*/ GENx___x___x900("VFLR"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_load_rounded                                   ),
  /*E7C6*/ GENx___x___x___ ,
  /*E7C7*/ GENx___x___x900("VFI"    , VRR_A  , ASMFMT_VRR_A  , vector_load_fp_integer                                   ),
  /*E7C8*/ GENx___x___x___ ,
  /*E7C9*/ GENx___x___x___ ,
- /*E7CA*/ GENx___x___x900("WFK"    , VRR_A  , ASMFMT_VRR_A  , vector_fp_compare_and_signal_scalar                      ),
- /*E7CB*/ GENx___x___x900("WFC"    , VRR_A  , ASMFMT_VRR_A  , vector_fp_compare_scalar                                 ),
+ /*E7CA*/ GENx___x___x900("WFK"    , VRR_A  , ASMFMT_VRR_A_VVM3M4  , vector_fp_compare_and_signal_scalar               ),
+ /*E7CB*/ GENx___x___x900("WFC"    , VRR_A  , ASMFMT_VRR_A_VVM3M4  , vector_fp_compare_scalar                          ),
  /*E7CC*/ GENx___x___x900("VFPSO"  , VRR_A  , ASMFMT_VRR_A  , vector_fp_perform_sign_operation                         ),
  /*E7CD*/ GENx___x___x___ ,
- /*E7CE*/ GENx___x___x900("VFSQ"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_square_root                                    ),
+ /*E7CE*/ GENx___x___x900("VFSQ"   , VRR_A  , ASMFMT_VRR_A_VVM3M4  , vector_fp_square_root                             ),
  /*E7CF*/ GENx___x___x___ ,
  /*E7D0*/ GENx___x___x___ ,
  /*E7D1*/ GENx___x___x___ ,
@@ -5540,12 +5563,12 @@ static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
  /*E7DF*/ GENx___x___x900("VLP"    , VRR_A  , ASMFMT_VRR_A_VVM3  , vector_load_positive                                ),
  /*E7E0*/ GENx___x___x___ ,
  /*E7E1*/ GENx___x___x___ ,
- /*E7E2*/ GENx___x___x900("VFS"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_subtract                                       ),
- /*E7E3*/ GENx___x___x900("VFA"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_add                                            ),
+ /*E7E2*/ GENx___x___x900("VFS"    , VRR_C  , ASMFMT_VRR_C_VVVM4M5  , vector_fp_subtract                               ),
+ /*E7E3*/ GENx___x___x900("VFA"    , VRR_C  , ASMFMT_VRR_C_VVVM4M5  , vector_fp_add                                    ),
  /*E7E4*/ GENx___x___x___ ,
- /*E7E5*/ GENx___x___x900("VFD"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_divide                                         ),
+ /*E7E5*/ GENx___x___x900("VFD"    , VRR_C  , ASMFMT_VRR_C_VVVM4M5  , vector_fp_divide                                 ),
  /*E7E6*/ GENx___x___x___ ,
- /*E7E7*/ GENx___x___x900("VFM"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_multiply                                       ),
+ /*E7E7*/ GENx___x___x900("VFM"    , VRR_C  , ASMFMT_VRR_C_VVVM4M5  , vector_fp_multiply                               ),
  /*E7E8*/ GENx___x___x900("VFCE"   , VRR_C  , ASMFMT_VRR_C  , vector_fp_compare_equal                                  ),
  /*E7E9*/ GENx___x___x___ ,
  /*E7EA*/ GENx___x___x900("VFCHE"  , VRR_C  , ASMFMT_VRR_C  , vector_fp_compare_high_or_equal                          ),
