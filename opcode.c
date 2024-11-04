@@ -1754,6 +1754,7 @@ FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VVM3 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VVM3M4 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_A_VVM3M5 );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_B );
+FWD_REF_IPRINT_FUNC( ASMFMT_VRR_B_VVV );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C_VVV );
 FWD_REF_IPRINT_FUNC( ASMFMT_VRR_C_VVVM4 );
@@ -2230,7 +2231,7 @@ static INSTR_FUNC ARCH_DEP( gen_opcode_e6xx )[256][NUM_INSTR_TAB_PTRS] =
  /*E679*/ AD_GENx___x___x900 ("VMSP"     , VRI_F  , ASMFMT_VRI_F  , vector_multiply_and_shift_decimal                     ),
  /*E67A*/ AD_GENx___x___x900 ("VDP"      , VRI_F  , ASMFMT_VRI_F  , vector_divide_decimal                                 ),
  /*E67B*/ AD_GENx___x___x900 ("VRP"      , VRI_F  , ASMFMT_VRI_F  , vector_remainder_decimal                              ),
- /*E67C*/ AD_GENx___x___x900 ("VSCSHP"   , VRR_B  , ASMFMT_VRR_B  , decimal_scale_and_convert_and_split_to_hfp            ),
+ /*E67C*/ AD_GENx___x___x900 ("VSCSHP"   , VRR_B  , ASMFMT_VRR_B_VVV  , decimal_scale_and_convert_and_split_to_hfp        ),
  /*E67D*/ AD_GENx___x___x900 ("VCSPH"    , VRR_J  , ASMFMT_VRR_J  , vector_convert_hfp_to_scaled_decimal                  ),
  /*E67E*/ AD_GENx___x___x900 ("VSDP"     , VRI_F  , ASMFMT_VRI_F  , vector_shift_and_divide_decimal                       ),
  /*E67F*/ AD_GENx___x___x___ ,
@@ -3367,6 +3368,15 @@ IPRINT_FUNC(ASMFMT_VRR_B);
     m4 = inst[4] >> 4;
     m5 = inst[3] >> 4;
     IPRINT_PRINT("%d,%d,%d,%d,%d", v1, v2, v3, m4, m5)
+
+// "Mnemonic   V1,V2,V3"
+IPRINT_FUNC(ASMFMT_VRR_B_VVV);
+    int v1, v2, v3;
+    UNREFERENCED(regs);
+    v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
+    v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
+    v3 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
+    IPRINT_PRINT("%d,%d,%d", v1, v2, v3)
 
 IPRINT_FUNC(ASMFMT_VRR_C);
     int v1, v2, v3, m4, m5, m6;
