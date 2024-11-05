@@ -1687,6 +1687,7 @@ FWD_REF_IPRINT_FUNC( ASMFMT_RR );
 FWD_REF_IPRINT_FUNC( ASMFMT_RR_R1 );
 FWD_REF_IPRINT_FUNC( ASMFMT_RR_SVC );
 FWD_REF_IPRINT_FUNC( ASMFMT_RRE );
+FWD_REF_IPRINT_FUNC( ASMFMT_RRE_NONE );
 FWD_REF_IPRINT_FUNC( ASMFMT_RRE_R1 );
 FWD_REF_IPRINT_FUNC( ASMFMT_RRF_R );
 FWD_REF_IPRINT_FUNC( ASMFMT_RRF_M );
@@ -2192,16 +2193,16 @@ static INSTR_FUNC ARCH_DEP( gen_opcode_e6xx )[256][NUM_INSTR_TAB_PTRS] =
  /*E652*/ AD_GENx___x___x900 ("VCVBG"    , VRR_I  , ASMFMT_VRR_I  , vector_convert_to_binary_64                           ),
  /*E653*/ AD_GENx___x___x___ ,
  /*E654*/ AD_GENx___x___x900 ("VUPKZH"   , VRR_K  , ASMFMT_VRR_K  , vector_unpack_zoned_high                              ),
- /*E655*/ AD_GENx___x___x900 ("VCNF"     , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_to_nnp                              ),
- /*E656*/ AD_GENx___x___x900 ("VCLFNH"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_and_lengthen_from_nnp_high          ),
+ /*E655*/ AD_GENx___x___x900 ("VCNF"     , VRR_A  , ASMFMT_VRR_A_VVM3M4  , vector_fp_convert_to_nnp                       ),
+ /*E656*/ AD_GENx___x___x900 ("VCLFNH"   , VRR_A  , ASMFMT_VRR_A_VVM3M4  , vector_fp_convert_and_lengthen_from_nnp_high   ),
  /*E657*/ AD_GENx___x___x___ ,
  /*E658*/ AD_GENx___x___x900 ("VCVD"     , VRI_I  , ASMFMT_VRI_I  , vector_convert_to_decimal_32                          ),
  /*E659*/ AD_GENx___x___x900 ("VSRP"     , VRI_G  , ASMFMT_VRI_G  , vector_shift_and_round_decimal                        ),
  /*E65A*/ AD_GENx___x___x900 ("VCVDG"    , VRI_I  , ASMFMT_VRI_I  , vector_convert_to_decimal_64                          ),
  /*E65B*/ AD_GENx___x___x900 ("VPSOP"    , VRI_G  , ASMFMT_VRI_G  , vector_perform_sign_operation_decimal                 ),
  /*E65C*/ AD_GENx___x___x900 ("VUPKZL"   , VRR_K  , ASMFMT_VRR_K  , vector_unpack_zoned_low                               ),
- /*E65D*/ AD_GENx___x___x900 ("VCFN"     , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_from_nnp                            ),
- /*E65E*/ AD_GENx___x___x900 ("VCLFNL"   , VRR_A  , ASMFMT_VRR_A  , vector_fp_convert_and_lengthen_from_nnp_low           ),
+ /*E65D*/ AD_GENx___x___x900 ("VCFN"     , VRR_A  , ASMFMT_VRR_A_VVM3M4  , vector_fp_convert_from_nnp                     ),
+ /*E65E*/ AD_GENx___x___x900 ("VCLFNL"   , VRR_A  , ASMFMT_VRR_A_VVM3M4  , vector_fp_convert_and_lengthen_from_nnp_low    ),
  /*E65F*/ AD_GENx___x___x900 ("VTP"      , VRR_G  , ASMFMT_VRR_G  , vector_test_decimal                                   ),
  /*E660*/ AD_GENx___x___x___ ,
  /*E661*/ AD_GENx___x___x___ ,
@@ -2224,7 +2225,7 @@ static INSTR_FUNC ARCH_DEP( gen_opcode_e6xx )[256][NUM_INSTR_TAB_PTRS] =
  /*E672*/ AD_GENx___x___x900 ("VSRPR"    , VRI_F  , ASMFMT_VRI_F  , vector_shift_and_round_decimal_register               ),
  /*E673*/ AD_GENx___x___x900 ("VSP"      , VRI_F  , ASMFMT_VRI_F  , vector_subtract_decimal                               ),
  /*E674*/ AD_GENx___x___x900 ("VSCHP"    , VRR_B  , ASMFMT_VRR_B  , decimal_scale_and_convert_to_hfp                      ),
- /*E675*/ AD_GENx___x___x900 ("VCRNF"    , VRR_C  , ASMFMT_VRR_C  , vector_fp_convert_and_round_to_nnp                    ),
+ /*E675*/ AD_GENx___x___x900 ("VCRNF"    , VRR_C  , ASMFMT_VRR_C_VVVM4M5  , vector_fp_convert_and_round_to_nnp            ),
  /*E676*/ AD_GENx___x___x___ ,
  /*E677*/ AD_GENx___x___x900 ("VCP"      , VRR_H  , ASMFMT_VRR_H  , vector_compare_decimal                                ),
  /*E678*/ AD_GENx___x___x900 ("VMP"      , VRI_F  , ASMFMT_VRI_F  , vector_multiply_decimal                               ),
@@ -2761,6 +2762,12 @@ IPRINT_FUNC( ASMFMT_RRE );
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d,%d",r1,r2)
+
+// "Mnemonic   "
+IPRINT_FUNC( ASMFMT_RRE_NONE );
+    UNREFERENCED( regs );
+    UNREFERENCED( inst );
+    IPRINT_PRINT("%c",' ')
 
 // "Mnemonic   R1"
 IPRINT_FUNC( ASMFMT_RRE_R1 );
@@ -4478,7 +4485,7 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B938*/ GENx___x___x___ ,
  /*B939*/ GENx___x___x___ ,
  /*B93A*/ GENx___x___x___ ,
- /*B93B*/ GENx___x___x900 ( "NNPA"      , RRE  , ASMFMT_RRE      ,  neural_network_processing_assist                   ),
+ /*B93B*/ GENx___x___x900 ( "NNPA"      , RRE  , ASMFMT_RRE_NONE , neural_network_processing_assist                    ),
  /*B93C*/ GENx37Xx390x900 ( "PRNO"      , RRE  , ASMFMT_RRE      , perform_random_number_operation                     ),
  /*B93D*/ GENx___x___x___ ,
  /*B93E*/ GENx37Xx390x900 ( "KIMD"      , RRE  , ASMFMT_RRE      , compute_intermediate_message_digest                 ),
