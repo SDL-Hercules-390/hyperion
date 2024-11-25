@@ -96,8 +96,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#LOGOPT">LOGOPT</a>     TIMESTAMP NODATESTAMP
 
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
-    <a href="#CNSLPORT">CNSLPORT</a>   3270
-    <a href="#SYSGPORT">SYSGPORT</a>   3278
+    <a href="#CNSLPORT">CNSLPORT</a>   3270             Listening port for 3270 device connections
+    <a href="#SYSGPORT">SYSGPORT</a>   3278             Listening port for SYSG device connections
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
 
@@ -381,6 +381,10 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a telnet or tn3270 client.
+    <p>
+    Note that the CNSLPORT statement will be ignored and no listening port
+    will be opened unless there is at least one <a href="#device_types_table">
+    3270 device</a> defined in your configuration.
     <p>
 
 <a name="CODEPAGE"></a>
@@ -1626,6 +1630,10 @@ a real System/390.  The configuration file is an ASCII text file.
     See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a telnet or tn3270 client.
     <p>
+    Note that the SYSGPORT statement will be ignored and no listening port
+    will be opened unless your configuration has a <a href="#device_types_table">
+    SYSG device</a> defined.
+    <p>
 
 <a name="TIMERINT"></a>
 <dt><code>TIMERINT &nbsp; DEFAULT &#124; <em>nnnn</em></code>
@@ -2242,9 +2250,9 @@ a real System/390.  The configuration file is an ASCII text file.
     specified for a device number or group of devices. The Identification
     number is specified at the beginning of the definition, followed by a ':'
     character. For example :<p>
-    1:0400-040F 3270<p>
+    &nbsp; &nbsp; &nbsp; &nbsp; <code>1:0400-040F &nbsp;3270</code><p>
     defines 3270 devices 400 to 40F to be on S/370 Channel Set 1 or on S/390
-    or z/Architecture Logical Channel Subsystem # 1.<p>
+    or z/Architecture Logical Channel Subsystem #1.<p>
     Since each Logical Channel Subsystem defines its own device numbering space,
     care should be taken in S/370 mode as to define a coherent set of device
     numbers.<p>

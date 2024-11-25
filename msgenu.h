@@ -2622,7 +2622,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC17013 "Process ID = %d"
 #define HHC17014 "%s value is invalid; valid range is %d - %d"
 #define HHC17015 "%s support not included in this engine build"
-//efine HHC17016 - HHC17099 (available)
+#define HHC17016 "%s server port set to %s"
+//efine HHC17017 - HHC17099 (available)
 
 //efine HHC17100 - HHC17198 (available)
 #define HHC17199 "%.4s %s"
