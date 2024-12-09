@@ -2309,7 +2309,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03006 "%s error: %s"
 #define HHC03007 "File size:      (%s bytes)"
 #define HHC03008 "Compressed device header inconsistency(s) found! code: %4.4X"
-//efine HHC03009 - HHC03019 (available)
+#define HHC03009 "Only '-i' (summary information only) is supported for CFBA/CFBA64 devices"
+//efine HHC03010 - HHC03019 (available)
 #define HHC03020 "" // (blank line)
 #define HHC03021 "%s of:     \"%s\""
 #define HHC03022                                                            "\n" \
