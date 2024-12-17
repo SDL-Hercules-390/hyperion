@@ -2449,12 +2449,17 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC03255 - HHC03299 (available)
 
 // txt2card
-#define HHC03300 "Usage:  txt2card  codepage  infile  outfile"
+#define HHC03300 "Usage:  txt2card  codepage  ifile  {ofile | host:port}"
 #define HHC03301 "Incorrect number of arguments"
 #define HHC03302 "Invalid/unsupported codepage"
 #define HHC03303 "Error opening \"%s\": %s"
 #define HHC03304 "I/O error on file \"%s\": %s"
-//efine HHC03305 - HHC03349 (available)
+#define HHC03305 "Invalid socket specification: %s"
+#define HHC03306 "Transmission error on socket: %s"
+#define HHC03307 "%d cards submitted"
+#define HHC03308 "Socket creation error: %s"
+#define HHC03309 "Error connecting to %s"
+//efine HHC03310 - HHC03349 (available)
 
 //efine HHC03350 - HHC03399 (available)
 
