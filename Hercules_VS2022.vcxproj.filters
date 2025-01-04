@@ -1895,6 +1895,9 @@
     <None Include="tests\zvector-e7-03-VGFMA.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\zvector-e7-04-BitCount.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\FAC53.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2411,6 +2414,9 @@
     <None Include="tests\zvector-e7-03-VGFMA.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\zvector-e7-04-BitCount.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
@@ -2667,6 +2673,9 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\zvector-e7-03-VGFMA.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-04-BitCount.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\3211.list">
@@ -3096,6 +3105,12 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\zvector-e7-03-VGFMA.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-04-BitCount.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-04-BitCount.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="hercules.cnf">

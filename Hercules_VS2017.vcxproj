@@ -1335,6 +1335,11 @@
     <None Include="tests\zvector-e7-03-VGFMA.list" />
     <None Include="tests\zvector-e7-03-VGFMA.pdf" />
     <None Include="tests\zvector-e7-03-VGFMA.tst" />
+    <None Include="tests\zvector-e7-04-BitCount.asm" />
+    <None Include="tests\zvector-e7-04-BitCount.core" />
+    <None Include="tests\zvector-e7-04-BitCount.list" />
+    <None Include="tests\zvector-e7-04-BitCount.pdf" />
+    <None Include="tests\zvector-e7-04-BitCount.tst" />
     <None Include="util\awssl-v19g" />
     <None Include="util\awswrite.jcl" />
     <None Include="util\bldlvlck" />

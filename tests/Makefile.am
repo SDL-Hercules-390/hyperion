@@ -746,4 +746,9 @@ EXTRA_DIST =                    \
      zvector-e7-03-VGFMA.core               \
      zvector-e7-03-VGFMA.list               \
      zvector-e7-03-VGFMA.pdf                \
-     zvector-e7-03-VGFMA.tst
+     zvector-e7-03-VGFMA.tst                \
+     zvector-e7-04-BitCount.asm             \
+     zvector-e7-04-BitCount.core            \
+     zvector-e7-04-BitCount.list            \
+     zvector-e7-04-BitCount.pdf             \
+     zvector-e7-04-BitCount.tst
