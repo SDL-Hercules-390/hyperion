@@ -669,6 +669,7 @@ struct SYSBLK {
   const char  **extpkg_vers;            /* External Package versions */
 
         bool    ulimit_unlimited;       /* ulimit -c unlimited       */
+        bool    is_debugger_present;    /* gdb debugger present?     */
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         LOCK    bindlock;               /* Sockdev bind lock         */

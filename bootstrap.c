@@ -117,10 +117,34 @@ static void crash_signal_handler( int signo )
 }
 #endif /* defined( HAVE_SIGNAL_HANDLING ) */
 
+/*-------------------------------------------------------------------
+  This works on Linux and MacOSX and any BSD kernel too. Please see:
+  https://forum.juce.com/t/detecting-if-a-process-is-being-run-under-a-debugger/2098
+  -------------------------------------------------------------------*/
+
+#include <sys/ptrace.h>
+
+static void check_if_debugger_is_present()
+{
+    static int did_this_once_already = 0;
+
+    if (!did_this_once_already)
+    {
+        did_this_once_already = 1;
+        sysblk.is_debugger_present = 0;
+
+        if (ptrace( PTRACE_TRACEME, 0, 1, 0 ) < 0)
+            sysblk.is_debugger_present = 1;
+        else
+            ptrace( PTRACE_DETACH, 0, 1, 0 );
+    }
+}
+
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*  For Unix-like platforms, the main() function:                    */
 /*                                                                   */
+/*   - determines if running under control of a debugger or not      */
 /*   - Installs a crash handler if signal handling is available      */
 /*   - Sets the privilege level                                      */
 /*   - Initializes the LIBTOOL environment                           */
@@ -130,6 +154,7 @@ static void crash_signal_handler( int signo )
 int main( int ac, char* av[] )
 {
     int rc = 0;
+    check_if_debugger_is_present();
     save_term_attrs();
     DROP_PRIVILEGES( CAP_SYS_NICE );
     SET_THREAD_NAME( BOOTSTRAP_NAME );
