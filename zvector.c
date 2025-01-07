@@ -1669,12 +1669,28 @@ DEF_INST( vector_replicate )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_population_count )
 {
+
+    static const BYTE OneBitsInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 0,  1,  1,  2,  1,  2,  2,  3,  1,  2,  2,  3,  2,  3,  3,  4,
+    /* 1- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 2- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 3- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 4- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 5- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 6- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 7- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* 8- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 9- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* A- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* B- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* C- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* D- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* E- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* F- */   4,  5,  5,  6,  5,  6,  6,  7,  5,  6,  6,  7,  6,  7,  7,  8 };
+
     int     v1, v2, m3, m4, m5;
     int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1695,13 +1711,7 @@ DEF_INST( vector_population_count )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            count = 0;
-            belement = regs->VR_B(v2, i);
-            for (j=0; j < 8; j++)
-            {
-                if (belement & 0x80) count++;
-                belement <<= 1;
-            }
+            count = OneBitsInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
@@ -1709,11 +1719,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 8; i++)
         {
             count = 0;
-            helement = regs->VR_H(v2, i);
-            for (j=0; j < 16; j++)
+            for (j=i*2; j < (i*2)+2; j++)
             {
-                if (helement & 0x8000) count++;
-                helement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1722,11 +1730,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 4; i++)
         {
             count = 0;
-            felement = regs->VR_F(v2, i);
-            for (j=0; j < 32; j++)
+            for (j=i*4; j < (i*4)+4; j++)
             {
-                if (felement & 0x80000000) count++;
-                felement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1735,11 +1741,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 2; i++)
         {
             count = 0;
-            delement = regs->VR_D(v2, i);
-            for (j=0; j < 64; j++)
+            for (j=i*8; j < (i*8)+8; j++)
             {
-                if (delement & 0x8000000000000000ull) count++;
-                delement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_D(v1, i) = count;
         }
@@ -1757,12 +1761,28 @@ DEF_INST( vector_population_count )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_count_trailing_zeros )
 {
+
+    static const BYTE TrailingZerosInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 8,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 1- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 2- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 3- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 4- */   6,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 5- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 6- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 7- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 8- */   7,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 9- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* A- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* B- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* C- */   6,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* D- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* E- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* F- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0 };
+
     int     v1, v2, m3, m4, m5;
-    int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
+    int     i, j, k, count;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1777,23 +1797,19 @@ DEF_INST( vector_count_trailing_zeros )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            belement = regs->VR_B(v2, i);
-            for (j=0, count=0; j < 8; j++, count++)
-            {
-                if (belement & 0x01) break;
-                belement >>= 1;
-            }
+            count = TrailingZerosInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
     case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
-            helement = regs->VR_H(v2, i);
-            for (j=0, count=0; j < 16; j++, count++)
+            count = 0;
+            for (j=(i*2)+1; j >= i*2; j--)
             {
-                if (helement & 0x0001) break;
-                helement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1801,11 +1817,12 @@ DEF_INST( vector_count_trailing_zeros )
     case 2:  // Word
         for (i=0; i < 4; i++)
         {
-            felement = regs->VR_F(v2, i);
-            for (j=0, count=0; j < 32; j++, count++)
+            count = 0;
+            for (j=(i*4)+3; j >= i*4; j--)
             {
-                if (felement & 0x00000001) break;
-                felement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1813,11 +1830,12 @@ DEF_INST( vector_count_trailing_zeros )
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
-            delement = regs->VR_D(v2, i);
-            for (j=0, count=0; j < 64; j++, count++)
+            count = 0;
+            for (j=(i*8)+7; j >= i*8; j--)
             {
-                if (delement & 0x0000000000000001ull) break;
-                delement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_D(v1, i) = count;
         }
@@ -1835,12 +1853,28 @@ DEF_INST( vector_count_trailing_zeros )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_count_leading_zeros )
 {
+
+    static const BYTE LeadingZerosInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 8,  7,  6,  6,  5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  4,
+    /* 1- */   3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+    /* 2- */   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+    /* 3- */   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+    /* 4- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 5- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 6- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 7- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 8- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* 9- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* A- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* B- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* C- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* D- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* E- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* F- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 };
+
     int     v1, v2, m3, m4, m5;
-    int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
+    int     i, j, k, count;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1855,23 +1889,19 @@ DEF_INST( vector_count_leading_zeros )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            belement = regs->VR_B(v2, i);
-            for (j=0, count=0; j < 8; j++, count++)
-            {
-                if (belement & 0x80) break;
-                belement <<= 1;
-            }
+            count = LeadingZerosInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
     case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
-            helement = regs->VR_H(v2, i);
-            for (j=0, count=0; j < 16; j++, count++)
+            count = 0;
+            for (j=i*2; j < (i*2)+2; j++)
             {
-                if (helement & 0x8000) break;
-                helement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1879,11 +1909,12 @@ DEF_INST( vector_count_leading_zeros )
     case 2:  // Word
         for (i=0; i < 4; i++)
         {
-            felement = regs->VR_F(v2, i);
-            for (j=0, count=0; j < 32; j++, count++)
+            count = 0;
+            for (j=i*4; j < (i*4)+4; j++)
             {
-                if (felement & 0x80000000) break;
-                felement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1891,11 +1922,12 @@ DEF_INST( vector_count_leading_zeros )
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
-            delement = regs->VR_D(v2, i);
-            for (j=0, count=0; j < 64; j++, count++)
+            count = 0;
+            for (j=i*8; j < (i*8)+8; j++)
             {
-                if (delement & 0x8000000000000000ull) break;
-                delement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_D(v1, i) = count;
         }
