@@ -5807,8 +5807,7 @@ DEF_INST( vector_unpack_high )
 DEF_INST( vector_test_under_mask )
 {
     int     v1, v2, m3, m4, m5;
-    union   { U32 f[2]; } temp;
-    int     i, j, masko, selz, selo;
+    union   { U64 d[2]; } temp;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -5819,34 +5818,21 @@ DEF_INST( vector_test_under_mask )
 
     ZVECTOR_CHECK( regs );
 
-    masko = selz = selo = 0;
-    for (i=0; i < 4; i++)
-    {
-        temp.f[0] = regs->VR_F( v1, i );
-        temp.f[1] = regs->VR_F( v2, i );
-        for (j=0; j < 32; j++)
-        {
-            if (temp.f[1] & 0x80000000)
-            {
-                masko++;
-                if (temp.f[0] & 0x80000000)
-                    selo++;
-                else
-                    selz++;
-            }
-            temp.f[0] <<= 1;
-            temp.f[1] <<= 1;
-        }
-    }
+    //note: V2 is mask
+    temp.d[0] = regs->VR_D(v1,0) & regs->VR_D(v2,0);
+    temp.d[1] = regs->VR_D(v1,1) & regs->VR_D(v2,1);
 
-    if (masko == 0)
-        regs->psw.cc = 0;    // All mask bits zero
-    else if (masko == selz)
-        regs->psw.cc = 0;    // Selected bits all zeros
-    else if (masko == selo)
-        regs->psw.cc = 3;    // Selected bits all ones
+    // Selected bits all zeros; or all mask bits zero
+    if ( temp.d[0] == 0 && temp.d[1] == 0 )
+        regs->psw.cc = 0;
+
+    // Selected bits all ones
+    else if ( temp.d[0] == regs->VR_D(v2,0) && temp.d[1] == regs->VR_D(v2,1) )
+        regs->psw.cc = 3;
+
+    // Selected bits a mix of zeros and ones
     else
-        regs->psw.cc = 1;    // Selected bits a mix of zeros and ones
+        regs->psw.cc = 1;
 
     ZVECTOR_END( regs );
 }
