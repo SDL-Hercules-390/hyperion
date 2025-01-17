@@ -751,4 +751,9 @@ EXTRA_DIST =                    \
      zvector-e7-04-BitCount.core            \
      zvector-e7-04-BitCount.list            \
      zvector-e7-04-BitCount.pdf             \
-     zvector-e7-04-BitCount.tst
+     zvector-e7-04-BitCount.tst             \
+     zvector-e7-05-VTM.asm                  \
+     zvector-e7-05-VTM.core                 \
+     zvector-e7-05-VTM.list                 \
+     zvector-e7-05-VTM.pdf                  \
+     zvector-e7-05-VTM.tst

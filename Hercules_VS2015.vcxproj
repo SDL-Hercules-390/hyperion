@@ -1340,6 +1340,11 @@
     <None Include="tests\zvector-e7-04-BitCount.list" />
     <None Include="tests\zvector-e7-04-BitCount.pdf" />
     <None Include="tests\zvector-e7-04-BitCount.tst" />
+    <None Include="tests\zvector-e7-05-VTM.asm" />
+    <None Include="tests\zvector-e7-05-VTM.core" />
+    <None Include="tests\zvector-e7-05-VTM.list" />
+    <None Include="tests\zvector-e7-05-VTM.pdf" />
+    <None Include="tests\zvector-e7-05-VTM.tst" />
     <None Include="util\awssl-v19g" />
     <None Include="util\awswrite.jcl" />
     <None Include="util\bldlvlck" />

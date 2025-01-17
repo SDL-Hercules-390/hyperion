@@ -3778,6 +3778,10 @@
 						RelativePath=".\tests\zvector-e7-04-BitCount.core"
 						>
 					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-05-VTM.core"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="scripts"
@@ -5089,6 +5093,10 @@
 							RelativePath=".\tests\zvector-e7-04-BitCount.tst"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-05-VTM.tst"
+							>
+						</File>
 						<Filter
 							Name="subtst"
 							>
@@ -5555,6 +5563,10 @@
 						</File>
 						<File
 							RelativePath=".\tests\zvector-e7-04-BitCount.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-05-VTM.asm"
 							>
 						</File>
 						<Filter
@@ -6338,6 +6350,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\zvector-e7-04-BitCount.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-05-VTM.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-05-VTM.pdf"
 								>
 							</File>
 						</Filter>
