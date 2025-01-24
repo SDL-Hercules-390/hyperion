@@ -332,8 +332,6 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
     int i, secs, rc;
     TID tids[ NUM_THREADS ];
 
-    //UNREFERENCED(argc);
-    //UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
     if (sysblk.scrtest)
@@ -443,11 +441,22 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
         else if (CMD( argv[1], SIGUSR1, 7 )) raise( SIGUSR1 );
         else if (CMD( argv[1], SIGUSR2, 7 )) raise( SIGUSR2 );
 #endif
+        else if (CMD( argv[1], 33, 2 ))   // "$test 33"
+        {
+            LOGMSG("+++ $test 33: Before BREAK_INTO_DEBUGGER(): sysblk.is_debugger_present = %s\n",
+                sysblk.is_debugger_present ? "true" : "false" );
+
+            BREAK_INTO_DEBUGGER();
+
+            LOGMSG("+++ $test 33: After  BREAK_INTO_DEBUGGER(): sysblk.is_debugger_present = %s\n",
+                sysblk.is_debugger_present ? "true" : "false" );
+        }
         else
         {
             // "%s%s"
             WRMSG( HHC00001, "E", argv[1], ": unknown test");
         }
+
         return 0;
     }
 

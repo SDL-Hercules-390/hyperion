@@ -945,6 +945,9 @@ int     rc, maxprio, minprio;
     /* Clear the system configuration block */
     memset( &sysblk, 0, sizeof( SYSBLK ) );
 
+    // Check if debugger is present...
+    check_if_debugger_is_present();
+
     /* Restore saved minprio/maxprio into SYSBLK */
     sysblk.minprio = minprio;
     sysblk.maxprio = maxprio;
