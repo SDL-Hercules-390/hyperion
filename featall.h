@@ -51,18 +51,6 @@
 #define OPTION_NOASYNC_SF_CMDS          // Bypass bug in cache logic
                                         // (see GitHub Issue #618!)
 
-
-
-/////////////////// FISHTEST ///////////////////
-
-#define IS_DEBUGGER_PRESENT_TRY_2       // (Jame's suggested way)
-
-/////////////////// FISHTEST ///////////////////
-
-
-
-
-
 /*-------------------------------------------------------------------*/
 /*              Normal default OPTIONs and FEATUREs                  */
 /*-------------------------------------------------------------------*/

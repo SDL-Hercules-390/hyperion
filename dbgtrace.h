@@ -143,7 +143,7 @@
 
 #if defined( _MSVC_ ) && _ENABLE_TRACING_STMTS_IMPL
 
-  // (only need to implement this once)
+  // (static function: only need to implement this once)
 
   #ifndef _ENABLE_TRACING_STMTS_DEBUGGERTRACE_DEFINED
   #define _ENABLE_TRACING_STMTS_DEBUGGERTRACE_DEFINED

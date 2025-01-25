@@ -728,25 +728,6 @@ static const char *build_info[] = {
     "With    OPTION_NOASYNC_SF_CMDS",           // (see GitHub Issue #618!)
 #endif
 
-
-
-
-
-/////////////////// FISHTEST ///////////////////
-
-#if defined( IS_DEBUGGER_PRESENT_TRY_2 )        // (try Jame's suggested way)
-    "With    IS_DEBUGGER_PRESENT_TRY_2",        // (see GitHub Issue #700)
-#endif
-
-/////////////////// FISHTEST ///////////////////
-
-
-
-
-
-
-
-
 //---------------------------------------------------------------------
 
 

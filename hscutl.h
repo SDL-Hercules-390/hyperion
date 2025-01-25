@@ -411,7 +411,7 @@ HUT_DLL_IMPORT bool are_big_endian();
 /*      Determine if running under the control of a debugger         */
 /*-------------------------------------------------------------------*/
 
-HUT_DLL_IMPORT void check_if_debugger_is_present();
+HUT_DLL_IMPORT bool check_if_debugger_is_present();
 
 /*********************************************************************/
 /*********************************************************************/

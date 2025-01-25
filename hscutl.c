@@ -2566,144 +2566,101 @@ DLL_EXPORT bool are_big_endian()
 }
 
 /*-------------------------------------------------------------------*/
-/*      Determine if running under the control of a debugger         */
+/*      NON-Windows implementation of "IsDebuggerPresent()"          */
 /*-------------------------------------------------------------------*/
 
-#if defined(_MSVC_)
-
-DLL_EXPORT void check_if_debugger_is_present()
-{
-    sysblk.is_debugger_present = IsDebuggerPresent() ? true : false;
-}
-
-#else // Linux...
-
-#if defined( IS_DEBUGGER_PRESENT_TRY_2 )
-
-//------------------------------------------------------------------------------
-// https://github.com/SDL-Hercules-390/hyperion/issues/700#issuecomment-2572472164
-//------------------------------------------------------------------------------
+#if !defined( _MSVC_ ) // Linux, etc..
 
 #include <sys/ptrace.h>
 
-DLL_EXPORT void check_if_debugger_is_present()
+#if defined( __APPLE__ )
+  #include <sys/sysctl.h>
+#endif
+
+static bool IsDebuggerPresent()
 {
-    static bool did_this_once_already = false;
-
-    if (!did_this_once_already)
-    {
-        did_this_once_already = true;
-
-        sysblk.is_debugger_present = false;  // (default until we learn otherwise)
-
 #if defined( __APPLE__ )
 
-        {
-            // macOS
+    // macOS
 
-            int                mib[4];
-            struct kinfo_proc  info;
-            size_t             size = sizeof( info );
+    int                mib[4];
+    struct kinfo_proc  info;
+    size_t             size = sizeof( info );
 
-            mib[0] = CTL_KERN;
-            mib[1] = KERN_PROC;
-            mib[2] = KERN_PROC_PID;
-            mib[3] = getpid();
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
 
-            sysctl( mib, 4, &info, &size, NULL, 0 );
+    sysctl( mib, 4, &info, &size, NULL, 0 );
 
-            sysblk.is_debugger_present =
-                ((info.kp_proc.p_flag & P_TRACED) != 0);
-        }
+    return ((info.kp_proc.p_flag & P_TRACED) != 0);
 
 #elif defined( __FreeBSD__ ) || defined( __OpenBSD__ )
 
-        {
-            // BSD
+    // BSD
 
-            int                mib[4];
-            struct kinfo_proc  info;
-            size_t             size = sizeof( info );
+    int                mib[4];
+    struct kinfo_proc  info;
+    size_t             size = sizeof( info );
 
-            mib[0] = CTL_KERN;
-            mib[1] = KERN_PROC;
-            mib[2] = KERN_PROC_PID;
-            mib[3] = getpid();
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
 
-            sysctl( mib, 4, &info, &size, NULL, 0 );
+    sysctl( mib, 4, &info, &size, NULL, 0 );
 
-            sysblk.is_debugger_present =
-                ((info.ki_flag & P_TRACED) != 0);
-        }
+    return ((info.ki_flag & P_TRACED) != 0);
 
 #elif defined( __linux__ )
 
+    // Linux
+
+    FILE*  f;
+    char   buf[ 256 ];
+    int    tracer_pid;
+    bool   debugger_is_present = false;
+
+    snprintf( buf, sizeof( buf ), "/proc/%d/status", getpid() );
+
+    if ((f = fopen( buf, "r" )))
+    {
+        while (fgets( buf, sizeof( buf ), f ))
         {
-            // Linux
-
-            FILE*  f;
-            char   buf[ 256 ];
-            int    tracer_pid;
-
-            snprintf( buf, sizeof( buf ), "/proc/%d/status", getpid() );
-
-            if (!(f = fopen( buf, "r" )))
+            if (strncmp( buf, "TracerPid:", 10 ) == 0)
             {
-                sysblk.is_debugger_present = false;
-            }
-            else
-            {
-                while (fgets( buf, sizeof( buf ), f))
+                tracer_pid = atoi( &buf[10] );
+
+                if (tracer_pid != 0)
                 {
-                    if (strncmp(buf, "TracerPid:", 10) == 0)
-                    {
-                        tracer_pid = atoi( &buf[10] );
-
-                        if (tracer_pid != 0)
-                        {
-                            sysblk.is_debugger_present = true;
-                            break;
-                        }
-                    }
+                    debugger_is_present = true;
+                    break;
                 }
-
-                fclose( f );
             }
         }
+
+        fclose( f );
+    }
+
+    return debugger_is_present;
+
 #endif
 
     } // (did this once already)
 
-} // check_if_debugger_is_present
+} // IsDebuggerPresent
 
-#else // !defined( IS_DEBUGGER_PRESENT_TRY_2 ) i.e. original problematic way
+#endif // !MSVC
 
-/*-------------------------------------------------------------------
-  This works on Linux and MacOSX and any BSD kernel too. Please see:
-  https://forum.juce.com/t/detecting-if-a-process-is-being-run-under-a-debugger/2098
-  -------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*      Determine if running under the control of a debugger         */
+/*-------------------------------------------------------------------*/
 
-#include <sys/ptrace.h>
-
-DLL_EXPORT void check_if_debugger_is_present()
+DLL_EXPORT bool check_if_debugger_is_present()
 {
-    static int did_this_once_already = 0;
-
-    if (!did_this_once_already)
-    {
-        did_this_once_already = 1;
-        sysblk.is_debugger_present = 0;
-
-        if (ptrace( PTRACE_TRACEME, 0, 1, 0 ) < 0)
-            sysblk.is_debugger_present = 1;
-        else
-            ptrace( PTRACE_DETACH, 0, 1, 0 );
-    }
+    return (sysblk.is_debugger_present = IsDebuggerPresent() ? true : false);
 }
-
-#endif // IS_DEBUGGER_PRESENT_TRY_2
-
-#endif // MSVC or not
 
 /*********************************************************************/
 /*********************************************************************/
