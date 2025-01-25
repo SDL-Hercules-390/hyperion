@@ -2647,8 +2647,6 @@ static bool IsDebuggerPresent()
 
 #endif
 
-    } // (did this once already)
-
 } // IsDebuggerPresent
 
 #endif // !MSVC
