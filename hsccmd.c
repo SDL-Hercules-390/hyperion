@@ -332,8 +332,6 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
     int i, secs, rc;
     TID tids[ NUM_THREADS ];
 
-    //UNREFERENCED(argc);
-    //UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
     if (sysblk.scrtest)
@@ -443,11 +441,22 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
         else if (CMD( argv[1], SIGUSR1, 7 )) raise( SIGUSR1 );
         else if (CMD( argv[1], SIGUSR2, 7 )) raise( SIGUSR2 );
 #endif
+        else if (CMD( argv[1], 33, 2 ))   // "$test 33"
+        {
+            LOGMSG("+++ $test 33: Before BREAK_INTO_DEBUGGER(): sysblk.is_debugger_present = %s\n",
+                sysblk.is_debugger_present ? "true" : "false" );
+
+            BREAK_INTO_DEBUGGER();
+
+            LOGMSG("+++ $test 33: After  BREAK_INTO_DEBUGGER(): sysblk.is_debugger_present = %s\n",
+                sysblk.is_debugger_present ? "true" : "false" );
+        }
         else
         {
             // "%s%s"
             WRMSG( HHC00001, "E", argv[1], ": unknown test");
         }
+
         return 0;
     }
 
@@ -4236,7 +4245,7 @@ int cnslport_cmd( int argc, char* argv[], char* cmdline )
 
         if (strchr( sysblk.cnslport, ':' ) == NULL)
         {
-            MSGBUF( buf, "on port %s", sysblk.cnslport);
+            MSGBUF( buf, "port %s", sysblk.cnslport);
         }
         else
         {
@@ -4252,12 +4261,12 @@ int cnslport_cmd( int argc, char* argv[], char* cmdline )
                     host = port;
             }
 
-            MSGBUF( buf, "for host %s on port %s", host, serv);
+            MSGBUF( buf, "port %s on host %s", serv, host );
             free( port );
         }
 
-        // "%s server %slistening %s"
-        WRMSG( HHC17001, "I", "Console", "", buf);
+        // "%s server port set to %s"
+        WRMSG( HHC17016, "I", "3270 console", buf);
         rc = 0;
     }
     else
@@ -4380,7 +4389,7 @@ int sysgport_cmd( int argc, char* argv[], char* cmdline )
                         host = port;
                 }
 
-                MSGBUF( buf, "for host %s on port %s", host, serv );
+                MSGBUF( buf, "on port %s for host %s", serv, host );
                 free( port );
             }
         }
@@ -9575,6 +9584,7 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
     }
 
 
+    //-----------------------------------------------------------------
     // HTTP SERVER...
 
     MSGBUF( buf, "on port %s with %s", http_get_port(), http_get_portauth() );
@@ -9583,6 +9593,7 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
     WRMSG( HHC17001, "I", "HTTP", "", buf );
 
 
+    //-----------------------------------------------------------------
     // SHARED DASD SERVER...
 
 #if defined( OPTION_SHARED_DEVICES )
@@ -9606,8 +9617,8 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
 
 #endif // defined( OPTION_SHARED_DEVICES )
 
-
-    // CONSOLE...
+    //-----------------------------------------------------------------
+    // CONSOLE... (i.e. CNSLPORT)
 
     if (!strchr( sysblk.cnslport, ':' ))
     {
@@ -9626,15 +9637,17 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
                 host = port;
         }
 
-        MSGBUF( buf, "for host %s on port %s", host, serv );
+        MSGBUF( buf, "on port %s for host %s", serv, host );
         free( port );
     }
 
     // "%s server %slistening %s"
-    WRMSG( HHC17001, "I", "Console", "", buf );
+    WRMSG( HHC17001, "I", "3270 terminal",
+        !sysblk.cnsltid ? "NOT " : "", buf );
 
 
-    // SYSG CONSOLE...
+    //-----------------------------------------------------------------
+    // SYSG CONSOLE... (i.e. SYSGPORT)
 
     if (sysblk.sysgport)
     {
@@ -9655,7 +9668,7 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
                     host = port;
             }
 
-            MSGBUF( buf, "for host %s on port %s", host, serv );
+            MSGBUF( buf, "on port %s for host %s", serv, host );
             free( port );
         }
 

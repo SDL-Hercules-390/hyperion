@@ -2565,6 +2565,101 @@ DLL_EXPORT bool are_big_endian()
     return (0x01 == test.b[0]);
 }
 
+/*-------------------------------------------------------------------*/
+/*      NON-Windows implementation of "IsDebuggerPresent()"          */
+/*-------------------------------------------------------------------*/
+
+#if !defined( _MSVC_ ) // Linux, etc..
+
+#include <sys/ptrace.h>
+
+#if defined( __APPLE__ )
+  #include <sys/sysctl.h>
+#endif
+
+static bool IsDebuggerPresent()
+{
+#if defined( __APPLE__ )
+
+    // macOS
+
+    int                mib[4];
+    struct kinfo_proc  info;
+    size_t             size = sizeof( info );
+
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
+
+    sysctl( mib, 4, &info, &size, NULL, 0 );
+
+    return ((info.kp_proc.p_flag & P_TRACED) != 0);
+
+#elif defined( __FreeBSD__ ) || defined( __OpenBSD__ )
+
+    // BSD
+
+    int                mib[4];
+    struct kinfo_proc  info;
+    size_t             size = sizeof( info );
+
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
+
+    sysctl( mib, 4, &info, &size, NULL, 0 );
+
+    return ((info.ki_flag & P_TRACED) != 0);
+
+#elif defined( __linux__ )
+
+    // Linux
+
+    FILE*  f;
+    char   buf[ 256 ];
+    int    tracer_pid;
+    bool   debugger_is_present = false;
+
+    snprintf( buf, sizeof( buf ), "/proc/%d/status", getpid() );
+
+    if ((f = fopen( buf, "r" )))
+    {
+        while (fgets( buf, sizeof( buf ), f ))
+        {
+            if (strncmp( buf, "TracerPid:", 10 ) == 0)
+            {
+                tracer_pid = atoi( &buf[10] );
+
+                if (tracer_pid != 0)
+                {
+                    debugger_is_present = true;
+                    break;
+                }
+            }
+        }
+
+        fclose( f );
+    }
+
+    return debugger_is_present;
+
+#endif
+
+} // IsDebuggerPresent
+
+#endif // !MSVC
+
+/*-------------------------------------------------------------------*/
+/*      Determine if running under the control of a debugger         */
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT bool check_if_debugger_is_present()
+{
+    return (sysblk.is_debugger_present = IsDebuggerPresent() ? true : false);
+}
+
 /*********************************************************************/
 /*********************************************************************/
 /**                                                                 **/

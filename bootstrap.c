@@ -121,6 +121,7 @@ static void crash_signal_handler( int signo )
 /*                                                                   */
 /*  For Unix-like platforms, the main() function:                    */
 /*                                                                   */
+/*   - determines if running under control of a debugger or not      */
 /*   - Installs a crash handler if signal handling is available      */
 /*   - Sets the privilege level                                      */
 /*   - Initializes the LIBTOOL environment                           */

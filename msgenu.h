@@ -554,27 +554,27 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00451 "%1d:%04X CKD file %s: DASD table entry not found for devtype 0x%2.2X"
 #define HHC00452 "%1d:%04X CKD file %s: initialization failed"
 #define HHC00453 "%1d:%04X CKD file %s: heads %d trklen %d"
-#define HHC00454 "%1d:%04X FBA file %s: sectors %d size %d"
+//efine HHC00454 (available)
 #define HHC00455 "%1d:%04X CKD file %s: %s record not found"
 #define HHC00456 "%1d:%04X CKD file %s: VOLSER %s VTOC %4.4X%4.4X%2.2X"
 #define HHC00457 "%1d:%04X CKD file %s: VTOC start %2.2X%2.2X%2.2X%2.2X end %2.2X%2.2X%2.2X%2.2X"
 #define HHC00458 "%1d:%04X CKD file %s: dataset %s not found in VTOC"
 #define HHC00459 "%1d:%04X CKD file %s: DSNAME %s F1DSCB CCHHR=%4.4X%4.4X%2.2X"
-#define HHC00460 "%1d:%04X CKD file %s: %u %s successfully written"
+#define HHC00460 "%1d:%04X %s file %s: %u %s successfully written"
 #define HHC00461 "%1d:%04X CKD file %s: %s count %u is outside range %u-%u"
 #define HHC00462 "%1d:%04X CKD file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
-#define HHC00463 "%1d:%04X FBA file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
-#define HHC00464 "%1d:%04X CKD file %s: file size too large: %"PRIu64" [%d]"
-#define HHC00465 "%1d:%04X FBA file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+//efine HHC00463 (available)
+//efine HHC00464 (available)
+//efine HHC00465 (available)
 #define HHC00466 "Maximum of %u %s in %u 2GB file(s) is supported"
 #define HHC00467 "Maximum %s supported is %u"
 #define HHC00468 "For larger capacity DASD volumes, use %s"
 #define HHC00469 "%1d:%04X %s file %s: shadow files not supported for %s dasd"
 #define HHC00470 "%1d:%04X %s file %s: model %s cyls %d heads %d tracks %d trklen %d"
-#define HHC00471 "%1d:%04X CKD64 file %s: %u %s successfully written"
+//efine HHC00471 (available)
 #define HHC00472 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
-#define HHC00473 "%1d:%04X FBA64 file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
-#define HHC00474 "%1d:%04X FBA64 file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+//efine HHC00473 (available)
+//efine HHC00474 (available)
 #define HHC00475 "This might take a while... Please wait..."
 #define HHC00476 "%1d:%04X %s file %s: opened r/o%s"
 //efine HHC00477 - HHC00499 (available)
@@ -603,7 +603,15 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00519 "Thread "TIDPAT" %1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
 #define HHC00520 "Thread "TIDPAT" %1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
 #define HHC00521 "Maximum of %u %s in a 2GB file"
-//efine HHC00522 - HHC00599 (available)
+// fba dasd device related messages...
+#define HHC00522 "%1d:%04X %s file %s: sectors %d size %d"
+#define HHC00523 "%1d:%04X %s file %s: %u %s successfully written"
+#define HHC00524 "%1d:%04X %s file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
+//efine HHC00525 (available)
+#define HHC00526 "%1d:%04X %s file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+#define HHC00527 "%1d:%04X %s file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
+#define HHC00528 "%1d:%04X %s file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+//efine HHC00529 - HHC00599 (available)
 
 // scedasd.c
 #define HHC00600 "SCE file %s: error in function %s: %s"
@@ -2303,7 +2311,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03006 "%s error: %s"
 #define HHC03007 "File size:      (%s bytes)"
 #define HHC03008 "Compressed device header inconsistency(s) found! code: %4.4X"
-//efine HHC03009 - HHC03019 (available)
+#define HHC03009 "Only '-i' (summary information only) is supported for CFBA/CFBA64 devices"
+//efine HHC03010 - HHC03019 (available)
 #define HHC03020 "" // (blank line)
 #define HHC03021 "%s of:     \"%s\""
 #define HHC03022                                                            "\n" \
@@ -2442,12 +2451,17 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC03255 - HHC03299 (available)
 
 // txt2card
-#define HHC03300 "Usage:  txt2card  codepage  infile  outfile"
+#define HHC03300 "Usage:  txt2card  codepage  ifile  {ofile | host:port}"
 #define HHC03301 "Incorrect number of arguments"
 #define HHC03302 "Invalid/unsupported codepage"
 #define HHC03303 "Error opening \"%s\": %s"
 #define HHC03304 "I/O error on file \"%s\": %s"
-//efine HHC03305 - HHC03349 (available)
+#define HHC03305 "Invalid socket specification: %s"
+#define HHC03306 "Transmission error on socket: %s"
+#define HHC03307 "%d cards submitted"
+#define HHC03308 "Socket creation error: %s"
+#define HHC03309 "Error connecting to %s"
+//efine HHC03310 - HHC03349 (available)
 
 //efine HHC03350 - HHC03399 (available)
 
@@ -2624,7 +2638,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC17013 "Process ID = %d"
 #define HHC17014 "%s value is invalid; valid range is %d - %d"
 #define HHC17015 "%s support not included in this engine build"
-//efine HHC17016 - HHC17099 (available)
+#define HHC17016 "%s server port set to %s"
+//efine HHC17017 - HHC17099 (available)
 
 //efine HHC17100 - HHC17198 (available)
 #define HHC17199 "%.4s %s"

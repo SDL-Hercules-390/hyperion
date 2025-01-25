@@ -1898,6 +1898,12 @@
     <None Include="tests\zvector-e7-03-VGFMA.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\zvector-e7-04-BitCount.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e7-05-VTM.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\FAC53.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2414,6 +2420,12 @@
     <None Include="tests\zvector-e7-03-VGFMA.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\zvector-e7-04-BitCount.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e7-05-VTM.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
@@ -2670,6 +2682,12 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\zvector-e7-03-VGFMA.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-04-BitCount.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-05-VTMt.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\3211.list">
@@ -3101,6 +3119,18 @@
     <None Include="tests\zvector-e7-03-VGFMA.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\zvector-e7-04-BitCount.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-04-BitCount.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-05-VTM.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-05-VTM.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="hercules.cnf">
       <Filter>Other Files\misc</Filter>
     </None>
@@ -3149,6 +3179,9 @@
     <None Include="tests\privop.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\prno.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\problem.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -3185,6 +3218,9 @@
     <None Include="tests\privop.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\prno.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\problem.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -3218,6 +3254,9 @@
     <None Include="tests\privop.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\prno.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\problem.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -3246,6 +3285,12 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\privop.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\prno.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\prno.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\problem.list">

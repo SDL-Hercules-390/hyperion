@@ -330,8 +330,9 @@ int             argc=0;                 /*  device open              */
     cif->trksz = dev->fbablksiz;
     if (is_verbose_util())
     {
-       FWRMSG( stdout, HHC00454, "I", SSID_TO_LCSS(cif->devblk.ssid),
-           cif->devblk.devnum, fname, cif->heads, cif->trksz );
+        // "%1d:%04X %s file %s: sectors %d size %d"
+       FWRMSG( stdout, HHC00522, "I", SSID_TO_LCSS(cif->devblk.ssid),
+           cif->devblk.devnum, FBATYP(0,1), fname, cif->heads, cif->trksz );
     }
 
     /* Indicate that the track buffer is empty */
@@ -893,8 +894,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Display completion message */
-    // "%1d:%04X CKD64 file %s: %u %s successfully written"
-    FWRMSG( stdout, HHC00471, "I", 0, 0, fname,
+    // "%1d:%04X %s file %s: %u %s successfully written"
+    FWRMSG( stdout, HHC00460, "I", 0, 0, CKDTYP(0,1), fname,
             cyl - start, "cylinders" );
     return 0;
 
@@ -1157,8 +1158,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Display progress message */
-    // "%1d:%04X FBA64 file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
-    FWRMSG( stdout, HHC00473, "I", 0, 0, fname,
+    // "%1d:%04X %s file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
+    FWRMSG( stdout, HHC00527, "I", 0, 0, FBATYP(0,1), fname,
             devtype, rawflag ? "" : volser, sectors, sectsz );
 
     /* if `dasdcopy' > 1 then we can replace the existing file */
@@ -1238,8 +1239,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     free (buf);
 
     /* Display completion message */
-    // "%1d:%04X CKD64 file %s: %u %s successfully written"
-    FWRMSG( stdout, HHC00471, "I", 0, 0, fname, sectors, "sectors" );
+    // "%1d:%04X %s file %s: %u %s successfully written"
+    FWRMSG( stdout, HHC00523, "I", 0, 0, FBATYP(0,1), fname, sectors, "sectors" );
 
     return 0;
 } /* end function create_fba64 */
@@ -1275,7 +1276,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
 #if defined( HAVE_ZLIB )
     BYTE             buf2[256];         /* Compressed buffer         */
 #endif
-    BYTE             buf[65536];        /* Buffer                    */
+    BYTE*            pBuf = NULL;       /* Work buffer               */
     int              x = O_EXCL;        /* Open option               */
     char             pathname[MAX_PATH];/* file path in host format  */
 
@@ -1286,11 +1287,10 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
     num_L1tab = (blkgrps + 255) / 256;
     l1tabsz   = num_L1tab * CCKD64_L1ENT_SIZE;
 
-    if (l1tabsz > 65536)
+    if (!(pBuf = malloc( l1tabsz )))
     {
-        // "%1d:%04X CKD file %s: file size too large: %"PRIu64" [%d]"
-        FWRMSG( stderr, HHC00464, "E", 0, 0, fname,
-                ((U64)sectors * sectsz), num_L1tab );
+        // "Out of memory"
+        FWRMSG( stderr, HHC00152, "S" );
         return -1;
     }
 
@@ -1318,12 +1318,13 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "open()", strerror( errno ));
+        free( pBuf );
         return -1;
     }
 
     /* Display progress message */
-    // "%1d:%04X FBA64 file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
-    FWRMSG( stdout, HHC00474, "I", 0, 0, fname,
+    // "%1d:%04X %s file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+    FWRMSG( stdout, HHC00528, "I", 0, 0, FBATYP(1,1), fname,
         devtype, rawflag ? "" : volser, sectors, sectsz );
 
     /* Create the device header */
@@ -1346,6 +1347,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "write()", errno ? strerror( errno ) : "incomplete" );
+        free( pBuf );
         return -1;
     }
 
@@ -1374,11 +1376,12 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "write()", errno ? strerror( errno ) : "incomplete" );
+        free( pBuf );
         return -1;
     }
 
     /* Build and Write the level 1 table */
-    l1 = (CCKD64_L1ENT*) &buf;
+    l1 = (CCKD64_L1ENT*) pBuf;
     memset( l1, 0, l1tabsz );
     l1[0] = CKD_DEVHDR_SIZE + CCKD64_DEVHDR_SIZE + l1tabsz;
     rc = write( fd, l1, l1tabsz );
@@ -1387,6 +1390,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "write()", errno ? strerror( errno ) : "incomplete" );
+        free( pBuf );
         return -1;
     }
 
@@ -1400,22 +1404,23 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "write()", errno ? strerror( errno ) : "incomplete" );
+        free( pBuf );
         return -1;
     }
 
     /* Clear the first block group's image data to binary zeros */
-    memset( &buf, 0, FBA_BKGHDR_SIZE + CFBA_BLKGRP_SIZE );
+    memset( pBuf, 0, FBA_BKGHDR_SIZE + CFBA_BLKGRP_SIZE );
 
     /* Build the "Track Header" (FBA Block Group Header) */
-    blkghdr = (FBA_BKGHDR*) &buf[0]; /* (--> block group header) */
+    blkghdr = (FBA_BKGHDR*) pBuf;        /* (--> block group header) */
     blkghdr->cmp = CCKD_COMPRESS_NONE;   /* (until we know for sure) */
-    store_fw( blkghdr->blknum, 0 );      /* (group's starting block) */
+    store_fw( blkghdr->grpnum, 0 );      /* (group's GROUP number)   */
 
     /* Build the VOL1 label if requested */
     if (!rawflag)
     {
         /* The VOL1 label is at physical sector number 1 */
-        VOL1_FBA* fbavol1 = (VOL1_FBA*) &buf[ FBA_BKGHDR_SIZE + sectsz ];
+        VOL1_FBA* fbavol1 = (VOL1_FBA*) &pBuf[ FBA_BKGHDR_SIZE + sectsz ];
         build_vol1( fbavol1, volser, NULL, false );
     }
 
@@ -1424,7 +1429,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
     len2 = sizeof( buf2 );
     if (1
         && CCKD_COMPRESS_ZLIB == (comp & CCKD_COMPRESS_MASK)
-        && Z_OK == (rc = compress2( &buf2[0], &len2, &buf[ FBA_BKGHDR_SIZE ],
+        && Z_OK == (rc = compress2( &buf2[0], &len2, &pBuf[ FBA_BKGHDR_SIZE ],
                                     CFBA_BLKGRP_SIZE, Z_DEFAULT_COMPRESSION ))
     )
     {
@@ -1434,12 +1439,13 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
            was NOT compressed) followed by the compressed block group
            data (which WAS compressed)
         */
-        rc = write( fd, &buf, FBA_BKGHDR_SIZE );
+        rc = write( fd, pBuf, FBA_BKGHDR_SIZE );
         if (rc < (int) FBA_BKGHDR_SIZE)
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
             FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
                 "write()", errno ? strerror( errno ) : "incomplete" );
+            free( pBuf );
             return -1;
         }
 
@@ -1450,6 +1456,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
             // "%1d:%04X CKD file %s: error in function %s: %s"
             FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
                 "write()", errno ? strerror( errno ) : "incomplete" );
+            free( pBuf );
             return -1;
         }
     }
@@ -1462,12 +1469,13 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         /* Write out both the FBA Block Group Header and the Block Group
            Data itself (i.e. all of the block group sectors) in one I/O.
         */
-        rc = write( fd, &buf, FBA_BKGHDR_SIZE + len2 );
+        rc = write( fd, pBuf, FBA_BKGHDR_SIZE + len2 );
         if (rc < (int)(FBA_BKGHDR_SIZE + len2))
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
             FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
                 "write()", errno ? strerror( errno ) : "incomplete" );
+            free( pBuf );
             return -1;
         }
     }
@@ -1486,6 +1494,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
                 "lseek()", strerror( errno ));
+        free( pBuf );
         return -1;
     }
     rc = write( fd, &cdevhdr, CCKD64_DEVHDR_SIZE);
@@ -1494,6 +1503,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "write()", errno ? strerror( errno ) : "incomplete" );
+        free( pBuf );
         return -1;
     }
 
@@ -1503,6 +1513,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "lseek()", strerror( errno ));
+        free( pBuf );
         return -1;
     }
     rc = write( fd, &l2, CCKD64_L2TAB_SIZE);
@@ -1511,6 +1522,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "write()", errno ? strerror( errno ) : "incomplete" );
+        free( pBuf );
         return -1;
     }
 
@@ -1520,12 +1532,14 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
         // "%1d:%04X CKD file %s: error in function %s: %s"
         FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
             "close()", strerror( errno ));
+        free( pBuf );
         return -1;
     }
 
     /* Display completion message */
-    // "%1d:%04X CKD64 file %s: %u %s successfully written"
-    FWRMSG( stdout, HHC00471, "I", 0, 0, fname,
+    // "%1d:%04X %s file %s: %u %s successfully written"
+    FWRMSG( stdout, HHC00523, "I", 0, 0, FBATYP(1,1), fname,
         sectors, "sectors" );
+    free( pBuf );
     return 0;
 } /* end function create_compressed_fba64 */

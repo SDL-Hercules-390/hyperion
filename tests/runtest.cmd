@@ -137,7 +137,7 @@
   echo.
   echo     VERSION
   echo.
-  echo         3.3         (April 3, 2018)
+  echo         3.4         (January 3, 2025)
   echo.
 
   set "hlp=1"
@@ -358,9 +358,69 @@
 
 
 ::-----------------------------------------------------------------------------
+::                         LocalDateTime
+::-----------------------------------------------------------------------------
+:LocalDateTime
+
+setlocal
+
+  REM -----------------------------------------------------------------------
+  REM
+  REM NOTE: return value of "wmic os get LocalDateTime /VALUE" system call is
+  REM "20241229085316.318000+000" (we strip off the "LocalDateTime=" prefix)
+  REM where "+000" is the UTC offset in minutes. But the point is, the value
+  REM is ALWAYS returned in "YYYYMMDDhhmmss.uuuuuu+mmmm" format, and should be
+  REM CONSISTENTLY IDENTICAL acrosss ALL Windows regional languages!
+  REM
+  REM After obtaining the "localdatetime" value, we then parse is and use it
+  REM to set the %date% and %time% variables to U.S. English format, since
+  REM that is what the rest of this script expects.
+  REM
+  REM BECAUSE OF THAT, you are hereby FORWARNED to always wrap your script
+  REM with a "setlocal"and "endlocal", so that the normal default Windows
+  REM behavior of %date% and %time% are not affected!
+  REM
+  REM -----------------------------------------------------------------------
+
+  set "localdatetime="
+  for /f "tokens=1,2 delims==" %%a in ('wmic os get LocalDateTime /VALUE 2^>nul') do (
+      if ".%%a." == ".LocalDateTime." set "localdatetime=%%b"
+  )
+
+%TRACE%.
+%TRACE% +++ LocalDateTime: wmic LocalDateTime = %localdatetime%
+%TRACE%.
+
+  REM parse the results into individual variables
+
+  set "year=%localdatetime:~0,4%"
+  set "month=%localdatetime:~4,2%"
+  set "day=%localdatetime:~6,2%"
+  set "hour=%localdatetime:~8,2%"
+  set "minute=%localdatetime:~10,2%"
+  set "second=%localdatetime:~12,2%"
+  set "subsecs=%localdatetime:~15,2%"
+
+  set "date=%month%/%day%/%year%"
+  set "time=%hour%:%minute%:%second%.%subsecs%"
+
+%TRACE%.
+%TRACE% +++ LocalDateTime: date = %date%
+%TRACE% +++ LocalDateTime: time = %time%
+%TRACE%.
+
+  endlocal && set "date=%date%" && set "time=%time%"
+  %return%
+
+
+::-----------------------------------------------------------------------------
 ::                            timesecs
 ::-----------------------------------------------------------------------------
 :timesecs
+
+%TRACE%.
+%TRACE% timesecs: +++ in = %~1
+%TRACE%.
 
   @REM   Converts the passed time-of-day value in %time% format
   @REM   to the rounded up number of seconds since midnight.
@@ -387,6 +447,10 @@
 
   set /a "#=((((%@hh% * 60 * 60) + (%@mm% * 60) + %@ss%) * 100) + %@cc% + 50) / 100"
 
+%TRACE%.
+%TRACE% +++ timesecs: out = %#%
+%TRACE%.
+
   endlocal & set "#=%#%"
   %return%
 
@@ -396,6 +460,10 @@
 ::-----------------------------------------------------------------------------
 :difftime
 
+%TRACE%.
+%TRACE% +++ difftime: t1 = %~1  t2 = %~2
+%TRACE%.
+
   @REM   Calculate difference between two %time% values:
   @REM
   @REM      difftime  {begtime}  {endtime}
@@ -404,12 +472,22 @@
   @REM   crossed a day boundary. Only durations of less than 2 days
   @REM   is supported. The returned value is in number of seconds.
 
+  :: First, convert the two times to number of seconds
+
   call :timesecs "%~1"
   set /a "t1=%#%"
   call :timesecs "%~2"
   set /a "t2=%#%"
+
+  :: Then perform the calculation to get the duration in #of seconds
+
   if %t2% LSS %t1% set /a "t2=%t2% + 86400"
   set /a "#= %t2% - %t1%"
+  
+%TRACE%.
+%TRACE% +++ difftime: out = %#%
+%TRACE%.
+
   %return%
 
 
@@ -417,6 +495,10 @@
 ::                            dureng
 ::-----------------------------------------------------------------------------
 :dureng
+
+%TRACE%.
+%TRACE% +++ dureng: in = %~1
+%TRACE%.
 
   @REM   Format a duration value in number of seconds to long format.
   @REM   E.g. "1 day, 2 hours, 34 minutes, 56 seconds"
@@ -463,6 +545,11 @@
   ) else (
     set "#=less than 1 second"
   )
+  
+%TRACE%.
+%TRACE% +++ dureng: out = %#%
+%TRACE%.
+
   %return%
 
 
@@ -498,6 +585,7 @@
 
   setlocal ENABLEDELAYEDEXPANSION
   set @=%*
+  call :LocalDateTime
   echo %time%: !@!
   endlocal
   %return%
@@ -942,19 +1030,32 @@
 
   set "begin=1"
 
-
-  @REM  Save start date/time
+  :: ---------------------
+  :: Save beginning time
+  :: ---------------------
 
   for /f "tokens=*" %%d in ('date /t') do set "dat=%%d"
   for /f "tokens=*" %%t in ('time /t') do set "tod=%%t"
+
+  call :LocalDateTime
   set "begtime=%time%"
 
   for /f "tokens=*" %%d in ('date /t') do set "dat2=%%d"
   if not "%dat2%" == "%dat%" (
     for /f "tokens=*" %%t in ('time /t') do set "tod=%%t"
+
+    call :LocalDateTime
     set "begtime=%time%"
   )
+  
+%TRACE%.
+%TRACE% +++ dat     = %dat%
+%TRACE% +++ tod     = %tod%
+%TRACE% +++ tod2    = %tod2%
+%TRACE% +++ begtime = %begtime%
+%TRACE%.
 
+  :: ---------------------
 
   @REM  Output "Begin:" banner...
 
@@ -1113,6 +1214,7 @@
   @REM Accumulate elapsed times since each preceding failure
 
   if %totfail% LEQ 1 set "begfail=%begtime%"
+  call :LocalDateTime
   set "endfail=%time%"
   call :difftime %begfail% %endfail%
   set /a "failtimes=failtimes + #"
@@ -1152,9 +1254,35 @@
     goto :exitnow
   )
 
-  @REM Save ending time
+  :: -------------------
+  :: Save ending time
+  :: -------------------
 
+  for /f "tokens=*" %%d in ('date /t') do set "dat=%%d"
+  for /f "tokens=*" %%t in ('time /t') do set "tod=%%t"
+
+  call :LocalDateTime
   set "endtime=%time%"
+
+  for /f "tokens=*" %%d in ('date /t') do set "dat2=%%d"
+  if not "%dat2%" == "%dat%" (
+    for /f "tokens=*" %%t in ('time /t') do set "tod=%%t"
+
+    call :LocalDateTime
+    set "endtime=%time%"
+  )
+  
+%TRACE%.
+%TRACE% +++ dat     = %dat%
+%TRACE% +++ tod     = %tod%
+%TRACE% +++ tod2    = %tod2%
+%TRACE% +++ endtime = %endtime%
+%TRACE%.
+
+  :: ----------------------------------
+  :: REM Calculate duration in seconds
+  :: ----------------------------------
+
   call :difftime %begtime% %endtime%
   set /a "totsecs=%#%"
   call :dureng %totsecs%
@@ -1165,6 +1293,8 @@
 
   if not defined repeat (
     type %wfn%.txt
+    echo.
+    echo Ended at: %dat% at %endtime:~0,8% %tod:~-2%
     echo.
     echo Duration: %totdur%
     echo.
@@ -1206,6 +1336,8 @@
 :skip
 
 
+  call :logmsg
+  call :logmsg Ended at: %dat% at %endtime:~0,8% %tod:~-2%
   call :logmsg
   call :logmsg Duration: %totdur%
 

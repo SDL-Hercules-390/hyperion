@@ -1669,12 +1669,28 @@ DEF_INST( vector_replicate )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_population_count )
 {
+
+    static const BYTE OneBitsInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 0,  1,  1,  2,  1,  2,  2,  3,  1,  2,  2,  3,  2,  3,  3,  4,
+    /* 1- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 2- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 3- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 4- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 5- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 6- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 7- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* 8- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 9- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* A- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* B- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* C- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* D- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* E- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* F- */   4,  5,  5,  6,  5,  6,  6,  7,  5,  6,  6,  7,  6,  7,  7,  8 };
+
     int     v1, v2, m3, m4, m5;
     int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1695,13 +1711,7 @@ DEF_INST( vector_population_count )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            count = 0;
-            belement = regs->VR_B(v2, i);
-            for (j=0; j < 8; j++)
-            {
-                if (belement & 0x80) count++;
-                belement <<= 1;
-            }
+            count = OneBitsInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
@@ -1709,11 +1719,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 8; i++)
         {
             count = 0;
-            helement = regs->VR_H(v2, i);
-            for (j=0; j < 16; j++)
+            for (j=i*2; j < (i*2)+2; j++)
             {
-                if (helement & 0x8000) count++;
-                helement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1722,11 +1730,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 4; i++)
         {
             count = 0;
-            felement = regs->VR_F(v2, i);
-            for (j=0; j < 32; j++)
+            for (j=i*4; j < (i*4)+4; j++)
             {
-                if (felement & 0x80000000) count++;
-                felement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1735,11 +1741,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 2; i++)
         {
             count = 0;
-            delement = regs->VR_D(v2, i);
-            for (j=0; j < 64; j++)
+            for (j=i*8; j < (i*8)+8; j++)
             {
-                if (delement & 0x8000000000000000ull) count++;
-                delement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_D(v1, i) = count;
         }
@@ -1757,12 +1761,28 @@ DEF_INST( vector_population_count )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_count_trailing_zeros )
 {
+
+    static const BYTE TrailingZerosInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 8,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 1- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 2- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 3- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 4- */   6,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 5- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 6- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 7- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 8- */   7,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 9- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* A- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* B- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* C- */   6,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* D- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* E- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* F- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0 };
+
     int     v1, v2, m3, m4, m5;
-    int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
+    int     i, j, k, count;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1777,23 +1797,19 @@ DEF_INST( vector_count_trailing_zeros )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            belement = regs->VR_B(v2, i);
-            for (j=0, count=0; j < 8; j++, count++)
-            {
-                if (belement & 0x01) break;
-                belement >>= 1;
-            }
+            count = TrailingZerosInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
     case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
-            helement = regs->VR_H(v2, i);
-            for (j=0, count=0; j < 16; j++, count++)
+            count = 0;
+            for (j=(i*2)+1; j >= i*2; j--)
             {
-                if (helement & 0x0001) break;
-                helement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1801,11 +1817,12 @@ DEF_INST( vector_count_trailing_zeros )
     case 2:  // Word
         for (i=0; i < 4; i++)
         {
-            felement = regs->VR_F(v2, i);
-            for (j=0, count=0; j < 32; j++, count++)
+            count = 0;
+            for (j=(i*4)+3; j >= i*4; j--)
             {
-                if (felement & 0x00000001) break;
-                felement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1813,11 +1830,12 @@ DEF_INST( vector_count_trailing_zeros )
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
-            delement = regs->VR_D(v2, i);
-            for (j=0, count=0; j < 64; j++, count++)
+            count = 0;
+            for (j=(i*8)+7; j >= i*8; j--)
             {
-                if (delement & 0x0000000000000001ull) break;
-                delement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_D(v1, i) = count;
         }
@@ -1835,12 +1853,28 @@ DEF_INST( vector_count_trailing_zeros )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_count_leading_zeros )
 {
+
+    static const BYTE LeadingZerosInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 8,  7,  6,  6,  5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  4,
+    /* 1- */   3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+    /* 2- */   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+    /* 3- */   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+    /* 4- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 5- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 6- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 7- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 8- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* 9- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* A- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* B- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* C- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* D- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* E- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* F- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 };
+
     int     v1, v2, m3, m4, m5;
-    int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
+    int     i, j, k, count;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1855,23 +1889,19 @@ DEF_INST( vector_count_leading_zeros )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            belement = regs->VR_B(v2, i);
-            for (j=0, count=0; j < 8; j++, count++)
-            {
-                if (belement & 0x80) break;
-                belement <<= 1;
-            }
+            count = LeadingZerosInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
     case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
-            helement = regs->VR_H(v2, i);
-            for (j=0, count=0; j < 16; j++, count++)
+            count = 0;
+            for (j=i*2; j < (i*2)+2; j++)
             {
-                if (helement & 0x8000) break;
-                helement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1879,11 +1909,12 @@ DEF_INST( vector_count_leading_zeros )
     case 2:  // Word
         for (i=0; i < 4; i++)
         {
-            felement = regs->VR_F(v2, i);
-            for (j=0, count=0; j < 32; j++, count++)
+            count = 0;
+            for (j=i*4; j < (i*4)+4; j++)
             {
-                if (felement & 0x80000000) break;
-                felement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1891,11 +1922,12 @@ DEF_INST( vector_count_leading_zeros )
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
-            delement = regs->VR_D(v2, i);
-            for (j=0, count=0; j < 64; j++, count++)
+            count = 0;
+            for (j=i*8; j < (i*8)+8; j++)
             {
-                if (delement & 0x8000000000000000ull) break;
-                delement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_D(v1, i) = count;
         }
@@ -5503,7 +5535,7 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
 {
     int     v1, v2, v3, v4, m5, m6;
-    U64     tempd;
+    union   { U64 d; } temp;
     int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
@@ -5516,15 +5548,15 @@ DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
     switch (m5)
     {
     case 4:  // Quadword
-        tempd = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
+        temp.d = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
         for (i=3; i >= 0; i--)
         {
-            tempd += ~regs->VR_F( v3, i );
-            tempd += regs->VR_F( v2, i );
-            tempd >>= 32;
+            temp.d += ~regs->VR_F( v3, i );
+            temp.d += regs->VR_F( v2, i );
+            temp.d >>= 32;
         }
         regs->VR_D( v1, 0 ) = 0;
-        regs->VR_D( v1, 1 ) = tempd;
+        regs->VR_D( v1, 1 ) = temp.d;
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5775,8 +5807,7 @@ DEF_INST( vector_unpack_high )
 DEF_INST( vector_test_under_mask )
 {
     int     v1, v2, m3, m4, m5;
-    union   { U32 f[2]; } temp;
-    int     i, j, masko, selz, selo;
+    union   { U64 d[2]; } temp;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -5787,34 +5818,21 @@ DEF_INST( vector_test_under_mask )
 
     ZVECTOR_CHECK( regs );
 
-    masko = selz = selo = 0;
-    for (i=0; i < 4; i++)
-    {
-        temp.f[0] = regs->VR_F( v1, i );
-        temp.f[1] = regs->VR_F( v2, i );
-        for (j=0; j < 32; j++)
-        {
-            if (temp.f[1] & 0x80000000)
-            {
-                masko++;
-                if (temp.f[0] & 0x80000000)
-                    selo++;
-                else
-                    selz++;
-            }
-            temp.f[0] <<= 1;
-            temp.f[1] <<= 1;
-        }
-    }
+    //note: V2 is mask
+    temp.d[0] = regs->VR_D(v1,0) & regs->VR_D(v2,0);
+    temp.d[1] = regs->VR_D(v1,1) & regs->VR_D(v2,1);
 
-    if (masko == 0)
-        regs->psw.cc = 0;    // All mask bits zero
-    else if (masko == selz)
-        regs->psw.cc = 0;    // Selected bits all zeros
-    else if (masko == selo)
-        regs->psw.cc = 3;    // Selected bits all ones
+    // Selected bits all zeros; or all mask bits zero
+    if ( temp.d[0] == 0 && temp.d[1] == 0 )
+        regs->psw.cc = 0;
+
+    // Selected bits all ones
+    else if ( temp.d[0] == regs->VR_D(v2,0) && temp.d[1] == regs->VR_D(v2,1) )
+        regs->psw.cc = 3;
+
+    // Selected bits a mix of zeros and ones
     else
-        regs->psw.cc = 1;    // Selected bits a mix of zeros and ones
+        regs->psw.cc = 1;
 
     ZVECTOR_END( regs );
 }
@@ -6098,7 +6116,7 @@ DEF_INST( vector_average_logical )
 DEF_INST( vector_add_compute_carry )
 {
     int     v1, v2, v3, m4, m5, m6;
-    U64     tempd;
+    union   { U64 d; } temp;
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -6132,25 +6150,25 @@ DEF_INST( vector_add_compute_carry )
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
-            tempd = 0;
-            tempd += regs->VR_F( v2, (i*2)+1 );
-            tempd += regs->VR_F( v3, (i*2)+1 );
-            tempd >>= 32;
-            tempd += regs->VR_F( v2, i*2 );
-            tempd += regs->VR_F( v3, i*2 );
-            regs->VR_D( v1, i ) = tempd >> 32;
+            temp.d = 0;
+            temp.d += regs->VR_F( v2, (i*2)+1 );
+            temp.d += regs->VR_F( v3, (i*2)+1 );
+            temp.d >>= 32;
+            temp.d += regs->VR_F( v2, i*2 );
+            temp.d += regs->VR_F( v3, i*2 );
+            regs->VR_D( v1, i ) = temp.d >> 32;
         }
         break;
     case 4:  // Quadword
-        tempd = 0;
+        temp.d = 0;
         for (i=3; i >= 0; i--)
         {
-            tempd += regs->VR_F( v2, i );
-            tempd += regs->VR_F( v3, i );
-            tempd >>= 32;
+            temp.d += regs->VR_F( v2, i );
+            temp.d += regs->VR_F( v3, i );
+            temp.d >>= 32;
         }
         regs->VR_D( v1, 0 ) = 0;
-        regs->VR_D( v1, 1 ) = tempd;
+        regs->VR_D( v1, 1 ) = temp.d;
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -6167,8 +6185,8 @@ DEF_INST( vector_average )
 {
     int     v1, v2, v3, m4, m5, m6;
 
-    int i;                          /* loop index                    */
-    S64 temps64;                    /* signed temp                   */
+    int     i;                      /* loop index                    */
+    union   { S64 sd; } temp;       /* signed temp                   */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -6201,17 +6219,17 @@ DEF_INST( vector_average )
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             if  (
-                    ( regs->VR_D(v2, i) & 0x8000000000000000ULL )  ==
-                    ( regs->VR_D(v3, i) & 0x8000000000000000ULL )
+                    ( regs->VR_D(v2, i) & 0x8000000000000000ull )  ==
+                    ( regs->VR_D(v3, i) & 0x8000000000000000ull )
                 )
             {
                 /* same sign: possible overflow */
-                if  ( regs->VR_D(v2, i) & 0x8000000000000000ULL )
+                if  ( regs->VR_D(v2, i) & 0x8000000000000000ull )
                 {
                     /* negative signs: allow overflow, round and force back to negative */
-                    temps64 = (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i);
-                    temps64++;
-                    regs->VR_D(v1, i) = (U64) ( temps64 >> 1 ) | 0x8000000000000000ULL;
+                    temp.sd = (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i);
+                    temp.sd++;
+                    regs->VR_D(v1, i) = (U64) ( temp.sd >> 1 ) | 0x8000000000000000ull;
                 }
                 else
                 {
@@ -6399,7 +6417,8 @@ DEF_INST(vector_subtract)
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_compare_equal )
 {
-    int     v1, v2, v3, m4, m5, eq = 0, ne = 0, i;
+    int     v1, v2, v3, m4, m5;
+    int     i, el, eq = 0;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -6410,50 +6429,46 @@ DEF_INST( vector_compare_equal )
     switch (m4)
     {
     case 0:  // Byte
-        for (i=0; i < 16; i++) {
+        for (el=16, i=0; i < 16; i++) {
             if (regs->VR_B(v2, i) == regs->VR_B(v3, i)) {
                 regs->VR_B(v1, i) = 0xff;
                 eq++;
             }
             else {
                 regs->VR_B(v1, i) = 0x00;
-                ne++;
             }
         }
         break;
     case 1:  // Halfword
-        for (i=0; i < 8; i++) {
+        for (el=8, i=0; i < 8; i++) {
             if (regs->VR_H(v2, i) == regs->VR_H(v3, i)) {
                 regs->VR_H(v1, i) = 0xffff;
                 eq++;
             }
             else {
                 regs->VR_H(v1, i) = 0x0000;
-                ne++;
             }
         }
         break;
     case 2:  // Word
-        for (i=0; i < 4; i++) {
+        for (el=4, i=0; i < 4; i++) {
             if (regs->VR_F(v2, i) == regs->VR_F(v3, i)) {
-                regs->VR_F(v1, i) = 0xffffffff;
+                regs->VR_F(v1, i) = 0xFFFFFFFF;
                 eq++;
             }
             else {
                 regs->VR_F(v1, i) = 0x00000000;
-                ne++;
             }
         }
         break;
     case 3:  // Doubleword
-        for (i=0; i < 2; i++) {
+        for (el=2, i=0; i < 2; i++) {
             if (regs->VR_D(v2, i) == regs->VR_D(v3, i)) {
-                regs->VR_D(v1, i) = 0xffffffffffffffff;
+                regs->VR_D(v1, i) = 0xFFFFFFFFFFFFFFFFull;
                 eq++;
             }
             else {
-                regs->VR_D(v1, i) = 0x0000000000000000;
-                ne++;
+                regs->VR_D(v1, i) = 0x0000000000000000ull;
             }
         }
         break;
@@ -6463,11 +6478,11 @@ DEF_INST( vector_compare_equal )
     }
 
     if (M5_CS) {
-        if (ne == 0)
+        if (eq == el)
             regs->psw.cc = 0;
-        else if (eq > 0)
+        else if (eq != 0)
             regs->psw.cc = 1;
-        else if (eq == 0)
+        else
             regs->psw.cc = 3;
     }
 
@@ -6482,9 +6497,7 @@ DEF_INST( vector_compare_equal )
 DEF_INST( vector_compare_high_logical )
 {
     int     v1, v2, v3, m4, m5;
-    int     hi = 0;
-    int     nothi = 0;
-    int     i;
+    int     i, el, hi = 0;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -6495,53 +6508,49 @@ DEF_INST( vector_compare_high_logical )
     switch (m4)
     {
     case 0:         /* Byte */
-        for (i=0; i < 16; i++) {
+        for (el=16, i=0; i < 16; i++) {
             if (regs->VR_B(v2, i) > regs->VR_B(v3, i)) {
                 regs->VR_B(v1, i) = 0xff;
                 hi++;
             }
             else {
                 regs->VR_B(v1, i) = 0x00;
-                nothi++;
             }
         }
         break;
 
     case 1:        /* Halfword */
-        for (i=0; i < 8; i++) {
+        for (el=8, i=0; i < 8; i++) {
             if (regs->VR_H(v2, i) > regs->VR_H(v3, i)) {
                 regs->VR_H(v1, i) = 0xffff;
                 hi++;
             }
             else {
                 regs->VR_H(v1, i) = 0x0000;
-                nothi++;
             }
         }
         break;
 
     case 2:         /* Word */
-        for (i=0; i < 4; i++) {
+        for (el=4, i=0; i < 4; i++) {
             if (regs->VR_F(v2, i) > regs->VR_F(v3, i)) {
-                regs->VR_F(v1, i) = 0xffffffff;
+                regs->VR_F(v1, i) = 0xFFFFFFFF;
                 hi++;
             }
             else {
                 regs->VR_F(v1, i) = 0x00000000;
-                nothi++;
             }
         }
         break;
 
     case 3:        /* Doubleword */
-        for (i=0; i < 2; i++) {
+        for (el=2, i=0; i < 2; i++) {
             if (regs->VR_D(v2, i) > regs->VR_D(v3, i)) {
-                regs->VR_D(v1, i) = 0xffffffffffffffff;
+                regs->VR_D(v1, i) = 0xFFFFFFFFFFFFFFFFull;
                 hi++;
             }
             else {
-                regs->VR_D(v1, i) = 0x0000000000000000;
-                nothi++;
+                regs->VR_D(v1, i) = 0x0000000000000000ull;
             }
         }
         break;
@@ -6552,11 +6561,11 @@ DEF_INST( vector_compare_high_logical )
     }
 
     if (M5_CS) {
-        if (nothi == 0)
+        if (hi == el)
             regs->psw.cc = 0;
-        else if (hi > 0)
+        else if (hi != 0)
             regs->psw.cc = 1;
-        else if (hi == 0)
+        else
             regs->psw.cc = 3;
     }
 
@@ -6571,9 +6580,7 @@ DEF_INST( vector_compare_high_logical )
 DEF_INST( vector_compare_high )
 {
     int     v1, v2, v3, m4, m5;
-    int     hi = 0;
-    int     nothi = 0;
-    int     i;
+    int     i, el, hi = 0;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -6584,53 +6591,49 @@ DEF_INST( vector_compare_high )
     switch (m4)
     {
     case 0:         /* Byte */
-        for (i=0; i < 16; i++) {
+        for (el=16, i=0; i < 16; i++) {
             if ( (S8) regs->VR_B(v2, i) > (S8) regs->VR_B(v3, i) ) {
                 regs->VR_B(v1, i) = 0xff;
                 hi++;
             }
             else {
                 regs->VR_B(v1, i) = 0x00;
-                nothi++;
             }
         }
         break;
 
     case 1:        /* Halfword */
-        for (i=0; i < 8; i++) {
+        for (el=8, i=0; i < 8; i++) {
             if ( (S16) regs->VR_H(v2, i) > (S16) regs->VR_H(v3, i) ) {
                 regs->VR_H(v1, i) = 0xffff;
                 hi++;
             }
             else {
                 regs->VR_H(v1, i) = 0x0000;
-                nothi++;
             }
         }
         break;
 
     case 2:         /* Word */
-        for (i=0; i < 4; i++) {
+        for (el=4, i=0; i < 4; i++) {
             if ( (S32) regs->VR_F(v2, i) > (S32) regs->VR_F(v3, i) ) {
-                regs->VR_F(v1, i) = 0xffffffff;
+                regs->VR_F(v1, i) = 0xFFFFFFFF;
                 hi++;
             }
             else {
                 regs->VR_F(v1, i) = 0x00000000;
-                nothi++;
             }
         }
         break;
 
     case 3:        /* Doubleword */
-        for (i=0; i < 2; i++) {
+        for (el=2, i=0; i < 2; i++) {
             if ( (S64) regs->VR_D(v2, i) > (S64) regs->VR_D(v3, i) ) {
-                regs->VR_D(v1, i) = 0xffffffffffffffff;
+                regs->VR_D(v1, i) = 0xFFFFFFFFFFFFFFFFull;
                 hi++;
             }
             else {
-                regs->VR_D(v1, i) = 0x0000000000000000;
-                nothi++;
+                regs->VR_D(v1, i) = 0x0000000000000000ull;
             }
         }
         break;
@@ -6641,11 +6644,11 @@ DEF_INST( vector_compare_high )
     }
 
     if (M5_CS) {
-        if (nothi == 0)
+        if (hi == el)
             regs->psw.cc = 0;
-        else if (hi > 0)
+        else if (hi != 0)
             regs->psw.cc = 1;
-        else if (hi == 0)
+        else
             regs->psw.cc = 3;
     }
 

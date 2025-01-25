@@ -163,8 +163,10 @@ static int readpos
 /* decomptrk - decompress track data                                 */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*  ibuf      points at CKD_TRKHDR header followed by track data     */
-/*  ibuflen   specifies length of TRKHDR and data                    */
+/*  ibuf      points at CKD_TRKHDR or FBA_BKGHDR header followed by  */
+/*            track or blockgroup data                               */
+/*                                                                   */
+/*  ibuflen   specifies length of TRKHDR/BKGHDR and data             */
 /*                                                                   */
 /*  Returns   length of decompressed data or -1 on error.            */
 /*                                                                   */
@@ -380,8 +382,9 @@ static void snap( int comp, void *data, int len, bool ckddasd )
 /*-------------------------------------------------------------------*/
 static void showtrkorblk
 (
-    CKD_TRKHDR*  buf,       /* track header ptr                      */
-    int  imglen,            /* TRKHDR + track user data length       */
+    CKD_TRKHDR*  buf,       /* track or block group header ptr       */
+    int  imglen,            /* TRKHDR/BKGHDR + track/block user data */
+                            /* length                                */
     int  trk,               /* relative track or block number        */
     bool ckddasd,           /* true = CKD dasd  false = FBA dasd     */
     bool hexdump            /* true=dump key & data blks; false=don't*/
@@ -417,9 +420,9 @@ static void showtrkorblk
         printf("\n");
     }
 
-    bufp = &buf2[ CKD_TRKHDR_SIZE];
+    bufp = ckddasd ? &buf2[ CKD_TRKHDR_SIZE ] : &buf2[ FBA_BKGHDR_SIZE ];
 
-    if (ckddasd)
+    if (ckddasd) // CCKD
     {
         while (bufp < &buf2[ sizeof( buf2 )])
         {
@@ -437,17 +440,17 @@ static void showtrkorblk
             bufp = show_ckd_data  ( rh, bufp, trk, hexdump );
         }
     }
-    else // FBA
+    else // CFBA
     {
         /* Extract block number of first block in block group */
-        FBA_BKGHDR* blkghdr = (FBA_BKGHDR*) buf;
-        U32 blknum = fetch_fw( blkghdr->blknum );
+        FBA_BKGHDR*  blkghdr =  (FBA_BKGHDR*) buf2;
+        U32          grpnum  =  fetch_fw( blkghdr->grpnum );
 
         /* Calculate relative block number within block group */
-        U32 grpblk = (trk - blknum);
+        U32 grpblk = (trk - (grpnum * CFBA_BLKS_PER_GRP));
 
         /* Index to desired block within expanded block group */
-        bufp += grpblk * 512;
+        bufp += grpblk * FBA_SECTOR_SIZE;
 
         /* Show desired block data */
         show_fba_block( bufp, trk, hexdump );
