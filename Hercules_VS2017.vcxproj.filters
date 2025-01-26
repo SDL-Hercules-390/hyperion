@@ -2684,7 +2684,7 @@
     <None Include="tests\zvector-e7-04-BitCount.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
-    <None Include="tests\zvector-e7-05-VTMt.asm">
+    <None Include="tests\zvector-e7-05-VTM.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\3211.list">
