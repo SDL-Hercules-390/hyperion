@@ -62,13 +62,16 @@
 /* HIM device emulation.  The bits are reversed from where they      */
 /* appear in memory because this is a little-endian architecture     */
 /*-------------------------------------------------------------------*/
-struct buff_hdr {
-    u_char bh_flags;
+struct buff_hdr
+{
+    u_char bh_flags;                   /* (see below)                */
+
     #define BH_TN3270     0x08         /* Switch to TN3270 mode      */
     #define BH_INIT       0x10         /* Data is configuration info */
     #define BH_FINISHED   0x20         /* Interface disconnect       */
     #define BH_RNR        0x40         /* Read-Not-Ready             */
     #define BH_URGENT     0x80         /* Urgent data to be read     */
+
     u_char buffer_number;              /* Sequential buffer number   */
     u_short buffer_length;             /* buffer length              */
 };
@@ -81,10 +84,12 @@ struct buff_hdr {
 /* and the TCP and UDP packet headers.                               */
 /*-------------------------------------------------------------------*/
 #if defined( _MSVC_ )        // MS Windows
-struct packet_hdr {
+struct packet_hdr
+{
     struct buff_hdr him_hdr;
     struct ip_hdr ip_header;
-    union {
+    union
+    {
         struct tcp_hdr tcp_header;
         struct udp_hdr udp_header;
     } sh;
@@ -93,10 +98,12 @@ struct packet_hdr {
     u_short tcp_optval;
 };
 #else                        // unix/linux/Mac_OS
-struct packet_hdr {
+struct packet_hdr
+{
     struct buff_hdr him_hdr;
     struct ip ip_header;
-    union {
+    union
+    {
         struct tcphdr tcp_header;
         struct udphdr udp_header;
     } sh;
@@ -112,7 +119,8 @@ struct packet_hdr {
 /* that MTS sends out when it wants to start using a particular      */
 /* subchannel. The configuration command itself is an EBCDIC string. */
 /*-------------------------------------------------------------------*/
-struct config_reply {
+struct config_reply
+{
     struct buff_hdr him_hdr;
     unsigned char config_ok[2];        /* EBCDIC "Ok"                */
     u_char family;                     /* Protocol family            */
@@ -129,7 +137,8 @@ struct config_reply {
 /* The I/O control block                                             */
 /*-------------------------------------------------------------------*/
 typedef enum {SHUTDOWN, INITIALIZED, CONNECTED, CLOSING} t_state;
-struct io_cb {
+struct io_cb
+{
     int sock;
     u_char protocol;
     t_state state;
@@ -361,8 +370,7 @@ static int him_close_device( DEVBLK *dev )
 static void him_cpe_device( DEVBLK *dev )
 {
     UNREFERENCED( dev );
-
-} /* end function him_cpe_device */
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -401,8 +409,8 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
     buff_ptr = (struct packet_hdr *) iobuf;
 
     /* Process depending on CCW opcode */
-    switch( code ) {
-
+    switch( code )
+    {
     case 0x01:      /* Write_Ccw */
     /*---------------------------------------------------------------*/
     /* WRITE - process data from channel                             */
@@ -418,9 +426,10 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
 
         if ( buff_ptr->him_hdr.bh_flags & BH_FINISHED )
         {
-            for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ ) ;
+            for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ )
+                /* (do nothing) */
+                ;
             cb_ptr->read_q[i] = FINISHED;
-
         }
         else if ( cb_ptr->state == CONNECTED && buff_ptr->him_hdr.bh_flags & BH_RNR )
         {
@@ -429,7 +438,6 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
             cb_ptr->watch_sock = 0;
             cb_ptr->rnr = 1;
             *unitstat |= CSW_UX;
-
         }
         else if ( cb_ptr->rnr && !( buff_ptr->him_hdr.bh_flags & BH_RNR ) )
         {
@@ -437,7 +445,6 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
 
             start_sock_thread( dev );
             cb_ptr->rnr = 0;
-
         }
         else if ( buff_ptr->him_hdr.bh_flags & BH_INIT )
         {
@@ -447,11 +454,12 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
             readlen = ntohs( buff_ptr->him_hdr.buffer_length ) + sizeof( struct buff_hdr );
             memcpy( dev->buf, buff_ptr, readlen );
 
-            for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ ) ;
+            for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ )
+                /* (do nothing) */
+                ;
             cb_ptr->read_q[i] = CONFIG;
 
             *unitstat |= CSW_ATTN;
-
         }
         else if ( cb_ptr->protocol == IPPROTO_UDP )
         {
@@ -497,11 +505,12 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
                 set_state( cb_ptr, CONNECTED );
 
                 /* Queue an MSS acknowledgement */
-                for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ ) ;
+                for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ )
+                    /* (do nothing) */
+                    ;
                 cb_ptr->read_q[i] = MSS;
 
                 *unitstat |= CSW_ATTN;
-
             }
             else if ( ntohs( buff_ptr->him_hdr.buffer_length ) > 4 )
             {
@@ -525,7 +534,9 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
 
                         if ( (window - (ack_seq % window)) < (writelen + 4096) )
                         {
-                            for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ ) ;
+                            for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ )
+                                /* (do nothing) */
+                                ;
                             cb_ptr->read_q[i] = ACK;
                         }
                     }
@@ -535,17 +546,20 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
                 {
                     if ( cb_ptr->state == CONNECTED )
                     {
-                        for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ ) ;
+                        for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ )
+                            /* (do nothing) */
+                            ;
                         cb_ptr->read_q[i] = FIN;
                         set_state( cb_ptr, CLOSING );
                     }
 
-                    for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ ) ;
+                    for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ )
+                        /* (do nothing) */
+                        ;
                     cb_ptr->read_q[i] = FINISHED;
                 }
             }
         }
-
         break;
 
 
@@ -565,10 +579,13 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
         if ( cb_ptr->read_q[0] != EMPTY )
         {       /* Data that needs to be sent to MTS has been queued */
             /* Record the maximum size of the read queue */
-            for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ ) ;
+            for ( i = 0; cb_ptr->read_q[i] != EMPTY; i++ )
+                /* (do nothing) */
+                ;
             cb_ptr->max_q = i > cb_ptr->max_q ? i : cb_ptr->max_q;
 
-            switch( cb_ptr->read_q[0] ) {
+            switch( cb_ptr->read_q[0] )
+            {
             case CONFIG:    /* The config command reply was left in dev->buf */
                 readlen = ntohs( ((struct buff_hdr *) dev->buf)->buffer_length )
                     + sizeof( struct buff_hdr );
@@ -616,7 +633,9 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
 
                 reset_io_cb(cb_ptr);
 
-            default: ;
+            default:
+                /* (do nothing) */
+                break;
 
             } /* end switch( cb_ptr->read_q[0] ) */
 
@@ -625,18 +644,15 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
                 cb_ptr->read_q[i] = cb_ptr->read_q[i+1];
 
             *residual -= readlen;
-
         }
         else if ( cb_ptr->state == CLOSING )
         {
             *unitstat |= CSW_UX;
             debug_pf( " ------ READ ccw, STATE = CLOSING\n" );
-
         }
         else if ( !poll( &read_chk, 1, 10 ) )  /* i.e. no data available from the socket */
         {
             *unitstat |= CSW_UX;
-
         }
         else if ( cb_ptr->protocol == IPPROTO_UDP )
         {
@@ -655,7 +671,6 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
             buff_ptr->sh.udp_header.uh_sport = cb_ptr->sin.sin_port;
 
             *residual -= readlen + 32;
-
         }
         else if ( cb_ptr->passive && !cb_ptr->server &&
                   cb_ptr->state == INITIALIZED )
@@ -673,7 +688,6 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
             *residual -= return_mss( cb_ptr, buff_ptr );
 
             debug_pf( "just accepted call on socket %d for socket %d\n", temp_sock, cb_ptr->sock );
-
         }
         else if ( cb_ptr->state == CONNECTED ) /* A UDP connection will never be in this state */
         {
@@ -693,7 +707,6 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
                     buff_ptr->ip_header.ip_len = htons( readlen + 40 );
 
                 *residual -= ( readlen + 44 );
-
             }
             else if ( readlen == 0 )
             {
@@ -701,7 +714,6 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
                 set_state( cb_ptr, CLOSING );
 
                 *residual -= 44;
-
             }
             else
             {
@@ -719,7 +731,6 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
             *unitstat |= CSW_UX;
 
             debug_pf( "READ ccw, STATE = %d\n", cb_ptr->state );
-
         }
 
         /* don't start the socket thread if there is no socket.
@@ -835,7 +846,7 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-
+        break;
 
     } /* end switch( code ) */
 
@@ -845,7 +856,8 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
 } /* end function him_execute_ccw */
 
 
-static DEVHND him_device_hndinfo = {
+static DEVHND him_device_hndinfo =
+{
     &him_init_handler,                 /* Device Initialisation      */
     &him_execute_ccw,                  /* Device CCW execute         */
     &him_close_device,                 /* Device Close               */
@@ -933,7 +945,6 @@ static void config_subchan( DEVBLK *dev, struct io_cb *cb_ptr, BYTE *config_data
            devices */
            debug_pf( "Config record in active state, reseting device\n" );
            reset_io_cb( cb_ptr );
-
     }
 
     if ( !parse_config_data( cb_ptr, (char *) &config_data[4], cd_len) )
@@ -941,7 +952,6 @@ static void config_subchan( DEVBLK *dev, struct io_cb *cb_ptr, BYTE *config_data
         if ( cb_ptr->sock > 0 )
             (void) close_socket( cb_ptr->sock );
         goto failed;
-
     }
     else
     {                              /* Set up socket for non-servers. */
@@ -959,11 +969,9 @@ static void config_subchan( DEVBLK *dev, struct io_cb *cb_ptr, BYTE *config_data
                 cb_ptr->our_addr = cb_ptr->sin.sin_addr.s_addr;
             /*  Set the destination port in the MTS header as well   */
             cb_ptr->mts_header.sh.tcp_header.th_dport = cb_ptr->sin.sin_port;
-
         }
         else if ( cb_ptr->server &&
             cb_ptr->mts_header.sh.tcp_header.th_dport == 0 )
-
         {
             // A server listening on port zero
             if ( cb_ptr->protocol == IPPROTO_UDP )
@@ -971,14 +979,13 @@ static void config_subchan( DEVBLK *dev, struct io_cb *cb_ptr, BYTE *config_data
                 if ( add_UDP_server_listener( dev, cb_ptr ) < 0 )
                 {
                     goto failed;
-
                 }
             }
-            else {
+            else
+            {
                 if ( add_TCP_server_listener( dev, cb_ptr ) < 0 )
                 {
                     goto failed;
-
                 }
             }
         }
@@ -1058,9 +1065,11 @@ static int parse_config_data( struct io_cb *cb_ptr,
     enum lhs_codes {LHS_TYPE, LHS_PROTOCOL, LHS_ACTIVE, LHS_PASSIVE,
                     LHS_LOCALSOCK, LHS_FOREIGNSOCK, LHS_SERVER};
 
-    static char *lhs_tbl[] = {
+    static char *lhs_tbl[] =
+    {
         "type",         "protocol",       "active",    "passive",
-        "local_socket", "foreign_socket", "server"};
+        "local_socket", "foreign_socket", "server"
+    };
 
     /*---------------------------------------------------------------*/
     /* Build an MTS TCP/IP header                                    */
@@ -1095,10 +1104,14 @@ static int parse_config_data( struct io_cb *cb_ptr,
 
     lhs_token = strtok( config_string, " =" );
 
-    do {
-        for ( i = 0; ( strcmp( lhs_token, lhs_tbl[i] ) != 0 ) && i < LHS_SERVER; i++ ) ;
+    do
+    {
+        for ( i = 0; ( strcmp( lhs_token, lhs_tbl[i] ) != 0 ) && i < LHS_SERVER; i++ )
+            /* (do nothing) */
+            ;
 
-        switch( i ) {
+        switch( i )
+        {
         case LHS_TYPE:
             echo_rhs = rhs_token = strtok( NULL, " =" );
             break;
@@ -1152,11 +1165,11 @@ static int parse_config_data( struct io_cb *cb_ptr,
 
         if ( echo_rhs == NULL )
             debug_pf( " %s, no right hand side\n", lhs_token );
-
         else
             debug_pf( " %s = %s\n", lhs_token, echo_rhs );
 
-    } while ( (lhs_token = strtok( NULL, " =" )) );
+    }
+    while ( (lhs_token = strtok( NULL, " =" )) );
 
     return success;
 
@@ -1189,7 +1202,6 @@ static int get_socket( DEVBLK *dev, int protocol, in_addr_t bind_addr, int port,
 
     /* Use protocol to choose a socket type */
     socktype = protocol == IPPROTO_UDP ? SOCK_DGRAM : SOCK_STREAM;
-
 
     /* Allocate a socket */
     s = socket( PF_INET, socktype, 0 );
@@ -1316,6 +1328,7 @@ static void* skt_thread( void* arg )
     sleep_timer = 10000;   /* microseconds */
 
     while ( ((struct io_cb *)dev->dev_data)->watch_sock )
+    {
         if ( !((struct io_cb *)dev->dev_data)->rnr && poll(&read_chk, 1, poll_timer) > 0 )
         {
             rc = device_attention (dev, CSW_ATTN);
@@ -1325,6 +1338,7 @@ static void* skt_thread( void* arg )
         }
         else
             usleep( sleep_timer );
+    }
 
     return NULL;
 
@@ -1345,32 +1359,32 @@ static int add_TCP_server_listener( DEVBLK *dev, struct io_cb *cb_ptr )
     int rc;
 
     obtain_lock( &TCPServerLock );
-
-    // Increment the count of devices listening
-    TCPServerCount++;
-
-    // Start the listener thread if it is not running.
-    if ( !TCPServerThreadRunning )
     {
-        SSLTA* sslta = malloc( sizeof( SSLTA ));
+        // Increment the count of devices listening
+        TCPServerCount++;
 
-        sslta->dev    = dev;
-        sslta->cb_ptr = cb_ptr;
-
-        /* First one, start the thread to listen for a connection */
-        rc = create_thread( &tid, DETACHED, TCP_sserver_listen_thread,
-                     sslta, "TCP_listener" );
-        if ( rc )
+        // Start the listener thread if it is not running.
+        if ( !TCPServerThreadRunning )
         {
-            release_lock( &TCPServerLock );
-            // "Error in function create_thread(): %s"
-            WRMSG( HHC00102, "E", strerror( rc ) );
-            free( sslta );
-            return 0;
-        }
-        TCPServerThreadRunning = 1;
-    }
+            SSLTA* sslta = malloc( sizeof( SSLTA ));
 
+            sslta->dev    = dev;
+            sslta->cb_ptr = cb_ptr;
+
+            /* First one, start the thread to listen for a connection */
+            rc = create_thread( &tid, DETACHED, TCP_sserver_listen_thread,
+                         sslta, "TCP_listener" );
+            if ( rc )
+            {
+                release_lock( &TCPServerLock );
+                // "Error in function create_thread(): %s"
+                WRMSG( HHC00102, "E", strerror( rc ) );
+                free( sslta );
+                return 0;
+            }
+            TCPServerThreadRunning = 1;
+        }
+    }
     release_lock( &TCPServerLock );
     return 1;
 
@@ -1391,32 +1405,32 @@ static int add_UDP_server_listener( DEVBLK *dev, struct io_cb *cb_ptr )
     int rc;
 
     obtain_lock( &UDPServerLock );
-
-    // Increment the count of devices listening
-    UDPServerCount++;
-
-    // Start the listener thread if it is not running.
-    if ( !UDPServerThreadRunning )
     {
-        SSLTA* sslta = malloc( sizeof( SSLTA ));
+        // Increment the count of devices listening
+        UDPServerCount++;
 
-        sslta->dev    = dev;
-        sslta->cb_ptr = cb_ptr;
-
-        /* First one, start the thread to listen for a connection */
-        rc = create_thread( &tid, DETACHED, UDP_sserver_listen_thread,
-                     sslta, "UDP_listener" );
-        if ( rc )
+        // Start the listener thread if it is not running.
+        if ( !UDPServerThreadRunning )
         {
-            release_lock( &UDPServerLock );
-            // "Error in function create_thread(): %s"
-            WRMSG( HHC00102, "E", strerror( rc ) );
-            free( sslta );
-            return 0;
-        }
-        UDPServerThreadRunning = 1;
-    }
+            SSLTA* sslta = malloc( sizeof( SSLTA ));
 
+            sslta->dev    = dev;
+            sslta->cb_ptr = cb_ptr;
+
+            /* First one, start the thread to listen for a connection */
+            rc = create_thread( &tid, DETACHED, UDP_sserver_listen_thread,
+                         sslta, "UDP_listener" );
+            if ( rc )
+            {
+                release_lock( &UDPServerLock );
+                // "Error in function create_thread(): %s"
+                WRMSG( HHC00102, "E", strerror( rc ) );
+                free( sslta );
+                return 0;
+            }
+            UDPServerThreadRunning = 1;
+        }
+    }
     release_lock( &UDPServerLock );
     return 1;
 
@@ -1456,14 +1470,14 @@ static int remove_TCP_server_listener( struct io_cb *cb_ptr )
     */
 
     obtain_lock( &TCPServerLock );
+    {
+        // Decrement the count of devices listening
+        TCPServerCount--;
 
-    // Decrement the count of devices listening
-    TCPServerCount--;
-
-    // Don't let it be less than zero
-    if ( TCPServerCount < 0 )
-        TCPServerCount = 0;
-
+        // Don't let it be less than zero
+        if ( TCPServerCount < 0 )
+            TCPServerCount = 0;
+    }
     release_lock( &TCPServerLock );
     return 1;
 
@@ -1482,14 +1496,14 @@ static int remove_UDP_server_listener( struct io_cb *cb_ptr )
     */
 
     obtain_lock( &UDPServerLock );
+    {
+        // Decrement the count of devices listening
+        UDPServerCount--;
 
-    // Decrement the count of devices listening
-    UDPServerCount--;
-
-    // Don't let it be less than zero
-    if ( UDPServerCount < 0 )
-        UDPServerCount = 0;
-
+        // Don't let it be less than zero
+        if ( UDPServerCount < 0 )
+            UDPServerCount = 0;
+    }
     release_lock( &UDPServerLock );
     return 1;
 
@@ -1531,10 +1545,10 @@ static void* TCP_sserver_listen_thread( void* arg )
         2026            MOC.:check_vitals
         2110            POP:POP3.TEST (Duplicate)
         9998            ASRV:ACCSERV*C
-
     */
 
-    #define TCP_PORT_COUNT 17
+#define TCP_PORT_COUNT 17
+
     u_short ports[TCP_PORT_COUNT] = {23, 25, 79, 109, 110, 143, 220, 1010,
                     1011, 1309, 2110, 3217, 4242, 2025, 2026, 2110, 9998};
     int sockets[TCP_PORT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -1583,21 +1597,21 @@ static void* TCP_sserver_listen_thread( void* arg )
 
         /* See if we should quit */
         obtain_lock( &TCPServerLock );
-        if ( TCPServerCount == 0 )
         {
-            /* We're done, clean up and go home */
-            for ( i = 0; i < TCP_PORT_COUNT; i++ )
+            if ( TCPServerCount == 0 )
             {
-                if ( sockets[i] != 0 )
-                    (void) close_socket( sockets[i] );
-                sockets[i] = 0;
+                /* We're done, clean up and go home */
+                for ( i = 0; i < TCP_PORT_COUNT; i++ )
+                {
+                    if ( sockets[i] != 0 )
+                        (void) close_socket( sockets[i] );
+                    sockets[i] = 0;
+                }
+                TCPServerThreadRunning = 0;
+                release_lock( &TCPServerLock );
+                break;  // and exit
             }
-            TCPServerThreadRunning = 0;
-            release_lock( &TCPServerLock );
-            break;  // and exit
-
         }
-
         release_lock( &TCPServerLock );
 
         listen_set = socket_set;
@@ -1613,7 +1627,6 @@ static void* TCP_sserver_listen_thread( void* arg )
             WRMSG( HHC01150, "E", LCSS_DEVNUM, "pselect()", strerror( HSO_errno ));
             usleep( 50000 ); // (wait a bit; maybe it'll fix itself??)
             continue;
-
         }
 
         /* See which ports have pending connections */
@@ -1635,18 +1648,22 @@ static void* TCP_sserver_listen_thread( void* arg )
                         if ( try_obtain_lock( &dev->lock ) )
                             /* Couldn't lock device, skip it */
                             continue;
+
                         /* Now that it's locked see if it is a server HIM
                            device waiting for a TCP connection */
                         cb_ptr = (struct io_cb *) dev->dev_data;
-                        if ( dev->allocated &&
-                             dev->himdev &&
-                             cb_ptr->server &&
-                             cb_ptr->passive &&
-                             cb_ptr->state == INITIALIZED &&
-                             cb_ptr->protocol == IPPROTO_TCP &&
-                             cb_ptr->sock <= 0
-                             )
-                            break;      // from device loop
+
+                        if (1
+                            && dev->allocated
+                            && dev->himdev
+                            && cb_ptr->server
+                            && cb_ptr->passive
+                            && cb_ptr->state == INITIALIZED
+                            && cb_ptr->protocol == IPPROTO_TCP
+                            && cb_ptr->sock <= 0
+                        )
+                            break;      // break from device loop; keep locked
+
                         release_lock( &dev->lock );
                     }
                 }   // End of device loop
@@ -1677,7 +1694,6 @@ static void* TCP_sserver_listen_thread( void* arg )
                     }
                     release_lock( &dev->lock );
                     continue;   // Loop over ports
-
                 }
 
                 /* have a connection socket, do something with it */
@@ -1698,7 +1714,9 @@ static void* TCP_sserver_listen_thread( void* arg )
                 cb_ptr->mts_header.sh.tcp_header.th_dport = our_sin.sin_port;
 
                 /* Queue an MSS acknowledgement */
-                for ( j = 0; cb_ptr->read_q[j] != EMPTY; j++ ) ;
+                for ( j = 0; cb_ptr->read_q[j] != EMPTY; j++ )
+                    /* (do nothing) */
+                    ;
                 cb_ptr->read_q[j] = MSS;
 
                 /* Unlock the device and queue an attention interrupt */
@@ -1747,7 +1765,8 @@ static void* UDP_sserver_listen_thread( void* arg )
         424             AUTH,AUTH:UDPSERV
     */
 
-    #define UDP_PORT_COUNT 15
+#define UDP_PORT_COUNT 15
+
     u_short ports[UDP_PORT_COUNT] = {7, 9, 11, 13, 15, 17, 19, 37, 42, 53, 59,
                                     69, 79, 123, 129};
     int sockets[UDP_PORT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -1759,7 +1778,7 @@ static void* UDP_sserver_listen_thread( void* arg )
 
     /* Retrieve arguments */
     SSLTA* sslta = arg;
-    DEVBLK *dev           = sslta->dev;
+    DEVBLK *dev   = sslta->dev;
     struct io_cb *cb_ptr  = sslta->cb_ptr;
     free( sslta );
 
@@ -1790,7 +1809,8 @@ static void* UDP_sserver_listen_thread( void* arg )
         /* get a socket for any missing port */
         for ( i = 0; i < UDP_PORT_COUNT; i++ )
         {
-            if ( sockets[i] == 0 || (sockets[i] < 0 && retry_count <= 0) ) {
+            if ( sockets[i] == 0 || (sockets[i] < 0 && retry_count <= 0) )
+            {
                 int s;
                 s = get_socket( dev, IPPROTO_UDP, cb_ptr->bind_addr, htons( ports[i] ),
                                 NULL, QLEN );
@@ -1816,6 +1836,7 @@ static void* UDP_sserver_listen_thread( void* arg )
                 }
             }
         }
+
         /* Adjust the retry count that controls how oftern we retry failures */
         if ( --retry_count < 0 )
             retry_count = 10;
@@ -1838,7 +1859,6 @@ static void* UDP_sserver_listen_thread( void* arg )
             WRMSG( HHC01150, "E", LCSS_DEVNUM, "pselect()", strerror( HSO_errno ));
             usleep( 50000 ); // (wait a bit; maybe it'll fix itself??)
             continue;
-
         }
 
         /* See which ports have pending input */
@@ -1897,6 +1917,7 @@ static void* UDP_sserver_listen_thread( void* arg )
                 // Save the address and port of the remote host
                 cb_ptr->mts_header.ip_header.ip_src = cb_ptr->sin.Sin_Addr;
                 cb_ptr->mts_header.sh.udp_header.uh_sport = cb_ptr->sin.sin_port;
+
                 // Also save the address and port of our end
                 if ( getsockname( csock, (struct sockaddr *)&our_sin, &sinlen ) < 0 )
                 {
@@ -1908,11 +1929,11 @@ static void* UDP_sserver_listen_thread( void* arg )
 
                 /* Unlock the device and queue an attention interrupt */
                 release_lock( &dev->lock );
+
                 /* This MTS job is no longer waiting for a call. */
                 remove_UDP_server_listener(cb_ptr);
                 rc = device_attention (dev, CSW_ATTN);
                 ((struct io_cb *)dev->dev_data)->attn_rc[rc]++;
-
             }
         }
     }
@@ -1946,6 +1967,7 @@ static void dumpdata( char *label, BYTE *data, int len )
         ascii_hex[index++] = hex[*data & 0xF];
 
         space_chk++;
+ 
         if ( space_chk % 4 == 0 )
             ascii_hex[index++] = ' ';
 
@@ -1955,8 +1977,8 @@ static void dumpdata( char *label, BYTE *data, int len )
             debug_pf( "%s\n", ascii_hex );
             index = space_chk = 0;
         }
+ 
         data++;
-
     }
 
     ascii_hex[index] = '\0';
