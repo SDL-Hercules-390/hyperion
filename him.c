@@ -1775,11 +1775,17 @@ static void* UDP_sserver_listen_thread( void* arg )
     int retry_count;
 
     fd_set socket_set;      /* set of sockets to listen on */
+    struct timespec slowpoll = { 0, 100000000 };         /* 100ms */
+    fd_set listen_set;
+    int rc;
+    struct io_cb *cb_ptr;
+    SSLTA* sslta;
+    DEVBLK *dev;
 
     /* Retrieve arguments */
-    SSLTA* sslta = arg;
-    DEVBLK *dev   = sslta->dev;
-    struct io_cb *cb_ptr  = sslta->cb_ptr;
+    sslta = arg;
+    dev = sslta->dev;
+    cb_ptr  = sslta->cb_ptr;
     free( sslta );
 
     max_socket = 0;
@@ -1840,11 +1846,6 @@ static void* UDP_sserver_listen_thread( void* arg )
         /* Adjust the retry count that controls how oftern we retry failures */
         if ( --retry_count < 0 )
             retry_count = 10;
-
-        struct timespec slowpoll = { 0, 100000000 };         /* 100ms */
-        fd_set listen_set;
-        int rc;
-        struct io_cb *cb_ptr;
 
         listen_set = socket_set;
         rc = pselect ( max_socket+1, &listen_set, NULL, NULL, &slowpoll, NULL );
