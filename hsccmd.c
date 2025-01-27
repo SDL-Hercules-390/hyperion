@@ -6009,6 +6009,7 @@ static BYTE is_devclass_name( const char* name )
         || strcasecmp( name, "PRT"  ) == 0
         || strcasecmp( name, "RDR"  ) == 0
         || strcasecmp( name, "TAPE" ) == 0
+        || strcasecmp( name, "HIM"  ) == 0
     );
 }
 

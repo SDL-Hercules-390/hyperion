@@ -142,6 +142,7 @@
    On Darwin, <sys/socket.h> must be included before <net/if.h> and
    on older Darwin systems, before <net/route.h> and <netinet/in.h>.
 */
+#define __FAVOR_BSD                 // (always?)
 #ifdef HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
 #endif
@@ -160,10 +161,20 @@
 #ifdef HAVE_NETINET_IN_H
   #include <netinet/in.h>
 #endif
+#if defined( HAVE_NETINET_IP_H )
+  #include <netinet/ip.h>
+#elif defined( HAVE_NET_IP_H )
+  #include <net/ip.h>
+#endif
 #if defined( HAVE_NETINET_TCP_H )
   #include <netinet/tcp.h>
 #elif defined( HAVE_NET_TCP_H )
   #include <net/tcp.h>
+#endif
+#if defined( HAVE_NETINET_UDP_H )
+  #include <netinet/udp.h>
+#elif defined( HAVE_NET_UDP_H )
+  #include <net/udp.h>
 #endif
 #ifdef HAVE_SYS_IOCTL_H
   #include <sys/ioctl.h>

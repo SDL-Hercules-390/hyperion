@@ -729,6 +729,20 @@ AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_n
       #include <sys/socket.h>
     #endif
 ] )
+AC_CHECK_HEADERS( net/ip.h,       [hc_cv_have_net_ip_h=yes],       [hc_cv_have_net_ip_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( netinet/ip.h,   [hc_cv_have_netinet_ip_h=yes],   [hc_cv_have_netinet_ip_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
 AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_net_if_h=no],
 [
     #include <sys/types.h>
@@ -751,6 +765,20 @@ AC_CHECK_HEADERS( net/tcp.h,      [hc_cv_have_net_tcp_h=yes],      [hc_cv_have_n
     #endif
 ] )
 AC_CHECK_HEADERS( netinet/tcp.h,  [hc_cv_have_netinet_tcp_h=yes],  [hc_cv_have_netinet_tcp_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( net/udp.h,      [hc_cv_have_net_udp_h=yes],      [hc_cv_have_net_udp_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( netinet/udp.h,  [hc_cv_have_netinet_udp_h=yes],  [hc_cv_have_netinet_udp_h=no],
 [
     #include <sys/types.h>
     #ifdef HAVE_SYS_SOCKET_H

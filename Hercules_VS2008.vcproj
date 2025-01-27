@@ -539,6 +539,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\him.c"
+								>
+							</File>
+							<File
 								RelativePath=".\netsupp.c"
 								>
 							</File>

@@ -387,6 +387,7 @@
     <ClCompile Include="hettape.c" />
     <ClCompile Include="hetupd.c" />
     <ClCompile Include="hexdumpe.c" />
+    <ClCompile Include="him.c" />
     <ClCompile Include="history.c" />
     <ClCompile Include="hostinfo.c" />
     <ClCompile Include="hRexx.c" />
