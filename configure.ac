@@ -2813,8 +2813,6 @@ AC_CACHE_SAVE()
 
 # Automatic determination of what optimization flags to use...
 
-AC_MSG_CHECKING( [for what optimization flags to use] )
-
 hc_cv_auto_optimize=""
 hc_cv_optimization_flags=""
 
@@ -3000,6 +2998,8 @@ if test "$hc_cv_auto_optimize" = "yes"; then
       hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-strict-aliasing"
     fi
 fi
+
+AC_MSG_CHECKING( [for what optimization flags to use] )
 
 if test "x$hc_cv_optimization_flags" = "x"; then
     AC_MSG_RESULT( [(none)] )
