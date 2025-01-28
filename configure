@@ -21655,9 +21655,6 @@ rm -f confcache
 
 # Automatic determination of what optimization flags to use...
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for what optimization flags to use " >&5
-$as_echo_n "checking for what optimization flags to use ... " >&6; }
-
 hc_cv_auto_optimize=""
 hc_cv_optimization_flags=""
 
@@ -21884,6 +21881,9 @@ $as_echo "$hc_cv_have_inline_stringops_dynamically" >&6; }
       hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-strict-aliasing"
     fi
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for what optimization flags to use " >&5
+$as_echo_n "checking for what optimization flags to use ... " >&6; }
 
 if test "x$hc_cv_optimization_flags" = "x"; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: (none) " >&5
