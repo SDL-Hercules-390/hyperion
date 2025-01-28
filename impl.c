@@ -1751,11 +1751,7 @@ int     rc, maxprio, minprio;
         {
             /* daemon mode without any external GUI... */
 
-            /* If this is NOT a Test, process stdin */
-            if (!sysblk.scrtest)
-            {
-                process_script_file( "-", true );
-            }
+            process_script_file( "-", true );
 
             /* We come here only if the user did ctl-d on a tty,
                or we reached EOF on stdin.  No quit command has
