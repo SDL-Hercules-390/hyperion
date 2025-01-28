@@ -1132,7 +1132,10 @@ setlocal
   :: ending, the last line of our file would then become "# last lineexit")
 
   echo.                                                                    >> %wfn%.%wfe%
-  if not defined noexit echo exit                                          >> %wfn%.%wfe%
+  if not defined noexit (
+    echo cfall off                                                         >> %wfn%.%wfe% 
+    echo exit                                                              >> %wfn%.%wfe%
+  )
 
 
   @REM Build startup .rc file which invokes the test script
@@ -1167,7 +1170,7 @@ setlocal
   if defined noexit (
     "%tdir%\..\%hdir%\hercules.exe" -d -t%ttof% -f %tdir%\%cfg% -r %wfn%.rc > %wfn%.out
   ) else (
-    "%tdir%\..\%hdir%\hercules.exe" -d -t%ttof% -f %tdir%\%cfg% -r %wfn%.rc > %wfn%.out 2>&1
+    "%tdir%\..\%hdir%\hercules.exe" -d -t%ttof% -f %tdir%\%cfg% -r %wfn%.rc <NUL > %wfn%.out 2>&1
   )
 
 

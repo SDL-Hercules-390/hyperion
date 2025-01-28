@@ -322,36 +322,43 @@ if [ -n "$repeat" ] ; then
         done
 fi
 
+# PROGRAMMING NOTE: It's CRITICALLY IMPORTANT that we echo a blank line
+# before echoing our 'exit command to our work file ($wfn.testin) since
+# the last file might not end with a line with a LF or CRLF line ending,
+# causing the exit command to simply be appended to the end of that line
+# instead of being echoed to a new line by itself, thus causing Hercules
+# to never exit. (If the last line is "# last line" without any line-
+# ending, the last line of our file would then become "# last lineexit")
+
+# echo -en is not supported on all systems, or newer bash
+#       echo -en '\n' >>$wfn.testin
+        echo  >>$wfn.testin  # echo just a newline
+
 # Run  the script through Hercules.  Redirecting standard output writes
 # a log file.  2>&1 disables the panel display and the ability to enter
 # panel commands.
 
 # set -x
+
 cmd="$hdir/hercules -p $modpath -t2.0 $hercargs -f $dir/tests.conf -r $wfn.testin"
+
 if [ "$exit" = "noexit" ] ; then
+
         $cmd >$wfn.out
         rv=$?
 else
-        # Run  Hercules  in  daemon mode by redirecting both stdout and
-        # stderr.
-
-        # PROGRAMMING NOTE: It's CRITICALLY IMPORTANT that we echo a blank line
-        # before echoing our 'exit command to our work file ($wfn.testin) since
-        # the last file might not end with a line with a LF or CRLF line ending,
-        # causing the exit command to simply be appended to the end of that line
-        # instead of being echoed to a new line by itself, thus causing Hercules
-        # to never exit. (If the last line is "# last line" without any line-
-        # ending, the last line of our file would then become "# last lineexit")
-
-        # echo -en is not supported on all systems, or newer bash
-#       echo -en '\n' >>$wfn.testin
-        echo  >>$wfn.testin  # echo just a newline
+        echo cfall off >>$wfn.testin  # ensures 'exit' will always work
         echo exit >>$wfn.testin
-        $cmd -d >$wfn.out 2>&1
+        
+        # Run  Hercules  in  daemon mode by redirecting both stdout and
+        # stderr. Also redirect stdin too to ensure automatic exiting.
+
+        $cmd -d </dev/null >$wfn.out 2>&1
         rv=$?
 fi
 
 # Read entire file to allow redtest.rexx to parse the features list
+
 if [ $rv -eq 0 ] ; then
    rexx $dir/redtest.rexx $wfn.out $vars $rest
    rv=$?
