@@ -832,7 +832,7 @@ static void is_PCLMULQDQ_available()
 
 #else // !defined( _MSVC_ ), i.e. Linux
 
-#if defined( _GCC_SSE2_ ) && defined( HAVE_SIGNAL_HANDLING )
+#if defined( _GCC_SSE2_ ) && defined( HAVE_SIGNAL_HANDLING ) && defined( FEATURE_HW_CLMUL )
 
 static struct sigaction  sa_CRASH   = {0};
 static struct sigaction  sa_SIGILL  = {0};
@@ -898,7 +898,7 @@ static void is_PCLMULQDQ_available()
   #pragma GCC pop_options
 #endif
 
-#else // !defined( _GCC_SSE2_ ) || !defined( HAVE_SIGNAL_HANDLING )
+#else // !defined( _GCC_SSE2_ ) || !defined( HAVE_SIGNAL_HANDLING ) || !defined( FEATURE_HW_CLMUL )
 
 /* No way to know without SSE2 and signal handling, so play it safe! */
 static void is_PCLMULQDQ_available()

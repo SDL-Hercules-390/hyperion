@@ -240,11 +240,30 @@
   /* MSVC on X64: intrinsics are available and should be used for optimization */
   #if defined( _MSC_VER ) || defined( _MSVC_ )
     #define FEATURE_V128_SSE  1
+
+    /* For MSC, assume all HW features are recognized  */
+    /* at compile time and runtime hardware checks are */
+    /* used to determine whether or not an instinsic   */
+    /* is executed.                                    */
+
+    /* Compile-time Hardware Feature: Carry-less multiply */
+    #define FEATURE_HW_CLMUL  1
+
+
   /* gcc/clang on X64: intrinsics are available and should be used for optimization */
   /*                   Being conservative: require SSE 4.2 to be available to allow */
   /*                   any SSE intrinsic to be used for optimization.               */
   #elif defined( __GNUC__ ) && defined( __SSE4_2__ )
     #define FEATURE_V128_SSE  1
+
+    /* For Gcc/Clang, check for compiler recognized HW features */
+    /* to avoid compile errors                                  */
+
+    /* Compile-time Hardware Feature: Carry-less multiply */
+    #if defined(__PCLMUL__) && __has_builtin(__builtin_ia32_pclmulqdq128)
+        #define FEATURE_HW_CLMUL  1
+    #endif
+
   #endif
   /* compile debug message: are we using intrinsics? */
   #if 0

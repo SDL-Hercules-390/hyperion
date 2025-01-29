@@ -386,7 +386,7 @@ static inline void u128_logmsg(const char * msg, U128 u)
 /*-------------------------------------------------------------------*/
 static inline U64 gf_mul_32( U32 m1, U32 m2)
 {
-#if defined( FEATURE_V128_SSE )
+#if defined( FEATURE_V128_SSE ) && defined( FEATURE_HW_CLMUL )
 
     if (sysblk.have_PCLMULQDQ)
     {
@@ -410,7 +410,7 @@ static inline U64 gf_mul_32( U32 m1, U32 m2)
     }
     else
 
-#endif  //  !defined( FEATURE_V128_SSE ), or
+#endif  //  !(defined( FEATURE_V128_SSE ) && defined( FEATURE_HW_CLMUL )), or
         // "PCLMULQDQ" instruction unavailable
     {
         int     i;                    /* loop index                      */
@@ -459,7 +459,7 @@ static inline U64 gf_mul_32( U32 m1, U32 m2)
 /*-------------------------------------------------------------------*/
 static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
 {
-#if defined( FEATURE_V128_SSE )
+#if defined( FEATURE_V128_SSE ) && defined( FEATURE_HW_CLMUL )
 
     if (sysblk.have_PCLMULQDQ)
     {
@@ -484,7 +484,7 @@ static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
     }
     else
 
-#endif  //  !defined( FEATURE_V128_SSE ), or
+#endif  //  !(defined( FEATURE_V128_SSE ) && defined( FEATURE_HW_CLMUL )), or
         // "PCLMULQDQ" instruction unavailable
     {
         /* portable C: GF 64-bit multiply */
