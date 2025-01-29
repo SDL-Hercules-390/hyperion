@@ -116,6 +116,7 @@ int main( int argc, char* argv[] )
     if ((rc = impl( argc, argv )) == 0)
     {
         sysblk.panel_init = 1;
+        sysblk.herclin = 1;
 
         /******************************************/
         /* Get the command handler function       */

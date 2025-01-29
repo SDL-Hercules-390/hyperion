@@ -1012,6 +1012,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
                 sfcmd:1,                /* 1 = 'sf' command issued   */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
+                herclin:1,              /* herclin.exe has no panel  */
                 npquiet:1,              /* New Panel quiet indicator */
 #if defined(_FEATURE_SYSTEM_CONSOLE)
                 scpecho:1,              /* scp echo mode indicator   */
