@@ -2238,10 +2238,10 @@
 						RelativePath=".\readme\README.TRACEFILE.md"
 						>
 					</File>
-                    <File
-                        RelativePath=".\readme\README.VMFPLC2.md"
-                        >
-                    </File>
+					<File
+						RelativePath=".\readme\README.VMFPLC2.md"
+						>
+					</File>
                     <File
                         RelativePath=".\readme\README.VMHANDSHAKE.md"
                         >
