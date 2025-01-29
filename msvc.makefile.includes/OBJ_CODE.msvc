@@ -71,6 +71,12 @@ hutil_OBJ = \
     $(O)hsocket.obj  \
     $(O)w32util.obj
 
+crypto_OBJ = \
+    $(O)crypto.obj
+
+loadparm_OBJ = \
+    $(O)loadparm.obj
+
 hengine_OBJ = \
     $(O)archlvl.obj  \
     $(O)assist.obj   \
@@ -90,7 +96,6 @@ hengine_OBJ = \
     $(O)config.obj   \
     $(O)control.obj  \
     $(O)cpu.obj      \
-    $(O)crypto.obj   \
     $(O)dat.obj      \
     $(O)decimal.obj  \
     $(O)dfp.obj      \
@@ -123,7 +128,6 @@ hengine_OBJ = \
     $(O)io.obj       \
     $(O)ipl.obj      \
     $(O)loadmem.obj  \
-    $(O)loadparm.obj \
     $(O)losc.obj     \
     $(O)machchk.obj  \
     $(O)machdep.obj  \

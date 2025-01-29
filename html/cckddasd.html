@@ -845,8 +845,12 @@ The Home Address plus the uncompressed track data comprise the track image.
 
 <p>
 
-For <b>FBA</b>, the 4 byte nnnnnnnn is the <em>big-endian</em> sector number
-of the block group (i.e. the sector or block number of the first block in the group).
+For <b>FBA</b>, the 4 byte nnnnnnnn is the big-endian <b>group number</b>
+--  <i>(<u><b>not</b></u> the block or sector number!)</i> --
+of the block group. The sector or block number of the first block in the group
+is therefore the block group's <i><u>group number</u></i> times the number of blocks
+per group (or 120), yielding the actual sector/block number of the first block in
+the group.
 
 The block group data (the individual sectors in the block group) --- which may or
 may not be compressed (depending on the <i>cmp</i> flag) --- follows immediately
@@ -859,7 +863,7 @@ There is of course no end-of-track marker at the end of an FBA block group.
 
 <p>
 
-Please note that, while the <i>FBA Block Group Header</i> is the first part
+<b>Please note</b> that, while the <i>FBA Block Group Header</i> is the first part
 of the block group, it is <i><u>not</u></i> part of the compressed image.
 Only the sectors themselves (which immediately follow the <i>Block Group Header</i>)
 are actually compressed. FBA devices do not have Track Headers (Home Addresses).

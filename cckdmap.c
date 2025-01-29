@@ -418,6 +418,13 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     if (imgtyp & FBA_CMP_OR_SF_TYP)
         fba = true;
 
+    if (fba && !info_only)
+    {
+        // "Only '-i' (summary information only) is supported for CFBA/CFBA64 devices"
+        FWRMSG( stderr, HHC03009, "E" );
+        return syntax();
+    }
+
     /* Remember whether input is shadow or not */
     if (imgtyp & ANY_SF_TYP)
         shadow = true;
@@ -847,6 +854,10 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         WRMSG( HHC03050, sev, gc_str, gc <= 1 ? "!" : "." );
     }
 
+    /* FBA devices don't have tracks, so cannot report track information */
+    if (fba && info_only)
+        goto eoj;
+
     /* cdevhdr inconsistencies check */
     hdrerr  = 0;
     hdrerr |= cdevhdr.cdh_size != filesize && cdevhdr.cdh_size != cdevhdr.free_off ? 0x0001 : 0;
@@ -1272,6 +1283,8 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
                 spacetab[i].spc_siz, spacetab[i].spc_siz, RTRIM( track_range ));
         }
     }
+
+eoj:
 
     WRMSG( HHC03020, "I" );
 

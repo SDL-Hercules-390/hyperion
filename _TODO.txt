@@ -15,34 +15,6 @@
 
 --------------------------------------------------------------------------------
 
-  Determine optimal run_cpu/run_sie loop value taking into consideration
-  typical/average real host milliseconds/microseconds to complete a real
-  dasd I/O and typical/average number of typical workload guest instructions
-  that can be executed within that amount of time. The idea here is to NOT
-  continue looping executing guest instructions if there's a guest interrupt
-  waiting to be taken. This ensures timely guest notification that their
-  I/O has completed instead of having them "wait" much longer for the I/O
-  interrupt to occur because we're busy burning CPU executing instructions
-  instead of taking/processing an interrupt. (I.e. we don't want to "delay"
-  notifying them of their pending interrupts any longer than necessary.
-  IDEALLY we should call INTERRUPT_PENDING() macro after every instruction
-  but that slows Hercules down to crawl, which is why we execute multiple
-  instructions in a loop in the first place before calling INTERRUPT_PENDING()
-  macro. We don't want to call INTERRUPT_PENDING() macro TOO often, but we
-  should MAYBE be calling it more frequently than we are. The trick is to
-  determine HOW often it should be called for best performance ON A GIVEN
-  HOST SYSTEM. It should be a dynamially calculated value that is calculated
-  during startup to prevent our current defined fixed value from unfairly
-  penalizing those users with slower/faster Hercules host systems.
-
---------------------------------------------------------------------------------
-
-  Examine all instances of "#if 0" and "if 1" and determine which should
-  stay and which should go. For those that should be kept, add comments
-  documenting the rationale for keeping it.
-
---------------------------------------------------------------------------------
-
   *BUG*:  FIX PORTABILITY ISSUES that have crept in over time.
 
   Remove all "#if defined(__APPLE__) || defined(__FreeBSD__)" statements.
@@ -68,6 +40,34 @@
   and then test for that instead.
 
   Refer to "hostopts.h" for an example of the technique I'm referring to.
+
+--------------------------------------------------------------------------------
+
+  Examine all instances of "#if 0" and "if 1" and determine which should
+  stay and which should go. For those that should be kept, add comments
+  documenting the rationale for keeping it.
+
+--------------------------------------------------------------------------------
+
+  Determine optimal run_cpu/run_sie loop value taking into consideration
+  typical/average real host milliseconds/microseconds to complete a real
+  dasd I/O and typical/average number of typical workload guest instructions
+  that can be executed within that amount of time. The idea here is to NOT
+  continue looping executing guest instructions if there's a guest interrupt
+  waiting to be taken. This ensures timely guest notification that their
+  I/O has completed instead of having them "wait" much longer for the I/O
+  interrupt to occur because we're busy burning CPU executing instructions
+  instead of taking/processing an interrupt. (I.e. we don't want to "delay"
+  notifying them of their pending interrupts any longer than necessary.
+  IDEALLY we should call INTERRUPT_PENDING() macro after every instruction
+  but that slows Hercules down to crawl, which is why we execute multiple
+  instructions in a loop in the first place before calling INTERRUPT_PENDING()
+  macro. We don't want to call INTERRUPT_PENDING() macro TOO often, but we
+  should MAYBE be calling it more frequently than we are. The trick is to
+  determine HOW often it should be called for best performance ON A GIVEN
+  HOST SYSTEM. It should be a dynamially calculated value that is calculated
+  during startup to prevent our current defined fixed value from unfairly
+  penalizing those users with slower/faster Hercules host systems.
 
 --------------------------------------------------------------------------------
 

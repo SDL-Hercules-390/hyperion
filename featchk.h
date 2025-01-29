@@ -987,6 +987,10 @@
  #error You cannot have "Message Security Assist extension 4" without having "Message Security Assist extension 3"
 #endif
 
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) && !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
+ #error You cannot have "Message Security Assist extension 5" without having "Message Security Assist extension 4"
+#endif
+
 #if defined( FEATURE_078_ENHANCED_DAT_FACILITY_2 ) && !defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
  #error FEATURE_078_ENHANCED_DAT_FACILITY_2 requires FEATURE_008_ENHANCED_DAT_FACILITY_1
 #endif

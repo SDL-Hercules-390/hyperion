@@ -18,44 +18,85 @@
 #include "inline.h"
 
 /* ====================================================================== */
-/* TEMPORARY while zVector instructions are being developed */
 
-//  #if defined(__clang__)
-//      #pragma clang diagnostic ignored "-Wunused-variable"
-//      #pragma clang diagnostic ignored "-Wunused-but-set-variable"
-//      #pragma clang diagnostic ignored "-Wcomment"
-//      #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
-//      #pragma clang diagnostic ignored "-Wmacro-redefined"
-//  #elif defined(__GNUC__)
-//      #pragma GCC diagnostic ignored "-Wunused-variable"
-//      #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-//      #pragma GCC diagnostic ignored "-Wcomment"
-//      #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-//  #endif
-
-//  #undef ZVECTOR_CHECK
-
-//  #define ZVECTOR_CHECK(_regs)  /* (do nothing) */
+// To display the results of all Vector instructions, uncomment the
+// following three lines:-
 
 //  #undef ZVECTOR_END
-
-/* remove GCC: warning: multi-line comment [-Wcomment]
-
 //  #define ZVECTOR_END(_regs)                                      \
 //              ARCH_DEP(display_inst) (_regs, inst);
 
-//  #define ZVECTOR_END(_regs)                                      \
-//          if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36)  \
-//              ARCH_DEP(display_inst) (_regs, inst);
+// To display the results of specific Vector instructions, uncomment
+// and modify the following four lines:-
 
-*/ /*end remove GCC: warning: multi-line comment [-Wcomment] */
+//  #undef ZVECTOR_END
+//  #define ZVECTOR_END(_regs)                                      \
+//          if (inst[5] == 0x3E || inst[5] == 0x36)                 \
+//              ARCH_DEP(display_inst) (_regs, inst);
 
 /* ====================================================================== */
 
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
 
 /*------------------------------------------------------------------------*/
-/* See ieee.c for the following Vector Floating-Point Instructions.       */
+/* See zvector2.c for the following Vector instructions.                  */
+/*------------------------------------------------------------------------*/
+/* E601 VLEBRH  - VECTOR LOAD BYTE REVERSED ELEMENT (16)          [VRX]   */
+/* E602 VLEBRG  - VECTOR LOAD BYTE REVERSED ELEMENT (64)          [VRX]   */
+/* E603 VLEBRF  - VECTOR LOAD BYTE REVERSED ELEMENT (32)          [VRX]   */
+/* E604 VLLEBRZ - VECTOR LOAD BYTE REVERSED ELEMENT AND ZERO      [VRX]   */
+/* E605 VLBRREP - VECTOR LOAD BYTE REVERSED ELEMENT AND REPLICATE [VRX]   */
+/* E606 VLBR    - VECTOR LOAD BYTE REVERSED ELEMENTS              [VRX]   */
+/* E607 VLER    - VECTOR LOAD ELEMENTS REVERSED                   [VRX]   */
+/* E609 VSTEBRH - VECTOR STORE BYTE REVERSED ELEMENT (16)         [VRX]   */
+/* E60A VSTEBRG - VECTOR STORE BYTE REVERSED ELEMENT (64)         [VRX]   */
+/* E60B VSTEBRF - VECTOR STORE BYTE REVERSED ELEMENT (32)         [VRX]   */
+/* E60E VSTBR   - VECTOR STORE BYTE REVERSED ELEMENTS             [VRX]   */
+/* E60F VSTER   - VECTOR STORE ELEMENTS REVERSED                  [VRX]   */
+/* E634 VPKZ    - VECTOR PACK ZONED                               [VSI]   */
+/* E635 VLRL    - VECTOR LOAD RIGHTMOST WITH LENGTH               [VSI]   */
+/* E637 VLRLR   - VECTOR LOAD RIGHTMOST WITH LENGTH (reg)         [VRS-d] */
+/* E63C VUPKZ   - VECTOR UNPACK ZONED                             [VSI]   */
+/* E63D VSTRL   - VECTOR STORE RIGHTMOST WITH LENGTH              [VSI]   */
+/* E63F VSTRLR  - VECTOR STORE RIGHTMOST WITH LENGTH (reg)        [VRS-d] */
+/* E649 VLIP    - VECTOR LOAD IMMEDIATE DECIMAL                   [VRI-h] */
+/* E650 VCVB    - VECTOR CONVERT TO BINARY (32)                   [VRR-i] */
+/* E651 VCLZDP  - VECTOR COUNT LEADING ZERO DIGITS                [VRR-k] */
+/* E652 VCVBG   - VECTOR CONVERT TO BINARY (64)                   [VRR-i] */
+/* E654 VUPKZH  - VECTOR UNPACK ZONED HIGH                        [VRR-k] */
+/* E658 VCVD    - VECTOR CONVERT TO DECIMAL (32)                  [VRI-i] */
+/* E659 VSRP    - VECTOR SHIFT AND ROUND DECIMAL                  [VRi-g] */
+/* E65A VCVDG   - VECTOR CONVERT TO DECIMAL (64)                  [VRI-i] */
+/* E65B VPSOP   - VECTOR PERFORM SIGN OPERATION DECIMAL           [VRI-g] */
+/* E65C VUPKZL  - VECTOR UNPACK ZONED LOW                         [VRR-k] */
+/* E65F VTP     - VECTOR TEST DECIMAL                             [VRR-g] */
+/* E670 VPKZR   - VECTOR PACK ZONED REGISTER                      [VRI-f] */
+/* E671 VAP     - VECTOR ADD DECIMAL                              [VRI-f] */
+/* E672 VSRPR   - VECTOR SHIFT AND ROUND DECIMAL REGISTER         [VRI-f] */
+/* E673 VSP     - VECTOR SUBTRACT DECIMAL                         [VRI-f] */
+/* E674 VSCHP   - DECIMAL SCALE AND CONVERT TO HFP                [VRR-b] */
+/* E677 VCP     - VECTOR COMPARE DECIMAL                          [VRR-h] */
+/* E678 VMP     - VECTOR MULTIPLY DECIMAL                         [VRI-f] */
+/* E679 VMSP    - VECTOR MULTIPLY AND SHIFT DECIMAL               [VRI-f] */
+/* E67A VDP     - VECTOR DIVIDE DECIMAL                           [VRI-f] */
+/* E67B VRP     - VECTOR REMAINDER DECIMAL                        [VRI-f] */
+/* E67C VSCSHP  - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP      [VRR-b] */
+/* E67D VCSPH   - VECTOR CONVERT HFP TO SCALED DECIMAL            [VRR-j] */
+/* E67E VSDP    - VECTOR SHIFT AND DIVIDE DECIMAL                 [VRI-f] */
+/*------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------*/
+/* See nnpa.c for the following Specialized-Function-Assist instructions. */
+/*------------------------------------------------------------------------*/
+/* E655 VCNF   - VECTOR FP CONVERT TO NNP                         [VRR-a] */
+/* E656 VCLFNH - VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH     [VRR_a] */
+/* E65D VCFN   - VECTOR FP CONVERT FROM NNP                       [VRR-a] */
+/* E65E VCLFNL - VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW      [VRR-a] */
+/* E675 VCRNF  - VECTOR FP CONVERT AND ROUND TO NNP               [VRR-c] */
+/*------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------*/
+/* See ieee.c for the following Vector Floating-Point instructions.       */
 /*------------------------------------------------------------------------*/
 /* E74A VFTCI  - Vector FP Test Data Class Immediate              [VRI-e] */
 /* E78E VFMS   - Vector FP Multiply and Subtract                  [VRR-e] */
@@ -661,7 +702,7 @@ DEF_INST( vector_load )
 
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3);
 
-    /* m3 is not part of this instruction */
+    /* m3 - Alignment Hint: not used */
     UNREFERENCED( m3 );
 
     ZVECTOR_CHECK( regs );
@@ -794,7 +835,7 @@ DEF_INST( vector_store )
 
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
 
-    /* m3 is not part of this instruction */
+    /* m3 - Alignment Hint: not used */
     UNREFERENCED( m3 );
 
     ZVECTOR_CHECK( regs );
@@ -928,6 +969,18 @@ DEF_INST( vector_scatter_element_32 )
 /*-------------------------------------------------------------------*/
 /* E721 VLGV   - Vector Load GR from VR Element              [VRS-c] */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* In PoP (SA22-7832-13), for VLGV we can read:                      */
+/*   If the index specified by the second-operand address is         */
+/*   greater than the highest numbered element in the third          */
+/*   operand, of the specified element size, the result in the       */
+/*   first operand is unpredictable.                                 */
+/*                                                                   */
+/* However, empirical evidence suggests that any index larger than   */
+/* the highest numbered element is treated as the modulo of the      */
+/* highest numbered element. This may be model dependant behaviour,  */
+/* but this implementation will follow a models (z15) behaviour.     */
+/*                                                                   */
 DEF_INST( vector_load_gr_from_vr_element )
 {
     int     r1, v3, b2, m4;
@@ -942,20 +995,20 @@ DEF_INST( vector_load_gr_from_vr_element )
 
     switch (m4)
     {
-    case 0:
-        if ( i > 15 ) break;
+    case 0:  // Byte
+        i %= 16;
         regs->GR( r1 ) = regs->VR_B( v3, i );
         break;
-    case 1:
-        if ( i > 7 ) break;
+    case 1:  // Halfword
+        i %= 8;
         regs->GR( r1 ) = regs->VR_H( v3, i );
         break;
-    case 2:
-        if ( i > 3 ) break;
+    case 2:  // Word
+        i %= 4;
         regs->GR( r1 ) = regs->VR_F( v3, i );
         break;
-    case 3:
-        if ( i > 1 ) break;
+    case 3:  // Doubleword
+        i %= 2;
         regs->GR( r1 ) = regs->VR_D( v3, i );
         break;
     default:
@@ -969,6 +1022,18 @@ DEF_INST( vector_load_gr_from_vr_element )
 /*-------------------------------------------------------------------*/
 /* E722 VLVG   - Vector Load VR Element from GR              [VRS-b] */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* In PoP (SA22-7832-13), for VLVG we can read:                      */
+/*   If the index, specified by the second-operand address, is       */
+/*   greater than the highest numbered element in the first          */
+/*   operand, of the specified element size, it is unpredictable     */
+/*   which element, if any, is replaced.                             */
+/*                                                                   */
+/* However, empirical evidence suggests that any index larger than   */
+/* the highest numbered element is treated as the modulo of the      */
+/* highest numbered element. This may be model dependant behaviour,  */
+/* but this implementation will follow a models (z15) behaviour.     */
+/*                                                                   */
 DEF_INST( vector_load_vr_element_from_gr )
 {
     int     v1, r3, b2, m4;
@@ -983,20 +1048,20 @@ DEF_INST( vector_load_vr_element_from_gr )
 
     switch (m4)
     {
-    case 0:
-        if ( i > 15 ) break;
+    case 0:  // Byte
+        i %= 16;
         regs->VR_B( v1, i ) = regs->GR_LHLCL( r3 );
         break;
-    case 1:
-        if ( i > 7 ) break;
+    case 1:  // Halfword
+        i %= 8;
         regs->VR_H( v1, i ) = regs->GR_LHL  ( r3 );
         break;
-    case 2:
-        if ( i > 3 ) break;
+    case 2:  // Word
+        i %= 4;
         regs->VR_F( v1, i ) = regs->GR_L    ( r3 );
         break;
-    case 3:
-        if ( i > 1 ) break;
+    case 3:  // Doubleword
+        i %= 2;
         regs->VR_D( v1, i ) = regs->GR_G    ( r3 );
         break;
     default:
@@ -1137,7 +1202,7 @@ DEF_INST( vector_load_multiple )
 
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
 
-    /* m4 is not part of this instruction */
+    /* m4 - Alignment Hint: not used */
     UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
@@ -1167,7 +1232,7 @@ DEF_INST( vector_load_with_length )
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
 
-    /* m4 is not part of this instruction */
+    /* m4 - Alignment Hint: not used */
     UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
@@ -1281,7 +1346,7 @@ DEF_INST( vector_store_multiple )
 
     VRS_A( inst, regs, v1, v3, b2, effective_addr2, m4 );
 
-    /* m4 is not part of this instruction */
+    /* m4 - Alignment Hint: not used */
     UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
@@ -1486,28 +1551,68 @@ DEF_INST( vector_generate_mask )
     case 0:
         i2 &= 7;
         i3 &= 7;
-        bitmask = (i2 <= i3) ? (1u << (8 - i2)) - (1u << (7 - i3)) : 0xffu - (1u << (7 - i3)) + (1u << (8 - i2));
+        if (i2 <= i3) {
+            if (i2 == 0)
+                bitmask = 0u - (1u << (7 - i3));
+            else
+                bitmask = (1u << (8 - i2)) - (1u << (7 - i3));
+        } else {
+            if (i2 == 0)
+                bitmask = 0xFFu - (1u << (7 - i3));
+            else
+                bitmask = 0xFFu - (1u << (7 - i3)) + (1u << (8 - i2));
+        }
         for (i=0; i < 16; i++)
             regs->VR_B(v1, i) = bitmask;
         break;
     case 1:
         i2 &= 15;
         i3 &= 15;
-        bitmask = (i2 <= i3) ? (1u << (16 - i2)) - (1u << (15 - i3)) : 0xffffu - (1u << (15 - i3)) + (1u << (16 - i2));
+        if (i2 <= i3) {
+            if (i2 == 0)
+                bitmask = 0u - (1u << (15 - i3));
+            else
+                bitmask = (1u << (16 - i2)) - (1u << (15 - i3));
+        } else {
+            if (i2 == 0)
+                bitmask = 0xFFFFu - (1u << (15 - i3));
+            else
+                bitmask = 0xFFFFu - (1u << (15 - i3)) + (1u << (16 - i2));
+        }
         for (i=0; i < 8; i++)
             regs->VR_H(v1, i) = bitmask;
         break;
     case 2:
         i2 &= 31;
         i3 &= 31;
-        bitmask = (i2 <= i3) ? (1u << (32 - i2)) - (1u << (31 - i3)) : 0xffffffffu - (1u << (31 - i3)) + (1u << (32 - i2));
+        if (i2 <= i3) {
+            if (i2 == 0)
+                bitmask = 0u - (1u << (31 - i3));
+            else
+                bitmask = (1u << (32 - i2)) - (1u << (31 - i3));
+        } else {
+            if (i2 == 0)
+                bitmask = 0xFFFFFFFFu - (1u << (31 - i3));
+            else
+                bitmask = 0xFFFFFFFFu - (1u << (31 - i3)) + (1u << (32 - i2));
+        }
         for (i=0; i < 4; i++)
             regs->VR_F(v1, i) = bitmask;
         break;
     case 3:
         i2 &= 63;
         i3 &= 63;
-        bitmask = (i2 <= i3) ? (1ull << (64 - i2)) - (1ull << (63 - i3)) : 0xffffffffffffffffull - (1ull << (63 - i3)) + (1ull << (64 - i2));
+        if (i2 <= i3) {
+            if (i2 == 0)
+                bitmask = 0ull - (1ull << (63 - i3));
+            else
+                bitmask = (1ull << (64 - i2)) - (1ull << (63 - i3));
+        } else {
+            if (i2 == 0)
+                bitmask = 0xFFFFFFFFFFFFFFFFull - (1ull << (63 - i3));
+            else
+                bitmask = 0xFFFFFFFFFFFFFFFFull - (1ull << (63 - i3)) + (1ull << (64 - i2));
+        }
         for (i=0; i < 2; i++)
             regs->VR_D(v1, i) = bitmask;
         break;
@@ -1564,12 +1669,28 @@ DEF_INST( vector_replicate )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_population_count )
 {
+
+    static const BYTE OneBitsInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 0,  1,  1,  2,  1,  2,  2,  3,  1,  2,  2,  3,  2,  3,  3,  4,
+    /* 1- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 2- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 3- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 4- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 5- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 6- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* 7- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* 8- */   1,  2,  2,  3,  2,  3,  3,  4,  2,  3,  3,  4,  3,  4,  4,  5,
+    /* 9- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* A- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* B- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* C- */   2,  3,  3,  4,  3,  4,  4,  5,  3,  4,  4,  5,  4,  5,  5,  6,
+    /* D- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* E- */   3,  4,  4,  5,  4,  5,  5,  6,  4,  5,  5,  6,  5,  6,  6,  7,
+    /* F- */   4,  5,  5,  6,  5,  6,  6,  7,  5,  6,  6,  7,  6,  7,  7,  8 };
+
     int     v1, v2, m3, m4, m5;
     int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1590,13 +1711,7 @@ DEF_INST( vector_population_count )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            count = 0;
-            belement = regs->VR_B(v2, i);
-            for (j=0; j < 8; j++)
-            {
-                if (belement & 0x80) count++;
-                belement <<= 1;
-            }
+            count = OneBitsInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
@@ -1604,11 +1719,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 8; i++)
         {
             count = 0;
-            helement = regs->VR_H(v2, i);
-            for (j=0; j < 16; j++)
+            for (j=i*2; j < (i*2)+2; j++)
             {
-                if (helement & 0x8000) count++;
-                helement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1617,11 +1730,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 4; i++)
         {
             count = 0;
-            felement = regs->VR_F(v2, i);
-            for (j=0; j < 32; j++)
+            for (j=i*4; j < (i*4)+4; j++)
             {
-                if (felement & 0x80000000) count++;
-                felement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1630,11 +1741,9 @@ DEF_INST( vector_population_count )
         for (i=0; i < 2; i++)
         {
             count = 0;
-            delement = regs->VR_D(v2, i);
-            for (j=0; j < 64; j++)
+            for (j=i*8; j < (i*8)+8; j++)
             {
-                if (delement & 0x8000000000000000ull) count++;
-                delement <<= 1;
+                count += OneBitsInByte[regs->VR_B(v2, j)];
             }
             regs->VR_D(v1, i) = count;
         }
@@ -1652,12 +1761,28 @@ DEF_INST( vector_population_count )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_count_trailing_zeros )
 {
+
+    static const BYTE TrailingZerosInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 8,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 1- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 2- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 3- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 4- */   6,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 5- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 6- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 7- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 8- */   7,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* 9- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* A- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* B- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* C- */   6,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* D- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* E- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+    /* F- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0 };
+
     int     v1, v2, m3, m4, m5;
-    int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
+    int     i, j, k, count;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1672,23 +1797,19 @@ DEF_INST( vector_count_trailing_zeros )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            belement = regs->VR_B(v2, i);
-            for (j=0, count=0; j < 8; j++, count++)
-            {
-                if (belement & 0x01) break;
-                belement >>= 1;
-            }
+            count = TrailingZerosInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
     case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
-            helement = regs->VR_H(v2, i);
-            for (j=0, count=0; j < 16; j++, count++)
+            count = 0;
+            for (j=(i*2)+1; j >= i*2; j--)
             {
-                if (helement & 0x0001) break;
-                helement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1696,11 +1817,12 @@ DEF_INST( vector_count_trailing_zeros )
     case 2:  // Word
         for (i=0; i < 4; i++)
         {
-            felement = regs->VR_F(v2, i);
-            for (j=0, count=0; j < 32; j++, count++)
+            count = 0;
+            for (j=(i*4)+3; j >= i*4; j--)
             {
-                if (felement & 0x00000001) break;
-                felement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1708,11 +1830,12 @@ DEF_INST( vector_count_trailing_zeros )
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
-            delement = regs->VR_D(v2, i);
-            for (j=0, count=0; j < 64; j++, count++)
+            count = 0;
+            for (j=(i*8)+7; j >= i*8; j--)
             {
-                if (delement & 0x0000000000000001ull) break;
-                delement >>= 1;
+                k = TrailingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_D(v1, i) = count;
         }
@@ -1730,12 +1853,28 @@ DEF_INST( vector_count_trailing_zeros )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_count_leading_zeros )
 {
+
+    static const BYTE LeadingZerosInByte[256] =
+    /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+    /* 0- */ { 8,  7,  6,  6,  5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  4,
+    /* 1- */   3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+    /* 2- */   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+    /* 3- */   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+    /* 4- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 5- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 6- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 7- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    /* 8- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* 9- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* A- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* B- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* C- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* D- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* E- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    /* F- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 };
+
     int     v1, v2, m3, m4, m5;
-    int     i, j, count;
-    U64     delement;
-    U32     felement;
-    U16     helement;
-    BYTE    belement;
+    int     i, j, k, count;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -1750,23 +1889,19 @@ DEF_INST( vector_count_leading_zeros )
     case 0:  // Byte
         for (i=0; i < 16; i++)
         {
-            belement = regs->VR_B(v2, i);
-            for (j=0, count=0; j < 8; j++, count++)
-            {
-                if (belement & 0x80) break;
-                belement <<= 1;
-            }
+            count = LeadingZerosInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
     case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
-            helement = regs->VR_H(v2, i);
-            for (j=0, count=0; j < 16; j++, count++)
+            count = 0;
+            for (j=i*2; j < (i*2)+2; j++)
             {
-                if (helement & 0x8000) break;
-                helement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_H(v1, i) = count;
         }
@@ -1774,11 +1909,12 @@ DEF_INST( vector_count_leading_zeros )
     case 2:  // Word
         for (i=0; i < 4; i++)
         {
-            felement = regs->VR_F(v2, i);
-            for (j=0, count=0; j < 32; j++, count++)
+            count = 0;
+            for (j=i*4; j < (i*4)+4; j++)
             {
-                if (felement & 0x80000000) break;
-                felement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_F(v1, i) = count;
         }
@@ -1786,11 +1922,12 @@ DEF_INST( vector_count_leading_zeros )
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
-            delement = regs->VR_D(v2, i);
-            for (j=0, count=0; j < 64; j++, count++)
+            count = 0;
+            for (j=i*8; j < (i*8)+8; j++)
             {
-                if (delement & 0x8000000000000000ull) break;
-                delement <<= 1;
+                k = LeadingZerosInByte[regs->VR_B(v2, j)];
+                count += k;
+                if (k != 8) break;
             }
             regs->VR_D(v1, i) = count;
         }
@@ -1974,6 +2111,7 @@ DEF_INST( vector_merge_low )
 {
     int     v1, v2, v3, m4, m5, m6;
     int     i, j;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -1988,32 +2126,35 @@ DEF_INST( vector_merge_low )
     case 0:  // Byte
         for ( i=0, j=8; i<16; i+=2, j++ )
         {
-            regs->VR_B( v1, i   ) = regs->VR_B( v2, j );
-            regs->VR_B( v1, i+1 ) = regs->VR_B( v3, j );
+            SV_B( temp, i   ) = regs->VR_B( v2, j );
+            SV_B( temp, i+1 ) = regs->VR_B( v3, j );
         }
         break;
     case 1:  // Halfword
         for ( i=0, j=4; i<8; i+=2, j++ )
         {
-            regs->VR_H( v1, i   ) = regs->VR_H( v2, j );
-            regs->VR_H( v1, i+1 ) = regs->VR_H( v3, j );
+            SV_H( temp, i   ) = regs->VR_H( v2, j );
+            SV_H( temp, i+1 ) = regs->VR_H( v3, j );
         }
         break;
     case 2:  // Word
         for ( i=0, j=2; i<4; i+=2, j++ )
         {
-            regs->VR_F( v1, i   ) = regs->VR_F( v2, j );
-            regs->VR_F( v1, i+1 ) = regs->VR_F( v3, j );
+            SV_F( temp, i   ) = regs->VR_F( v2, j );
+            SV_F( temp, i+1 ) = regs->VR_F( v3, j );
         }
         break;
     case 3:  // Doubleword
-        regs->VR_D( v1, 0 ) = regs->VR_D( v2, 1 );
-        regs->VR_D( v1, 1 ) = regs->VR_D( v3, 1 );
+        SV_D( temp, 0 ) = regs->VR_D( v2, 1 );
+        SV_D( temp, 1 ) = regs->VR_D( v3, 1 );
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
     }
+
+    regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
+    regs->VR_D( v1, 1 ) = SV_D( temp, 1 );
 
     ZVECTOR_END( regs );
 }
@@ -2025,6 +2166,7 @@ DEF_INST( vector_merge_high )
 {
     int     v1, v2, v3, m4, m5, m6;
     int     i, j;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -2039,32 +2181,35 @@ DEF_INST( vector_merge_high )
     case 0:  // Byte
         for ( i=0, j=0; i<16; i+=2, j++ )
         {
-            regs->VR_B( v1, i   ) = regs->VR_B( v2, j );
-            regs->VR_B( v1, i+1 ) = regs->VR_B( v3, j );
+            SV_B( temp, i   ) = regs->VR_B( v2, j );
+            SV_B( temp, i+1 ) = regs->VR_B( v3, j );
         }
         break;
     case 1:  // Halfword
         for ( i=0, j=0; i<8; i+=2, j++ )
         {
-            regs->VR_H( v1, i   ) = regs->VR_H( v2, j );
-            regs->VR_H( v1, i+1 ) = regs->VR_H( v3, j );
+            SV_H( temp, i   ) = regs->VR_H( v2, j );
+            SV_H( temp, i+1 ) = regs->VR_H( v3, j );
         }
         break;
     case 2:  // Word
         for ( i=0, j=0; i<4; i+=2, j++ )
         {
-            regs->VR_F( v1, i   ) = regs->VR_F( v2, j );
-            regs->VR_F( v1, i+1 ) = regs->VR_F( v3, j );
+            SV_F( temp, i   ) = regs->VR_F( v2, j );
+            SV_F( temp, i+1 ) = regs->VR_F( v3, j );
         }
         break;
     case 3:  // Doubleword
-        regs->VR_D( v1, 0 ) = regs->VR_D( v2, 0 );
-        regs->VR_D( v1, 1 ) = regs->VR_D( v3, 0 );
+        SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
+        SV_D( temp, 1 ) = regs->VR_D( v3, 0 );
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
     }
+
+    regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
+    regs->VR_D( v1, 1 ) = SV_D( temp, 1 );
 
     ZVECTOR_END( regs );
 }
@@ -2691,7 +2836,7 @@ DEF_INST( vector_shift_left_by_byte )
 }
 
 /*-------------------------------------------------------------------*/
-/* git7 VSLDB  - Vector Shift Left Double By Byte            [VRI-d] */
+/* E777 VSLDB  - Vector Shift Left Double By Byte            [VRI-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_shift_left_double_by_byte )
 {
@@ -2980,8 +3125,7 @@ DEF_INST( vector_find_element_equal )
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     zf = ef = FALSE;
-    ei = 16;    // Number of bytes in vector
-    newcc = 3;  // No equal, no zero
+    zi = ei = 16;     // Number of bytes in vector
 
     switch (m4)
     {
@@ -2992,7 +3136,6 @@ DEF_INST( vector_find_element_equal )
             {
                 ef = TRUE;
                 ei = i;     // Element index in bytes
-                newcc = 1;  // Equal, no zero
                 break;
             }
         }
@@ -3016,7 +3159,6 @@ DEF_INST( vector_find_element_equal )
             {
                 ef = TRUE;
                 ei = i * 2;  // Element index in bytes
-                newcc = 1;   // Equal, no zero
                 break;
             }
         }
@@ -3040,7 +3182,6 @@ DEF_INST( vector_find_element_equal )
             {
                 ef = TRUE;
                 ei = i * 4;  // Element index in bytes
-                newcc = 1;   // Equal, no zero
                 break;
             }
         }
@@ -3059,24 +3200,35 @@ DEF_INST( vector_find_element_equal )
         break;
     }
 
-    if (zf)
+    if (ef == TRUE)
     {
-        if (ef)
+        if (zf == TRUE)
         {
-            if (zi < ei)
+            if (zi <= ei)
             {
-                ei = zi;    // Element index in bytes
-                newcc = 0;  // Zero before equal
+                newcc = 0;   // Equal element follows zero element, or equal element is zero element
+                ei = zi;     // Element index in bytes
             }
             else
             {
-                newcc = 2;  // Zero not before equal
+                newcc = 2;   // Equal element before zero element
             }
         }
-        else
+        else /* zf == FALSE */
         {
-            ei = zi;        // Element index in bytes
-            newcc = 0;      // Zero before equal
+            newcc = 1;       // Equal element and, if M5_ZS, no zero element
+        }
+    }
+    else  /* ef == FALSE */
+    {
+        if (zf == TRUE)
+        {
+            newcc = 0;       // No equal element and a zero element
+            ei = zi;         // Element index in bytes
+        }
+        else /* zf == FALSE */
+        {
+            newcc = 3;       // No equal element and, if M5_ZS, no zero element
         }
     }
 
@@ -3114,7 +3266,7 @@ DEF_INST( vector_find_element_not_equal )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     zf = nef = FALSE;
-    nei = 16;   // Number of bytes in vector
+    zf = nei = 16;  // Number of bytes in vector
     newcc = 3;  // All equal, no zero
 
     switch (m4)
@@ -3193,20 +3345,35 @@ DEF_INST( vector_find_element_not_equal )
         break;
     }
 
-    if (zf)
+    if (nef == TRUE)
     {
-        if (nef)
+        if (zf == TRUE)
         {
             if (zi < nei)
             {
-                nei = zi;   // Element index in bytes
-                newcc = 0;  // Zero before not equal
+                newcc = 0;   // Not equal element follows zero element
+                nei = zi;    // Element index in bytes
+            }
+            else
+            {
+             /* newcc = 1 or 2; */     // Not equal element before zero element, or not equal element is zero element
             }
         }
-        else
+        else /* zf == FALSE */
         {
-            nei = zi;       // Element index in bytes
-            newcc = 0;      // Zero before equal
+         /* newcc = 1 or 2; */         // Not equal element and, if M5_ZS, no zero element
+        }
+    }
+    else  /* nef == FALSE */
+    {
+        if (zf == TRUE)
+        {
+            newcc = 0;       // No not equal (i.e. all equal) element and a zero element
+            nei = zi;        // Element index in bytes
+        }
+        else /* zf == FALSE */
+        {
+         /* newcc = 3; */    // No not equal (i.e. all equal) element and, if M5_ZS, no zero element
         }
     }
 
@@ -3245,18 +3412,12 @@ salva - 2023, feb,27.
 
 DEF_INST( vector_find_any_element_equal )
 {
-// Overkill to prevent erroneous "may be used uninitialized" warnings
-#if defined(__clang__)
-    #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
-#elif defined(__GNUC__)
-    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
 
     int     v1, v2, v3, m4, m5;
     int     i, j;
-    BYTE    irt1[16], irt2[16];        // First and second intermediate results
     int     lxt1, lxt2;                // Lowest indexed true
     int     mxt;                       // Maximum indexed true
+    BYTE    irt1[16], irt2[16];        // First and second intermediate results
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -3267,12 +3428,17 @@ DEF_INST( vector_find_any_element_equal )
 #define M5_ZS ((m5 & 0x2) != 0) // Zero Search
 #define M5_CS ((m5 & 0x1) != 0) // Condition Code Set
 
+    for (i=0; i<16; i++)
+    {
+        irt1[i] = irt2[i] = FALSE;
+    }
+
     switch (m4)
     {
     case 0:  // Byte
         for (i=0; i<16; i++)
         {
-            irt1[i] = irt2[i] = FALSE;
+            // Compare the element of the second with the elements of the third operands
             for (j=0; j<16; j++)
             {
                 if (regs->VR_B(v2,i) == regs->VR_B(v3,j))
@@ -3281,26 +3447,16 @@ DEF_INST( vector_find_any_element_equal )
                     break;
                 }
             }
-            if (M5_ZS)                 // if M5_ZS (Zero Search)
-            {
-                if (regs->VR_B(v2,i) == 0)
-                {
-                    irt2[i] = TRUE;
-                }
-            }
-            if (M5_IN)                 // if M5_IN (Invert Result)
-            {
-                irt1[i] ^= TRUE;
-            }
+            // Invert the result if required
+            if (M5_IN) irt1[i] ^= TRUE;
+            // Compare the element of the second operand with zero
+            if (M5_ZS && regs->VR_B(v2,i) == 0) irt2[i] = TRUE;
         }
         if (M5_RT)                     // if M5_RT (Result Type)
         {
             for (i=0; i<16; i++)
             {
-                if (irt1[i] == TRUE)
-                    regs->VR_B(v1,i) = 0xFF;
-                else
-                    regs->VR_B(v1,i) = 0x00;
+                regs->VR_B(v1, i) = (irt1[i] == TRUE) ? 0xFF : 0x00;
             }
         }
         else                           // else !M5_RT
@@ -3320,7 +3476,7 @@ DEF_INST( vector_find_any_element_equal )
     case 1:  // Halfword
         for (i=0; i<8; i++)
         {
-            irt1[i] = irt2[i] = FALSE;
+            // Compare the element of the second with the elements of the third operands
             for (j=0; j<8; j++)
             {
                 if (regs->VR_H(v2,i) == regs->VR_H(v3,j))
@@ -3329,26 +3485,16 @@ DEF_INST( vector_find_any_element_equal )
                     break;
                 }
             }
-            if (M5_ZS)                 // if M5_ZS (Zero Search)
-            {
-                if (regs->VR_H(v2,i) == 0)
-                {
-                    irt2[i] = TRUE;
-                }
-            }
-            if (M5_IN)                 // if M5_IN (Invert Result)
-            {
-                irt1[i] ^= TRUE;
-            }
+            // Invert the result if required
+            if (M5_IN) irt1[i] ^= TRUE;
+            // Compare the element of the second operand with zero
+            if (M5_ZS && regs->VR_H(v2,i) == 0) irt2[i] = TRUE;
         }
         if (M5_RT)                     // if M5_RT (Result Type)
         {
-            for (j=0; j<8; j++)
+            for (i=0; i<8; i++)
             {
-                if (irt1[i] == TRUE)
-                    regs->VR_H(v1,i) = 0xFFFF;
-                else
-                    regs->VR_H(v1,i) = 0x0000;
+                regs->VR_H(v1, i) = (irt1[i] == TRUE) ? 0xFFFF : 0x0000;
             }
         }
         else                           // else !M5_RT
@@ -3368,7 +3514,7 @@ DEF_INST( vector_find_any_element_equal )
     case 2:  // Word
         for (i=0; i<4; i++)
         {
-            irt1[i] = irt2[i] = FALSE;
+            // Compare the element of the second with the elements of the third operands
             for (j=0; j<4; j++)
             {
                 if (regs->VR_F(v2,i) == regs->VR_F(v3,j))
@@ -3377,26 +3523,16 @@ DEF_INST( vector_find_any_element_equal )
                     break;
                 }
             }
-            if (M5_ZS)                 // if M5_ZS (Zero Search)
-            {
-                if (regs->VR_F(v2,i) == 0)
-                {
-                    irt2[i] = TRUE;
-                }
-            }
-            if (M5_IN)                 // if M5_IN (Invert Result)
-            {
-                irt1[i] ^= TRUE;
-            }
+            // Invert the result if required
+            if (M5_IN) irt1[i] ^= TRUE;
+            // Compare the element of the second operand with zero
+            if (M5_ZS && regs->VR_F(v2,i) == 0) irt2[i] = TRUE;
         }
         if (M5_RT)                     // if M5_RT (Result Type)
         {
-            for (j=0; j<4; j++)
+            for (i=0; i<4; i++)
             {
-                if (irt1[i] == TRUE)
-                    regs->VR_F(v1,i) = 0xFFFFFFFF;
-                else
-                    regs->VR_F(v1,i) = 0x00000000;
+                regs->VR_F(v1, i) = (irt1[i] == TRUE) ? 0xFFFFFFFF : 0x00000000;
             }
         }
         else                           // else !M5_RT
@@ -3430,6 +3566,9 @@ DEF_INST( vector_find_any_element_equal )
             break;
         case 2:  // Word
             lxt1 = lxt2 = mxt = 4;
+            break;
+        default:  // Prevent erroneous "may be used uninitialized" warnings
+            lxt1 = lxt2 = mxt = 0;
             break;
         }
 
@@ -3470,6 +3609,7 @@ DEF_INST( vector_find_any_element_equal )
 DEF_INST( vector_permute_doubleword_immediate )
 {
     int     v1, v2, v3, m4, m5, m6;
+    SV      temp;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -3482,8 +3622,11 @@ DEF_INST( vector_permute_doubleword_immediate )
 #define M4_SO ((m4 & 0x4) != 0)  // Second operand index
 #define M4_TO ((m4 & 0x1) != 0)  // Third operand index
 
-    regs->VR_D( v1, 0 ) = regs->VR_D( v2, M4_SO );
-    regs->VR_D( v1, 1 ) = regs->VR_D( v3, M4_TO );
+    SV_D( temp, 0 ) = regs->VR_D( v2, M4_SO );
+    SV_D( temp, 1 ) = regs->VR_D( v3, M4_TO );
+
+    regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
+    regs->VR_D( v1, 1 ) = SV_D( temp, 1 );
 
 #undef M4_SO
 #undef M4_TO
@@ -3628,7 +3771,12 @@ DEF_INST( vector_shift_right_double_by_bit )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_string_range_compare )
 {
-    int     v1, v2, v3, v4, m5, m6, max, low1, low2, result1[16], result2[16], i, j, lr, rr;
+    int     v1, v2, v3, v4, m5, m6;
+    int     i, j;
+    int     lxt1, lxt2;                // Lowest indexed true
+    int     mxt;                       // Maximum indexed true
+    BYTE    irt1[16], irt2[16];        // First and second intermediate results
+    BYTE    erc, orc;                  // Even and Odd range comparison results
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -3639,94 +3787,183 @@ DEF_INST( vector_string_range_compare )
 #define M6_ZS ((m6 & 0x2) != 0) // Zero Search
 #define M6_CS ((m6 & 0x1) != 0) // Condition Code Set
 
-    regs->VR_D(v1, 0) = 0x00;
-    regs->VR_D(v1, 1) = 0x00;
+    for (i=0; i<16; i++)
+    {
+        irt1[i] = irt2[i] = FALSE;
+    }
 
     switch (m5)
     {
-    case 0:
-        max = 16, low1 = max, low2 = max;
-        for (i=0; i < max; i++) {
-            result1[i] = 0;
-            result2[i] = M6_ZS & (regs->VR_B(v2, i) == 0x00);
-            for (j=0; j < max; j+=2) {
-                lr = 0, rr = 0;
-                if ((regs->VR_B(v4, j)   & 0x80) && regs->VR_B(v2, i) == regs->VR_B(v3, j))   lr = 1;
-                if ((regs->VR_B(v4, j)   & 0x40) && regs->VR_B(v2, i) <  regs->VR_B(v3, j))   lr = 1;
-                if ((regs->VR_B(v4, j)   & 0x20) && regs->VR_B(v2, i) >  regs->VR_B(v3, j))   lr = 1;
-                if ((regs->VR_B(v4, j+1) & 0x80) && regs->VR_B(v2, i) == regs->VR_B(v3, j+1)) rr = 1;
-                if ((regs->VR_B(v4, j+1) & 0x40) && regs->VR_B(v2, i) <  regs->VR_B(v3, j+1)) rr = 1;
-                if ((regs->VR_B(v4, j+1) & 0x20) && regs->VR_B(v2, i) >  regs->VR_B(v3, j+1)) rr = 1;
-                result1[i] = (lr & rr) ^ M6_IN;
+    case 0:  // Byte
+        for (i=0; i<16; i++)
+        {
+            // Compare the element of the second operand with the ranges
+            for (j=0; j<16; j+=2)
+            {
+                erc = orc = FALSE;
+                // Compare the element of the second operand with the even element of the third operand.
+                if ((regs->VR_B(v4, j)   & 0x80) && regs->VR_B(v2, i) == regs->VR_B(v3, j))   erc = TRUE;
+                if ((regs->VR_B(v4, j)   & 0x40) && regs->VR_B(v2, i) <  regs->VR_B(v3, j))   erc = TRUE;
+                if ((regs->VR_B(v4, j)   & 0x20) && regs->VR_B(v2, i) >  regs->VR_B(v3, j))   erc = TRUE;
+                // Compare the element of the second operand with the odd element of the third operand.
+                if ((regs->VR_B(v4, j+1) & 0x80) && regs->VR_B(v2, i) == regs->VR_B(v3, j+1)) orc = TRUE;
+                if ((regs->VR_B(v4, j+1) & 0x40) && regs->VR_B(v2, i) <  regs->VR_B(v3, j+1)) orc = TRUE;
+                if ((regs->VR_B(v4, j+1) & 0x20) && regs->VR_B(v2, i) >  regs->VR_B(v3, j+1)) orc = TRUE;
+                // Determine the result of the range comparison
+                if (erc == TRUE && orc == TRUE) irt1[i] = TRUE;
             }
-            if (M6_RT) {
-                regs->VR_B(v1, i) = result1[i] ? 0xff : 0x00;
+            // Invert the ranges result if required
+            if (M6_IN) irt1[i] ^= TRUE;
+            // Compare the element of the second operand with zero
+            if (M6_ZS && regs->VR_B(v2,i) == 0) irt2[i] = TRUE;
+        }
+        if (M6_RT)                     // if M6_RT (Result Type)
+        {
+            for (i=0; i<16; i++)
+            {
+                regs->VR_B(v1, i) = (irt1[i] == TRUE) ? 0xFF : 0x00;
             }
-            if (result1[i]) low1 = min(low1, i);
-            if (result2[i]) low2 = min(low2, i);
+        }
+        else                           // else !M6_RT
+        {
+            lxt1 = lxt2 = 16;
+            for (i=0; i<16; i++)
+            {
+                if (irt1[i] == TRUE && lxt1 == 16) lxt1 = i;
+                if (irt2[i] == TRUE && lxt2 == 16) lxt2 = i;
+            }
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
+            regs->VR_D(v1, 1) = 0;
         }
         break;
-    case 1:
-        max = 8, low1 = max, low2 = max;
-        for (i=0; i < max; i++) {
-            result1[i] = 0;
-            result2[i] = M6_ZS & (regs->VR_H(v2, i) == 0x00);
-            for (j=0; j < max; j+=2) {
-                lr = 0, rr = 0;
-                if ((regs->VR_H(v4, j)   & 0x8000) && regs->VR_H(v2, i) == regs->VR_H(v3, j))   lr = 1;
-                if ((regs->VR_H(v4, j)   & 0x4000) && regs->VR_H(v2, i) <  regs->VR_H(v3, j))   lr = 1;
-                if ((regs->VR_H(v4, j)   & 0x2000) && regs->VR_H(v2, i) >  regs->VR_H(v3, j))   lr = 1;
-                if ((regs->VR_H(v4, j+1) & 0x8000) && regs->VR_H(v2, i) == regs->VR_H(v3, j+1)) rr = 1;
-                if ((regs->VR_H(v4, j+1) & 0x4000) && regs->VR_H(v2, i) <  regs->VR_H(v3, j+1)) rr = 1;
-                if ((regs->VR_H(v4, j+1) & 0x2000) && regs->VR_H(v2, i) >  regs->VR_H(v3, j+1)) rr = 1;
-                result1[i] = (lr & rr) ^ M6_IN;
+    case 1:  //Halfword
+        for (i=0; i<8; i++)
+        {
+            // Compare the element of the second operand with the ranges
+            for (j=0; j<8; j+=2)
+            {
+                erc = orc = FALSE;
+                // Compare the element of the second operand with the even element of the third operand.
+                if ((regs->VR_H(v4, j)   & 0x8000) && regs->VR_H(v2, i) == regs->VR_H(v3, j))   erc = TRUE;
+                if ((regs->VR_H(v4, j)   & 0x4000) && regs->VR_H(v2, i) <  regs->VR_H(v3, j))   erc = TRUE;
+                if ((regs->VR_H(v4, j)   & 0x2000) && regs->VR_H(v2, i) >  regs->VR_H(v3, j))   erc = TRUE;
+                // Compare the element of the second operand with the odd element of the third operand.
+                if ((regs->VR_H(v4, j+1) & 0x8000) && regs->VR_H(v2, i) == regs->VR_H(v3, j+1)) orc = TRUE;
+                if ((regs->VR_H(v4, j+1) & 0x4000) && regs->VR_H(v2, i) <  regs->VR_H(v3, j+1)) orc = TRUE;
+                if ((regs->VR_H(v4, j+1) & 0x2000) && regs->VR_H(v2, i) >  regs->VR_H(v3, j+1)) orc = TRUE;
+                // Determine the result of the range comparison
+                if (erc == TRUE && orc == TRUE) irt1[i] = TRUE;
             }
-            if (M6_RT) {
-                regs->VR_H(v1, i) = result1[i] ? 0xffff : 0x0000;
+            // Invert the ranges result if required
+            if (M6_IN) irt1[i] ^= TRUE;
+            // Compare the element of the second operand with zero
+            if (M6_ZS && regs->VR_H(v2,i) == 0) irt2[i] = TRUE;
+        }
+        if (M6_RT)                     // if M6_RT (Result Type)
+        {
+            for (i=0; i<8; i++)
+            {
+                regs->VR_H(v1, i) = (irt1[i] == TRUE) ? 0xFFFF : 0x0000;
             }
-            if (result1[i]) low1 = min(low1, i);
-            if (result2[i]) low2 = min(low2, i);
+        }
+        else                           // else !M6_RT
+        {
+            lxt1 = lxt2 = 16;
+            for (i=0; i<8; i++)
+            {
+                if (irt1[i] == TRUE && lxt1 == 16) lxt1 = i * 2;
+                if (irt2[i] == TRUE && lxt2 == 16) lxt2 = i * 2;
+            }
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
+            regs->VR_D(v1, 1) = 0;
         }
         break;
-    case 2:
-        max = 4, low1 = max, low2 = max;
-        for (i=0; i < max; i++) {
-            result1[i] = 0;
-            result2[i] = M6_ZS & (regs->VR_F(v2, i) == 0x00);
-            for (j=0; j < max; j+=2) {
-                lr = 0, rr = 0;
-                if ((regs->VR_F(v4, j)   & 0x8000) && regs->VR_F(v2, i) == regs->VR_F(v3, j))   lr = 1;
-                if ((regs->VR_F(v4, j)   & 0x4000) && regs->VR_F(v2, i) <  regs->VR_F(v3, j))   lr = 1;
-                if ((regs->VR_F(v4, j)   & 0x2000) && regs->VR_F(v2, i) >  regs->VR_F(v3, j))   lr = 1;
-                if ((regs->VR_F(v4, j+1) & 0x8000) && regs->VR_F(v2, i) == regs->VR_F(v3, j+1)) rr = 1;
-                if ((regs->VR_F(v4, j+1) & 0x4000) && regs->VR_F(v2, i) <  regs->VR_F(v3, j+1)) rr = 1;
-                if ((regs->VR_F(v4, j+1) & 0x2000) && regs->VR_F(v2, i) >  regs->VR_F(v3, j+1)) rr = 1;
-                result1[i] = (lr & rr) ^ M6_IN;
+    case 2:  // Word
+        for (i=0; i<4; i++)
+        {
+            // Compare the element of the second operand with the ranges
+            for (j=0; j<4; j+=2)
+            {
+                erc = orc = FALSE;
+                // Compare the element of the second operand with the even element of the third operand.
+                if ((regs->VR_F(v4, j)   & 0x80000000) && regs->VR_F(v2, i) == regs->VR_F(v3, j))   erc = TRUE;
+                if ((regs->VR_F(v4, j)   & 0x40000000) && regs->VR_F(v2, i) <  regs->VR_F(v3, j))   erc = TRUE;
+                if ((regs->VR_F(v4, j)   & 0x20000000) && regs->VR_F(v2, i) >  regs->VR_F(v3, j))   erc = TRUE;
+                // Compare the element of the second operand with the odd element of the third operand.
+                if ((regs->VR_F(v4, j+1) & 0x80000000) && regs->VR_F(v2, i) == regs->VR_F(v3, j+1)) orc = TRUE;
+                if ((regs->VR_F(v4, j+1) & 0x40000000) && regs->VR_F(v2, i) <  regs->VR_F(v3, j+1)) orc = TRUE;
+                if ((regs->VR_F(v4, j+1) & 0x20000000) && regs->VR_F(v2, i) >  regs->VR_F(v3, j+1)) orc = TRUE;
+                // Determine the result of the range comparison
+                if (erc == TRUE && orc == TRUE) irt1[i] = TRUE;
             }
-            if (M6_RT) {
-                regs->VR_F(v1, i) = result1[i] ? 0xffffffff : 0x00000000;
+            // Invert the ranges result if required
+            if (M6_IN) irt1[i] ^= TRUE;
+            // Compare the element of the second operand with zero
+            if (M6_ZS && regs->VR_F(v2,i) == 0) irt2[i] = TRUE;
+        }
+        if (M6_RT)                     // if M6_RT (Result Type)
+        {
+            for (i=0; i<4; i++)
+            {
+                regs->VR_F(v1, i) = (irt1[i] == TRUE) ? 0xFFFFFFFF : 0x00000000;
             }
-            if (result1[i]) low1 = min(low1, i);
-            if (result2[i]) low2 = min(low2, i);
+        }
+        else                           // else !M6_RT
+        {
+            lxt1 = lxt2 = 16;
+            for (i=0; i<4; i++)
+            {
+                if (irt1[i] == TRUE && lxt1 == 16) lxt1 = i * 4;
+                if (irt2[i] == TRUE && lxt2 == 16) lxt2 = i * 4;
+            }
+            regs->VR_D(v1, 0) = min(lxt1, lxt2);
+            regs->VR_D(v1, 1) = 0;
         }
         break;
     default:
-        /* remove initialization warnings */
-        max = 0, low1 = max, low2 = max;
-
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
-    if (!M6_RT) regs->VR_B(v1, 7) = min(low1, low2) * (1 << m5);;
-    if (M6_CS) {               // if M6_CS (Condition Code Set)
-        if (M6_ZS && (low1 >= low2))
-            regs->psw.cc = 0;
-        else if ((low1 < max) && (low2 == max))
-            regs->psw.cc = 1;
-        else if (M6_ZS && (low1 < max) && low1 < low2)
-            regs->psw.cc = 2;
-        else if ((low1 == max) && (low2 == max))
+
+    if (M6_CS)                         // if M6_CS (Condition Code Set)
+    {
+        switch (m5)
+        {
+        case 0:  // Byte
+            lxt1 = lxt2 = mxt = 16;
+            break;
+        case 1:  // Halfword
+            lxt1 = lxt2 = mxt = 8;
+            break;
+        case 2:  // Word
+            lxt1 = lxt2 = mxt = 4;
+            break;
+        default:  // Prevent erroneous "may be used uninitialized" warnings
+            lxt1 = lxt2 = mxt = 0;
+            break;
+        }
+
+        for (i = 0; i < mxt; i++)
+        {
+            if (irt1[i] == TRUE && lxt1 == mxt)
+                lxt1 = i;
+            if (M6_ZS)                 // if M6_ZS (Zero Search)
+            {
+                if (irt2[i] == TRUE && lxt2 == mxt)
+                    lxt2 = i;
+            }
+        }
+
+        // cc 1 and 3 are possible when M6_ZS is 0 or 1.
+        if (lxt1 == mxt && lxt2 == mxt)
             regs->psw.cc = 3;
+        else if (lxt1 < mxt && lxt2 == mxt )
+            regs->psw.cc = 1;
+        // cc 0 and 2 are only possible when M6_ZS is 1.
+        else if (lxt1 < lxt2)
+            regs->psw.cc = 2;
+        else
+            regs->psw.cc = 0;
     }
 
 #undef M6_IN
@@ -3740,12 +3977,22 @@ DEF_INST( vector_string_range_compare )
 /*-------------------------------------------------------------------*/
 /* E78B VSTRS  - Vector String Search                        [VRR-d] */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* In PoP (SA22-7832-13), for VSTRS we can read:                     */
+/*   Byte element seven of the fourth operand specifies              */
+/*   the length of the substring in bytes and must be in             */
+/*   the range of 0-16. Other values will result in an               */
+/*   unpredictable result.                                           */
+/*                                                                   */
+/* However, empirical evidence suggests that any value larger than   */
+/* 16 is treated as 16. This may be model dependant behaviour, but   */
+/* this implementation will follow a models (z15) behaviour.         */
+/*                                                                   */
 DEF_INST( vector_string_search )
 {
     int     v1, v2, v3, v4, m5, m6;
     char    v2_temp[16], v3_temp[16], nulls[16];
-    int     substr_len, str_len, i, k, eos;
-    int     char_size = 1; /* initialize to remove warning */
+    int     substr_len, char_size, str_len, eos, i, k;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -3760,9 +4007,12 @@ DEF_INST( vector_string_search )
     /* Get the contents of v2 and v3 as a string of bytes arranged */
     /* as they would be if they were in the guests storage.        */
     for (i = 0; i < 16; i++)
-        v2_temp[i] = regs->VR_B(v2, i);
-    for (i = 0; i < 16; i++)
+    {
+        v2_temp[i] = regs->VR_B( v2, i );
         v3_temp[i] = regs->VR_B( v3, i );
+    }
+
+    substr_len = regs->VR_B( v4, 7 );
 
     switch (m5)
     {
@@ -3775,13 +4025,12 @@ DEF_INST( vector_string_search )
     case 2:
         char_size = 4;
         break;
+    default:  // Prevent erroneous "may be used uninitialized" warnings
+        char_size = 1;
+        break;
     }
 
-    substr_len = regs->VR_B( v4, 7 );
-    if (substr_len < 0 || substr_len > 16)
-        goto vector_string_search_mdresult;
-
-    str_len = i = k = eos = 0;
+    str_len = eos = i = k = 0;
 
     if (M6_ZS)
     {
@@ -3806,6 +4055,11 @@ DEF_INST( vector_string_search )
         }
         else
         {
+            if (substr_len > 16)
+            {
+                substr_len = 16;
+            }
+
             for ( ; k < 16 ; k += char_size )
             {
                 if ( memcmp(&v2_temp[k], &nulls, char_size) == 0 )
@@ -3838,7 +4092,7 @@ DEF_INST( vector_string_search )
                         }
                         else
                         {
-                            if ( memcmp(&v2_temp[k], &v3_temp[0], k + substr_len - 16) == 0 )
+                            if ( memcmp(&v2_temp[k], &v3_temp[0], str_len - k ) == 0 )
                             {
                                 goto vector_string_search_partial_match;
                             }
@@ -3868,7 +4122,10 @@ DEF_INST( vector_string_search )
             {
                 goto vector_string_search_mdresult;
             }
-
+            if (substr_len > 16)
+            {
+                substr_len = 16;
+            }
             for ( ; ; k += char_size )
             {
                 if (k == 16)
@@ -3885,7 +4142,7 @@ DEF_INST( vector_string_search )
                 }
                 else
                 {
-                    if ( memcmp(&v2_temp[k], &v3_temp[0], k + substr_len - 16) == 0 )
+                    if ( memcmp(&v2_temp[k], &v3_temp[0], 16 - k) == 0 )
                     {
                         goto vector_string_search_partial_match;
                     }
@@ -3897,7 +4154,7 @@ DEF_INST( vector_string_search )
     UNREACHABLE_CODE( goto vector_string_search_mdresult );
 
 vector_string_search_mdresult:
-    regs->VR_D( v1, 0 ) = 0;                     /* Model dependant */
+    regs->VR_D( v1, 0 ) = 16;                    /* Model dependant */
     regs->VR_D( v1, 1 ) = 0;                     /* results are     */
     regs->psw.cc = 0;  /* no match */            /* unpredictable   */
     goto vector_string_search_end;
@@ -4044,9 +4301,7 @@ DEF_INST( vector_pack )
 DEF_INST(vector_pack_logical_saturate)
 {
     int     v1, v2, v3, m4, m5;
-    int     sat = 0;
-    int     allsat = 0;
-    int     i;
+    int     sat, allsat, i;
     BYTE    newcc;
     SV      temp;
 
@@ -4061,19 +4316,21 @@ DEF_INST(vector_pack_logical_saturate)
     SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
+    sat = allsat = 0;
+
     switch (m4)
     {
     case 1:  // Low-order bytes from 16 halfwords
         for ( i = 0; i < 16; i++ )
         {
-            if ( SV_H( temp, i ) > 0x00FF )
+            if ( SV_H( temp, i ) <= 0x00FF )
             {
-                regs->VR_B( v1, i ) = 0xFF;
-                sat++;
+                regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
             }
             else
             {
-                regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+                regs->VR_B( v1, i ) = 0xFF;
+                sat++;
             }
         }
         allsat = 16;
@@ -4081,14 +4338,14 @@ DEF_INST(vector_pack_logical_saturate)
     case 2:  // Low-order halfwords from 8 fullwords
         for ( i = 0; i < 8; i++ )
         {
-            if ( SV_F( temp, i ) > 0x0000FFFF )
+            if ( SV_F( temp, i ) <= 0x0000FFFF )
             {
-                regs->VR_H( v1, i ) = 0xFFFF;
-                sat++;
+                regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
             }
             else
             {
-                regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+                regs->VR_H( v1, i ) = 0xFFFF;
+                sat++;
             }
         }
         allsat = 8;
@@ -4096,14 +4353,14 @@ DEF_INST(vector_pack_logical_saturate)
     case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
-            if ( SV_D( temp, i ) > 0x00000000FFFFFFFFull )
+            if ( SV_D( temp, i ) <= 0x00000000FFFFFFFFull )
             {
-                regs->VR_F( v1, i ) = 0xFFFFFFFF;
-                sat++;
+                regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
             }
             else
             {
-                regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+                regs->VR_F( v1, i ) = 0xFFFFFFFF;
+                sat++;
             }
         }
         allsat = 4;
@@ -4141,9 +4398,7 @@ DEF_INST(vector_pack_logical_saturate)
 DEF_INST( vector_pack_saturate )
 {
     int     v1, v2, v3, m4, m5;
-    int     sat = 0;
-    int     allsat = 0;
-    int     i;
+    int     sat, allsat, i;
     BYTE    newcc;
     SV      temp;
 
@@ -4158,19 +4413,36 @@ DEF_INST( vector_pack_saturate )
     SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
+    sat = allsat = 0;
+
     switch (m4)
     {
     case 1:  // Low-order bytes from 16 halfwords
         for ( i = 0; i < 16; i++ )
         {
-            if ( SV_H( temp, i ) > 0x007F )
+            if ( !( SV_H( temp, i ) & 0x8000 ) )
             {
-                regs->VR_B( v1, i ) = 0x7F;
-                sat++;
+                if ( SV_H( temp, i ) <= 0x007F )
+                {
+                    regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_B( v1, i ) = 0x7F;
+                    sat++;
+                }
             }
             else
             {
-                regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+                if ( (S16)SV_H( temp, i ) >= (S16)0xFF80 )
+                {
+                    regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_B( v1, i ) = 0x80;
+                    sat++;
+                }
             }
         }
         allsat = 16;
@@ -4178,14 +4450,29 @@ DEF_INST( vector_pack_saturate )
     case 2:  // Low-order halfwords from 8 fullwords
         for ( i = 0; i < 8; i++ )
         {
-            if ( SV_F( temp, i ) > 0x00007FFF )
+            if ( !( SV_F( temp, i ) & 0x80000000 ) )
             {
-                regs->VR_H( v1, i ) = 0x7FFF;
-                sat++;
+                if ( SV_F( temp, i ) <= 0x00007FFF )
+                {
+                    regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_H( v1, i ) = 0x7FFF;
+                    sat++;
+                }
             }
             else
             {
-                regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+                if ( (S32)SV_F( temp, i ) >= (S32)0xFFFF8000 )
+                {
+                    regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_H( v1, i ) = 0x8000;
+                    sat++;
+                }
             }
         }
         allsat = 8;
@@ -4193,14 +4480,29 @@ DEF_INST( vector_pack_saturate )
     case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
-            if ( SV_D( temp, i ) > 0x000000007FFFFFFFull )
+            if ( !( SV_D( temp, i ) & 0x8000000000000000ull ) )
             {
-                regs->VR_F( v1, i ) = 0x7FFFFFFF;
-                sat++;
+                if ( SV_D( temp, i ) <= 0x000000007FFFFFFFull )
+                {
+                    regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_F( v1, i ) = 0x7FFFFFFF;
+                    sat++;
+                }
             }
             else
             {
-                regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+                if ( (S64)SV_D( temp, i ) >= (S64)0xFFFFFFFF80000000ull )
+                {
+                    regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
+                }
+                else
+                {
+                    regs->VR_F( v1, i ) = 0x80000000;
+                    sat++;
+                }
             }
         }
         allsat = 4;
@@ -5233,7 +5535,7 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
 {
     int     v1, v2, v3, v4, m5, m6;
-    U64     tempd;
+    union   { U64 d; } temp;
     int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
@@ -5246,15 +5548,15 @@ DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
     switch (m5)
     {
     case 4:  // Quadword
-        tempd = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
+        temp.d = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
         for (i=3; i >= 0; i--)
         {
-            tempd += ~regs->VR_F( v3, i );
-            tempd += regs->VR_F( v2, i );
-            tempd >>= 32;
+            temp.d += ~regs->VR_F( v3, i );
+            temp.d += regs->VR_F( v2, i );
+            temp.d >>= 32;
         }
         regs->VR_D( v1, 0 ) = 0;
-        regs->VR_D( v1, 1 ) = tempd;
+        regs->VR_D( v1, 1 ) = temp.d;
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5412,19 +5714,28 @@ DEF_INST( vector_unpack_low )
     {
     case 0:  // Byte
         for (i = 0; i < 8; i++)
-            temp.sh[i] = (S16) regs->VR_B(v2, i + 8);
+        {
+            temp.sh[i] = regs->VR_B(v2, i + 8);
+            if (temp.sh[i] & 0x0080) temp.sh[i] |= 0xFF00;
+        }
         for (i = 0; i < 8; i++)
             regs->VR_H(v1, i) = temp.sh[i];
         break;
     case 1:  // Halfword
         for (i = 0; i < 4; i++)
-            temp.sf[i] = (S32) regs->VR_H(v2, i + 4);
+        {
+            temp.sf[i] = regs->VR_H(v2, i + 4);
+            if (temp.sf[i] & 0x00008000) temp.sf[i] |= 0xFFFF0000;
+        }
         for (i = 0; i < 4; i++)
             regs->VR_F(v1, i) = temp.sf[i];
         break;
     case 2:  // Word
         for (i = 0; i < 2; i++)
-            temp.sd[i] = (S64) regs->VR_F(v2, i + 2);
+        {
+            temp.sd[i] = regs->VR_F(v2, i + 2);
+            if (temp.sd[i] & 0x0000000080000000ull) temp.sd[i] |= 0xFFFFFFFF00000000ull;
+        }
         for (i = 0; i < 2; i++)
             regs->VR_D(v1, i) = temp.sd[i];
         break;
@@ -5457,19 +5768,28 @@ DEF_INST( vector_unpack_high )
     {
     case 0:  // Byte
         for (i = 0; i < 8; i++)
-            temp.sh[i] = (S16) regs->VR_B(v2, i);
+        {
+            temp.sh[i] = regs->VR_B(v2, i);
+            if (temp.sh[i] & 0x0080) temp.sh[i] |= 0xFF00;
+        }
         for (i = 0; i < 8; i++)
             regs->VR_H(v1, i) = temp.sh[i];
         break;
     case 1:  // Halfword
         for (i = 0; i < 4; i++)
-            temp.sf[i] = (S32) regs->VR_H(v2, i);
+        {
+            temp.sf[i] = regs->VR_H(v2, i);
+            if (temp.sf[i] & 0x00008000) temp.sf[i] |= 0xFFFF0000;
+        }
         for (i = 0; i < 4; i++)
             regs->VR_F(v1, i) = temp.sf[i];
         break;
     case 2:  // Word
         for (i = 0; i < 2; i++)
-            temp.sd[i] = (S64) regs->VR_F(v2, i);
+        {
+            temp.sd[i] = regs->VR_F(v2, i);
+            if (temp.sd[i] & 0x0000000080000000ull) temp.sd[i] |= 0xFFFFFFFF00000000ull;
+        }
         for (i = 0; i < 2; i++)
             regs->VR_D(v1, i) = temp.sd[i];
         break;
@@ -5487,8 +5807,7 @@ DEF_INST( vector_unpack_high )
 DEF_INST( vector_test_under_mask )
 {
     int     v1, v2, m3, m4, m5;
-    union   { U32 f[2]; } temp;
-    int     i, j, masko, selz, selo;
+    union   { U64 d[2]; } temp;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -5499,34 +5818,21 @@ DEF_INST( vector_test_under_mask )
 
     ZVECTOR_CHECK( regs );
 
-    masko = selz = selo = 0;
-    for (i=0; i < 4; i++)
-    {
-        temp.f[0] = regs->VR_F( v1, i );
-        temp.f[1] = regs->VR_F( v2, i );
-        for (j=0; j < 32; j++)
-        {
-            if (temp.f[1] & 0x80000000)
-            {
-                masko++;
-                if (temp.f[0] & 0x80000000)
-                    selo++;
-                else
-                    selz++;
-            }
-            temp.f[0] <<= 1;
-            temp.f[1] <<= 1;
-        }
-    }
+    //note: V2 is mask
+    temp.d[0] = regs->VR_D(v1,0) & regs->VR_D(v2,0);
+    temp.d[1] = regs->VR_D(v1,1) & regs->VR_D(v2,1);
 
-    if (masko == 0)
-        regs->psw.cc = 0;    // All mask bits zero
-    else if (masko == selz)
-        regs->psw.cc = 0;    // Selected bits all zeros
-    else if (masko == selo)
-        regs->psw.cc = 3;    // Selected bits all ones
+    // Selected bits all zeros; or all mask bits zero
+    if ( temp.d[0] == 0 && temp.d[1] == 0 )
+        regs->psw.cc = 0;
+
+    // Selected bits all ones
+    else if ( temp.d[0] == regs->VR_D(v2,0) && temp.d[1] == regs->VR_D(v2,1) )
+        regs->psw.cc = 3;
+
+    // Selected bits a mix of zeros and ones
     else
-        regs->psw.cc = 1;    // Selected bits a mix of zeros and ones
+        regs->psw.cc = 1;
 
     ZVECTOR_END( regs );
 }
@@ -5707,19 +6013,27 @@ DEF_INST( vector_load_positive )
     {
     case 0:  // Byte
         for (i=0; i < 16; i++)
-            regs->VR_B( v1, i ) = regs->VR_B( v2, i ) & 0x7F;
+            regs->VR_B( v1, i ) = (S8)regs->VR_B( v2, i ) < 0 ?
+                                        -((S8)regs->VR_B( v2, i )) :
+                                        (S8)regs->VR_B( v2, i );
         break;
     case 1:  // Halfword
         for (i=0; i < 8; i++)
-            regs->VR_H( v1, i ) = regs->VR_H( v2, i ) & 0x7FFF;
+            regs->VR_H( v1, i ) = (S16)regs->VR_H( v2, i ) < 0 ?
+                                         -((S16)regs->VR_H( v2, i )) :
+                                         (S16)regs->VR_H( v2, i );
         break;
     case 2:  // Word
         for (i=0; i < 4; i++)
-            regs->VR_F( v1, i ) = regs->VR_F( v2, i ) & 0x7FFFFFFF;
+            regs->VR_F( v1, i ) = (S32)regs->VR_F( v2, i ) < 0 ?
+                                         -((S32)regs->VR_F( v2, i )) :
+                                         (S32)regs->VR_F( v2, i );
         break;
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
-            regs->VR_D( v1, i ) = regs->VR_D( v2, i ) & 0x7FFFFFFFFFFFFFFFull;
+            regs->VR_D( v1, i ) = (S64)regs->VR_D( v2, i ) < 0 ?
+                                         -((S64)regs->VR_D( v2, i )) :
+                                         (S64)regs->VR_D( v2, i );
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5802,7 +6116,7 @@ DEF_INST( vector_average_logical )
 DEF_INST( vector_add_compute_carry )
 {
     int     v1, v2, v3, m4, m5, m6;
-    U64     tempd;
+    union   { U64 d; } temp;
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -5836,25 +6150,25 @@ DEF_INST( vector_add_compute_carry )
     case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
-            tempd = 0;
-            tempd += regs->VR_F( v2, (i*2)+1 );
-            tempd += regs->VR_F( v3, (i*2)+1 );
-            tempd >>= 32;
-            tempd += regs->VR_F( v2, i*2 );
-            tempd += regs->VR_F( v3, i*2 );
-            regs->VR_D( v1, i ) = tempd >> 32;
+            temp.d = 0;
+            temp.d += regs->VR_F( v2, (i*2)+1 );
+            temp.d += regs->VR_F( v3, (i*2)+1 );
+            temp.d >>= 32;
+            temp.d += regs->VR_F( v2, i*2 );
+            temp.d += regs->VR_F( v3, i*2 );
+            regs->VR_D( v1, i ) = temp.d >> 32;
         }
         break;
     case 4:  // Quadword
-        tempd = 0;
+        temp.d = 0;
         for (i=3; i >= 0; i--)
         {
-            tempd += regs->VR_F( v2, i );
-            tempd += regs->VR_F( v3, i );
-            tempd >>= 32;
+            temp.d += regs->VR_F( v2, i );
+            temp.d += regs->VR_F( v3, i );
+            temp.d >>= 32;
         }
         regs->VR_D( v1, 0 ) = 0;
-        regs->VR_D( v1, 1 ) = tempd;
+        regs->VR_D( v1, 1 ) = temp.d;
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -5871,8 +6185,8 @@ DEF_INST( vector_average )
 {
     int     v1, v2, v3, m4, m5, m6;
 
-    int i;                          /* loop index                    */
-    S64 temps64;                    /* signed temp                   */
+    int     i;                      /* loop index                    */
+    union   { S64 sd; } temp;       /* signed temp                   */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -5905,17 +6219,17 @@ DEF_INST( vector_average )
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             if  (
-                    ( regs->VR_D(v2, i) & 0x8000000000000000ULL )  ==
-                    ( regs->VR_D(v3, i) & 0x8000000000000000ULL )
+                    ( regs->VR_D(v2, i) & 0x8000000000000000ull )  ==
+                    ( regs->VR_D(v3, i) & 0x8000000000000000ull )
                 )
             {
                 /* same sign: possible overflow */
-                if  ( regs->VR_D(v2, i) & 0x8000000000000000ULL )
+                if  ( regs->VR_D(v2, i) & 0x8000000000000000ull )
                 {
                     /* negative signs: allow overflow, round and force back to negative */
-                    temps64 = (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i);
-                    temps64++;
-                    regs->VR_D(v1, i) = (U64) ( temps64 >> 1 ) | 0x8000000000000000ULL;
+                    temp.sd = (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i);
+                    temp.sd++;
+                    regs->VR_D(v1, i) = (U64) ( temp.sd >> 1 ) | 0x8000000000000000ull;
                 }
                 else
                 {
@@ -6025,8 +6339,16 @@ DEF_INST( vector_subtract_compute_borrow_indication )
             regs->VR_D( v1, i ) = (regs->VR_D( v2, i ) < regs->VR_D( v3, i )) ? 0 : 1;
         break;
     case 4:  // Quadword
-        regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 0 ) < regs->VR_D( v3, 0 )) ? 0 : 1;
-        regs->VR_D( v1, 0 ) = 0;
+        if (regs->VR_D( v2, 0 ) == regs->VR_D( v3, 0 ))
+        {
+            regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 1 ) < regs->VR_D( v3, 1 )) ? 0 : 1;
+            regs->VR_D( v1, 0 ) = 0;
+        }
+        else
+        {
+            regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 0 ) < regs->VR_D( v3, 0 )) ? 0 : 1;
+            regs->VR_D( v1, 0 ) = 0;
+        }
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -6076,7 +6398,7 @@ DEF_INST(vector_subtract)
         break;
     case 4:  // Quadword
         high = regs->VR_D(v2, 0) - regs->VR_D(v3, 0);
-        low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 0);
+        low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 1);
         if (low > regs->VR_D(v2, 1))
             high--;
         regs->VR_D(v1, 0) = high;
@@ -6095,7 +6417,8 @@ DEF_INST(vector_subtract)
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_compare_equal )
 {
-    int     v1, v2, v3, m4, m5, eq = 0, ne = 0, i;
+    int     v1, v2, v3, m4, m5;
+    int     i, el, eq = 0;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -6106,50 +6429,46 @@ DEF_INST( vector_compare_equal )
     switch (m4)
     {
     case 0:  // Byte
-        for (i=0; i < 16; i++) {
+        for (el=16, i=0; i < 16; i++) {
             if (regs->VR_B(v2, i) == regs->VR_B(v3, i)) {
                 regs->VR_B(v1, i) = 0xff;
                 eq++;
             }
             else {
                 regs->VR_B(v1, i) = 0x00;
-                ne++;
             }
         }
         break;
     case 1:  // Halfword
-        for (i=0; i < 8; i++) {
+        for (el=8, i=0; i < 8; i++) {
             if (regs->VR_H(v2, i) == regs->VR_H(v3, i)) {
                 regs->VR_H(v1, i) = 0xffff;
                 eq++;
             }
             else {
                 regs->VR_H(v1, i) = 0x0000;
-                ne++;
             }
         }
         break;
     case 2:  // Word
-        for (i=0; i < 4; i++) {
+        for (el=4, i=0; i < 4; i++) {
             if (regs->VR_F(v2, i) == regs->VR_F(v3, i)) {
-                regs->VR_F(v1, i) = 0xffffffff;
+                regs->VR_F(v1, i) = 0xFFFFFFFF;
                 eq++;
             }
             else {
                 regs->VR_F(v1, i) = 0x00000000;
-                ne++;
             }
         }
         break;
     case 3:  // Doubleword
-        for (i=0; i < 2; i++) {
+        for (el=2, i=0; i < 2; i++) {
             if (regs->VR_D(v2, i) == regs->VR_D(v3, i)) {
-                regs->VR_D(v1, i) = 0xffffffffffffffff;
+                regs->VR_D(v1, i) = 0xFFFFFFFFFFFFFFFFull;
                 eq++;
             }
             else {
-                regs->VR_D(v1, i) = 0x0000000000000000;
-                ne++;
+                regs->VR_D(v1, i) = 0x0000000000000000ull;
             }
         }
         break;
@@ -6159,11 +6478,11 @@ DEF_INST( vector_compare_equal )
     }
 
     if (M5_CS) {
-        if (ne == 0)
+        if (eq == el)
             regs->psw.cc = 0;
-        else if (eq > 0)
+        else if (eq != 0)
             regs->psw.cc = 1;
-        else if (eq == 0)
+        else
             regs->psw.cc = 3;
     }
 
@@ -6178,9 +6497,7 @@ DEF_INST( vector_compare_equal )
 DEF_INST( vector_compare_high_logical )
 {
     int     v1, v2, v3, m4, m5;
-    int     hi = 0;
-    int     nothi = 0;
-    int     i;
+    int     i, el, hi = 0;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -6191,53 +6508,49 @@ DEF_INST( vector_compare_high_logical )
     switch (m4)
     {
     case 0:         /* Byte */
-        for (i=0; i < 16; i++) {
+        for (el=16, i=0; i < 16; i++) {
             if (regs->VR_B(v2, i) > regs->VR_B(v3, i)) {
                 regs->VR_B(v1, i) = 0xff;
                 hi++;
             }
             else {
                 regs->VR_B(v1, i) = 0x00;
-                nothi++;
             }
         }
         break;
 
     case 1:        /* Halfword */
-        for (i=0; i < 8; i++) {
+        for (el=8, i=0; i < 8; i++) {
             if (regs->VR_H(v2, i) > regs->VR_H(v3, i)) {
                 regs->VR_H(v1, i) = 0xffff;
                 hi++;
             }
             else {
                 regs->VR_H(v1, i) = 0x0000;
-                nothi++;
             }
         }
         break;
 
     case 2:         /* Word */
-        for (i=0; i < 4; i++) {
+        for (el=4, i=0; i < 4; i++) {
             if (regs->VR_F(v2, i) > regs->VR_F(v3, i)) {
-                regs->VR_F(v1, i) = 0xffffffff;
+                regs->VR_F(v1, i) = 0xFFFFFFFF;
                 hi++;
             }
             else {
                 regs->VR_F(v1, i) = 0x00000000;
-                nothi++;
             }
         }
         break;
 
     case 3:        /* Doubleword */
-        for (i=0; i < 2; i++) {
+        for (el=2, i=0; i < 2; i++) {
             if (regs->VR_D(v2, i) > regs->VR_D(v3, i)) {
-                regs->VR_D(v1, i) = 0xffffffffffffffff;
+                regs->VR_D(v1, i) = 0xFFFFFFFFFFFFFFFFull;
                 hi++;
             }
             else {
-                regs->VR_D(v1, i) = 0x0000000000000000;
-                nothi++;
+                regs->VR_D(v1, i) = 0x0000000000000000ull;
             }
         }
         break;
@@ -6248,11 +6561,11 @@ DEF_INST( vector_compare_high_logical )
     }
 
     if (M5_CS) {
-        if (nothi == 0)
+        if (hi == el)
             regs->psw.cc = 0;
-        else if (hi > 0)
+        else if (hi != 0)
             regs->psw.cc = 1;
-        else if (hi == 0)
+        else
             regs->psw.cc = 3;
     }
 
@@ -6267,9 +6580,7 @@ DEF_INST( vector_compare_high_logical )
 DEF_INST( vector_compare_high )
 {
     int     v1, v2, v3, m4, m5;
-    int     hi = 0;
-    int     nothi = 0;
-    int     i;
+    int     i, el, hi = 0;
 
     VRR_B( inst, regs, v1, v2, v3, m4, m5 );
 
@@ -6280,53 +6591,49 @@ DEF_INST( vector_compare_high )
     switch (m4)
     {
     case 0:         /* Byte */
-        for (i=0; i < 16; i++) {
+        for (el=16, i=0; i < 16; i++) {
             if ( (S8) regs->VR_B(v2, i) > (S8) regs->VR_B(v3, i) ) {
                 regs->VR_B(v1, i) = 0xff;
                 hi++;
             }
             else {
                 regs->VR_B(v1, i) = 0x00;
-                nothi++;
             }
         }
         break;
 
     case 1:        /* Halfword */
-        for (i=0; i < 8; i++) {
+        for (el=8, i=0; i < 8; i++) {
             if ( (S16) regs->VR_H(v2, i) > (S16) regs->VR_H(v3, i) ) {
                 regs->VR_H(v1, i) = 0xffff;
                 hi++;
             }
             else {
                 regs->VR_H(v1, i) = 0x0000;
-                nothi++;
             }
         }
         break;
 
     case 2:         /* Word */
-        for (i=0; i < 4; i++) {
+        for (el=4, i=0; i < 4; i++) {
             if ( (S32) regs->VR_F(v2, i) > (S32) regs->VR_F(v3, i) ) {
-                regs->VR_F(v1, i) = 0xffffffff;
+                regs->VR_F(v1, i) = 0xFFFFFFFF;
                 hi++;
             }
             else {
                 regs->VR_F(v1, i) = 0x00000000;
-                nothi++;
             }
         }
         break;
 
     case 3:        /* Doubleword */
-        for (i=0; i < 2; i++) {
+        for (el=2, i=0; i < 2; i++) {
             if ( (S64) regs->VR_D(v2, i) > (S64) regs->VR_D(v3, i) ) {
-                regs->VR_D(v1, i) = 0xffffffffffffffff;
+                regs->VR_D(v1, i) = 0xFFFFFFFFFFFFFFFFull;
                 hi++;
             }
             else {
-                regs->VR_D(v1, i) = 0x0000000000000000;
-                nothi++;
+                regs->VR_D(v1, i) = 0x0000000000000000ull;
             }
         }
         break;
@@ -6337,11 +6644,11 @@ DEF_INST( vector_compare_high )
     }
 
     if (M5_CS) {
-        if (nothi == 0)
+        if (hi == el)
             regs->psw.cc = 0;
-        else if (hi > 0)
+        else if (hi != 0)
             regs->psw.cc = 1;
-        else if (hi == 0)
+        else
             regs->psw.cc = 3;
     }
 

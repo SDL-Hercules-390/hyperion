@@ -111,16 +111,9 @@ inline BYTE* _get_dev_storekey2_ptr( DEVBLK* dev, U64 abs )
 //  which optionally supported either 2K pages or 4K pages.
 //  ESA/390 and z/Arch on the other hand only supports 4K pages.
 
-#undef IS_DOUBLE_KEYED_4K_BYTE_BLOCK
-
-#if defined( FEATURE_2K_STORAGE_KEYS )    // (System/370 only)
-  #define IS_DOUBLE_KEYED_4K_BYTE_BLOCK( K )        \
-    (K == 4 && STORAGE_KEY_2K_PAGESIZE == _STORKEY_ARRAY_UNITSIZE)
-#else // (!FEATURE_2K_STORAGE_KEYS)        // (ESA/390 and z/Arch)
-  #define IS_DOUBLE_KEYED_4K_BYTE_BLOCK( K )   0   // (i.e. never)
-                                           // (see also PROGRAMMING
-                                           //  NOTE in feature.h)
-#endif
+#undef  IS_DOUBLE_KEYED_4K_BYTE_BLOCK
+#define IS_DOUBLE_KEYED_4K_BYTE_BLOCK( K )        \
+  (K == 4 && STORAGE_KEY_2K_PAGESIZE == _STORKEY_ARRAY_UNITSIZE)
 
 /*-------------------------------------------------------------------*/
 /*  ARCH_DEP Storage Key helper functions sometimes called directly  */

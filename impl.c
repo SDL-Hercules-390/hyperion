@@ -942,12 +942,16 @@ int     rc, maxprio, minprio;
     minprio = sysblk.minprio;
     maxprio = sysblk.maxprio;
 
-    /* Clear the system configuration block */
+    /* Clear the system configuration block (SYSBLK) to zero */
     memset( &sysblk, 0, sizeof( SYSBLK ) );
 
     /* Restore saved minprio/maxprio into SYSBLK */
     sysblk.minprio = minprio;
     sysblk.maxprio = maxprio;
+
+    // Check if, and remember, if debugger is present...
+    // (must be done AFTER sysblk has been set to zero)
+    check_if_debugger_is_present();
 
     /* Lock SYSBLK into memory since it's referenced so frequently.
        Note that the call could fail when the working set is small

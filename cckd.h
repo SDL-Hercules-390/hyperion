@@ -74,7 +74,7 @@ struct CKD_TRKHDR {                     /* Track header              */
 
 struct FBA_BKGHDR {                     /* Block Group Header        */
         BYTE    cmp;                    /* Compression byte          */
-        FWORD   blknum;                 /* Sector number             */
+        FWORD   grpnum;                 /* GROUP number              */
 };
 
 struct CKD_RECHDR {                     /* Record header             */

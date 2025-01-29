@@ -284,6 +284,7 @@ AC_DEFUN([_HC_CHECK_NEED_GETOPT_WRAPPER],
                    Will the linker complain about duplicate
                    symbols for getopt? We'll soon find out!
                 */
+                extern int getopt(int, char *const[], const char *);
                 extern char *optarg;
                 extern int optind;
 
@@ -308,6 +309,8 @@ DUPGETOPT1
                    needs getopt. Will linker complain about
                    duplicate symbols for getopt? Let's see.
                 */
+                extern int getopt(int, char *const[], const char *);
+                extern int test1();
                 extern char *optarg;
                 extern int optind;
                 extern int test2();
@@ -327,11 +330,11 @@ DUPGETOPT1
                 }
 DUPGETOPT2
 
-            libtool --mode=compile ${CC-cc} conftest1.c -c -o conftest1.lo > /dev/null 2>&1
-            libtool --mode=compile ${CC-cc} conftest2.c -c -o conftest2.lo > /dev/null 2>&1
+            libtool --tag=CC --mode=compile ${CC-cc} conftest1.c -c -o conftest1.lo > /dev/null 2>&1
+            libtool --tag=CC --mode=compile ${CC-cc} conftest2.c -c -o conftest2.lo > /dev/null 2>&1
 
-            libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest1.lo                 -o libconftest1.la > /dev/null 2>&1
-            libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest2.lo libconftest1.la -o libconftest2.la > /dev/null 2>&1
+            libtool --tag=CC --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest1.lo                 -o libconftest1.la > /dev/null 2>&1
+            libtool --tag=CC --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest2.lo libconftest1.la -o libconftest2.la > /dev/null 2>&1
 
             if test $? = 0; then
 

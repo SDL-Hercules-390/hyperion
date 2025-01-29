@@ -3474,6 +3474,10 @@ DEF_INST( load_logical_and_zero_rightmost_byte );
 DEF_INST( load_and_zero_rightmost_byte );
 #endif
 
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+DEF_INST( perform_random_number_operation );
+#endif
+
 #if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
 DEF_INST( branch_indirect_on_condition );
 DEF_INST( add_long_halfword );
@@ -3713,7 +3717,7 @@ DEF_INST(vector_load_immediate_decimal);
 DEF_INST(vector_load_rightmost_with_length);
 DEF_INST(vector_multiply_and_shift_decimal);
 DEF_INST(vector_multiply_decimal);
-DEF_INST(vector_packed_zoned);
+DEF_INST(vector_pack_zoned);
 DEF_INST(vector_perform_sign_operation_decimal);
 DEF_INST(vector_remainder_decimal);
 DEF_INST(vector_shift_and_divide_decimal);
@@ -3743,15 +3747,15 @@ DEF_INST( insert_reference_bits_multiple );
 DEF_INST(vector_load_byte_reversed_element_16);
 DEF_INST(vector_load_byte_reversed_element_64);
 DEF_INST(vector_load_byte_reversed_element_32);
-DEF_INST(vector_load_byte_reversed_and_zero);
-DEF_INST(vector_load_byte_reversed_and_replicate);
+DEF_INST(vector_load_byte_reversed_element_and_zero);
+DEF_INST(vector_load_byte_reversed_element_and_replicate);
 DEF_INST(vector_load_byte_reversed_elements);
 DEF_INST(vector_load_elements_reversed);
 DEF_INST(vector_store_byte_reversed_element_16);
 DEF_INST(vector_store_byte_reversed_element_64);
 DEF_INST(vector_store_byte_reversed_element_32);
 DEF_INST(vector_store_byte_reversed_elements);
-DEF_INST(vector_store_reversed_elements);
+DEF_INST(vector_store_elements_reversed);
 #endif
 
 #if defined(FEATURE_152_VECT_PACKDEC_ENH_FACILITY)
@@ -3761,7 +3765,7 @@ DEF_INST(vector_store_rightmost_with_length_reg);
 
 #if defined(FEATURE_165_NNET_ASSIST_FACILITY)
 DEF_INST(neural_network_processing_assist);
-DEF_INST(vector_fp_convert_nnp);
+DEF_INST(vector_fp_convert_to_nnp);
 DEF_INST(vector_fp_convert_and_lengthen_from_nnp_high);
 DEF_INST(vector_fp_convert_from_nnp);
 DEF_INST(vector_fp_convert_and_lengthen_from_nnp_low);

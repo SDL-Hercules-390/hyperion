@@ -669,6 +669,7 @@ struct SYSBLK {
   const char  **extpkg_vers;            /* External Package versions */
 
         bool    ulimit_unlimited;       /* ulimit -c unlimited       */
+        bool    is_debugger_present;    /* gdb debugger present?     */
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         LOCK    bindlock;               /* Sockdev bind lock         */
@@ -815,6 +816,10 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         CPU Measurement Sampling facility
         Load Program Parameter facility */
         U64     program_parameter;      /* Program Parameter Register*/
+
+#if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+        HRANDHAND  PRNOrandhand;        /* secure random api handle  */
+#endif /* defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
 
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
         HRANDHAND  wkrandhand;          /* secure random api handle  */
@@ -1505,6 +1510,7 @@ struct DEVBLK {                         /* Device configuration block*/
                 ccwopstrace:1,          /* 1=trace CCW opcodes       */
                 cdwmerge:1,             /* 1=Channel will merge data
                                              chained write CCWs      */
+                himdev:1,               /* 1=is a HIM device         */
                 debug:1,                /* 1=generic debug flag      */
                 reinit:1,               /* 1=devinit, not attach     */
                 handshake:1;            /* 1='handshake' option      */

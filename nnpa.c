@@ -120,10 +120,10 @@ facility  code  test#   Instruction                                             
 
 
 /* Debug end of vector instruction execution                     */
-#undef  ZVECTOR_END
-#define ZVECTOR_END(_regs) \
-        if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
-            ARCH_DEP(display_inst) (_regs, inst);
+// #undef  ZVECTOR_END
+// #define ZVECTOR_END(_regs) \
+//         if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
+//             ARCH_DEP(display_inst) (_regs, inst);
 
 
 /*===================================================================*/
@@ -659,7 +659,7 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
 /*-------------------------------------------------------------------*/
 /* E655 VCNF   - VECTOR FP CONVERT TO NNP                    [VRR-a] */
 /*-------------------------------------------------------------------*/
-DEF_INST( vector_fp_convert_nnp )
+DEF_INST( vector_fp_convert_to_nnp )
 {
     int     v1, v2, m3, m4, m5;           /* instruction parts       */
 

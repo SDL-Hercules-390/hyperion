@@ -69,11 +69,17 @@ struct ip_hdr
     U8      ip_hl:4,        // hdr len
             ip_v:4;         // IP version (4)
 #endif
+
+#define IPVERSION   4
+
     BYTE    ip_tos;         // Type of service
     S16     ip_len;         // Packet length
     U16     ip_id;          // Identification
     S16     ip_off;         // Fragment offset
     BYTE    ip_ttl;         // Time to Live
+
+#define MAXTTL      255
+
     BYTE    ip_p;           // Protocol
     U16     ip_sum;         // Checksum
     U32     ip_src;         // src addr
@@ -101,6 +107,14 @@ struct tcp_hdr
     BYTE    th_off:4;       // payload offset
 #endif
     BYTE    th_flags;
+
+#define TH_FIN      0x01
+#define TH_SYN      0x02
+#define TH_RST      0x04
+#define TH_PUSH     0x08
+#define TH_ACK      0x10
+#define TH_URG      0x20
+
     U16     th_win;         // window size
     U16     th_sum;         // checksum
     U16     th_urp;         // urgent ptr
@@ -109,6 +123,21 @@ struct tcp_hdr
 typedef struct tcp_hdr      tcp_hdr;
 #define                     tcp_hdr_size        sizeof( tcp_hdr )
 
+#define TCPOPT_EOL                  0
+#define TCPOPT_NOP                  1
+#define TCPOPT_MAXSEG               2
+#define TCPOLEN_MAXSEG              4
+#define TCPOPT_WINDOW               3
+#define TCPOLEN_WINDOW              3
+#define TCPOPT_SACK_PERMITTED       4                /* Experimental */
+#define TCPOLEN_SACK_PERMITTED      2
+#define TCPOPT_SACK                 5                /* Experimental */
+#define TCPOPT_TIMESTAMP            8
+#define TCPOLEN_TIMESTAMP           10
+#define TCPOLEN_TSTAMP_APPA      (TCPOLEN_TIMESTAMP+2) /* appendix A */
+
+#define TCPOPT_TSTAMP_HDR           \
+  (TCPOPT_NOP<<24|TCPOPT_NOP<<16|TCPOPT_TIMESTAMP<<8|TCPOLEN_TIMESTAMP)
 
 /*-------------------------------------------------------------------*/
 /*                           UDP header                              */

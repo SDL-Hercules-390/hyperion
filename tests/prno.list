@@ -1,0 +1,206 @@
+ASMA Ver. 0.7.0  Standalone Test PRNO Instruction                                                   21 Oct 2024 11:09:05  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 *
+                                                     3 *        Jurgen Winkelmann's MSA-5 'PRNO' instruction test
+                                                     4 *
+                                                     5 *          This module tests the PRNO instruction
+                                                     6 *          in a standalone environment.
+                                                     7 *
+                                                     8 *        Operation -
+                                                     9 *
+                                                    10 *          PRNOTEST exercises PRNO QUERY, DRNG, and TRNG functions
+                                                    11 *          and does plausibility checks on the results.
+                                                    12 *
+                                                    13 *          - If all tests pass, PRNOTEST enters a disabled wait state
+                                                    14 *            with a PSW address of X'0000000000000000' (all zeros).
+                                                    15 *
+                                                    16 *          - If a test fails, the test sequence is aborted
+                                                    17 *            and a disabled wait state X'000000000000DEAD' is entered.
+                                                    18 *
+                                                    19          PRINT OFF  (register equates)
+                                                    36          PRINT ON
+                              00000000  000007FF    37 PRNOTEST CSECT
+00000000                      00000000              38          USING *,0
+00000000                      00000000  000001A0    39          ORG   PRNOTEST+X'1A0'
+000001A0  00000001 80000000                         40          DC    X'00000001800000000000000000000200' # z/Arch restart PSW
+000001B0                      000001B0  000001D0    41          ORG   PRNOTEST+X'1D0'
+000001D0  00020001 80000000                         42          DC    X'0002000180000000000000000000DEAD' # z/Arch pgm new PSW
+000001E0                      000001E0  00000200    43          ORG   PRNOTEST+X'200'
+                                                    44 ***
+                                                    45 ***      QUERY
+                                                    46 ***
+00000200  C001 0000 0000                            47          LGFI  R0,0           R0->function code 0
+00000206  D2EF 0480 0600      00000480  00000600    48          MVC   PB(240),PBNULL clear parameter block
+0000020C  4110 0480                     00000480    49          LA    R1,PB          R1->parameter block
+00000210  B93C 0024                                 50          PRNO  R2,R4          perform random number operation
+00000214  D50F 06F0 0480      000006F0  00000480    51          CLC   ERQUERY(16),PB compare with expected result
+0000021A  4780 0220                     00000220    52          BE    *+6            result OK
+0000021E  0000                                      53          DC    H'0'           disabled wait DEAD if result invalid
+                                                    54 ***
+                                                    55 ***      DRNG: FIPS known answer test
+                                                    56 ***
+00000220  C001 0000 0083                            57          LGFI  R0,131         R0->function code 3 with modifier: seed
+00000226  D2EF 0480 0600      00000480  00000600    58          MVC   PB(240),PBNULL clear parameter block
+0000022C  4110 0480                     00000480    59          LA    R1,PB          R1->parameter block
+00000230  4120 0800                     00000800    60          LA    R2,FO          R2->first  operand address
+00000234  C031 0000 0000                            61          LGFI  R3,0           R3->first  operand length
+0000023A  4140 0570                     00000570    62          LA    R4,SO          R2->second operand address
+0000023E  C051 0000 0040                            63          LGFI  R5,64          R3->second operand length
+00000244  D23F 0570 0708      00000570  00000708    64          MVC   SO(64),ENTROPY provide predefined entropy
+0000024A  B93C 0024                                 65          PRNO  R2,R4          perform random number seed operation
+0000024E  C001 0000 0003                            66          LGFI  R0,3           R0->function code 3: generate
+00000254  4110 0480                     00000480    67          LA    R1,PB          R1->parameter block
+00000258  4120 0800                     00000800    68          LA    R2,FO          R2->first  operand address
+0000025C  C031 0000 0040                            69          LGFI  R3,64          R3->first  operand length
+00000262  4140 0570                     00000570    70          LA    R4,SO          R2->second operand address
+00000266  C051 0000 0000                            71          LGFI  R5,0           R3->second operand length
+0000026C  B93C 0024                                 72          PRNO  R2,R4          perform random number generate operation
+00000270  D53F 0748 0800      00000748  00000800    73          CLC   ERFIPS(64),FO  compare with expected result
+ASMA Ver. 0.7.0  Standalone Test PRNO Instruction                                                   21 Oct 2024 11:09:05  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000276  4780 027C                     0000027C    74          BE    *+6            result OK
+0000027A  0000                                      75          DC    H'0'           disabled wait DEAD if result invalid
+                                                    76 ***
+                                                    77 ***      DRNG: Reseed and generate
+                                                    78 ***
+0000027C  C001 0000 0083                            79          LGFI  R0,131         R0->function code 3 with modifier: reseed
+00000282  4110 0480                     00000480    80          LA    R1,PB          R1->parameter block
+00000286  4120 0800                     00000800    81          LA    R2,FO          R2->first  operand address
+0000028A  C031 0000 0000                            82          LGFI  R3,0           R3->first  operand length
+00000290  4140 0570                     00000570    83          LA    R4,SO          R2->second operand address
+00000294  C051 0000 0040                            84          LGFI  R5,64          R3->second operand length
+0000029A  D23F 0570 0491      00000570  00000491    85          MVC   SO(64),PB+17   steal seed material (ignored by Hercules)
+000002A0  B93C 0024                                 86          PRNO  R2,R4          perform random number reseed operation
+000002A4  C001 0000 0003                            87          LGFI  R0,3           R0->function code 3: generate
+000002AA  4110 0480                     00000480    88          LA    R1,PB          R1->parameter block
+000002AE  4120 0800                     00000800    89          LA    R2,FO          R2->first  operand address
+000002B2  C031 0001 0000                            90          LGFI  R3,65536       R3->first  operand length
+000002B8  4140 0570                     00000570    91          LA    R4,SO          R2->second operand address
+000002BC  C051 0000 0000                            92          LGFI  R5,0           R3->second operand length
+000002C2  B93C 0024                                 93          PRNO  R2,R4          perform random number generate operation
+000002C6  D53F 0800 0600      00000800  00000600    94          CLC   FO(64),PBNULL  first 64 bytes zero ..
+000002CC  4770 02D2                     000002D2    95          BNE   *+6            .. is not plausible
+000002D0  0000                                      96          DC    H'0'           disabled wait DEAD if first 64 bytes zero
+000002D2  C031 0001 07C1                            97          LGFI  R3,FODISP+65536-63 last 64 bytes ..
+000002D8  D53F 3000 0600      00000000  00000600    98          CLC   0(64,R3),PBNULL .. zero ..
+000002DE  4770 02E4                     000002E4    99          BNE   *+6            .. is not plausible
+000002E2  0000                                     100          DC    H'0'           disabled wait DEAD if last 64 bytes zero
+                                                   101 ***
+                                                   102 ***      TRNG Query
+                                                   103 ***
+000002E4  C001 0000 0070                           104          LGFI  R0,112         R0->function code 112
+000002EA  D2EF 0480 0600      00000480  00000600   105          MVC   PB(240),PBNULL clear parameter block
+000002F0  4110 0480                     00000480   106          LA    R1,PB          R1->parameter block
+000002F4  B93C 0024                                107          PRNO  R2,R4          perform random number operation
+000002F8  D507 0700 0480      00000700  00000480   108          CLC   TRQUERY(8),PB  compare with expected result
+000002FE  4780 0304                     00000304   109          BE    *+6            result OK
+00000302  0000                                     110          DC    H'0'           disabled wait DEAD if result invalid
+                                                   111 ***
+                                                   112 ***      TRNG
+                                                   113 ***
+00000304  C001 0000 0072                           114          LGFI  R0,114         R0->function code 114: TRNG
+0000030A  4120 0800                     00000800   115          LA    R2,FO          R2->first  operand address
+0000030E  C031 0000 0040                           116          LGFI  R3,64          R3->first  operand length
+00000314  4140 0570                     00000570   117          LA    R4,SO          R2->second operand address
+00000318  C051 0000 0040                           118          LGFI  R5,64          R3->second operand length
+0000031E  B93C 0024                                119          PRNO  R2,R4          perform random number generate operation
+00000322  D53F 0800 0600      00000800  00000600   120          CLC   FO(64),PBNULL  first operand zero ..
+00000328  4770 032E                     0000032E   121          BNE   *+6            .. is not plausible
+0000032C  0000                                     122          DC    H'0'           disabled wait DEAD if first operand zero
+0000032E  D53F 0570 0600      00000570  00000600   123          CLC   SO(64),PBNULL  seconf operand zero ..
+00000334  4770 033A                     0000033A   124          BNE   *+6            .. is not plausible
+00000338  0000                                     125          DC    H'0'           disabled wait DEAD if second operand zero
+0000033A  B2B2 0400                     00000400   126          LPSWE WAITPSW        load enabled wait PSW
+0000033E                      0000033E  00000400   127          ORG   PRNOTEST+X'400'
+00000400  00020001 80000000                        128 WAITPSW  DC    X'00020001800000000000000000000000' SUCCESS wait PSW
+00000410                      00000410  00000480   129          ORG   PRNOTEST+X'480'
+ASMA Ver. 0.7.0  Standalone Test PRNO Instruction                                                   21 Oct 2024 11:09:05  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000480  00000000 00000000                        130 PB       DS    XL240          current parameter block
+00000570  00000000 00000000                        131 SO       DS    XL64           second operand
+000005B0                      000005B0  00000600   132          ORG   PRNOTEST+X'600'
+00000600  00000000 00000000                        133 PBNULL   DC    240X'00'       empty parameter block
+000006F0  90000000 00000000                        134 ERQUERY  DC    X'9000000000000000000000000000A000' expected query reslt
+00000700  000000C0 00000020                        135 TRQUERY  DC    X'000000C000000020'  expected Hercules TRNG query result
+00000708  3295117F 02371270                        136 ENTROPY  DC    X'3295117F02371270'  predefined entropy for
+00000710  105A3783 CFE0BF5A                        137          DC    X'105A3783CFE0BF5A'  FIPS known answer test
+00000718  C1408E6C EAC5AEEB                        138          DC    X'C1408E6CEAC5AEEB'
+00000720  D6D814BC 827DC04D                        139          DC    X'D6D814BC827DC04D'
+00000728  21A1E480 E3D5F2E3                        140          DC    X'21A1E480E3D5F2E3'
+00000730  78319ADE 9BDDDA4C                        141          DC    X'78319ADE9BDDDA4C'
+00000738  2E93B74E 348D5EE3                        142          DC    X'2E93B74E348D5EE3'
+00000740  2ED46A1A E62566E0                        143          DC    X'2ED46A1AE62566E0'
+00000748  F1DFE833 0811ECD1                        144 ERFIPS   DC    X'F1DFE8330811ECD1'  expected generate result for
+00000750  0AEB6872 8FAC57B0                        145          DC    X'0AEB68728FAC57B0'  FIPS known answer test
+00000758  5DC8B411 6DFCC066                        146          DC    X'5DC8B4116DFCC066'
+00000760  C4FBB654 B317FB0E                        147          DC    X'C4FBB654B317FB0E'
+00000768  01126574 8F7929B0                        148          DC    X'011265748F7929B0'
+00000770  18036662 5DE0665B                        149          DC    X'180366625DE0665B'
+00000778  116C878B 0F05BAD8                        150          DC    X'116C878B0F05BAD8'
+00000780  31941625 8824DFDC                        151          DC    X'319416258824DFDC'
+                              00000800  00000001   152 FODISP   EQU   X'800'         where 'FO' ("first operand") should be
+00000788                      00000788  00000800   153          ORG   PRNOTEST+FODISP
+00000800                                           154 FO       DS    0X             first operand
+                                                   155          END
+ASMA Ver. 0.7.0  Standalone Test PRNO Instruction                                                   21 Oct 2024 11:09:05  Page     4
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ENTROPY             X    000708       8   136   64
+ERFIPS              X    000748       8   144   73
+ERQUERY             X    0006F0      16   134   51
+FO                  X    000800       1   154   60   68   73   81   89   94  115  120
+FODISP              U    000800       1   152  153   97
+IMAGE               1    000000    2048     0
+PB                  X    000480     240   130   48   49   51   58   59   67   80   85   88  105  106  108
+PBNULL              X    000600       1   133   48   58   94   98  105  120  123
+PRNOTEST            J    000000    2048    37   39   41   43  127  129  132  153
+R0                  U    000000       1    20   47   57   66   79   87  104  114
+R1                  U    000001       1    21   49   59   67   80   88  106
+R10                 U    00000A       1    30
+R11                 U    00000B       1    31
+R12                 U    00000C       1    32
+R13                 U    00000D       1    33
+R14                 U    00000E       1    34
+R15                 U    00000F       1    35
+R2                  U    000002       1    22   50   60   65   68   72   81   86   89   93  107  115  119
+R3                  U    000003       1    23   61   69   82   90   97   98  116
+R4                  U    000004       1    24   50   62   65   70   72   83   86   91   93  107  117  119
+R5                  U    000005       1    25   63   71   84   92  118
+R6                  U    000006       1    26
+R7                  U    000007       1    27
+R8                  U    000008       1    28
+R9                  U    000009       1    29
+SO                  X    000570      64   131   62   64   70   83   85   91  117  123
+TRQUERY             X    000700       8   135  108
+WAITPSW             X    000400      16   128  126
+ASMA Ver. 0.7.0  Standalone Test PRNO Instruction                                                   21 Oct 2024 11:09:05  Page     5
+
+MACRO  DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.7.0  Standalone Test PRNO Instruction                                                   21 Oct 2024 11:09:05  Page     6
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: not defined
+
+Image      IMAGE     2048  000-7FF  000-7FF
+  Region             2048  000-7FF  000-7FF
+    CSECT  PRNOTEST  2048  000-7FF  000-7FF
+ASMA Ver. 0.7.0  Standalone Test PRNO Instruction                                                   21 Oct 2024 11:09:05  Page     7
+
+   STMT                                       FILE NAME
+
+1     C:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\PRNO\PRNO.asm
+
+
+** NO ERRORS FOUND **
+
+

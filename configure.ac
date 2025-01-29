@@ -729,6 +729,20 @@ AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_n
       #include <sys/socket.h>
     #endif
 ] )
+AC_CHECK_HEADERS( net/ip.h,       [hc_cv_have_net_ip_h=yes],       [hc_cv_have_net_ip_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( netinet/ip.h,   [hc_cv_have_netinet_ip_h=yes],   [hc_cv_have_netinet_ip_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
 AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_net_if_h=no],
 [
     #include <sys/types.h>
@@ -751,6 +765,20 @@ AC_CHECK_HEADERS( net/tcp.h,      [hc_cv_have_net_tcp_h=yes],      [hc_cv_have_n
     #endif
 ] )
 AC_CHECK_HEADERS( netinet/tcp.h,  [hc_cv_have_netinet_tcp_h=yes],  [hc_cv_have_netinet_tcp_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( net/udp.h,      [hc_cv_have_net_udp_h=yes],      [hc_cv_have_net_udp_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( netinet/udp.h,  [hc_cv_have_netinet_udp_h=yes],  [hc_cv_have_netinet_udp_h=no],
 [
     #include <sys/types.h>
     #ifdef HAVE_SYS_SOCKET_H
@@ -2128,6 +2156,38 @@ esac
 
 AC_MSG_RESULT( [$hc_cv_asm_byteswap] )
 
+#--------------------------------------------------------------#
+#  Check if GCC supports -msse4.1 -msse4.2 -mpclmul compiler   #
+#  options needed by Herc 4.8 z/Arch vector registers support  #
+#--------------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [whether compiler supports '-msse4.1 -msse4.2 -mpclmul' options],
+
+        [hc_cv_sse4_pclmul_support],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-msse4.1 -msse4.2 -mpclmul"
+
+            AC_COMPILE_IFELSE(
+                [
+                    int main(int argc, char **argv)
+                    {
+                        return 0;
+                    }
+                ],
+                [hc_cv_sse4_pclmul_support=yes],
+                [hc_cv_sse4_pclmul_support=no]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_sse4_pclmul_support=no
+fi
+
 #------------------------------------------------------------------
 #  The logic to test whether optreset is needed for getopt use is
 #  defined in the 'HC_CHECK_NEED_GETOPT_OPTRESET' macro in the
@@ -2753,8 +2813,6 @@ AC_CACHE_SAVE()
 
 # Automatic determination of what optimization flags to use...
 
-AC_MSG_CHECKING( [for what optimization flags to use] )
-
 hc_cv_auto_optimize=""
 hc_cv_optimization_flags=""
 
@@ -2849,6 +2907,10 @@ if test "$hc_cv_auto_optimize" = "yes"; then
                                                            [hc_cv_intel_cpu_type=native],
                                                            [hc_cv_intel_cpu_type=native] )
             fi
+
+            if test "$hc_cv_sse4_pclmul_support" = "yes"; then
+                hc_cv_optimization_flags="$hc_cv_optimization_flags -msse4.1 -msse4.2 -mpclmul"
+            fi
             ;;
 
         i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
@@ -2936,6 +2998,8 @@ if test "$hc_cv_auto_optimize" = "yes"; then
       hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-strict-aliasing"
     fi
 fi
+
+AC_MSG_CHECKING( [for what optimization flags to use] )
 
 if test "x$hc_cv_optimization_flags" = "x"; then
     AC_MSG_RESULT( [(none)] )
@@ -3163,12 +3227,13 @@ crypto_libname="lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   crypto_pkgdir="${hc_cv_extpkg_dir}"
+  crypto_libdir="${crypto_pkgdir}/lib"
 else
   crypto_pkgdir="${srcdir}/${crypto_pkgname}"
+  crypto_libdir="${crypto_pkgdir}/lib"
 fi
 
 crypto_incdir="${crypto_pkgdir}/include"
-crypto_libdir="${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
 crypto_headers="${crypto_incdir}/aes.h      \
                 ${crypto_incdir}/crypto.h   \
@@ -3185,12 +3250,13 @@ decnumber_libname="lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   decnumber_pkgdir="${hc_cv_extpkg_dir}"
+  decnumber_libdir="${decnumber_pkgdir}/lib"
 else
   decnumber_pkgdir="${srcdir}/${decnumber_pkgname}"
+  decnumber_libdir="${decnumber_pkgdir}/lib"
 fi
 
 decnumber_incdir="${decnumber_pkgdir}/include"
-decnumber_libdir="${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
 decnumber_headers="${decnumber_incdir}/aes.h        \
                    ${decnumber_incdir}/decnumber.h  \
@@ -3207,12 +3273,13 @@ softfloat_libname="lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   softfloat_pkgdir="${hc_cv_extpkg_dir}"
+  softfloat_libdir="${softfloat_pkgdir}/lib"
 else
   softfloat_pkgdir="${srcdir}/${softfloat_pkgname}"
+  softfloat_libdir="${softfloat_pkgdir}/lib"
 fi
 
 softfloat_incdir="${softfloat_pkgdir}/include"
-softfloat_libdir="${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
 softfloat_headers="${softfloat_incdir}/aes.h        \
                    ${softfloat_incdir}/softfloat.h  \
@@ -3229,12 +3296,13 @@ telnet_libname="lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
 if test "${hc_cv_extpkg_dir}" != ""; then
   telnet_pkgdir="${hc_cv_extpkg_dir}"
+  telnet_libdir="${telnet_pkgdir}/lib"
 else
   telnet_pkgdir="${srcdir}/${telnet_pkgname}"
+  telnet_libdir="${telnet_pkgdir}/lib"
 fi
 
 telnet_incdir="${telnet_pkgdir}/include"
-telnet_libdir="${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
 telnet_headers="${telnet_incdir}/aes.h      \
                 ${telnet_incdir}/telnet.h   \
@@ -3297,17 +3365,32 @@ END
 fi
 
 LIBS="$LIBS -l${crypto_pkgname}${hc_cv_pkg_lib_suffix}"
-LDFLAGS="$LDFLAGS -L${crypto_libdir}"
+if test -z "${hc_cv_pkg_lib_subdir}"; then
+  LDFLAGS="$LDFLAGS -L${crypto_libdir}"
+else
+  LDFLAGS="$LDFLAGS -L${crypto_libdir}${hc_cv_pkg_lib_subdir}"
+fi
 
 LIBS="$LIBS -l${decnumber_pkgname}${hc_cv_pkg_lib_suffix}"
-LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
-
+if test -z "${hc_cv_pkg_lib_subdir}"; then
+  LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
+else
+  LDFLAGS="$LDFLAGS -L${decnumber_libdir}${hc_cv_pkg_lib_subdir}"
+fi
 
 LIBS="$LIBS -l${softfloat_pkgname}${hc_cv_pkg_lib_suffix}"
-LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
+if test -z "${hc_cv_pkg_lib_subdir}"; then
+  LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
+else
+  LDFLAGS="$LDFLAGS -L${softfloat_libdir}${hc_cv_pkg_lib_subdir}"
+fi
 
 LIBS="$LIBS -l${telnet_pkgname}${hc_cv_pkg_lib_suffix}"
-LDFLAGS="$LDFLAGS -L${telnet_libdir}"
+if test -z "${hc_cv_pkg_lib_subdir}"; then
+  LDFLAGS="$LDFLAGS -L${telnet_libdir}"
+else
+  LDFLAGS="$LDFLAGS -L${telnet_libdir}${hc_cv_pkg_lib_subdir}"
+fi
 
 ###############################################################################
 #          Pass values to other subdirectory Makefile.am files

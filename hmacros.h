@@ -231,6 +231,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
   #define  FD_ISSET             w32_FD_ISSET
   #define  select(n,r,w,e,t)    w32_select((n),(r),(w),(e),(t),__FILE__,__LINE__)
   #define  pselect(n,r,w,e,t,m) w32_pselect((n),(r),(w),(e),(t),(m),__FILE__,__LINE__)
+  #define  poll(p,n,t)          WSAPoll((p),(n),(t))      
   #define  fdopen               w32_fdopen
   #define  fwrite               w32_fwrite
   #define  fprintf              w32_fprintf

@@ -470,6 +470,11 @@ EXTRA_DIST =                    \
      privop.core                \
      privop.list                \
      privop.tst                 \
+     prno.asm                   \
+     prno.core                  \
+     prno.list                  \
+     prno.pdf                   \
+     prno.tst                   \
      problem.asm                \
      problem.core               \
      problem.list               \
@@ -741,4 +746,14 @@ EXTRA_DIST =                    \
      zvector-e7-03-VGFMA.core               \
      zvector-e7-03-VGFMA.list               \
      zvector-e7-03-VGFMA.pdf                \
-     zvector-e7-03-VGFMA.tst
+     zvector-e7-03-VGFMA.tst                \
+     zvector-e7-04-BitCount.asm             \
+     zvector-e7-04-BitCount.core            \
+     zvector-e7-04-BitCount.list            \
+     zvector-e7-04-BitCount.pdf             \
+     zvector-e7-04-BitCount.tst             \
+     zvector-e7-05-VTM.asm                  \
+     zvector-e7-05-VTM.core                 \
+     zvector-e7-05-VTM.list                 \
+     zvector-e7-05-VTM.pdf                  \
+     zvector-e7-05-VTM.tst

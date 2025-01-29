@@ -436,7 +436,11 @@ HUT_DLL_IMPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwle
 HUT_DLL_IMPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype );
 HUT_DLL_IMPORT int uro_closefromccw ( DEVBLK* dev );
 
+/*-------------------------------------------------------------------*/
+/*      Determine if running under the control of a debugger         */
+/*-------------------------------------------------------------------*/
 
+HUT_DLL_IMPORT bool check_if_debugger_is_present();
 
 /*********************************************************************/
 /*********************************************************************/

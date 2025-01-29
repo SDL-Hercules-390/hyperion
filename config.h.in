@@ -370,9 +370,6 @@
 /* Define to 1 if you have the <math.h> header file. */
 #undef HAVE_MATH_H
 
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
 /* Define to 1 if you have the `memrchr' function. */
 #undef HAVE_MEMRCHR
 
@@ -397,8 +394,14 @@
 /* Define to 1 if you have the <netinet/in_var.h> header file. */
 #undef HAVE_NETINET_IN_VAR_H
 
+/* Define to 1 if you have the <netinet/ip.h> header file. */
+#undef HAVE_NETINET_IP_H
+
 /* Define to 1 if you have the <netinet/tcp.h> header file. */
 #undef HAVE_NETINET_TCP_H
+
+/* Define to 1 if you have the <netinet/udp.h> header file. */
+#undef HAVE_NETINET_UDP_H
 
 /* Define to 1 if you have the <net/if.h> header file. */
 #undef HAVE_NET_IF_H
@@ -406,11 +409,17 @@
 /* Define to 1 if you have the <net/if_var.h> header file. */
 #undef HAVE_NET_IF_VAR_H
 
+/* Define to 1 if you have the <net/ip.h> header file. */
+#undef HAVE_NET_IP_H
+
 /* Define to 1 if you have the <net/route.h> header file. */
 #undef HAVE_NET_ROUTE_H
 
 /* Define to 1 if you have the <net/tcp.h> header file. */
 #undef HAVE_NET_TCP_H
+
+/* Define to 1 if you have the <net/udp.h> header file. */
+#undef HAVE_NET_UDP_H
 
 /* Define to enable OORexx support */
 #undef HAVE_OBJECT_REXX
@@ -511,6 +520,9 @@
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -796,7 +808,9 @@
 /* The size of `struct bytestruct', as computed by sizeof. */
 #undef SIZEOF_STRUCT_BYTESTRUCT
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
 /* Define if 'struct timespec' defined in <sys/types.h> */
@@ -825,11 +839,6 @@
 
 /* Define missing macro on apple darwin (osx) platform */
 #undef _BSD_SOCKLEN_T_
-
-/* Enable large inode numbers on Mac OS X 10.5.  */
-#ifndef _DARWIN_USE_64_BIT_INODE
-# define _DARWIN_USE_64_BIT_INODE 1
-#endif
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS
