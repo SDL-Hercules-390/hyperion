@@ -5446,7 +5446,7 @@ HDL_REGISTER_SECTION;
   UNREFERENCED( regsym );   // (HDL_REGISTER_SECTION parameter)
 
   // "%s module loaded%s"
-  WRMSG( HHC00150, "I", "Crypto", " (C) Copyright 2003-2024 by Bernard van der Helm & Juergen Winkelmann");
+  WRMSG( HHC00150, "I", "Crypto", " (C) Copyright 2003-2025 by Bernard van der Helm & Juergen Winkelmann");
 
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist");
