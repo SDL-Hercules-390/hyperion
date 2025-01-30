@@ -940,6 +940,7 @@ DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen )
  *    ext:         the file extension (with the dot separator)
  *    suffix:      the integer number to be added as a suffix
  */
+#define URO_MAX_SUFFIX 9999
 static /*recursive*/ void pushFileStack (
         DEVBLK *dev,
         const char * urotype,
@@ -954,9 +955,18 @@ static /*recursive*/ void pushFileStack (
     {
         MSGBUF(work, "%s_%d%s", rootname, suffix, ext);
         pushFileStack(dev, urotype, work, rootname, ext, suffix + 1);
-        // "%1d:%04X %s: renaming output file [%s] to [%s]"
-        WRMSG (HHC01292, "I", LCSS_DEVNUM, urotype, fullname, work);
-        rename(fullname, work);
+        if (suffix <= URO_MAX_SUFFIX)
+        {
+            // "%1d:%04X %s: renaming output file [%s] to [%s]"
+            WRMSG (HHC01292, "I", LCSS_DEVNUM, urotype, fullname, work);
+            rename(fullname, work);
+        }
+        else
+        {
+        	// "%1d:%04X %s: deleting old file [%s]"
+        	WRMSG (HHC01293, "I", LCSS_DEVNUM, urotype, fullname);
+        	remove(fullname);
+        }
     }
 }
 
