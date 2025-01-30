@@ -531,9 +531,16 @@ void z900_invalidate_tlbe( REGS* regs, BYTE* main );
 
 RADR apply_host_prefixing( REGS* regs, RADR raddr );
 
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt)( REGS* regs, int code );
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt)( REGS* regs, int code );
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) z900_program_interrupt)( REGS* regs, int code );
+#undef ATTRIBUTE_NORETURN
+#if defined(__GNUC__) && __GNUC__ >= 4
+    #define ATTRIBUTE_NORETURN __attribute__ ((__noreturn__))
+#else
+    #define ATTRIBUTE_NORETURN
+#endif
+
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt)( REGS* regs, int code ) ATTRIBUTE_NORETURN;
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt)( REGS* regs, int code ) ATTRIBUTE_NORETURN;
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) z900_program_interrupt)( REGS* regs, int code ) ATTRIBUTE_NORETURN;
 
 void s370_display_inst( REGS* iregs, BYTE* inst );
 void s390_display_inst( REGS* iregs, BYTE* inst );
