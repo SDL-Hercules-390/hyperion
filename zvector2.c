@@ -105,11 +105,17 @@ facility  code  test#   Instruction                                             
     #include "decPacked.h"
 #endif
 
-/* Debug end of vector instruction execution                     */
-// #undef  ZVECTOR_END
-// #define ZVECTOR_END(_regs) \
-//         if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
-//             ARCH_DEP(display_inst) (_regs, inst);
+/* ====================================================================== */
+/* ZVECTOR_END macro for debugging Vector instructions                    */
+/* Note: block comments are used to avoid gcc                             */
+/*       warning: multi-line comment [-Wcomment]                          */
+/*
+    #undef  ZVECTOR_END
+    #define ZVECTOR_END(_regs) \
+            if (0 && inst[5] != (U8) 0x3E && inst[5] != (U8) 0x36) \
+                ARCH_DEP(display_inst) (_regs, inst);
+*/
+/* ====================================================================== */
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */

@@ -18,22 +18,28 @@
 #include "inline.h"
 
 /* ====================================================================== */
+/* ZVECTOR_END macro for debugging Vector instructions                    */
+/* Note: block comments are used to avoid gcc                             */
+/*       warning: multi-line comment [-Wcomment]                          */
 
 // To display the results of all Vector instructions, uncomment the
 // following three lines:-
 
-//  #undef ZVECTOR_END
-//  #define ZVECTOR_END(_regs)                                      \
-//              ARCH_DEP(display_inst) (_regs, inst);
+/*
+    #undef ZVECTOR_END
+    #define ZVECTOR_END(_regs)                                      \
+                ARCH_DEP(display_inst) (_regs, inst);
+*/
 
 // To display the results of specific Vector instructions, uncomment
 // and modify the following four lines:-
 
-//  #undef ZVECTOR_END
-//  #define ZVECTOR_END(_regs)                                      \
-//          if (inst[5] == 0x3E || inst[5] == 0x36)                 \
-//              ARCH_DEP(display_inst) (_regs, inst);
-
+/*
+    #undef ZVECTOR_END
+    #define ZVECTOR_END(_regs)                                      \
+            if (inst[5] == 0x3E || inst[5] == 0x36)                 \
+                ARCH_DEP(display_inst) (_regs, inst);
+*/
 /* ====================================================================== */
 
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
