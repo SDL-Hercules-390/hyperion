@@ -3485,7 +3485,7 @@
     <None Include="tests\text2tst.rexx">
       <Filter>Other Files\tests</Filter>
     </None>
-    <None Include="util\cckddump-cckdload.zip">
+    <None Include="util\CCKD.JCL.Jan2025.XMI.Updated.zip">
       <Filter>Other Files\Utilities</Filter>
     </None>
   </ItemGroup>

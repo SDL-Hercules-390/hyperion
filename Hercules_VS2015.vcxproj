@@ -1350,7 +1350,7 @@
     <None Include="util\awssl-v19g" />
     <None Include="util\awswrite.jcl" />
     <None Include="util\bldlvlck" />
-    <None Include="util\cckddump-cckdload.zip" />
+    <None Include="util\CCKD.JCL.Jan2025.XMI.Updated.zip" />
     <None Include="util\configure.ac" />
     <None Include="util\dasdlist" />
     <None Include="util\dasdlist.bat" />
