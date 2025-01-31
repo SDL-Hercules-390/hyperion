@@ -1,5 +1,5 @@
 /* CARD2TXT.C   (C) Copyright "Fish" (David B. Trout), 2023-2024     */
-/*              Translate ASCII text file to EBCDIC                  */
+/*              Translate EBCDIC card deck to ASCII text file        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -9,15 +9,15 @@
 /*                                                                   */
 /*                          CARD2TXT                                 */
 /*                                                                   */
-/*  This program reads an ASCII text file and translates the text    */
-/*  to EBCDIC according to the specified code page and then writes   */
-/*  it to the specified output file.                                 */
+/*  This program reads a fixed 80-byte EBCDIC card deck, translates  */
+/*  each record to ASCII according to the specified codepage, and    */
+/*  then writes it to the specified output file.                     */
 /*                                                                   */
 /*       card2txt  codepage  ifile  ofile                            */
 /*                                                                   */
 /*  The input file format is 80 character fixed-length EBCDIC card   */
 /*  images. The output is variable length ASCII text records. Both   */
-/*  LF only or CR/LF line ending are supported, and depend on the    */
+/*  LF only and CR/LF line ending are supported, and depend on the   */
 /*  host system where card2txt is running. When running on Windows,  */
 /*  the output file record will end with CR/LF. Otherwise they will  */
 /*  end with LF only.                                                */
