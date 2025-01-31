@@ -786,6 +786,9 @@
     <ClCompile Include="txt2card.c">
       <Filter>Source Files\Utilities\other</Filter>
     </ClCompile>
+    <ClCompile Include="card2txt.c">
+      <Filter>Source Files\Utilities\other</Filter>
+    </ClCompile>
     <ClCompile Include="timer.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>

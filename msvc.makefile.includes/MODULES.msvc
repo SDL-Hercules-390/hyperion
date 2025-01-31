@@ -77,4 +77,5 @@ EXECUTABLES = \
     $(X)tfprint.exe     \
     $(X)tfswap.exe      \
     $(X)txt2card.exe    \
+    $(X)card2txt.exe    \
     $(X)vmfplc2.exe

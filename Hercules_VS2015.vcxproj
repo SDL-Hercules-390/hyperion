@@ -456,6 +456,7 @@
     <ClCompile Include="tfprint.c" />
     <ClCompile Include="tfswap.c" />
     <ClCompile Include="txt2card.c" />
+    <ClCompile Include="card2txt.c" />
     <ClCompile Include="timer.c" />
     <ClCompile Include="trace.c" />
     <ClCompile Include="transact.c" />

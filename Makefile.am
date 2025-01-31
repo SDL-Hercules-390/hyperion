@@ -254,6 +254,7 @@ bin_PROGRAMS = \
   tfprint      \
   tfswap       \
   txt2card     \
+  card2txt     \
   vmfplc2      \
   $(HERCIFC)   \
   $(HERCLIN)
@@ -750,6 +751,10 @@ tfswap_LDFLAGS     = $(tools_LD_FLAGS)
 txt2card_SOURCES   = txt2card.c
 txt2card_LDADD     = $(tools_ADDLIBS)
 txt2card_LDFLAGS   = $(tools_LD_FLAGS)
+
+card2txt_SOURCES   = card2txt.c
+card2txt_LDADD     = $(tools_ADDLIBS)
+card2txt_LDFLAGS   = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se

@@ -2450,7 +2450,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03254 "File successfully swapped from %s endian to %s endian"
 //efine HHC03255 - HHC03299 (available)
 
-// txt2card
+// txt2card/card2txt
 #define HHC03300 "Usage:  txt2card  codepage  ifile  {ofile | host:port}"
 #define HHC03301 "Incorrect number of arguments"
 #define HHC03302 "Invalid/unsupported codepage"

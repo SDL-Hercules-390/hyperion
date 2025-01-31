@@ -187,6 +187,8 @@ $(X)tfswap.exe:   $(O)$(@B).obj                 $(O)hsys.lib $(O)hutil.lib $(O)h
 
 $(X)txt2card.exe: $(O)$(@B).obj                 $(O)hsys.lib $(O)hutil.lib $(O)hercmisc.res
 
+$(X)card2txt.exe: $(O)$(@B).obj                 $(O)hsys.lib $(O)hutil.lib $(O)hercmisc.res
+
 $(X)conspawn.exe: $(O)$(@B).obj                                            $(O)hercmisc.res
 
 # ---------------------------------------------------------------------

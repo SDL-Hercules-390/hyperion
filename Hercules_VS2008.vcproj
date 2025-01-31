@@ -389,6 +389,10 @@
 					Name="other"
 					>
 					<File
+						RelativePath=".\card2txt.c"
+						>
+					</File>
+					<File
 						RelativePath=".\conspawn.c"
 						>
 					</File>
