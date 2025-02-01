@@ -110,8 +110,8 @@ bin_PROGRAMS = cckdcdsk$(EXEEXT) cckdcomp$(EXEEXT) cckddiag$(EXEEXT) \
 	hetinit$(EXEEXT) hetmap$(EXEEXT) hetupd$(EXEEXT) \
 	maketape$(EXEEXT) tapecopy$(EXEEXT) tapemap$(EXEEXT) \
 	tapesplt$(EXEEXT) tfprint$(EXEEXT) tfswap$(EXEEXT) \
-	txt2card$(EXEEXT) vmfplc2$(EXEEXT) $(am__EXEEXT_1) \
-	$(am__EXEEXT_2)
+	txt2card$(EXEEXT) card2txt$(EXEEXT) vmfplc2$(EXEEXT) \
+	$(am__EXEEXT_1) $(am__EXEEXT_2)
 EXTRA_PROGRAMS = hercifc$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -360,9 +360,15 @@ libhercu_la_OBJECTS = $(am_libhercu_la_OBJECTS)
 libhercu_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libhercu_la_LDFLAGS) $(LDFLAGS) -o $@
+am_card2txt_OBJECTS = card2txt.$(OBJEXT)
+card2txt_OBJECTS = $(am_card2txt_OBJECTS)
+am__DEPENDENCIES_3 = $(HERCLIBS2) $(am__DEPENDENCIES_1)
+card2txt_DEPENDENCIES = $(am__DEPENDENCIES_3)
+card2txt_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(card2txt_LDFLAGS) $(LDFLAGS) -o $@
 am_cckdcdsk_OBJECTS = cckdcdsk.$(OBJEXT)
 cckdcdsk_OBJECTS = $(am_cckdcdsk_OBJECTS)
-am__DEPENDENCIES_3 = $(HERCLIBS2) $(am__DEPENDENCIES_1)
 cckdcdsk_DEPENDENCIES = $(am__DEPENDENCIES_3)
 cckdcdsk_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -620,82 +626,82 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/archlvl.Plo ./$(DEPDIR)/assist.Plo \
 	./$(DEPDIR)/awstape.Plo ./$(DEPDIR)/bldcfg.Plo \
 	./$(DEPDIR)/bootstrap.Po ./$(DEPDIR)/cache.Plo \
-	./$(DEPDIR)/cardpch.Plo ./$(DEPDIR)/cardrdr.Plo \
-	./$(DEPDIR)/cckdcdsk.Po ./$(DEPDIR)/cckdcdsk64.Po \
-	./$(DEPDIR)/cckdcomp.Po ./$(DEPDIR)/cckdcomp64.Po \
-	./$(DEPDIR)/cckddasd.Plo ./$(DEPDIR)/cckddasd64.Plo \
-	./$(DEPDIR)/cckddiag.Po ./$(DEPDIR)/cckddiag64.Po \
-	./$(DEPDIR)/cckdmap.Po ./$(DEPDIR)/cckdswap.Po \
-	./$(DEPDIR)/cckdswap64.Po ./$(DEPDIR)/cckdutil.Plo \
-	./$(DEPDIR)/cckdutil64.Plo ./$(DEPDIR)/cgibin.Plo \
-	./$(DEPDIR)/channel.Plo ./$(DEPDIR)/chsc.Plo \
-	./$(DEPDIR)/ckddasd.Plo ./$(DEPDIR)/ckddasd64.Plo \
-	./$(DEPDIR)/clock.Plo ./$(DEPDIR)/cmdtab.Plo \
-	./$(DEPDIR)/cmpsc_2012.Plo ./$(DEPDIR)/cmpscdbg.Plo \
-	./$(DEPDIR)/cmpscdct.Plo ./$(DEPDIR)/cmpscget.Plo \
-	./$(DEPDIR)/cmpscmem.Plo ./$(DEPDIR)/cmpscput.Plo \
-	./$(DEPDIR)/codepage.Plo ./$(DEPDIR)/comm3705.Plo \
-	./$(DEPDIR)/commadpt.Plo ./$(DEPDIR)/con1052c.Plo \
-	./$(DEPDIR)/config.Plo ./$(DEPDIR)/console.Plo \
-	./$(DEPDIR)/control.Plo ./$(DEPDIR)/convto64.Po \
-	./$(DEPDIR)/cpu.Plo ./$(DEPDIR)/crypto.Plo \
-	./$(DEPDIR)/ctc_ctci.Plo ./$(DEPDIR)/ctc_lcs.Plo \
-	./$(DEPDIR)/ctc_ptp.Plo ./$(DEPDIR)/ctcadpt.Plo \
-	./$(DEPDIR)/dasdcat.Po ./$(DEPDIR)/dasdconv.Po \
-	./$(DEPDIR)/dasdconv64.Po ./$(DEPDIR)/dasdcopy.Po \
-	./$(DEPDIR)/dasdcopy64.Po ./$(DEPDIR)/dasdinit.Po \
-	./$(DEPDIR)/dasdinit64.Po ./$(DEPDIR)/dasdisup.Po \
-	./$(DEPDIR)/dasdload.Po ./$(DEPDIR)/dasdload64.Po \
-	./$(DEPDIR)/dasdls.Po ./$(DEPDIR)/dasdpdsu.Po \
-	./$(DEPDIR)/dasdseq.Po ./$(DEPDIR)/dasdser.Po \
-	./$(DEPDIR)/dasdtab.Plo ./$(DEPDIR)/dasdutil.Plo \
-	./$(DEPDIR)/dasdutil64.Plo ./$(DEPDIR)/dat.Plo \
-	./$(DEPDIR)/decimal.Plo ./$(DEPDIR)/dfp.Plo \
-	./$(DEPDIR)/diagmssf.Plo ./$(DEPDIR)/diagnose.Plo \
-	./$(DEPDIR)/dmap2hrc.Po ./$(DEPDIR)/dummydev.Plo \
-	./$(DEPDIR)/dyn76.Plo ./$(DEPDIR)/dyncrypt.Plo \
-	./$(DEPDIR)/dyngui.Plo ./$(DEPDIR)/ecpsvm.Plo \
-	./$(DEPDIR)/esame.Plo ./$(DEPDIR)/external.Plo \
-	./$(DEPDIR)/facility.Plo ./$(DEPDIR)/faketape.Plo \
-	./$(DEPDIR)/fbadasd.Plo ./$(DEPDIR)/fbadasd64.Plo \
-	./$(DEPDIR)/fillfnam.Plo ./$(DEPDIR)/float.Plo \
-	./$(DEPDIR)/fthreads.Plo ./$(DEPDIR)/ftlib.Plo \
-	./$(DEPDIR)/general1.Plo ./$(DEPDIR)/general2.Plo \
-	./$(DEPDIR)/general3.Plo ./$(DEPDIR)/hRexx.Plo \
-	./$(DEPDIR)/hRexx_o.Plo ./$(DEPDIR)/hRexx_r.Plo \
-	./$(DEPDIR)/hao.Plo ./$(DEPDIR)/hbyteswp.Plo \
-	./$(DEPDIR)/hchan.Plo ./$(DEPDIR)/hconsole.Plo \
-	./$(DEPDIR)/hdiagf18.Plo ./$(DEPDIR)/hdl.Plo \
-	./$(DEPDIR)/hdteq.Plo ./$(DEPDIR)/hercifc.Po \
-	./$(DEPDIR)/herclin.Po ./$(DEPDIR)/hetget.Po \
-	./$(DEPDIR)/hetinit.Po ./$(DEPDIR)/hetlib.Plo \
-	./$(DEPDIR)/hetmap.Po ./$(DEPDIR)/hettape.Plo \
-	./$(DEPDIR)/hetupd.Po ./$(DEPDIR)/hexdumpe.Plo \
-	./$(DEPDIR)/him.Plo ./$(DEPDIR)/history.Plo \
-	./$(DEPDIR)/hostinfo.Plo ./$(DEPDIR)/hsccmd.Plo \
-	./$(DEPDIR)/hscemode.Plo ./$(DEPDIR)/hscloc.Plo \
-	./$(DEPDIR)/hscmisc.Plo ./$(DEPDIR)/hscpufun.Plo \
-	./$(DEPDIR)/hscutl.Plo ./$(DEPDIR)/hsocket.Plo \
-	./$(DEPDIR)/hsys.Plo ./$(DEPDIR)/hthreads.Plo \
-	./$(DEPDIR)/httpserv.Plo ./$(DEPDIR)/ieee.Plo \
-	./$(DEPDIR)/impl.Plo ./$(DEPDIR)/inline.Plo ./$(DEPDIR)/io.Plo \
-	./$(DEPDIR)/ipl.Plo ./$(DEPDIR)/loadmem.Plo \
-	./$(DEPDIR)/loadparm.Plo ./$(DEPDIR)/logger.Plo \
-	./$(DEPDIR)/logmsg.Plo ./$(DEPDIR)/losc.Plo \
-	./$(DEPDIR)/machchk.Plo ./$(DEPDIR)/machdep.Plo \
-	./$(DEPDIR)/maketape.Po ./$(DEPDIR)/memrchr.Plo \
-	./$(DEPDIR)/mpc.Plo ./$(DEPDIR)/netsupp.Plo \
-	./$(DEPDIR)/nnpa.Plo ./$(DEPDIR)/omatape.Plo \
-	./$(DEPDIR)/opcode.Plo ./$(DEPDIR)/panel.Plo \
-	./$(DEPDIR)/parser.Plo ./$(DEPDIR)/pfpo.Plo \
-	./$(DEPDIR)/plo.Plo ./$(DEPDIR)/printer.Plo \
-	./$(DEPDIR)/pttrace.Plo ./$(DEPDIR)/qdio.Plo \
-	./$(DEPDIR)/qeth.Plo ./$(DEPDIR)/resolve.Plo \
-	./$(DEPDIR)/scedasd.Plo ./$(DEPDIR)/scescsi.Plo \
-	./$(DEPDIR)/script.Plo ./$(DEPDIR)/scsitape.Plo \
-	./$(DEPDIR)/scsiutil.Plo ./$(DEPDIR)/service.Plo \
-	./$(DEPDIR)/shared.Plo ./$(DEPDIR)/sie.Plo \
-	./$(DEPDIR)/skey.Plo ./$(DEPDIR)/sllib.Plo \
+	./$(DEPDIR)/card2txt.Po ./$(DEPDIR)/cardpch.Plo \
+	./$(DEPDIR)/cardrdr.Plo ./$(DEPDIR)/cckdcdsk.Po \
+	./$(DEPDIR)/cckdcdsk64.Po ./$(DEPDIR)/cckdcomp.Po \
+	./$(DEPDIR)/cckdcomp64.Po ./$(DEPDIR)/cckddasd.Plo \
+	./$(DEPDIR)/cckddasd64.Plo ./$(DEPDIR)/cckddiag.Po \
+	./$(DEPDIR)/cckddiag64.Po ./$(DEPDIR)/cckdmap.Po \
+	./$(DEPDIR)/cckdswap.Po ./$(DEPDIR)/cckdswap64.Po \
+	./$(DEPDIR)/cckdutil.Plo ./$(DEPDIR)/cckdutil64.Plo \
+	./$(DEPDIR)/cgibin.Plo ./$(DEPDIR)/channel.Plo \
+	./$(DEPDIR)/chsc.Plo ./$(DEPDIR)/ckddasd.Plo \
+	./$(DEPDIR)/ckddasd64.Plo ./$(DEPDIR)/clock.Plo \
+	./$(DEPDIR)/cmdtab.Plo ./$(DEPDIR)/cmpsc_2012.Plo \
+	./$(DEPDIR)/cmpscdbg.Plo ./$(DEPDIR)/cmpscdct.Plo \
+	./$(DEPDIR)/cmpscget.Plo ./$(DEPDIR)/cmpscmem.Plo \
+	./$(DEPDIR)/cmpscput.Plo ./$(DEPDIR)/codepage.Plo \
+	./$(DEPDIR)/comm3705.Plo ./$(DEPDIR)/commadpt.Plo \
+	./$(DEPDIR)/con1052c.Plo ./$(DEPDIR)/config.Plo \
+	./$(DEPDIR)/console.Plo ./$(DEPDIR)/control.Plo \
+	./$(DEPDIR)/convto64.Po ./$(DEPDIR)/cpu.Plo \
+	./$(DEPDIR)/crypto.Plo ./$(DEPDIR)/ctc_ctci.Plo \
+	./$(DEPDIR)/ctc_lcs.Plo ./$(DEPDIR)/ctc_ptp.Plo \
+	./$(DEPDIR)/ctcadpt.Plo ./$(DEPDIR)/dasdcat.Po \
+	./$(DEPDIR)/dasdconv.Po ./$(DEPDIR)/dasdconv64.Po \
+	./$(DEPDIR)/dasdcopy.Po ./$(DEPDIR)/dasdcopy64.Po \
+	./$(DEPDIR)/dasdinit.Po ./$(DEPDIR)/dasdinit64.Po \
+	./$(DEPDIR)/dasdisup.Po ./$(DEPDIR)/dasdload.Po \
+	./$(DEPDIR)/dasdload64.Po ./$(DEPDIR)/dasdls.Po \
+	./$(DEPDIR)/dasdpdsu.Po ./$(DEPDIR)/dasdseq.Po \
+	./$(DEPDIR)/dasdser.Po ./$(DEPDIR)/dasdtab.Plo \
+	./$(DEPDIR)/dasdutil.Plo ./$(DEPDIR)/dasdutil64.Plo \
+	./$(DEPDIR)/dat.Plo ./$(DEPDIR)/decimal.Plo \
+	./$(DEPDIR)/dfp.Plo ./$(DEPDIR)/diagmssf.Plo \
+	./$(DEPDIR)/diagnose.Plo ./$(DEPDIR)/dmap2hrc.Po \
+	./$(DEPDIR)/dummydev.Plo ./$(DEPDIR)/dyn76.Plo \
+	./$(DEPDIR)/dyncrypt.Plo ./$(DEPDIR)/dyngui.Plo \
+	./$(DEPDIR)/ecpsvm.Plo ./$(DEPDIR)/esame.Plo \
+	./$(DEPDIR)/external.Plo ./$(DEPDIR)/facility.Plo \
+	./$(DEPDIR)/faketape.Plo ./$(DEPDIR)/fbadasd.Plo \
+	./$(DEPDIR)/fbadasd64.Plo ./$(DEPDIR)/fillfnam.Plo \
+	./$(DEPDIR)/float.Plo ./$(DEPDIR)/fthreads.Plo \
+	./$(DEPDIR)/ftlib.Plo ./$(DEPDIR)/general1.Plo \
+	./$(DEPDIR)/general2.Plo ./$(DEPDIR)/general3.Plo \
+	./$(DEPDIR)/hRexx.Plo ./$(DEPDIR)/hRexx_o.Plo \
+	./$(DEPDIR)/hRexx_r.Plo ./$(DEPDIR)/hao.Plo \
+	./$(DEPDIR)/hbyteswp.Plo ./$(DEPDIR)/hchan.Plo \
+	./$(DEPDIR)/hconsole.Plo ./$(DEPDIR)/hdiagf18.Plo \
+	./$(DEPDIR)/hdl.Plo ./$(DEPDIR)/hdteq.Plo \
+	./$(DEPDIR)/hercifc.Po ./$(DEPDIR)/herclin.Po \
+	./$(DEPDIR)/hetget.Po ./$(DEPDIR)/hetinit.Po \
+	./$(DEPDIR)/hetlib.Plo ./$(DEPDIR)/hetmap.Po \
+	./$(DEPDIR)/hettape.Plo ./$(DEPDIR)/hetupd.Po \
+	./$(DEPDIR)/hexdumpe.Plo ./$(DEPDIR)/him.Plo \
+	./$(DEPDIR)/history.Plo ./$(DEPDIR)/hostinfo.Plo \
+	./$(DEPDIR)/hsccmd.Plo ./$(DEPDIR)/hscemode.Plo \
+	./$(DEPDIR)/hscloc.Plo ./$(DEPDIR)/hscmisc.Plo \
+	./$(DEPDIR)/hscpufun.Plo ./$(DEPDIR)/hscutl.Plo \
+	./$(DEPDIR)/hsocket.Plo ./$(DEPDIR)/hsys.Plo \
+	./$(DEPDIR)/hthreads.Plo ./$(DEPDIR)/httpserv.Plo \
+	./$(DEPDIR)/ieee.Plo ./$(DEPDIR)/impl.Plo \
+	./$(DEPDIR)/inline.Plo ./$(DEPDIR)/io.Plo ./$(DEPDIR)/ipl.Plo \
+	./$(DEPDIR)/loadmem.Plo ./$(DEPDIR)/loadparm.Plo \
+	./$(DEPDIR)/logger.Plo ./$(DEPDIR)/logmsg.Plo \
+	./$(DEPDIR)/losc.Plo ./$(DEPDIR)/machchk.Plo \
+	./$(DEPDIR)/machdep.Plo ./$(DEPDIR)/maketape.Po \
+	./$(DEPDIR)/memrchr.Plo ./$(DEPDIR)/mpc.Plo \
+	./$(DEPDIR)/netsupp.Plo ./$(DEPDIR)/nnpa.Plo \
+	./$(DEPDIR)/omatape.Plo ./$(DEPDIR)/opcode.Plo \
+	./$(DEPDIR)/panel.Plo ./$(DEPDIR)/parser.Plo \
+	./$(DEPDIR)/pfpo.Plo ./$(DEPDIR)/plo.Plo \
+	./$(DEPDIR)/printer.Plo ./$(DEPDIR)/pttrace.Plo \
+	./$(DEPDIR)/qdio.Plo ./$(DEPDIR)/qeth.Plo \
+	./$(DEPDIR)/resolve.Plo ./$(DEPDIR)/scedasd.Plo \
+	./$(DEPDIR)/scescsi.Plo ./$(DEPDIR)/script.Plo \
+	./$(DEPDIR)/scsitape.Plo ./$(DEPDIR)/scsiutil.Plo \
+	./$(DEPDIR)/service.Plo ./$(DEPDIR)/shared.Plo \
+	./$(DEPDIR)/sie.Plo ./$(DEPDIR)/skey.Plo ./$(DEPDIR)/sllib.Plo \
 	./$(DEPDIR)/sockdev.Plo ./$(DEPDIR)/sr.Plo \
 	./$(DEPDIR)/stack.Plo ./$(DEPDIR)/strsignal.Plo \
 	./$(DEPDIR)/tapeccws.Plo ./$(DEPDIR)/tapecopy-scsiutil.Po \
@@ -743,8 +749,8 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(libherc_la_SOURCES) $(EXTRA_libherc_la_SOURCES) \
 	$(libhercd_la_SOURCES) $(libhercs_la_SOURCES) \
 	$(libherct_la_SOURCES) $(libhercu_la_SOURCES) \
-	$(cckdcdsk_SOURCES) $(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
-	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
+	$(card2txt_SOURCES) $(cckdcdsk_SOURCES) $(cckdcdsk64_SOURCES) \
+	$(cckdcomp_SOURCES) $(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
 	$(cckddiag64_SOURCES) $(cckdmap_SOURCES) $(cckdswap_SOURCES) \
 	$(cckdswap64_SOURCES) $(convto64_SOURCES) $(dasdcat_SOURCES) \
 	$(dasdconv_SOURCES) $(dasdconv64_SOURCES) $(dasdcopy_SOURCES) \
@@ -770,8 +776,8 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(libherc_la_SOURCES) $(EXTRA_libherc_la_SOURCES) \
 	$(libhercd_la_SOURCES) $(libhercs_la_SOURCES) \
 	$(libherct_la_SOURCES) $(am__libhercu_la_SOURCES_DIST) \
-	$(cckdcdsk_SOURCES) $(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
-	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
+	$(card2txt_SOURCES) $(cckdcdsk_SOURCES) $(cckdcdsk64_SOURCES) \
+	$(cckdcomp_SOURCES) $(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
 	$(cckddiag64_SOURCES) $(cckdmap_SOURCES) $(cckdswap_SOURCES) \
 	$(cckdswap64_SOURCES) $(convto64_SOURCES) $(dasdcat_SOURCES) \
 	$(dasdconv_SOURCES) $(dasdconv64_SOURCES) $(dasdcopy_SOURCES) \
@@ -1634,6 +1640,9 @@ tfswap_LDFLAGS = $(tools_LD_FLAGS)
 txt2card_SOURCES = txt2card.c
 txt2card_LDADD = $(tools_ADDLIBS)
 txt2card_LDFLAGS = $(tools_LD_FLAGS)
+card2txt_SOURCES = card2txt.c
+card2txt_LDADD = $(tools_ADDLIBS)
+card2txt_LDFLAGS = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se
@@ -2274,6 +2283,10 @@ libherct.la: $(libherct_la_OBJECTS) $(libherct_la_DEPENDENCIES) $(EXTRA_libherct
 libhercu.la: $(libhercu_la_OBJECTS) $(libhercu_la_DEPENDENCIES) $(EXTRA_libhercu_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libhercu_la_LINK) -rpath $(libdir) $(libhercu_la_OBJECTS) $(libhercu_la_LIBADD) $(LIBS)
 
+card2txt$(EXEEXT): $(card2txt_OBJECTS) $(card2txt_DEPENDENCIES) $(EXTRA_card2txt_DEPENDENCIES) 
+	@rm -f card2txt$(EXEEXT)
+	$(AM_V_CCLD)$(card2txt_LINK) $(card2txt_OBJECTS) $(card2txt_LDADD) $(LIBS)
+
 cckdcdsk$(EXEEXT): $(cckdcdsk_OBJECTS) $(cckdcdsk_DEPENDENCIES) $(EXTRA_cckdcdsk_DEPENDENCIES) 
 	@rm -f cckdcdsk$(EXEEXT)
 	$(AM_V_CCLD)$(cckdcdsk_LINK) $(cckdcdsk_OBJECTS) $(cckdcdsk_LDADD) $(LIBS)
@@ -2447,6 +2460,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bldcfg.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bootstrap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cache.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/card2txt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cardpch.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cardrdr.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cckdcdsk.Po@am__quote@ # am--include-marker
@@ -3052,6 +3066,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/bldcfg.Plo
 	-rm -f ./$(DEPDIR)/bootstrap.Po
 	-rm -f ./$(DEPDIR)/cache.Plo
+	-rm -f ./$(DEPDIR)/card2txt.Po
 	-rm -f ./$(DEPDIR)/cardpch.Plo
 	-rm -f ./$(DEPDIR)/cardrdr.Plo
 	-rm -f ./$(DEPDIR)/cckdcdsk.Po
@@ -3291,6 +3306,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/bldcfg.Plo
 	-rm -f ./$(DEPDIR)/bootstrap.Po
 	-rm -f ./$(DEPDIR)/cache.Plo
+	-rm -f ./$(DEPDIR)/card2txt.Po
 	-rm -f ./$(DEPDIR)/cardpch.Plo
 	-rm -f ./$(DEPDIR)/cardrdr.Plo
 	-rm -f ./$(DEPDIR)/cckdcdsk.Po
