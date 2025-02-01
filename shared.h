@@ -325,7 +325,7 @@
 /*-------------------------------------------------------------------*/
 
 #define SHARED_VERSION              0   /* Version level  (0 .. 15)  */
-#define SHARED_RELEASE              2   /* Release level  (0 .. 15)  */
+#define SHARED_RELEASE              3   /* Release level  (0 .. 15)  */
 
 /* Constraints                                                       */
 #define SHARED_DEFAULT_PORT      3990   /* Default shared port       */
@@ -384,6 +384,7 @@
 #define SHRD_DEVID               0x42   /* Device identifier         */
 #define SHRD_USED                0x43   /* Device usage              */
 #define SHRD_SERIAL              0x44   /* Device serial number      */
+#define SHRD_CU                  0x45   /* Device control unit       */
 #define SHRD_CKDCYLS             0x48   /* CKD number cylinders      */
 #define SHRD_FBAORIGIN           0x4c   /* FBA origin                */
 #define SHRD_FBANUMBLK           0x4d   /* FBA number blocks         */

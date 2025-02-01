@@ -340,6 +340,43 @@ init_retry:
     if (dev->ckdcu->devt == 0x3990)
         dev->ckd3990 = 1;
 
+    /* Get the control unit type and model if the server supports such a query */
+
+    if (dev->rmtver <  SHARED_VERSION ||
+       (dev->rmtver == SHARED_VERSION &&
+        dev->rmtrel <  SHARED_RELEASE))
+    {
+        /* (No choice but to presume they're the same!) */
+    }
+    else /* (server SHOULD support the SHRD_CU query) */
+    {
+        CKDCU svr_cu; // (server's control unit information)
+
+        rc = clientRequest (dev, (BYTE*)&svr_cu, sizeof( CKDCU ),
+                            SHRD_QUERY, SHRD_CU, NULL, NULL);
+
+        if (rc < 0)
+            goto init_retry;
+        else if (rc == 0 || rc > (int)sizeof( CKDCU ))
+        {
+            // "%1d:%04X Shared: error retrieving control unit information"
+            WRMSG( HHC00746, "S", LCSS_DEVNUM );
+            return -1;
+        }
+
+        /* verify control unit type and model are the same */
+
+        if (0
+            || svr_cu.devt  != dev->ckdcu->devt
+            || svr_cu.model != dev->ckdcu->model
+        )
+        {
+            // "%1d:%04X Shared: client/server device control unit type/model mismatch"
+            WRMSG( HHC00747, "E", LCSS_DEVNUM );
+            return -1;
+        }
+    }
+
     /* Clear the DPA */
     memset(dev->pgid, 0, sizeof(dev->pgid));
 
@@ -2037,6 +2074,11 @@ char     trcmsg[32];
         case SHRD_SERIAL:
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, sizeof( dev->serial ));
             serverSend (dev, ix, hdr, dev->serial, (U32)sizeof( dev->serial ));
+            break;
+
+        case SHRD_CU:
+            SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, sizeof( CKDCU ));
+            serverSend (dev, ix, hdr, (BYTE*)dev->ckdcu, (U32)sizeof( CKDCU ));
             break;
 
         case SHRD_CKDCYLS:
