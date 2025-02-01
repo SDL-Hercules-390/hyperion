@@ -80,20 +80,20 @@ to the real device.
 <p class="box">
 
 <b><u>NOTE</u>:</b> It is also important that the client's
-configuration file device statement specifies the same <tt>'CU=xxxx'</tt>
+configuration file device statement specifies the same <tt>'cu=xxxx'</tt>
 control unit option value as is specified on the server.<br>
 <br>
 Not all dasd
 control units support the same set of features or channel commands (CCWs).
 If the two do not match then your guest and/or server will very likely
 not function correctly. This is especially important on modern "MVS"
-systems using 3390 dasds, which typically require <tt>'CU=3990-6'</tt>
+systems using 3390 dasds, which typically require <tt>'cu=3990-6'</tt>
 to be specified on all of their dasd.<br>
 <br>
 For example: If the server has a device specified as: <tt>'0001 3390
-"dasd filename..." <i><b>CU=3990-6</b></i>'</tt>, then the client must specify
-the same <tt>'CU='</tt> value on its own device statement, such as:
-<tt>'0123 3390 ipaddr:port:0001 <i><b>CU=3990-6</b></i>'</tt>
+"dasd filename..." <i><b>cu=3990-6</b></i>'</tt>, then the client must specify
+the same <tt>'cu='</tt> value on its own device statement, such as:
+<tt>'0123 3390 ipaddr:port:0001 <i><b>cu=3990-6</b></i>'</tt>
 </p>
 
 <p>
