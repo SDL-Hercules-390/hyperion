@@ -1136,7 +1136,7 @@ data they point to. Enabling automatic garbage collection is therefore
 default starting with Hercules 4.5.
 
 <p>
-Starting with Hercules 4.5, CCKD will (if <b><a href=#gcmsgs>gsmsgs</a></b>=1)
+Starting with Hercules 4.5, CCKD will (if <b><a href=#gcmsgs>gcmsgs</a></b>=1)
 report the current garbage state (fragmentation state) of each dasd image
 at startup so you can know which images you should perform manual
 defragmentation for.
@@ -1167,6 +1167,8 @@ the <b>cckd</b> command explained below.
 <tr><td>&nbsp;</td><td><b>comp=</b>n</td>      <td> &nbsp; Compression to be used</td>
 <tr><td>&nbsp;</td><td><b>compparm=</b>n</td>  <td> &nbsp; Compression parameter to be used</td>
 <tr><td>&nbsp;</td><td><b>debug=</b>n</td>     <td> &nbsp; Turn CCW tracing debug messages on or off</td>
+<tr><td>&nbsp;</td><td><b>dhint=</b>n</td>     <td> &nbsp; DASD hardener interval</td>
+<tr><td>&nbsp;</td><td><b>dhstart=</b>n</td>   <td> &nbsp; DASD hardener startup</td>
 <tr><td>&nbsp;</td><td><b>freepend=</b>n</td>  <td> &nbsp; Set the free pending value</td>
 <tr><td>&nbsp;</td><td><b>fsync=</b>n</td>     <td> &nbsp; Turn fsync on or off</td>
 <tr><td>&nbsp;</td><td><b>gcint=</b>n</td>     <td> &nbsp; Garbage collector interval</td>
@@ -1221,6 +1223,38 @@ the <b>cckd</b> command explained below.
         You can specify <b>0</b> (disable debug tracing) or <b>1</b> (enable debug tracing).
         <br /><br />
     </td>
+
+<tr><td valign="top"><b>dhint=</b>n</td><td> &nbsp; </td>
+    <td>Number of seconds the DASD hardener thread waits during an interval.
+        At the end of an interval, the DASD hardener
+        flushes the cache, hardens the DASD emulation file,
+        and optionally <em>fsync</em>s the emulation file.
+        <p>
+        The default is <b>0</b>, meaning automatic DASD hardening is disabled.
+        <p>
+        You can specify a number between <b>0</b> and <b>60</b>. A value of 0
+        disables the default automatic behavior of the DASD hardener,
+        converting it to as-needed mode. When in as-needed mode,
+        data written to DASD by the guest OS will be written to the emulation
+        files as necessary when the cache approaches full, or at
+        Hercules termination.
+        In automatic mode (dhint > 0), the DASD hardener will start itself
+        automatically and remain idle (but still running) between each DASD
+        hardening cycle, automatically starting the next cycle every 'dhint'
+        seconds.
+        <p>
+        It is recommended that this parameter remain set to a non-default value
+        greater than 0 in order to allow the DASD hardener to run automatically.
+        <br /><br />
+    </td>
+
+<tr><td valign="top"><b>dhstart=</b>n</td><td> &nbsp; </td>
+    <td>If set to 1 then the DASD hardener will become active.
+        <p>
+        The default is <b>0</b>.
+        <br /><br />
+    </td>
+
 
 <tr><td valign="top"><b>freepend=</b>n</td><td> &nbsp; </td>
     <td>Specifies the <em>free pending</em> value for freed space.  When a

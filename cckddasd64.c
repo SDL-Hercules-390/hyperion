@@ -2830,8 +2830,11 @@ int             rc=0;                   /* Return code               */
     if (cckd64_write_chdr (dev) < 0)
         rc = -1;
 
-    if (cckdblk.fsync)
+    if (cckdblk.fsync) {
         fdatasync (cckd->fd[cckd->sfn]);
+		cckdblk.stats_fsyncs++;
+	}
+	cckdblk.stats_hardens++;
 
     return rc;
 } /* cckd64_harden */
