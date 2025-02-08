@@ -253,11 +253,11 @@
 
   call   :tempfn                            calc_mttof_rexx    .rexx
 
-  echo   PARSE ARG '"' formula '"'     >   %calc_mttof_rexx%
-  echo   INTERPRET 'mttof = 'formula   >>  %calc_mttof_rexx%
-  echo   SAY FORMAT(mttof,,1)          >>  %calc_mttof_rexx%
-  for    /f %%i in ('rexx.exe              %calc_mttof_rexx% "%formula%"') do set mttof=%%i
-  del                                      %calc_mttof_rexx% >nul 2>&1
+  echo   formula = STRIP(ARG(1),'B','^"') >   %calc_mttof_rexx%
+  echo   INTERPRET 'mttof = 'formula      >>  %calc_mttof_rexx%
+  echo   SAY FORMAT(mttof,,1)             >>  %calc_mttof_rexx%
+  for    /f %%i in ('rexx.exe                 %calc_mttof_rexx% "%formula%"') do set mttof=%%i
+  del                                         %calc_mttof_rexx% >nul 2>&1
 
   endlocal && set "mttof=%mttof%"
   %return%
