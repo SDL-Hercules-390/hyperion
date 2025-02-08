@@ -181,7 +181,8 @@ void cckd_dasd_term_if_appropriate()
     release_lock( &cckdblk.ralock );
 
     /* Terminate all disk hardener threads... */
-    if (cckdblk.dhint != 0) {
+    if (cckdblk.dhint != 0)
+    {
         obtain_lock( &cckdblk.dhlock_c );
         {
             max = cckdblk.dhmax;    /* Save current value */
@@ -1727,7 +1728,7 @@ int             dhid;                   /* Identifier                */
 struct timeval  tv_now;                 /* Time-of-day (as timeval)  */
 time_t          tt_now;                 /* Time-of-day (as time_t)   */
 struct timespec tm;                     /* Time-of-day to wait       */
-int             dhs;                    /* Shadow copy of cckdblk.dhs*/
+int             dhs;                    /* Working copy of cckdblk.dhs */
 DEVBLK          *dev;
 CCKD_EXT        *cckd;                  /* -> cckd extension         */
 int             rc;
@@ -1760,7 +1761,7 @@ int             rc;
 
         release_lock( &cckdblk.dhlock_t );
         signal_condition( &cckdblk.termcond );  /* signal if last thread ending before init. */
-        return NULL;        /* back to the shadows again  */
+        return NULL;        /* too many already started, return  */
     }
     release_lock (&cckdblk.dhlock_c);
 
@@ -1822,7 +1823,7 @@ int             rc;
         // "0:0000 %s wait %d seconds at %s"
         if (cckdblk.debug || cckdblk.itrace)
             // (Can't use CCKD_TRACE - no dev)
-            LOGMSG( "HHC00393I " HHC00393, CCKD_DH_THREAD_NAME, cckdblk.dhint, ctime (&tt_now) );
+            WRMSG( HHC00393, "I", CCKD_DH_THREAD_NAME, cckdblk.dhint, ctime( &tt_now ));
         tm.tv_sec = tv_now.tv_sec + cckdblk.dhint;
         tm.tv_nsec = tv_now.tv_usec * 1000;
         timed_wait_condition( &cckdblk.dhcond, &cckdblk.dhlock_t, &tm );
@@ -5279,7 +5280,7 @@ int             gcs;
 
         release_lock( &cckdblk.gclock );
         signal_condition( &cckdblk.termcond );  /* signal if last gcol thread ending before init. */
-        return NULL;        /* back to the shadows again  */
+        return NULL;        /* too many already started, return  */
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
