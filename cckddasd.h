@@ -136,6 +136,8 @@ int     cckd_sf_init(DEVBLK *dev);
 int     cckd_sf_new(DEVBLK *dev);
 void    cckd_lock_devchain(int flag);
 void    cckd_unlock_devchain();
+void    cckd_dhstart(int by_cmdline);
+void*   cckd_dh(void* arg);
 void    cckd_gcstart();
 void*   cckd_gcol(void* arg);
 void    cckd_gcol_dev( DEVBLK* dev, struct timeval* tv_now );

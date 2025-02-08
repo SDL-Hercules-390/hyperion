@@ -67,12 +67,15 @@ int cckd_dasd_init( int argc, BYTE* argv[] )
 
     memcpy( &cckdblk.id, CCKDBLK_ID, sizeof( cckdblk.id ));
 
+    initialize_lock( &cckdblk.dhlock_c);
+    initialize_lock( &cckdblk.dhlock_t);
     initialize_lock( &cckdblk.gclock  );
     initialize_lock( &cckdblk.ralock  );
     initialize_lock( &cckdblk.wrlock  );
     initialize_lock( &cckdblk.devlock );
     initialize_lock( &cckdblk.trclock );
 
+    initialize_condition( &cckdblk.dhcond   );
     initialize_condition( &cckdblk.gccond   );
     initialize_condition( &cckdblk.racond   );
     initialize_condition( &cckdblk.wrcond   );
@@ -92,6 +95,8 @@ int cckd_dasd_init( int argc, BYTE* argv[] )
     cckdblk.ranbr      = CCKD_DEF_RA_SIZE;
     cckdblk.ramax      = CCKD_DEF_RA;
     cckdblk.wrmax      = CCKD_DEF_WRITER;
+    cckdblk.dhmax      = 1;                // Only one.
+    cckdblk.dhint      = CCKD_DEF_DHINT;
     cckdblk.gcmax      = CCKD_DEF_GCOL;
     cckdblk.gcint      = CCKD_DEF_GCINT;
     cckdblk.gcparm     = CCKD_DEF_GCPARM;
@@ -174,6 +179,23 @@ void cckd_dasd_term_if_appropriate()
         cckdblk.ramax = max;    /* Restore orignal value */
     }
     release_lock( &cckdblk.ralock );
+
+    /* Terminate all disk hardener threads... */
+    if (cckdblk.dhint != 0)
+    {
+        obtain_lock( &cckdblk.dhlock_c );
+        {
+            max = cckdblk.dhmax;    /* Save current value */
+            cckdblk.dhmax = 0;      /* signal   all threads to terminate */
+            while (cckdblk.dhs)     /* wait for all threads to terminate */
+            {
+                broadcast_condition( &cckdblk.dhcond );
+                wait_condition( &cckdblk.termcond, &cckdblk.dhlock_c );
+            }
+            cckdblk.dhmax = max;    /* Restore orignal value */
+        }
+        release_lock( &cckdblk.dhlock_c );
+    }
 
     /* Terminate all garbage collection threads... */
     obtain_lock( &cckdblk.gclock );
@@ -975,6 +997,10 @@ int             rc;                     /* Return code               */
         shared_update_notify (dev, trk);
     }
 
+    /* Ensure the DASD hardener is running, if it's supposed to be. */
+    if (cckdblk.dhint > 0)
+        cckd_dhstart(0);
+
     return len;
 
 } /* end function cckd_update_track */
@@ -1650,6 +1676,181 @@ int             ras;
 } /* end thread cckd_ra_thread */
 
 /*-------------------------------------------------------------------*/
+/* Start the DASD hardener, if it isn't already running.             */
+/*-------------------------------------------------------------------*/
+void cckd_dhstart(int by_cmdline)
+{
+    TID tid;
+    int rc;
+    char *how_started;
+
+    /* Schedule the DASD hardener  */
+    how_started = by_cmdline ? CCKD_DH_THREAD_NAME "() by command line" : CCKD_DH_THREAD_NAME "()";
+
+    obtain_lock( &cckdblk.dhlock_c );    // Lock the counters.
+    {
+        if (cckdblk.dhs < cckdblk.dhmax)
+        {
+            /* Schedule the DASD hardener thread  */
+            if (!cckdblk.batch || cckdblk.batchml > 1)
+                // "Starting thread %s, active=%d, started=%d, max=%d"
+                WRMSG( HHC00107, "I", how_started,
+                    cckdblk.dha, cckdblk.dhs, cckdblk.dhmax );
+
+            ++cckdblk.dhs;
+
+            /* Release lock across thread create to prevent interlock  */
+            release_lock( &cckdblk.dhlock_c );
+            {
+                rc = create_thread( &tid, JOINABLE, cckd_dh, NULL, CCKD_DH_THREAD_NAME );
+            }
+            obtain_lock( &cckdblk.dhlock_c );
+
+            if (rc)
+            {
+                // "Error in function create_thread() for %s %d of %d: %s"
+                WRMSG( HHC00106, "E", how_started,
+                    cckdblk.dhs-1, cckdblk.dhmax, strerror( rc ));
+
+                --cckdblk.dhs;
+            }
+        }
+    }
+    release_lock( &cckdblk.dhlock_c );
+}
+
+/*-------------------------------------------------------------------*/
+/* DASD hardener thread                                              */
+/*-------------------------------------------------------------------*/
+void* cckd_dh(void* arg)
+{
+int             dhid;                   /* Identifier                */
+struct timeval  tv_now;                 /* Time-of-day (as timeval)  */
+time_t          tt_now;                 /* Time-of-day (as time_t)   */
+struct timespec tm;                     /* Time-of-day to wait       */
+int             dhs;                    /* Working copy of cckdblk.dhs */
+DEVBLK          *dev;
+CCKD_EXT        *cckd;                  /* -> cckd extension         */
+int             rc;
+
+    UNREFERENCED( arg );
+
+    obtain_lock (&cckdblk.dhlock_t);    // Ensure there's only one running.
+
+    obtain_lock (&cckdblk.dhlock_c);    // Lock the counters.
+    dhid = ++cckdblk.dha;
+
+    /* Return without messages if too many already started */
+    if (dhid > cckdblk.dhmax || cckdblk.dhint == 0)
+    {
+        dhs = --cckdblk.dhs;
+        --cckdblk.dha;
+        release_lock (&cckdblk.dhlock_c);
+
+        if (!dhs)
+        {
+            if (!cckdblk.batch || cckdblk.batchml > 1)
+                // "Thread id "TIDPAT", prio %d, name '%s' ended"
+                LOG_THREAD_END( CCKD_DH_THREAD_NAME  );
+        }
+        else
+            if (!cckdblk.batch || cckdblk.batchml > 0)
+                // "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
+                WRMSG( HHC00108, "W", TID_CAST( thread_id()), CCKD_DH_THREAD_NAME,
+                    get_thread_priority(), dhs, cckdblk.dhmax );
+
+        release_lock( &cckdblk.dhlock_t );
+        signal_condition( &cckdblk.termcond );  /* signal if last thread ending before init. */
+        return NULL;        /* too many already started, return  */
+    }
+    release_lock (&cckdblk.dhlock_c);
+
+    if (!cckdblk.batch || cckdblk.batchml > 1)
+        // "Thread id "TIDPAT", prio %d, name '%s' started"
+        LOG_THREAD_BEGIN( CCKD_DH_THREAD_NAME  );
+
+    while ((dhid <= cckdblk.dhmax) && !sysblk.shutdown)
+    {
+        // "Starting CCKD DASD hardener pass"
+        if (cckdblk.debug) WRMSG( HHC00391, "D" );
+        cckdblk.stats_dhpasses++;
+
+        /* Harden any DASD that have been updated since the last time. */
+        cckd_lock_devchain(0);
+        for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
+        {
+            cckd = dev->cckd_ext;
+            /* Flush the cache and wait for the writes to complete. */
+            obtain_lock( &cckd->cckdiolock );
+            {
+                cckd_flush_cache( dev );
+                if (cckd->needsdh && !cckd->stopping && !sysblk.shutdown) {
+                    CCKD_TRACE("needs hardening");
+                    while (cckd->wrpending || cckd->cckdioact)
+                    {
+                        cckd->cckdwaiters++;
+                        CCKD_TRACE("%s waiting 1 second to complete %d pending writes",
+                            CCKD_DH_THREAD_NAME, cckd->wrpending);
+                        rc = timed_wait_condition_relative_usecs(
+                            &cckd->cckdiocond, &cckd->cckdiolock, 1000000, NULL );
+                        cckd->cckdwaiters--;
+                        if (EINTR == rc)
+                            continue;
+                    }
+                    broadcast_condition( &cckd->cckdiocond );
+                }
+            }
+            release_lock( &cckd->cckdiolock );
+            /* Harden the disk file. */
+            obtain_lock( &cckd->filelock );
+            {
+                if (cckd->needsdh && !cckd->stopping && !sysblk.shutdown) {
+                    cckd_harden (dev);
+                    cckd->needsdh = 0;
+                    CCKD_TRACE("hardened");
+                }
+            }
+            release_lock( &cckd->filelock );
+        }
+        cckd_unlock_devchain();
+
+        // "CCKD DASD hardener pass complete"
+        if (cckdblk.debug) WRMSG( HHC00392, "D" );
+
+        /* Wait a bit before starting the next cycle */
+        gettimeofday (&tv_now, NULL);
+        tt_now = tv_now.tv_sec + ((tv_now.tv_usec + 500000)/1000000);
+        // "0:0000 %s wait %d seconds at %s"
+        if (cckdblk.debug || cckdblk.itrace)
+            // (Can't use CCKD_TRACE - no dev)
+            WRMSG( HHC00393, "I", CCKD_DH_THREAD_NAME, cckdblk.dhint, ctime( &tt_now ));
+        tm.tv_sec = tv_now.tv_sec + cckdblk.dhint;
+        tm.tv_nsec = tv_now.tv_usec * 1000;
+        timed_wait_condition( &cckdblk.dhcond, &cckdblk.dhlock_t, &tm );
+    }
+
+    if (!cckdblk.batch || cckdblk.batchml > 1)
+        // "Thread id "TIDPAT", prio %d, name '%s' ended"
+        LOG_THREAD_END( CCKD_DH_THREAD_NAME );
+
+    obtain_lock( &cckdblk.dhlock_c );
+    {
+        cckdblk.dhs--;
+        cckdblk.dha--;
+
+        dhs = cckdblk.dhs;
+    }
+    release_lock( &cckdblk.dhlock_c );
+
+    release_lock( &cckdblk.dhlock_t );
+
+    if (!dhs)
+        signal_condition( &cckdblk.termcond );
+
+    return NULL;
+} /* end thread cckd_dh */
+
+/*-------------------------------------------------------------------*/
 /* Flush updated cache entries for a device                          */
 /*                                                                   */
 /* Caller holds the cckd->cckdiolock                                 */
@@ -2042,6 +2243,7 @@ BYTE            buf2[ 64*1024 ];        /* 64K Compress buffer       */
 
         /* Write the track image */
         cckd_write_trkimg( dev, bufp, bufl, trk, CCKD_SIZE_ANY );
+        cckd->needsdh = 1;    /* We've updated the file. */
     }
     release_lock( &cckd->filelock );
 
@@ -2077,6 +2279,10 @@ BYTE            buf2[ 64*1024 ];        /* 64K Compress buffer       */
         }
     }
     release_lock( &cckdblk.gclock );
+
+    /* Ensure the DASD hardener is running, if it's supposed to be. */
+    if (cckdblk.dhint > 0)
+        cckd_dhstart(0);
 
     obtain_lock( &cckd->cckdiolock );
     {
@@ -3519,8 +3725,11 @@ int             rc=0;                   /* Return code               */
     if (cckd_write_chdr (dev) < 0)
         rc = -1;
 
-    if (cckdblk.fsync)
+    if (cckdblk.fsync) {
         fdatasync (cckd->fd[cckd->sfn]);
+        cckdblk.stats_fsyncs++;
+    }
+    cckdblk.stats_hardens++;
 
     return rc;
 } /* cckd_harden */
@@ -5071,7 +5280,7 @@ int             gcs;
 
         release_lock( &cckdblk.gclock );
         signal_condition( &cckdblk.termcond );  /* signal if last gcol thread ending before init. */
-        return NULL;        /* back to the shadows again  */
+        return NULL;        /* too many already started, return  */
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
@@ -6104,6 +6313,8 @@ void cckd_command_help()
         , "  comp=<n>      Override compression                 (-1,0,1,2)"
         , "  compparm=<n>  Override compression parm            (-1 ... 9)"
         , "  debug=<n>     Enable CCW tracing debug messages      (0 or 1)"
+        , "  dhint=<n>     Set DASD hardener interval (sec)     (0 ... 60)"
+        , "  dhstart=<n>   Start DASD hardener                    (0 or 1)"
         , "  dtax=<n>      Dump cckd trace table at exit          (0 or 1)"
         , "  freepend=<n>  Set free pending cycles              (-1 ... 4)"
         , "  fsync=<n>     Enable fsync                           (0 or 1)"
@@ -6129,7 +6340,7 @@ void cckd_command_help()
 } /* end function cckd_command_help */
 
 /*-------------------------------------------------------------------*/
-/* cckd command stats                                                */
+/* cckd command opts                                                 */
 /*-------------------------------------------------------------------*/
 void cckd_command_opts()
 {
@@ -6142,20 +6353,16 @@ void cckd_command_opts()
         " "   "comp=%d"
         ","   "compparm=%d"
         ","   "debug=%d"
+        ","   "dhint=%d"
         ","   "dtax=%d"
         ","   "freepend=%d"
-        ","   "fsync=%d"
-        ","   "gcint=%d"
-        ","   "gcmsgs=%d"
 
         , cckdblk.comp == 0xff ? -1 : cckdblk.comp
         , cckdblk.compparm
         , cckdblk.debug
+        , cckdblk.dhint
         , cckdblk.dtax
         , cckdblk.freepend
-        , cckdblk.fsync
-        , cckdblk.gcint
-        , cckdblk.gcmsgs
     );
     WRMSG( HHC00346, "I", msgbuf );
 
@@ -6163,19 +6370,33 @@ void cckd_command_opts()
 
         // ***  Please keep these in alphabetical order!  ***
 
-        " "   "gcparm=%d"
+        " "   "fsync=%d"
+        ","   "gcint=%d"
+        ","   "gcmsgs=%d"
+        ","   "gcparm=%d"
         ","   "linuxnull=%d"
         ","   "nosfd=%d"
-        ","   "nostress=%d"
+
+        , cckdblk.fsync
+        , cckdblk.gcint
+        , cckdblk.gcmsgs
+        , cckdblk.gcparm
+        , cckdblk.linuxnull
+        , cckdblk.nosfd
+    );
+    WRMSG( HHC00346, "I", msgbuf );
+
+    MSGBUF( msgbuf, "          "
+
+        // ***  Please keep these in alphabetical order!  ***
+
+        " "   "nostress=%d"
         ","   "ra=%d"
         ","   "raq=%d"
         ","   "rat=%d"
         ","   "trace=%d"
         ","   "wr=%d"
 
-        , cckdblk.gcparm
-        , cckdblk.linuxnull
-        , cckdblk.nosfd
         , cckdblk.nostress
         , cckdblk.ramax
         , cckdblk.ranbr
@@ -6227,6 +6448,14 @@ void cckd_command_stats()
 
     MSGBUF( msgbuf, "  garbage collector   moves....%10"PRId64" Kbytes...%10"PRId64,
                     cckdblk.stats_gcolmoves, cckdblk.stats_gcolbytes >> SHIFT_1K );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  DASD hardener....   passes...%10"PRId64" hardens..%10"PRId64,
+                    cckdblk.stats_dhpasses, cckdblk.stats_hardens );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  filesyncs........            %10"PRId64,
+                    cckdblk.stats_fsyncs );
     WRMSG( HHC00347, "I", msgbuf );
 
     return;
@@ -6375,6 +6604,35 @@ int   rc;
             {
                 cckdblk.debug = val;
                 opts = 1;
+            }
+        }
+        // Check for DASD hardener interval in seconds
+        else if (CMD( kw, DHINT, 5 ))
+        {
+            if (val < CCKD_MIN_DHINT || val > CCKD_MAX_DHINT)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG( HHC00348, "E", val, kw );
+                return -1;
+            }
+            else
+            {
+                cckdblk.dhint = val;
+                opts = 1;
+            }
+        }
+        // Start DASD hardener
+        else if (CMD( kw, DHSTART, 7 ))
+        {
+            if (val < 0 || val > 1)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG( HHC00348, "E", val, kw );
+                return -1;
+            }
+            else if (val == 1)
+            {
+                cckd_dhstart(1);
             }
         }
         // Dump Table At Exit

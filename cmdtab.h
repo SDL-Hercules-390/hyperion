@@ -221,6 +221,8 @@
   "  comp=n        Override compression                  (-1,0,1,2)\n"          \
   "  compparm=n    Override compression parm             (-1 ... 9)\n"          \
   "  debug=n       Enable CCW tracing debug messages       (0 or 1)\n"          \
+  "  dhint=n       Set DASD hardener interval (sec)      (0 ... 60)\n"          \
+  "  dhstart=n     Start DASD hardener                     (0 or 1)\n"          \
   "  dtax=n        Dump trace table at exit                (0 or 1)\n"          \
   "  freepend=n    Set free pending cycles               (-1 ... 4)\n"          \
   "  fsync=n       Enable fsync                            (0 or 1)\n"          \
