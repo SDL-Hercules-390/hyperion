@@ -48,6 +48,36 @@ Hercules: Release Notes
   </p>
 
 
+  <dt>Compressed CKD/FBA DASD Hardener
+  <dd>
+  <p>
+    This release adds a <i>DASD Hardener</i> function to the Compressed CKD (and FBA)
+    DASD support.
+
+    Prior to this release, under normal operation, DASD data written by a guest OS might
+    not have been commited to the emulation disk files for an unpredictable time, possibly
+    longer might seem reasonable.  On systems with large idle periods (<i>e.g.</i>, hobbyist
+    systems or "shared DASD servers"), such data might have remained uncommitted for hours,
+    or even days.  Any interruption of the host system, or of the Hercules emulator itself,
+    could have resulted in loss of such uncommitted data.  No mechanism existed in those
+    releases to ensure that all data the guest OS has written is permanently recorded to the
+    emulation files.
+
+    This release uses the existing functions in the Compressed DASD subsystem to build an
+    optional thread that periodically scan the DASD cache and flushes updated tracks to the
+    emulation files on a timely basis.  See the <a href="cckddasd.html#cckdcommand">cckd
+    command documentation</a> for details on configuring and controlling the DASD Hardener.
+
+    <b>NOTE:</b> Flushing the DASD data cache frequently may increase the host disk activity,
+    as frequently-updated tracks would be written more often in this scenario.  For
+    largely-idle Hercules systems, this increase will likely have negligable effects.  For
+    busy systems with activity scattered across a broad set of tracks, the data cache should
+    already be flushed often, albeit unpredictably.  For busy systems with more-focused
+    activity, the high-activity tracks will be written to disk more often, which may have
+    measurable negative effects.
+  </p>
+
+
   <dt>(description...)
   <dd>
   <p>
