@@ -473,13 +473,13 @@ mode or simple non-graphical standard command-line mode.
 <p>
 
 The default semi-graphical "panel" mode of operation is invoked by the
-"hercules.exe" executable, and the non-graphical standard command-line
-mode by the "herclin.exe" executable. They are both exactly identical
+"<b>hercules.exe</b>" executable, and the non-graphical standard command-line
+mode by the "<b>herclin.exe</b>" executable. They are both exactly identical
 except for how the terminal screen is managed.
 
 <p>
 
-In the normal (default) semi-graphical "panel" mode, Hercules.exe draws
+In the normal (default) semi-graphical "panel" mode, <b>hercules.exe</b> draws
 to screen directly itself, and does not rely on any terminal manager
 functionality (Terminal or Command-Prompt program). It paints (draws)
 messages and other information (such as its command line and CPU status
@@ -487,25 +487,25 @@ line) on specifc screen lines starting at specific columns, etc:
 
 <br><br>
 <center>
-<img src="images/herc-panel.jpg"><br><br>Hercules managed Hardware Machine Console (HMC)
+<img src="images/herc-panel.jpg"><br><br><b>hercules.exe</b> managed Hardware Machine Console (HMC)
 </center>
 
 <p><br>
 
 It relies on certain keystrokes (such as the PageUp and PageDown keys,
 etc) to perform actions such as displaying previously issued messages
-and switching to its alternate semi-graphical display panel via the Esc.
-key (which shows an overal summary of the machine's state, such as its
+and switching to its alternate semi-graphical display panel via the <b>Esc.
+key</b> (which shows an overal summary of the machine's state, such as its
 current set of register values, list of devices, etc):
 
 <br><br>
 <center>
-<img src="images/herc-panel2.jpg"><br><br>Hercules managed semi-graphical panel
+<img src="images/herc-panel2.jpg"><br><br><b>hercules.exe</b> managed semi-graphical panel
 </center>
 
 <p><br>
 
-When started in standard command-line mode via "herclin.exe", the terminal
+When started in standard command-line mode via "<b>herclin.exe</b>", the terminal
 screen is managed completely by your host operating system's terminal
 management software. Hercules does not paint the screen itself at all. It simply
 issues messages to "stdout" just like any other command-line program and your operating
@@ -517,13 +517,13 @@ of managing the command-line, not Hercules:
 
 <br><br>
 <center>
-<img src="images/herclin.jpg"><br><br><u><i>Unmanaged</i></u> "herclin.exe" terminal screen,<br>
-scrolled back several screens to see previously issued terminal commands.
+<img src="images/herclin.jpg"><br><br><u><i>Unmanaged</i></u> "<b>herclin.exe</b>" terminal
+screen,<br> scrolled back several screens to see previously issued terminal commands.
 </center>
 
 <p><br>
 
-In standard "herclin.exe" command-line mode, Hercules operates just like any other
+In standard "<b>herclin.exe</b>" command-line mode, Hercules operates just like any other
 normal command-line program, and you can use the Terminal's scroll bar (if it has
 one) and/or your mouse's scroll wheel to scroll the screen backward or forward to
 see previously issued mesages and/or commands and their responses. Your host
@@ -1257,7 +1257,7 @@ panel commands:
 The <em>ipl</em> command may also be used to perform a load from cdrom or
 server.  For example if a standard SuSE S/390 Linux distribution CD is loaded
 and mounted on /cdrom for example, this cdrom may then be ipl-ed by:
-<em>ipl /cdrom/suse.ins</em>
+<em><code>ipl /cdrom/suse.ins</code></em>
 <p>
 The <em>attach</em> and <em>detach</em> commands are used to dynamically
 add or remove devices from the configuration,
@@ -1279,15 +1279,16 @@ There is also an alternate semi-graphical control panel.  Press Esc to
 switch between the command line format and the semi-graphical format.
 Press ? to obtain help in either control panel.
 <p>
-When a command is prefixed with '-', the the command will not be redisplayed at
-the console. This can be used in scripts and is also used internally when commands
-are to be invoked without being redisplayed at the panel.
+When a command is prefixed with <code>'-'</code> (minus sign or dash), then
+the command will not be redisplayed at the console. This can be used in scripts
+and is also used internally when commands are to be invoked without being
+redisplayed at the panel.
 
 <br /><br />
 <a name="morehelp"></a>
 <b>Additional Command Help</b><br /><br />
 Some commands also offer additional help information regarding their syntax,
-etc. Enter&nbsp; "<tt>help <i>&lt;command name&gt;</i></tt>" &nbsp; to display
+etc. Enter&nbsp; "<code>help <i>&lt;command name&gt;</i></code>" &nbsp; to display
 this additional help information. (Note: not every command supports additional help)
 
 <br /><br />
@@ -1304,7 +1305,7 @@ read and interpreted as a panel command exactly as if the command were
 entered from the HMC system console.
 <p>
 The default filename for the run-commands file is "hercules.rc", but may be
-overridden by setting the "<tt><b>HERCULES_RC</b></tt>" environment variable to the
+overridden by setting the "<code><b>HERCULES_RC</b></code>" environment variable to the
 desired filename.
 <p>
 Except for the 'pause' command (see paragraph further below), each command
@@ -1312,15 +1313,15 @@ read from the run-commands file is logged to the console preceded by a '> '
 (greater-than sign) character so you can easily distinguish between panel
 commands entered from the keyboard from those entered via the .rc file.
 <p>
-Lines starting with '<tt>#</tt>' are treated as "silent comments" and are
-thus not logged to the console. Line starting with '<tt>*</tt>' however are
+Lines starting with '<code>#</code>' (pound or hash) are treated as "silent comments" and are
+thus not logged to the console. Line starting with '<code>*</code>' (asterisk) however are
 treated as "loud comments" and <i>will</i> be logged.
 <p>
 In addition to being able to execute any valid panel command (including the
-'sh' shell command) via the run-commands file, an additional
-'<tt><b>pause <i>nnn</i></b></tt>' command is supported in order to introduce
+<code>'sh'</code> shell command) via the run-commands file, an additional
+'<code><b>pause <i>nnn</i></b></code>' command is supported in order to introduce
 a brief delay before reading and processing the next line in the file. The
-value <tt><i>nnn</i></tt> can be any number from 0.001 to 999.0 and specifies
+value <code><i>nnn</i></code> can be any number from 0.001 to 999.0 and specifies
 the number of seconds to delay before reading the next line. Creative use of
 the run-commands file can completely automate Hercules startup.
 
@@ -1339,13 +1340,13 @@ To use the Hercules Automatic Operator facility, you first define a "rule"
 consisting of a "target" and an associated "command". The "target" is
 a regular expression pattern used to match against the text of the various
 messages that Hercules issues as it runs. Whenever a match is found, the
-rule "fires" and its associated command is automatically issued.
+rule "fires" (is triggered) and its associated command is automatically issued.
 <p>
 The Hercules Automatic Operator facility only operates on messages issued
 to the Hercules console. These messages may originate from Hercules itself,
 or from the guest operating system via the SCP SYSCONS interface or via the
 integrated console printer-keyboard (3215-C or 1052-C). HAO cannot intercept
-messages issued by the guest operating system to its own terminals.
+messages issued by the guest operating system to its own 3270 terminals.
 
 <h5>Defining a Rule</h5>
 <p>
@@ -1354,13 +1355,13 @@ To define a HAO rule, enter the command:
    hao tgt <i>target</i>
 </pre>
 <p>
-to define the rule's "target" match pattern
-followed by the command:
+to define the rule's "target" match pattern,
+followed by a second command:
 <pre>
    hao cmd <i>command</i>
 </pre>
 <p>
-to define the rule's associated panel-command.
+to define that rule's associated panel-command.
 <p>
 The <i>target</i> is a regular expression as defined by your host platform.
 When running on Linux, Hercules uses POSIX Extended Regular Expression syntax.
