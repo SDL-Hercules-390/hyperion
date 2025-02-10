@@ -3272,7 +3272,7 @@ DEF_INST( vector_find_element_not_equal )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     zf = nef = FALSE;
-    zf = nei = 16;  // Number of bytes in vector
+    zi = nei = 16;  // Number of bytes in vector
     newcc = 3;  // All equal, no zero
 
     switch (m4)
