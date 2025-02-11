@@ -123,7 +123,7 @@ void __cdecl tt32_output_debug_string( const char* debug_string )
             *nl2 = 0;
         if (*p2)
             // "DBG: %s"
-            WRMSG ( HHC90000, "D", p2 );
+            WRMSG ( HHC90032, "D", p2 );
     }
 
     free(p);
