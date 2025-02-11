@@ -480,6 +480,8 @@ static void* watchdog_thread( void* arg )
 
     UNREFERENCED( arg );
 
+    LOG_THREAD_BEGIN( WATCHDOG_THREAD_NAME );
+
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
         savecount[ cpu ] = -1;
 
@@ -527,10 +529,21 @@ static void* watchdog_thread( void* arg )
         } /* (end for (slept_secs ...) */
 
 #if defined( _MSVC_ )
-        // Disable all watchdog logic while debugger is attached
-        if (IsDebuggerPresent())
-            continue;
+
+        // If watchdog is NOT allowed while debugging (the default),
+        // then disable all watchdog logic while debugger is attached.
+        //
+        // This allows the developer to debug other areas of Hercules
+        // without the watchdog interfering with their debugging.
+        //
+        // Otherwise, if watchdog *IS* allowed while debugging (set
+        // via "$TEST WD YES" command), proceed with normal watchdog
+        // processing...
+
+        if (!sysblk.allow_wd_debugging && IsDebuggerPresent())
+            continue; // (neuter watchdog while they're debugging)
 #endif
+
         /* Check for and report any deadlocks */
         if (hthread_report_deadlocks( deadlock_reported ? NULL : "S" ))
         {
@@ -629,35 +642,65 @@ static void* watchdog_thread( void* arg )
         if (deadlock_reported || hung_cpu_reported)
         {
 #if defined( _MSVC_ )
+
             // Give developer time to attach a debugger before crashing
             // If they do so, then prevent the crash from occurring as
             // long as their debugger is still attached, but once they
             // detach their debugger, then go ahead and allow the crash
 
-            // "You have %d seconds to attach a debugger before crash dump will be taken!"
-            WRMSG( HHC00823, "S", WAIT_FOR_DEBUGGER_SECS );
+            if (!sysblk.allow_wd_debugging)
             {
-                int i;
-                for (i=0; !IsDebuggerPresent() && i < WAIT_FOR_DEBUGGER_SECS; ++i)
-                    SLEEP( 1 );
+                static bool didwait = false;
+
+                if (!didwait)
+                {
+                    // "You have %d seconds to attach a debugger before crash dump will be taken!"
+                    WRMSG( HHC00823, "S", WAIT_FOR_DEBUGGER_SECS );
+
+                    // Wait for them to attach a debugger if desired...
+                    {
+                        int i;
+                        for (i=0; !IsDebuggerPresent() && i < WAIT_FOR_DEBUGGER_SECS; ++i)
+                            SLEEP( 1 );
+                    }
+
+                    didwait = true;
+                }
 
                 // Don't crash if there is now a debugger attached
                 if (IsDebuggerPresent())
                 {
                     // "Debugger attached! NOT crashing!"
                     WRMSG( HHC00824, "S" );
-                    continue;
+                    continue; // (they're still debugging; prevent crashing)
                 }
-
-                // "TIME'S UP! (or debugger has been detached!) - Forcing crash dump!"
-                WRMSG( HHC00825, "S" );
             }
-#endif
+
+            // "Creating crash dump!"
+            WRMSG( HHC00825, "S" );
+
+#endif // defined( _MSVC_ )
+
             /* Display additional debugging information */
+            panel_command( "*" );
+            panel_command( "*" );
+            panel_command( "*" );
             panel_command( "ptt" );
+            panel_command( "*" );
+            panel_command( "*" );
+            panel_command( "*" );
             panel_command( "ipending" );
-            panel_command( "locks held sort tid" );
-            panel_command( "threads waiting sort tid" );
+            panel_command( "*" );
+            panel_command( "*" );
+            panel_command( "*" );
+            panel_command( "threads waiting sort tod" );
+            panel_command( "*" );
+            panel_command( "*" );
+            panel_command( "*" );
+            panel_command( "locks held sort tod" );
+            panel_command( "*" );
+            panel_command( "*" );
+            panel_command( "*" );
 
             /* Display the instruction each hung CPU was executing */
             if (hung_cpus_mask)
@@ -688,6 +731,8 @@ static void* watchdog_thread( void* arg )
         }
     }
     while (!sysblk.shutdown);
+
+    LOG_THREAD_END( WATCHDOG_THREAD_NAME );
 
     return NULL;
 }

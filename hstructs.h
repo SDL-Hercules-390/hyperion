@@ -706,6 +706,7 @@ struct SYSBLK {
         */
         bool    sys_suspended;          /* System has been suspended */
         bool    sys_resumed;            /* System has been resumed   */
+        bool    allow_wd_debugging;     /* allow watchdog debugging  */
 #endif
 #endif
         enum OPERATION_MODE operation_mode; /* CPU operation mode    */
