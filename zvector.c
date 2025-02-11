@@ -5348,6 +5348,9 @@ DEF_INST( vector_multiply_sum_logical )
 {
     int     v1, v2, v3, v4, m5, m6;
     U128    intere, intero;
+#if defined( _MSVC_ )
+    U128    copyv4;
+#endif
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -5366,7 +5369,12 @@ DEF_INST( vector_multiply_sum_logical )
         if (M6_OS)
             intero = U128_U32_mul( intero, 2 );  // Shift left
         intere = U128_add( intere, intero );
+#if defined( _MSVC_ )
+        copyv4.Q = regs->VR_Q(v4);
+        intere = U128_add( intere, copyv4 );
+#else
         intere = U128_add( intere, (U128)regs->VR_Q(v4) );
+#endif
         regs->VR_Q(v1) = intere.Q;
         break;
     default:
@@ -5427,6 +5435,9 @@ DEF_INST( vector_add_with_carry )
 {
     int     v1, v2, v3, v4, m5, m6;
     U128    inter, rmost;
+#if defined( _MSVC_ )
+    U128    copyv2, copyv3;
+#endif
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -5438,7 +5449,13 @@ DEF_INST( vector_add_with_carry )
     switch (m5)
     {
     case 4:  /* Quadword */
+#if defined( _MSVC_ )
+        copyv2.Q = regs->VR_Q(v2);
+        copyv3.Q = regs->VR_Q(v3);
+        inter = U128_add( copyv2, copyv3 );
+#else
         inter = U128_add( (U128)regs->VR_Q(v2), (U128)regs->VR_Q(v3) );
+#endif
         if (regs->VR_D( v4, 1 ) & 0x0000000000000001ull)
         {
             rmost.Q.D.H.D = 0;
@@ -6257,6 +6274,9 @@ DEF_INST(vector_add)
 {
     int     v1, v2, v3, m4, m5, m6, i;
     U128    temp;
+#if defined( _MSVC_ )
+    U128    copyv2, copyv3;
+#endif
 
     VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
 
@@ -6289,7 +6309,13 @@ DEF_INST(vector_add)
         }
         break;
     case 4:  /* Quadword */
+#if defined( _MSVC_ )
+        copyv2.Q = regs->VR_Q(v2);
+        copyv3.Q = regs->VR_Q(v3);
+        temp = U128_add( copyv2, copyv3 );
+#else
         temp = U128_add( (U128)regs->VR_Q(v2), (U128)regs->VR_Q(v3) );
+#endif
         regs->VR_Q(v1) = temp.Q;
         break;
     default:
@@ -6361,6 +6387,9 @@ DEF_INST(vector_subtract)
 {
     int     v1, v2, v3, m4, m5, m6, i;
     U128    temp;
+#if defined( _MSVC_ )
+    U128    copyv2, copyv3;
+#endif
 
     VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
 
@@ -6393,7 +6422,13 @@ DEF_INST(vector_subtract)
         }
         break;
     case 4:  /* Quadword */
+#if defined( _MSVC_ )
+        copyv2.Q = regs->VR_Q(v2);
+        copyv3.Q = regs->VR_Q(v3);
+        temp = U128_sub( copyv2, copyv3 );
+#else
         temp = U128_sub( (U128)regs->VR_Q(v2), (U128)regs->VR_Q(v3) );
+#endif
         regs->VR_Q(v1) = temp.Q;
         break;
     default:
