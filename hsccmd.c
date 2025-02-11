@@ -451,6 +451,7 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
             LOGMSG("+++ $test 33: After  BREAK_INTO_DEBUGGER(): sysblk.is_debugger_present = %s\n",
                 sysblk.is_debugger_present ? "true" : "false" );
         }
+#if defined( OPTION_WATCHDOG )
         else if (CMD( argv[1], WD, 2 ))
         {
             if (argc > 2)
@@ -471,6 +472,7 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
             LOGMSG("$TEST: allow watchdog while debugging = %s\n",
                 sysblk.allow_wd_debugging ? "yes" : "no" );
         }
+#endif // defined( OPTION_WATCHDOG )
         else
         {
             // "%s%s"

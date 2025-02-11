@@ -1001,19 +1001,19 @@ DEF_INST( vector_load_gr_from_vr_element )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         i %= 16;
         regs->GR( r1 ) = regs->VR_B( v3, i );
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         i %= 8;
         regs->GR( r1 ) = regs->VR_H( v3, i );
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         i %= 4;
         regs->GR( r1 ) = regs->VR_F( v3, i );
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         i %= 2;
         regs->GR( r1 ) = regs->VR_D( v3, i );
         break;
@@ -1054,19 +1054,19 @@ DEF_INST( vector_load_vr_element_from_gr )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         i %= 16;
         regs->VR_B( v1, i ) = regs->GR_LHLCL( r3 );
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         i %= 8;
         regs->VR_H( v1, i ) = regs->GR_LHL  ( r3 );
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         i %= 4;
         regs->VR_F( v1, i ) = regs->GR_L    ( r3 );
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         i %= 2;
         regs->VR_D( v1, i ) = regs->GR_G    ( r3 );
         break;
@@ -1714,14 +1714,14 @@ DEF_INST( vector_population_count )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             count = OneBitsInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             count = 0;
@@ -1732,7 +1732,7 @@ DEF_INST( vector_population_count )
             regs->VR_H(v1, i) = count;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             count = 0;
@@ -1743,7 +1743,7 @@ DEF_INST( vector_population_count )
             regs->VR_F(v1, i) = count;
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
             count = 0;
@@ -1800,14 +1800,14 @@ DEF_INST( vector_count_trailing_zeros )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             count = TrailingZerosInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             count = 0;
@@ -1820,7 +1820,7 @@ DEF_INST( vector_count_trailing_zeros )
             regs->VR_H(v1, i) = count;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             count = 0;
@@ -1833,7 +1833,7 @@ DEF_INST( vector_count_trailing_zeros )
             regs->VR_F(v1, i) = count;
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
             count = 0;
@@ -1892,14 +1892,14 @@ DEF_INST( vector_count_leading_zeros )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             count = LeadingZerosInByte[regs->VR_B(v2, i)];
             regs->VR_B(v1, i) = count;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             count = 0;
@@ -1912,7 +1912,7 @@ DEF_INST( vector_count_leading_zeros )
             regs->VR_H(v1, i) = count;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             count = 0;
@@ -1925,7 +1925,7 @@ DEF_INST( vector_count_leading_zeros )
             regs->VR_F(v1, i) = count;
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
             count = 0;
@@ -1987,7 +1987,7 @@ DEF_INST( vector_isolate_string )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             if (regs->VR_B(v2, i) != 0)
@@ -2005,7 +2005,7 @@ DEF_INST( vector_isolate_string )
             }
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             if (regs->VR_H(v2, i) != 0)
@@ -2023,7 +2023,7 @@ DEF_INST( vector_isolate_string )
             }
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             if (regs->VR_F(v2, i) != 0)
@@ -2072,7 +2072,7 @@ DEF_INST( vector_sign_extend_to_doubleword )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         element = regs->VR_B(v2, 7);
         if (element & 0x0000000000000080ull)
             element |= 0xFFFFFFFFFFFFFF00ull;
@@ -2082,7 +2082,7 @@ DEF_INST( vector_sign_extend_to_doubleword )
             element |= 0xFFFFFFFFFFFFFF00ull;
         regs->VR_D(v1, 1) = element;
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         element = regs->VR_H(v2, 3);
         if (element & 0x0000000000008000ull)
             element |= 0xFFFFFFFFFFFF0000ull;
@@ -2092,7 +2092,7 @@ DEF_INST( vector_sign_extend_to_doubleword )
             element |= 0xFFFFFFFFFFFF0000ull;
         regs->VR_D(v1, 1) = element;
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         element = regs->VR_F(v2, 1);
         if (element & 0x0000000080000000ull)
             element |= 0xFFFFFFFF00000000ull;
@@ -2129,28 +2129,28 @@ DEF_INST( vector_merge_low )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for ( i=0, j=8; i<16; i+=2, j++ )
         {
             SV_B( temp, i   ) = regs->VR_B( v2, j );
             SV_B( temp, i+1 ) = regs->VR_B( v3, j );
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for ( i=0, j=4; i<8; i+=2, j++ )
         {
             SV_H( temp, i   ) = regs->VR_H( v2, j );
             SV_H( temp, i+1 ) = regs->VR_H( v3, j );
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for ( i=0, j=2; i<4; i+=2, j++ )
         {
             SV_F( temp, i   ) = regs->VR_F( v2, j );
             SV_F( temp, i+1 ) = regs->VR_F( v3, j );
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         SV_D( temp, 0 ) = regs->VR_D( v2, 1 );
         SV_D( temp, 1 ) = regs->VR_D( v3, 1 );
         break;
@@ -2184,28 +2184,28 @@ DEF_INST( vector_merge_high )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for ( i=0, j=0; i<16; i+=2, j++ )
         {
             SV_B( temp, i   ) = regs->VR_B( v2, j );
             SV_B( temp, i+1 ) = regs->VR_B( v3, j );
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for ( i=0, j=0; i<8; i+=2, j++ )
         {
             SV_H( temp, i   ) = regs->VR_H( v2, j );
             SV_H( temp, i+1 ) = regs->VR_H( v3, j );
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for ( i=0, j=0; i<4; i+=2, j++ )
         {
             SV_F( temp, i   ) = regs->VR_F( v2, j );
             SV_F( temp, i+1 ) = regs->VR_F( v3, j );
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         SV_D( temp, 0 ) = regs->VR_D( v2, 0 );
         SV_D( temp, 1 ) = regs->VR_D( v3, 0 );
         break;
@@ -2256,7 +2256,7 @@ DEF_INST( vector_sum_across_word )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i = 0, j = 0; i < 4; i++, j+=4)
         {
             sum[i] = 0;
@@ -2267,7 +2267,7 @@ DEF_INST( vector_sum_across_word )
             sum[i] += regs->VR_B(v3, j+3);
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i = 0, j = 0; i < 4; i++, j+=2)
         {
             sum[i] = 0;
@@ -2308,7 +2308,7 @@ DEF_INST( vector_sum_across_doubleword )
 
     switch (m4)
     {
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i = 0, j = 0; i < 2; i++, j+=4)
         {
             sum[i] = 0;
@@ -2319,7 +2319,7 @@ DEF_INST( vector_sum_across_doubleword )
             sum[i] += regs->VR_H(v3, j+3);
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i = 0, j = 0; i < 2; i++, j+=2)
         {
             sum[i] = 0;
@@ -2407,14 +2407,14 @@ DEF_INST( vector_sum_across_quadword )
 
     switch (m4)
     {
-    case 2:  /* Word */
+    case 2:  // Word
         for (i = 0; i < 4; i++)
         {
             add += regs->VR_F(v2, i);
         }
         add += regs->VR_F(v3, 3);
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         low = regs->VR_D(v2, 0);
         add = low + regs->VR_D(v2, 1);
         if (add < low) high++;
@@ -2672,7 +2672,7 @@ DEF_INST( vector_element_rotate_and_insert_under_mask )
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             sl = i4 % 8;
@@ -2682,7 +2682,7 @@ DEF_INST( vector_element_rotate_and_insert_under_mask )
             regs->VR_B( v1, i ) = temp.b[0] | temp.b[1];
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             sl = i4 % 16;
@@ -2692,7 +2692,7 @@ DEF_INST( vector_element_rotate_and_insert_under_mask )
             regs->VR_H( v1, i ) = temp.h[0] | temp.h[1];
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             sl = i4 % 32;
@@ -2702,7 +2702,7 @@ DEF_INST( vector_element_rotate_and_insert_under_mask )
             regs->VR_F( v1, i ) = temp.f[0] | temp.f[1];
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
             sl = i4 % 64;
@@ -2738,7 +2738,7 @@ DEF_INST( vector_element_rotate_left_logical_vector )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             sl = regs->VR_B( v3, i ) % 8;
@@ -2746,7 +2746,7 @@ DEF_INST( vector_element_rotate_left_logical_vector )
             regs->VR_B( v1, i ) = (regs->VR_B( v2, i ) << sl) | (regs->VR_B( v2, i ) >> sr);
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             sl = regs->VR_H( v3, i ) % 16;
@@ -2754,7 +2754,7 @@ DEF_INST( vector_element_rotate_left_logical_vector )
             regs->VR_H( v1, i ) = (regs->VR_H( v2, i ) << sl) | (regs->VR_H( v2, i ) >> sr);
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             sl = regs->VR_F( v3, i ) % 32;
@@ -2762,7 +2762,7 @@ DEF_INST( vector_element_rotate_left_logical_vector )
             regs->VR_F( v1, i ) = (regs->VR_F( v2, i ) << sl) | (regs->VR_F( v2, i ) >> sr);
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
             sl = regs->VR_D( v3, i ) % 64;
@@ -2886,28 +2886,28 @@ DEF_INST( vector_element_shift_right_logical_vector )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             shift = regs->VR_B( v3, i ) % 8;
             regs->VR_B( v1, i ) = regs->VR_B( v2, i ) >> shift;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             shift = regs->VR_H( v3, i ) % 16;
             regs->VR_H( v1, i ) = regs->VR_H( v2, i ) >> shift;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             shift = regs->VR_F( v3, i ) % 32;
             regs->VR_F( v1, i ) = regs->VR_F( v2, i ) >> shift;
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
             shift = regs->VR_D( v3, i ) % 64;
@@ -2940,28 +2940,28 @@ DEF_INST( vector_element_shift_right_arithmetic_vector )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             shift = regs->VR_B( v3, i ) % 8;
             regs->VR_B( v1, i ) = (S8) regs->VR_B( v2, i ) >> shift;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             shift = regs->VR_H( v3, i ) % 16;
             regs->VR_H( v1, i ) = (S16) regs->VR_H( v2, i ) >> shift;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             shift = regs->VR_F( v3, i ) % 32;
             regs->VR_F( v1, i ) = (S32) regs->VR_F( v2, i ) >> shift;
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
             shift = regs->VR_D( v3, i ) % 64;
@@ -3135,7 +3135,7 @@ DEF_INST( vector_find_element_equal )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i<16; i++)
         {
             if (regs->VR_B(v2,i) == regs->VR_B(v3,i))
@@ -3158,7 +3158,7 @@ DEF_INST( vector_find_element_equal )
             }
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i<8; i++)
         {
             if (regs->VR_H(v2,i) == regs->VR_H(v3,i))
@@ -3181,7 +3181,7 @@ DEF_INST( vector_find_element_equal )
             }
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i<4; i++)
         {
             if (regs->VR_F(v2,i) == regs->VR_F(v3,i))
@@ -3277,7 +3277,7 @@ DEF_INST( vector_find_element_not_equal )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i<16; i++)
         {
             if (regs->VR_B(v2,i) != regs->VR_B(v3,i))
@@ -3301,7 +3301,7 @@ DEF_INST( vector_find_element_not_equal )
             }
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i<8; i++)
         {
             if (regs->VR_H(v2,i) != regs->VR_H(v3,i))
@@ -3325,7 +3325,7 @@ DEF_INST( vector_find_element_not_equal )
             }
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i<4; i++)
         {
             if (regs->VR_F(v2,i) != regs->VR_F(v3,i))
@@ -3441,7 +3441,7 @@ DEF_INST( vector_find_any_element_equal )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i<16; i++)
         {
             // Compare the element of the second with the elements of the third operands
@@ -3479,7 +3479,7 @@ DEF_INST( vector_find_any_element_equal )
             regs->VR_D(v1, 1) = 0;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i<8; i++)
         {
             // Compare the element of the second with the elements of the third operands
@@ -3517,7 +3517,7 @@ DEF_INST( vector_find_any_element_equal )
             regs->VR_D(v1, 1) = 0;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i<4; i++)
         {
             // Compare the element of the second with the elements of the third operands
@@ -3564,13 +3564,13 @@ DEF_INST( vector_find_any_element_equal )
     {
         switch (m4)
         {
-        case 0:  /* Byte */
+        case 0:  // Byte
             lxt1 = lxt2 = mxt = 16;
             break;
-        case 1:  /* Halfword */
+        case 1:  // Halfword
             lxt1 = lxt2 = mxt = 8;
             break;
-        case 2:  /* Word */
+        case 2:  // Word
             lxt1 = lxt2 = mxt = 4;
             break;
         default:  // Prevent erroneous "may be used uninitialized" warnings
@@ -3800,7 +3800,7 @@ DEF_INST( vector_string_range_compare )
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i<16; i++)
         {
             // Compare the element of the second operand with the ranges
@@ -3842,7 +3842,7 @@ DEF_INST( vector_string_range_compare )
             regs->VR_D(v1, 1) = 0;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  //Halfword
         for (i=0; i<8; i++)
         {
             // Compare the element of the second operand with the ranges
@@ -3884,7 +3884,7 @@ DEF_INST( vector_string_range_compare )
             regs->VR_D(v1, 1) = 0;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i<4; i++)
         {
             // Compare the element of the second operand with the ranges
@@ -3935,13 +3935,13 @@ DEF_INST( vector_string_range_compare )
     {
         switch (m5)
         {
-        case 0:  /* Byte */
+        case 0:  // Byte
             lxt1 = lxt2 = mxt = 16;
             break;
-        case 1:  /* Halfword */
+        case 1:  // Halfword
             lxt1 = lxt2 = mxt = 8;
             break;
-        case 2:  /* Word */
+        case 2:  // Word
             lxt1 = lxt2 = mxt = 4;
             break;
         default:  // Prevent erroneous "may be used uninitialized" warnings
@@ -4275,19 +4275,19 @@ DEF_INST( vector_pack )
 
     switch (m4)
     {
-    case 1:  /* Halfword: Low-order bytes from halfwords */
+    case 1:  // Low-order bytes from 16 halfwords
         for ( i = 0; i < 16; i++ )
         {
             regs->VR_B( v1, i ) = SV_B( temp, (i*2)+1 );
         }
         break;
-    case 2:  /* Word: Low-order halfwords from words */
+    case 2:  // Low-order halfwords from 8 fullwords
         for ( i = 0; i < 8; i++ )
         {
             regs->VR_H( v1, i ) = SV_H( temp, (i*2)+1 );
         }
         break;
-    case 3:  /* Doubleword: Low-order words from doublewords */
+    case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
             regs->VR_F( v1, i ) = SV_F( temp, (i*2)+1 );
@@ -4326,7 +4326,7 @@ DEF_INST(vector_pack_logical_saturate)
 
     switch (m4)
     {
-    case 1:  /* Halfword: Low-order bytes from halfwords */
+    case 1:  // Low-order bytes from 16 halfwords
         for ( i = 0; i < 16; i++ )
         {
             if ( SV_H( temp, i ) <= 0x00FF )
@@ -4341,7 +4341,7 @@ DEF_INST(vector_pack_logical_saturate)
         }
         allsat = 16;
         break;
-    case 2:  /* Word: Low-order halfwords from words */
+    case 2:  // Low-order halfwords from 8 fullwords
         for ( i = 0; i < 8; i++ )
         {
             if ( SV_F( temp, i ) <= 0x0000FFFF )
@@ -4356,7 +4356,7 @@ DEF_INST(vector_pack_logical_saturate)
         }
         allsat = 8;
         break;
-    case 3:  /* Doubleword: Low-order words from doublewords */
+    case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
             if ( SV_D( temp, i ) <= 0x00000000FFFFFFFFull )
@@ -4423,7 +4423,7 @@ DEF_INST( vector_pack_saturate )
 
     switch (m4)
     {
-    case 1:  /* Halfword: Low-order bytes from halfwords */
+    case 1:  // Low-order bytes from 16 halfwords
         for ( i = 0; i < 16; i++ )
         {
             if ( !( SV_H( temp, i ) & 0x8000 ) )
@@ -4453,7 +4453,7 @@ DEF_INST( vector_pack_saturate )
         }
         allsat = 16;
         break;
-    case 2:  /* Word: Low-order halfwords from words */
+    case 2:  // Low-order halfwords from 8 fullwords
         for ( i = 0; i < 8; i++ )
         {
             if ( !( SV_F( temp, i ) & 0x80000000 ) )
@@ -4483,7 +4483,7 @@ DEF_INST( vector_pack_saturate )
         }
         allsat = 8;
         break;
-    case 3:  /* Doubleword: Low-order words from doublewords */
+    case 3:  // Low-order fullwords from 4 doublewords
         for ( i = 0; i < 4; i++ )
         {
             if ( !( SV_D( temp, i ) & 0x8000000000000000ull ) )
@@ -4559,7 +4559,7 @@ DEF_INST( vector_multiply_logical_high )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             temp.h = regs->VR_B(v2, i);
@@ -4567,7 +4567,7 @@ DEF_INST( vector_multiply_logical_high )
             regs->VR_B(v1, i) = temp.h >> 8;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             temp.f = regs->VR_H(v2, i);
@@ -4575,7 +4575,7 @@ DEF_INST( vector_multiply_logical_high )
             regs->VR_H(v1, i) = temp.f >> 16;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             temp.d = regs->VR_F(v2, i);
@@ -4610,7 +4610,7 @@ DEF_INST( vector_multiply_low )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             temp.h = regs->VR_B(v2, i);
@@ -4618,7 +4618,7 @@ DEF_INST( vector_multiply_low )
             regs->VR_B(v1, i) = temp.h & 0xFF;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             temp.f = regs->VR_H(v2, i);
@@ -4626,7 +4626,7 @@ DEF_INST( vector_multiply_low )
             regs->VR_H(v1, i) = temp.f & 0xFFFF;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             temp.d = regs->VR_F(v2, i);
@@ -4661,7 +4661,7 @@ DEF_INST( vector_multiply_high )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             temp.sh = (S8)regs->VR_B(v2, i);
@@ -4669,7 +4669,7 @@ DEF_INST( vector_multiply_high )
             regs->VR_B(v1, i) = temp.sh >> 8;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             temp.sf = (S16)regs->VR_H(v2, i);
@@ -4677,7 +4677,7 @@ DEF_INST( vector_multiply_high )
             regs->VR_H(v1, i) = temp.sf >> 16;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             temp.sd = (S32)regs->VR_F(v2, i);
@@ -4712,7 +4712,7 @@ DEF_INST( vector_multiply_logical_even )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0, j=0; i < 16; i+=2, j++)
         {
             temp.h = regs->VR_B(v2, i);
@@ -4720,7 +4720,7 @@ DEF_INST( vector_multiply_logical_even )
             regs->VR_H(v1, j) = temp.h;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0, j=0; i < 8; i+=2, j++)
         {
             temp.f = regs->VR_H(v2, i);
@@ -4728,7 +4728,7 @@ DEF_INST( vector_multiply_logical_even )
             regs->VR_F(v1, j) = temp.f;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0, j=0; i < 4; i+=2, j++)
         {
             temp.d = regs->VR_F(v2, i);
@@ -4763,7 +4763,7 @@ DEF_INST( vector_multiply_logical_odd )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=1, j=0; i < 16; i+=2, j++)
         {
             temp.h = regs->VR_B(v2, i);
@@ -4771,7 +4771,7 @@ DEF_INST( vector_multiply_logical_odd )
             regs->VR_H(v1, j) = temp.h;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=1, j=0; i < 8; i+=2, j++)
         {
             temp.f = regs->VR_H(v2, i);
@@ -4779,7 +4779,7 @@ DEF_INST( vector_multiply_logical_odd )
             regs->VR_F(v1, j) = temp.f;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=1, j=0; i < 4; i+=2, j++)
         {
             temp.d = regs->VR_F(v2, i);
@@ -4814,7 +4814,7 @@ DEF_INST( vector_multiply_even )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0, j=0; i < 16; i+=2, j++)
         {
             temp.sh = (S8)regs->VR_B(v2, i);
@@ -4822,7 +4822,7 @@ DEF_INST( vector_multiply_even )
             regs->VR_H(v1, j) = temp.sh;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0, j=0; i < 8; i+=2, j++)
         {
             temp.sf = (S16)regs->VR_H(v2, i);
@@ -4830,7 +4830,7 @@ DEF_INST( vector_multiply_even )
             regs->VR_F(v1, j) = temp.sf;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0, j=0; i < 4; i+=2, j++)
         {
             temp.sd = (S32)regs->VR_F(v2, i);
@@ -4865,7 +4865,7 @@ DEF_INST( vector_multiply_odd )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=1, j=0; i < 16; i+=2, j++)
         {
             temp.sh = (S8)regs->VR_B(v2, i);
@@ -4873,7 +4873,7 @@ DEF_INST( vector_multiply_odd )
             regs->VR_H(v1, j) = temp.sh;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=1, j=0; i < 8; i+=2, j++)
         {
             temp.sf = (S16)regs->VR_H(v2, i);
@@ -4881,7 +4881,7 @@ DEF_INST( vector_multiply_odd )
             regs->VR_F(v1, j) = temp.sf;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=1, j=0; i < 4; i+=2, j++)
         {
             temp.sd = (S32)regs->VR_F(v2, i);
@@ -4915,7 +4915,7 @@ DEF_INST( vector_multiply_and_add_logical_high )
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             temp.h = regs->VR_B(v2, i);
@@ -4924,7 +4924,7 @@ DEF_INST( vector_multiply_and_add_logical_high )
             regs->VR_B(v1, i) = temp.h >> 8;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             temp.f = regs->VR_H(v2, i);
@@ -4933,7 +4933,7 @@ DEF_INST( vector_multiply_and_add_logical_high )
             regs->VR_H(v1, i) = temp.f >> 16;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             temp.d = regs->VR_F(v2, i);
@@ -4968,7 +4968,7 @@ DEF_INST(vector_multiply_and_add_low)
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             temp.h = regs->VR_B(v2, i);
@@ -4977,7 +4977,7 @@ DEF_INST(vector_multiply_and_add_low)
             regs->VR_B(v1, i) = temp.h & 0xFF;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             temp.f = regs->VR_H(v2, i);
@@ -4986,7 +4986,7 @@ DEF_INST(vector_multiply_and_add_low)
             regs->VR_H(v1, i) = temp.f & 0xFFFF;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             temp.d = regs->VR_F(v2, i);
@@ -5021,7 +5021,7 @@ DEF_INST( vector_multiply_and_add_high )
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             temp.sh = (S8)regs->VR_B(v2, i);
@@ -5030,7 +5030,7 @@ DEF_INST( vector_multiply_and_add_high )
             regs->VR_B(v1, i) = temp.sh >> 8;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             temp.sf = (S16)regs->VR_H(v2, i);
@@ -5039,7 +5039,7 @@ DEF_INST( vector_multiply_and_add_high )
             regs->VR_H(v1, i) = temp.sf >> 16;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             temp.sd = (S32)regs->VR_F(v2, i);
@@ -5074,7 +5074,7 @@ DEF_INST( vector_multiply_and_add_logical_even )
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0, j=0; i < 16; i+=2, j++)
         {
             temp.h = regs->VR_B(v2, i);
@@ -5083,7 +5083,7 @@ DEF_INST( vector_multiply_and_add_logical_even )
             regs->VR_H(v1, j) = temp.h;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0, j=0; i < 8; i+=2, j++)
         {
             temp.f = regs->VR_H(v2, i);
@@ -5092,7 +5092,7 @@ DEF_INST( vector_multiply_and_add_logical_even )
             regs->VR_F(v1, j) = temp.f;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0, j=0; i < 4; i+=2, j++)
         {
             temp.d = regs->VR_F(v2, i);
@@ -5127,7 +5127,7 @@ DEF_INST( vector_multiply_and_add_logical_odd )
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=1, j=0; i < 16; i+=2, j++)
         {
             temp.h = regs->VR_B(v2, i);
@@ -5136,7 +5136,7 @@ DEF_INST( vector_multiply_and_add_logical_odd )
             regs->VR_H(v1, j) = temp.h;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=1, j=0; i < 8; i+=2, j++)
         {
             temp.f = regs->VR_H(v2, i);
@@ -5145,7 +5145,7 @@ DEF_INST( vector_multiply_and_add_logical_odd )
             regs->VR_F(v1, j) = temp.f;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=1, j=0; i < 4; i+=2, j++)
         {
             temp.d = regs->VR_F(v2, i);
@@ -5180,7 +5180,7 @@ DEF_INST( vector_multiply_and_add_even )
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0, j=0; i < 16; i+=2, j++)
         {
             temp.sh = (S8)regs->VR_B(v2, i);
@@ -5189,7 +5189,7 @@ DEF_INST( vector_multiply_and_add_even )
             regs->VR_H(v1, j) = temp.sh;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0, j=0; i < 8; i+=2, j++)
         {
             temp.sf = (S16)regs->VR_H(v2, i);
@@ -5198,7 +5198,7 @@ DEF_INST( vector_multiply_and_add_even )
             regs->VR_F(v1, j) = temp.sf;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0, j=0; i < 4; i+=2, j++)
         {
             temp.sd = (S32)regs->VR_F(v2, i);
@@ -5233,7 +5233,7 @@ DEF_INST( vector_multiply_and_add_odd )
 
     switch (m5)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=1, j=0; i < 16; i+=2, j++)
         {
             temp.sh = (S8)regs->VR_B(v2, i);
@@ -5242,7 +5242,7 @@ DEF_INST( vector_multiply_and_add_odd )
             regs->VR_H(v1, j) = temp.sh;
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=1, j=0; i < 8; i+=2, j++)
         {
             temp.sf = (S16)regs->VR_H(v2, i);
@@ -5251,7 +5251,7 @@ DEF_INST( vector_multiply_and_add_odd )
             regs->VR_F(v1, j) = temp.sf;
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=1, j=0; i < 4; i+=2, j++)
         {
             temp.sd = (S32)regs->VR_F(v2, i);
@@ -5358,7 +5358,7 @@ DEF_INST( vector_multiply_sum_logical )
 
     switch (m5)
     {
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         intere = U64_mul( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
         intero = U64_mul( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
         if (M6_ES)
@@ -5366,8 +5366,13 @@ DEF_INST( vector_multiply_sum_logical )
         if (M6_OS)
             intero = U128_U32_mul( intero, 2 );  // Shift left
         intere = U128_add( intere, intero );
-        intere = U128_add( intere, (U128)regs->VR_Q(v4) );
-        regs->VR_Q(v1) = intere.Q;
+        {
+            U128  temp;
+            temp.Q = regs->VR_Q(v4);
+//          intere = U128_add( intere, (U128)regs->VR_Q(v4) );
+            intere = U128_add( intere, temp );
+        }
+        memcpy(&regs->VR_Q(v1), &intere, 16);
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5400,7 +5405,7 @@ DEF_INST( vector_add_with_carry_compute_carry )
 
     switch (m5)
     {
-    case 4:  /* Quadword */
+    case 4:  // Quadword
         carry = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
         for (i=3; i >= 0; i--)
         {
@@ -5426,7 +5431,9 @@ DEF_INST( vector_add_with_carry_compute_carry )
 DEF_INST( vector_add_with_carry )
 {
     int     v1, v2, v3, v4, m5, m6;
-    U128    inter, rmost;
+    union   { U64 d[4]; } temp;
+    U64     carry;
+    int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -5437,15 +5444,17 @@ DEF_INST( vector_add_with_carry )
 
     switch (m5)
     {
-    case 4:  /* Quadword */
-        inter = U128_add( (U128)regs->VR_Q(v2), (U128)regs->VR_Q(v3) );
-        if (regs->VR_D( v4, 1 ) & 0x0000000000000001ull)
+    case 4:  // Quadword
+        carry = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
+        for (i=3; i >= 0; i--)
         {
-            rmost.Q.D.H.D = 0;
-            rmost.Q.D.L.D = 1;
-            inter = U128_add(inter, rmost);
+            temp.d[i] = carry;
+            temp.d[i] += regs->VR_F( v3, i );
+            temp.d[i] += regs->VR_F( v2, i );
+            carry = temp.d[i] >> 32;
         }
-        regs->VR_Q(v1) = inter.Q;
+        for (i=3; i >= 0; i--)
+            regs->VR_F( v1, i ) = temp.d[i];
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5544,7 +5553,7 @@ DEF_INST( vector_subtract_with_borrow_compute_borrow_indication )
 
     switch (m5)
     {
-    case 4:  /* Quadword */
+    case 4:  // Quadword
         temp.d = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
         for (i=3; i >= 0; i--)
         {
@@ -5582,7 +5591,7 @@ DEF_INST( vector_subtract_with_borrow_indication )
 
     switch (m5)
     {
-    case 4:  /* Quadword */
+    case 4:  // Quadword
         carry = regs->VR_D( v4, 1 ) & 0x0000000000000001ull;
         for (i=3; i >= 0; i--)
         {
@@ -5620,19 +5629,19 @@ DEF_INST( vector_unpack_logical_low )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i = 0; i < 8; i++)
             temp.h[i] = (U16) regs->VR_B(v2, i + 8);
         for (i = 0; i < 8; i++)
             regs->VR_H(v1, i) = temp.h[i];
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i = 0; i < 4; i++)
             temp.f[i] = (U32) regs->VR_H(v2, i + 4);
         for (i = 0; i < 4; i++)
             regs->VR_F(v1, i) = temp.f[i];
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i = 0; i < 2; i++)
             temp.d[i] = (U64) regs->VR_F(v2, i + 2);
         for (i = 0; i < 2; i++)
@@ -5664,19 +5673,19 @@ DEF_INST( vector_unpack_logical_high )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i = 0; i < 8; i++)
             temp.h[i] = (U16) regs->VR_B(v2, i);
         for (i = 0; i < 8; i++)
             regs->VR_H(v1, i) = temp.h[i];
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i = 0; i < 4; i++)
             temp.f[i] = (U32) regs->VR_H(v2, i);
         for (i = 0; i < 4; i++)
             regs->VR_F(v1, i) = temp.f[i];
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i = 0; i < 2; i++)
             temp.d[i] = (U64) regs->VR_F(v2, i);
         for (i = 0; i < 2; i++)
@@ -5709,7 +5718,7 @@ DEF_INST( vector_unpack_low )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i = 0; i < 8; i++)
         {
             temp.sh[i] = regs->VR_B(v2, i + 8);
@@ -5718,7 +5727,7 @@ DEF_INST( vector_unpack_low )
         for (i = 0; i < 8; i++)
             regs->VR_H(v1, i) = temp.sh[i];
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i = 0; i < 4; i++)
         {
             temp.sf[i] = regs->VR_H(v2, i + 4);
@@ -5727,7 +5736,7 @@ DEF_INST( vector_unpack_low )
         for (i = 0; i < 4; i++)
             regs->VR_F(v1, i) = temp.sf[i];
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i = 0; i < 2; i++)
         {
             temp.sd[i] = regs->VR_F(v2, i + 2);
@@ -5763,7 +5772,7 @@ DEF_INST( vector_unpack_high )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i = 0; i < 8; i++)
         {
             temp.sh[i] = regs->VR_B(v2, i);
@@ -5772,7 +5781,7 @@ DEF_INST( vector_unpack_high )
         for (i = 0; i < 8; i++)
             regs->VR_H(v1, i) = temp.sh[i];
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i = 0; i < 4; i++)
         {
             temp.sf[i] = regs->VR_H(v2, i);
@@ -5781,7 +5790,7 @@ DEF_INST( vector_unpack_high )
         for (i = 0; i < 4; i++)
             regs->VR_F(v1, i) = temp.sf[i];
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i = 0; i < 2; i++)
         {
             temp.sd[i] = regs->VR_F(v2, i);
@@ -5851,7 +5860,7 @@ DEF_INST( vector_element_compare_logical )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         if (regs->VR_B( v1, 7 ) == regs->VR_B( v2, 7 ))
             regs->psw.cc = 0;
         else if (regs->VR_B( v1, 7 ) < regs->VR_B( v2, 7 ))
@@ -5859,7 +5868,7 @@ DEF_INST( vector_element_compare_logical )
         else
             regs->psw.cc = 2;
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         if (regs->VR_H( v1, 3 ) == regs->VR_H( v2, 3 ))
             regs->psw.cc = 0;
         else if (regs->VR_H( v1, 3 ) < regs->VR_H( v2, 3 ))
@@ -5867,7 +5876,7 @@ DEF_INST( vector_element_compare_logical )
         else
             regs->psw.cc = 2;
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         if (regs->VR_F( v1, 1 ) == regs->VR_F( v2, 1 ))
             regs->psw.cc = 0;
         else if (regs->VR_F( v1, 1 ) < regs->VR_F( v2, 1 ))
@@ -5875,7 +5884,7 @@ DEF_INST( vector_element_compare_logical )
         else
             regs->psw.cc = 2;
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         if (regs->VR_D( v1, 0 ) == regs->VR_D( v2, 0 ))
             regs->psw.cc = 0;
         else if (regs->VR_D( v1, 0 ) < regs->VR_D( v2, 0 ))
@@ -5908,7 +5917,7 @@ DEF_INST( vector_element_compare )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         if ((S8)regs->VR_B( v1, 7 ) == (S8)regs->VR_B( v2, 7 ))
             regs->psw.cc = 0;
         else if ((S8)regs->VR_B( v1, 7 ) < (S8)regs->VR_B( v2, 7 ))
@@ -5916,7 +5925,7 @@ DEF_INST( vector_element_compare )
         else
             regs->psw.cc = 2;
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         if ((S16)regs->VR_H( v1, 3 ) == (S16)regs->VR_H( v2, 3 ))
             regs->psw.cc = 0;
         else if ((S16)regs->VR_H( v1, 3 ) < (S16)regs->VR_H( v2, 3 ))
@@ -5924,7 +5933,7 @@ DEF_INST( vector_element_compare )
         else
             regs->psw.cc = 2;
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         if ((S32)regs->VR_F( v1, 1 ) == (S32)regs->VR_F( v2, 1 ))
             regs->psw.cc = 0;
         else if ((S32)regs->VR_F( v1, 1 ) < (S32)regs->VR_F( v2, 1 ))
@@ -5932,7 +5941,7 @@ DEF_INST( vector_element_compare )
         else
             regs->psw.cc = 2;
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         if ((S64)regs->VR_D( v1, 0 ) == (S64)regs->VR_D( v2, 0 ))
             regs->psw.cc = 0;
         else if ((S64)regs->VR_D( v1, 0 ) < (S64)regs->VR_D( v2, 0 ))
@@ -5966,19 +5975,19 @@ DEF_INST( vector_load_complement )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
             regs->VR_B( v1, i ) = ~(S8)regs->VR_B( v2, i ) + 1;
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
             regs->VR_H( v1, i ) = ~(S16)regs->VR_H( v2, i ) + 1;
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
             regs->VR_F( v1, i ) = ~(S32)regs->VR_F( v2, i ) + 1;
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
             regs->VR_D( v1, i ) = ~(S64)regs->VR_D( v2, i ) + 1;
         break;
@@ -6008,25 +6017,25 @@ DEF_INST( vector_load_positive )
 
     switch (m3)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
             regs->VR_B( v1, i ) = (S8)regs->VR_B( v2, i ) < 0 ?
                                         -((S8)regs->VR_B( v2, i )) :
                                         (S8)regs->VR_B( v2, i );
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
             regs->VR_H( v1, i ) = (S16)regs->VR_H( v2, i ) < 0 ?
                                          -((S16)regs->VR_H( v2, i )) :
                                          (S16)regs->VR_H( v2, i );
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
             regs->VR_F( v1, i ) = (S32)regs->VR_F( v2, i ) < 0 ?
                                          -((S32)regs->VR_F( v2, i )) :
                                          (S32)regs->VR_F( v2, i );
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
             regs->VR_D( v1, i ) = (S64)regs->VR_D( v2, i ) < 0 ?
                                          -((S64)regs->VR_D( v2, i )) :
@@ -6126,25 +6135,25 @@ DEF_INST( vector_add_compute_carry )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
         {
             regs->VR_B( v1, i ) = (U8) ( ( (U16)regs->VR_B( v2, i ) + (U16)regs->VR_B( v3, i ) ) >> 8 );
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
         {
             regs->VR_H( v1, i ) = (U16) ( ( (U32)regs->VR_H( v2, i ) + (U32)regs->VR_H( v3, i ) ) >> 16 );
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
         {
             regs->VR_F( v1, i ) = (U32) ( ( (U64)regs->VR_F( v2, i ) + (U64)regs->VR_F( v3, i ) ) >> 32 );
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
         {
             temp.d = 0;
@@ -6156,7 +6165,7 @@ DEF_INST( vector_add_compute_carry )
             regs->VR_D( v1, i ) = temp.d >> 32;
         }
         break;
-    case 4:  /* Quadword */
+    case 4:  // Quadword
         temp.d = 0;
         for (i=3; i >= 0; i--)
         {
@@ -6220,7 +6229,7 @@ DEF_INST( vector_average )
                     ( regs->VR_D(v3, i) & 0x8000000000000000ull )
                 )
             {
-                /* same signs: possible overflow */
+                /* same sign: possible overflow */
                 if  ( regs->VR_D(v2, i) & 0x8000000000000000ull )
                 {
                     /* negative signs: allow overflow, round and force back to negative */
@@ -6235,10 +6244,7 @@ DEF_INST( vector_average )
                 }
             }
             else
-            {
-                /* different signs */
                 regs->VR_D(v1, i) = (U64) ( ( (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i) + 1) >> 1 );
-            }
         }
         break;
 
@@ -6256,7 +6262,7 @@ DEF_INST( vector_average )
 DEF_INST(vector_add)
 {
     int     v1, v2, v3, m4, m5, m6, i;
-    U128    temp;
+    U64     high, low;
 
     VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
 
@@ -6268,29 +6274,33 @@ DEF_INST(vector_add)
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++) {
             regs->VR_B(v1, i) = (S8) regs->VR_B(v2, i) + (S8) regs->VR_B(v3, i);
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++) {
             regs->VR_H(v1, i) = (S16) regs->VR_H(v2, i) + (S16) regs->VR_H(v3, i);
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++) {
             regs->VR_F(v1, i) = (S32) regs->VR_F(v2, i) + (S32) regs->VR_F(v3, i);
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i);
         }
         break;
-    case 4:  /* Quadword */
-        temp = U128_add( (U128)regs->VR_Q(v2), (U128)regs->VR_Q(v3) );
-        regs->VR_Q(v1) = temp.Q;
+    case 4:  // Quadword
+        high = regs->VR_D(v2, 0) + regs->VR_D(v3, 0);
+        low  = regs->VR_D(v2, 1) + regs->VR_D(v3, 1);
+        if (low < regs->VR_D(v2, 1))
+            high++;
+        regs->VR_D(v1, 0) = high;
+        regs->VR_D(v1, 1) = low;
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -6318,23 +6328,23 @@ DEF_INST( vector_subtract_compute_borrow_indication )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++)
             regs->VR_B( v1, i ) = (regs->VR_B( v2, i ) < regs->VR_B( v3, i )) ? 0 : 1;
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++)
             regs->VR_H( v1, i ) = (regs->VR_H( v2, i ) < regs->VR_H( v3, i )) ? 0 : 1;
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++)
             regs->VR_F( v1, i ) = (regs->VR_F( v2, i ) < regs->VR_F( v3, i )) ? 0 : 1;
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++)
             regs->VR_D( v1, i ) = (regs->VR_D( v2, i ) < regs->VR_D( v3, i )) ? 0 : 1;
         break;
-    case 4:  /* Quadword */
+    case 4:  // Quadword
         if (regs->VR_D( v2, 0 ) == regs->VR_D( v3, 0 ))
         {
             regs->VR_D( v1, 1 ) = (regs->VR_D( v2, 1 ) < regs->VR_D( v3, 1 )) ? 0 : 1;
@@ -6360,41 +6370,45 @@ DEF_INST( vector_subtract_compute_borrow_indication )
 DEF_INST(vector_subtract)
 {
     int     v1, v2, v3, m4, m5, m6, i;
-    U128    temp;
+    U64     high, low;
 
-    VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
+     VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
 
     /* m5, m6 are not part of this instruction */
     UNREFERENCED( m5 );
     UNREFERENCED( m6 );
 
-    ZVECTOR_CHECK(regs);
+     ZVECTOR_CHECK(regs);
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (i=0; i < 16; i++) {
             regs->VR_B(v1, i) = (S8) regs->VR_B(v2, i) - (S8) regs->VR_B(v3, i);
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (i=0; i < 8; i++) {
             regs->VR_H(v1, i) = (S16) regs->VR_H(v2, i) - (S16) regs->VR_H(v3, i);
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (i=0; i < 4; i++) {
             regs->VR_F(v1, i) = (S32) regs->VR_F(v2, i) - (S32) regs->VR_F(v3, i);
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = (S64)regs->VR_D(v2, i) - (S64)regs->VR_D(v3, i);
         }
         break;
-    case 4:  /* Quadword */
-        temp = U128_sub( (U128)regs->VR_Q(v2), (U128)regs->VR_Q(v3) );
-        regs->VR_Q(v1) = temp.Q;
+    case 4:  // Quadword
+        high = regs->VR_D(v2, 0) - regs->VR_D(v3, 0);
+        low  = regs->VR_D(v2, 1) - regs->VR_D(v3, 1);
+        if (low > regs->VR_D(v2, 1))
+            high--;
+        regs->VR_D(v1, 0) = high;
+        regs->VR_D(v1, 1) = low;
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -6420,7 +6434,7 @@ DEF_INST( vector_compare_equal )
 
     switch (m4)
     {
-    case 0:  /* Byte */
+    case 0:  // Byte
         for (el=16, i=0; i < 16; i++) {
             if (regs->VR_B(v2, i) == regs->VR_B(v3, i)) {
                 regs->VR_B(v1, i) = 0xff;
@@ -6431,7 +6445,7 @@ DEF_INST( vector_compare_equal )
             }
         }
         break;
-    case 1:  /* Halfword */
+    case 1:  // Halfword
         for (el=8, i=0; i < 8; i++) {
             if (regs->VR_H(v2, i) == regs->VR_H(v3, i)) {
                 regs->VR_H(v1, i) = 0xffff;
@@ -6442,7 +6456,7 @@ DEF_INST( vector_compare_equal )
             }
         }
         break;
-    case 2:  /* Word */
+    case 2:  // Word
         for (el=4, i=0; i < 4; i++) {
             if (regs->VR_F(v2, i) == regs->VR_F(v3, i)) {
                 regs->VR_F(v1, i) = 0xFFFFFFFF;
@@ -6453,7 +6467,7 @@ DEF_INST( vector_compare_equal )
             }
         }
         break;
-    case 3:  /* Doubleword */
+    case 3:  // Doubleword
         for (el=2, i=0; i < 2; i++) {
             if (regs->VR_D(v2, i) == regs->VR_D(v3, i)) {
                 regs->VR_D(v1, i) = 0xFFFFFFFFFFFFFFFFull;
