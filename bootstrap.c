@@ -571,7 +571,7 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
     _wmakepath( g_wszDumpPath, g_wszHercDrive, g_wszHercDir, L"Hercules", L".dmp" );
 
     _tprintf( _T("Creating crash dump \"%ls\"...\n\n"), g_wszDumpPath );
-    _tprintf( _T("Please wait; this may take a few minutes...\n\n") );
+    _tprintf( _T("Please wait; this may take up to 2 or 3 minutes...\n\n") );
     _tprintf( _T("(another message will appear when the dump is complete)\n\n") );
 
     hDumpFile = CreateFileW
@@ -621,9 +621,19 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 
         if ( bSuccess )
         {
-            _tprintf( _T("\nDump \"%ls\" created.\n\n"
-                         "Please forward the dump to the Hercules team for analysis.\n\n"),
-                         g_wszDumpPath );
+            _tprintf(_T(
+
+                "\nDump \"%ls\" created.\n\n"
+
+                "Please forward the dump -- along with all other documentation\n"
+                "(such as your Hercules log and configuration files, etc) -- to\n"
+                "the Hercules team for analysis. Thanks.\n\n"
+
+                "(Also try to compress the dump file too, using e.g. WinZip or 7-Zip,\n"
+                "etc, as crash dumps, while usually quite large, compress quite well.)\n\n"
+
+                ), g_wszDumpPath
+            );
         }
         else
             _tprintf( _T("\nMiniDumpWriteDump failed! Error: %u\n\n"), GetLastError() );
