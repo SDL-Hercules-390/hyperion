@@ -5225,14 +5225,8 @@ U32 num;                                /* Number of bytes to move   */
             /* Prepare to wait for additional packets or pipe signal */
             FD_ZERO( &readset );
             FD_SET( grp->ppfd[0], &readset );
-            if (grp->enabled)
-            {
-                FD_SET( grp->ttfd,    &readset );
-                fd = max( grp->ppfd[0], grp->ttfd );
-            }
-            else
-                fd = grp->ppfd[0];
-
+            FD_SET( grp->ttfd,    &readset );
+            fd = max( grp->ppfd[0], grp->ttfd );
             tv.tv_sec  = 0;
             tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
 
