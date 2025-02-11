@@ -2125,6 +2125,8 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                 curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
         }
+        // "Processor %s%02X: psw %s"
+        STRLCAT( buf, "\nHHC00869I" );
         WRMSG( HHC00869, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf );
 
         /*--------------------------*/
@@ -2179,6 +2181,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                    curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                    curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
             }
+
+            // "Processor %s%02X: psw %s"
+            STRLCAT( buf, "\nHHC00869I" );
             WRMSG(HHC00869, "I", "IE", sysblk.regs[i]->cpuad, buf);
         }
     }
