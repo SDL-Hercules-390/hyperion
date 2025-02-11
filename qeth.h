@@ -241,6 +241,7 @@ typedef struct _OSA_GRP {
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* Thread signalling socket pipe     */
+                                /* [0] = read end, [1] = write end   */
 
     U32   seqnumth;             /* MPC_TH sequence number            */
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */

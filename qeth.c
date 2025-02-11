@@ -868,7 +868,7 @@ static int qeth_select (int nfds, fd_set* rdset, struct timeval* tv)
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
         /* Otherwise pause before retrying */
-        sched_yield();
+        USLEEP( OSA_TIMEOUTUS );
     }
     if (rc <= 0)
         errno = errnum;
@@ -886,7 +886,7 @@ static int qeth_read_pipe (int fd, BYTE *sig)
         errnum = HSO_errno;
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
-        sched_yield();
+        USLEEP( OSA_TIMEOUTUS );
     }
     if (rc <= 0)
         errno = errnum;
@@ -904,7 +904,7 @@ static int qeth_write_pipe (int fd, BYTE *sig)
         errnum = HSO_errno;
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
-        sched_yield();
+        USLEEP( OSA_TIMEOUTUS );
     }
     if (rc <= 0)
         errno = errnum;
@@ -2547,7 +2547,7 @@ static void raise_adapter_interrupt( DEVBLK* dev )
         /* Yield to hopefully allow current lock owner a chance
            to finish using it and release it before we try again.
         */
-        sched_yield();
+        USLEEP( OSA_TIMEOUTUS );
     }
 
     /* Halt/Clear Subchannel was requested for device.
@@ -3826,24 +3826,74 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 }
 
 /*-------------------------------------------------------------------*/
+/*       QETH Halt or Clear Subchannel Asynchronous Thread           */
+/*-------------------------------------------------------------------*/
+/* This thread is created by the below qeth_halt_or_clear function   */
+/* which itself is called by channel.c in response to a HSCH (Halt   */
+/* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
+/* no locks are held, but the device lock is then obtained and held  */
+/* for the duration of the actual halt/clear processing.             */
+/*-------------------------------------------------------------------*/
+static void*  qeth_halt_or_clear_thread( void* arg)
+{
+    DEVBLK* dev = (DEVBLK*) arg;
+    OSA_GRP* grp = (OSA_GRP*) dev->group->grp_data;
+
+    OBTAIN_DEVLOCK( dev );
+    {
+        if (QTYPE_READ == dev->qtype)
+        {
+            // "%1d:%04X %s: Halt or clear %s for %s device"
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, "recognized", "read" );
+
+            qeth_halt_read_device( dev, grp );
+
+            // "%1d:%04X %s: Halt or clear %s for %s device"
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, "completed", "read" );
+        }
+        else if (QTYPE_DATA == dev->qtype)
+        {
+            // "%1d:%04X %s: Halt or clear %s for %s device"
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, "recognized", "data" );
+
+            qeth_halt_data_device( dev, grp );
+
+            // "%1d:%04X %s: Halt or clear %s for %s device"
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, "completed", "data" );
+        }
+        else
+            BREAK_INTO_DEBUGGER(); // (should not occur)
+    }
+    RELEASE_DEVLOCK( dev );
+    return NULL;
+}
+
+/*-------------------------------------------------------------------*/
 /*                  QETH Halt or Clear Subchannel                    */
 /*-------------------------------------------------------------------*/
 /* This function is called by channel.c in response to a HSCH (Halt  */
 /* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
-/* both INTLOCK (sysblk.intlock) and dev->lock are held.             */
+/* both INTLOCK (sysblk.intlock) and dev->lock are held. The actual  */
+/* halt/clear processing is performed in an asynchronous thread so   */
+/* that this function can return as soon as possible so that it can  */
+/* release both locks as soon as possible. The actual halt or clear  */
+/* really only needs devlock but does not actually need intlock.     */
 /*-------------------------------------------------------------------*/
 static void qeth_halt_or_clear( DEVBLK* dev )
 {
-    OSA_GRP* grp = (OSA_GRP*) dev->group->grp_data;
-
-    if (QTYPE_READ == dev->qtype)
-        qeth_halt_read_device( dev, grp );
-    else if (QTYPE_DATA == dev->qtype)
-        qeth_halt_data_device( dev, grp );
-    else
+    int  rc;
+    TID  tid;
+    char thread_name[16];
+    MSGBUF( thread_name, "%4.4X qe_hlt_clr", dev->devnum );
+    rc = create_thread( &tid, DETACHED, qeth_halt_or_clear_thread, dev, thread_name );
+    if (rc)
     {
-        DBGTRC( dev, "qeth_halt_or_clear: noop!" );
-        PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
+        // "create_thread( \"%s\" ) error: %s"
+        WRMSG( HHC00103, "W", thread_name, strerror( rc ));
+        // "Calling \"%s\" directly for %4.4X"
+        WRMSG( HHC00104, "W", "qeth_halt_or_clear", dev->devnum );
+        /* No choice but to call directly! */
+        qeth_halt_or_clear_thread( dev );
     }
 }
 
@@ -5175,8 +5225,14 @@ U32 num;                                /* Number of bytes to move   */
             /* Prepare to wait for additional packets or pipe signal */
             FD_ZERO( &readset );
             FD_SET( grp->ppfd[0], &readset );
-            FD_SET( grp->ttfd,    &readset );
-            fd = max( grp->ppfd[0], grp->ttfd );
+            if (grp->enabled)
+            {
+                FD_SET( grp->ttfd,    &readset );
+                fd = max( grp->ppfd[0], grp->ttfd );
+            }
+            else
+                fd = grp->ppfd[0];
+
             tv.tv_sec  = 0;
             tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
 
@@ -5215,6 +5271,16 @@ U32 num;                                /* Number of bytes to move   */
                     ASSERT(0);  /* (should NEVER occur) */
                 }
             }
+
+#if defined( OPTION_W32_CTCI )
+            /* Cannot process any input or output queues until the interface
+               is (re-)enabled (which will very likely happen VERY soon!) */
+            if (!grp->enabled)
+            {
+                USLEEP( OSA_TIMEOUTUS );
+                continue;
+            }
+#endif
 
             /* Check if any new packets have arrived */
             if ((rc && FD_ISSET( grp->ttfd, &readset )) || grp->l3r.firstbhr)
