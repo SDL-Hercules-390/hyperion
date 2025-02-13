@@ -2897,6 +2897,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             ICOUNT_COLLECT_CASE( 0xE3, imape3, imape3T, 256, 5 )
             ICOUNT_COLLECT_CASE( 0xE4, imape4, imape4T, 256, 1 )
             ICOUNT_COLLECT_CASE( 0xE5, imape5, imape5T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xE6, imape6, imape6T, 256, 5 )
             ICOUNT_COLLECT_CASE( 0xE7, imape7, imape7T, 256, 5 )
             ICOUNT_COLLECT_CASE( 0xEB, imapeb, imapebT, 256, 5 )
             ICOUNT_COLLECT_CASE( 0xEC, imapec, imapecT, 256, 5 )
@@ -2962,6 +2963,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             case 0xE3:
             case 0xE4:
             case 0xE5:
+            case 0xE6:
             case 0xE7:
             case 0xEB:
             case 0xEC:
