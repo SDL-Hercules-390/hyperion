@@ -1907,6 +1907,15 @@
     <None Include="tests\zvector-e7-05-VTM.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\zvector-e7-06-Find.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e7-07-VGBM.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e7-08-VISTR.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\FAC53.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2429,6 +2438,15 @@
     <None Include="tests\zvector-e7-05-VTM.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\zvector-e7-06-Find.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e7-07-VGBM.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e7-08-VISTR.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
@@ -2691,6 +2709,15 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\zvector-e7-05-VTM.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-06-Find.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-07-VGBM.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-08-VISTR.asm ">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\3211.list">
@@ -3132,6 +3159,24 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\zvector-e7-05-VTM.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-06-Find.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-06-Find.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-07-VGBM.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-07-VGBM.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-08-VISTR.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-08-VISTR.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="hercules.cnf">

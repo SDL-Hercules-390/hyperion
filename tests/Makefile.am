@@ -756,4 +756,20 @@ EXTRA_DIST =                    \
      zvector-e7-05-VTM.core                 \
      zvector-e7-05-VTM.list                 \
      zvector-e7-05-VTM.pdf                  \
-     zvector-e7-05-VTM.tst
+     zvector-e7-05-VTM.tst                  \
+     zvector-e7-06-Find.asm                 \
+     zvector-e7-06-Find.core                \
+     zvector-e7-06-Find.list                \
+     zvector-e7-06-Find.pdf                 \
+     zvector-e7-06-Find.tst                 \
+     zvector-e7-07-VGBM.asm                 \
+     zvector-e7-07-VGBM.core                \
+     zvector-e7-07-VGBM.list                \
+     zvector-e7-07-VGBM.pdf                 \
+     zvector-e7-07-VGBM.tst                 \
+     zvector-e7-08-VISTR.asm                \
+     zvector-e7-08-VISTR.core               \
+     zvector-e7-08-VISTR.list               \
+     zvector-e7-08-VISTR.pdf                \
+     zvector-e7-08-VISTR.tst
+
