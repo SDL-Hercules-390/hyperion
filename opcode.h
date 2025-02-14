@@ -284,7 +284,10 @@ OPCD_DLL_IMPORT int iprint_router_func( int arch_mode, BYTE inst[], char mnemoni
                 used = sysblk.imaps.imape5[(_inst)[1]]++;           \
                 break;                                              \
             case 0xE6:                                              \
-                used = sysblk.imaps.imape6[(_inst)[5]]++;           \
+                if (sysblk.arch_mode == ARCH_900_IDX)               \
+                    used = sysblk.imaps.imape6[(_inst)[5]]++;       \
+                else                                                \
+                    used = sysblk.imaps.imape6[(_inst)[1]]++;       \
                 break;                                              \
             case 0xE7:                                              \
                 used = sysblk.imaps.imape7[(_inst)[5]]++;           \
