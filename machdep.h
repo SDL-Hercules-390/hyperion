@@ -535,12 +535,16 @@ inline int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile 
     int result = 1;
     U64 expected1 = *old1;
     U64 expected2 = *old2;
-    __asm __volatile(
-        "ldaxp %[old1], %[old2], [%[ptr]]"
-            : [old1] "+r" (*old1), [old2] "+r" (*old2)
-            : [ptr] "r" (ptr));
-    if ( expected1 == *old1 && expected2 == *old2 )
+    while ( result )
     {
+        __asm __volatile(
+            "ldaxp %[old1], %[old2], [%[ptr]]"
+                : [old1] "+r" (*old1), [old2] "+r" (*old2)
+                : [ptr] "r" (ptr));
+        if ( expected1 != *old1 || expected2 != *old2 )
+        {
+            return 1;
+        }
         __asm __volatile(
             "stlxp %w[result], %[new1], %[new2], [%[ptr]]"
                 : [result] "+r" (result)
