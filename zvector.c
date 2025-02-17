@@ -1376,9 +1376,9 @@ DEF_INST( vector_store_multiple )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_store_with_length )
 {
-    int     v1, r3, b2, m4, len, i;
+    int     v1, r3, b2, m4, len;
     VADR    effective_addr2;
-    BYTE    temp[16];
+    QW      temp;
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
 
@@ -1390,8 +1390,7 @@ DEF_INST( vector_store_with_length )
 
     len = min(regs->GR_L(r3), 15);
 
-    for (i = 0; i <= len; i++)
-        temp[i] = regs->VR_B(v1, i);
+    temp = CSWAP128( regs->VR_Q( v1 ) );
 
     ARCH_DEP( vstorec )( &temp, len , effective_addr2, b2, regs );
 
