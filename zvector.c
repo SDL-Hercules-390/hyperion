@@ -1232,9 +1232,10 @@ DEF_INST( vector_load_multiple )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_load_with_length )
 {
-    int     v1, r3, b2, m4, i;
-    VADR    effective_addr2;
-    BYTE    temp[16];
+    int           v1, r3, b2, m4;
+    unsigned int  length;
+    VADR          effective_addr2;
+    QW            temp;
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
 
@@ -1244,12 +1245,14 @@ DEF_INST( vector_load_with_length )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
+    length = regs->GR_L(r3);
+    if (length > 15) length = 15;
+
     memset(&temp, 0x00, sizeof(temp));
 
-    ARCH_DEP( vfetchc )( &temp, min(regs->GR_L(r3), 15), effective_addr2, b2, regs );
+    ARCH_DEP( vfetchc )( &temp, length, effective_addr2, b2, regs );
 
-    for(i=0; i < 16; i++)
-        regs->VR_B(v1, i) = temp[i];
+    regs->VR_Q( v1 ) = CSWAP128( temp );
 
     ZVECTOR_END( regs );
 }
@@ -1376,9 +1379,10 @@ DEF_INST( vector_store_multiple )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_store_with_length )
 {
-    int     v1, r3, b2, m4, len;
-    VADR    effective_addr2;
-    QW      temp;
+    int           v1, r3, b2, m4;
+    unsigned int  length;
+    VADR          effective_addr2;
+    QW            temp;
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
 
@@ -1388,11 +1392,12 @@ DEF_INST( vector_store_with_length )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    len = min(regs->GR_L(r3), 15);
+    length = regs->GR_L(r3);
+    if (length > 15) length = 15;
 
     temp = CSWAP128( regs->VR_Q( v1 ) );
 
-    ARCH_DEP( vstorec )( &temp, len , effective_addr2, b2, regs );
+    ARCH_DEP( vstorec )( &temp, length , effective_addr2, b2, regs );
 
     ZVECTOR_END( regs );
 }
