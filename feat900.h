@@ -260,7 +260,7 @@
     /* to avoid compile errors                                  */
 
     /* Compile-time Hardware Feature: Carry-less multiply */
-    #if defined(__PCLMUL__) && __has_builtin(__builtin_ia32_pclmulqdq128)
+    #if defined(__PCLMUL__)
         #define FEATURE_HW_CLMUL  1
     #endif
 
