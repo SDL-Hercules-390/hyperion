@@ -1913,7 +1913,7 @@ DLL_EXPORT const char* str_HOC( int hoc )
         "HALT",
         "Device Reset"
     };
-    if (hoc >= 0 && hoc < _countof( hoc_str ))
+    if (hoc >= 0 && hoc < (int) _countof( hoc_str ))
         return hoc_str[ hoc ];
     return "???";
 }
