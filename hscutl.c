@@ -1898,6 +1898,27 @@ DLL_EXPORT int make_asciiz( char* dest, int destlen, BYTE* src, int srclen )
 }
 
 /*-------------------------------------------------------------------*/
+/* Subroutine to convert DEVBLK halt or clear type to string         */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* str_HOC( int hoc )
+{
+    static const char* hoc_str[6] =
+    {
+        // Must match DEVBLK "hoc" value!
+
+        "(none)",
+        "HSCH",
+        "CSCH",
+        "HIO or HDV",
+        "HALT",
+        "Device Reset"
+    };
+    if (hoc >= 0 && hoc < _countof( hoc_str ))
+        return hoc_str[ hoc ];
+    return "???";
+}
+
+/*-------------------------------------------------------------------*/
 /*                        idx_snprintf                               */
 /*      Fix for "Potential snprintf buffer overflow" #457            */
 /*-------------------------------------------------------------------*/

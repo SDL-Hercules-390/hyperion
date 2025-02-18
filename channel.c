@@ -2217,6 +2217,7 @@ perform_halt (DEVBLK *dev)
     OBTAIN_INTLOCK( NULL );
     {
         OBTAIN_DEVLOCK( dev );
+        dev->hoc = HOC_HALT;
         perform_halt_and_release_lock(dev);
     }
     RELEASE_INTLOCK( NULL );
@@ -2537,7 +2538,10 @@ device_reset (DEVBLK *dev)
 #endif
 
         if (dev->hnd && dev->hnd->halt)
+        {
+            dev->hoc = HOC_RESET;
             dev->hnd->halt(dev);
+        }
     }
     RELEASE_DEVLOCK( dev );
 } /* end device_reset() */

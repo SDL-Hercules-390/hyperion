@@ -113,6 +113,7 @@ DEVBLK* dev;                            /* -> device block           */
     }
 
     /* Perform clear subchannel and set condition code zero */
+    dev->hoc = HOC_CSCH;
     clear_subchan( regs, dev );
 
     regs->psw.cc = 0;
@@ -170,6 +171,7 @@ DEVBLK* dev;                            /* -> device block           */
     }
 
     /* Perform halt subchannel and set condition code */
+    dev->hoc = HOC_HSCH;
     if ((regs->psw.cc = halt_subchan( regs, dev )) != 0)
         PTIO( ERR, "*HSCH" );
 }
@@ -1217,6 +1219,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     }
 
     /* Test the device and set the condition code */
+    dev->hoc = HOC_HIO_HDV;
     regs->psw.cc = haltio (regs, dev, inst[1]);
 
     if (regs->psw.cc != 0)

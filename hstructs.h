@@ -1492,6 +1492,16 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    sensemm[5];             /* Manuf. & model for sense  */
 
         /*  control flags...                                         */
+
+        BYTE    hoc;                    /* Halt or Clear type        */
+
+#define HOC_NONE        0
+#define HOC_HSCH        1
+#define HOC_CSCH        2
+#define HOC_HIO_HDV     3
+#define HOC_HALT        4
+#define HOC_RESET       5
+
         unsigned int                    /* Flags                     */
                 append:1,               /* 1=append new data to end  */
                 s370start:1,            /* 1=S/370 non-BMX behavior  */

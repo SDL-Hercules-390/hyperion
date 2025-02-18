@@ -163,8 +163,9 @@ typedef struct _OSA_IPV6 {
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_GRP {
-    COND    qrcond;             /* Condition for IDX read thread     */
-    COND    qdcond;             /* Condition for halt data device    */
+    COND    q_idxrt_cond;       /* Condition for IDX read thread     */
+    COND    q_hread_cond;       /* Condition for halt read device    */
+    COND    q_hdata_cond;       /* Condition for halt data device    */
     LOCK    qlock;              /* Lock for above conditions         */
 
     OSA_BAN  idx;               /* IDX buffer anchor                 */

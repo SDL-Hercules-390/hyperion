@@ -805,7 +805,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00902 "%1d:%04X %s: ioctl %s failed for device %s: %s"
 #define HHC00903 "%1d:%04X: CTC DEBUG is %s"
 #define HHC00904 "%1d:%04X %s: Halt or clear recognized"
-#define HHC00905 "%1d:%04X %s: Halt or clear %s for %s device"
+#define HHC00905 "%1d:%04X %s: %s %s for %s device"
 #define HHC00906 "%1d:%04X CTC: write CCW count %u is invalid"
 #define HHC00907 "%1d:%04X CTC: interface command: %s %8.8X"
 #define HHC00908 "%1d:%04X CTC: incomplete write buffer segment header at offset %4.4X"
