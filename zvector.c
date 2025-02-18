@@ -724,10 +724,11 @@ DEF_INST( vector_load )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_load_to_block_boundary )
 {
-    int     v1, m3, x2, b2, length, i;
-    VADR    effective_addr2, nextbound;
-    U8      bytes[16];
+    int     v1, m3, x2, b2;
+    VADR    effective_addr2, boundary_addr;
     U64     boundary;
+    U64     length;
+    QW      temp;
 
     VRX( inst, regs, v1, x2, b2, effective_addr2, m3 );
 
@@ -738,14 +739,19 @@ DEF_INST( vector_load_to_block_boundary )
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
-                                4: 1K - byte, 5: 2K - Byte, 6: 4K - Byte */
+                            4: 1 K-byte, 5: 2 K-Byte, 6: 4 K-Byte */
 
-    nextbound = (effective_addr2 + boundary) & ~(boundary - 1);
-    length = min( 16, nextbound - effective_addr2 );
-    ARCH_DEP( vfetchc )( &bytes, length - 1, effective_addr2, b2, regs );
+    boundary_addr = (effective_addr2 + boundary) & ~(boundary - 1);
 
-    for (i=0; i < length; i++)
-        regs->VR_B( v1, i ) = bytes[i];
+    length = boundary_addr - effective_addr2;
+    if (length > 16) length = 16;
+    length--;
+
+    memset(&temp, 0x00, sizeof(temp));
+
+    ARCH_DEP( vfetchc )( &temp, (U32)length, effective_addr2, b2, regs );
+
+    regs->VR_Q( v1 ) = CSWAP128( temp );
 
     ZVECTOR_END( regs );
 }
@@ -1083,9 +1089,10 @@ DEF_INST( vector_load_vr_element_from_gr )
 /*-------------------------------------------------------------------*/
 DEF_INST( load_count_to_block_boundary )
 {
-    int     r1, x2, b2, m3, length;
-    VADR    effective_addr2, nextbound;
+    int     r1, x2, b2, m3;
+    VADR    effective_addr2, boundary_addr;
     U64     boundary;
+    U64     length;
 
     RXE_M3( inst, regs, r1, x2, b2, effective_addr2, m3 );
 
@@ -1097,10 +1104,12 @@ DEF_INST( load_count_to_block_boundary )
     boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
                             4: 1 K-byte, 5: 2 K-Byte, 6: 4 K-Byte */
 
-    nextbound = (effective_addr2 + boundary) & ~(boundary - 1);
-    length = min( 16, nextbound - effective_addr2 );
+    boundary_addr = (effective_addr2 + boundary) & ~(boundary - 1);
 
-    regs->GR_L( r1 ) = length;
+    length = boundary_addr - effective_addr2;
+    if (length > 16) length = 16;
+
+    regs->GR_L( r1 ) = (U32)length;
     regs->psw.cc = (length == 16) ? 0 : 3;
 
     ZVECTOR_END( regs );
@@ -1232,10 +1241,10 @@ DEF_INST( vector_load_multiple )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_load_with_length )
 {
-    int           v1, r3, b2, m4;
-    unsigned int  length;
-    VADR          effective_addr2;
-    QW            temp;
+    int     v1, r3, b2, m4;
+    VADR    effective_addr2;
+    U32     length;
+    QW      temp;
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
 
@@ -1379,10 +1388,10 @@ DEF_INST( vector_store_multiple )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_store_with_length )
 {
-    int           v1, r3, b2, m4;
-    unsigned int  length;
-    VADR          effective_addr2;
-    QW            temp;
+    int     v1, r3, b2, m4;
+    VADR    effective_addr2;
+    U32     length;
+    QW      temp;
 
     VRS_B( inst, regs, v1, r3, b2, effective_addr2, m4 );
 
