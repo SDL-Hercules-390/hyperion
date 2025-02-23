@@ -3842,41 +3842,61 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 /* This thread is created by the below qeth_halt_or_clear function   */
 /* which itself is called by channel.c in response to a HSCH (Halt   */
 /* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
-/* no locks are held, but the device lock is then obtained and held  */
-/* for the duration of the actual halt/clear processing.             */
+/* no locks are held, but both intlock and devlock are then obtained */
+/* and held for the duration of the actual halt/clear processing.    */
 /*-------------------------------------------------------------------*/
 static void*  qeth_halt_or_clear_thread( void* arg)
 {
-    DEVBLK* dev = (DEVBLK*) arg;
-    OSA_GRP* grp = (OSA_GRP*) dev->group->grp_data;
-    const char* hoc = str_HOC( dev->hoc );
+    DEVBLK*      dev  = (DEVBLK*) arg;
+    OSA_GRP*     grp  = (OSA_GRP*) dev->group->grp_data;
+    const char*  hoc  = str_HOC( dev->hoc );
+    const char*  qtype;
 
-    OBTAIN_DEVLOCK( dev );
+    // If we're being called asynchronously in a separate thread
+    // (normal case), we need to obtain and release both locks
+    // ourselves. Else if we were called synchronously/directly,
+    // both locks are already being held by the caller, so we
+    // must NOT try obtaining or releasing EITHER lock as they
+    // are already held.
+
+    if (!dev->synchalt)
+    {
+        OBTAIN_INTLOCK( NULL );
+        OBTAIN_DEVLOCK( dev  );
+    }
     {
         if (QTYPE_READ == dev->qtype) // "read" device?
         {
+            qtype = "read";
+
             // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", "read" );
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
             {
                 qeth_halt_read_device( dev, grp );
             }
             // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", "read" );
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
         }
         else if (QTYPE_DATA == dev->qtype) // "data device?
         {
+            qtype = "data";
+
             // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", "data" );
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
             {
                 qeth_halt_data_device( dev, grp );
             }
             // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", "data" );
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
         }
         else
-            BREAK_INTO_DEBUGGER(); // (should not occur)
+            BREAK_INTO_DEBUGGER(); // (should never occur!)
     }
-    RELEASE_DEVLOCK( dev );
+    if (!dev->synchalt)
+    {
+        RELEASE_DEVLOCK( dev  );
+        RELEASE_INTLOCK( NULL );
+    }
     return NULL;
 }
 
@@ -3888,24 +3908,31 @@ static void*  qeth_halt_or_clear_thread( void* arg)
 /* both INTLOCK (sysblk.intlock) and dev->lock are held. The actual  */
 /* halt/clear processing is performed in an asynchronous thread so   */
 /* that this function can return as soon as possible so that it can  */
-/* release both locks as soon as possible. The actual halt or clear  */
-/* really only needs devlock but does not actually need intlock.     */
+/* release both locks as soon as possible.                           */
 /*-------------------------------------------------------------------*/
 static void qeth_halt_or_clear( DEVBLK* dev )
 {
     int  rc;
     TID  tid;
     char thread_name[16];
+
     MSGBUF( thread_name, "%4.4X qe_hlt_clr", dev->devnum );
+
     rc = create_thread( &tid, DETACHED, qeth_halt_or_clear_thread, dev, thread_name );
     if (rc)
     {
         // "create_thread( \"%s\" ) error: %s"
-        WRMSG( HHC00103, "W", thread_name, strerror( rc ));
-        // "Calling \"%s\" directly for %4.4X"
-        WRMSG( HHC00104, "W", "qeth_halt_or_clear", dev->devnum );
-        /* No choice but to call directly! */
-        qeth_halt_or_clear_thread( dev );
+        WRMSG( HHC00103, "E", thread_name, strerror( rc ));
+
+        /* No choice but to call it directly! */
+        dev->synchalt = 1;
+        {
+            // "%1d:%04X: Calling \"%s\" directly!"
+            WRMSG( HHC00104, "W", LCSS_DEVNUM, "qeth_halt_or_clear_thread" );
+
+            qeth_halt_or_clear_thread( dev );
+        }
+        dev->synchalt = 0;
     }
 }
 

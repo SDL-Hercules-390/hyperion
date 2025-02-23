@@ -296,7 +296,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00101 "Thread id "TIDPAT", prio %d, name '%s' ended"
 #define HHC00102 "Error in function create_thread(): %s"
 #define HHC00103 "create_thread( \"%s\" ) error: %s"
-#define HHC00104 "Calling \"%s\" directly for %4.4X"
+#define HHC00104 "%1d:%04X: Calling \"%s\" directly!"
 //efine HHC00105 (available)
 #define HHC00106 "Error in function create_thread() for %s %d of %d: %s"
 #define HHC00107 "Starting thread %s, active=%d, started=%d, max=%d"
