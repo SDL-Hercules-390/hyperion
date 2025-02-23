@@ -3783,7 +3783,10 @@ static void qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
     obtain_lock( &grp->qlock );
     {
         /* Is read device still active? */
-        if (dev->busy && dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
+        DBGTRC( dev, "Halt read device: Active %s (%d)",
+                                        (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE) ? "true" : "false",
+                                        dev->qdio.idxstate );
+        if (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
         {
             DBGTRC( dev, "Halting read device" );
             {
@@ -3817,6 +3820,9 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
     obtain_lock( &grp->qlock );
     {
         /* Is data device still active? */
+        DBGTRC( dev, "Halt data device: Active %s (%d)",
+                                        (dev->qdio.acqstate == ACQ_STATE_ACTIVE) ? "true" : "false",
+                                        dev->qdio.acqstate );
         if (dev->qdio.acqstate == ACQ_STATE_ACTIVE)
         {
             BYTE  sig  = QDSIG_HALT;
@@ -3916,7 +3922,7 @@ static void*  qeth_halt_or_clear_thread( void* arg)
 static void qeth_halt_or_clear( DEVBLK* dev )
 {
     /* Halt/Clear is not needed if the device isn't busy
-       or a previous Halt/Clear request hasn't finished. */ 
+       or a previous Halt/Clear request hasn't finished. */
     if (!dev->busy || dev->halting)
     {
         /* Skip scary warning message for just simple device resets */
@@ -5296,6 +5302,7 @@ U32 num;                                /* Number of bytes to move   */
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
         /* Indicate ACTIVATE QUEUES is now active (looping) */
+//      DBGTRC( dev, "Activate Queues: Becoming Active");
         dev->qdio.acqstate = ACQ_STATE_ACTIVE;
 
         /* Loop until halt signal is received via notification pipe */
@@ -5435,6 +5442,7 @@ U32 num;                                /* Number of bytes to move   */
 
         /* Indicate ACTIVATE QUEUES is now INactive (NOT looping) */
         dev->qdio.acqstate = ACQ_STATE_INACTIVE;
+//      DBGTRC( dev, "Activate Queues: Become Inactive");
 
         /* Acknowledge halt signal (how else could we reach here?) */
         if (sig == QDSIG_HALT)
