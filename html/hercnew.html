@@ -13,6 +13,48 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
+<h2>What's new in Version 4.8
+</h2>
+
+<p>Release date: dd Mmmm 2025
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.8">Release_4.8</a>
+
+<ul>
+
+<li>Fix rare Hercules crash in QETH device handling
+<li>Fix CCKDDU64 failure on very large (e.g. 3390-54) dasds
+<li>Fix cckddiag/64 CFBA crash and correct associated DOC
+<li>Fix storage key double-keyed 4K-byte-block bug
+<li>Fix timer interval bug in rubato_thread causing excessive CPU
+<li>Fix QDIO SQBS instruction return codes
+<li>Fix 17 yr. old SIE bug
+<li>Fix SoftFloat libs updated to new version
+<li>Fix minor trailing path separator bug in 'sclproot' command
+<li>Fix LCS device confusion with preconfigured interfaces
+<li>Fix 3880/3990 control unit chaining requirement
+<li>Fix bug in ED24 LDE (LOAD LENGTHENED) instruction
+<li>Fix CTCE support for VM TSAF facility
+<li>Fix Shared Device Server/Client "CU=" mismatch bug
+<p>
+<li>New: Compressed CKD/FBA DASD Hardener
+<li>New: card2txt: utility to translate EBCDIC card deck to ASCII text file:
+<li>New: txt2card: socket output option added
+<li>New: Support for Michigan Terminal System (MTS) Host Interface Machine (HIM) devices
+<li>New: zVector Facility support
+         THANK YOU salva-rczero, James Wekel, and Ian Shorter!
+<li>New: Message Security Assists 5 and 7 support
+<li>New: Workaround implemented for IBM PRNO instruction mishandling bug
+<li>New: Report unavailable host instructions
+<li>New: dasdinit: Warn if extension doesn't match compression option
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
 <h2>What's new in Version 4.7
 </h2>
 
