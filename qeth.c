@@ -3817,7 +3817,7 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
     obtain_lock( &grp->qlock );
     {
         /* Is data device still active? */
-        if (dev->busy && dev->scsw.flag2 & SCSW2_Q)
+        if (dev->qdio.acqstate == ACQ_STATE_ACTIVE)
         {
             BYTE  sig  = QDSIG_HALT;
 
@@ -5295,6 +5295,9 @@ U32 num;                                /* Number of bytes to move   */
         DBGTRC( dev, "Activate Queues: Entry iqm=%8.8x oqm=%8.8x",dev->qdio.i_qmask, dev->qdio.o_qmask);
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
+        /* Indicate ACTIVATE QUEUES is now active (looping) */
+        dev->qdio.acqstate = ACQ_STATE_ACTIVE;
+
         /* Loop until halt signal is received via notification pipe */
         while (1)
         {
@@ -5429,6 +5432,9 @@ U32 num;                                /* Number of bytes to move   */
             }
         }
         PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
+
+        /* Indicate ACTIVATE QUEUES is now INactive (NOT looping) */
+        dev->qdio.acqstate = ACQ_STATE_INACTIVE;
 
         /* Acknowledge halt signal (how else could we reach here?) */
         if (sig == QDSIG_HALT)
