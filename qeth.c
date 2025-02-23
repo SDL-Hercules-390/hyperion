@@ -2544,7 +2544,7 @@ static void raise_adapter_interrupt( DEVBLK* dev )
             return;
         }
 
-        /* Yield to hopefully allow current lock owner a chance
+        /* Yield to hopefully allow current intlock owner a chance
            to finish using it and release it before we try again.
         */
         USLEEP( OSA_TIMEOUTUS );
@@ -5243,6 +5243,16 @@ U32 num;                                /* Number of bytes to move   */
         {
             /* Prepare to wait for pipe signal or additional packets */
             FD_ZERO( &readset );
+
+            // PROGRAMMING NOTE: On Windows, the 'select' function can
+            // only contain socket file descriptors as it was designed
+            // solely for TCP/IP and not for regular file descriptors.
+            // On Linux however, 'select' can contain any mixture of
+            // regular file descriptors or socket file descriptors and
+            // on Linux, the QETH interface file descriptor could be a
+            // regular file file descriptor. Thus the special handling
+            // for WIndows to prevent a "HHC90000D mixed set(s)" error.
+#if defined( OPTION_W32_CTCI )
             fd = -1;
             if (socket_is_socket( grp->ppfd[0] ))
             {
@@ -5260,18 +5270,21 @@ U32 num;                                /* Number of bytes to move   */
                 FD_SET( grp->ttfd, &readset );
                 fd = grp->ttfd;
             }
-
-            /* Do nothing if neither file descriptor is valid */
+            /* Skip 'qeth_select' if neither file descriptor's valid */
             if (fd < 0)
             {
                 USLEEP( OSA_TIMEOUTUS );
                 continue;
             }
-
-            tv.tv_sec  = 0;
-            tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
+#else // Linux: always do 'qeth_select' on both file descriptors
+            FD_SET( grp->ppfd[0], &readset );
+            FD_SET( grp->ttfd,    &readset );
+            fd = max( grp->ppfd[0], grp->ttfd );
+#endif // (Windows or Linux)
 
             /* Wait (but only very briefly) for more work to arrive */
+            tv.tv_sec  = 0;
+            tv.tv_usec = OSA_TIMEOUTUS;     /* Select timeout usecs  */
             rc = qeth_select( fd+1, &readset, &tv );
 
             /* Read pipe signal if one was sent */
@@ -5286,29 +5299,22 @@ U32 num;                                /* Number of bytes to move   */
                 if (QDSIG_HALT == sig)
                     break;
 
+                /* Process pipe signal */
                 switch (sig)
                 {
-                case QDSIG_READ:
-                    grp->rdpack = 0;
-                    break;
-                case QDSIG_RDMULT:
-                    grp->rdpack = 1;
-                    break;
-                case QDSIG_WRIT:
-                    grp->wrpack = 0;
-                    break;
-                case QDSIG_WRMULT:
-                    grp->wrpack = 1;
-                    break;
-                case QDSIG_WAKEUP:
-                    break;
+                case QDSIG_READ:   grp->rdpack = 0; break;
+                case QDSIG_RDMULT: grp->rdpack = 1; break;
+                case QDSIG_WRIT:   grp->wrpack = 0; break;
+                case QDSIG_WRMULT: grp->wrpack = 1; break;
+                case QDSIG_WAKEUP:                  break;
                 default:
-                    ASSERT(0);  /* (should NEVER occur) */
+                    BREAK_INTO_DEBUGGER(); // (should not occur)
                 }
             }
 
             /* Cannot process any input or output queues until the interface
-               is (re-)enabled (which will very likely happen VERY soon!) */
+               is (re-)enabled (which will very likely happen VERY soon!).
+               This is MOSTLY (but not exclusively!) a Windows thing. */
             if (!grp->enabled)
             {
                 USLEEP( OSA_TIMEOUTUS );
@@ -5354,7 +5360,7 @@ U32 num;                                /* Number of bytes to move   */
             */
             if (likely( dev->qdio.o_qmask ))
             {
-                process_output_queues(dev);
+                process_output_queues( dev );
 
                 /* Present "output processed" interrupt if needed */
                 if (grp->oqPCI)
