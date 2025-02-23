@@ -1531,6 +1531,7 @@ struct DEVBLK {                         /* Device configuration block*/
         unsigned int                    /* Device state - serialized
                                             by dev->lock             */
                 busy:1,                 /* 1=Device is busy          */
+                halting:1,              /* 1=Halt/Clear busy         */
                 synchalt:1,             /* 1=Synchronous Halt/Clear  */
                 reserved:1,             /* 1=Device is reserved      */
                 suspended:1,            /* 1=Channel pgm suspended   */

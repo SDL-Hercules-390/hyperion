@@ -3891,6 +3891,9 @@ static void*  qeth_halt_or_clear_thread( void* arg)
         }
         else
             BREAK_INTO_DEBUGGER(); // (should never occur!)
+
+        /* Halt/Clear request completed */
+        dev->halting = 0;
     }
     if (!dev->synchalt)
     {
@@ -3912,27 +3915,54 @@ static void*  qeth_halt_or_clear_thread( void* arg)
 /*-------------------------------------------------------------------*/
 static void qeth_halt_or_clear( DEVBLK* dev )
 {
-    int  rc;
-    TID  tid;
-    char thread_name[16];
-
-    MSGBUF( thread_name, "%4.4X qe_hlt_clr", dev->devnum );
-
-    rc = create_thread( &tid, DETACHED, qeth_halt_or_clear_thread, dev, thread_name );
-    if (rc)
+    /* Halt/Clear is not needed if the device isn't busy
+       or a previous Halt/Clear request hasn't finished. */ 
+    if (!dev->busy || dev->halting)
     {
-        // "create_thread( \"%s\" ) error: %s"
-        WRMSG( HHC00103, "E", thread_name, strerror( rc ));
-
-        /* No choice but to call it directly! */
-        dev->synchalt = 1;
+        /* Skip scary warning message for just simple device resets */
+        if (dev->hoc != HOC_RESET)
         {
-            // "%1d:%04X: Calling \"%s\" directly!"
-            WRMSG( HHC00104, "W", LCSS_DEVNUM, "qeth_halt_or_clear_thread" );
+            const char* hoc = str_HOC( dev->hoc );
+            const char* qtype = (QTYPE_READ  == dev->qtype) ? "read"
+                              : (QTYPE_WRITE == dev->qtype) ? "write"
+                              : (QTYPE_DATA  == dev->qtype) ? "data"
+                              :                               "qeth";
 
-            qeth_halt_or_clear_thread( dev );
+            // "%1d:%04X %s: %s %s for %s device"
+            WRMSG( HHC00905, "W", LCSS_DEVNUM, dev->typname, hoc, "skipped", qtype );
         }
-        dev->synchalt = 0;
+    }
+    else // (dev->busy && !dev->halting): Halt/Clear needed
+    {
+        /* PROGRAMMING NOTE: we do the actual Halt/Clear processing
+           asynchronously in a separate thread because that's the way
+           the Principles of Operation says it should be done. This
+           allows the HSCH/CSCH instruction to more quickly complete.
+        */
+        int  rc;
+        TID  tid;
+        char thread_name[16];
+
+        MSGBUF( thread_name, "%1d:%04X q_hltclr", LCSS_DEVNUM );
+
+        dev->halting = 1; // (indicate halt/clear request in progress)
+
+        rc = create_thread( &tid, DETACHED, qeth_halt_or_clear_thread, dev, thread_name );
+        if (rc)
+        {
+            // "create_thread( \"%s\" ) error: %s"
+            WRMSG( HHC00103, "E", thread_name, strerror( rc ));
+
+            /* No choice but to call it directly! */
+            dev->synchalt = 1;
+            {
+                // "%1d:%04X: Calling \"%s\" directly!"
+                WRMSG( HHC00104, "W", LCSS_DEVNUM, "qeth_halt_or_clear_thread" );
+
+                qeth_halt_or_clear_thread( dev );
+            }
+            dev->synchalt = 0;
+        }
     }
 }
 
