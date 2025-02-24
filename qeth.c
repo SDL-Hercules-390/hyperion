@@ -868,7 +868,7 @@ static int qeth_select (int nfds, fd_set* rdset, struct timeval* tv)
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
         /* Otherwise pause before retrying */
-        USLEEP( OSA_TIMEOUTUS );
+        sched_yield();
     }
     if (rc <= 0)
         errno = errnum;
@@ -886,7 +886,7 @@ static int qeth_read_pipe (int fd, BYTE *sig)
         errnum = HSO_errno;
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
-        USLEEP( OSA_TIMEOUTUS );
+        sched_yield();
     }
     if (rc <= 0)
         errno = errnum;
@@ -904,7 +904,7 @@ static int qeth_write_pipe (int fd, BYTE *sig)
         errnum = HSO_errno;
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
-        USLEEP( OSA_TIMEOUTUS );
+        sched_yield();
     }
     if (rc <= 0)
         errno = errnum;
@@ -2547,7 +2547,7 @@ static void raise_adapter_interrupt( DEVBLK* dev )
         /* Yield to hopefully allow current intlock owner a chance
            to finish using it and release it before we try again.
         */
-        USLEEP( OSA_TIMEOUTUS );
+        sched_yield();
     }
 
     /* Halt/Clear Subchannel was requested for device.
