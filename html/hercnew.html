@@ -24,14 +24,13 @@ Hercules: What's new
 
 <ul>
 
-<li>Fix rare Hercules crash in QETH device handling
+<li>Fix rare Hercules crash in QETH device handling if LSO enabled
 <li>Fix CCKDDU64 failure on very large (e.g. 3390-54) dasds (Andrew)
 <li>Fix cckddiag/64 CFBA crash and correct associated DOC
 <li>Fix storage key double-keyed 4K-byte-block bug (Pascal Parent)
 <li>Fix timer interval bug in rubato_thread causing excessive CPU
 <li>Fix QDIO SQBS/EQBS instruction return codes (James Wekel)
 <li>Fix 17 yr. old SIE bug (Pascal Parent)
-<li>Fix SoftFloat libs updated to new version
 <li>Fix minor trailing path separator bug in 'sclproot' command
 <li>Fix LCS device confusion with preconfigured interfaces (Ian Shorter)
 <li>Fix 3880/3990 control unit chaining requirement
@@ -45,9 +44,10 @@ Hercules: What's new
 <li>New: MTS (Michigan Terminal System) HIM (Host Interface Machine) device support (Mike Alexander)
 <li>New: <a href="hercrnot.html#4.8">zVector Facility support</a> (salva-rczero, James Wekel, Ian Shorter)
 <li>New: <a href="hercrnot.html#4.8">Message Security Assists 5 and 7</a> support (Jürgen Winkelmann)
-<li>New: Workaround implemented for <a href="hercrnot.html#4.8">IBM PRNO instruction mishandling</a> bug (Jürgen Winkelmann)
+<li>New: Workaround for PRNO instruction mishandling bug (Jürgen Winkelmann)
 <li>New: Report unavailable host instructions
 <li>New: dasdinit: Warn if extension doesn't match compression option
+<li>NEW: SoftFloat libs updated to new version
 
 </ul>
 
