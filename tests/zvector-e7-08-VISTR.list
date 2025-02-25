@@ -1,4 +1,4 @@
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     1
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -52,7 +52,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                                                     48 *    *Done
                                                     49 *
                                                     50 ***********************************************************************
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     2
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -110,7 +110,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                                                    103          B     EOJ
                                                    104 XC&SYSNDX EQU *
                                                    105          MEND
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     3
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -170,7 +170,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00000206  4190 8800                     00000800   155          LA    R9,2048(,R8)     Initalize SECOND base register
 0000020A  4190 9800                     00000800   156          LA    R9,2048(,R9)     Initalize SECOND base register
                                                    157
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     4
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -214,7 +214,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000002C8  4520 8270                     00000470   195+         BAL   R2,MSG
 000002CC  47F0 8338                     00000538   196+         B     EOJ
                               000002D0  00000001   197+XC0001   EQU   *
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     5
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -251,7 +251,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00000314  47F0 80D4                     000002D4   229          B     NEXTE7
                                                    230
 00000318  4700 811C                     0000031C   231 TESTCC   BC    0,CCMSG                 (unexpected condition code?)
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     6
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -306,7 +306,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                                                    281
 000003AC  47F0 8100                     00000300   282          B     TESTREST
                                                    283
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     7
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -362,7 +362,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000042C  1211                                     332          LTR   R1,R1
 0000042E  4780 8338                     00000538   333          BZ    EOJ                     No, exit
 00000432  47F0 8350                     00000550   334          B     FAILTEST                Yes, exit with BAD PSW
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     8
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -422,7 +422,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000004A4  0000                                     387          DC    H'0'                    CRASH for debugging purposes
 
 000004A6  9802 82AC                     000004AC   389 MSGRET   LM    R0,R2,MSGSAVE           Restore registers
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page     9
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page     9
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -440,7 +440,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000004BE  D4E2C7D5 D6C8405C                        395 MSGCMD   DC    C'MSGNOH * '            *** HERCULES MESSAGE COMMAND ***
 000004C7  40404040 40404040                        396 MSGMSG   DC    CL95' '                 The message text to be displayed
                                                    397
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    10
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    10
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -488,7 +488,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                                                    433
                               AABBCCDD  00000001   434 REG2PATT EQU   X'AABBCCDD'             Polluted Register pattern
                               000000DD  00000001   435 REG2LOW  EQU         X'DD'             (last byte above)
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    11
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    11
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -539,7 +539,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000010A8  A7                                       480 CCPRTGOT DC    C'x'
 000010A9  4B                                       481          DC    C'.'
                               00000055  00000001   482 CCPRTLNG   EQU   *-CCPRTLINE
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    12
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    12
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -597,7 +597,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                                                    531 *
                                                    532 *        followed by
                                                    533 *              EXPECTED RESULT
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    13
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    13
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -657,7 +657,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                                                    586 X&TNUM   DS    0F
                                                    587          LA   R1,V1FUDGE         load v21 fudge
                                                    588          VL    v21,0(R1)
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    14
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    14
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -703,7 +703,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                                                    626 .*
                                                    627          MEND
                                                    628
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    15
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    15
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -763,7 +763,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00001186  E756 0010 0C5C                           682+         VISTR V21,V22,0,1                test instruction
 0000118C  B98D 0020                                683+         EPSW  R2,R0              extract psw
 00001190  5020 500C                     0000000C   684+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    16
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    16
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -823,7 +823,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000126C  0003                                     733+         DC    H'3'               test number
 0000126E  00                                       734+         DC    X'00'
 0000126F  00                                       735+         DC    HL1'0'                  M3 used
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    17
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    17
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -859,7 +859,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000012F4  090A0B0C 0D0E0F10
 000012FC  01020304 05060708                        764          DC    XL16'01020304 05060708 090A0B0C 0D0E0F10'   v2
 00001304  090A0B0C 0D0E0F10
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    18
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    18
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -919,7 +919,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000013CD  E5C9E2E3 D9404040                        816+         DC    CL8'VISTR'         instruction name
 000013D8  0000143C                                 817+         DC    A(RE5)             address of v1 result
 000013DC  0000144C                                 818+         DC    A(RE5+16)          address of v2 source
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    19
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    19
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -979,7 +979,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000014CE  E756 0010 1C5C                           868+         VISTR V21,V22,1,1                test instruction
 000014D4  B98D 0020                                869+         EPSW  R2,R0              extract psw
 000014D8  5020 500C                     0000000C   870+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    20
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    20
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -991,7 +991,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000014EC  090A0B0C 0D0E0F10
 000014F4  01020304 05060708                        876          DC    XL16'01020304 05060708 090A0B0C 0D0E0F10'   v2
 000014FC  090A0B0C 0D0E0F10
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    21
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    21
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1051,7 +1051,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000015C5  E5C9E2E3 D9404040                        928+         DC    CL8'VISTR'         instruction name
 000015D0  00001634                                 929+         DC    A(RE8)             address of v1 result
 000015D4  00001644                                 930+         DC    A(RE8+16)          address of v2 source
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    22
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    22
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1111,7 +1111,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000016C6  E756 0010 2C5C                           980+         VISTR V21,V22,2,1                test instruction
 000016CC  B98D 0020                                981+         EPSW  R2,R0              extract psw
 000016D0  5020 500C                     0000000C   982+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    23
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    23
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1123,7 +1123,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000016E4  090A0B0C 0D0E0F10
 000016EC  01020304 05060708                        988          DC    XL16'01020304 05060708 090A0B0C 0D0E0F10'   v2
 000016F4  090A0B0C 0D0E0F10
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    24
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    24
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1183,7 +1183,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000017B2  07                                      1040+         DC    HL1'7'             CC failed mask
 000017B4  00000000 00000000                       1041+         DS    2F                 extracted PSW after test (has CC)
 000017BC  FF                                      1042+         DC    X'FF'              extracted CC, if test failed
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    25
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    25
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1243,7 +1243,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000018AC  E751 0000 0806                00000000  1092+         VL    v21,0(R1)
 000018B2  E310 5024 0014                00000024  1093+         LGF   R1,V2ADDR          load v2 source
 000018B8  E761 0000 0806                00000000  1094+         VL    v22,0(R1)          use v21 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    26
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    26
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1303,7 +1303,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000019A0                                          1143+         DS    0FD
 000019A0                      000019A0            1144+         USING *,R5               base for test data and test routine
 000019A0  000019F8                                1145+T14      DC    A(X14)             address of test routine
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    27
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    27
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1363,7 +1363,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00001A78  00001ACC                                1196+REA15    DC    A(RE15)            result address
 00001A80  00000000 00000000                       1197+         DS    FD                 gap
 00001A88  00000000 00000000                       1198+V1O15    DS    XL16               V1 output
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    28
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    28
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1423,7 +1423,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00001B74                                          1248+RE16     DC    0F                 V1 for this test
 00001B74                                          1249+         DROP  R5
 00001B74  01020304 05060708                       1250          DC    XL16'01020304 05060708 09000000 00000000'   v1
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    29
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    29
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1483,7 +1483,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00001C4A  07                                      1299+         DC    HL1'7'             CC failed mask
 00001C4C  00000000 00000000                       1300+         DS    2F                 extracted PSW after test (has CC)
 00001C54  FF                                      1301+         DC    X'FF'              extracted CC, if test failed
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    30
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    30
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1543,7 +1543,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00001D44  E751 0000 0806                00000000  1351+         VL    v21,0(R1)
 00001D4A  E310 5024 0014                00000024  1352+         LGF   R1,V2ADDR          load v2 source
 00001D50  E761 0000 0806                00000000  1353+         VL    v22,0(R1)          use v21 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    31
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    31
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1603,7 +1603,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00001E38                                          1402+         DS    0FD
 00001E38                      00001E38            1403+         USING *,R5               base for test data and test routine
 00001E38  00001E90                                1404+T21      DC    A(X21)             address of test routine
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    32
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    32
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1663,7 +1663,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00001F10  00001F64                                1455+REA22    DC    A(RE22)            result address
 00001F18  00000000 00000000                       1456+         DS    FD                 gap
 00001F20  00000000 00000000                       1457+V1O22    DS    XL16               V1 output
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    33
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    33
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1723,7 +1723,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000200C                                          1507+RE23     DC    0F                 V1 for this test
 0000200C                                          1508+         DROP  R5
 0000200C  01020000 00000000                       1509          DC    XL16'01020000 00000000 00000000 00000000'   v1
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    34
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    34
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1783,7 +1783,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000020E2  07                                      1558+         DC    HL1'7'             CC failed mask
 000020E4  00000000 00000000                       1559+         DS    2F                 extracted PSW after test (has CC)
 000020EC  FF                                      1560+         DC    X'FF'              extracted CC, if test failed
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    35
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    35
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1814,7 +1814,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002164  00000000 00000000
 0000216C  00020304 05060708                       1584          DC    XL16'00020304 05060708 090A0B0C 0D0E0F10'   v2
 00002174  090A0B0C 0D0E0F10
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    36
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    36
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1874,7 +1874,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000223D  E5C9E2E3 D9404040                       1636+         DC    CL8'VISTR'         instruction name
 00002248  000022AC                                1637+         DC    A(RE27)            address of v1 result
 0000224C  000022BC                                1638+         DC    A(RE27+16)         address of v2 source
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    37
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    37
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1934,7 +1934,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000233E  E756 0010 1C5C                          1688+         VISTR V21,V22,1,1                test instruction
 00002344  B98D 0020                               1689+         EPSW  R2,R0              extract psw
 00002348  5020 500C                     0000000C  1690+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    38
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    38
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1994,7 +1994,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002424  001E                                    1739+         DC    H'30'              test number
 00002426  00                                      1740+         DC    X'00'
 00002427  01                                      1741+         DC    HL1'1'                  M3 used
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    39
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    39
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2054,7 +2054,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002510  00000000 00000000
 00002518  00000000 00000000                       1792+         DS    FD                 gap
                                                   1793+*
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    40
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    40
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2114,7 +2114,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000025FC  00000000 00000000
 00002604  88888888 00007777                       1844          DC    XL16'88888888 00007777 66666666 55555555'   v2
 0000260C  66666666 55555555
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    41
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    41
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2174,7 +2174,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000026D5  E5C9E2E3 D9404040                       1895+         DC    CL8'VISTR'         instruction name
 000026E0  00002744                                1896+         DC    A(RE34)            address of v1 result
 000026E4  00002754                                1897+         DC    A(RE34+16)         address of v2 source
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    42
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    42
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2202,7 +2202,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000274C  00000000 00000000
 00002754  00008888 77777777                       1918          DC    XL16'00008888 77777777 66666666 55555555'   v2
 0000275C  66666666 55555555
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    43
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    43
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2262,7 +2262,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002825  E5C9E2E3 D9404040                       1970+         DC    CL8'VISTR'         instruction name
 00002830  00002894                                1971+         DC    A(RE36)            address of v1 result
 00002834  000028A4                                1972+         DC    A(RE36+16)         address of v2 source
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    44
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    44
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2322,7 +2322,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002926  E756 0010 2C5C                          2022+         VISTR V21,V22,2,1                test instruction
 0000292C  B98D 0020                               2023+         EPSW  R2,R0              extract psw
 00002930  5020 500C                     0000000C  2024+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    45
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    45
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2382,7 +2382,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002A0C  0027                                    2073+         DC    H'39'              test number
 00002A0E  00                                      2074+         DC    X'00'
 00002A0F  02                                      2075+         DC    HL1'2'                  M3 used
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    46
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    46
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2419,7 +2419,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002A9C  00000000 BBBBBBBB                       2104          DC    XL16'00000000 BBBBBBBB CCCCCCCC DDDDDDDD'   v2
 00002AA4  CCCCCCCC DDDDDDDD
                                                   2105
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    47
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    47
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2479,7 +2479,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002B62  07                                      2157+         DC    HL1'7'             CC failed mask
 00002B64  00000000 00000000                       2158+         DS    2F                 extracted PSW after test (has CC)
 00002B6C  FF                                      2159+         DC    X'FF'              extracted CC, if test failed
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    48
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    48
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2539,7 +2539,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002C5C  E751 0000 0806                00000000  2209+         VL    v21,0(R1)
 00002C62  E310 5024 0014                00000024  2210+         LGF   R1,V2ADDR          load v2 source
 00002C68  E761 0000 0806                00000000  2211+         VL    v22,0(R1)          use v21 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    49
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    49
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2599,7 +2599,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002D50                                          2260+         DS    0FD
 00002D50                      00002D50            2261+         USING *,R5               base for test data and test routine
 00002D50  00002DA8                                2262+T44      DC    A(X44)             address of test routine
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    50
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    50
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2659,7 +2659,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002E28  00002E7C                                2313+REA45    DC    A(RE45)            result address
 00002E30  00000000 00000000                       2314+         DS    FD                 gap
 00002E38  00000000 00000000                       2315+V1O45    DS    XL16               V1 output
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    51
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    51
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2719,7 +2719,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002F24                                          2365+RE46     DC    0F                 V1 for this test
 00002F24                                          2366+         DROP  R5
 00002F24  01020304 00000000                       2367          DC    XL16'01020304 00000000 00000000 00000000'   v1
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    52
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    52
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2779,7 +2779,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00002FFA  07                                      2416+         DC    HL1'7'             CC failed mask
 00002FFC  00000000 00000000                       2417+         DS    2F                 extracted PSW after test (has CC)
 00003004  FF                                      2418+         DC    X'FF'              extracted CC, if test failed
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    53
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    53
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2839,7 +2839,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000030F4  E751 0000 0806                00000000  2468+         VL    v21,0(R1)
 000030FA  E310 5024 0014                00000024  2469+         LGF   R1,V2ADDR          load v2 source
 00003100  E761 0000 0806                00000000  2470+         VL    v22,0(R1)          use v21 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    54
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    54
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2899,7 +2899,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000031E8                                          2519+         DS    0FD
 000031E8                      000031E8            2520+         USING *,R5               base for test data and test routine
 000031E8  00003240                                2521+T51      DC    A(X51)             address of test routine
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    55
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    55
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2959,7 +2959,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000032C0  00003314                                2572+REA52    DC    A(RE52)            result address
 000032C8  00000000 00000000                       2573+         DS    FD                 gap
 000032D0  00000000 00000000                       2574+V1O52    DS    XL16               V1 output
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    56
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    56
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3019,7 +3019,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000033BC                                          2624+RE53     DC    0F                 V1 for this test
 000033BC                                          2625+         DROP  R5
 000033BC  00000000 00000000                       2626          DC    XL16'00000000 00000000 00000000 00000000'   v1
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    57
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    57
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3027,7 +3027,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 000033CC  00000304 05060708                       2627          DC    XL16'00000304 05060708 090A0B0C 0D0E0F10'   v2
 000033D4  090A0B0C 0D0E0F10
                                                   2628
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    58
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    58
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3087,7 +3087,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000349D  E5C9E2E3 D9404040                       2680+         DC    CL8'VISTR'         instruction name
 000034A8  0000350C                                2681+         DC    A(RE55)            address of v1 result
 000034AC  0000351C                                2682+         DC    A(RE55+16)         address of v2 source
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    59
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    59
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3147,7 +3147,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000359E  E756 0010 1C5C                          2732+         VISTR V21,V22,1,1                test instruction
 000035A4  B98D 0020                               2733+         EPSW  R2,R0              extract psw
 000035A8  5020 500C                     0000000C  2734+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    60
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    60
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3207,7 +3207,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003684  003A                                    2783+         DC    H'58'              test number
 00003686  00                                      2784+         DC    X'00'
 00003687  01                                      2785+         DC    HL1'1'                  M3 used
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    61
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    61
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3267,7 +3267,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003770  00000000 00000000
 00003778  00000000 00000000                       2836+         DS    FD                 gap
                                                   2837+*
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    62
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    62
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3327,7 +3327,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000385C  00000000 00000000
 00003864  00000000 77777777                       2888          DC    XL16'00000000 77777777 66666666 55555555'   v2
 0000386C  66666666 55555555
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    63
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    63
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3387,7 +3387,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003935  E5C9E2E3 D9404040                       2940+         DC    CL8'VISTR'         instruction name
 00003940  000039A4                                2941+         DC    A(RE62)            address of v1 result
 00003944  000039B4                                2942+         DC    A(RE62+16)         address of v2 source
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    64
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    64
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3447,7 +3447,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003A36  E756 0010 2C5C                          2992+         VISTR V21,V22,2,1                test instruction
 00003A3C  B98D 0020                               2993+         EPSW  R2,R0              extract psw
 00003A40  5020 500C                     0000000C  2994+         ST    R2,CCPSW              to save CC
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    65
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    65
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3499,7 +3499,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003AFC  00000000 00000000
 00003B04  00000000 BBBBBBBB                       3037          DC    XL16'00000000 BBBBBBBB CCCCCCCC DDDDDDDD'   v2
 00003B0C  CCCCCCCC DDDDDDDD
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    66
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    66
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3559,7 +3559,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003BCA  07                                      3089+         DC    HL1'7'             CC failed mask
 00003BCC  00000000 00000000                       3090+         DS    2F                 extracted PSW after test (has CC)
 00003BD4  FF                                      3091+         DC    X'FF'              extracted CC, if test failed
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    67
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    67
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3619,7 +3619,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003CC4  E751 0000 0806                00000000  3141+         VL    v21,0(R1)
 00003CCA  E310 5024 0014                00000024  3142+         LGF   R1,V2ADDR          load v2 source
 00003CD0  E761 0000 0806                00000000  3143+         VL    v22,0(R1)          use v21 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    68
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    68
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3679,7 +3679,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003DB8                                          3192+         DS    0FD
 00003DB8                      00003DB8            3193+         USING *,R5               base for test data and test routine
 00003DB8  00003E10                                3194+T69      DC    A(X69)             address of test routine
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    69
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    69
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3739,7 +3739,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003E90  00003EE4                                3245+REA70    DC    A(RE70)            result address
 00003E98  00000000 00000000                       3246+         DS    FD                 gap
 00003EA0  00000000 00000000                       3247+V1O70    DS    XL16               V1 output
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    70
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    70
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3799,7 +3799,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00003F8A  07FB                                    3297+         BR    R11                return
 00003F8C                                          3298+RE71     DC    0F                 V1 for this test
 00003F8C                                          3299+         DROP  R5
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    71
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    71
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3859,7 +3859,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00004061  00                                      3348+         DC    HL1'0'             CC
 00004062  07                                      3349+         DC    HL1'7'             CC failed mask
 00004064  00000000 00000000                       3350+         DS    2F                 extracted PSW after test (has CC)
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    72
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    72
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3919,7 +3919,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00004158  4110 8EF8                     000010F8  3400+         LA    R1,V1FUDGE        load v21 fudge
 0000415C  E751 0000 0806                00000000  3401+         VL    v21,0(R1)
 00004162  E310 5024 0014                00000024  3402+         LGF   R1,V2ADDR          load v2 source
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    73
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    73
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3979,14 +3979,14 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 0000423C  88838182 84868700                       3452          DC    XL16'88838182 84868700 81880000 000D1111'   v2
 00004244  81880000 000D1111
                                                   3453
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    74
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    74
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
                                                   3454
 0000424C  00000000                                3455          DC    F'0'     END OF TABLE
 00004250  00000000                                3456          DC    F'0'
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    75
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    75
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4046,7 +4046,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
 00004310  00002FF0                                3511+         DC    A(T48)                  test address
 00004314  00003098                                3512+         DC    A(T49)                  test address
 00004318  00003140                                3513+         DC    A(T50)                  test address
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    76
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    76
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4081,7 +4081,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                                                   3542
 00004388  00000000                                3543          DC    F'0'     END OF TABLE
 0000438C  00000000                                3544          DC    F'0'
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    77
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    77
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4141,7 +4141,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                               00000013  00000001  3590 V19      EQU   19
                               00000014  00000001  3591 V20      EQU   20
                               00000015  00000001  3592 V21      EQU   21
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    78
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    78
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4157,7 +4157,7 @@ ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)              
                               0000001F  00000001  3602 V31      EQU   31
                                                   3603
                                                   3604          END
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    79
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    79
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4217,7 +4217,7 @@ PRTM5               C    00001051           3   462   311
 PRTNAME             C    00001033           8   457   297
 PRTNUM              C    00001018           3   455   295
 R0                  U    00000000           1  3550   111   161   164   184   186   187   188   193   212   213   275   279   280
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    80
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    80
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4277,7 +4277,7 @@ R2                  U    00000002           1  3552   195   253   254   261   26
                                                      2547  2583  2584  2620  2621  2659  2660  2696  2697  2733  2734  2770  2771
                                                      2807  2808  2844  2845  2881  2882  2919  2920  2956  2957  2993  2994  3030
                                                      3031  3071  3072  3108  3109  3145  3146  3182  3183  3219  3220  3256  3257
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    81
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    81
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4337,7 +4337,7 @@ RE4                 F    00001394           4   799   780   781   782   784
 RE40                F    00002B34           4  2143  2124  2125  2126  2128
 RE41                F    00002BDC           4  2180  2161  2162  2163  2165
 RE42                F    00002C84           4  2217  2198  2199  2200  2202
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    82
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    82
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4397,7 +4397,7 @@ REA22               A    00001F10           4  1455
 REA23               A    00001FB8           4  1492
 REA24               A    00002060           4  1529
 REA25               A    00002108           4  1566
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    83
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    83
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4457,7 +4457,7 @@ REA73               A    00004088           4  3357
 REA74               A    00004130           4  3394
 REA75               A    000041D8           4  3434
 REA8                A    000015E0           4   933
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    84
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    84
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4517,7 +4517,7 @@ T46                 A    00002EA0           4  2336  3509
 T47                 A    00002F48           4  2373  3510
 T48                 A    00002FF0           4  2410  3511
 T49                 A    00003098           4  2447  3512
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    85
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    85
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4577,7 +4577,7 @@ V1FUDGE             X    000010F8          16   499   215   678   715   752   79
                                                      2092  2134  2171  2208  2245  2282  2319  2356  2393  2430  2467  2504  2541
                                                      2578  2615  2654  2691  2728  2765  2802  2839  2876  2914  2951  2988  3025
                                                      3066  3103  3140  3177  3214  3251  3289  3326  3363  3400  3440
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    86
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    86
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4637,7 +4637,7 @@ V1O57               X    00003618          16  2761  2772
 V1O58               X    000036C0          16  2798  2809
 V1O59               X    00003768          16  2835  2846
 V1O6                X    000014A0          16   860   871
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    87
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    87
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4697,7 +4697,7 @@ V23                 U    00000017           1  3594
 V24                 U    00000018           1  3595
 V25                 U    00000019           1  3596
 V26                 U    0000001A           1  3597
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    88
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    88
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4757,7 +4757,7 @@ X39                 F    00002A60           4  2091  2072
 X4                  F    00001368           4   789   770
 X40                 F    00002B08           4  2133  2114
 X41                 F    00002BB0           4  2170  2151
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    89
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    89
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -4809,7 +4809,7 @@ ZVE7TST             J    00000000       17296   110   113   115   119   123   44
 =F'64'              F    00000568           4   420   188
 =H'0'               H    00000578           2   424   365
 =XL4'3'             X    00000570           4   422   248
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    90
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    90
 
  MACRO   DEFN  REFERENCES
 
@@ -4820,7 +4820,7 @@ VRR_A     546    655    692    729    767    804    841    879    916    953    
                 1921   1958   1995   2032   2069   2111   2148   2185   2222   2259   2296   2333   2370   2407   2444   2481   2518
                 2555   2592   2631   2668   2705   2742   2779   2816   2853   2891   2928   2965   3002   3043   3080   3117   3154
                 3191   3228   3266   3303   3340   3377   3417
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    91
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    91
 
    DESC     SYMBOL   SIZE     POS        ADDR
 
@@ -4829,7 +4829,7 @@ Entry: 0
 Image      IMAGE    17296  0000-438F  0000-438F
   Region            17296  0000-438F  0000-438F
     CSECT  ZVE7TST  17296  0000-438F  0000-438F
-ASMA Ver. 0.7.0  zvector-e7-06-Find (Zvector E7 VRR-a instruction)                                  14 Feb 2025 21:40:22  Page    92
+ASMA Ver. 0.7.0  zvector-e7-08-VISTR                                                                25 Feb 2025 14:05:50  Page    92
 
    STMT                       FILE NAME
 

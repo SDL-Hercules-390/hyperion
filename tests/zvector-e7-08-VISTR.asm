@@ -1,4 +1,4 @@
- TITLE 'zvector-e7-06-Find (Zvector E7 VRR-a instruction)'
+ TITLE 'zvector-e7-08-VISTR'
 ***********************************************************************
 *
 *   Zvector E7 instruction tests for VRR-a encoded:

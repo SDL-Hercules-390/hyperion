@@ -1,4 +1,4 @@
- TITLE 'zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)'
+ TITLE 'zvector-e7-07-VGBM'
 ***********************************************************************
 *
 *   Zvector E7 instruction tests for VRI-a instruction:

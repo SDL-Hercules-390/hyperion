@@ -1,4 +1,4 @@
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     1
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -52,7 +52,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                     48 *    *Done
                                                     49 *
                                                     50 ***********************************************************************
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     2
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -110,7 +110,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                    103          B     EOJ
                                                    104 XC&SYSNDX EQU *
                                                    105          MEND
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     3
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -170,7 +170,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00000206  4190 8800                     00000800   155          LA    R9,2048(,R8)     Initalize SECOND base register
 0000020A  4190 9800                     00000800   156          LA    R9,2048(,R9)     Initalize SECOND base register
                                                    157
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     4
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -214,7 +214,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 000002C8  4520 81A0                     000003A0   195+         BAL   R2,MSG
 000002CC  47F0 8268                     00000468   196+         B     EOJ
                               000002D0  00000001   197+XC0001   EQU   *
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     5
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -243,7 +243,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                    221
 000002FC  41C0 C004                     00000004   222          LA    R12,4(0,R12)      next test address
 00000300  47F0 80D4                     000002D4   223          B     NEXTE6
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     6
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -275,7 +275,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 0000031C  1211                                     248          LTR   R1,R1
 0000031E  4780 8268                     00000468   249          BZ    EOJ                  No, exit
 00000322  47F0 8280                     00000480   250          B     FAILTEST             Yes, exit with BAD PSW
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     7
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -318,7 +318,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 0000038C  00000000                                 287 RPTSVR5  DC    F'0'               R5 save area
 
 00000390  00000000 00000000                        289 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     8
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -366,7 +366,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 000003EE  D4E2C7D5 D6C8405C                        326 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
 000003F7  40404040 40404040                        327 MSGMSG   DC    CL95' '                The message text to be displayed
                                                    328
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page     9
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page     9
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -420,7 +420,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                    362
                               AABBCCDD  00000001   363 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
                               000000DD  00000001   364 REG2LOW  EQU         X'DD'    (last byte above)
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    10
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    10
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -447,7 +447,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001044  A7A7A7A7 A7                              385 PRTI2    DC    C'xxxxx'
 00001049  4B                                       386          DC    C'.'
                               00000042  00000001   387 PRTLNG   EQU   *-PRTLINE
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    11
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    11
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -469,7 +469,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001088  00000000 00000000                        403          DS    XL16                                        gap
 00001098  44444444 44444444                        404 V1FUDGE  DC    XL16'44444444444444444444444444444444'    V1 FUDGE
 000010A8  00000000 00000000                        405          DS    XL16
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    12
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    12
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -529,7 +529,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                    455          DC    XL2'&I2'          i2
                                                    456          DC    CL8'&INST'        instruction name
                                                    457          DC    A(RE&TNUM+16)     address of v2 source
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    13
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    13
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -578,7 +578,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                    498 .*
                                                    499          MEND
                                                    500
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    14
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    14
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -638,7 +638,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001144  00000010                                 553+         DC    A(16)             result length
 00001148  00001184                                 554+REA2     DC    A(RE2)            result address
 00001150  00000000 00000000                        555+         DS    FD                gap
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    15
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    15
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -698,7 +698,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001230  00000000 00000000                        605+         DS    FD                gap
 00001238  00000000 00000000                        606+V1O4     DS    XL16              V1 output
 00001240  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    16
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    16
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -758,7 +758,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001320  00000000 00000000
 00001328  00000000 00000000                        657+         DS    FD                gap
                                                    658+*
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    17
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    17
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -818,7 +818,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                    708+*
 00001410                                           709+X8       DS    0F
 00001410  E760 8E98 0806                00001098   710+         VL    V22,V1FUDGE
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    18
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    18
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -878,7 +878,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 000014F0  E760 8E98 0806                00001098   760+         VL    V22,V1FUDGE
 000014F6  E760 0100 0844                           761+         VGBM  V22,X'0100'       test instruction  (dest is a source)
 000014FC  E760 5030 080E                000014D8   762+         VST   V22,V1O10         save v1 output
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    19
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    19
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -938,7 +938,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 000015DC  E760 5030 080E                000015B8   812+         VST   V22,V1O12         save v1 output
 000015E2  07FB                                     813+         BR    R11               return
 000015E4                                           814+RE12     DC    0F                xl16 expected result
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    20
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    20
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -998,7 +998,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 000016C4                                           864+RE14     DC    0F                xl16 expected result
 000016C4                                           865+         DROP  R5
 000016C4  000000FF 00000000                        866          DC    XL16'000000FF 00000000 00000000 00000000' expected mask
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    21
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    21
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1058,7 +1058,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 000017A4  00FF0000 00000000                        916          DC    XL16'00FF0000 00000000 00000000 00000000' expected mask
 000017AC  00000000 00000000
                                                    917
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    22
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    22
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1115,7 +1115,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001884                                           965+         DROP  R5
 00001884  FFFFFFFF FFFFFFFF                        966          DC    XL16'FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF' expected mask
 0000188C  FFFFFFFF FFFFFFFF
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    23
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    23
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1175,7 +1175,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001964                                          1018+         DROP  R5
 00001964  FF000000 000000FF                       1019          DC    XL16'FF000000 000000FF FF000000 000000FF' expected mask
 0000196C  FF000000 000000FF
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    24
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    24
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1235,7 +1235,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001A4C  0000FFFF 00000000
                                                   1070
                                                   1071          VRI_A VGBM,3003
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    25
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    25
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1295,7 +1295,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                   1121          VRI_A VGBM,1313
 00001B38                                          1122+         DS    0FD
 00001B38                      00001B38            1123+         USING *,R5              base for test data and test routine
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    26
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    26
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1355,7 +1355,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001C18                      00001C18            1173+         USING *,R5              base for test data and test routine
 00001C18  00001C60                                1174+T27      DC    A(X27)            address of test routine
 00001C1C  001B                                    1175+         DC    H'27'             test number
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    27
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    27
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1415,7 +1415,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
 00001CFC  001D                                    1225+         DC    H'29'             test number
 00001CFE  00                                      1226+         DC    X'00'
 00001CFF  1717                                    1227+         DC    XL2'1717'         i2
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    28
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    28
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1443,7 +1443,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                   1247
 00001D64  00000000                                1248          DC    F'0'     END OF TABLE
 00001D68  00000000                                1249          DC    F'0'
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    29
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    29
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1488,7 +1488,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                                                   1289
 00001DE8  00000000                                1290          DC    F'0'     END OF TABLE
 00001DEC  00000000                                1291          DC    F'0'
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    30
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    30
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1548,7 +1548,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                               00000013  00000001  1337 V19      EQU   19
                               00000014  00000001  1338 V20      EQU   20
                               00000015  00000001  1339 V21      EQU   21
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    31
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    31
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1564,7 +1564,7 @@ ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)              
                               0000001F  00000001  1349 V31      EQU   31
                                                   1350
                                                   1351          END
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    32
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    32
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -1624,7 +1624,7 @@ R5                  U    00000005           1  1302   206   207   210   257   28
                                                       790   795   815   820   840   845   865   870   890   895   915   920   940
                                                       945   965   973   993   998  1018  1023  1043  1048  1068  1073  1093  1098
                                                      1118  1123  1143  1148  1168  1173  1193  1198  1218  1223  1243
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    33
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    33
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -1684,7 +1684,7 @@ REA27               A    00001C38           4  1182
 REA28               A    00001CA8           4  1207
 REA29               A    00001D18           4  1232
 REA3                A    000011B8           4   579
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    34
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    34
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -1744,7 +1744,7 @@ V10                 U    0000000A           1  1328
 V11                 U    0000000B           1  1329
 V12                 U    0000000C           1  1330
 V13                 U    0000000D           1  1331
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    35
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    35
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -1804,7 +1804,7 @@ V26                 U    0000001A           1  1344
 V27                 U    0000001B           1  1345
 V28                 U    0000001C           1  1346
 V29                 U    0000001D           1  1347
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    36
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    36
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -1856,7 +1856,7 @@ ZVE7TST             J    00000000        7664   110   113   115   119   123   37
 =F'1'               F    00000494           4   352   237
 =F'64'              F    0000048C           4   350   188
 =H'0'               H    00000498           2   353   296
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    37
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    37
 
  MACRO   DEFN  REFERENCES
 
@@ -1864,7 +1864,7 @@ FCHECK     63    170
 PTTABLE   483   1255
 VRI_A     442    518    543    568    593    618    643    668    693    718    743    768    793    818    843    868    893    918
                  943    971    996   1021   1046   1071   1096   1121   1146   1171   1196   1221
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    38
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    38
 
    DESC     SYMBOL  SIZE     POS        ADDR
 
@@ -1873,7 +1873,7 @@ Entry: 0
 Image      IMAGE    7664  0000-1DEF  0000-1DEF
   Region            7664  0000-1DEF  0000-1DEF
     CSECT  ZVE7TST  7664  0000-1DEF  0000-1DEF
-ASMA Ver. 0.7.0  zvector-e7-02-VGBM (Zvector E7 VRI-a instruction)                                  12 Feb 2025 14:28:07  Page    39
+ASMA Ver. 0.7.0  zvector-e7-07-VGBM                                                                 25 Feb 2025 14:05:28  Page    39
 
    STMT                      FILE NAME
 
