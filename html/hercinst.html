@@ -16,8 +16,12 @@ Hercules: Installation and Operation
     <p>
         <a href="#install">Building and Installing</a>
         <ul>
-            <li><a href="#instsource">Building from source</a>
-            <li><a href="#instbinary">Windows Pre-built binaries</a>
+            <li><a href="#buildwin">Building from source on Windows</a>
+            <ul>
+                <li><a href="#instbinary">Windows Pre-built binaries</a>
+            </ul>
+            <li><a href="#buildmac">Building from source on Mac OS X</a>
+            <li><a href="#buildnix">Building from source on Linux and macOS (High Sierra and newer)</a>
         </ul>
     </p>
     <p>
@@ -45,20 +49,25 @@ Hercules: Installation and Operation
 <p><hr><a name="install"></a>
 <h2>Building and Installing</h2>
 
-<a name="instsource"></a>
-
-<h3>Building from source - Windows</h3>
-
 <p>
 
-For the most direct and by far <i><u>easiest</u></i> method to build Hercules on Windows,
-it is <i><u>highly recommended</u></i> that you use Bill Lewis's fantastic
-"<a href="https://github.com/wrljet/hercules-helper-windows"><b>Hercules Helper for Windows</b></a>"
-tool instead, and <b><i>not</i></b> the below manual method. <u>Hercules-Helper</u> completely
-automates the entire build process of downloading and installing all of the needed pieces
-and running all of needed commands to create a working Hercules. Simply download Bill's tool
-and enter a few simple commands, and within minutes you should have a working Hercules
-on your system.
+By far <i><u>easiest</u></i> and most direct way to build Hercules is
+to use Bill Lewis's fantastic
+<b><i><u>Hercules Helper</u></i></b> tool, and <b><i>not</i></b> the below manual method.
+<p>
+<b><i><u>Hercules Helper</u></i></b>
+<i>
+(for both <a href="https://github.com/wrljet/hercules-helper-windows">Windows</a>
+and <a href="https://github.com/wrljet/hercules-helper">non-Windows</a>)
+</i>
+completely automates the entire build process of downloading and installing all of the
+needed pieces and running all of needed commands to create a working Hercules. Simply
+download Bill's tool and enter a few simple commands, and within minutes you should have
+a working Hercules on your system.
+
+<a name="instsource"></a>
+<a name="buildwin"></a>
+<h3>Building from source - Windows</h3>
 
 <p>
 
@@ -71,7 +80,7 @@ If you wish to build Hercules yourself <b>manually</b> however, the procedure is
 <li>Clone the <b><a href="https://github.com/sdl-hercules-390/hyperion">Hercules source code git repository</a></b>
 <i>(recommended)</i>, or download the
 <a href="https://github.com/sdl-hercules-390/hyperion/archive/master.zip">source code .ZIP file</a>
-from Github <i>(discouraged)</i>.
+from Github <i>(discouraged!)</i>.
 
 <p><pre>
     git clone  https://github.com/SDL-Hercules-390/hyperion.git  &lt;directory-name&gt;
@@ -81,7 +90,7 @@ If you don't have <code>git</code> on your system, you will need to <a href="htt
 
 <p>
 
-<em><b>Note:</b> By downloading the .zip file <i>(discouraged)</i>
+<em><b>Note:</b> By downloading the source code .zip file <i>(discouraged!)</i>
 or by cloning the repository <i>(recommended)</i>
 you agree to the terms of the Hercules <a href="herclic.html">Q Public Licence</a>.</em>
 <br />
@@ -119,6 +128,7 @@ from
 and/or one or more of his other <a href="http://www.softdevlabs.com/index.html">Hercules products</a>.<br /><br />
 </ol>
 
+<a name="buildmac"></a>
 <h3>Building from source - Mac OS X</h3>
 <p><em><b>Important - Not Recently Tested.  May be obsolete.</b></em>
 <ol>
@@ -139,6 +149,7 @@ at <a href="http://brew.sh/">http://brew.sh/</a>
 <br />
 <br />
 
+<a name="buildnix"></a>
 <li>Proceed with <i>Building from source - Linux and macOS</i> below.<br /><br />
 </ol>
 
