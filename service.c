@@ -394,6 +394,7 @@ U32 pending;
 /* Input:                                                            */
 /*      command Null-terminated ASCII command string                 */
 /*      priomsg 0=SCP command, 1=SCP priority message                */
+/*      mask: suppress echoing of actual reply text                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 int scp_command( const char* command, bool priomsg, bool echo, bool mask )
@@ -422,25 +423,24 @@ int scp_command( const char* command, bool priomsg, bool echo, bool mask )
         return -1;
     }
 
-    /* Echo command to HMC console iuf requested */
+    /* Echo command to HMC console if requested */
     if (echo)
     {
+        /* SECURITY: Suppress echoing of actual text if needed */
         const char* cmd = mask ? "(suppressed)" : command;
-
         // "SCP %scommand: %s"
         WRMSG( HHC00160, "I", priomsg ? "priority " : "", cmd );
     }
 
-    /* Obtain the interrupt lock */
+    /* Notify the service processor is has event data */
     OBTAIN_INTLOCK( NULL );
+    {
+        /* Save command string and message type for read event data */
+        STRLCPY( servc_scpcmdstr, command );
 
-    /* Save command string and message type for read event data */
-    STRLCPY( servc_scpcmdstr, command );
-
-    /* Raise attention service signal */
-    sclp_attention( priomsg ? SCCB_EVD_TYPE_PRIOR : SCCB_EVD_TYPE_OPCMD );
-
-    /* Release the interrupt lock */
+        /* Raise attention service signal */
+        sclp_attention( priomsg ? SCCB_EVD_TYPE_PRIOR : SCCB_EVD_TYPE_OPCMD );
+    }
     RELEASE_INTLOCK( NULL );
 
     return 0;
