@@ -289,14 +289,14 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         && ARCH_370_IDX == sysblk.arch_mode
         && om_basic != sysblk.operation_mode
     )
-        panel_command( "-LPARNUM BASIC" );
+        panel_command( "LPARNUM BASIC" );
     else if (1
         && ARCH_900_IDX == sysblk.arch_mode
         && om_basic == sysblk.operation_mode
     )
     {
-        panel_command( "-LPARNUM 1" );
-        panel_command( "-CPUIDFMT 0" );
+        panel_command( "LPARNUM 1" );
+        panel_command( "CPUIDFMT 0" );
     }
 
     return 0;
