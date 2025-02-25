@@ -22,12 +22,13 @@ Hercules: Release Notes
 <dl>
 
 
-  <dt>Experimental z/Architecture Vector Registers Support
+  <dt>z/Architecture Vector Registers Support
   <dd>
   <p>
-    All zVector instructions have now been coded and lightly tested and appear to be functioning
-    normally. Nevertheless, Vector Facility support is still considered to be experimental
-    given that this feature is brand new to Hercules and has only been lightly tested.
+    Full zVector Register support has now been coded and lightly tested and appears
+    to be functioning normally. Nevertheless, Vector Facility support is still considered
+    to be <i><u>experimental</u></i> given that this feature is brand new to Hercules
+    and has not been thoroughly tested.
   </p>
 
 
@@ -38,23 +39,25 @@ Hercules: Release Notes
     random number generator (DRNG) and a true random number generator (TRNG) through the PRNO
     instruction. On real hardware, entropy for the TRNG is obtained using sources external to
     the CP. Data obtained from the TRNG is intended to be used to seed the DRNG. Both facilities
-    are now provided by Hercules. However, the Hercules implementation is not based on the
+    are now provided by Hercules.
+  <p>
+    However, the Hercules implementation is not based on the
     algorithms described in "z/Architecture Principles of Operation" (SA22-7832-13) but on its
     internal CSRNG implementation already being in use for Message-Security-Assist Extension 3.
-    This internal implementation relies on the on the host system's RNG capabilities. Most
+    This internal implementation relies on the host system's RNG capabilities. Most
     modern host operating systems support cryptographically secure random number generation,
     namely the BCrypt API as implemented on Windows and the /dev/(u)random implementations
     on Linux and macOS.
   </p>
 
 
-  <dt>Compressed CKD/FBA DASD Hardener
+  <dt>Compressed CKD/FBA Dasd Hardener
   <dd>
   <p>
-    This release adds a <i>DASD Hardener</i> function to the Compressed CKD (and FBA)
-    DASD support.
+    This release adds a <i>Dasd Hardener</i> function to the Compressed CKD (and FBA)
+    dasd support.
   <p>
-    Prior to this release, under normal operation, not immediately committing DASD data
+    Prior to this release, under normal operation, not immediately committing dasd data
     written by a guest OS to the emulation disk files for an unpredictable period time
     might have been reasonable.  On systems with large idle periods (<i>e.g.</i>, hobbyist
     systems or "Shared DASD servers") however, such data might have remained uncommitted
@@ -63,18 +66,18 @@ Hercules: Release Notes
     those releases to ensure that all data the guest OS has written was permanently recorded
     to the emulation files.
   <p>
-    This release uses existing functions in the Compressed DASD subsystem to build an
-    optional thread that periodically scans the DASD cache and flushes updated tracks to the
-    emulation files on a timely basis.  See the <a href="cckddasd.html#cckdcommand">cckd
-    command documentation</a> for details on configuring and controlling the DASD Hardener.
+    This release uses existing functions in the Compressed Dasd subsystem to build an
+    optional thread that periodically scans the dasd cache and flushes updated tracks to the
+    emulation files on a timely basis.  See the <a href="cckddasd.html#cckdcommand">'cckd'
+    command documentation</a> for details on configuring and controlling the Dasd Hardener.
   <p>
-    <b>NOTE:</b> Flushing the DASD data cache frequently may increase the host disk activity,
+    <b>NOTE:</b> Flushing the dasd data cache frequently may increase the host disk activity,
     as frequently-updated tracks would be written more often in this scenario.  For
     largely-idle Hercules systems, this increase will likely have negligable effects.  For
     busy systems with activity scattered across a broad set of tracks, the data cache should
     already be flushed often, albeit unpredictably.  For busy systems with more-focused
-    activity, the high-activity tracks will be written to disk more often, which may have
-    a measurable negative effect.
+    activity, the high-activity tracks will be written to disk more often, which could
+    possibly have a measurable negative effect.
   </p>
 
 

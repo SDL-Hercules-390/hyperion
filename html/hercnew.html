@@ -20,32 +20,32 @@ Hercules: What's new
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.8">Release_4.8</a>
+<br><i>Please refer to the <a href="hercrnot.html#4.8">Release Notes</a> for important information.</i>
 
 <ul>
 
 <li>Fix rare Hercules crash in QETH device handling
-<li>Fix CCKDDU64 failure on very large (e.g. 3390-54) dasds
+<li>Fix CCKDDU64 failure on very large (e.g. 3390-54) dasds (Andrew)
 <li>Fix cckddiag/64 CFBA crash and correct associated DOC
-<li>Fix storage key double-keyed 4K-byte-block bug
+<li>Fix storage key double-keyed 4K-byte-block bug (Pascal Parent)
 <li>Fix timer interval bug in rubato_thread causing excessive CPU
-<li>Fix QDIO SQBS instruction return codes
-<li>Fix 17 yr. old SIE bug
+<li>Fix QDIO SQBS/EQBS instruction return codes (James Wekel)
+<li>Fix 17 yr. old SIE bug (Pascal Parent)
 <li>Fix SoftFloat libs updated to new version
 <li>Fix minor trailing path separator bug in 'sclproot' command
-<li>Fix LCS device confusion with preconfigured interfaces
+<li>Fix LCS device confusion with preconfigured interfaces (Ian Shorter)
 <li>Fix 3880/3990 control unit chaining requirement
-<li>Fix bug in ED24 LDE (LOAD LENGTHENED) instruction
-<li>Fix CTCE support for VM TSAF facility
+<li>Fix bug in ED24 LDE (LOAD LENGTHENED) instruction (Ian Shorter)
+<li>Fix CTCE support for VM TSAF facility (Peter Jansen)
 <li>Fix Shared Device Server/Client "CU=" mismatch bug
 <p>
-<li>New: Compressed CKD/FBA DASD Hardener
-<li>New: card2txt: utility to translate EBCDIC card deck to ASCII text file:
-<li>New: txt2card: socket output option added
-<li>New: Support for Michigan Terminal System (MTS) Host Interface Machine (HIM) devices
-<li>New: zVector Facility support
-         THANK YOU salva-rczero, James Wekel, and Ian Shorter!
-<li>New: Message Security Assists 5 and 7 support
-<li>New: Workaround implemented for IBM PRNO instruction mishandling bug
+<li>New: Compressed CKD/FBA <a href="hercrnot.html#4.8">Dasd Hardener</a> (Ross Patterson)
+<li>New: card2txt: utility to translate EBCDIC cards to ASCII file
+<li>New: txt2card: socket output option
+<li>New: MTS (Michigan Terminal System) HIM (Host Interface Machine) device support (Mike Alexander)
+<li>New: <a href="hercrnot.html#4.8">zVector Facility support</a> (salva-rczero, James Wekel, Ian Shorter)
+<li>New: <a href="hercrnot.html#4.8">Message Security Assists 5 and 7</a> support (Jürgen Winkelmann)
+<li>New: Workaround implemented for <a href="hercrnot.html#4.8">IBM PRNO instruction mishandling</a> bug (Jürgen Winkelmann)
 <li>New: Report unavailable host instructions
 <li>New: dasdinit: Warn if extension doesn't match compression option
 
