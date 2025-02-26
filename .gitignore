@@ -16,6 +16,7 @@ config.log
 autoconf/compile
 /aclocal.m4
 /autom4te.cache
+/card2txt
 /cckd2ckd
 /cckd642ckd
 /cckdcdsk
