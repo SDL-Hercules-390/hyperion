@@ -1497,15 +1497,33 @@ static void ptp_halt_or_clear( DEVBLK* pDEVBLK )
 {
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
-    obtain_lock( &pPTPBLK->ReadEventLock );
+    const char*  hoc;
+    const char*  type;
+    char       text[256];
+
+    if (pPTPBLK->uDebugMask & DBGPTPCCW)
     {
-        if (pPTPBLK->fReadWaiting)
-        {
-            pPTPBLK->fHaltOrClear = 1;
-            signal_condition( &pPTPBLK->ReadEvent );
-        }
+        hoc  = str_HOC( pDEVBLK->hoc );
+        if (pPTPATH->bDLCtype == DLCTYPE_READ)     // For the y-side's Read path?
+            type = "read";
+        else
+            type = "write";
+        snprintf( text, sizeof(text), "%s for %s device", hoc, type );
+        WRMSG( HHC03991, "D", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pDEVBLK->typname, text );
     }
-    release_lock( &pPTPBLK->ReadEventLock );
+
+    if (pPTPATH->bDLCtype == DLCTYPE_READ)     // For the y-side's Read path?
+    {
+        obtain_lock( &pPTPBLK->ReadEventLock );
+        {
+            if (pPTPBLK->fReadWaiting)
+            {
+                pPTPBLK->fHaltOrClear = 1;
+                signal_condition( &pPTPBLK->ReadEvent );
+            }
+        }
+        release_lock( &pPTPBLK->ReadEventLock );
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -1534,6 +1552,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
     struct timespec waittime;
     struct timeval  now;
     BYTE       haltorclear = FALSE;
+    BYTE       closeinprogress = FALSE;
 
     if (pPTPATH->bDLCtype == DLCTYPE_READ)     // Read from the y-side's Read path?
     {
@@ -1555,7 +1574,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
 
                 // Free the buffer.
                 free( pPTPHDR );
-                return;
+                break;
             }
 
             // Return the data from the read buffer to the guest OS.
@@ -1575,7 +1594,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
 
                 // Release the read buffer lock.
                 release_lock( &pPTPBLK->ReadBufferLock );
-                return;
+                break;
             }
 
             // Release the read buffer lock.
@@ -1605,20 +1624,26 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
                 pPTPBLK->fHaltOrClear = 0;
             }
 
+            // check for shutting down condition
+            if (pPTPBLK->fCloseInProgress)
+            {
+                closeinprogress = TRUE;
+            }
+
             // Release the event lock
             release_lock( &pPTPBLK->ReadEventLock );
 
-            // check for halt condition
-            if (haltorclear)
+            // check for halt or shutting down condition
+            if (haltorclear || closeinprogress)
             {
-                if (pDEVBLK->ccwtrace)
+                if (pDEVBLK->ccwtrace || pPTPBLK->uDebugMask & DBGPTPCCW)
                 {
                     // HHC00904 "%1d:%04X %s: halt or clear recognized"
-                    WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
+                    WRMSG(HHC00904, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
                 }
                 *pUnitStat = CSW_CE | CSW_DE;
                 *pResidual = uCount;
-                return;
+                break;
             }
         } /* for (;;) */
     }
@@ -1638,8 +1663,6 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
 
             // Free the buffer.
             free( pPTPHDR );
-
-            return;
         }
         else
         {
@@ -1649,10 +1672,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
             *pMore     = 0;
             *pResidual = 0;
             *pUnitStat = CSW_CE | CSW_DE;
-
-            return;
         }
-
     }   /* if (pPTPATH->bDLCtype == DLCTYPE_READ ) */
 
     return;
@@ -2053,6 +2073,9 @@ void*  ptp_read_thread( void* arg )
     char       cPktVer[8];
     int        iPktLen;
     int        iTraceLen;
+    fd_set     readset;
+    struct     timeval tv;
+    int        rc;
 
 
     // Allocate the TUN read buffer.
@@ -2077,6 +2100,30 @@ void*  ptp_read_thread( void* arg )
     // Keep going until we have to stop.
     while( pPTPBLK->fd != -1 && !pPTPBLK->fCloseInProgress )
     {
+        // Wait for something to happen.
+        for (;;)
+        {
+            // Prepare the read descriptor set.
+            FD_ZERO( &readset );
+            FD_SET( pPTPBLK->fd, &readset );
+            // Prepare the timeout value.
+            tv.tv_sec  = PTP_READ_TIMEOUT_SECS;
+            tv.tv_usec = 0;
+            // Issue select.
+            rc = select( pPTPBLK->fd+1, &readset, NULL, NULL, &tv );
+            // Check whether there's something to read.
+            if (rc > 0)
+                break;
+            // Check whether it's time to stop.
+            if (pPTPBLK->fd == -1 || pPTPBLK->fCloseInProgress )
+                break;
+            // Otherwise pause before re-issuing select.
+            sched_yield();
+        }
+
+        // Check whether it's time to stop.
+        if (pPTPBLK->fd == -1 || pPTPBLK->fCloseInProgress )
+            continue;
 
         // Read an IP packet from the TUN interface.
         iLength = TUNTAP_Read( pPTPBLK->fd, (void*)pTunBuf, iTunLen );
