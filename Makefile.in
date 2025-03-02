@@ -262,7 +262,8 @@ hdteq_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(hdteq_la_LDFLAGS) $(LDFLAGS) -o $@
 hdtptp_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_hdtptp_la_OBJECTS = ctc_ptp.lo mpc.lo resolve.lo tuntap.lo
+am_hdtptp_la_OBJECTS = ctc_ptp.lo mpc.lo resolve.lo tuntap.lo \
+	netsupp.lo
 hdtptp_la_OBJECTS = $(am_hdtptp_la_OBJECTS)
 hdtptp_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \

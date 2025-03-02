@@ -2073,9 +2073,6 @@ void*  ptp_read_thread( void* arg )
     char       cPktVer[8];
     int        iPktLen;
     int        iTraceLen;
-    fd_set     readset;
-    struct     timeval tv;
-    int        rc;
 
 
     // Allocate the TUN read buffer.
@@ -2100,35 +2097,8 @@ void*  ptp_read_thread( void* arg )
     // Keep going until we have to stop.
     while( pPTPBLK->fd != -1 && !pPTPBLK->fCloseInProgress )
     {
-#if !defined( OPTION_W32_CTCI ) // (i.e. Linux only)
-        // Wait for something to happen.
-        for (;;)
-        {
-            // Prepare the read descriptor set.
-            FD_ZERO( &readset );
-            FD_SET( pPTPBLK->fd, &readset );
-            // Prepare the timeout value.
-            tv.tv_sec  = DEF_NET_READ_TIMEOUT_SECS;
-            tv.tv_usec = 0;
-            // Issue select.
-            rc = select( pPTPBLK->fd+1, &readset, NULL, NULL, &tv );
-            // Check whether there's something to read.
-            if (rc > 0)
-                break;
-            // Check whether it's time to stop.
-            if (pPTPBLK->fd == -1 || pPTPBLK->fCloseInProgress )
-                break;
-            // Otherwise pause before re-issuing select.
-            sched_yield();
-        }
-
-        // Check whether it's time to stop.
-        if (pPTPBLK->fd == -1 || pPTPBLK->fCloseInProgress )
-            continue;
-#endif // !defined( OPTION_W32_CTCI ) // (i.e. Linux only)
-
         // Read an IP packet from the TUN interface.
-        iLength = TUNTAP_Read( pPTPBLK->fd, (void*)pTunBuf, iTunLen );
+        iLength = read_tuntap( pPTPBLK->fd, pTunBuf, iTunLen, DEF_NET_READ_TIMEOUT_SECS );
 
         // Check for error conditions...
         if (iLength < 0)

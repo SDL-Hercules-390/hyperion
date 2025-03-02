@@ -334,7 +334,7 @@ hdt1052c_la_SOURCES = con1052c.c
 hdt1052c_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c tuntap.c
+hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c tuntap.c netsupp.c
 hdtptp_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
 
