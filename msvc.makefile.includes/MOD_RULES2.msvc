@@ -132,7 +132,7 @@ $(X)hdteq.dll:    $(O)hdteq.obj \
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdtptp.dll:   $(O)ctc_ptp.obj $(tuntap_OBJ) \
+$(X)hdtptp.dll:   $(O)ctc_ptp.obj $(tuntap_OBJ) $(O)netsupp.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
