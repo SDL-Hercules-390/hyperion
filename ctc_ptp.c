@@ -2100,6 +2100,7 @@ void*  ptp_read_thread( void* arg )
     // Keep going until we have to stop.
     while( pPTPBLK->fd != -1 && !pPTPBLK->fCloseInProgress )
     {
+#if !defined( OPTION_W32_CTCI ) // (i.e. Linux only)
         // Wait for something to happen.
         for (;;)
         {
@@ -2107,7 +2108,7 @@ void*  ptp_read_thread( void* arg )
             FD_ZERO( &readset );
             FD_SET( pPTPBLK->fd, &readset );
             // Prepare the timeout value.
-            tv.tv_sec  = PTP_READ_TIMEOUT_SECS;
+            tv.tv_sec  = DEF_NET_READ_TIMEOUT_SECS;
             tv.tv_usec = 0;
             // Issue select.
             rc = select( pPTPBLK->fd+1, &readset, NULL, NULL, &tv );
@@ -2124,6 +2125,7 @@ void*  ptp_read_thread( void* arg )
         // Check whether it's time to stop.
         if (pPTPBLK->fd == -1 || pPTPBLK->fCloseInProgress )
             continue;
+#endif // !defined( OPTION_W32_CTCI ) // (i.e. Linux only)
 
         // Read an IP packet from the TUN interface.
         iLength = TUNTAP_Read( pPTPBLK->fd, (void*)pTunBuf, iTunLen );
