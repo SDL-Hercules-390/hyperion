@@ -2574,38 +2574,95 @@ typedef short QRC;              /* Internal function return code     */
 #define QRC_ESBPKCPY    -9      /* Packet copy wrong ending SBALE    */
 #define QRC_ESBNOEOF   -10      /* No last Last Storage Block flag   */
 
+#define NUM_QRCS        11      /* How many different QRCs there are */
+
 
 /*-------------------------------------------------------------------*/
-/* Helper function to report errors associated with an SBALE.        */
+/* Helper function to return a QRC string                            */
 /*-------------------------------------------------------------------*/
-static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
-                        QDIO_SBAL *sbal, BYTE sbalk, int sb )
+static const char* QRC2str( QRC qrc )
 {
-    char errmsg[256] = {0};
-    U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
-    U64 sba;
-    U32 sblen;
+    static const char* qrctab[ NUM_QRCS ] =
+    {
+        "QRC_SUCCESS",          /* Successful completion             */
+        "QRC_EIOERR",           /* Device i/o error reading/writing  */
+        "QRC_ESTORCHK",         /* STORCHK failure (Prot Key Chk)    */
+        "QRC_ENOSPC",           /* Out of Storage Blocks             */
+        "QRC_EPKEOF",           /* EOF while looking for packets     */
+        "QRC_EPKTYP",           /* Unsupported output packet type    */
+        "QRC_EPKSIZ",           /* Output packet/frame too large     */
+        "QRC_EZEROBLK",         /* Zero Length Storage Block         */
+        "QRC_EPKSBLEN",         /* Packet length <-> SBALE mismatch  */
+        "QRC_ESBPKCPY",         /* Packet copy wrong ending SBALE    */
+        "QRC_ESBNOEOF",         /* No last Last Storage Block flag   */
+    };
+    return ((-qrc) >= 0 && (-qrc) < NUM_QRCS) ? qrctab[ -qrc ] : "QRC_???";
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Helper function to format error message associated with an SBALE. */
+/*-------------------------------------------------------------------*/
+static void Format_SBALE_ErrMsg( char* msgbuf, size_t buflen, char* fmtstr,
+                                 QRC qrc, DEVBLK* dev, QDIO_SBAL *sbal,
+                                 BYTE sbalk, int sb )
+{
+    char errmsg[256]  = {0};
+    U64  sbala         = (U64)((BYTE*)sbal - dev->mainstor);
+    U64  sba;
+    U32  sblen;
 
     FETCH_DW( sba,   sbal->sbale[sb].addr   );
     FETCH_FW( sblen, sbal->sbale[sb].length );
 
-    MSGBUF( errmsg, msg, sb, sbala, sbalk, sba, sblen,
-        sbal->sbale[sb].flags[0],
-        sbal->sbale[sb].flags[3]);
+    MSGBUF
+    (
+        errmsg, fmtstr,
+        QRC2str( qrc ), sb, sbala, sbalk, sba, sblen,
+        sbal->sbale[sb].flags[0], sbal->sbale[sb].flags[3]
+    );
+
+    strlcpy( msgbuf, errmsg, buflen );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Helper function to report errors associated with an SBALE.        */
+/*-------------------------------------------------------------------*/
+static QRC Return_SBALE_ERROR( QRC qrc, DEVBLK* dev, QDIO_SBAL* sbal, BYTE sbalk, int sb,
+                               const char* file, int line, const char* func )
+{
+    char errmsg[ 256 ];
+
+    /* Format the message text that will follow the devnum & devtype */
+
+    Format_SBALE_ErrMsg( errmsg, sizeof( errmsg ),
+
+        "** %s **: SBAL(%d) @ %llx [%02X]:"
+        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X"
+
+        , qrc, dev, sbal, sbalk, sb
+    );
+
+    /* Now write the COMPLETE error message with devnum and devtype.
+
+       PLEASE NOTE that we call the "fwritemsg" function directly
+       instead of using the "WRMSG" macro so that it can be properly
+       reported exactly WHERE the error actually occurred. */
 
     // HHC03985 "%1d:%04X %s: %s"
-    WRMSG( HHC03985, "E", LCSS_DEVNUM,
-        dev->typname, errmsg );
+    fwritemsg( file, line, func, WRMSG_NORMAL, stdout,
+        "HHC03985E " HHC03985 "\n", LCSS_DEVNUM, dev->typname, errmsg );
 
     return qrc;
 }
+
 /*-------------------------------------------------------------------*/
-/* Helper macro to call above helper function.                       */
+/* Helper macro to report errors associated with an SBALE.           */
 /*-------------------------------------------------------------------*/
-#define SBALE_ERROR(_qrc,_dev,_sbal,_sbalk,_sb)                     \
-    SBALE_Error( "** " #_qrc " **: SBAL(%d) @ %llx [%02X]:"         \
-        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X",              \
-        (_qrc), (_dev), (_sbal), (_sbalk), (_sb))
+#define SBALE_ERROR(        _qrc, _dev, _sbal, _sbalk, _sb )        \
+        Return_SBALE_ERROR( _qrc, _dev, _sbal, _sbalk, _sb,         \
+               TRIMLOC( __FILE__ ), __LINE__, __FUNCTION__ )
 
 
 /*-------------------------------------------------------------------*/
