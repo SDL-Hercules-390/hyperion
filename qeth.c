@@ -2615,11 +2615,16 @@ static void Format_SBALE_ErrMsg( char* msgbuf, size_t buflen, char* fmtstr,
     FETCH_DW( sba,   sbal->sbale[sb].addr   );
     FETCH_FW( sblen, sbal->sbale[sb].length );
 
-    MSGBUF
-    (
-        errmsg, fmtstr,
-        QRC2str( qrc ), sb, sbala, sbalk, sba, sblen,
-        sbal->sbale[sb].flags[0], sbal->sbale[sb].flags[3]
+    // "** %s **: SBAL(%d) @ %"PRIx64" [%02X]:"
+    // " Addr: %"PRIx64" Len: %"PRIu32
+    // " flags[0,3]: %2.2X %2.2X"
+
+    MSGBUF( errmsg, fmtstr,
+
+        QRC2str( qrc ), sb, sbala, sbalk,
+        sba, sblen,
+        sbal->sbale[sb].flags[0],
+        sbal->sbale[sb].flags[3]
     );
 
     strlcpy( msgbuf, errmsg, buflen );
@@ -2638,8 +2643,9 @@ static QRC Return_SBALE_ERROR( QRC qrc, DEVBLK* dev, QDIO_SBAL* sbal, BYTE sbalk
 
     Format_SBALE_ErrMsg( errmsg, sizeof( errmsg ),
 
-        "** %s **: SBAL(%d) @ %llx [%02X]:"
-        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X"
+        "** %s **: SBAL(%d) @ %"PRIx64" [%02X]:"
+        " Addr: %"PRIx64" Len: %"PRIu32
+        " flags[0,3]: %2.2X %2.2X"
 
         , qrc, dev, sbal, sbalk, sb
     );
