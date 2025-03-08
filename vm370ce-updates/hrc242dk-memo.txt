@@ -1,0 +1,58 @@
+LOCAL MODIFICATION: HRC242DK
+
+Add option to bypass error recording/recovery
+
+Affected Files:
+===============
+
+IOBLOKS  COPY 
+DMKIOS   ASSEMBLE
+
+Prerequisites:
+==============
+
+HRC001DK
+HRC018DK
+
+Description:
+============
+
+Sometimes CP needs to perform an I/O operation that could produce 
+"expected" results.. For instance, the 3270 code might want to 
+issue a Write-Structured-Field but, if it isn't supported, 
+just continue on without the optional features and without any 
+error messages or recovery processing.
+
+Details:
+========
+
+IOBLOKS COPY          
+------------ 
+
+This update adds two new flags to IOBSPEC3:
+   -- IOBBYPER - Bypass ERP for errors (set by caller))
+   -- IOBHADER - Task resulted in bypassed error  (set by IOS)
+
+This update also redefines one of the "reserved"
+bytes (IOBRSV2) to pass back the "ignored" sense data
+   -- IOBFSNS1 - first byte of ignored sense data    
+
+============================================================================
+
+DMKIOS ASSEMBLE
+---------------
+
+Allow device support to issue a CCW that might or might
+not result in some sort of device error and have the 
+standard error reporting and recovery by bypassed and
+the error condition just returned to the caller.
+
+When this option is enabled (IOBSPEC3+IOBBYPER), DMKIOS
+will just return the result in the IOBLOK being stacked to
+dispatcher for return to the IOBIRA address. In this case,
+the new IOBHADER flag will also be set anad the first byte
+of any sense data placed in IOBFSNS1 so the device support
+can take aaction like fencing off an optional feature.
+
+============================================================================
+

@@ -1,0 +1,53 @@
+LOCAL MODIFICATION: HRC243DK
+
+Add new IOS entry point for synchronous I/O
+
+Affected Files:
+===============
+
+DMKIOS   ASSEMBLE
+
+Prerequisites:
+==============
+
+None
+
+Description:
+============
+
+This update adds a new entry point to DMKIOS to provide a
+simpler way of performing an I/O operation. 
+
+Using this new entry point allows the caller to avoid having 
+to implement a second-level interrupt handler (SLIH) to 
+handle the completion of the I/O event. Instead, the I/O 
+operation results can be processed in a linear fashinn 
+right after calling the new DMKIOSRQ entry point.
+
+It is intended that this new entry point be used when 
+there really isn't anything for a device to do until
+the results of an I/O operation are processed.
+
+Details:
+========
+
+DMKIOS ASSEMBLE
+---------------
+
+The new DMKIOS entry point propcesses the I/O request:  
+
+   1. For AP support, SWITCH to the I/O processor
+   2. Save R13 current save area address in IOBMISC
+   3. Set the IOBIRA to our local completion routine
+   4. Call DMKIOSQR to perform the I/O 
+   5. Go to the dispatcher to await completion
+   
+The local completion routine (#3 above) is entered
+when the I/O request is finished. It will:
+
+   1. Reestablish DMKIOS addressability
+   2. Restore R13 save area address from IOBMISC
+   3. Join common DMKIOS return logic at IOSQXIT
+
+============================================================================
+

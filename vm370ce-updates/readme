@@ -5,14 +5,22 @@ to the CP component of VM370CE v1.1.2, you will be able to
 utilize the new Hercules "handshake" option for printer and 
 punch devices.
 
-There are two updates that need to be applied to CP:
+There are three updates that need to be applied to CP:
 
-* WED002DK - allows program control of Command-Reject error
+* HRC242DK - allows program control of Command-Reject error
              handling. The next update uses this to prevent
              I/O errors being posted when the Hercules
              "handshake" option is not in force.
 
-* WED003DK - updates the spooled print/punch processing to
+* HRC243DK - adds a new entry point (DMKIOSYN) that allows
+             I/O to be processed synchronously without the 
+             need to create a "completion handler" and 
+             make a trip thru to dispatcher.   
+
+* HRC244DK - updates the spooled print/punch processing to
              utilize the new File-Open/Close CCWs to create
              individual native files for each VM spool file.
+             This update also makes a change to punch file
+             handling under Hercules by bypassing the IntReq
+             step that is part of the standard VM processing.
                  
