@@ -2773,9 +2773,12 @@ typedef struct {
 /*-------------------------------------------------------------------*/
 /* icount command sort callback (Descending by exec count)           */
 /*-------------------------------------------------------------------*/
-static int icount_cmd_sort(const ICOUNT_INSTR *x, const ICOUNT_INSTR *y)
+static int icount_cmd_sort(const void *x, const void *y)
 {
-    return (x->count < y->count) ? +1 : -1;
+    const ICOUNT_INSTR *X = (const ICOUNT_INSTR *) x;
+    const ICOUNT_INSTR *Y = (const ICOUNT_INSTR *) y;
+
+    return (X->count < Y->count) ? +1 : -1;
 }
 
 /*-------------------------------------------------------------------*/
