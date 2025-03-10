@@ -1167,8 +1167,8 @@ the <b>cckd</b> command explained below.
 <tr><td>&nbsp;</td><td><b>comp=</b>n</td>      <td> &nbsp; Compression to be used</td>
 <tr><td>&nbsp;</td><td><b>compparm=</b>n</td>  <td> &nbsp; Compression parameter to be used</td>
 <tr><td>&nbsp;</td><td><b>debug=</b>n</td>     <td> &nbsp; Turn CCW tracing debug messages on or off</td>
-<tr><td>&nbsp;</td><td><b>dhint=</b>n</td>     <td> &nbsp; DASD hardener interval</td>
-<tr><td>&nbsp;</td><td><b>dhstart=</b>n</td>   <td> &nbsp; DASD hardener startup</td>
+<tr><td>&nbsp;</td><td><b>dhint=</b>n</td>     <td> &nbsp; Dasd Hardener interval</td>
+<tr><td>&nbsp;</td><td><b>dhstart=</b>n</td>   <td> &nbsp; Dasd Hardener startup</td>
 <tr><td>&nbsp;</td><td><b>freepend=</b>n</td>  <td> &nbsp; Set the free pending value</td>
 <tr><td>&nbsp;</td><td><b>fsync=</b>n</td>     <td> &nbsp; Turn fsync on or off</td>
 <tr><td>&nbsp;</td><td><b>gcint=</b>n</td>     <td> &nbsp; Garbage collector interval</td>
@@ -1225,31 +1225,43 @@ the <b>cckd</b> command explained below.
     </td>
 
 <tr><td valign="top"><b>dhint=</b>n</td><td> &nbsp; </td>
-    <td>Number of seconds the DASD hardener thread waits during an interval.
-        At the end of an interval, the DASD hardener
-        flushes the cache, hardens the DASD emulation file,
+    <td>Number of seconds the Dasd Hardener thread waits during an interval.
+        At the end of an interval, the Dasd Hardener
+        flushes the cache, hardens the dasd emulation file,
         and optionally <em>fsync</em>s the emulation file.
         <p>
-        The default is <b>0</b>, meaning automatic DASD hardening is disabled.
+        The default is <b>0</b>, meaning automatic Dasd Hardener is disabled.
         <p>
-        You can specify a number between <b>0</b> and <b>60</b>. A value of 0
-        disables the default automatic behavior of the DASD hardener,
+        You can specify a number between <b>0</b> and <b>999</b>.
+        <p>
+        A value of 0
+        disables the default automatic behavior of the Dasd Hardener,
         converting it to as-needed mode. When in as-needed mode,
-        data written to DASD by the guest OS will be written to the emulation
+        data written to dasd by the guest OS will be written to the emulation
         files as necessary when the cache approaches full, or at
         Hercules termination.
-        In automatic mode (dhint > 0), the DASD hardener will start itself
-        automatically and remain idle (but still running) between each DASD
-        hardening cycle, automatically starting the next cycle every 'dhint'
+        <p>
+        In automatic mode <i>(<code>dhint</code> > 0)</i>, the Dasd Hardener will start itself
+        automatically and remain idle (but still running) between each dasd
+        hardening cycle, automatically starting the next cycle every <code>dhint</code>
         seconds.
         <p>
-        It is recommended that this parameter remain set to a non-default value
-        greater than 0 in order to allow the DASD hardener to run automatically.
+        <i>
+            <b>Note!</b> It is highly recommended that this parameter be <u>set
+            to a non-default value greater than 0</u> in order to allow the Dasd
+            Hardener to run automatically in order to prevent any potential loss
+            of data that could result should Hercules ever crash or the host system
+            unexpectedly experience sudden loss of power.
+        </i>
         <br /><br />
     </td>
 
 <tr><td valign="top"><b>dhstart=</b>n</td><td> &nbsp; </td>
-    <td>If set to 1 then the DASD hardener will become active.
+    <td>If set to 1, then the Dasd Hardener will immediately become active as long
+        as the above <code>dhint=</code> value is set to a non-zero value.
+        <p>
+        If the above <code>dhint</code> value is set to 0, then setting <code>dhstart</code>
+        to 1 accomplishes absolutely nothing.
         <p>
         The default is <b>0</b>.
         <br /><br />

@@ -489,9 +489,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00388 "%1d:%04X CCKD%s image %s is moderately fragmented"
 #define HHC00389 "%1d:%04X CCKD%s image %s is slightly fragmented"
 #define HHC00390 "%1d:%04X CCKD file: device has no shadow files"
-#define HHC00391 "Starting CCKD DASD hardener pass"
-#define HHC00392 "CCKD DASD hardener pass complete"
-#define HHC00393 "0:0000 %s wait %d seconds at %s"
+#define HHC00391 "Starting CCKD Dasd Hardener pass..."
+#define HHC00392 "CCKD Dasd Hardener pass complete."
+#define HHC00393 "Thread '%s': sleeping for %d seconds at %s..."
 //efine HHC00394 (available)
 //efine HHC00395 (available)
 #define HHC00396 "%1d:%04X %s" // (cckd_trace)

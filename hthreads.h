@@ -306,7 +306,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define HTTP_REQ_THREAD_NAME    "http_request"
 #define WATCHDOG_THREAD_NAME    "watchdog_thread"
 #define HERCLIN_KB_THREAD       "keyboard thread"
-#define CCKD_DH_THREAD_NAME     "cckd_dh"
+#define CCKD_DH_THREAD_NAME     "Dasd Hardener"
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */

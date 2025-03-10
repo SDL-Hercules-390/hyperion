@@ -257,9 +257,14 @@ typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 #define CCKD_DEF_FREEPEND     -1        /* Def free pending cycles   */
 #define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
+#define CCKD_MIN_DHMAX         0        /* Min DASD hardeners allowed  */
+#define CCKD_DEF_DHMAX         1        /* Def DASD hardeners allowed  */
+#define CCKD_MAX_DHMAX         1        /* Max DASD hardeners allowed  */
+                                        /* *** ONLY ONE ALLOWED! ***   */
+
 #define CCKD_MIN_DHINT         0        /* Min DASD hardening interval */
 #define CCKD_DEF_DHINT         0        /* Def DASD hardening interval */
-#define CCKD_MAX_DHINT         60       /* Max DASD hardening interval */
+#define CCKD_MAX_DHINT         999      /* Max DASD hardening interval */
 
 
 /*-------------------------------------------------------------------*/
@@ -282,12 +287,11 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         BYTE             comp;          /* Override compression      */
         int              compparm;      /* Override compression parm */
 
-        LOCK             dhlock_c;      /* DASD hardener count lock  */
-        LOCK             dhlock_t;      /* DASD hardener thread lock */
-        COND             dhcond;        /* DASD hardener cond        */
-        int              dhs;           /* Number DASD hardener threads started */
-        int              dha;           /* Number DASD hardener threads active */
-        int              dhmax;         /* Max DASD hardeners        */
+        LOCK             dhlock;        /* Dasd Hardener lock        */
+        COND             dhcond;        /* Dasd Hardener cond        */
+        int              dhs;           /* Number Dasd Hardener threads started */
+        int              dha;           /* Number Dasd Hardener threads active */
+        int              dhmax;         /* Max Dasd Hardeners        */
         int              dhint;         /* Wait time in seconds      */
 
         LOCK             gclock;        /* Garbage collector lock    */
