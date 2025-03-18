@@ -571,7 +571,7 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
     _wmakepath( g_wszDumpPath, g_wszHercDrive, g_wszHercDir, L"Hercules", L".dmp" );
 
     _tprintf( _T("Creating crash dump \"%ls\"...\n\n"), g_wszDumpPath );
-    _tprintf( _T("Please wait; this may take up to 2 or 3 minutes...\n\n") );
+    _tprintf( _T("Please wait; this may take up to 5 or 6 minutes to complete...\n\n") );
     _tprintf( _T("(another message will appear when the dump is complete)\n\n") );
 
     hDumpFile = CreateFileW
