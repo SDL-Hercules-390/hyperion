@@ -389,6 +389,10 @@
 					Name="other"
 					>
 					<File
+						RelativePath=".\card2txt.c"
+						>
+					</File>
+					<File
 						RelativePath=".\conspawn.c"
 						>
 					</File>
@@ -3252,7 +3256,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\util\cckddump-cckdload.zip"
+					RelativePath=".\util\CCKD.JCL.Jan2025.XMI.Updated.zip"
 					>
 				</File>
 				<File
@@ -3788,6 +3792,18 @@
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-05-VTM.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-06-Find.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-07-VGBM.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-08-VISTR.core"
 						>
 					</File>
 				</Filter>
@@ -5105,6 +5121,18 @@
 							RelativePath=".\tests\zvector-e7-05-VTM.tst"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-06-Find.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-07-VGBM.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-08-VISTR.tst"
+							>
+						</File>
 						<Filter
 							Name="subtst"
 							>
@@ -5575,6 +5603,18 @@
 						</File>
 						<File
 							RelativePath=".\tests\zvector-e7-05-VTM.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-06-Find.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-07-VGBM.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-08-VISTR.asm"
 							>
 						</File>
 						<Filter
@@ -6366,6 +6406,30 @@
 							</File>
 							<File
 								RelativePath=".\tests\zvector-e7-05-VTM.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-06-Find.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-06-Find.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-07-VGBM.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-07-VGBM.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-08-VISTR.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-08-VISTR.pdf"
 								>
 							</File>
 						</Filter>

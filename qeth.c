@@ -2544,7 +2544,7 @@ static void raise_adapter_interrupt( DEVBLK* dev )
             return;
         }
 
-        /* Yield to hopefully allow current lock owner a chance
+        /* Yield to hopefully allow current intlock owner a chance
            to finish using it and release it before we try again.
         */
         sched_yield();
@@ -2574,38 +2574,101 @@ typedef short QRC;              /* Internal function return code     */
 #define QRC_ESBPKCPY    -9      /* Packet copy wrong ending SBALE    */
 #define QRC_ESBNOEOF   -10      /* No last Last Storage Block flag   */
 
+#define NUM_QRCS        11      /* How many different QRCs there are */
+
 
 /*-------------------------------------------------------------------*/
-/* Helper function to report errors associated with an SBALE.        */
+/* Helper function to return a QRC string                            */
 /*-------------------------------------------------------------------*/
-static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
-                        QDIO_SBAL *sbal, BYTE sbalk, int sb )
+static const char* QRC2str( QRC qrc )
 {
-    char errmsg[256] = {0};
-    U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
-    U64 sba;
-    U32 sblen;
+    static const char* qrctab[ NUM_QRCS ] =
+    {
+        "QRC_SUCCESS",          /* Successful completion             */
+        "QRC_EIOERR",           /* Device i/o error reading/writing  */
+        "QRC_ESTORCHK",         /* STORCHK failure (Prot Key Chk)    */
+        "QRC_ENOSPC",           /* Out of Storage Blocks             */
+        "QRC_EPKEOF",           /* EOF while looking for packets     */
+        "QRC_EPKTYP",           /* Unsupported output packet type    */
+        "QRC_EPKSIZ",           /* Output packet/frame too large     */
+        "QRC_EZEROBLK",         /* Zero Length Storage Block         */
+        "QRC_EPKSBLEN",         /* Packet length <-> SBALE mismatch  */
+        "QRC_ESBPKCPY",         /* Packet copy wrong ending SBALE    */
+        "QRC_ESBNOEOF",         /* No last Last Storage Block flag   */
+    };
+    return ((-qrc) >= 0 && (-qrc) < NUM_QRCS) ? qrctab[ -qrc ] : "QRC_???";
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Helper function to format error message associated with an SBALE. */
+/*-------------------------------------------------------------------*/
+static void Format_SBALE_ErrMsg( char* msgbuf, size_t buflen, char* fmtstr,
+                                 QRC qrc, DEVBLK* dev, QDIO_SBAL *sbal,
+                                 BYTE sbalk, int sb )
+{
+    char errmsg[256]  = {0};
+    U64  sbala         = (U64)((BYTE*)sbal - dev->mainstor);
+    U64  sba;
+    U32  sblen;
 
     FETCH_DW( sba,   sbal->sbale[sb].addr   );
     FETCH_FW( sblen, sbal->sbale[sb].length );
 
-    MSGBUF( errmsg, msg, sb, sbala, sbalk, sba, sblen,
+    // "** %s **: SBAL(%d) @ %"PRIx64" [%02X]:"
+    // " Addr: %"PRIx64" Len: %"PRIu32
+    // " flags[0,3]: %2.2X %2.2X"
+
+    MSGBUF( errmsg, fmtstr,
+
+        QRC2str( qrc ), sb, sbala, sbalk,
+        sba, sblen,
         sbal->sbale[sb].flags[0],
-        sbal->sbale[sb].flags[3]);
+        sbal->sbale[sb].flags[3]
+    );
+
+    strlcpy( msgbuf, errmsg, buflen );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Helper function to report errors associated with an SBALE.        */
+/*-------------------------------------------------------------------*/
+static QRC Return_SBALE_ERROR( QRC qrc, DEVBLK* dev, QDIO_SBAL* sbal, BYTE sbalk, int sb,
+                               const char* file, int line, const char* func )
+{
+    char errmsg[ 256 ];
+
+    /* Format the message text that will follow the devnum & devtype */
+
+    Format_SBALE_ErrMsg( errmsg, sizeof( errmsg ),
+
+        "** %s **: SBAL(%d) @ %"PRIx64" [%02X]:"
+        " Addr: %"PRIx64" Len: %"PRIu32
+        " flags[0,3]: %2.2X %2.2X"
+
+        , qrc, dev, sbal, sbalk, sb
+    );
+
+    /* Now write the COMPLETE error message with devnum and devtype.
+
+       PLEASE NOTE that we call the "fwritemsg" function directly
+       instead of using the "WRMSG" macro so that it can be properly
+       reported exactly WHERE the error actually occurred. */
 
     // HHC03985 "%1d:%04X %s: %s"
-    WRMSG( HHC03985, "E", LCSS_DEVNUM,
-        dev->typname, errmsg );
+    fwritemsg( file, line, func, WRMSG_NORMAL, stdout,
+        "HHC03985E " HHC03985 "\n", LCSS_DEVNUM, dev->typname, errmsg );
 
     return qrc;
 }
+
 /*-------------------------------------------------------------------*/
-/* Helper macro to call above helper function.                       */
+/* Helper macro to report errors associated with an SBALE.           */
 /*-------------------------------------------------------------------*/
-#define SBALE_ERROR(_qrc,_dev,_sbal,_sbalk,_sb)                     \
-    SBALE_Error( "** " #_qrc " **: SBAL(%d) @ %llx [%02X]:"         \
-        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X",              \
-        (_qrc), (_dev), (_sbal), (_sbalk), (_sb))
+#define SBALE_ERROR(        _qrc, _dev, _sbal, _sbalk, _sb )        \
+        Return_SBALE_ERROR( _qrc, _dev, _sbal, _sbalk, _sb,         \
+               TRIMLOC( __FILE__ ), __LINE__, __FUNCTION__ )
 
 
 /*-------------------------------------------------------------------*/
@@ -3775,24 +3838,35 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
 }
 /* end process_output_queues */
 
-
 /*-------------------------------------------------------------------*/
-/* Halt device and Clear Subchannel related functions...             */
+/* Halt or Clear QETH "read" device...                               */
 /*-------------------------------------------------------------------*/
 static void qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
 {
     obtain_lock( &grp->qlock );
     {
         /* Is read device still active? */
-        if (dev->busy && dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
+        DBGTRC( dev, "Halt read device: Active %s (%d)",
+                                        (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE) ? "true" : "false",
+                                        dev->qdio.idxstate );
+        if (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
         {
             DBGTRC( dev, "Halting read device" );
             {
                 /* Ask, then wait for, the READ CCW loop to exit */
                 PTT_QETH_TRACE( "b4 halt read", 0,0,0 );
                 dev->qdio.idxstate = MPC_IDX_STATE_HALTING;
-                signal_condition( &grp->qrcond );
-                wait_condition( &grp->qrcond, &grp->qlock );
+
+                /* PROGRAMMING NOTE: we SIGNAL the "read" condition
+                   but WAIT for the "halt" condition because the 0x02
+                   READ CCW logic function may be stuck in its loop
+                   waiting for the "read" condition to be signalled
+                   before it can wake up and notice it's been asked
+                   to halt. Once it notices it can signal the "halt"
+                   condition to let us know it has halted.
+                */
+                signal_condition( &grp->q_idxrt_cond );
+                wait_condition( &grp->q_hread_cond, &grp->qlock );
                 PTT_QETH_TRACE( "af halt read", 0,0,0 );
             }
             DBGTRC( dev, "Read device halted" );
@@ -3801,12 +3875,18 @@ static void qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
     release_lock( &grp->qlock );
 }
 
+/*-------------------------------------------------------------------*/
+/* Halt or Clear QETH "data" device...                               */
+/*-------------------------------------------------------------------*/
 static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 {
     obtain_lock( &grp->qlock );
     {
         /* Is data device still active? */
-        if (dev->busy && dev->scsw.flag2 & SCSW2_Q)
+        DBGTRC( dev, "Halt data device: Active %s (%d)",
+                                        (dev->qdio.acqstate == ACQ_STATE_ACTIVE) ? "true" : "false",
+                                        dev->qdio.acqstate );
+        if (dev->qdio.acqstate == ACQ_STATE_ACTIVE)
         {
             BYTE  sig  = QDSIG_HALT;
 
@@ -3815,7 +3895,7 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
                 /* Ask, then wait for, the Activate Queues loop to exit */
                 PTT_QETH_TRACE( "b4 halt data", 0,0,0 );
                 VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
-                wait_condition( &grp->qdcond, &grp->qlock );
+                wait_condition( &grp->q_hdata_cond, &grp->qlock );
                 dev->scsw.flag2 &= ~SCSW2_Q;
                 PTT_QETH_TRACE( "af halt data", 0,0,0 );
             }
@@ -3826,24 +3906,132 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 }
 
 /*-------------------------------------------------------------------*/
+/*       QETH Halt or Clear Subchannel Asynchronous Thread           */
+/*-------------------------------------------------------------------*/
+/* This thread is created by the below qeth_halt_or_clear function   */
+/* which itself is called by channel.c in response to a HSCH (Halt   */
+/* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
+/* no locks are held, but both intlock and devlock are then obtained */
+/* and held for the duration of the actual halt/clear processing.    */
+/*-------------------------------------------------------------------*/
+static void*  qeth_halt_or_clear_thread( void* arg)
+{
+    DEVBLK*      dev  = (DEVBLK*) arg;
+    OSA_GRP*     grp  = (OSA_GRP*) dev->group->grp_data;
+    const char*  hoc  = str_HOC( dev->hoc );
+    const char*  qtype;
+
+    // If we're being called asynchronously in a separate thread
+    // (normal case), we need to obtain and release both locks
+    // ourselves. Else if we were called synchronously/directly,
+    // both locks are already being held by the caller, so we
+    // must NOT try obtaining or releasing EITHER lock as they
+    // are already held.
+
+    if (!dev->synchalt)
+    {
+        OBTAIN_INTLOCK( NULL );
+        OBTAIN_DEVLOCK( dev  );
+    }
+    {
+        if (QTYPE_READ == dev->qtype) // "read" device?
+        {
+            qtype = "read";
+
+            // "%1d:%04X %s: %s %s for %s device"
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+            {
+                qeth_halt_read_device( dev, grp );
+            }
+            // "%1d:%04X %s: %s %s for %s device"
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+        }
+        else if (QTYPE_DATA == dev->qtype) // "data device?
+        {
+            qtype = "data";
+
+            // "%1d:%04X %s: %s %s for %s device"
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+            {
+                qeth_halt_data_device( dev, grp );
+            }
+            // "%1d:%04X %s: %s %s for %s device"
+            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+        }
+        else
+            BREAK_INTO_DEBUGGER(); // (should never occur!)
+
+        /* Halt/Clear request completed */
+        dev->halting = 0;
+    }
+    if (!dev->synchalt)
+    {
+        RELEASE_DEVLOCK( dev  );
+        RELEASE_INTLOCK( NULL );
+    }
+    return NULL;
+}
+
+/*-------------------------------------------------------------------*/
 /*                  QETH Halt or Clear Subchannel                    */
 /*-------------------------------------------------------------------*/
 /* This function is called by channel.c in response to a HSCH (Halt  */
 /* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
-/* both INTLOCK (sysblk.intlock) and dev->lock are held.             */
+/* both INTLOCK (sysblk.intlock) and dev->lock are held. The actual  */
+/* halt/clear processing is performed in an asynchronous thread so   */
+/* that this function can return as soon as possible so that it can  */
+/* release both locks as soon as possible.                           */
 /*-------------------------------------------------------------------*/
 static void qeth_halt_or_clear( DEVBLK* dev )
 {
-    OSA_GRP* grp = (OSA_GRP*) dev->group->grp_data;
-
-    if (QTYPE_READ == dev->qtype)
-        qeth_halt_read_device( dev, grp );
-    else if (QTYPE_DATA == dev->qtype)
-        qeth_halt_data_device( dev, grp );
-    else
+    /* Halt/Clear is not needed if the device isn't busy
+       or a previous Halt/Clear request hasn't finished. */
+    if (!dev->busy || dev->halting)
     {
-        DBGTRC( dev, "qeth_halt_or_clear: noop!" );
-        PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
+        /* Skip scary warning message for just simple device resets */
+        if (dev->hoc != HOC_RESET)
+        {
+            const char* hoc = str_HOC( dev->hoc );
+            const char* qtype = (QTYPE_READ  == dev->qtype) ? "read"
+                              : (QTYPE_WRITE == dev->qtype) ? "write"
+                              : (QTYPE_DATA  == dev->qtype) ? "data"
+                              :                               "qeth";
+
+            // "%1d:%04X %s: %s %s for %s device"
+            WRMSG( HHC00905, "W", LCSS_DEVNUM, dev->typname, hoc, "skipped", qtype );
+        }
+    }
+    else // (dev->busy && !dev->halting): Halt/Clear needed
+    {
+        /* PROGRAMMING NOTE: we do the actual Halt/Clear processing
+           asynchronously in a separate thread because that's the way
+           the Principles of Operation says it should be done. This
+           allows the HSCH/CSCH instruction to more quickly complete.
+        */
+        int  rc;
+        TID  tid;
+        char thread_name[16];
+
+        MSGBUF( thread_name, "%1d:%04X q_hltclr", LCSS_DEVNUM );
+
+        dev->halting = 1; // (indicate halt/clear request in progress)
+
+        rc = create_thread( &tid, DETACHED, qeth_halt_or_clear_thread, dev, thread_name );
+        if (rc)
+        {
+            // "create_thread( \"%s\" ) error: %s"
+            WRMSG( HHC00103, "E", thread_name, strerror( rc ));
+
+            /* No choice but to call it directly! */
+            dev->synchalt = 1;
+            {
+                // "%1d:%04X: Calling \"%s\" directly!"
+                WRMSG( HHC00104, "W", LCSS_DEVNUM, "qeth_halt_or_clear_thread" );
+
+                qeth_halt_or_clear_thread( dev );
+            }
+            dev->synchalt = 0;
+        }
     }
 }
 
@@ -3935,8 +4123,9 @@ U32 mask4;
             dev->group->grp_data = grp = malloc( sizeof( OSA_GRP ));
             memset( grp, 0, sizeof( OSA_GRP ));
 
-            initialize_condition( &grp->qrcond );
-            initialize_condition( &grp->qdcond );
+            initialize_condition( &grp->q_idxrt_cond );
+            initialize_condition( &grp->q_hread_cond );
+            initialize_condition( &grp->q_hdata_cond );
 
             initialize_lock( &grp->qlock );
             MSGBUF( buf,    "&grp->qlock %1d:%04X",       LCSS_DEVNUM );
@@ -4478,8 +4667,10 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         remove_and_free_any_buffers_on_chain( &grp->idx );
         PTT_QETH_TRACE( "af clos fbuf", 0,0,0 );
 
-        destroy_condition( &grp->qrcond );
-        destroy_condition( &grp->qdcond );
+        destroy_condition( &grp->q_idxrt_cond );
+        destroy_condition( &grp->q_hread_cond );
+        destroy_condition( &grp->q_hdata_cond );
+
         destroy_lock( &grp->qlock );
         destroy_lock( &grp->idx.lockbhr );
         destroy_lock( &grp->l3r.lockbhr );
@@ -4798,19 +4989,23 @@ U32 num;                                /* Number of bytes to move   */
             }
 
             /* Wait for an IDX response buffer to be chained. */
-            obtain_lock(&grp->qlock);
-            PTT_QETH_TRACE( "read wait", 0,0,0 );
-            wait_condition( &grp->qrcond, &grp->qlock );
-            release_lock(&grp->qlock);
+            obtain_lock( &grp->qlock );
+            {
+                PTT_QETH_TRACE( "read wait", 0,0,0 );
+                wait_condition( &grp->q_idxrt_cond, &grp->qlock );
+            }
+            release_lock( &grp->qlock );
 
         } /* end while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE) */
 
         if (dev->qdio.idxstate == MPC_IDX_STATE_HALTING)
         {
             obtain_lock( &grp->qlock );
-            PTT_QETH_TRACE( "read hlt ack", 0,0,0 );
-            dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
-            signal_condition( &grp->qrcond );
+            {
+                PTT_QETH_TRACE( "read hlt ack", 0,0,0 );
+                dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
+                signal_condition( &grp->q_hread_cond );
+            }
             release_lock( &grp->qlock );
         }
 
@@ -5169,18 +5364,57 @@ U32 num;                                /* Number of bytes to move   */
         DBGTRC( dev, "Activate Queues: Entry iqm=%8.8x oqm=%8.8x",dev->qdio.i_qmask, dev->qdio.o_qmask);
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
+        /* Indicate ACTIVATE QUEUES is now active (looping) */
+//      DBGTRC( dev, "Activate Queues: Becoming Active");
+        dev->qdio.acqstate = ACQ_STATE_ACTIVE;
+
         /* Loop until halt signal is received via notification pipe */
         while (1)
         {
-            /* Prepare to wait for additional packets or pipe signal */
+            /* Prepare to wait for pipe signal or additional packets */
             FD_ZERO( &readset );
+
+            // PROGRAMMING NOTE: On Windows, the 'select' function can
+            // only contain socket file descriptors as it was designed
+            // solely for TCP/IP and not for regular file descriptors.
+            // On Linux however, 'select' can contain any mixture of
+            // regular file descriptors or socket file descriptors and
+            // on Linux, the QETH interface file descriptor could be a
+            // regular file file descriptor. Thus the special handling
+            // for WIndows to prevent a "HHC90000D mixed set(s)" error.
+#if defined( OPTION_W32_CTCI )
+            fd = -1;
+            if (socket_is_socket( grp->ppfd[0] ))
+            {
+                FD_SET( grp->ppfd[0], &readset );
+                fd = grp->ppfd[0];
+
+                if (socket_is_socket( grp->ttfd ))
+                {
+                    FD_SET( grp->ttfd, &readset );
+                    fd = max( fd, grp->ttfd );
+                }
+            }
+            else if (socket_is_socket( grp->ttfd ))
+            {
+                FD_SET( grp->ttfd, &readset );
+                fd = grp->ttfd;
+            }
+            /* Skip 'qeth_select' if neither file descriptor's valid */
+            if (fd < 0)
+            {
+                USLEEP( OSA_TIMEOUTUS );
+                continue;
+            }
+#else // Linux: always do 'qeth_select' on both file descriptors
             FD_SET( grp->ppfd[0], &readset );
             FD_SET( grp->ttfd,    &readset );
             fd = max( grp->ppfd[0], grp->ttfd );
-            tv.tv_sec  = 0;
-            tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
+#endif // (Windows or Linux)
 
             /* Wait (but only very briefly) for more work to arrive */
+            tv.tv_sec  = 0;
+            tv.tv_usec = OSA_TIMEOUTUS;     /* Select timeout usecs  */
             rc = qeth_select( fd+1, &readset, &tv );
 
             /* Read pipe signal if one was sent */
@@ -5195,25 +5429,26 @@ U32 num;                                /* Number of bytes to move   */
                 if (QDSIG_HALT == sig)
                     break;
 
+                /* Process pipe signal */
                 switch (sig)
                 {
-                case QDSIG_READ:
-                    grp->rdpack = 0;
-                    break;
-                case QDSIG_RDMULT:
-                    grp->rdpack = 1;
-                    break;
-                case QDSIG_WRIT:
-                    grp->wrpack = 0;
-                    break;
-                case QDSIG_WRMULT:
-                    grp->wrpack = 1;
-                    break;
-                case QDSIG_WAKEUP:
-                    break;
+                case QDSIG_READ:   grp->rdpack = 0; break;
+                case QDSIG_RDMULT: grp->rdpack = 1; break;
+                case QDSIG_WRIT:   grp->wrpack = 0; break;
+                case QDSIG_WRMULT: grp->wrpack = 1; break;
+                case QDSIG_WAKEUP:                  break;
                 default:
-                    ASSERT(0);  /* (should NEVER occur) */
+                    BREAK_INTO_DEBUGGER(); // (should not occur)
                 }
+            }
+
+            /* Cannot process any input or output queues until the interface
+               is (re-)enabled (which will very likely happen VERY soon!).
+               This is MOSTLY (but not exclusively!) a Windows thing. */
+            if (!grp->enabled)
+            {
+                USLEEP( OSA_TIMEOUTUS );
+                continue;
             }
 
             /* Check if any new packets have arrived */
@@ -5255,7 +5490,7 @@ U32 num;                                /* Number of bytes to move   */
             */
             if (likely( dev->qdio.o_qmask ))
             {
-                process_output_queues(dev);
+                process_output_queues( dev );
 
                 /* Present "output processed" interrupt if needed */
                 if (grp->oqPCI)
@@ -5268,13 +5503,17 @@ U32 num;                                /* Number of bytes to move   */
         }
         PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
 
+        /* Indicate ACTIVATE QUEUES is now INactive (NOT looping) */
+        dev->qdio.acqstate = ACQ_STATE_INACTIVE;
+//      DBGTRC( dev, "Activate Queues: Become Inactive");
+
         /* Acknowledge halt signal (how else could we reach here?) */
         if (sig == QDSIG_HALT)
         {
             obtain_lock( &grp->qlock );
             {
                 dev->scsw.flag2 &= ~SCSW2_Q;
-                signal_condition( &grp->qdcond );
+                signal_condition( &grp->q_hdata_cond );
             }
             release_lock( &grp->qlock );
         }
@@ -6370,7 +6609,9 @@ static void  remove_and_free_any_buffers_on_chain( OSA_BAN* ban )
 static void  signal_idx_event( OSA_GRP* grp )
 {
     obtain_lock( &grp->qlock );
-    signal_condition( &grp->qrcond );
+    {
+        signal_condition( &grp->q_idxrt_cond );
+    }
     release_lock( &grp->qlock );
 }
 

@@ -1337,8 +1337,20 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
 
                 qsort( ilk, k, sizeof( ILOCK ), sortby );
 
-                /* Display the requested locks */
-                for (c = 0 /* (zero locks found) */, i=0; i < k; i++ )
+                /* DISPLAY THE REQUESTED LOCKS... Note: We process the locks list
+                   twice: the first time reporting only where it was created, and
+                   the second time reporting only where it was obtained. We do this
+                   because when it was created is typically not that interesting,
+                   whereas when the lock was obtain is MUCH more interesting, as
+                   we can then better see the SEQUENCE of events that lead up to
+                   the deadlock.
+                */
+
+                c = 0; // (zero locks found)
+
+                // FIRST pass: report where/when CREATED...
+
+                for (i=0; i < k; i++ )
                 {
                     /* ALL, HELD or specific TID? */
                     if (0
@@ -1363,9 +1375,24 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
                             , &tod[11]
                             , TRIMLOC( ilk[i].il_cr_locat )
                         );
+                    }
+                }
 
+                // SECOND pass: report where/when OBTAINED...
+
+                for (i=0; i < k; i++ )
+                {
+                    /* ALL, HELD or specific TID? */
+                    if (0
+                        || !tid
+                        || (equal_threads( tid, (TID) -1 ) && !equal_threads( ilk[i].il_ob_tid, 0 ))
+                        || equal_threads( tid, ilk[i].il_ob_tid )
+                    )
+                    {
                         if (ilk[i].il_ob_tid)
                         {
+                            c = 1;  /* (at least one lock found) */
+
                             get_thread_name( ilk[i].il_ob_tid, threadname );
                             FormatTIMEVAL(  &ilk[i].il_ob_time, tod, sizeof( tod ));
 
@@ -1624,7 +1651,7 @@ DLL_EXPORT int threads_cmd( int argc, char* argv[], char* cmdline )
 
                             // "Thread %-15.15s tid="TIDPAT" waiting since %s at %s for lock %s = "PTR_FMTx
 
-                            WRMSG( HHC90023, "W", ht[i].ht_name, TID_CAST( ht[i].ht_tid ),
+                            WRMSG( HHC90023, "I", ht[i].ht_name, TID_CAST( ht[i].ht_tid ),
                                 &ht_ob_time[11], TRIMLOC( ht[i].ht_ob_where ),
                                 get_lock_name( ht[i].ht_ob_lock ), PTR_CAST( ht[i].ht_ob_lock ));
                         }

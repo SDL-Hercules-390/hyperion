@@ -322,6 +322,11 @@ HUT_DLL_IMPORT void convert_to_ebcdic( BYTE* dest, int len, const char* source )
 HUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
 
 /*-------------------------------------------------------------------*/
+/* Subroutine to convert DEVBLK halt or clear type to string         */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT const char* str_HOC( int hoc );
+
+/*-------------------------------------------------------------------*/
 /*                        idx_snprintf                               */
 /*      Fix for "Potential snprintf buffer overflow" #457            */
 /*-------------------------------------------------------------------*/

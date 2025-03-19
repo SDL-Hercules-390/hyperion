@@ -2831,7 +2831,11 @@ int             rc=0;                   /* Return code               */
         rc = -1;
 
     if (cckdblk.fsync)
+    {
         fdatasync (cckd->fd[cckd->sfn]);
+		cckdblk.stats_fsyncs++;
+	}
+	cckdblk.stats_hardens++;
 
     return rc;
 } /* cckd64_harden */

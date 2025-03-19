@@ -2125,6 +2125,8 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                 curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
         }
+        // "Processor %s%02X: psw %s"
+        STRLCAT( buf, "\nHHC00869I" );
         WRMSG( HHC00869, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf );
 
         /*--------------------------*/
@@ -2179,6 +2181,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                    curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                    curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
             }
+
+            // "Processor %s%02X: psw %s"
+            STRLCAT( buf, "\nHHC00869I" );
             WRMSG(HHC00869, "I", "IE", sysblk.regs[i]->cpuad, buf);
         }
     }
@@ -2768,9 +2773,12 @@ typedef struct {
 /*-------------------------------------------------------------------*/
 /* icount command sort callback (Descending by exec count)           */
 /*-------------------------------------------------------------------*/
-static int icount_cmd_sort(const ICOUNT_INSTR *x, const ICOUNT_INSTR *y)
+static int icount_cmd_sort(const void *x, const void *y)
 {
-    return (x->count < y->count) ? +1 : -1;
+    const ICOUNT_INSTR *X = (const ICOUNT_INSTR *) x;
+    const ICOUNT_INSTR *Y = (const ICOUNT_INSTR *) y;
+
+    return (X->count < Y->count) ? +1 : -1;
 }
 
 /*-------------------------------------------------------------------*/
@@ -2892,6 +2900,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             ICOUNT_COLLECT_CASE( 0xE3, imape3, imape3T, 256, 5 )
             ICOUNT_COLLECT_CASE( 0xE4, imape4, imape4T, 256, 1 )
             ICOUNT_COLLECT_CASE( 0xE5, imape5, imape5T, 256, 1 )
+            ICOUNT_COLLECT_CASE( 0xE6, imape6, imape6T, 256, 5 )
             ICOUNT_COLLECT_CASE( 0xE7, imape7, imape7T, 256, 5 )
             ICOUNT_COLLECT_CASE( 0xEB, imapeb, imapebT, 256, 5 )
             ICOUNT_COLLECT_CASE( 0xEC, imapec, imapecT, 256, 5 )
@@ -2957,6 +2966,7 @@ int icount_cmd( int argc, char* argv[], char* cmdline )
             case 0xE3:
             case 0xE4:
             case 0xE5:
+            case 0xE6:
             case 0xE7:
             case 0xEB:
             case 0xEC:

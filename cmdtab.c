@@ -696,7 +696,6 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
 
     char  cmd[ MAX_CMD_LEN ];           /* Copy of panel command     */
     char* pCmdLine;
-    unsigned i;
     int hercecho = 1;                   /* Default echo to console   */
     int rc = 0;                         /* Return Code from command  */
 
@@ -731,82 +730,52 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
 
     pCmdLine = cmdline; ASSERT( pCmdLine );
 
+#if defined( _FEATURE_SYSTEM_CONSOLE )
+  #define IS_SCP_CMD( p ) (0                  \
+                           || p[0] == '.'     \
+                           || p[0] == '!'     \
+                           || p[0] == '\\'    \
+                          )
+#endif
+
     /* Every command will be stored in history list,
-       EXCEPT: null commands, script commands, scp input,
-       and "silent" commands (prefixed with '-')
+       EXCEPT: null, script, and scp input commands
+       (unless echoing of scp commands is disallowed).
     */
     if (*pCmdLine != 0 && !FindSCRCTL( thread_id() ))
     {
-        if (!(*pCmdLine == '-'))    /* (normal command?) */
-        {
-
 #if defined( _FEATURE_SYSTEM_CONSOLE )
 
-            if (*pCmdLine == '.' || *pCmdLine == '!')
-            {
-                if (sysblk.scpecho)
-                    history_add( cmdline );
-            }
-            else
-
-#endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
-
+        /* scp input command? */
+        if (IS_SCP_CMD( pCmdLine ))
+        {
+            // SECURITY: DON'T add suppressed scp replies to history!
+            if (sysblk.scpecho && '\\' != pCmdLine[0])
                 history_add( cmdline );
         }
-    }
-
-    /* Copy panel command to work area, skipping leading blanks.
-       If the command starts with a -, then strip it and indicate
-       that we do NOT want the command echoed to the console.
-    */
-    hercecho = 1;   // (default)
-
-    while (*pCmdLine && isspace( (unsigned char)*pCmdLine ))
-        pCmdLine++;
-
-    i = 0;
-
-    while (*pCmdLine && i < (MAX_CMD_LEN-1))
-    {
-        if (i == 0 && (0            /* (1st character?) */
-            || *pCmdLine == '-'     /* (silent command) */
-            || *pCmdLine == '#'     /* (silent comment) */
-        ))
+        else // Hercules command/reply
+#endif
         {
-            hercecho = 0;           /* (silence please) */
-
-            if (*pCmdLine == '-')   /* (silent command?)*/
-            {
-                pCmdLine++;         /* (skip past the '-' ... */
-                                    /* ... and remove blanks) */
-
-                while (*pCmdLine && isspace( (unsigned char)*pCmdLine ))
-                    pCmdLine++;     /* (get past blank) */
-            }
+            history_add( cmdline );
         }
-
-        cmd[i] = *pCmdLine;
-        i++;
-        pCmdLine++;
     }
-    cmd[i] = 0;
 
-    /* (just pressing the enter key shouldn't be echoed) */
-    if (0 == cmd[0])
-        hercecho = 0;               /* (silence please) */
+    /* Copy panel command to work area, skipping leading blanks. */
+
+    RTRIM( pCmdLine );
+    STRLCPY( cmd, pCmdLine );
+
+    /* Silent comments and just pressing enter key shouldn't be echoed */
+    hercecho = ('#' == cmd[0] || 0 == cmd[0]) ? 0 : 1;
 
 #if defined( _FEATURE_SYSTEM_CONSOLE )
 
-    /* Check if SCP command */
-    if (0
-        || cmd[0] == '.'
-        || cmd[0] == '!'
-        || cmd[0] == '\\'
-    )
+    /* Process SCP command... */
+    if (IS_SCP_CMD( cmd ))
     {
         bool  priomsg  = cmd[0] == '!'  ? true : false;
         bool  scpecho  = sysblk.scpecho ? true : false;
-        bool  mask     = cmd[0] == '\\' ? true : false;
+        bool  mask     = cmd[0] == '\\' ? true : false; // "(suppressed)"
 
         if (!cmd[1]) {      /* (empty command given?) */
             cmd[1] = ' ';   /* (must send something!) */
@@ -818,9 +787,10 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
     else
 
 #endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
-
-    /* Perform variable substitution */
+    /* Process Hercules command... */
     {
+        /* Perform variable substitution */
+
         char* cl;
 
         set_symbol( "CUU",  "$(CUU)"  );
@@ -835,9 +805,13 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
             free( cl );
         }
 
+        /* Echo the command being executed
+           to the panel (and log file too)
+        */
         if (hercecho && *cmd)
             EchoHercCmdLine( cmd );
 
+        /* Now actually execute (process) the command */
         rc = HercCmdLine( cmd );
     }
 

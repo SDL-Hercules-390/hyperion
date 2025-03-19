@@ -707,6 +707,7 @@ struct SYSBLK {
         bool    sys_suspended;          /* System has been suspended */
         bool    sys_resumed;            /* System has been resumed   */
 #endif
+        bool    allow_wd_debugging;     /* allow watchdog debugging  */
 #endif
         enum OPERATION_MODE operation_mode; /* CPU operation mode    */
         u_int   lparmode:1;             /* LPAR mode active          */
@@ -1012,6 +1013,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
                 sfcmd:1,                /* 1 = 'sf' command issued   */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
+                herclin:1,              /* herclin.exe has no panel  */
                 npquiet:1,              /* New Panel quiet indicator */
 #if defined(_FEATURE_SYSTEM_CONSOLE)
                 scpecho:1,              /* scp echo mode indicator   */
@@ -1140,6 +1142,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
             U64 imape3[256];
             U64 imape4[256];
             U64 imape5[256];
+            U64 imape6[256];
             U64 imape7[256];
             U64 imapeb[256];
             U64 imapec[256];
@@ -1162,6 +1165,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
             U64 imape3T[256];
             U64 imape4T[256];
             U64 imape5T[256];
+            U64 imape6T[256];
             U64 imape7T[256];
             U64 imapebT[256];
             U64 imapecT[256];
@@ -1488,6 +1492,16 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    sensemm[5];             /* Manuf. & model for sense  */
 
         /*  control flags...                                         */
+
+        BYTE    hoc;                    /* Halt or Clear type        */
+
+#define HOC_NONE        0
+#define HOC_HSCH        1
+#define HOC_CSCH        2
+#define HOC_HIO_HDV     3
+#define HOC_HALT        4
+#define HOC_RESET       5
+
         unsigned int                    /* Flags                     */
                 append:1,               /* 1=append new data to end  */
                 s370start:1,            /* 1=S/370 non-BMX behavior  */
@@ -1521,6 +1535,8 @@ struct DEVBLK {                         /* Device configuration block*/
         unsigned int                    /* Device state - serialized
                                             by dev->lock             */
                 busy:1,                 /* 1=Device is busy          */
+                halting:1,              /* 1=Halt/Clear busy         */
+                synchalt:1,             /* 1=Synchronous Halt/Clear  */
                 reserved:1,             /* 1=Device is reserved      */
                 suspended:1,            /* 1=Channel pgm suspended   */
                 pending:1,              /* 1=I/O interrupt pending   */

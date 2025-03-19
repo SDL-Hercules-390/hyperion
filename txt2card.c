@@ -32,7 +32,7 @@
 #include "hercules.h"
 
 #define UTILITY_NAME    "txt2card"
-#define UTILITY_DESC    "Translate text file to EBCDIC utility"
+#define UTILITY_DESC    "Translate ASCII text file to EBCDIC card deck utility"
 
 static FILE*   ifile = NULL;
 static FILE*   ofile = NULL;
@@ -132,7 +132,7 @@ int main( int argc, char* argv[] )
 
     /* Determine if output is to a file or to a socket */
 
-    if (!(colon = strchr( argv[3], ':' )))
+    if (!(colon = strchr( &argv[3][2], ':' )))
     {
         // Output is to a file
 

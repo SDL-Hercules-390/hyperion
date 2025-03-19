@@ -1582,7 +1582,8 @@ static void do_shutdown_now()
     {
         sysblk.shutdown = TRUE;       // (system shutdown initiated)
         loggersetshutdown = FALSE;    // logger didn't set system shutdown
-        WRMSG( HHC01421, "E" , "Failsafe shutdown actioned");
+        if (!sysblk.herclin)          // herclin doesn't set shutdown flag
+            WRMSG( HHC01421, "E" , "Failsafe shutdown actioned");
     }
 
     /* Wakeup I/O subsystem to start I/O subsystem shutdown */

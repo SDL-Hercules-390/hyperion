@@ -257,6 +257,16 @@ typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 #define CCKD_DEF_FREEPEND     -1        /* Def free pending cycles   */
 #define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
+#define CCKD_MIN_DHMAX         0        /* Min DASD hardeners allowed  */
+#define CCKD_DEF_DHMAX         1        /* Def DASD hardeners allowed  */
+#define CCKD_MAX_DHMAX         1        /* Max DASD hardeners allowed  */
+                                        /* *** ONLY ONE ALLOWED! ***   */
+
+#define CCKD_MIN_DHINT         0        /* Min DASD hardening interval */
+#define CCKD_DEF_DHINT         0        /* Def DASD hardening interval */
+#define CCKD_MAX_DHINT         999      /* Max DASD hardening interval */
+
+
 /*-------------------------------------------------------------------*/
 /*                   Global CCKD dasd block                          */
 /*-------------------------------------------------------------------*/
@@ -276,6 +286,13 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         BYTE             comps;         /* Supported compressions    */
         BYTE             comp;          /* Override compression      */
         int              compparm;      /* Override compression parm */
+
+        LOCK             dhlock;        /* Dasd Hardener lock        */
+        COND             dhcond;        /* Dasd Hardener cond        */
+        int              dhs;           /* Number Dasd Hardener threads started */
+        int              dha;           /* Number Dasd Hardener threads active */
+        int              dhmax;         /* Max Dasd Hardeners        */
+        int              dhint;         /* Wait time in seconds      */
 
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */
@@ -337,6 +354,9 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         U64              stats_writebytes;     /* Bytes written      */
         U64              stats_gcolmoves;      /* Spaces moved       */
         U64              stats_gcolbytes;      /* Bytes moved        */
+        U64              stats_dhpasses;       /* DASD harden passes */
+        U64              stats_hardens;        /* DASD harden opers  */
+        U64              stats_fsyncs;         /* DASD sync opers    */
 
         LOCK             trclock;       /* Internal trace table lock */
         CCKD_ITRACE     *itrace;        /* Internal trace table      */
@@ -370,7 +390,8 @@ struct CCKD_EXT {                       /* Ext for compressed ckd    */
                          notnull:1,     /* 1=Device has track images */
                          L2ok:1,        /* 1=All l2s below bounds    */
                          sfmerge:1,     /* 1=sf-xxxx merge           */
-                         sfforce:1;     /* 1=sf-xxxx force           */
+                         sfforce:1,     /* 1=sf-xxxx force           */
+                         needsdh:1;     /* 1=written since last harden */
 
         int              sflevel;       /* sfk xxxx level            */
 

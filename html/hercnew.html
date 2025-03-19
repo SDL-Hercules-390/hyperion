@@ -13,6 +13,48 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
+<h2>What's new in Version 4.8
+</h2>
+
+<p>Release date: dd Mmmm 2025
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.8">Release_4.8</a>
+<br><i>Please refer to the <a href="hercrnot.html#4.8">Release Notes</a> for important information.</i>
+
+<ul>
+
+<li>Fix rare Hercules crash in QETH device handling if LSO enabled
+<li>Fix CCKDDU64 failure on very large (e.g. 3390-54) dasds (Andrew)
+<li>Fix cckddiag/64 CFBA crash and correct associated DOC
+<li>Fix storage key double-keyed 4K-byte-block bug (Pascal Parent)
+<li>Fix timer interval bug in rubato_thread causing excessive CPU
+<li>Fix QDIO SQBS/EQBS instruction return codes (James Wekel)
+<li>Fix 17 yr. old SIE bug (Pascal Parent)
+<li>Fix minor trailing path separator bug in 'sclproot' command
+<li>Fix LCS device confusion with preconfigured interfaces (Ian Shorter)
+<li>Fix 3880/3990 control unit chaining requirement
+<li>Fix bug in ED24 LDE (LOAD LENGTHENED) instruction (Ian Shorter)
+<li>Fix CTCE support for VM TSAF facility (Peter Jansen)
+<li>Fix Shared Device Server/Client "CU=" mismatch bug
+<p>
+<li>New: Improved performance of SLA, SLDA, SLAK, and SLAG instructions
+<li>New: Compressed CKD/FBA <a href="hercrnot.html#4.8">Dasd Hardener</a> (Ross Patterson)
+<li>New: card2txt: utility to translate EBCDIC cards to ASCII file
+<li>New: txt2card: socket output option
+<li>New: MTS (Michigan Terminal System) HIM (Host Interface Machine) device support (Mike Alexander)
+<li>New: <a href="hercrnot.html#4.8">zVector Facility support</a> (salva-rczero, James Wekel, Ian Shorter)
+<li>New: <a href="hercrnot.html#4.8">Message Security Assists 5 and 7</a> support (Jurgen Winkelmann)
+<li>New: Report unavailable host instructions
+<li>New: dasdinit: Warn if extension doesn't match compression option
+<li>New: SoftFloat libs updated to new version
+
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
 <h2>What's new in Version 4.7
 </h2>
 

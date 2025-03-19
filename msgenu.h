@@ -295,7 +295,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00100 "Thread id "TIDPAT", prio %d, name '%s' started"
 #define HHC00101 "Thread id "TIDPAT", prio %d, name '%s' ended"
 #define HHC00102 "Error in function create_thread(): %s"
-//efine HHC00103 (available)
+#define HHC00103 "create_thread( \"%s\" ) error: %s"
+#define HHC00104 "%1d:%04X: Calling \"%s\" directly!"
 //efine HHC00105 (available)
 #define HHC00106 "Error in function create_thread() for %s %d of %d: %s"
 #define HHC00107 "Starting thread %s, active=%d, started=%d, max=%d"
@@ -488,9 +489,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00388 "%1d:%04X CCKD%s image %s is moderately fragmented"
 #define HHC00389 "%1d:%04X CCKD%s image %s is slightly fragmented"
 #define HHC00390 "%1d:%04X CCKD file: device has no shadow files"
-//efine HHC00391 (available)
-//efine HHC00392 (available)
-//efine HHC00393 (available)
+#define HHC00391 "Starting CCKD Dasd Hardener pass..."
+#define HHC00392 "CCKD Dasd Hardener pass complete."
+#define HHC00393 "Thread '%s': sleeping for %d seconds at %s..."
 //efine HHC00394 (available)
 //efine HHC00395 (available)
 #define HHC00396 "%1d:%04X %s" // (cckd_trace)
@@ -693,7 +694,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00743 "Shared:  %s" // (trace message)
 #define HHC00744 "Shared: Server already active"
 #define HHC00745 "%1d:%04X Shared: CKD file: 'fakewrite' invalid without 'readonly'"
-//efine HHC00746 - HHC00799 (available)
+#define HHC00746 "%1d:%04X Shared: error retrieving control unit information"
+#define HHC00747 "%1d:%04X Shared: client/server device control unit type/model mismatch"
+//efine HHC00748 - HHC00799 (available)
 
 // reserve 008xx for processor related messages
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
@@ -721,7 +724,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00822 "PROCESSOR %s%02X APPEARS TO BE HUNG!"
 #define HHC00823 "You have %d seconds to attach a debugger before crash dump will be taken!"
 #define HHC00824 "Debugger attached! NOT crashing!"
-#define HHC00825 "TIME'S UP! (or debugger has been detached!) - Forcing crash dump!"
+#define HHC00825 "Creating crash dump!"
 #define HHC00826 "Processor %s%02X: processor %sstopped due to disabled wait"
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: %s"
 #define HHC00828 "Processor %s%02X: ipl failed: %s" // (IPL I/O error)
@@ -802,7 +805,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00902 "%1d:%04X %s: ioctl %s failed for device %s: %s"
 #define HHC00903 "%1d:%04X: CTC DEBUG is %s"
 #define HHC00904 "%1d:%04X %s: Halt or clear recognized"
-//efine HHC00905 (available)
+#define HHC00905 "%1d:%04X %s: %s %s for %s device"
 #define HHC00906 "%1d:%04X CTC: write CCW count %u is invalid"
 #define HHC00907 "%1d:%04X CTC: interface command: %s %8.8X"
 #define HHC00908 "%1d:%04X CTC: incomplete write buffer segment header at offset %4.4X"
@@ -2454,7 +2457,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03254 "File successfully swapped from %s endian to %s endian"
 //efine HHC03255 - HHC03299 (available)
 
-// txt2card
+// txt2card/card2txt
 #define HHC03300 "Usage:  txt2card  codepage  ifile  {ofile | host:port}"
 #define HHC03301 "Incorrect number of arguments"
 #define HHC03302 "Invalid/unsupported codepage"
@@ -2777,7 +2780,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC90027 "Total threads running: %d"
 #define HHC90028 "lock %s was already initialized at %s"
 #define HHC90029 "Lock "PTR_FMTx" (%s) obtained by "TIDPAT" (%s) on %s at %s"
-//efine HHC90030 - HHC90099 (available)
+//efine HHC90030 (available)
+//efine HHC90031 (available)
+#define HHC90032 "DBG: %s" // EXCLUSIVELY for CTCI-WIN "tt32 debug" messages
+                           // See w32ctca.c "tt32_output_debug_string".
+//efine HHC90033 - HHC90099 (available)
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"

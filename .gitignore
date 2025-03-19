@@ -16,6 +16,7 @@ config.log
 autoconf/compile
 /aclocal.m4
 /autom4te.cache
+/card2txt
 /cckd2ckd
 /cckd642ckd
 /cckdcdsk
@@ -184,6 +185,6 @@ allTests.*
 /AutoBuildCount.h
 /_nmake_pjj.bat
 /3211.txt
-/tests/3330-shadow_1.cckd64
-/tests/3380-shadow_1.cckd64
-/tests/3390-shadow_1.cckd64
+3330-shadow_1.cckd64
+3380-shadow_1.cckd64
+3390-shadow_1.cckd64
