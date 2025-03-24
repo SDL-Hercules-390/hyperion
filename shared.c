@@ -373,6 +373,10 @@ init_retry:
         {
             // "%1d:%04X Shared: client/server device control unit type/model mismatch"
             WRMSG( HHC00747, "E", LCSS_DEVNUM );
+
+            // "%1d:%04X Shared: %s cu type/model: %4.4X %2.2X"
+            WRMSG( HHC00748, "I", LCSS_DEVNUM, "client", dev->ckdcu->devt, dev->ckdcu->model );
+            WRMSG( HHC00748, "I", LCSS_DEVNUM, "server",      svr_cu.devt,      svr_cu.model );
             return -1;
         }
     }

@@ -696,7 +696,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00745 "%1d:%04X Shared: CKD file: 'fakewrite' invalid without 'readonly'"
 #define HHC00746 "%1d:%04X Shared: error retrieving control unit information"
 #define HHC00747 "%1d:%04X Shared: client/server device control unit type/model mismatch"
-//efine HHC00748 - HHC00799 (available)
+#define HHC00748 "%1d:%04X Shared: %s cu type/model: %4.4X %2.2X"
+//efine HHC00749 - HHC00799 (available)
 
 // reserve 008xx for processor related messages
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
