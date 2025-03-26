@@ -350,9 +350,9 @@ init_retry:
     }
     else /* (server SHOULD support the SHRD_CU query) */
     {
-        CKDCU svr_cu; // (server's control unit information)
+        struct { U16 devt; BYTE model; } svr_cu;
 
-        rc = clientRequest (dev, (BYTE*)&svr_cu, sizeof( CKDCU ),
+        rc = clientRequest (dev, (BYTE*)&svr_cu, sizeof( svr_cu ),
                             SHRD_QUERY, SHRD_CU, NULL, NULL);
 
         if (rc < 0)
@@ -2081,9 +2081,14 @@ char     trcmsg[32];
             break;
 
         case SHRD_CU:
-            SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, sizeof( CKDCU ));
-            serverSend (dev, ix, hdr, (BYTE*)dev->ckdcu, (U32)sizeof( CKDCU ));
+        {
+            struct { U16 devt; BYTE model; } temp;
+            temp.devt  = dev->ckdcu->devt;
+            temp.model = dev->ckdcu->model;
+            SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, sizeof( temp ));
+            serverSend (dev, ix, hdr, (BYTE*)&temp, (U32)sizeof( temp ));
             break;
+        }
 
         case SHRD_CKDCYLS:
             store_fw (buf, dev->ckdcyls);
@@ -3038,8 +3043,6 @@ struct timeval          timeout = {0};
         timeout.tv_usec = SHARED_SELECT_WAIT_MSECS * 1000;
         rc = select( hi, &selset, NULL, NULL, &timeout );
 
-        SHRDGENTRACE("shared_server: select rc %d", rc );
-
         if (rc == 0)
             continue;
 
@@ -3048,10 +3051,14 @@ struct timeval          timeout = {0};
             if (HSO_errno == HSO_EINTR)
                 continue;
 
+            SHRDGENTRACE(" shared_server: select rc %d", rc );
+
             // "Shared: error in function %s: %s"
             WRMSG( HHC00735, "E", "select()", strerror( HSO_errno ));
             break;
         }
+
+        SHRDGENTRACE(" shared_server: select rc %d", rc );
 
         /* If a client connection request has arrived then accept it */
         if (FD_ISSET( lsock, &selset ))
