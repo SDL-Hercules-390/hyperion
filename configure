@@ -20050,49 +20050,6 @@ esac
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $hc_cv_asm_byteswap " >&5
 $as_echo "$hc_cv_asm_byteswap " >&6; }
 
-#--------------------------------------------------------------#
-#  Check if GCC supports -msse4.1 -msse4.2 -mpclmul compiler   #
-#  options needed by Herc 4.8 z/Arch vector registers support  #
-#--------------------------------------------------------------#
-
-if test "$GCC" = "yes"; then
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports '-msse4.1 -msse4.2 -mpclmul' options" >&5
-$as_echo_n "checking whether compiler supports '-msse4.1 -msse4.2 -mpclmul' options... " >&6; }
-if ${hc_cv_sse4_pclmul_support+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-            hc_temp="$CFLAGS"
-            CFLAGS="-msse4.1 -msse4.2 -mpclmul"
-
-            cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-                    int main(int argc, char **argv)
-                    {
-                        return 0;
-                    }
-
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  hc_cv_sse4_pclmul_support=yes
-else
-  hc_cv_sse4_pclmul_support=no
-
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-            CFLAGS="$hc_temp"
-
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $hc_cv_sse4_pclmul_support" >&5
-$as_echo "$hc_cv_sse4_pclmul_support" >&6; }
-else
-    hc_cv_sse4_pclmul_support=no
-fi
-
 #------------------------------------------------------------------
 #  The logic to test whether optreset is needed for getopt use is
 #  defined in the 'HC_CHECK_NEED_GETOPT_OPTRESET' macro in the
@@ -21768,10 +21725,6 @@ case $? in #(
   *) :
      ;;
 esac
-            fi
-
-            if test "$hc_cv_sse4_pclmul_support" = "yes"; then
-                hc_cv_optimization_flags="$hc_cv_optimization_flags -msse4.1 -msse4.2 -mpclmul"
             fi
             ;;
 
