@@ -155,6 +155,9 @@
   set "tool1=rexx.exe"
   set "tool2=datetime.rexx"
 
+  set "did_WMIC="
+  set "have_WMIC="
+
   set "tdir="
   set "tname="
   set "noexit="
@@ -361,6 +364,43 @@
 ::                         LocalDateTime
 ::-----------------------------------------------------------------------------
 :LocalDateTime
+
+  REM "wmic" is no longer INSTALLED starting with Windows 11 24H2.
+  REM Note however, if Windows 11 24H2 was simply UPGRADED TO from
+  REM a previous Windows 10 or 11 installtion, then it should still
+  REM exist. 24H2 does NOT remove it. It simply no longer INSTALLS
+  REM it by default. So only those who do a fresh INSTALL of 24H2
+  REM or later are affected/impacted.
+
+  if defined did_WMIC (
+  
+    if not defined have_WMIC (
+
+      REM "wmic" doesn't exist! We have no choice but to use the
+      REM existing builtin %date% and %time% batch variables. For
+      REM most people using the same date/time format as the U.S.
+      REM this will work just fine. For other countries/languages
+      REM however, this will cause incorrectly formatted "Begin"
+      REM and "End" and "Duration" messages. But without WMIC, we
+      REM really have no choice in the matter! The only good news
+      REM is that this is a purely cosmetic issue, and does not
+      REM otherwise impact the overall functioning of the runtest
+      REM script. It will still work fine. You will just see some
+      REM very unusual "Begin" and "End" time messages, and your
+      REM "Duration" message will be WILDLY inaccurate!
+
+      %return%
+    )
+  ) else (
+
+    set "did_WMIC=yes"
+
+    call :fullpath "wmic.exe"
+
+    if     defined # set "have_WMIC=yes"
+    if not defined # %return%
+    )
+  )
 
 setlocal
 
