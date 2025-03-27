@@ -399,7 +399,6 @@
 
     if     defined # set "have_WMIC=yes"
     if not defined # %return%
-    )
   )
 
 setlocal
