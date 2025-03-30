@@ -1409,6 +1409,13 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Clear the first block group's image data to binary zeros */
+    if (!(pBuf = realloc( pBuf, FBA_BKGHDR_SIZE + CFBA_BLKGRP_SIZE )))
+    {
+        // "Out of memory"
+        FWRMSG( stderr, HHC00152, "S" );
+        return -1;
+    }
+
     memset( pBuf, 0, FBA_BKGHDR_SIZE + CFBA_BLKGRP_SIZE );
 
     /* Build the "Track Header" (FBA Block Group Header) */
