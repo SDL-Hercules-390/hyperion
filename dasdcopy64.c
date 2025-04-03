@@ -129,6 +129,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         else if (strcmp(argv[0], "-bz2") == 0)
             comp = CCKD_COMPRESS_BZIP2;
 #endif
+        else if (strcmp(argv[0], "-lz4") == 0)
+            comp = CCKD_COMPRESS_LZ4;
         else if (strcmp(argv[0], "-0") == 0)
             comp = CCKD_COMPRESS_NONE;
         else if ((strcmp(argv[0], "-cyl") == 0
@@ -654,10 +656,12 @@ int syntax( const char* pgm, const char* msgfmt, ... )
     char zbuf  [80];
     char bzbuf [80];
     char lfsbuf[80];
+    char lz4buf[80];
 
     zbuf  [0] = 0;
     bzbuf [0] = 0;
     lfsbuf[0] = 0;
+    lz4buf[0] = 0;
 
     /* Show them their syntax error... */
     if (msgfmt)
@@ -705,6 +709,7 @@ int syntax( const char* pgm, const char* msgfmt, ... )
 
 #define Z_HELP     "  -z       compress using zlib [default]"
 #define BZ_HELP    "  -bz2     compress using bzip2"
+#define LZ4_HELP   "  -lz4     compress using lz4"
 #define LFS_HELP   "  -lfs     create single large output file"
 
     /* Display help information... */
@@ -712,7 +717,8 @@ int syntax( const char* pgm, const char* msgfmt, ... )
     {
         if (zlib)  MSGBUF(  zbuf, "%s%s\n", HHC02435I,  Z_HELP );
         if (bzip2) MSGBUF( bzbuf, "%s%s\n", HHC02435I, BZ_HELP );
-        WRMSG(                              HHC02435, "I", zbuf, bzbuf );
+        MSGBUF( lz4buf, "%s%s\n", HHC02435I, LZ4_HELP );
+        WRMSG(                              HHC02435, "I", zbuf, bzbuf, lz4buf);
     }
     else if (strcasecmp( pgm,             "cckd642ckd"   ) == 0)
     {
@@ -723,7 +729,8 @@ int syntax( const char* pgm, const char* msgfmt, ... )
     {
         if (zlib)  MSGBUF(  zbuf, "%s%s\n", HHC02437I,  Z_HELP );
         if (bzip2) MSGBUF( bzbuf, "%s%s\n", HHC02437I, BZ_HELP );
-        WRMSG(                              HHC02437, "I", zbuf, bzbuf );
+        MSGBUF( lz4buf, "%s%s\n", HHC02437I, LZ4_HELP );
+        WRMSG(                              HHC02437, "I", zbuf, bzbuf, lz4buf );
     }
     else if (strcasecmp( pgm,             "cfba642fba"   ) == 0)
     {
@@ -735,7 +742,8 @@ int syntax( const char* pgm, const char* msgfmt, ... )
         if (zlib)  MSGBUF(   zbuf, "%s%s\n", HHC02439I,   Z_HELP );
         if (bzip2) MSGBUF(  bzbuf, "%s%s\n", HHC02439I,  BZ_HELP );
         if (lfs)   MSGBUF( lfsbuf, "%s%s\n", HHC02439I, LFS_HELP );
-        WRMSG(                               HHC02439, "I", pgm, zbuf, bzbuf, lfsbuf,
+        MSGBUF( lz4buf, "%s%s\n", HHC02439I, LZ4_HELP );
+        WRMSG(                               HHC02439, "I", pgm, zbuf, bzbuf, lz4buf, lfsbuf,
             "CKD, CKD64, CCKD, CCKD64, FBA, FBA64, CFBA, CFBA64" );
     }
 
