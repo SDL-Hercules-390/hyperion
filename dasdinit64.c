@@ -18,6 +18,7 @@
 /*                      (ignored if size specified manually)         */
 /*              -z      build compressed device using zlib           */
 /*              -bz2    build compressed device using bzip2          */
+/*              -lz4    build compressed device using lz4            */
 /*              -0      build compressed device with no compression  */
 /*              -r      "raw" init (bypass VOL1 & IPL track fmt)     */
 /*              -b      build disabled wait PSW as BC-mode PSW (if   */
@@ -111,6 +112,8 @@ int     rc;                             /* Return code               */
         else if (strcmp("bz2", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_BZIP2;
 #endif
+        else if (strcmp("lz4", &argv[1][1]) == 0)
+            comp = CCKD_COMPRESS_LZ4;
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
         else if (strcmp("r", &argv[1][1]) == 0)
@@ -341,12 +344,14 @@ static void argexit( int code, char* m, const char* pgm )
             char *bufbz = "";
 #endif
 
+            char *buflz4 = "HHC02448I   -lz4      build compressed dasd image file using lz4\n";
+
             char* buflfs = "";
 
             if (sizeof(off_t) > 4)
                 buflfs = "HHC02448I   -lfs      build a large (uncompressed) dasd file (if supported)\n";
 
-            WRMSG( HHC02448, "I", pgm, bufz, bufbz, buflfs );
+            WRMSG( HHC02448, "I", pgm, bufz, bufbz, buflz4, buflfs );
         }
         break;
     }
