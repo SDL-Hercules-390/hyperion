@@ -2276,7 +2276,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
 #if defined( HAVE_ZLIB )
     len2 = sizeof( buf2 );
     if (1
-        && CCKD_COMPRESS_ZLIB == (comp & CCKD_COMPRESS_MASK)
+        && CCKD_COMPRESS_ZLIB == comp
         && Z_OK == (rc = compress2( &buf2[0], &len2, &pBuf[ FBA_BKGHDR_SIZE ],
                                     CFBA_BLKGRP_SIZE, Z_DEFAULT_COMPRESSION ))
     )

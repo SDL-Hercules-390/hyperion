@@ -211,7 +211,7 @@ static int decomptrk
     memset(obuf, 0, obuflen);
 
     /* Uncompress the track/block image */
-    switch (ibuf[0] & CCKD_COMPRESS_MASK)
+    switch (ibuf[0])
     {
 
     case CCKD_COMPRESS_NONE:
@@ -278,7 +278,7 @@ static int decomptrk
     default:
         return -1;
 
-    } /* switch (buf[0] & CCKD_COMPRESS_MASK) */
+    } /* switch (buf[0]) */
     return bufl;
 }
 

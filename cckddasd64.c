@@ -595,8 +595,7 @@ int             cache;                  /* New active cache entry    */
     if (trk == dev->bufcur && dev->cache >= 0)
     {
         /* Track image may be compressed */
-        if ((dev->buf[0] & CCKD_COMPRESS_MASK) != 0
-         && (dev->buf[0] & dev->comps) == 0)
+        if ((dev->buf[0] & dev->comps) == 0)
         {
             len = cache_getval(CACHE_DEVBUF, dev->cache);
             newbuf = cckd64_uncompress (dev, dev->buf, len, dev->ckdtrksz, trk);
@@ -616,7 +615,7 @@ int             cache;                  /* New active cache entry    */
                         trk, dev->buflen);
         }
 
-        dev->comp = dev->buf[0] & CCKD_COMPRESS_MASK;
+        dev->comp = dev->buf[0];
         if (dev->comp != 0) dev->compoff = CKD_TRKHDR_SIZE;
 
         return 0;
@@ -641,7 +640,7 @@ int             cache;                  /* New active cache entry    */
     dev->buflen   = cache_getval (CACHE_DEVBUF, dev->cache);
     dev->bufsize  = cache_getlen (CACHE_DEVBUF, dev->cache);
 
-    dev->comp = dev->buf[0] & CCKD_COMPRESS_MASK;
+    dev->comp = dev->buf[0];
     if (dev->comp != 0) dev->compoff = CKD_TRKHDR_SIZE;
 
     /* If the image is compressed then call ourself recursively
@@ -677,7 +676,7 @@ int             rc;                     /* Return code               */
     /* If the track is not current or compressed then read it.
        `dev->comps' is set to zero forcing the read routine to
        uncompress the image.                                     */
-    if (trk != dev->bufcur || (dev->buf[0] & CCKD_COMPRESS_MASK) != 0)
+    if (trk != dev->bufcur || dev->buf[0] != 0)
     {
         dev->comps = 0;
         rc = (dev->hnd->read) (dev, trk, unitstat);
@@ -781,8 +780,7 @@ int             maxlen;                 /* Size for cache entry      */
     if (blkgrp == dev->bufcur && dev->cache >= 0)
     {
         /* Block group image may be compressed */
-        if ((cbuf[0] & CCKD_COMPRESS_MASK) != 0
-         && (cbuf[0] & dev->comps) == 0)
+        if ((cbuf[0] & dev->comps) == 0)
         {
             len = cache_getval(CACHE_DEVBUF, dev->cache) + CKD_TRKHDR_SIZE;
             newbuf = cckd64_uncompress (dev, cbuf, len, maxlen, blkgrp);
@@ -803,7 +801,7 @@ int             maxlen;                 /* Size for cache entry      */
                         blkgrp, dev->buflen);
         }
 
-        dev->comp = cbuf[0] & CCKD_COMPRESS_MASK;
+        dev->comp = cbuf[0];
 
         return 0;
     }
@@ -827,7 +825,7 @@ int             maxlen;                 /* Size for cache entry      */
     dev->buflen   = CFBA_BLKGRP_SIZE;
     cache_setval  (CACHE_DEVBUF, dev->cache, dev->buflen);
     dev->bufsize  = cache_getlen (CACHE_DEVBUF, dev->cache);
-    dev->comp     = cbuf[0] & CCKD_COMPRESS_MASK;
+    dev->comp     = cbuf[0];
 
     /* If the image is compressed then call ourself recursively
        to cause the image to get uncompressed.  This is because
@@ -860,7 +858,7 @@ BYTE           *cbuf;                   /* -> cache buffer           */
     /* Read the block group if it's not current or compressed.
        `dev->comps' is set to zero forcing the read routine to
        uncompress the image.                                   */
-    if (blkgrp != dev->bufcur || (cbuf[0] & CCKD_COMPRESS_MASK) != 0)
+    if (blkgrp != dev->bufcur || cbuf[0] != 0)
     {
         dev->comps = 0;
         rc = (dev->hnd->read) (dev, blkgrp, unitstat);
@@ -3008,14 +3006,10 @@ BYTE            badcomp=0;              /* 1=Unsupported compression */
         {
             if (buf[0] & ~cckdblk.comps)
             {
-                if (buf[0] & ~CCKD_COMPRESS_MASK)
-                {
-                    if (cckdblk.bytemsgs++ < 10)
-                        // "%1d:%04X CCKD file[%d] %s: invalid byte 0 trk %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
-                        WRMSG( HHC00307, "E", LCSS_DEVNUM, cckd->sfn,
-                            cckd_sf_name( dev, cckd->sfn ), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
-                    buf[0] &= CCKD_COMPRESS_MASK;
-                }
+                if (cckdblk.bytemsgs++ < 10)
+                    // "%1d:%04X CCKD file[%d] %s: invalid byte 0 trk %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
+                    WRMSG( HHC00307, "E", LCSS_DEVNUM, cckd->sfn,
+                        cckd_sf_name( dev, cckd->sfn ), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
             }
             if (buf[0] & ~cckdblk.comps)
                 badcomp = 1;
@@ -3031,13 +3025,9 @@ BYTE            badcomp=0;              /* 1=Unsupported compression */
         {
             if (buf[0] & ~cckdblk.comps)
             {
-                if (buf[0] & ~CCKD_COMPRESS_MASK)
-                {
-                    // "%1d:%04X CCKD file[%d] %s: invalid byte 0 blkgrp %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
-                    WRMSG( HHC00308, "E", LCSS_DEVNUM, cckd->sfn,
-                            cckd_sf_name( dev, cckd->sfn ), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
-                    buf[0] &= CCKD_COMPRESS_MASK;
-                }
+                // "%1d:%04X CCKD file[%d] %s: invalid byte 0 blkgrp %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
+                WRMSG( HHC00308, "E", LCSS_DEVNUM, cckd->sfn,
+                        cckd_sf_name( dev, cckd->sfn ), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
             }
             if (buf[0] & ~cckdblk.comps)
                 badcomp = 1;
@@ -4830,15 +4820,15 @@ CCKD64_EXT     *cckd;
 BYTE           *to = NULL;                /* Uncompressed buffer     */
 int             newlen;                   /* Uncompressed length     */
 BYTE            comp;                     /* Compression type        */
-static char    *compress[] = {"none", "zlib", "bzip2"};
+static char    *compress[] = {"none", "zlib", "bzip2", "lz4"};
 
     cckd = dev->cckd_ext;
 
     CCKD_TRACE( "uncompress comp %d len %d maxlen %d trk %d",
-                from[0] & CCKD_COMPRESS_MASK, len, maxlen, trk);
+                from[0], len, maxlen, trk);
 
     /* Extract compression type */
-    comp = (from[0] & CCKD_COMPRESS_MASK);
+    comp = from[0];
 
     /* Get a buffer to uncompress into */
     if (comp != CCKD_COMPRESS_NONE && cckd->newbuf == NULL)
@@ -4862,6 +4852,10 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
     case CCKD_COMPRESS_BZIP2:
         to = cckd->newbuf;
         newlen = cckd_uncompress_bzip2 (dev, to, from, len, maxlen);
+        break;
+    case CCKD_COMPRESS_LZ4:
+        to = cckd->newbuf;
+        newlen = cckd_uncompress_lz4 (dev, to, from, len, maxlen);
         break;
     default:
         newlen = -1;
@@ -4913,6 +4907,17 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
     to = cckd->newbuf;
     newlen = cckd_uncompress_bzip2 (dev, to, from, len, maxlen);
     newlen = cckd64_validate       (dev, to, trk, newlen);
+    if (newlen > 0)
+    {
+        cckd->newbuf = from;
+        cckd->bufused = 1;
+        return to;
+    }
+
+    /* lz4 compression */
+    to = cckd->newbuf;
+    newlen = cckd_uncompress_lz4 (dev, to, from, len, maxlen);
+    newlen = cckd64_validate     (dev, to, trk, newlen);
     if (newlen > 0)
     {
         cckd->newbuf = from;
