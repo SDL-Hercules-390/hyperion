@@ -140,7 +140,8 @@ struct CCKD_DEVHDR                      /* Compress device header    */
 #define CCKD_COMPRESS_NONE     0x00
 #define CCKD_COMPRESS_ZLIB     0x01
 #define CCKD_COMPRESS_BZIP2    0x02
-#define CCKD_COMPRESS_MASK     0x03
+#define CCKD_COMPRESS_LZ4      0x03
+#define CCKD_COMPRESS_LZ4_DICT 0x04
 
 #define CCKD_STRESS_MINLEN     4096
 #if defined( HAVE_ZLIB )

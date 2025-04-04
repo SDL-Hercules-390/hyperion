@@ -204,10 +204,12 @@ int     cckd64_gc_l2(DEVBLK *dev, BYTE *buf);
 BYTE   *cckd_uncompress(DEVBLK *dev, BYTE *from, int len, int maxlen, int trk);
 int     cckd_uncompress_zlib(DEVBLK *dev, BYTE *to, BYTE *from, int len, int maxlen);
 int     cckd_uncompress_bzip2(DEVBLK *dev, BYTE *to, BYTE *from, int len, int maxlen);
+int     cckd_uncompress_lz4(DEVBLK *dev, BYTE *to, BYTE *from, int len, int maxlen);
 int     cckd_compress(DEVBLK *dev, BYTE **to, BYTE *from, int len, int comp, int parm);
 int     cckd_compress_none(DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm);
 int     cckd_compress_zlib(DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm);
 int     cckd_compress_bzip2(DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm);
+int     cckd_compress_lz4(DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm);
 /*-------------------------------------------------------------------*/
 BYTE   *cckd64_uncompress(DEVBLK *dev, BYTE *from, int len, int maxlen, int trk);
 //t     cckd64_uncompress_zlib(DEVBLK *dev, BYTE *to, BYTE *from, int len, int maxlen);
