@@ -1,0 +1,1318 @@
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *   Zvector E7 instruction tests for VRX encoded:
+                                                     5 *
+                                                     6 *   E705 VLREP  - Vector Load and Replicate
+                                                     7 *
+                                                     8 *        James Wekel March 2025
+                                                     9 ***********************************************************************
+
+
+                                                    11 ***********************************************************************
+                                                    12 *
+                                                    13 *        basic instruction tests
+                                                    14 *
+                                                    15 ***********************************************************************
+                                                    16 *  This program tests proper functioning of the z/arch E7 VRX
+                                                    17 *  Vector Load and Replicate instruction.
+                                                    18 *  Exceptions are not tested.
+                                                    19 *
+                                                    20 *  NOTE: As VLREP is missing, this test uses the Extended Mnemonics:
+                                                    21 *        VREPLB, VREPLH, VLREPF, VLREPG
+                                                    22 *
+                                                    23 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    24 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    25 *  NOT designed to test all aspects of any of the instructions.
+                                                    26 *
+                                                    27 ***********************************************************************
+                                                    28 *
+                                                    29 *   *Testcase zvector-e7-23-VLREP
+                                                    30 *   *
+                                                    31 *   *   Zvector E7 instruction tests for VRX encoded:
+                                                    32 *   *
+                                                    33 *   *   E705 VLREP  - Vector Load and Replicate
+                                                    34 *   *
+                                                    35 *   *   # ------------------------------------------------------------
+                                                    36 *   *   #  This tests only the basic function of the instructions.
+                                                    37 *   *   #  Exceptions are NOT tested.
+                                                    38 *   *   # ------------------------------------------------------------
+                                                    39 *   *
+                                                    40 *   mainsize    2
+                                                    41 *   numcpu      1
+                                                    42 *   sysclear
+                                                    43 *   archlvl     z/Arch
+                                                    44 *
+                                                    45 *   loadcore    "$(testpath)/zvector-e7-23-VLREP.core" 0x0
+                                                    46 *
+                                                    47 *   diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    48 *   runtest     5
+                                                    49 *   diag8cmd    disable   # (reset back to default)
+                                                    50 *
+                                                    51 *   *Done
+                                                    52 *
+                                                    53 ***********************************************************************
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    55 ***********************************************************************
+                                                    56 *        FCHECK Macro - Is a Facility Bit set?
+                                                    57 *
+                                                    58 *        If the facility bit is NOT set, an message is issued and
+                                                    59 *        the test is skipped.
+                                                    60 *
+                                                    61 *        Fcheck uses R0, R1 and R2
+                                                    62 *
+                                                    63 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    64 ***********************************************************************
+                                                    65          MACRO
+                                                    66          FCHECK &BITNO,&NOTSETMSG
+                                                    67 .*                        &BITNO : facility bit number to check
+                                                    68 .*                        &NOTSETMSG : 'facility name'
+                                                    69          LCLA  &FBBYTE           Facility bit in Byte
+                                                    70          LCLA  &FBBIT            Facility bit within Byte
+                                                    71
+                                                    72          LCLA  &L(8)
+                                                    73 &L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+                                                    74
+                                                    75 &FBBYTE  SETA  &BITNO/8
+                                                    76 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    77 .*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    78
+                                                    79          B     X&SYSNDX
+                                                    80 *                                      Fcheck data area
+                                                    81 *                                      skip messgae
+                                                    82 SKT&SYSNDX DC  C'    Skipping tests: '
+                                                    83          DC    C&NOTSETMSG
+                                                    84          DC    C' (bit &BITNO) is not installed.'
+                                                    85 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                    86 *                                      facility bits
+                                                    87          DS    FD                      gap
+                                                    88 FB&SYSNDX DS   4FD
+                                                    89          DS    FD                      gap
+                                                    90 *
+                                                    91 X&SYSNDX EQU *
+                                                    92          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                    93          STFLE FB&SYSNDX               get facility bits
+                                                    94
+                                                    95          XGR   R0,R0
+                                                    96          IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+                                                    97          N     R0,=F'&FBBIT'           is bit set?
+                                                    98          BNZ   XC&SYSNDX
+                                                    99 *
+                                                   100 * facility bit not set, issue message and exit
+                                                   101 *
+                                                   102          LA    R0,SKL&SYSNDX           message length
+                                                   103          LA    R1,SKT&SYSNDX           message address
+                                                   104          BAL   R2,MSG
+                                                   105
+                                                   106          B     EOJ
+                                                   107 XC&SYSNDX EQU *
+                                                   108          MEND
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   110 ***********************************************************************
+                                                   111 *        Low core PSWs
+                                                   112 ***********************************************************************
+                              00000000  000016FB   113 ZVE7TST  START 0
+00000000                      00000000             114          USING ZVE7TST,R0            Low core addressability
+                                                   115
+                              00000140  00000000   116 SVOLDPSW EQU   ZVE7TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   118          ORG   ZVE7TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                        119          DC    X'0000000180000000'
+000001A8  00000000 00000200                        120          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   122          ORG   ZVE7TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        123          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        124          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   126          ORG   ZVE7TST+X'200'        Start of actual test program...
+
+
+                                                   128 ***********************************************************************
+                                                   129 *               The actual "ZVE7TST" program itself...
+                                                   130 ***********************************************************************
+                                                   131 *
+                                                   132 *  Architecture Mode: z/Arch
+                                                   133 *  Register Usage:
+                                                   134 *
+                                                   135 *   R0       (work)
+                                                   136 *   R1-4     (work)
+                                                   137 *   R5       Testing control table - current test base
+                                                   138 *   R6-R7    (work)
+                                                   139 *   R8       First base register
+                                                   140 *   R9       Second base register
+                                                   141 *   R10      Third base register
+                                                   142 *   R11      E7TEST call return
+                                                   143 *   R12      E7TESTS register
+                                                   144 *   R13      (work)
+                                                   145 *   R14      Subroutine call
+                                                   146 *   R15      Secondary Subroutine call or work
+                                                   147 *
+                                                   148 ***********************************************************************
+
+00000200                      00000200             150          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200             151          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00002200             152          USING  BEGIN+8192,R10  THIRD Base Register
+
+00000200  0580                                     154 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                     155          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                     156          BCTR  R8,0             Initalize FIRST base register
+
+00000206  4190 8800                     00000800   158          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800   159          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                   160
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000020E  41A0 9800                     00000800   161          LA    R10,2048(,R9)    Initalize THIRD base register
+00000212  41A0 A800                     00000800   162          LA    R10,2048(,R10)   Initalize THIRD base register
+                                                   163
+00000216  B600 828C                     0000048C   164          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
+0000021A  9604 828D                     0000048D   165          OI    CTLR0+1,X'04'    Turn on AFP bit
+0000021E  9602 828D                     0000048D   166          OI    CTLR0+1,X'02'    Turn on Vector bit
+00000222  B700 828C                     0000048C   167          LCTL  R0,R0,CTLR0      Reload updated CR0
+                                                   168
+                                                   169 ***********************************************************************
+                                                   170 * Is z/Architecture vector facility installed  (bit 129)
+                                                   171 ***********************************************************************
+                                                   172
+                                                   173          FCHECK 129,'z/Architecture vector facility'
+00000226  47F0 80A8                     000002A8   174+         B     X0001
+                                                   175+*                                      Fcheck data area
+                                                   176+*                                      skip messgae
+0000022A  40404040 E2928997                        177+SKT0001  DC    C'    Skipping tests: '
+0000023E  A961C199 838889A3                        178+         DC    C'z/Architecture vector facility'
+0000025C  404D8289 A340F1F2                        179+         DC    C' (bit 129) is not installed.'
+                              0000004E  00000001   180+SKL0001  EQU   *-SKT0001
+                                                   181+*                                      facility bits
+00000278  00000000 00000000                        182+         DS    FD                      gap
+00000280  00000000 00000000                        183+FB0001   DS    4FD
+000002A0  00000000 00000000                        184+         DS    FD                      gap
+                                                   185+*
+                              000002A8  00000001   186+X0001    EQU   *
+000002A8  4100 0004                     00000004   187+         LA    R0,((X0001-FB0001)/8)-1
+000002AC  B2B0 8080                     00000280   188+         STFLE FB0001                  get facility bits
+000002B0  B982 0000                                189+         XGR   R0,R0
+000002B4  4300 8090                     00000290   190+         IC    R0,FB0001+16            get fbit byte
+000002B8  5400 8294                     00000494   191+         N     R0,=F'64'               is bit set?
+000002BC  4770 80D0                     000002D0   192+         BNZ   XC0001
+                                                   193+*
+                                                   194+* facility bit not set, issue message and exit
+                                                   195+*
+000002C0  4100 004E                     0000004E   196+         LA    R0,SKL0001              message length
+000002C4  4110 802A                     0000022A   197+         LA    R1,SKT0001              message address
+000002C8  4520 81A8                     000003A8   198+         BAL   R2,MSG
+000002CC  47F0 8270                     00000470   199+         B     EOJ
+                              000002D0  00000001   200+XC0001   EQU   *
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   202 ***********************************************************************
+                                                   203 *              Do tests in the E7TESTS table
+                                                   204 ***********************************************************************
+                                                   205
+000002D0  58C0 8298                     00000498   206          L     R12,=A(E7TESTS)       get table of test addresses
+                                                   207
+                              000002D4  00000001   208 NEXTE7   EQU   *
+000002D4  5850 C000                     00000000   209          L     R5,0(0,R12)       get test address
+000002D8  1255                                     210          LTR   R5,R5                have a test?
+000002DA  4780 811E                     0000031E   211          BZ    ENDTEST                 done?
+                                                   212
+000002DE                      00000000             213          USING E7TEST,R5
+                                                   214
+000002DE  4800 5004                     00000004   215          LH    R0,TNUM           save current test number
+000002E2  5000 8E04                     00001004   216          ST    R0,TESTING        for easy reference
+                                                   217
+000002E6  E710 8E94 0006                00001094   218          VL    V1,V1FUDGE
+000002EC  58B0 5000                     00000000   219          L     R11,TSUB          get address of test routine
+000002F0  05BB                                     220          BALR  R11,R11           do test
+                                                   221
+000002F2  E310 501C 0014                0000001C   222          LGF   R1,READDR         get address of expected result
+000002F8  D50F 5028 1000      00000028  00000000   223          CLC   V1OUTPUT,0(R1)    valid?
+000002FE  4770 810A                     0000030A   224          BNE   FAILMSG              no, issue failed message
+                                                   225
+00000302  41C0 C004                     00000004   226          LA    R12,4(0,R12)      next test address
+00000306  47F0 80D4                     000002D4   227          B     NEXTE7
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   229 ***********************************************************************
+                                                   230 * result not as expected:
+                                                   231 *        issue message with test number, instruction under test
+                                                   232 *              and instruction m3
+                                                   233 ***********************************************************************
+                              0000030A  00000001   234 FAILMSG  EQU   *
+0000030A  45F0 812C                     0000032C   235          BAL   R15,RPTERROR
+
+
+                                                   237 ***********************************************************************
+                                                   238 * continue after a failed test
+                                                   239 ***********************************************************************
+                              0000030E  00000001   240 FAILCONT EQU   *
+0000030E  5800 829C                     0000049C   241          L     R0,=F'1'          set failed test indicator
+00000312  5000 8E00                     00001000   242          ST    R0,FAILED
+                                                   243
+00000316  41C0 C004                     00000004   244          LA    R12,4(0,R12)      next test address
+0000031A  47F0 80D4                     000002D4   245          B     NEXTE7
+
+
+                                                   247 ***********************************************************************
+                                                   248 * end of testing; set ending psw
+                                                   249 ***********************************************************************
+                              0000031E  00000001   250 ENDTEST  EQU   *
+0000031E  5810 8E00                     00001000   251          L     R1,FAILED         did a test fail?
+00000322  1211                                     252          LTR   R1,R1
+00000324  4780 8270                     00000470   253          BZ    EOJ                  No, exit
+00000328  47F0 8288                     00000488   254          B     FAILTEST             Yes, exit with BAD PSW
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   256 ***********************************************************************
+                                                   257 *        RPTERROR                 Report instruction test in error
+                                                   258 ***********************************************************************
+
+0000032C  50F0 8190                     00000390   260 RPTERROR ST    R15,RPTSAVE          Save return address
+00000330  5050 8194                     00000394   261          ST    R5,RPTSVR5           Save R5
+                                                   262 *
+00000334  4820 5004                     00000004   263          LH    R2,TNUM              get test number and convert
+00000338  4E20 8E73                     00001073   264          CVD   R2,DECNUM
+0000033C  D211 8E5D 8E47      0000105D  00001047   265          MVC   PRT3,EDIT
+00000342  DE11 8E5D 8E73      0000105D  00001073   266          ED    PRT3,DECNUM
+00000348  D202 8E18 8E6A      00001018  0000106A   267          MVC   PRTNUM(3),PRT3+13    fill in message with test #
+                                                   268
+0000034E  D207 8E33 5008      00001033  00000008   269          MVC   PRTNAME,OPNAME       fill in message with instruction
+                                                   270 *
+00000354  E320 5007 0076                00000007   271          LB    R2,m3                get m3 and convert
+0000035A  4E20 8E73                     00001073   272          CVD   R2,DECNUM
+0000035E  D211 8E5D 8E47      0000105D  00001047   273          MVC   PRT3,EDIT
+00000364  DE11 8E5D 8E73      0000105D  00001073   274          ED    PRT3,DECNUM
+0000036A  D201 8E44 8E6B      00001044  0000106B   275          MVC   PRTm3(2),PRT3+14     fill in message with m3 field
+
+                                                   277 *
+                                                   278 *        Use Hercules Diagnose for Message to console
+                                                   279 *
+00000370  9002 8198                     00000398   280          STM   R0,R2,RPTDWSAV       save regs used by MSG
+00000374  4100 003F                     0000003F   281          LA    R0,PRTLNG            message length
+00000378  4110 8E08                     00001008   282          LA    R1,PRTLINE           messagfe address
+0000037C  4520 81A8                     000003A8   283          BAL   R2,MSG               call Hercules console MSG display
+00000380  9802 8198                     00000398   284          LM    R0,R2,RPTDWSAV       restore regs
+
+
+00000384  5850 8194                     00000394   286          L     R5,RPTSVR5         Restore R5
+00000388  58F0 8190                     00000390   287          L     R15,RPTSAVE        Restore return address
+0000038C  07FF                                     288          BR    R15                Return to caller
+
+00000390  00000000                                 290 RPTSAVE  DC    F'0'               R15 save area
+00000394  00000000                                 291 RPTSVR5  DC    F'0'               R5 save area
+
+00000398  00000000 00000000                        293 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   295 ***********************************************************************
+                                                   296 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   297 *              R2 = return address
+                                                   298 ***********************************************************************
+
+000003A8  4900 82A0                     000004A0   300 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000003AC  07D2                                     301          BNHR  R2                     No, ignore
+
+000003AE  9002 81E4                     000003E4   303          STM   R0,R2,MSGSAVE          Save registers
+
+000003B2  4900 82A2                     000004A2   305          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000003B6  47D0 81BE                     000003BE   306          BNH   MSGOK                  Yes, continue
+000003BA  4100 005F                     0000005F   307          LA    R0,L'MSGMSG            No, set to maximum
+
+000003BE  1820                                     309 MSGOK    LR    R2,R0                  Copy length to work register
+000003C0  0620                                     310          BCTR  R2,0                   Minus-1 for execute
+000003C2  4420 81F0                     000003F0   311          EX    R2,MSGMVC              Copy message to O/P buffer
+
+000003C6  4120 200A                     0000000A   313          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+000003CA  4110 81F6                     000003F6   314          LA    R1,MSGCMD              Point to true command
+
+000003CE  83120008                                 316          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+000003D2  4780 81DE                     000003DE   317          BZ    MSGRET                 Return if successful
+                                                   318
+000003D6  1222                                     319          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+000003D8  4780 81DE                     000003DE   320          BZ    MSGRET                   an error occurred but coninue
+                                                   321
+000003DC  0000                                     322          DC    H'0'                   CRASH for debugging purposes
+
+000003DE  9802 81E4                     000003E4   324 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+000003E2  07F2                                     325          BR    R2                     Return to caller
+
+
+
+
+
+
+000003E4  00000000 00000000                        327 MSGSAVE  DC    3F'0'                  Registers save area
+000003F0  D200 81FF 1000      000003FF  00000000   328 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+000003F6  D4E2C7D5 D6C8405C                        330 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+000003FF  40404040 40404040                        331 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   332
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   334 ***********************************************************************
+                                                   335 *        Normal completion or Abnormal termination PSWs
+                                                   336 ***********************************************************************
+
+
+
+
+
+00000460  00020001 80000000                        338 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+00000470  B2B2 8260                     00000460   340 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+00000478  00020001 80000000                        342 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+00000488  B2B2 8278                     00000478   344 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                                   346 ***********************************************************************
+                                                   347 *        Working Storage
+                                                   348 ***********************************************************************
+
+
+0000048C  00000000                                 350 CTLR0    DS    F                CR0
+00000490  00000000                                 351          DS    F
+
+00000494                                           353          LTORG ,                Literals pool
+00000494  00000040                                 354                =F'64'
+00000498  000016BC                                 355                =A(E7TESTS)
+0000049C  00000001                                 356                =F'1'
+000004A0  0000                                     357                =H'0'
+000004A2  005F                                     358                =AL2(L'MSGMSG)
+                                                   359
+                                                   360 *        some constants
+                                                   361
+                              00000400  00000001   362 K        EQU   1024             One KB
+                              00001000  00000001   363 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   364 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   365 MB       EQU   (K*K)             1 MB
+                                                   366
+                              AABBCCDD  00000001   367 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   368 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   370 *======================================================================
+                                                   371 *
+                                                   372 *  NOTE: start data on an address that is easy to display
+                                                   373 *        within Hercules
+                                                   374 *
+                                                   375 *======================================================================
+                                                   376
+000004A4                      000004A4  00001000   377          ORG   ZVE7TST+X'1000'
+00001000  00000000                                 378 FAILED   DC    F'0'                     some test failed?
+00001004  00000000                                 379 TESTING  DC    F'0'                     current test number
+
+
+                                                   381 *
+                                                   382 *        failed message and associated editting
+                                                   383 *
+00001008  40404040 40404040                        384 PRTLINE  DC    C'         Test # '
+00001018  A7A7A7                                   385 PRTNUM   DC    C'xxx'
+0000101B  40868189 93858440                        386          DC    c' failed for instruction '
+00001033  A7A7A7A7 A7A7A7A7                        387 PRTNAME  DC    CL8'xxxxxxxx'
+0000103B  40A689A3 884094F3                        388          DC    C' with m3='
+00001044  A7A7                                     389 PRTM3    DC    C'xx'
+00001046  4B                                       390          DC    C'.'
+                              0000003F  00000001   391 PRTLNG   EQU   *-PRTLINE
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   393 ***********************************************************************
+                                                   394 *        TEST failed : message working storge
+                                                   395 ***********************************************************************
+00001047  40212020 20202020                        396 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   397
+00001059  7E7E7E6E                                 398          DC    C'===>'
+0000105D  40404040 40404040                        399 PRT3     DC    CL18' '
+0000106F  4C7E7E7E                                 400          DC    C'<==='
+00001073  00000000 00000000                        401 DECNUM   DS    CL16
+
+
+                                                   403 ***********************************************************************
+                                                   404 *        Vector instruction results, pollution and input
+                                                   405 ***********************************************************************
+00001084                                           406          DS    0F
+00001084  00000000 00000000                        407          DS    XL16                                        gap
+00001094  FFFFFFFF FFFFFFFF                        408 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
+000010A4  00000000 00000000                        409          DS    XL16
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   411 ***********************************************************************
+                                                   412 *        E7TEST DSECT
+                                                   413 ***********************************************************************
+
+
+                                                   415 E7TEST   DSECT ,
+00000000  00000000                                 416 TSUB     DC    A(0)           pointer  to test
+00000004  0000                                     417 TNUM     DC    H'00'          Test Number
+00000006  00                                       418          DC    X'00'
+00000007  00                                       419 M3       DC    HL1'00'        m3 used
+                                                   420
+00000008  40404040 40404040                        421 OPNAME   DC    CL8' '         E7 name
+00000010  00000000                                 422 V2ADDR   DC    A(0)           address of v2 source
+00000014  00000000                                 423 V3ADDR   DC    A(0)           address of v3 source
+00000018  00000000                                 424 RELEN    DC    A(0)           RESULT LENGTH
+0000001C  00000000                                 425 READDR   DC    A(0)           result (expected) address
+00000020  00000000 00000000                        426          DS    FD                gap
+00000028  00000000 00000000                        427 V1OUTPUT DS    XL16           V1 Output
+00000038  00000000 00000000                        428          DS    FD                gap
+                                                   429
+                                                   430 *        test routine will be here (from VRX macro)
+                                                   431 *
+                                                   432 *        followed by
+                                                   433 *              EXPECTED RESULT
+
+
+                              00000000  000016FB   435 ZVE7TST  CSECT ,
+000010B4                                           436          DS    0F
+
+
+                                                   438 ***********************************************************************
+                                                   439 *     Macros to help build test tables
+                                                   440 ***********************************************************************
+
+
+
+                                                   442 *
+                                                   443 * macro to generate individual test
+                                                   444 *
+                                                   445          MACRO
+                                                   446          VRX &INST,&M3
+                                                   447 .*                               &INST   - VRX instruction under test
+                                                   448 .*                               &m3     - m3 field
+                                                   449
+                                                   450          GBLA  &TNUM
+                                                   451 &TNUM    SETA  &TNUM+1
+                                                   452
+                                                   453          DS    0FD
+                                                   454          USING *,R5              base for test data and test routine
+                                                   455
+                                                   456 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   457          DC    H'&TNUM'          test number
+                                                   458          DC    X'00'
+                                                   459          DC    HL1'&M3'          m3
+                                                   460          DC    CL8'&INST'        instruction name
+                                                   461          DC    A(RE&TNUM+16)     address of v2 source
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   462          DC    A(RE&TNUM+32)     address of v3 source
+                                                   463          DC    A(16)             result length
+                                                   464 REA&TNUM DC    A(RE&TNUM)        result address
+                                                   465          DS    FD                gap
+                                                   466 V1O&TNUM DS    XL16              V1 output
+                                                   467          DS    FD                gap
+                                                   468 .*
+                                                   469 *
+                                                   470 X&TNUM   DS    0F
+                                                   471          VL    v22,V1FUDGE       fudge v22
+                                                   472          LGF   R1,V2ADDR         load source address
+                                                   473
+                                                   474          &INST V22,0(0,R1)   test instruction
+                                                   475
+                                                   476          VST   V22,V1O&TNUM      save v1 output
+                                                   477          BR    R11               return
+                                                   478
+                                                   479 RE&TNUM  DC    0F                xl16 expected result
+                                                   480
+                                                   481          DROP  R5
+                                                   482          MEND
+
+
+
+                                                   484 *
+                                                   485 * macro to generate table of pointers to individual tests
+                                                   486 *
+                                                   487          MACRO
+                                                   488          PTTABLE
+                                                   489          GBLA  &TNUM
+                                                   490          LCLA  &CUR
+                                                   491 &CUR     SETA  1
+                                                   492 .*
+                                                   493 TTABLE   DS    0F
+                                                   494 .LOOP    ANOP
+                                                   495 .*
+                                                   496          DC    A(T&CUR)
+                                                   497 .*
+                                                   498 &CUR     SETA  &CUR+1
+                                                   499          AIF   (&CUR LE &TNUM).LOOP
+                                                   500 *
+                                                   501          DC    A(0)              END OF TABLE
+                                                   502          DC    A(0)
+                                                   503 .*
+                                                   504          MEND
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   506 ***********************************************************************
+                                                   507 *        E7 VRX tests
+                                                   508 ***********************************************************************
+                                                   509          PRINT DATA
+                                                   510
+                                                   511 *   E705 VLREP  - Vector Load and Replicate
+                                                   512 *
+                                                   513 *        VRX instruction, m3
+                                                   514 *              followed by
+                                                   515 *                 16 byte expected result (V1)
+                                                   516 *                 16 byte source
+                                                   517 *
+                                                   518 *---------------------------------------------------------------------
+                                                   519 *   VLREP  - Vector Load and Replicate
+                                                   520 *---------------------------------------------------------------------
+                                                   521 *Byte
+                                                   522          VRX   VLREPB,0
+000010B8                                           523+         DS    0FD
+000010B8                      000010B8             524+         USING *,R5              base for test data and test routine
+000010B8  000010F8                                 525+T1       DC    A(X1)             address of test routine
+000010BC  0001                                     526+         DC    H'1'              test number
+000010BE  00                                       527+         DC    X'00'
+000010BF  00                                       528+         DC    HL1'0'            m3
+000010C0  E5D3D9C5 D7C24040                        529+         DC    CL8'VLREPB'       instruction name
+000010C8  00001124                                 530+         DC    A(RE1+16)         address of v2 source
+000010CC  00001134                                 531+         DC    A(RE1+32)         address of v3 source
+000010D0  00000010                                 532+         DC    A(16)             result length
+000010D4  00001114                                 533+REA1     DC    A(RE1)            result address
+000010D8  00000000 00000000                        534+         DS    FD                gap
+000010E0  00000000 00000000                        535+V1O1     DS    XL16              V1 output
+000010E8  00000000 00000000
+000010F0  00000000 00000000                        536+         DS    FD                gap
+                                                   537+*
+000010F8                                           538+X1       DS    0F
+000010F8  E760 8E94 0806                00001094   539+         VL    v22,V1FUDGE       fudge v22
+000010FE  E310 5010 0014                00000010   540+         LGF   R1,V2ADDR         load source address
+00001104  E760 1000 0805                00000000   541+         VLREPB V22,0(0,R1)  test instruction
+0000110A  E760 5028 080E                000010E0   542+         VST   V22,V1O1          save v1 output
+00001110  07FB                                     543+         BR    R11               return
+00001114                                           544+RE1      DC    0F                xl16 expected result
+00001114                                           545+         DROP  R5
+00001114  FFFFFFFF FFFFFFFF                        546          DC    XL16'FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF'   result
+0000111C  FFFFFFFF FFFFFFFF
+00001124  FFFFFFFF FFFFFFFF                        547          DC    XL16'FFFFFFFFFFFFFFFF 0102030405060708'   source
+0000112C  01020304 05060708
+                                                   548
+                                                   549          VRX   VLREPB,0
+00001138                                           550+         DS    0FD
+00001138                      00001138             551+         USING *,R5              base for test data and test routine
+00001138  00001178                                 552+T2       DC    A(X2)             address of test routine
+0000113C  0002                                     553+         DC    H'2'              test number
+0000113E  00                                       554+         DC    X'00'
+0000113F  00                                       555+         DC    HL1'0'            m3
+00001140  E5D3D9C5 D7C24040                        556+         DC    CL8'VLREPB'       instruction name
+00001148  000011A4                                 557+         DC    A(RE2+16)         address of v2 source
+0000114C  000011B4                                 558+         DC    A(RE2+32)         address of v3 source
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001150  00000010                                 559+         DC    A(16)             result length
+00001154  00001194                                 560+REA2     DC    A(RE2)            result address
+00001158  00000000 00000000                        561+         DS    FD                gap
+00001160  00000000 00000000                        562+V1O2     DS    XL16              V1 output
+00001168  00000000 00000000
+00001170  00000000 00000000                        563+         DS    FD                gap
+                                                   564+*
+00001178                                           565+X2       DS    0F
+00001178  E760 8E94 0806                00001094   566+         VL    v22,V1FUDGE       fudge v22
+0000117E  E310 5010 0014                00000010   567+         LGF   R1,V2ADDR         load source address
+00001184  E760 1000 0805                00000000   568+         VLREPB V22,0(0,R1)  test instruction
+0000118A  E760 5028 080E                00001160   569+         VST   V22,V1O2          save v1 output
+00001190  07FB                                     570+         BR    R11               return
+00001194                                           571+RE2      DC    0F                xl16 expected result
+00001194                                           572+         DROP  R5
+00001194  01010101 01010101                        573          DC    XL16'0101010101010101 0101010101010101'   result
+0000119C  01010101 01010101
+000011A4  01020304 05060708                        574          DC    XL16'0102030405060708 090A0B0C0D0E0F00'   source
+000011AC  090A0B0C 0D0E0F00
+                                                   575
+                                                   576          VRX   VLREPB,0
+000011B8                                           577+         DS    0FD
+000011B8                      000011B8             578+         USING *,R5              base for test data and test routine
+000011B8  000011F8                                 579+T3       DC    A(X3)             address of test routine
+000011BC  0003                                     580+         DC    H'3'              test number
+000011BE  00                                       581+         DC    X'00'
+000011BF  00                                       582+         DC    HL1'0'            m3
+000011C0  E5D3D9C5 D7C24040                        583+         DC    CL8'VLREPB'       instruction name
+000011C8  00001224                                 584+         DC    A(RE3+16)         address of v2 source
+000011CC  00001234                                 585+         DC    A(RE3+32)         address of v3 source
+000011D0  00000010                                 586+         DC    A(16)             result length
+000011D4  00001214                                 587+REA3     DC    A(RE3)            result address
+000011D8  00000000 00000000                        588+         DS    FD                gap
+000011E0  00000000 00000000                        589+V1O3     DS    XL16              V1 output
+000011E8  00000000 00000000
+000011F0  00000000 00000000                        590+         DS    FD                gap
+                                                   591+*
+000011F8                                           592+X3       DS    0F
+000011F8  E760 8E94 0806                00001094   593+         VL    v22,V1FUDGE       fudge v22
+000011FE  E310 5010 0014                00000010   594+         LGF   R1,V2ADDR         load source address
+00001204  E760 1000 0805                00000000   595+         VLREPB V22,0(0,R1)  test instruction
+0000120A  E760 5028 080E                000011E0   596+         VST   V22,V1O3          save v1 output
+00001210  07FB                                     597+         BR    R11               return
+00001214                                           598+RE3      DC    0F                xl16 expected result
+00001214                                           599+         DROP  R5
+00001214  FEFEFEFE FEFEFEFE                        600          DC    XL16'FEFEFEFEFEFEFEFE FEFEFEFEFEFEFEFE'   result
+0000121C  FEFEFEFE FEFEFEFE
+00001224  FEFDFCFB FAF9F8F7                        601          DC    XL16'FEFDFCFBFAF9F8F7 090A0B0C0D0E0F00'   source
+0000122C  090A0B0C 0D0E0F00
+                                                   602
+                                                   603 *Halfword
+                                                   604          VRX   VLREPH,1
+00001238                                           605+         DS    0FD
+00001238                      00001238             606+         USING *,R5              base for test data and test routine
+00001238  00001278                                 607+T4       DC    A(X4)             address of test routine
+0000123C  0004                                     608+         DC    H'4'              test number
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000123E  00                                       609+         DC    X'00'
+0000123F  01                                       610+         DC    HL1'1'            m3
+00001240  E5D3D9C5 D7C84040                        611+         DC    CL8'VLREPH'       instruction name
+00001248  000012A4                                 612+         DC    A(RE4+16)         address of v2 source
+0000124C  000012B4                                 613+         DC    A(RE4+32)         address of v3 source
+00001250  00000010                                 614+         DC    A(16)             result length
+00001254  00001294                                 615+REA4     DC    A(RE4)            result address
+00001258  00000000 00000000                        616+         DS    FD                gap
+00001260  00000000 00000000                        617+V1O4     DS    XL16              V1 output
+00001268  00000000 00000000
+00001270  00000000 00000000                        618+         DS    FD                gap
+                                                   619+*
+00001278                                           620+X4       DS    0F
+00001278  E760 8E94 0806                00001094   621+         VL    v22,V1FUDGE       fudge v22
+0000127E  E310 5010 0014                00000010   622+         LGF   R1,V2ADDR         load source address
+00001284  E760 1000 1805                00000000   623+         VLREPH V22,0(0,R1)  test instruction
+0000128A  E760 5028 080E                00001260   624+         VST   V22,V1O4          save v1 output
+00001290  07FB                                     625+         BR    R11               return
+00001294                                           626+RE4      DC    0F                xl16 expected result
+00001294                                           627+         DROP  R5
+00001294  FFAAFFAA FFAAFFAA                        628          DC    XL16'FFAAFFAAFFAAFFAA FFAAFFAAFFAAFFAA'   result
+0000129C  FFAAFFAA FFAAFFAA
+000012A4  FFAAFFFF FFFFFFFF                        629          DC    XL16'FFAAFFFFFFFFFFFF 0102030405060708'   source
+000012AC  01020304 05060708
+                                                   630
+                                                   631          VRX   VLREPH,1
+000012B8                                           632+         DS    0FD
+000012B8                      000012B8             633+         USING *,R5              base for test data and test routine
+000012B8  000012F8                                 634+T5       DC    A(X5)             address of test routine
+000012BC  0005                                     635+         DC    H'5'              test number
+000012BE  00                                       636+         DC    X'00'
+000012BF  01                                       637+         DC    HL1'1'            m3
+000012C0  E5D3D9C5 D7C84040                        638+         DC    CL8'VLREPH'       instruction name
+000012C8  00001324                                 639+         DC    A(RE5+16)         address of v2 source
+000012CC  00001334                                 640+         DC    A(RE5+32)         address of v3 source
+000012D0  00000010                                 641+         DC    A(16)             result length
+000012D4  00001314                                 642+REA5     DC    A(RE5)            result address
+000012D8  00000000 00000000                        643+         DS    FD                gap
+000012E0  00000000 00000000                        644+V1O5     DS    XL16              V1 output
+000012E8  00000000 00000000
+000012F0  00000000 00000000                        645+         DS    FD                gap
+                                                   646+*
+000012F8                                           647+X5       DS    0F
+000012F8  E760 8E94 0806                00001094   648+         VL    v22,V1FUDGE       fudge v22
+000012FE  E310 5010 0014                00000010   649+         LGF   R1,V2ADDR         load source address
+00001304  E760 1000 1805                00000000   650+         VLREPH V22,0(0,R1)  test instruction
+0000130A  E760 5028 080E                000012E0   651+         VST   V22,V1O5          save v1 output
+00001310  07FB                                     652+         BR    R11               return
+00001314                                           653+RE5      DC    0F                xl16 expected result
+00001314                                           654+         DROP  R5
+00001314  01020102 01020102                        655          DC    XL16'0102010201020102 0102010201020102'   result
+0000131C  01020102 01020102
+00001324  01020304 05060708                        656          DC    XL16'0102030405060708 090A0B0C0D0E0F00'   source
+0000132C  090A0B0C 0D0E0F00
+                                                   657
+                                                   658          VRX   VLREPH,1
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001338                                           659+         DS    0FD
+00001338                      00001338             660+         USING *,R5              base for test data and test routine
+00001338  00001378                                 661+T6       DC    A(X6)             address of test routine
+0000133C  0006                                     662+         DC    H'6'              test number
+0000133E  00                                       663+         DC    X'00'
+0000133F  01                                       664+         DC    HL1'1'            m3
+00001340  E5D3D9C5 D7C84040                        665+         DC    CL8'VLREPH'       instruction name
+00001348  000013A4                                 666+         DC    A(RE6+16)         address of v2 source
+0000134C  000013B4                                 667+         DC    A(RE6+32)         address of v3 source
+00001350  00000010                                 668+         DC    A(16)             result length
+00001354  00001394                                 669+REA6     DC    A(RE6)            result address
+00001358  00000000 00000000                        670+         DS    FD                gap
+00001360  00000000 00000000                        671+V1O6     DS    XL16              V1 output
+00001368  00000000 00000000
+00001370  00000000 00000000                        672+         DS    FD                gap
+                                                   673+*
+00001378                                           674+X6       DS    0F
+00001378  E760 8E94 0806                00001094   675+         VL    v22,V1FUDGE       fudge v22
+0000137E  E310 5010 0014                00000010   676+         LGF   R1,V2ADDR         load source address
+00001384  E760 1000 1805                00000000   677+         VLREPH V22,0(0,R1)  test instruction
+0000138A  E760 5028 080E                00001360   678+         VST   V22,V1O6          save v1 output
+00001390  07FB                                     679+         BR    R11               return
+00001394                                           680+RE6      DC    0F                xl16 expected result
+00001394                                           681+         DROP  R5
+00001394  07FD07FD 07FD07FD                        682          DC    XL16'07FD07FD07FD07FD 07FD07FD07FD07FD'   result
+0000139C  07FD07FD 07FD07FD
+000013A4  07FDFCFB FAF9F8F7                        683          DC    XL16'07FDFCFBFAF9F8F7 090A0B0C0D0E0F00'   source
+000013AC  090A0B0C 0D0E0F00
+                                                   684
+                                                   685 *Word
+                                                   686          VRX   VLREPF,2
+000013B8                                           687+         DS    0FD
+000013B8                      000013B8             688+         USING *,R5              base for test data and test routine
+000013B8  000013F8                                 689+T7       DC    A(X7)             address of test routine
+000013BC  0007                                     690+         DC    H'7'              test number
+000013BE  00                                       691+         DC    X'00'
+000013BF  02                                       692+         DC    HL1'2'            m3
+000013C0  E5D3D9C5 D7C64040                        693+         DC    CL8'VLREPF'       instruction name
+000013C8  00001424                                 694+         DC    A(RE7+16)         address of v2 source
+000013CC  00001434                                 695+         DC    A(RE7+32)         address of v3 source
+000013D0  00000010                                 696+         DC    A(16)             result length
+000013D4  00001414                                 697+REA7     DC    A(RE7)            result address
+000013D8  00000000 00000000                        698+         DS    FD                gap
+000013E0  00000000 00000000                        699+V1O7     DS    XL16              V1 output
+000013E8  00000000 00000000
+000013F0  00000000 00000000                        700+         DS    FD                gap
+                                                   701+*
+000013F8                                           702+X7       DS    0F
+000013F8  E760 8E94 0806                00001094   703+         VL    v22,V1FUDGE       fudge v22
+000013FE  E310 5010 0014                00000010   704+         LGF   R1,V2ADDR         load source address
+00001404  E760 1000 2805                00000000   705+         VLREPF V22,0(0,R1)  test instruction
+0000140A  E760 5028 080E                000013E0   706+         VST   V22,V1O7          save v1 output
+00001410  07FB                                     707+         BR    R11               return
+00001414                                           708+RE7      DC    0F                xl16 expected result
+00001414                                           709+         DROP  R5
+00001414  01020304 01020304                        710          DC    XL16'0102030401020304 0102030401020304'   result
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000141C  01020304 01020304
+00001424  01020304 05060708                        711          DC    XL16'0102030405060708 090A0B0C0D0E0F00'   source
+0000142C  090A0B0C 0D0E0F00
+                                                   712
+                                                   713          VRX   VLREPF,2
+00001438                                           714+         DS    0FD
+00001438                      00001438             715+         USING *,R5              base for test data and test routine
+00001438  00001478                                 716+T8       DC    A(X8)             address of test routine
+0000143C  0008                                     717+         DC    H'8'              test number
+0000143E  00                                       718+         DC    X'00'
+0000143F  02                                       719+         DC    HL1'2'            m3
+00001440  E5D3D9C5 D7C64040                        720+         DC    CL8'VLREPF'       instruction name
+00001448  000014A4                                 721+         DC    A(RE8+16)         address of v2 source
+0000144C  000014B4                                 722+         DC    A(RE8+32)         address of v3 source
+00001450  00000010                                 723+         DC    A(16)             result length
+00001454  00001494                                 724+REA8     DC    A(RE8)            result address
+00001458  00000000 00000000                        725+         DS    FD                gap
+00001460  00000000 00000000                        726+V1O8     DS    XL16              V1 output
+00001468  00000000 00000000
+00001470  00000000 00000000                        727+         DS    FD                gap
+                                                   728+*
+00001478                                           729+X8       DS    0F
+00001478  E760 8E94 0806                00001094   730+         VL    v22,V1FUDGE       fudge v22
+0000147E  E310 5010 0014                00000010   731+         LGF   R1,V2ADDR         load source address
+00001484  E760 1000 2805                00000000   732+         VLREPF V22,0(0,R1)  test instruction
+0000148A  E760 5028 080E                00001460   733+         VST   V22,V1O8          save v1 output
+00001490  07FB                                     734+         BR    R11               return
+00001494                                           735+RE8      DC    0F                xl16 expected result
+00001494                                           736+         DROP  R5
+00001494  F9F8F704 F9F8F704                        737          DC    XL16'F9F8F704F9F8F704 F9F8F704F9F8F704'   result
+0000149C  F9F8F704 F9F8F704
+000014A4  F9F8F704 05060708                        738          DC    XL16'F9F8F70405060708 FFFFFFFFFFFFFFFF'   source
+000014AC  FFFFFFFF FFFFFFFF
+                                                   739
+                                                   740          VRX   VLREPF,2
+000014B8                                           741+         DS    0FD
+000014B8                      000014B8             742+         USING *,R5              base for test data and test routine
+000014B8  000014F8                                 743+T9       DC    A(X9)             address of test routine
+000014BC  0009                                     744+         DC    H'9'              test number
+000014BE  00                                       745+         DC    X'00'
+000014BF  02                                       746+         DC    HL1'2'            m3
+000014C0  E5D3D9C5 D7C64040                        747+         DC    CL8'VLREPF'       instruction name
+000014C8  00001524                                 748+         DC    A(RE9+16)         address of v2 source
+000014CC  00001534                                 749+         DC    A(RE9+32)         address of v3 source
+000014D0  00000010                                 750+         DC    A(16)             result length
+000014D4  00001514                                 751+REA9     DC    A(RE9)            result address
+000014D8  00000000 00000000                        752+         DS    FD                gap
+000014E0  00000000 00000000                        753+V1O9     DS    XL16              V1 output
+000014E8  00000000 00000000
+000014F0  00000000 00000000                        754+         DS    FD                gap
+                                                   755+*
+000014F8                                           756+X9       DS    0F
+000014F8  E760 8E94 0806                00001094   757+         VL    v22,V1FUDGE       fudge v22
+000014FE  E310 5010 0014                00000010   758+         LGF   R1,V2ADDR         load source address
+00001504  E760 1000 2805                00000000   759+         VLREPF V22,0(0,R1)  test instruction
+0000150A  E760 5028 080E                000014E0   760+         VST   V22,V1O9          save v1 output
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001510  07FB                                     761+         BR    R11               return
+00001514                                           762+RE9      DC    0F                xl16 expected result
+00001514                                           763+         DROP  R5
+00001514  08080807 08080807                        764          DC    XL16'0808080708080807 0808080708080807'   result
+0000151C  08080807 08080807
+00001524  08080807 080807F7                        765          DC    XL16'08080807080807F7 FEFDFCFBFAF9F8F7'   source
+0000152C  FEFDFCFB FAF9F8F7
+                                                   766
+                                                   767 *Doubleword
+                                                   768          VRX   VLREPG,3
+00001538                                           769+         DS    0FD
+00001538                      00001538             770+         USING *,R5              base for test data and test routine
+00001538  00001578                                 771+T10      DC    A(X10)            address of test routine
+0000153C  000A                                     772+         DC    H'10'             test number
+0000153E  00                                       773+         DC    X'00'
+0000153F  03                                       774+         DC    HL1'3'            m3
+00001540  E5D3D9C5 D7C74040                        775+         DC    CL8'VLREPG'       instruction name
+00001548  000015A4                                 776+         DC    A(RE10+16)        address of v2 source
+0000154C  000015B4                                 777+         DC    A(RE10+32)        address of v3 source
+00001550  00000010                                 778+         DC    A(16)             result length
+00001554  00001594                                 779+REA10    DC    A(RE10)           result address
+00001558  00000000 00000000                        780+         DS    FD                gap
+00001560  00000000 00000000                        781+V1O10    DS    XL16              V1 output
+00001568  00000000 00000000
+00001570  00000000 00000000                        782+         DS    FD                gap
+                                                   783+*
+00001578                                           784+X10      DS    0F
+00001578  E760 8E94 0806                00001094   785+         VL    v22,V1FUDGE       fudge v22
+0000157E  E310 5010 0014                00000010   786+         LGF   R1,V2ADDR         load source address
+00001584  E760 1000 3805                00000000   787+         VLREPG V22,0(0,R1)  test instruction
+0000158A  E760 5028 080E                00001560   788+         VST   V22,V1O10         save v1 output
+00001590  07FB                                     789+         BR    R11               return
+00001594                                           790+RE10     DC    0F                xl16 expected result
+00001594                                           791+         DROP  R5
+00001594  FFFFFFFF FFFF09AA                        792          DC    XL16'FFFFFFFFFFFF09AA FFFFFFFFFFFF09AA'   result
+0000159C  FFFFFFFF FFFF09AA
+000015A4  FFFFFFFF FFFF09AA                        793          DC    XL16'FFFFFFFFFFFF09AA 0102030405060708'   source
+000015AC  01020304 05060708
+                                                   794
+                                                   795          VRX   VLREPG,3
+000015B8                                           796+         DS    0FD
+000015B8                      000015B8             797+         USING *,R5              base for test data and test routine
+000015B8  000015F8                                 798+T11      DC    A(X11)            address of test routine
+000015BC  000B                                     799+         DC    H'11'             test number
+000015BE  00                                       800+         DC    X'00'
+000015BF  03                                       801+         DC    HL1'3'            m3
+000015C0  E5D3D9C5 D7C74040                        802+         DC    CL8'VLREPG'       instruction name
+000015C8  00001624                                 803+         DC    A(RE11+16)        address of v2 source
+000015CC  00001634                                 804+         DC    A(RE11+32)        address of v3 source
+000015D0  00000010                                 805+         DC    A(16)             result length
+000015D4  00001614                                 806+REA11    DC    A(RE11)           result address
+000015D8  00000000 00000000                        807+         DS    FD                gap
+000015E0  00000000 00000000                        808+V1O11    DS    XL16              V1 output
+000015E8  00000000 00000000
+000015F0  00000000 00000000                        809+         DS    FD                gap
+                                                   810+*
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000015F8                                           811+X11      DS    0F
+000015F8  E760 8E94 0806                00001094   812+         VL    v22,V1FUDGE       fudge v22
+000015FE  E310 5010 0014                00000010   813+         LGF   R1,V2ADDR         load source address
+00001604  E760 1000 3805                00000000   814+         VLREPG V22,0(0,R1)  test instruction
+0000160A  E760 5028 080E                000015E0   815+         VST   V22,V1O11         save v1 output
+00001610  07FB                                     816+         BR    R11               return
+00001614                                           817+RE11     DC    0F                xl16 expected result
+00001614                                           818+         DROP  R5
+00001614  AABB1122 05060708                        819          DC    XL16'AABB112205060708 AABB112205060708'   result
+0000161C  AABB1122 05060708
+00001624  AABB1122 05060708                        820          DC    XL16'AABB112205060708 090A0B0C0D0E0F00'   source
+0000162C  090A0B0C 0D0E0F00
+                                                   821
+                                                   822          VRX   VLREPG,3
+00001638                                           823+         DS    0FD
+00001638                      00001638             824+         USING *,R5              base for test data and test routine
+00001638  00001678                                 825+T12      DC    A(X12)            address of test routine
+0000163C  000C                                     826+         DC    H'12'             test number
+0000163E  00                                       827+         DC    X'00'
+0000163F  03                                       828+         DC    HL1'3'            m3
+00001640  E5D3D9C5 D7C74040                        829+         DC    CL8'VLREPG'       instruction name
+00001648  000016A4                                 830+         DC    A(RE12+16)        address of v2 source
+0000164C  000016B4                                 831+         DC    A(RE12+32)        address of v3 source
+00001650  00000010                                 832+         DC    A(16)             result length
+00001654  00001694                                 833+REA12    DC    A(RE12)           result address
+00001658  00000000 00000000                        834+         DS    FD                gap
+00001660  00000000 00000000                        835+V1O12    DS    XL16              V1 output
+00001668  00000000 00000000
+00001670  00000000 00000000                        836+         DS    FD                gap
+                                                   837+*
+00001678                                           838+X12      DS    0F
+00001678  E760 8E94 0806                00001094   839+         VL    v22,V1FUDGE       fudge v22
+0000167E  E310 5010 0014                00000010   840+         LGF   R1,V2ADDR         load source address
+00001684  E760 1000 3805                00000000   841+         VLREPG V22,0(0,R1)  test instruction
+0000168A  E760 5028 080E                00001660   842+         VST   V22,V1O12         save v1 output
+00001690  07FB                                     843+         BR    R11               return
+00001694                                           844+RE12     DC    0F                xl16 expected result
+00001694                                           845+         DROP  R5
+00001694  FEFDFCFB FAF9F801                        846          DC    XL16'FEFDFCFBFAF9F801 FEFDFCFBFAF9F801'   result
+0000169C  FEFDFCFB FAF9F801
+000016A4  FEFDFCFB FAF9F801                        847          DC    XL16'FEFDFCFBFAF9F801 090A0B0C0D0E0F00'   source
+000016AC  090A0B0C 0D0E0F00
+                                                   848
+                                                   849
+000016B4  00000000                                 850          DC    F'0'     END OF TABLE
+000016B8  00000000                                 851          DC    F'0'
+                                                   852 *
+                                                   853 * table of pointers to individual load test
+                                                   854 *
+000016BC                                           855 E7TESTS  DS    0F
+                                                   856          PTTABLE
+000016BC                                           857+TTABLE   DS    0F
+000016BC  000010B8                                 858+         DC    A(T1)
+000016C0  00001138                                 859+         DC    A(T2)
+000016C4  000011B8                                 860+         DC    A(T3)
+000016C8  00001238                                 861+         DC    A(T4)
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000016CC  000012B8                                 862+         DC    A(T5)
+000016D0  00001338                                 863+         DC    A(T6)
+000016D4  000013B8                                 864+         DC    A(T7)
+000016D8  00001438                                 865+         DC    A(T8)
+000016DC  000014B8                                 866+         DC    A(T9)
+000016E0  00001538                                 867+         DC    A(T10)
+000016E4  000015B8                                 868+         DC    A(T11)
+000016E8  00001638                                 869+         DC    A(T12)
+                                                   870+*
+000016EC  00000000                                 871+         DC    A(0)              END OF TABLE
+000016F0  00000000                                 872+         DC    A(0)
+                                                   873
+000016F4  00000000                                 874          DC    F'0'     END OF TABLE
+000016F8  00000000                                 875          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   877 ***********************************************************************
+                                                   878 *        Register equates
+                                                   879 ***********************************************************************
+
+
+                              00000000  00000001   881 R0       EQU   0
+                              00000001  00000001   882 R1       EQU   1
+                              00000002  00000001   883 R2       EQU   2
+                              00000003  00000001   884 R3       EQU   3
+                              00000004  00000001   885 R4       EQU   4
+                              00000005  00000001   886 R5       EQU   5
+                              00000006  00000001   887 R6       EQU   6
+                              00000007  00000001   888 R7       EQU   7
+                              00000008  00000001   889 R8       EQU   8
+                              00000009  00000001   890 R9       EQU   9
+                              0000000A  00000001   891 R10      EQU   10
+                              0000000B  00000001   892 R11      EQU   11
+                              0000000C  00000001   893 R12      EQU   12
+                              0000000D  00000001   894 R13      EQU   13
+                              0000000E  00000001   895 R14      EQU   14
+                              0000000F  00000001   896 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                   898 ***********************************************************************
+                                                   899 *        Register equates
+                                                   900 ***********************************************************************
+
+
+                              00000000  00000001   902 V0       EQU   0
+                              00000001  00000001   903 V1       EQU   1
+                              00000002  00000001   904 V2       EQU   2
+                              00000003  00000001   905 V3       EQU   3
+                              00000004  00000001   906 V4       EQU   4
+                              00000005  00000001   907 V5       EQU   5
+                              00000006  00000001   908 V6       EQU   6
+                              00000007  00000001   909 V7       EQU   7
+                              00000008  00000001   910 V8       EQU   8
+                              00000009  00000001   911 V9       EQU   9
+                              0000000A  00000001   912 V10      EQU   10
+                              0000000B  00000001   913 V11      EQU   11
+                              0000000C  00000001   914 V12      EQU   12
+                              0000000D  00000001   915 V13      EQU   13
+                              0000000E  00000001   916 V14      EQU   14
+                              0000000F  00000001   917 V15      EQU   15
+                              00000010  00000001   918 V16      EQU   16
+                              00000011  00000001   919 V17      EQU   17
+                              00000012  00000001   920 V18      EQU   18
+                              00000013  00000001   921 V19      EQU   19
+                              00000014  00000001   922 V20      EQU   20
+                              00000015  00000001   923 V21      EQU   21
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001   924 V22      EQU   22
+                              00000017  00000001   925 V23      EQU   23
+                              00000018  00000001   926 V24      EQU   24
+                              00000019  00000001   927 V25      EQU   25
+                              0000001A  00000001   928 V26      EQU   26
+                              0000001B  00000001   929 V27      EQU   27
+                              0000001C  00000001   930 V28      EQU   28
+                              0000001D  00000001   931 V29      EQU   29
+                              0000001E  00000001   932 V30      EQU   30
+                              0000001F  00000001   933 V31      EQU   31
+                                                   934
+                                                   935          END
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    24
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   154  120  150  151  152
+CTLR0               F    0000048C           4   350  164  165  166  167
+DECNUM              C    00001073          16   401  264  266  272  274
+E7TEST              4    00000000          64   415  213
+E7TESTS             F    000016BC           4   855  206
+EDIT                X    00001047          18   396  265  273
+ENDTEST             U    0000031E           1   250  211
+EOJ                 I    00000470           4   340  199  253
+EOJPSW              D    00000460           8   338  340
+FAILCONT            U    0000030E           1   240
+FAILED              F    00001000           4   378  242  251
+FAILMSG             U    0000030A           1   234  224
+FAILPSW             D    00000478           8   342  344
+FAILTEST            I    00000488           4   344  254
+FB0001              F    00000280           8   183  187  188  190
+IMAGE               1    00000000        5884     0
+K                   U    00000400           1   362  363  364  365
+K64                 U    00010000           1   364
+M3                  U    00000007           1   419  271
+MB                  U    00100000           1   365
+MSG                 I    000003A8           4   300  198  283
+MSGCMD              C    000003F6           9   330  313  314
+MSGMSG              C    000003FF          95   331  307  328  305
+MSGMVC              I    000003F0           6   328  311
+MSGOK               I    000003BE           2   309  306
+MSGRET              I    000003DE           4   324  317  320
+MSGSAVE             F    000003E4           4   327  303  324
+NEXTE7              U    000002D4           1   208  227  245
+OPNAME              C    00000008           8   421  269
+PAGE                U    00001000           1   363
+PRT3                C    0000105D          18   399  265  266  267  273  274  275
+PRTLINE             C    00001008          16   384  391  282
+PRTLNG              U    0000003F           1   391  281
+PRTM3               C    00001044           2   389  275
+PRTNAME             C    00001033           8   387  269
+PRTNUM              C    00001018           3   385  267
+R0                  U    00000000           1   881  114  164  167  187  189  190  191  196  215  216  241  242  280  281  284
+                                                     300  303  305  307  309  324
+R1                  U    00000001           1   882  197  222  223  251  252  282  314  328  540  541  567  568  594  595  622
+                                                     623  649  650  676  677  704  705  731  732  758  759  786  787  813  814
+                                                     840  841
+R10                 U    0000000A           1   891  152  161  162
+R11                 U    0000000B           1   892  219  220  543  570  597  625  652  679  707  734  761  789  816  843
+R12                 U    0000000C           1   893  206  209  226  244
+R13                 U    0000000D           1   894
+R14                 U    0000000E           1   895
+R15                 U    0000000F           1   896  235  260  287  288
+R2                  U    00000002           1   883  198  263  264  271  272  280  283  284  301  303  309  310  311  313  319
+                                                     324  325
+R3                  U    00000003           1   884
+R4                  U    00000004           1   885
+R5                  U    00000005           1   886  209  210  213  261  286  524  545  551  572  578  599  606  627  633  654
+                                                     660  681  688  709  715  736  742  763  770  791  797  818  824  845
+R6                  U    00000006           1   887
+R7                  U    00000007           1   888
+R8                  U    00000008           1   889  150  154  155  156  158
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    25
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+R9                  U    00000009           1   890  151  158  159  161
+RE1                 F    00001114           4   544  530  531  533
+RE10                F    00001594           4   790  776  777  779
+RE11                F    00001614           4   817  803  804  806
+RE12                F    00001694           4   844  830  831  833
+RE2                 F    00001194           4   571  557  558  560
+RE3                 F    00001214           4   598  584  585  587
+RE4                 F    00001294           4   626  612  613  615
+RE5                 F    00001314           4   653  639  640  642
+RE6                 F    00001394           4   680  666  667  669
+RE7                 F    00001414           4   708  694  695  697
+RE8                 F    00001494           4   735  721  722  724
+RE9                 F    00001514           4   762  748  749  751
+REA1                A    000010D4           4   533
+REA10               A    00001554           4   779
+REA11               A    000015D4           4   806
+REA12               A    00001654           4   833
+REA2                A    00001154           4   560
+REA3                A    000011D4           4   587
+REA4                A    00001254           4   615
+REA5                A    000012D4           4   642
+REA6                A    00001354           4   669
+REA7                A    000013D4           4   697
+REA8                A    00001454           4   724
+REA9                A    000014D4           4   751
+READDR              A    0000001C           4   425  222
+REG2LOW             U    000000DD           1   368
+REG2PATT            U    AABBCCDD           1   367
+RELEN               A    00000018           4   424
+RPTDWSAV            D    00000398           8   293  280  284
+RPTERROR            I    0000032C           4   260  235
+RPTSAVE             F    00000390           4   290  260  287
+RPTSVR5             F    00000394           4   291  261  286
+SKL0001             U    0000004E           1   180  196
+SKT0001             C    0000022A          20   177  180  197
+SVOLDPSW            U    00000140           0   116
+T1                  A    000010B8           4   525  858
+T10                 A    00001538           4   771  867
+T11                 A    000015B8           4   798  868
+T12                 A    00001638           4   825  869
+T2                  A    00001138           4   552  859
+T3                  A    000011B8           4   579  860
+T4                  A    00001238           4   607  861
+T5                  A    000012B8           4   634  862
+T6                  A    00001338           4   661  863
+T7                  A    000013B8           4   689  864
+T8                  A    00001438           4   716  865
+T9                  A    000014B8           4   743  866
+TESTING             F    00001004           4   379  216
+TNUM                H    00000004           2   417  215  263
+TSUB                A    00000000           4   416  219
+TTABLE              F    000016BC           4   857
+V0                  U    00000000           1   902
+V1                  U    00000001           1   903  218
+V10                 U    0000000A           1   912
+V11                 U    0000000B           1   913
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    26
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V12                 U    0000000C           1   914
+V13                 U    0000000D           1   915
+V14                 U    0000000E           1   916
+V15                 U    0000000F           1   917
+V16                 U    00000010           1   918
+V17                 U    00000011           1   919
+V18                 U    00000012           1   920
+V19                 U    00000013           1   921
+V1FUDGE             X    00001094          16   408  218  539  566  593  621  648  675  703  730  757  785  812  839
+V1O1                X    000010E0          16   535  542
+V1O10               X    00001560          16   781  788
+V1O11               X    000015E0          16   808  815
+V1O12               X    00001660          16   835  842
+V1O2                X    00001160          16   562  569
+V1O3                X    000011E0          16   589  596
+V1O4                X    00001260          16   617  624
+V1O5                X    000012E0          16   644  651
+V1O6                X    00001360          16   671  678
+V1O7                X    000013E0          16   699  706
+V1O8                X    00001460          16   726  733
+V1O9                X    000014E0          16   753  760
+V1OUTPUT            X    00000028          16   427  223
+V2                  U    00000002           1   904
+V20                 U    00000014           1   922
+V21                 U    00000015           1   923
+V22                 U    00000016           1   924  539  541  542  566  568  569  593  595  596  621  623  624  648  650  651
+                                                     675  677  678  703  705  706  730  732  733  757  759  760  785  787  788
+                                                     812  814  815  839  841  842
+V23                 U    00000017           1   925
+V24                 U    00000018           1   926
+V25                 U    00000019           1   927
+V26                 U    0000001A           1   928
+V27                 U    0000001B           1   929
+V28                 U    0000001C           1   930
+V29                 U    0000001D           1   931
+V2ADDR              A    00000010           4   422  540  567  594  622  649  676  704  731  758  786  813  840
+V3                  U    00000003           1   905
+V30                 U    0000001E           1   932
+V31                 U    0000001F           1   933
+V3ADDR              A    00000014           4   423
+V4                  U    00000004           1   906
+V5                  U    00000005           1   907
+V6                  U    00000006           1   908
+V7                  U    00000007           1   909
+V8                  U    00000008           1   910
+V9                  U    00000009           1   911
+X0001               U    000002A8           1   186  174  187
+X1                  F    000010F8           4   538  525
+X10                 F    00001578           4   784  771
+X11                 F    000015F8           4   811  798
+X12                 F    00001678           4   838  825
+X2                  F    00001178           4   565  552
+X3                  F    000011F8           4   592  579
+X4                  F    00001278           4   620  607
+X5                  F    000012F8           4   647  634
+X6                  F    00001378           4   674  661
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    27
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+X7                  F    000013F8           4   702  689
+X8                  F    00001478           4   729  716
+X9                  F    000014F8           4   756  743
+XC0001              U    000002D0           1   200  192
+ZVE7TST             J    00000000        5884   113  116  118  122  126  377  114
+=A(E7TESTS)         A    00000498           4   355  206
+=AL2(L'MSGMSG)      R    000004A2           2   358  305
+=F'1'               F    0000049C           4   356  241
+=F'64'              F    00000494           4   354  191
+=H'0'               H    000004A0           2   357  300
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    28
+
+ MACRO   DEFN  REFERENCES
+
+FCHECK     66   173
+PTTABLE   488   856
+VRX       446   522   549   576   604   631   658   686   713   740   768   795   822
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    29
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    5884  0000-16FB  0000-16FB
+  Region            5884  0000-16FB  0000-16FB
+    CSECT  ZVE7TST  5884  0000-16FB  0000-16FB
+ASMA Ver. 0.7.0  zvector-e7-23-VLREP                                                                03 Apr 2025 15:41:04  Page    30
+
+   STMT                       FILE NAME
+
+1     /home/tn529/sharedvfp/tests/zvector-e7-23-VLREP.asm
+
+
+** NO ERRORS FOUND **
+
+

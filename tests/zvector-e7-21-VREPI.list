@@ -1,0 +1,2249 @@
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *   Zvector E7 instruction tests for VRI-a instruction:
+                                                     5 *
+                                                     6 *   E745 VREPI  - Vector Replicate Immediate
+                                                     7 *
+                                                     8 *        James Wekel February 2025
+                                                     9 ***********************************************************************
+
+
+                                                    11 ***********************************************************************
+                                                    12 *
+                                                    13 *        basic instruction tests
+                                                    14 *
+                                                    15 ***********************************************************************
+                                                    16 *  This program tests proper functioning of the z/arch E7 VRI-a
+                                                    17 *  Vector Replicate Immediate instruction.
+                                                    18 *  Exceptions are not tested.
+                                                    19 *
+                                                    20 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    21 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    22 *  NOT designed to test all aspects of any of the instructions.
+                                                    23 *
+                                                    24 ***********************************************************************
+                                                    25 *
+                                                    26 *   *Testcase zvector-e7-21-VREPI
+                                                    27 *   *
+                                                    28 *   *   Zvector E7 instruction tests for VRI-a instruction:
+                                                    29 *   *
+                                                    30 *   *   E745 VREPI  - Vector Replicate Immediate
+                                                    31 *   *
+                                                    32 *   *   # ------------------------------------------------------------
+                                                    33 *   *   #  This tests only the basic function of the instruction.
+                                                    34 *   *   #  Exceptions are NOT tested.
+                                                    35 *   *   # ------------------------------------------------------------
+                                                    36 *   *
+                                                    37 *   mainsize    2
+                                                    38 *   numcpu      1
+                                                    39 *   sysclear
+                                                    40 *   archlvl     z/Arch
+                                                    41 *
+                                                    42 *   loadcore    "$(testpath)/zvector-e7-21-VREPI.core" 0x0
+                                                    43 *
+                                                    44 *   diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    45 *   runtest     5
+                                                    46 *   diag8cmd    disable   # (reset back to default)
+                                                    47 *
+                                                    48 *   *Done
+                                                    49 *
+                                                    50 ***********************************************************************
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    52 ***********************************************************************
+                                                    53 *        FCHECK Macro - Is a Facility Bit set?
+                                                    54 *
+                                                    55 *        If the facility bit is NOT set, an message is issued and
+                                                    56 *        the test is skipped.
+                                                    57 *
+                                                    58 *        Fcheck uses R0, R1 and R2
+                                                    59 *
+                                                    60 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    61 ***********************************************************************
+                                                    62          MACRO
+                                                    63          FCHECK &BITNO,&NOTSETMSG
+                                                    64 .*                        &BITNO : facility bit number to check
+                                                    65 .*                        &NOTSETMSG : 'facility name'
+                                                    66          LCLA  &FBBYTE           Facility bit in Byte
+                                                    67          LCLA  &FBBIT            Facility bit within Byte
+                                                    68
+                                                    69          LCLA  &L(8)
+                                                    70 &L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+                                                    71
+                                                    72 &FBBYTE  SETA  &BITNO/8
+                                                    73 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    74 .*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    75
+                                                    76          B     X&SYSNDX
+                                                    77 *                                      Fcheck data area
+                                                    78 *                                      skip messgae
+                                                    79 SKT&SYSNDX DC  C'    Skipping tests: '
+                                                    80          DC    C&NOTSETMSG
+                                                    81          DC    C' (bit &BITNO) is not installed.'
+                                                    82 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                    83 *                                      facility bits
+                                                    84          DS    FD                      gap
+                                                    85 FB&SYSNDX DS   4FD
+                                                    86          DS    FD                      gap
+                                                    87 *
+                                                    88 X&SYSNDX EQU *
+                                                    89          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                    90          STFLE FB&SYSNDX               get facility bits
+                                                    91
+                                                    92          XGR   R0,R0
+                                                    93          IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+                                                    94          N     R0,=F'&FBBIT'           is bit set?
+                                                    95          BNZ   XC&SYSNDX
+                                                    96 *
+                                                    97 * facility bit not set, issue message and exit
+                                                    98 *
+                                                    99          LA    R0,SKL&SYSNDX           message length
+                                                   100          LA    R1,SKT&SYSNDX           message address
+                                                   101          BAL   R2,MSG
+                                                   102
+                                                   103          B     EOJ
+                                                   104 XC&SYSNDX EQU *
+                                                   105          MEND
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   107 ***********************************************************************
+                                                   108 *        Low core PSWs
+                                                   109 ***********************************************************************
+                              00000000  0000219F   110 ZVE7TST  START 0
+00000000                      00000000             111          USING ZVE7TST,R0            Low core addressability
+                                                   112
+                              00000140  00000000   113 SVOLDPSW EQU   ZVE7TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   115          ORG   ZVE7TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                        116          DC    X'0000000180000000'
+000001A8  00000000 00000200                        117          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   119          ORG   ZVE7TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        120          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        121          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   123          ORG   ZVE7TST+X'200'        Start of actual test program...
+
+
+                                                   125 ***********************************************************************
+                                                   126 *               The actual "ZVE7TST" program itself...
+                                                   127 ***********************************************************************
+                                                   128 *
+                                                   129 *  Architecture Mode: z/Arch
+                                                   130 *  Register Usage:
+                                                   131 *
+                                                   132 *   R0       (work)
+                                                   133 *   R1-4     (work)
+                                                   134 *   R5       Testing control table - current test base
+                                                   135 *   R6-R7    (work)
+                                                   136 *   R8       First base register
+                                                   137 *   R9       Second base register
+                                                   138 *   R10      Third base register
+                                                   139 *   R11      E7TEST call return
+                                                   140 *   R12      E7TESTS register
+                                                   141 *   R13      (work)
+                                                   142 *   R14      Subroutine call
+                                                   143 *   R15      Secondary Subroutine call or work
+                                                   144 *
+                                                   145 ***********************************************************************
+
+00000200                      00000200             147          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200             148          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00002200             149          USING  BEGIN+8192,R10  THIRD Base Register
+
+00000200  0580                                     151 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                     152          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                     153          BCTR  R8,0             Initalize FIRST base register
+
+00000206  4190 8800                     00000800   155          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800   156          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                   157
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000020E  41A0 9800                     00000800   158          LA    R10,2048(,R9)    Initalize THIRD base register
+00000212  41A0 A800                     00000800   159          LA    R10,2048(,R10)   Initalize THIRD base register
+                                                   160
+00000216  B600 82C4                     000004C4   161          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
+0000021A  9604 82C5                     000004C5   162          OI    CTLR0+1,X'04'    Turn on AFP bit
+0000021E  9602 82C5                     000004C5   163          OI    CTLR0+1,X'02'    Turn on Vector bit
+00000222  B700 82C4                     000004C4   164          LCTL  R0,R0,CTLR0      Reload updated CR0
+                                                   165
+                                                   166 ***********************************************************************
+                                                   167 * Is z/Architecture vector facility installed  (bit 129)
+                                                   168 ***********************************************************************
+                                                   169
+                                                   170          FCHECK 129,'z/Architecture vector facility'
+00000226  47F0 80A8                     000002A8   171+         B     X0001
+                                                   172+*                                      Fcheck data area
+                                                   173+*                                      skip messgae
+0000022A  40404040 E2928997                        174+SKT0001  DC    C'    Skipping tests: '
+0000023E  A961C199 838889A3                        175+         DC    C'z/Architecture vector facility'
+0000025C  404D8289 A340F1F2                        176+         DC    C' (bit 129) is not installed.'
+                              0000004E  00000001   177+SKL0001  EQU   *-SKT0001
+                                                   178+*                                      facility bits
+00000278  00000000 00000000                        179+         DS    FD                      gap
+00000280  00000000 00000000                        180+FB0001   DS    4FD
+000002A0  00000000 00000000                        181+         DS    FD                      gap
+                                                   182+*
+                              000002A8  00000001   183+X0001    EQU   *
+000002A8  4100 0004                     00000004   184+         LA    R0,((X0001-FB0001)/8)-1
+000002AC  B2B0 8080                     00000280   185+         STFLE FB0001                  get facility bits
+000002B0  B982 0000                                186+         XGR   R0,R0
+000002B4  4300 8090                     00000290   187+         IC    R0,FB0001+16            get fbit byte
+000002B8  5400 82CC                     000004CC   188+         N     R0,=F'64'               is bit set?
+000002BC  4770 80D0                     000002D0   189+         BNZ   XC0001
+                                                   190+*
+                                                   191+* facility bit not set, issue message and exit
+                                                   192+*
+000002C0  4100 004E                     0000004E   193+         LA    R0,SKL0001              message length
+000002C4  4110 802A                     0000022A   194+         LA    R1,SKT0001              message address
+000002C8  4520 81E0                     000003E0   195+         BAL   R2,MSG
+000002CC  47F0 82A8                     000004A8   196+         B     EOJ
+                              000002D0  00000001   197+XC0001   EQU   *
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   199 ***********************************************************************
+                                                   200 *              Do tests in the E7TESTS table
+                                                   201 ***********************************************************************
+                                                   202
+000002D0  58C0 82D0                     000004D0   203          L     R12,=A(E7TESTS)       get table of test addresses
+                                                   204
+                              000002D4  00000001   205 NEXTE7   EQU   *
+000002D4  5850 C000                     00000000   206          L     R5,0(0,R12)       get test address
+000002D8  1255                                     207          LTR   R5,R5                have a test?
+000002DA  4780 8118                     00000318   208          BZ    ENDTEST                 done?
+                                                   209
+000002DE                      00000000             210          USING E7TEST,R5
+                                                   211
+000002DE  4800 5004                     00000004   212          LH    R0,TNUM           save current test number
+000002E2  5000 8E04                     00001004   213          ST    R0,TESTING        for easy reference
+                                                   214
+000002E6  58B0 5000                     00000000   215          L     R11,TSUB          get address of test routine
+000002EA  05BB                                     216          BALR  R11,R11           do test
+                                                   217
+000002EC  E310 5020 0014                00000020   218          LGF   R1,READDR         get address of expected result
+000002F2  D50F 5030 1000      00000030  00000000   219          CLC   V1OUTPUT,0(R1)    valid?
+000002F8  4770 8104                     00000304   220          BNE   FAILMSG              no, issue failed message
+                                                   221
+000002FC  41C0 C004                     00000004   222          LA    R12,4(0,R12)      next test address
+00000300  47F0 80D4                     000002D4   223          B     NEXTE7
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   225 ***********************************************************************
+                                                   226 * result not as expected:
+                                                   227 *        issue message with test number, instruction under test
+                                                   228 *              and instruction i2
+                                                   229 ***********************************************************************
+                              00000304  00000001   230 FAILMSG  EQU   *
+00000304  45F0 8126                     00000326   231          BAL   R15,RPTERROR
+
+
+                                                   233 ***********************************************************************
+                                                   234 * continue after a failed test
+                                                   235 ***********************************************************************
+                              00000308  00000001   236 FAILCONT EQU   *
+00000308  5800 82D4                     000004D4   237          L     R0,=F'1'          set failed test indicator
+0000030C  5000 8E00                     00001000   238          ST    R0,FAILED
+                                                   239
+00000310  41C0 C004                     00000004   240          LA    R12,4(0,R12)      next test address
+00000314  47F0 80D4                     000002D4   241          B     NEXTE7
+
+
+                                                   243 ***********************************************************************
+                                                   244 * end of testing; set ending psw
+                                                   245 ***********************************************************************
+                              00000318  00000001   246 ENDTEST  EQU   *
+00000318  5810 8E00                     00001000   247          L     R1,FAILED         did a test fail?
+0000031C  1211                                     248          LTR   R1,R1
+0000031E  4780 82A8                     000004A8   249          BZ    EOJ                  No, exit
+00000322  47F0 82C0                     000004C0   250          B     FAILTEST             Yes, exit with BAD PSW
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   252 ***********************************************************************
+                                                   253 *        RPTERROR                 Report instruction test in error
+                                                   254 ***********************************************************************
+
+00000326  50F0 81C8                     000003C8   256 RPTERROR ST    R15,RPTSAVE          Save return address
+0000032A  5050 81CC                     000003CC   257          ST    R5,RPTSVR5           Save R5
+                                                   258 *
+0000032E  4820 5004                     00000004   259          LH    R2,TNUM              get test number and convert
+00000332  4E20 8E82                     00001082   260          CVD   R2,DECNUM
+00000336  D211 8E6C 8E56      0000106C  00001056   261          MVC   PRT3,EDIT
+0000033C  DE11 8E6C 8E82      0000106C  00001082   262          ED    PRT3,DECNUM
+00000342  D202 8E18 8E79      00001018  00001079   263          MVC   PRTNUM(3),PRT3+13    fill in message with test #
+                                                   264
+00000348  D207 8E33 500A      00001033  0000000A   265          MVC   PRTNAME,OPNAME       fill in message with instruction
+                                                   266 *
+0000034E  4820 5008                     00000008   267          LH    R2,I2                get i2 and convert
+00000352  4E20 8E82                     00001082   268          CVD   R2,DECNUM
+00000356  D211 8E6C 8E56      0000106C  00001056   269          MVC   PRT3,EDIT
+0000035C  DE11 8E6C 8E82      0000106C  00001082   270          ED    PRT3,DECNUM
+00000362  D204 8E45 8E77      00001045  00001077   271          MVC   PRTI2(5),PRT3+11     fill in message with i2 field
+                                                   272 *
+00000368  1222                                     273          LTR   R2,R2
+0000036A  4780 817C                     0000037C   274          BZ    I2ZERO               is I2 zero
+0000036E  4740 8186                     00000386   275          BL    I2NEG                is I2 negative
+00000372  D200 8E44 82DC      00001044  000004DC   276          MVC   PRTSGN(1),=C'+'
+00000378  47F0 818C                     0000038C   277          B     DOM4
+                                                   278
+0000037C                                           279 I2ZERO   DS    0H
+0000037C  D200 8E44 82DD      00001044  000004DD   280          MVC   PRTSGN(1),=C' '
+00000382  47F0 818C                     0000038C   281          B     DOM4
+                                                   282
+00000386                                           283 I2NEG    DS    0H
+00000386  D200 8E44 82DE      00001044  000004DE   284          MVC   PRTSGN(1),=C'-'
+                                                   285 *
+0000038C                                           286 DOM4     DS    0H
+0000038C  E320 5007 0076                00000007   287          LB    R2,M3                get m34 and convert
+00000392  4E20 8E82                     00001082   288          CVD   R2,DECNUM
+00000396  D211 8E6C 8E56      0000106C  00001056   289          MVC   PRT3,EDIT
+0000039C  DE11 8E6C 8E82      0000106C  00001082   290          ED    PRT3,DECNUM
+000003A2  D201 8E53 8E7A      00001053  0000107A   291          MVC   PRTM3(2),PRT3+14     fill in message with m4 field
+                                                   292 *
+                                                   293 *        Use Hercules Diagnose for Message to console
+                                                   294 *
+000003A8  9002 81D0                     000003D0   295          STM   R0,R2,RPTDWSAV       save regs used by MSG
+000003AC  4100 004E                     0000004E   296          LA    R0,PRTLNG            message length
+000003B0  4110 8E08                     00001008   297          LA    R1,PRTLINE           messagfe address
+000003B4  4520 81E0                     000003E0   298          BAL   R2,MSG               call Hercules console MSG display
+000003B8  9802 81D0                     000003D0   299          LM    R0,R2,RPTDWSAV       restore regs
+
+
+000003BC  5850 81CC                     000003CC   301          L     R5,RPTSVR5         Restore R5
+000003C0  58F0 81C8                     000003C8   302          L     R15,RPTSAVE        Restore return address
+000003C4  07FF                                     303          BR    R15                Return to caller
+
+000003C8  00000000                                 305 RPTSAVE  DC    F'0'               R15 save area
+000003CC  00000000                                 306 RPTSVR5  DC    F'0'               R5 save area
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+000003D0  00000000 00000000                        308 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   310 ***********************************************************************
+                                                   311 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   312 *              R2 = return address
+                                                   313 ***********************************************************************
+
+000003E0  4900 82D8                     000004D8   315 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000003E4  07D2                                     316          BNHR  R2                     No, ignore
+
+000003E6  9002 821C                     0000041C   318          STM   R0,R2,MSGSAVE          Save registers
+
+000003EA  4900 82DA                     000004DA   320          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000003EE  47D0 81F6                     000003F6   321          BNH   MSGOK                  Yes, continue
+000003F2  4100 005F                     0000005F   322          LA    R0,L'MSGMSG            No, set to maximum
+
+000003F6  1820                                     324 MSGOK    LR    R2,R0                  Copy length to work register
+000003F8  0620                                     325          BCTR  R2,0                   Minus-1 for execute
+000003FA  4420 8228                     00000428   326          EX    R2,MSGMVC              Copy message to O/P buffer
+
+000003FE  4120 200A                     0000000A   328          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+00000402  4110 822E                     0000042E   329          LA    R1,MSGCMD              Point to true command
+
+00000406  83120008                                 331          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+0000040A  4780 8216                     00000416   332          BZ    MSGRET                 Return if successful
+                                                   333
+0000040E  1222                                     334          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+00000410  4780 8216                     00000416   335          BZ    MSGRET                   an error occurred but coninue
+                                                   336
+00000414  0000                                     337          DC    H'0'                   CRASH for debugging purposes
+
+00000416  9802 821C                     0000041C   339 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+0000041A  07F2                                     340          BR    R2                     Return to caller
+
+
+
+
+
+
+0000041C  00000000 00000000                        342 MSGSAVE  DC    3F'0'                  Registers save area
+00000428  D200 8237 1000      00000437  00000000   343 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+0000042E  D4E2C7D5 D6C8405C                        345 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+00000437  40404040 40404040                        346 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   347
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   349 ***********************************************************************
+                                                   350 *        Normal completion or Abnormal termination PSWs
+                                                   351 ***********************************************************************
+
+
+
+
+
+00000498  00020001 80000000                        353 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+000004A8  B2B2 8298                     00000498   355 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+000004B0  00020001 80000000                        357 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+000004C0  B2B2 82B0                     000004B0   359 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                                   361 ***********************************************************************
+                                                   362 *        Working Storage
+                                                   363 ***********************************************************************
+
+
+000004C4  00000000                                 365 CTLR0    DS    F                CR0
+000004C8  00000000                                 366          DS    F
+
+000004CC                                           368          LTORG ,                Literals pool
+000004CC  00000040                                 369                =F'64'
+000004D0  000020FC                                 370                =A(E7TESTS)
+000004D4  00000001                                 371                =F'1'
+000004D8  0000                                     372                =H'0'
+000004DA  005F                                     373                =AL2(L'MSGMSG)
+000004DC  4E                                       374                =C'+'
+000004DD  40                                       375                =C' '
+000004DE  60                                       376                =C'-'
+                                                   377
+                                                   378 *        some constants
+                                                   379
+                              00000400  00000001   380 K        EQU   1024             One KB
+                              00001000  00000001   381 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   382 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   383 MB       EQU   (K*K)             1 MB
+                                                   384
+                              AABBCCDD  00000001   385 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   386 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   388 *======================================================================
+                                                   389 *
+                                                   390 *  NOTE: start data on an address that is easy to display
+                                                   391 *        within Hercules
+                                                   392 *
+                                                   393 *======================================================================
+                                                   394
+000004DF                      000004DF  00001000   395          ORG   ZVE7TST+X'1000'
+00001000  00000000                                 396 FAILED   DC    F'0'                     some test failed?
+00001004  00000000                                 397 TESTING  DC    F'0'                     current test number
+
+
+                                                   399 *
+                                                   400 *        failed message and associated editting
+                                                   401 *
+00001008  40404040 40404040                        402 PRTLINE  DC    C'         Test # '
+00001018  A7A7A7                                   403 PRTNUM   DC    C'xxx'
+0000101B  40868189 93858440                        404          DC    c' failed for instruction '
+00001033  A7A7A7A7 A7A7A7A7                        405 PRTNAME  DC    CL8'xxxxxxxx'
+0000103B  40A689A3 884089F2                        406          DC    C' with i2='
+00001044  40                                       407 PRTSGN   DC    C' '
+00001045  A7A7A7A7 A7                              408 PRTI2    DC    C'xxxxx'
+0000104A  40A689A3 884094F3                        409          DC    C' with m3='
+00001053  A7A7                                     410 PRTM3    DC    C'xx'
+00001055  4B                                       411          DC    C'.'
+                              0000004E  00000001   412 PRTLNG   EQU   *-PRTLINE
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   414 ***********************************************************************
+                                                   415 *        TEST failed : message working storge
+                                                   416 ***********************************************************************
+00001056  40212020 20202020                        417 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   418
+00001068  7E7E7E6E                                 419          DC    C'===>'
+0000106C  40404040 40404040                        420 PRT3     DC    CL18' '
+0000107E  4C7E7E7E                                 421          DC    C'<==='
+00001082  00000000 00000000                        422 DECNUM   DS    CL16
+
+
+                                                   424 ***********************************************************************
+                                                   425 *        Vector instruction results, pollution and input
+                                                   426 ***********************************************************************
+00001094                                           427          DS    0F
+00001094  00000000 00000000                        428          DS    XL16                                        gap
+000010A4  44444444 44444444                        429 V1FUDGE  DC    XL16'44444444444444444444444444444444'    V1 FUDGE
+000010B4  00000000 00000000                        430          DS    XL16
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   432 ***********************************************************************
+                                                   433 *        E7TEST DSECT
+                                                   434 ***********************************************************************
+
+
+                                                   436 E7TEST   DSECT ,
+00000000  00000000                                 437 TSUB     DC    A(0)           pointer  to test
+00000004  0000                                     438 TNUM     DC    H'00'          Test Number
+00000006  00                                       439          DC    X'00'
+                                                   440
+00000007  00                                       441 M3       DC    HL1'00'        m3 field
+00000008  0000                                     442 I2       DC    XL2'00'        i2 used
+                                                   443
+0000000A  40404040 40404040                        444 OPNAME   DC    CL8' '         E7 name
+00000014  00000000                                 445 V2ADDR   DC    A(0)           address of v2 source
+00000018  00000000                                 446 V3ADDR   DC    A(0)           address of v3 source
+0000001C  00000000                                 447 RELEN    DC    A(0)           RESULT LENGTH
+00000020  00000000                                 448 READDR   DC    A(0)           result (expected) address
+00000028  00000000 00000000                        449          DS    FD                gap
+00000030  00000000 00000000                        450 V1OUTPUT DS    XL16           V1 Output
+00000040  00000000 00000000                        451          DS    FD                gap
+                                                   452
+                                                   453 *        test routine will be here (from VRI-a macro)
+                                                   454 *
+                                                   455 *        followed by
+                                                   456 *              EXPECTED RESULT
+
+
+                              00000000  0000219F   458 ZVE7TST  CSECT ,
+000010C4                                           459          DS    0F
+
+
+                                                   461 ***********************************************************************
+                                                   462 *     Macros to help build test tables
+                                                   463 ***********************************************************************
+
+
+
+                                                   465 *
+                                                   466 * macros to generate individual test
+                                                   467 *
+                                                   468          MACRO
+                                                   469          VRI_A &INST,&I2,&M3
+                                                   470 .*                               &INST   - VRI-a instruction under test
+                                                   471 .*                               &i2     - i2 field (signed decimal)
+                                                   472 .*                               &m3     - element size
+                                                   473
+                                                   474          GBLA  &TNUM
+                                                   475 &TNUM    SETA  &TNUM+1
+                                                   476
+                                                   477          DS    0FD
+                                                   478          USING *,R5              base for test data and test routine
+                                                   479
+                                                   480 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   481          DC    H'&TNUM'          test number
+                                                   482          DC    X'00'
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   483          DC    HL1'&M3'          m3 field
+                                                   484          DC    HL2'&I2'          i2 used
+                                                   485          DC    CL8'&INST'        instruction name
+                                                   486          DC    A(RE&TNUM+16)     address of v2 source
+                                                   487          DC    A(RE&TNUM+32)     address of v3 source
+                                                   488          DC    A(16)             result length
+                                                   489 REA&TNUM DC    A(RE&TNUM)        result address
+                                                   490          DS    FD                gap
+                                                   491 V1O&TNUM DS    XL16              V1 output
+                                                   492          DS    FD                gap
+                                                   493 .*
+                                                   494 *
+                                                   495 X&TNUM   DS    0F
+                                                   496          VL    V22,V1FUDGE
+                                                   497
+                                                   498          &INST V22,&I2,&M3    test instruction  (dest is a source)
+                                                   499
+                                                   500          VST   V22,V1O&TNUM      save v1 output
+                                                   501          BR    R11               return
+                                                   502
+                                                   503 RE&TNUM  DC    0F                xl16 expected result
+                                                   504
+                                                   505          DROP  R5
+                                                   506          MEND
+                                                   507 *
+                                                   508 * macro to generate table of pointers to individual tests
+                                                   509 *
+                                                   510          MACRO
+                                                   511          PTTABLE
+                                                   512          GBLA  &TNUM
+                                                   513          LCLA  &CUR
+                                                   514 &CUR     SETA  1
+                                                   515 .*
+                                                   516 TTABLE   DS    0F
+                                                   517 .LOOP    ANOP
+                                                   518 .*
+                                                   519          DC    A(T&CUR)
+                                                   520 .*
+                                                   521 &CUR     SETA  &CUR+1
+                                                   522          AIF   (&CUR LE &TNUM).LOOP
+                                                   523 *
+                                                   524          DC    A(0)              END OF TABLE
+                                                   525          DC    A(0)
+                                                   526 .*
+                                                   527          MEND
+                                                   528
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   530 ***********************************************************************
+                                                   531 *        E7 VRI-a tests
+                                                   532 ***********************************************************************
+                                                   533          PRINT DATA
+                                                   534 *
+                                                   535 *   E745 VREPI  - Vector Replicate Immediate
+                                                   536 *
+                                                   537 *        VRI_A  instruction, I2 (signed decinal), M3
+                                                   538 *              followed by
+                                                   539 *                 16 byte expected result (V1)
+                                                   540 *---------------------------------------------------------------------
+                                                   541 * VREPI  - Vector Replicate Immediate
+                                                   542 *---------------------------------------------------------------------
+                                                   543 *Byte
+                                                   544          VRI_A VREPI,0,0
+000010C8                                           545+         DS    0FD
+000010C8                      000010C8             546+         USING *,R5              base for test data and test routine
+000010C8  00001110                                 547+T1       DC    A(X1)             address of test routine
+000010CC  0001                                     548+         DC    H'1'              test number
+000010CE  00                                       549+         DC    X'00'
+000010CF  00                                       550+         DC    HL1'0'            m3 field
+000010D0  0000                                     551+         DC    HL2'0'            i2 used
+000010D2  E5D9C5D7 C9404040                        552+         DC    CL8'VREPI'        instruction name
+000010DC  00001134                                 553+         DC    A(RE1+16)         address of v2 source
+000010E0  00001144                                 554+         DC    A(RE1+32)         address of v3 source
+000010E4  00000010                                 555+         DC    A(16)             result length
+000010E8  00001124                                 556+REA1     DC    A(RE1)            result address
+000010F0  00000000 00000000                        557+         DS    FD                gap
+000010F8  00000000 00000000                        558+V1O1     DS    XL16              V1 output
+00001100  00000000 00000000
+00001108  00000000 00000000                        559+         DS    FD                gap
+                                                   560+*
+00001110                                           561+X1       DS    0F
+00001110  E760 8EA4 0806                000010A4   562+         VL    V22,V1FUDGE
+00001116  E760 0000 0845                           563+         VREPI V22,0,0        test instruction  (dest is a source)
+0000111C  E760 5030 080E                000010F8   564+         VST   V22,V1O1          save v1 output
+00001122  07FB                                     565+         BR    R11               return
+00001124                                           566+RE1      DC    0F                xl16 expected result
+00001124                                           567+         DROP  R5
+00001124  00000000 00000000                        568          DC    16HL1'0'                                 result
+0000112C  00000000 00000000
+                                                   569
+                                                   570          VRI_A VREPI,1,0
+00001138                                           571+         DS    0FD
+00001138                      00001138             572+         USING *,R5              base for test data and test routine
+00001138  00001180                                 573+T2       DC    A(X2)             address of test routine
+0000113C  0002                                     574+         DC    H'2'              test number
+0000113E  00                                       575+         DC    X'00'
+0000113F  00                                       576+         DC    HL1'0'            m3 field
+00001140  0001                                     577+         DC    HL2'1'            i2 used
+00001142  E5D9C5D7 C9404040                        578+         DC    CL8'VREPI'        instruction name
+0000114C  000011A4                                 579+         DC    A(RE2+16)         address of v2 source
+00001150  000011B4                                 580+         DC    A(RE2+32)         address of v3 source
+00001154  00000010                                 581+         DC    A(16)             result length
+00001158  00001194                                 582+REA2     DC    A(RE2)            result address
+00001160  00000000 00000000                        583+         DS    FD                gap
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001168  00000000 00000000                        584+V1O2     DS    XL16              V1 output
+00001170  00000000 00000000
+00001178  00000000 00000000                        585+         DS    FD                gap
+                                                   586+*
+00001180                                           587+X2       DS    0F
+00001180  E760 8EA4 0806                000010A4   588+         VL    V22,V1FUDGE
+00001186  E760 0001 0845                           589+         VREPI V22,1,0        test instruction  (dest is a source)
+0000118C  E760 5030 080E                00001168   590+         VST   V22,V1O2          save v1 output
+00001192  07FB                                     591+         BR    R11               return
+00001194                                           592+RE2      DC    0F                xl16 expected result
+00001194                                           593+         DROP  R5
+00001194  01010101 01010101                        594          DC    16HL1'1'                                 result
+0000119C  01010101 01010101
+                                                   595
+                                                   596          VRI_A VREPI,2,0
+000011A8                                           597+         DS    0FD
+000011A8                      000011A8             598+         USING *,R5              base for test data and test routine
+000011A8  000011F0                                 599+T3       DC    A(X3)             address of test routine
+000011AC  0003                                     600+         DC    H'3'              test number
+000011AE  00                                       601+         DC    X'00'
+000011AF  00                                       602+         DC    HL1'0'            m3 field
+000011B0  0002                                     603+         DC    HL2'2'            i2 used
+000011B2  E5D9C5D7 C9404040                        604+         DC    CL8'VREPI'        instruction name
+000011BC  00001214                                 605+         DC    A(RE3+16)         address of v2 source
+000011C0  00001224                                 606+         DC    A(RE3+32)         address of v3 source
+000011C4  00000010                                 607+         DC    A(16)             result length
+000011C8  00001204                                 608+REA3     DC    A(RE3)            result address
+000011D0  00000000 00000000                        609+         DS    FD                gap
+000011D8  00000000 00000000                        610+V1O3     DS    XL16              V1 output
+000011E0  00000000 00000000
+000011E8  00000000 00000000                        611+         DS    FD                gap
+                                                   612+*
+000011F0                                           613+X3       DS    0F
+000011F0  E760 8EA4 0806                000010A4   614+         VL    V22,V1FUDGE
+000011F6  E760 0002 0845                           615+         VREPI V22,2,0        test instruction  (dest is a source)
+000011FC  E760 5030 080E                000011D8   616+         VST   V22,V1O3          save v1 output
+00001202  07FB                                     617+         BR    R11               return
+00001204                                           618+RE3      DC    0F                xl16 expected result
+00001204                                           619+         DROP  R5
+00001204  02020202 02020202                        620          DC    16HL1'2'                                 result
+0000120C  02020202 02020202
+                                                   621
+                                                   622          VRI_A VREPI,99,0
+00001218                                           623+         DS    0FD
+00001218                      00001218             624+         USING *,R5              base for test data and test routine
+00001218  00001260                                 625+T4       DC    A(X4)             address of test routine
+0000121C  0004                                     626+         DC    H'4'              test number
+0000121E  00                                       627+         DC    X'00'
+0000121F  00                                       628+         DC    HL1'0'            m3 field
+00001220  0063                                     629+         DC    HL2'99'           i2 used
+00001222  E5D9C5D7 C9404040                        630+         DC    CL8'VREPI'        instruction name
+0000122C  00001284                                 631+         DC    A(RE4+16)         address of v2 source
+00001230  00001294                                 632+         DC    A(RE4+32)         address of v3 source
+00001234  00000010                                 633+         DC    A(16)             result length
+00001238  00001274                                 634+REA4     DC    A(RE4)            result address
+00001240  00000000 00000000                        635+         DS    FD                gap
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001248  00000000 00000000                        636+V1O4     DS    XL16              V1 output
+00001250  00000000 00000000
+00001258  00000000 00000000                        637+         DS    FD                gap
+                                                   638+*
+00001260                                           639+X4       DS    0F
+00001260  E760 8EA4 0806                000010A4   640+         VL    V22,V1FUDGE
+00001266  E760 0063 0845                           641+         VREPI V22,99,0       test instruction  (dest is a source)
+0000126C  E760 5030 080E                00001248   642+         VST   V22,V1O4          save v1 output
+00001272  07FB                                     643+         BR    R11               return
+00001274                                           644+RE4      DC    0F                xl16 expected result
+00001274                                           645+         DROP  R5
+00001274  63636363 63636363                        646          DC    16HL1'99'                                result
+0000127C  63636363 63636363
+                                                   647
+                                                   648          VRI_A VREPI,999,0
+00001288                                           649+         DS    0FD
+00001288                      00001288             650+         USING *,R5              base for test data and test routine
+00001288  000012D0                                 651+T5       DC    A(X5)             address of test routine
+0000128C  0005                                     652+         DC    H'5'              test number
+0000128E  00                                       653+         DC    X'00'
+0000128F  00                                       654+         DC    HL1'0'            m3 field
+00001290  03E7                                     655+         DC    HL2'999'          i2 used
+00001292  E5D9C5D7 C9404040                        656+         DC    CL8'VREPI'        instruction name
+0000129C  000012F4                                 657+         DC    A(RE5+16)         address of v2 source
+000012A0  00001304                                 658+         DC    A(RE5+32)         address of v3 source
+000012A4  00000010                                 659+         DC    A(16)             result length
+000012A8  000012E4                                 660+REA5     DC    A(RE5)            result address
+000012B0  00000000 00000000                        661+         DS    FD                gap
+000012B8  00000000 00000000                        662+V1O5     DS    XL16              V1 output
+000012C0  00000000 00000000
+000012C8  00000000 00000000                        663+         DS    FD                gap
+                                                   664+*
+000012D0                                           665+X5       DS    0F
+000012D0  E760 8EA4 0806                000010A4   666+         VL    V22,V1FUDGE
+000012D6  E760 03E7 0845                           667+         VREPI V22,999,0      test instruction  (dest is a source)
+000012DC  E760 5030 080E                000012B8   668+         VST   V22,V1O5          save v1 output
+000012E2  07FB                                     669+         BR    R11               return
+000012E4                                           670+RE5      DC    0F                xl16 expected result
+000012E4                                           671+         DROP  R5
+000012E4  E7E7E7E7 E7E7E7E7                        672          DC    16HL1'999'                               result
+000012EC  E7E7E7E7 E7E7E7E7
+                                                   673
+                                                   674          VRI_A VREPI,-1,0
+000012F8                                           675+         DS    0FD
+000012F8                      000012F8             676+         USING *,R5              base for test data and test routine
+000012F8  00001340                                 677+T6       DC    A(X6)             address of test routine
+000012FC  0006                                     678+         DC    H'6'              test number
+000012FE  00                                       679+         DC    X'00'
+000012FF  00                                       680+         DC    HL1'0'            m3 field
+00001300  FFFF                                     681+         DC    HL2'-1'           i2 used
+00001302  E5D9C5D7 C9404040                        682+         DC    CL8'VREPI'        instruction name
+0000130C  00001364                                 683+         DC    A(RE6+16)         address of v2 source
+00001310  00001374                                 684+         DC    A(RE6+32)         address of v3 source
+00001314  00000010                                 685+         DC    A(16)             result length
+00001318  00001354                                 686+REA6     DC    A(RE6)            result address
+00001320  00000000 00000000                        687+         DS    FD                gap
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001328  00000000 00000000                        688+V1O6     DS    XL16              V1 output
+00001330  00000000 00000000
+00001338  00000000 00000000                        689+         DS    FD                gap
+                                                   690+*
+00001340                                           691+X6       DS    0F
+00001340  E760 8EA4 0806                000010A4   692+         VL    V22,V1FUDGE
+00001346  E760 FFFF 0845                           693+         VREPI V22,-1,0       test instruction  (dest is a source)
+0000134C  E760 5030 080E                00001328   694+         VST   V22,V1O6          save v1 output
+00001352  07FB                                     695+         BR    R11               return
+00001354                                           696+RE6      DC    0F                xl16 expected result
+00001354                                           697+         DROP  R5
+00001354  FFFFFFFF FFFFFFFF                        698          DC    16HL1'-1'                                result
+0000135C  FFFFFFFF FFFFFFFF
+                                                   699
+                                                   700          VRI_A VREPI,-22,0
+00001368                                           701+         DS    0FD
+00001368                      00001368             702+         USING *,R5              base for test data and test routine
+00001368  000013B0                                 703+T7       DC    A(X7)             address of test routine
+0000136C  0007                                     704+         DC    H'7'              test number
+0000136E  00                                       705+         DC    X'00'
+0000136F  00                                       706+         DC    HL1'0'            m3 field
+00001370  FFEA                                     707+         DC    HL2'-22'          i2 used
+00001372  E5D9C5D7 C9404040                        708+         DC    CL8'VREPI'        instruction name
+0000137C  000013D4                                 709+         DC    A(RE7+16)         address of v2 source
+00001380  000013E4                                 710+         DC    A(RE7+32)         address of v3 source
+00001384  00000010                                 711+         DC    A(16)             result length
+00001388  000013C4                                 712+REA7     DC    A(RE7)            result address
+00001390  00000000 00000000                        713+         DS    FD                gap
+00001398  00000000 00000000                        714+V1O7     DS    XL16              V1 output
+000013A0  00000000 00000000
+000013A8  00000000 00000000                        715+         DS    FD                gap
+                                                   716+*
+000013B0                                           717+X7       DS    0F
+000013B0  E760 8EA4 0806                000010A4   718+         VL    V22,V1FUDGE
+000013B6  E760 FFEA 0845                           719+         VREPI V22,-22,0      test instruction  (dest is a source)
+000013BC  E760 5030 080E                00001398   720+         VST   V22,V1O7          save v1 output
+000013C2  07FB                                     721+         BR    R11               return
+000013C4                                           722+RE7      DC    0F                xl16 expected result
+000013C4                                           723+         DROP  R5
+000013C4  EAEAEAEA EAEAEAEA                        724          DC    16HL1'-22'                               result
+000013CC  EAEAEAEA EAEAEAEA
+                                                   725
+                                                   726          VRI_A VREPI,-302,0
+000013D8                                           727+         DS    0FD
+000013D8                      000013D8             728+         USING *,R5              base for test data and test routine
+000013D8  00001420                                 729+T8       DC    A(X8)             address of test routine
+000013DC  0008                                     730+         DC    H'8'              test number
+000013DE  00                                       731+         DC    X'00'
+000013DF  00                                       732+         DC    HL1'0'            m3 field
+000013E0  FED2                                     733+         DC    HL2'-302'         i2 used
+000013E2  E5D9C5D7 C9404040                        734+         DC    CL8'VREPI'        instruction name
+000013EC  00001444                                 735+         DC    A(RE8+16)         address of v2 source
+000013F0  00001454                                 736+         DC    A(RE8+32)         address of v3 source
+000013F4  00000010                                 737+         DC    A(16)             result length
+000013F8  00001434                                 738+REA8     DC    A(RE8)            result address
+00001400  00000000 00000000                        739+         DS    FD                gap
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001408  00000000 00000000                        740+V1O8     DS    XL16              V1 output
+00001410  00000000 00000000
+00001418  00000000 00000000                        741+         DS    FD                gap
+                                                   742+*
+00001420                                           743+X8       DS    0F
+00001420  E760 8EA4 0806                000010A4   744+         VL    V22,V1FUDGE
+00001426  E760 FED2 0845                           745+         VREPI V22,-302,0     test instruction  (dest is a source)
+0000142C  E760 5030 080E                00001408   746+         VST   V22,V1O8          save v1 output
+00001432  07FB                                     747+         BR    R11               return
+00001434                                           748+RE8      DC    0F                xl16 expected result
+00001434                                           749+         DROP  R5
+00001434  D2D2D2D2 D2D2D2D2                        750          DC    16HL1'-302'                              result
+0000143C  D2D2D2D2 D2D2D2D2
+                                                   751
+                                                   752 *Halfword
+                                                   753          VRI_A VREPI,0,1
+00001448                                           754+         DS    0FD
+00001448                      00001448             755+         USING *,R5              base for test data and test routine
+00001448  00001490                                 756+T9       DC    A(X9)             address of test routine
+0000144C  0009                                     757+         DC    H'9'              test number
+0000144E  00                                       758+         DC    X'00'
+0000144F  01                                       759+         DC    HL1'1'            m3 field
+00001450  0000                                     760+         DC    HL2'0'            i2 used
+00001452  E5D9C5D7 C9404040                        761+         DC    CL8'VREPI'        instruction name
+0000145C  000014B4                                 762+         DC    A(RE9+16)         address of v2 source
+00001460  000014C4                                 763+         DC    A(RE9+32)         address of v3 source
+00001464  00000010                                 764+         DC    A(16)             result length
+00001468  000014A4                                 765+REA9     DC    A(RE9)            result address
+00001470  00000000 00000000                        766+         DS    FD                gap
+00001478  00000000 00000000                        767+V1O9     DS    XL16              V1 output
+00001480  00000000 00000000
+00001488  00000000 00000000                        768+         DS    FD                gap
+                                                   769+*
+00001490                                           770+X9       DS    0F
+00001490  E760 8EA4 0806                000010A4   771+         VL    V22,V1FUDGE
+00001496  E760 0000 1845                           772+         VREPI V22,0,1        test instruction  (dest is a source)
+0000149C  E760 5030 080E                00001478   773+         VST   V22,V1O9          save v1 output
+000014A2  07FB                                     774+         BR    R11               return
+000014A4                                           775+RE9      DC    0F                xl16 expected result
+000014A4                                           776+         DROP  R5
+000014A4  00000000 00000000                        777          DC    8HL2'0'                                  result
+000014AC  00000000 00000000
+                                                   778
+                                                   779          VRI_A VREPI,1,1
+000014B8                                           780+         DS    0FD
+000014B8                      000014B8             781+         USING *,R5              base for test data and test routine
+000014B8  00001500                                 782+T10      DC    A(X10)            address of test routine
+000014BC  000A                                     783+         DC    H'10'             test number
+000014BE  00                                       784+         DC    X'00'
+000014BF  01                                       785+         DC    HL1'1'            m3 field
+000014C0  0001                                     786+         DC    HL2'1'            i2 used
+000014C2  E5D9C5D7 C9404040                        787+         DC    CL8'VREPI'        instruction name
+000014CC  00001524                                 788+         DC    A(RE10+16)        address of v2 source
+000014D0  00001534                                 789+         DC    A(RE10+32)        address of v3 source
+000014D4  00000010                                 790+         DC    A(16)             result length
+000014D8  00001514                                 791+REA10    DC    A(RE10)           result address
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000014E0  00000000 00000000                        792+         DS    FD                gap
+000014E8  00000000 00000000                        793+V1O10    DS    XL16              V1 output
+000014F0  00000000 00000000
+000014F8  00000000 00000000                        794+         DS    FD                gap
+                                                   795+*
+00001500                                           796+X10      DS    0F
+00001500  E760 8EA4 0806                000010A4   797+         VL    V22,V1FUDGE
+00001506  E760 0001 1845                           798+         VREPI V22,1,1        test instruction  (dest is a source)
+0000150C  E760 5030 080E                000014E8   799+         VST   V22,V1O10         save v1 output
+00001512  07FB                                     800+         BR    R11               return
+00001514                                           801+RE10     DC    0F                xl16 expected result
+00001514                                           802+         DROP  R5
+00001514  00010001 00010001                        803          DC    8HL2'1'                                  result
+0000151C  00010001 00010001
+                                                   804
+                                                   805          VRI_A VREPI,2,1
+00001528                                           806+         DS    0FD
+00001528                      00001528             807+         USING *,R5              base for test data and test routine
+00001528  00001570                                 808+T11      DC    A(X11)            address of test routine
+0000152C  000B                                     809+         DC    H'11'             test number
+0000152E  00                                       810+         DC    X'00'
+0000152F  01                                       811+         DC    HL1'1'            m3 field
+00001530  0002                                     812+         DC    HL2'2'            i2 used
+00001532  E5D9C5D7 C9404040                        813+         DC    CL8'VREPI'        instruction name
+0000153C  00001594                                 814+         DC    A(RE11+16)        address of v2 source
+00001540  000015A4                                 815+         DC    A(RE11+32)        address of v3 source
+00001544  00000010                                 816+         DC    A(16)             result length
+00001548  00001584                                 817+REA11    DC    A(RE11)           result address
+00001550  00000000 00000000                        818+         DS    FD                gap
+00001558  00000000 00000000                        819+V1O11    DS    XL16              V1 output
+00001560  00000000 00000000
+00001568  00000000 00000000                        820+         DS    FD                gap
+                                                   821+*
+00001570                                           822+X11      DS    0F
+00001570  E760 8EA4 0806                000010A4   823+         VL    V22,V1FUDGE
+00001576  E760 0002 1845                           824+         VREPI V22,2,1        test instruction  (dest is a source)
+0000157C  E760 5030 080E                00001558   825+         VST   V22,V1O11         save v1 output
+00001582  07FB                                     826+         BR    R11               return
+00001584                                           827+RE11     DC    0F                xl16 expected result
+00001584                                           828+         DROP  R5
+00001584  00020002 00020002                        829          DC    8HL2'2'                                  result
+0000158C  00020002 00020002
+                                                   830
+                                                   831          VRI_A VREPI,99,1
+00001598                                           832+         DS    0FD
+00001598                      00001598             833+         USING *,R5              base for test data and test routine
+00001598  000015E0                                 834+T12      DC    A(X12)            address of test routine
+0000159C  000C                                     835+         DC    H'12'             test number
+0000159E  00                                       836+         DC    X'00'
+0000159F  01                                       837+         DC    HL1'1'            m3 field
+000015A0  0063                                     838+         DC    HL2'99'           i2 used
+000015A2  E5D9C5D7 C9404040                        839+         DC    CL8'VREPI'        instruction name
+000015AC  00001604                                 840+         DC    A(RE12+16)        address of v2 source
+000015B0  00001614                                 841+         DC    A(RE12+32)        address of v3 source
+000015B4  00000010                                 842+         DC    A(16)             result length
+000015B8  000015F4                                 843+REA12    DC    A(RE12)           result address
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000015C0  00000000 00000000                        844+         DS    FD                gap
+000015C8  00000000 00000000                        845+V1O12    DS    XL16              V1 output
+000015D0  00000000 00000000
+000015D8  00000000 00000000                        846+         DS    FD                gap
+                                                   847+*
+000015E0                                           848+X12      DS    0F
+000015E0  E760 8EA4 0806                000010A4   849+         VL    V22,V1FUDGE
+000015E6  E760 0063 1845                           850+         VREPI V22,99,1       test instruction  (dest is a source)
+000015EC  E760 5030 080E                000015C8   851+         VST   V22,V1O12         save v1 output
+000015F2  07FB                                     852+         BR    R11               return
+000015F4                                           853+RE12     DC    0F                xl16 expected result
+000015F4                                           854+         DROP  R5
+000015F4  00630063 00630063                        855          DC    8HL2'99'                                 result
+000015FC  00630063 00630063
+                                                   856
+                                                   857          VRI_A VREPI,9999,1
+00001608                                           858+         DS    0FD
+00001608                      00001608             859+         USING *,R5              base for test data and test routine
+00001608  00001650                                 860+T13      DC    A(X13)            address of test routine
+0000160C  000D                                     861+         DC    H'13'             test number
+0000160E  00                                       862+         DC    X'00'
+0000160F  01                                       863+         DC    HL1'1'            m3 field
+00001610  270F                                     864+         DC    HL2'9999'         i2 used
+00001612  E5D9C5D7 C9404040                        865+         DC    CL8'VREPI'        instruction name
+0000161C  00001674                                 866+         DC    A(RE13+16)        address of v2 source
+00001620  00001684                                 867+         DC    A(RE13+32)        address of v3 source
+00001624  00000010                                 868+         DC    A(16)             result length
+00001628  00001664                                 869+REA13    DC    A(RE13)           result address
+00001630  00000000 00000000                        870+         DS    FD                gap
+00001638  00000000 00000000                        871+V1O13    DS    XL16              V1 output
+00001640  00000000 00000000
+00001648  00000000 00000000                        872+         DS    FD                gap
+                                                   873+*
+00001650                                           874+X13      DS    0F
+00001650  E760 8EA4 0806                000010A4   875+         VL    V22,V1FUDGE
+00001656  E760 270F 1845                           876+         VREPI V22,9999,1     test instruction  (dest is a source)
+0000165C  E760 5030 080E                00001638   877+         VST   V22,V1O13         save v1 output
+00001662  07FB                                     878+         BR    R11               return
+00001664                                           879+RE13     DC    0F                xl16 expected result
+00001664                                           880+         DROP  R5
+00001664  270F270F 270F270F                        881          DC    8HL2'9999'                               result
+0000166C  270F270F 270F270F
+                                                   882
+                                                   883          VRI_A VREPI,-1,1
+00001678                                           884+         DS    0FD
+00001678                      00001678             885+         USING *,R5              base for test data and test routine
+00001678  000016C0                                 886+T14      DC    A(X14)            address of test routine
+0000167C  000E                                     887+         DC    H'14'             test number
+0000167E  00                                       888+         DC    X'00'
+0000167F  01                                       889+         DC    HL1'1'            m3 field
+00001680  FFFF                                     890+         DC    HL2'-1'           i2 used
+00001682  E5D9C5D7 C9404040                        891+         DC    CL8'VREPI'        instruction name
+0000168C  000016E4                                 892+         DC    A(RE14+16)        address of v2 source
+00001690  000016F4                                 893+         DC    A(RE14+32)        address of v3 source
+00001694  00000010                                 894+         DC    A(16)             result length
+00001698  000016D4                                 895+REA14    DC    A(RE14)           result address
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000016A0  00000000 00000000                        896+         DS    FD                gap
+000016A8  00000000 00000000                        897+V1O14    DS    XL16              V1 output
+000016B0  00000000 00000000
+000016B8  00000000 00000000                        898+         DS    FD                gap
+                                                   899+*
+000016C0                                           900+X14      DS    0F
+000016C0  E760 8EA4 0806                000010A4   901+         VL    V22,V1FUDGE
+000016C6  E760 FFFF 1845                           902+         VREPI V22,-1,1       test instruction  (dest is a source)
+000016CC  E760 5030 080E                000016A8   903+         VST   V22,V1O14         save v1 output
+000016D2  07FB                                     904+         BR    R11               return
+000016D4                                           905+RE14     DC    0F                xl16 expected result
+000016D4                                           906+         DROP  R5
+000016D4  FFFFFFFF FFFFFFFF                        907          DC    8HL2'-1'                                 result
+000016DC  FFFFFFFF FFFFFFFF
+                                                   908
+                                                   909          VRI_A VREPI,-2,1
+000016E8                                           910+         DS    0FD
+000016E8                      000016E8             911+         USING *,R5              base for test data and test routine
+000016E8  00001730                                 912+T15      DC    A(X15)            address of test routine
+000016EC  000F                                     913+         DC    H'15'             test number
+000016EE  00                                       914+         DC    X'00'
+000016EF  01                                       915+         DC    HL1'1'            m3 field
+000016F0  FFFE                                     916+         DC    HL2'-2'           i2 used
+000016F2  E5D9C5D7 C9404040                        917+         DC    CL8'VREPI'        instruction name
+000016FC  00001754                                 918+         DC    A(RE15+16)        address of v2 source
+00001700  00001764                                 919+         DC    A(RE15+32)        address of v3 source
+00001704  00000010                                 920+         DC    A(16)             result length
+00001708  00001744                                 921+REA15    DC    A(RE15)           result address
+00001710  00000000 00000000                        922+         DS    FD                gap
+00001718  00000000 00000000                        923+V1O15    DS    XL16              V1 output
+00001720  00000000 00000000
+00001728  00000000 00000000                        924+         DS    FD                gap
+                                                   925+*
+00001730                                           926+X15      DS    0F
+00001730  E760 8EA4 0806                000010A4   927+         VL    V22,V1FUDGE
+00001736  E760 FFFE 1845                           928+         VREPI V22,-2,1       test instruction  (dest is a source)
+0000173C  E760 5030 080E                00001718   929+         VST   V22,V1O15         save v1 output
+00001742  07FB                                     930+         BR    R11               return
+00001744                                           931+RE15     DC    0F                xl16 expected result
+00001744                                           932+         DROP  R5
+00001744  FFFEFFFE FFFEFFFE                        933          DC    8HL2'-2'                                 result
+0000174C  FFFEFFFE FFFEFFFE
+                                                   934
+                                                   935          VRI_A VREPI,-22,1
+00001758                                           936+         DS    0FD
+00001758                      00001758             937+         USING *,R5              base for test data and test routine
+00001758  000017A0                                 938+T16      DC    A(X16)            address of test routine
+0000175C  0010                                     939+         DC    H'16'             test number
+0000175E  00                                       940+         DC    X'00'
+0000175F  01                                       941+         DC    HL1'1'            m3 field
+00001760  FFEA                                     942+         DC    HL2'-22'          i2 used
+00001762  E5D9C5D7 C9404040                        943+         DC    CL8'VREPI'        instruction name
+0000176C  000017C4                                 944+         DC    A(RE16+16)        address of v2 source
+00001770  000017D4                                 945+         DC    A(RE16+32)        address of v3 source
+00001774  00000010                                 946+         DC    A(16)             result length
+00001778  000017B4                                 947+REA16    DC    A(RE16)           result address
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001780  00000000 00000000                        948+         DS    FD                gap
+00001788  00000000 00000000                        949+V1O16    DS    XL16              V1 output
+00001790  00000000 00000000
+00001798  00000000 00000000                        950+         DS    FD                gap
+                                                   951+*
+000017A0                                           952+X16      DS    0F
+000017A0  E760 8EA4 0806                000010A4   953+         VL    V22,V1FUDGE
+000017A6  E760 FFEA 1845                           954+         VREPI V22,-22,1      test instruction  (dest is a source)
+000017AC  E760 5030 080E                00001788   955+         VST   V22,V1O16         save v1 output
+000017B2  07FB                                     956+         BR    R11               return
+000017B4                                           957+RE16     DC    0F                xl16 expected result
+000017B4                                           958+         DROP  R5
+000017B4  FFEAFFEA FFEAFFEA                        959          DC    8HL2'-22'                                result
+000017BC  FFEAFFEA FFEAFFEA
+                                                   960
+                                                   961          VRI_A VREPI,-302,1
+000017C8                                           962+         DS    0FD
+000017C8                      000017C8             963+         USING *,R5              base for test data and test routine
+000017C8  00001810                                 964+T17      DC    A(X17)            address of test routine
+000017CC  0011                                     965+         DC    H'17'             test number
+000017CE  00                                       966+         DC    X'00'
+000017CF  01                                       967+         DC    HL1'1'            m3 field
+000017D0  FED2                                     968+         DC    HL2'-302'         i2 used
+000017D2  E5D9C5D7 C9404040                        969+         DC    CL8'VREPI'        instruction name
+000017DC  00001834                                 970+         DC    A(RE17+16)        address of v2 source
+000017E0  00001844                                 971+         DC    A(RE17+32)        address of v3 source
+000017E4  00000010                                 972+         DC    A(16)             result length
+000017E8  00001824                                 973+REA17    DC    A(RE17)           result address
+000017F0  00000000 00000000                        974+         DS    FD                gap
+000017F8  00000000 00000000                        975+V1O17    DS    XL16              V1 output
+00001800  00000000 00000000
+00001808  00000000 00000000                        976+         DS    FD                gap
+                                                   977+*
+00001810                                           978+X17      DS    0F
+00001810  E760 8EA4 0806                000010A4   979+         VL    V22,V1FUDGE
+00001816  E760 FED2 1845                           980+         VREPI V22,-302,1     test instruction  (dest is a source)
+0000181C  E760 5030 080E                000017F8   981+         VST   V22,V1O17         save v1 output
+00001822  07FB                                     982+         BR    R11               return
+00001824                                           983+RE17     DC    0F                xl16 expected result
+00001824                                           984+         DROP  R5
+00001824  FED2FED2 FED2FED2                        985          DC    8HL2'-302'                               result
+0000182C  FED2FED2 FED2FED2
+                                                   986
+                                                   987          VRI_A VREPI,-720,1
+00001838                                           988+         DS    0FD
+00001838                      00001838             989+         USING *,R5              base for test data and test routine
+00001838  00001880                                 990+T18      DC    A(X18)            address of test routine
+0000183C  0012                                     991+         DC    H'18'             test number
+0000183E  00                                       992+         DC    X'00'
+0000183F  01                                       993+         DC    HL1'1'            m3 field
+00001840  FD30                                     994+         DC    HL2'-720'         i2 used
+00001842  E5D9C5D7 C9404040                        995+         DC    CL8'VREPI'        instruction name
+0000184C  000018A4                                 996+         DC    A(RE18+16)        address of v2 source
+00001850  000018B4                                 997+         DC    A(RE18+32)        address of v3 source
+00001854  00000010                                 998+         DC    A(16)             result length
+00001858  00001894                                 999+REA18    DC    A(RE18)           result address
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001860  00000000 00000000                       1000+         DS    FD                gap
+00001868  00000000 00000000                       1001+V1O18    DS    XL16              V1 output
+00001870  00000000 00000000
+00001878  00000000 00000000                       1002+         DS    FD                gap
+                                                  1003+*
+00001880                                          1004+X18      DS    0F
+00001880  E760 8EA4 0806                000010A4  1005+         VL    V22,V1FUDGE
+00001886  E760 FD30 1845                          1006+         VREPI V22,-720,1     test instruction  (dest is a source)
+0000188C  E760 5030 080E                00001868  1007+         VST   V22,V1O18         save v1 output
+00001892  07FB                                    1008+         BR    R11               return
+00001894                                          1009+RE18     DC    0F                xl16 expected result
+00001894                                          1010+         DROP  R5
+00001894  FD30FD30 FD30FD30                       1011          DC    8HL2'-720'                               result
+0000189C  FD30FD30 FD30FD30
+                                                  1012
+                                                  1013          VRI_A VREPI,-31456,1
+000018A8                                          1014+         DS    0FD
+000018A8                      000018A8            1015+         USING *,R5              base for test data and test routine
+000018A8  000018F0                                1016+T19      DC    A(X19)            address of test routine
+000018AC  0013                                    1017+         DC    H'19'             test number
+000018AE  00                                      1018+         DC    X'00'
+000018AF  01                                      1019+         DC    HL1'1'            m3 field
+000018B0  8520                                    1020+         DC    HL2'-31456'       i2 used
+000018B2  E5D9C5D7 C9404040                       1021+         DC    CL8'VREPI'        instruction name
+000018BC  00001914                                1022+         DC    A(RE19+16)        address of v2 source
+000018C0  00001924                                1023+         DC    A(RE19+32)        address of v3 source
+000018C4  00000010                                1024+         DC    A(16)             result length
+000018C8  00001904                                1025+REA19    DC    A(RE19)           result address
+000018D0  00000000 00000000                       1026+         DS    FD                gap
+000018D8  00000000 00000000                       1027+V1O19    DS    XL16              V1 output
+000018E0  00000000 00000000
+000018E8  00000000 00000000                       1028+         DS    FD                gap
+                                                  1029+*
+000018F0                                          1030+X19      DS    0F
+000018F0  E760 8EA4 0806                000010A4  1031+         VL    V22,V1FUDGE
+000018F6  E760 8520 1845                          1032+         VREPI V22,-31456,1   test instruction  (dest is a source)
+000018FC  E760 5030 080E                000018D8  1033+         VST   V22,V1O19         save v1 output
+00001902  07FB                                    1034+         BR    R11               return
+00001904                                          1035+RE19     DC    0F                xl16 expected result
+00001904                                          1036+         DROP  R5
+00001904  85208520 85208520                       1037          DC    8HL2'-31456'                             result
+0000190C  85208520 85208520
+                                                  1038
+                                                  1039 *Word
+                                                  1040          VRI_A VREPI,0,2
+00001918                                          1041+         DS    0FD
+00001918                      00001918            1042+         USING *,R5              base for test data and test routine
+00001918  00001960                                1043+T20      DC    A(X20)            address of test routine
+0000191C  0014                                    1044+         DC    H'20'             test number
+0000191E  00                                      1045+         DC    X'00'
+0000191F  02                                      1046+         DC    HL1'2'            m3 field
+00001920  0000                                    1047+         DC    HL2'0'            i2 used
+00001922  E5D9C5D7 C9404040                       1048+         DC    CL8'VREPI'        instruction name
+0000192C  00001984                                1049+         DC    A(RE20+16)        address of v2 source
+00001930  00001994                                1050+         DC    A(RE20+32)        address of v3 source
+00001934  00000010                                1051+         DC    A(16)             result length
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001938  00001974                                1052+REA20    DC    A(RE20)           result address
+00001940  00000000 00000000                       1053+         DS    FD                gap
+00001948  00000000 00000000                       1054+V1O20    DS    XL16              V1 output
+00001950  00000000 00000000
+00001958  00000000 00000000                       1055+         DS    FD                gap
+                                                  1056+*
+00001960                                          1057+X20      DS    0F
+00001960  E760 8EA4 0806                000010A4  1058+         VL    V22,V1FUDGE
+00001966  E760 0000 2845                          1059+         VREPI V22,0,2        test instruction  (dest is a source)
+0000196C  E760 5030 080E                00001948  1060+         VST   V22,V1O20         save v1 output
+00001972  07FB                                    1061+         BR    R11               return
+00001974                                          1062+RE20     DC    0F                xl16 expected result
+00001974                                          1063+         DROP  R5
+00001974  00000000 00000000                       1064          DC    4FL4'0'                                  result
+0000197C  00000000 00000000
+                                                  1065
+                                                  1066          VRI_A VREPI,1,2
+00001988                                          1067+         DS    0FD
+00001988                      00001988            1068+         USING *,R5              base for test data and test routine
+00001988  000019D0                                1069+T21      DC    A(X21)            address of test routine
+0000198C  0015                                    1070+         DC    H'21'             test number
+0000198E  00                                      1071+         DC    X'00'
+0000198F  02                                      1072+         DC    HL1'2'            m3 field
+00001990  0001                                    1073+         DC    HL2'1'            i2 used
+00001992  E5D9C5D7 C9404040                       1074+         DC    CL8'VREPI'        instruction name
+0000199C  000019F4                                1075+         DC    A(RE21+16)        address of v2 source
+000019A0  00001A04                                1076+         DC    A(RE21+32)        address of v3 source
+000019A4  00000010                                1077+         DC    A(16)             result length
+000019A8  000019E4                                1078+REA21    DC    A(RE21)           result address
+000019B0  00000000 00000000                       1079+         DS    FD                gap
+000019B8  00000000 00000000                       1080+V1O21    DS    XL16              V1 output
+000019C0  00000000 00000000
+000019C8  00000000 00000000                       1081+         DS    FD                gap
+                                                  1082+*
+000019D0                                          1083+X21      DS    0F
+000019D0  E760 8EA4 0806                000010A4  1084+         VL    V22,V1FUDGE
+000019D6  E760 0001 2845                          1085+         VREPI V22,1,2        test instruction  (dest is a source)
+000019DC  E760 5030 080E                000019B8  1086+         VST   V22,V1O21         save v1 output
+000019E2  07FB                                    1087+         BR    R11               return
+000019E4                                          1088+RE21     DC    0F                xl16 expected result
+000019E4                                          1089+         DROP  R5
+000019E4  00000001 00000001                       1090          DC    4FL4'1'                                  result
+000019EC  00000001 00000001
+                                                  1091
+                                                  1092          VRI_A VREPI,2,2
+000019F8                                          1093+         DS    0FD
+000019F8                      000019F8            1094+         USING *,R5              base for test data and test routine
+000019F8  00001A40                                1095+T22      DC    A(X22)            address of test routine
+000019FC  0016                                    1096+         DC    H'22'             test number
+000019FE  00                                      1097+         DC    X'00'
+000019FF  02                                      1098+         DC    HL1'2'            m3 field
+00001A00  0002                                    1099+         DC    HL2'2'            i2 used
+00001A02  E5D9C5D7 C9404040                       1100+         DC    CL8'VREPI'        instruction name
+00001A0C  00001A64                                1101+         DC    A(RE22+16)        address of v2 source
+00001A10  00001A74                                1102+         DC    A(RE22+32)        address of v3 source
+00001A14  00000010                                1103+         DC    A(16)             result length
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001A18  00001A54                                1104+REA22    DC    A(RE22)           result address
+00001A20  00000000 00000000                       1105+         DS    FD                gap
+00001A28  00000000 00000000                       1106+V1O22    DS    XL16              V1 output
+00001A30  00000000 00000000
+00001A38  00000000 00000000                       1107+         DS    FD                gap
+                                                  1108+*
+00001A40                                          1109+X22      DS    0F
+00001A40  E760 8EA4 0806                000010A4  1110+         VL    V22,V1FUDGE
+00001A46  E760 0002 2845                          1111+         VREPI V22,2,2        test instruction  (dest is a source)
+00001A4C  E760 5030 080E                00001A28  1112+         VST   V22,V1O22         save v1 output
+00001A52  07FB                                    1113+         BR    R11               return
+00001A54                                          1114+RE22     DC    0F                xl16 expected result
+00001A54                                          1115+         DROP  R5
+00001A54  00000002 00000002                       1116          DC    4FL4'2'                                  result
+00001A5C  00000002 00000002
+                                                  1117
+                                                  1118          VRI_A VREPI,99,2
+00001A68                                          1119+         DS    0FD
+00001A68                      00001A68            1120+         USING *,R5              base for test data and test routine
+00001A68  00001AB0                                1121+T23      DC    A(X23)            address of test routine
+00001A6C  0017                                    1122+         DC    H'23'             test number
+00001A6E  00                                      1123+         DC    X'00'
+00001A6F  02                                      1124+         DC    HL1'2'            m3 field
+00001A70  0063                                    1125+         DC    HL2'99'           i2 used
+00001A72  E5D9C5D7 C9404040                       1126+         DC    CL8'VREPI'        instruction name
+00001A7C  00001AD4                                1127+         DC    A(RE23+16)        address of v2 source
+00001A80  00001AE4                                1128+         DC    A(RE23+32)        address of v3 source
+00001A84  00000010                                1129+         DC    A(16)             result length
+00001A88  00001AC4                                1130+REA23    DC    A(RE23)           result address
+00001A90  00000000 00000000                       1131+         DS    FD                gap
+00001A98  00000000 00000000                       1132+V1O23    DS    XL16              V1 output
+00001AA0  00000000 00000000
+00001AA8  00000000 00000000                       1133+         DS    FD                gap
+                                                  1134+*
+00001AB0                                          1135+X23      DS    0F
+00001AB0  E760 8EA4 0806                000010A4  1136+         VL    V22,V1FUDGE
+00001AB6  E760 0063 2845                          1137+         VREPI V22,99,2       test instruction  (dest is a source)
+00001ABC  E760 5030 080E                00001A98  1138+         VST   V22,V1O23         save v1 output
+00001AC2  07FB                                    1139+         BR    R11               return
+00001AC4                                          1140+RE23     DC    0F                xl16 expected result
+00001AC4                                          1141+         DROP  R5
+00001AC4  00000063 00000063                       1142          DC    4FL4'99'                                 result
+00001ACC  00000063 00000063
+                                                  1143
+                                                  1144          VRI_A VREPI,9999,2
+00001AD8                                          1145+         DS    0FD
+00001AD8                      00001AD8            1146+         USING *,R5              base for test data and test routine
+00001AD8  00001B20                                1147+T24      DC    A(X24)            address of test routine
+00001ADC  0018                                    1148+         DC    H'24'             test number
+00001ADE  00                                      1149+         DC    X'00'
+00001ADF  02                                      1150+         DC    HL1'2'            m3 field
+00001AE0  270F                                    1151+         DC    HL2'9999'         i2 used
+00001AE2  E5D9C5D7 C9404040                       1152+         DC    CL8'VREPI'        instruction name
+00001AEC  00001B44                                1153+         DC    A(RE24+16)        address of v2 source
+00001AF0  00001B54                                1154+         DC    A(RE24+32)        address of v3 source
+00001AF4  00000010                                1155+         DC    A(16)             result length
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001AF8  00001B34                                1156+REA24    DC    A(RE24)           result address
+00001B00  00000000 00000000                       1157+         DS    FD                gap
+00001B08  00000000 00000000                       1158+V1O24    DS    XL16              V1 output
+00001B10  00000000 00000000
+00001B18  00000000 00000000                       1159+         DS    FD                gap
+                                                  1160+*
+00001B20                                          1161+X24      DS    0F
+00001B20  E760 8EA4 0806                000010A4  1162+         VL    V22,V1FUDGE
+00001B26  E760 270F 2845                          1163+         VREPI V22,9999,2     test instruction  (dest is a source)
+00001B2C  E760 5030 080E                00001B08  1164+         VST   V22,V1O24         save v1 output
+00001B32  07FB                                    1165+         BR    R11               return
+00001B34                                          1166+RE24     DC    0F                xl16 expected result
+00001B34                                          1167+         DROP  R5
+00001B34  0000270F 0000270F                       1168          DC    4FL4'9999'                               result
+00001B3C  0000270F 0000270F
+                                                  1169
+                                                  1170          VRI_A VREPI,-1,2
+00001B48                                          1171+         DS    0FD
+00001B48                      00001B48            1172+         USING *,R5              base for test data and test routine
+00001B48  00001B90                                1173+T25      DC    A(X25)            address of test routine
+00001B4C  0019                                    1174+         DC    H'25'             test number
+00001B4E  00                                      1175+         DC    X'00'
+00001B4F  02                                      1176+         DC    HL1'2'            m3 field
+00001B50  FFFF                                    1177+         DC    HL2'-1'           i2 used
+00001B52  E5D9C5D7 C9404040                       1178+         DC    CL8'VREPI'        instruction name
+00001B5C  00001BB4                                1179+         DC    A(RE25+16)        address of v2 source
+00001B60  00001BC4                                1180+         DC    A(RE25+32)        address of v3 source
+00001B64  00000010                                1181+         DC    A(16)             result length
+00001B68  00001BA4                                1182+REA25    DC    A(RE25)           result address
+00001B70  00000000 00000000                       1183+         DS    FD                gap
+00001B78  00000000 00000000                       1184+V1O25    DS    XL16              V1 output
+00001B80  00000000 00000000
+00001B88  00000000 00000000                       1185+         DS    FD                gap
+                                                  1186+*
+00001B90                                          1187+X25      DS    0F
+00001B90  E760 8EA4 0806                000010A4  1188+         VL    V22,V1FUDGE
+00001B96  E760 FFFF 2845                          1189+         VREPI V22,-1,2       test instruction  (dest is a source)
+00001B9C  E760 5030 080E                00001B78  1190+         VST   V22,V1O25         save v1 output
+00001BA2  07FB                                    1191+         BR    R11               return
+00001BA4                                          1192+RE25     DC    0F                xl16 expected result
+00001BA4                                          1193+         DROP  R5
+00001BA4  FFFFFFFF FFFFFFFF                       1194          DC    4FL4'-1'                                 result
+00001BAC  FFFFFFFF FFFFFFFF
+                                                  1195
+                                                  1196          VRI_A VREPI,-2,2
+00001BB8                                          1197+         DS    0FD
+00001BB8                      00001BB8            1198+         USING *,R5              base for test data and test routine
+00001BB8  00001C00                                1199+T26      DC    A(X26)            address of test routine
+00001BBC  001A                                    1200+         DC    H'26'             test number
+00001BBE  00                                      1201+         DC    X'00'
+00001BBF  02                                      1202+         DC    HL1'2'            m3 field
+00001BC0  FFFE                                    1203+         DC    HL2'-2'           i2 used
+00001BC2  E5D9C5D7 C9404040                       1204+         DC    CL8'VREPI'        instruction name
+00001BCC  00001C24                                1205+         DC    A(RE26+16)        address of v2 source
+00001BD0  00001C34                                1206+         DC    A(RE26+32)        address of v3 source
+00001BD4  00000010                                1207+         DC    A(16)             result length
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001BD8  00001C14                                1208+REA26    DC    A(RE26)           result address
+00001BE0  00000000 00000000                       1209+         DS    FD                gap
+00001BE8  00000000 00000000                       1210+V1O26    DS    XL16              V1 output
+00001BF0  00000000 00000000
+00001BF8  00000000 00000000                       1211+         DS    FD                gap
+                                                  1212+*
+00001C00                                          1213+X26      DS    0F
+00001C00  E760 8EA4 0806                000010A4  1214+         VL    V22,V1FUDGE
+00001C06  E760 FFFE 2845                          1215+         VREPI V22,-2,2       test instruction  (dest is a source)
+00001C0C  E760 5030 080E                00001BE8  1216+         VST   V22,V1O26         save v1 output
+00001C12  07FB                                    1217+         BR    R11               return
+00001C14                                          1218+RE26     DC    0F                xl16 expected result
+00001C14                                          1219+         DROP  R5
+00001C14  FFFFFFFE FFFFFFFE                       1220          DC    4FL4'-2'                                 result
+00001C1C  FFFFFFFE FFFFFFFE
+                                                  1221
+                                                  1222          VRI_A VREPI,-720,2
+00001C28                                          1223+         DS    0FD
+00001C28                      00001C28            1224+         USING *,R5              base for test data and test routine
+00001C28  00001C70                                1225+T27      DC    A(X27)            address of test routine
+00001C2C  001B                                    1226+         DC    H'27'             test number
+00001C2E  00                                      1227+         DC    X'00'
+00001C2F  02                                      1228+         DC    HL1'2'            m3 field
+00001C30  FD30                                    1229+         DC    HL2'-720'         i2 used
+00001C32  E5D9C5D7 C9404040                       1230+         DC    CL8'VREPI'        instruction name
+00001C3C  00001C94                                1231+         DC    A(RE27+16)        address of v2 source
+00001C40  00001CA4                                1232+         DC    A(RE27+32)        address of v3 source
+00001C44  00000010                                1233+         DC    A(16)             result length
+00001C48  00001C84                                1234+REA27    DC    A(RE27)           result address
+00001C50  00000000 00000000                       1235+         DS    FD                gap
+00001C58  00000000 00000000                       1236+V1O27    DS    XL16              V1 output
+00001C60  00000000 00000000
+00001C68  00000000 00000000                       1237+         DS    FD                gap
+                                                  1238+*
+00001C70                                          1239+X27      DS    0F
+00001C70  E760 8EA4 0806                000010A4  1240+         VL    V22,V1FUDGE
+00001C76  E760 FD30 2845                          1241+         VREPI V22,-720,2     test instruction  (dest is a source)
+00001C7C  E760 5030 080E                00001C58  1242+         VST   V22,V1O27         save v1 output
+00001C82  07FB                                    1243+         BR    R11               return
+00001C84                                          1244+RE27     DC    0F                xl16 expected result
+00001C84                                          1245+         DROP  R5
+00001C84  FFFFFD30 FFFFFD30                       1246          DC    4FL4'-720'                               result
+00001C8C  FFFFFD30 FFFFFD30
+                                                  1247
+                                                  1248          VRI_A VREPI,-31456,2
+00001C98                                          1249+         DS    0FD
+00001C98                      00001C98            1250+         USING *,R5              base for test data and test routine
+00001C98  00001CE0                                1251+T28      DC    A(X28)            address of test routine
+00001C9C  001C                                    1252+         DC    H'28'             test number
+00001C9E  00                                      1253+         DC    X'00'
+00001C9F  02                                      1254+         DC    HL1'2'            m3 field
+00001CA0  8520                                    1255+         DC    HL2'-31456'       i2 used
+00001CA2  E5D9C5D7 C9404040                       1256+         DC    CL8'VREPI'        instruction name
+00001CAC  00001D04                                1257+         DC    A(RE28+16)        address of v2 source
+00001CB0  00001D14                                1258+         DC    A(RE28+32)        address of v3 source
+00001CB4  00000010                                1259+         DC    A(16)             result length
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    29
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001CB8  00001CF4                                1260+REA28    DC    A(RE28)           result address
+00001CC0  00000000 00000000                       1261+         DS    FD                gap
+00001CC8  00000000 00000000                       1262+V1O28    DS    XL16              V1 output
+00001CD0  00000000 00000000
+00001CD8  00000000 00000000                       1263+         DS    FD                gap
+                                                  1264+*
+00001CE0                                          1265+X28      DS    0F
+00001CE0  E760 8EA4 0806                000010A4  1266+         VL    V22,V1FUDGE
+00001CE6  E760 8520 2845                          1267+         VREPI V22,-31456,2   test instruction  (dest is a source)
+00001CEC  E760 5030 080E                00001CC8  1268+         VST   V22,V1O28         save v1 output
+00001CF2  07FB                                    1269+         BR    R11               return
+00001CF4                                          1270+RE28     DC    0F                xl16 expected result
+00001CF4                                          1271+         DROP  R5
+00001CF4  FFFF8520 FFFF8520                       1272          DC    4FL4'-31456'                             result
+00001CFC  FFFF8520 FFFF8520
+                                                  1273
+                                                  1274 *Doubleword
+                                                  1275          VRI_A VREPI,0,3
+00001D08                                          1276+         DS    0FD
+00001D08                      00001D08            1277+         USING *,R5              base for test data and test routine
+00001D08  00001D50                                1278+T29      DC    A(X29)            address of test routine
+00001D0C  001D                                    1279+         DC    H'29'             test number
+00001D0E  00                                      1280+         DC    X'00'
+00001D0F  03                                      1281+         DC    HL1'3'            m3 field
+00001D10  0000                                    1282+         DC    HL2'0'            i2 used
+00001D12  E5D9C5D7 C9404040                       1283+         DC    CL8'VREPI'        instruction name
+00001D1C  00001D74                                1284+         DC    A(RE29+16)        address of v2 source
+00001D20  00001D84                                1285+         DC    A(RE29+32)        address of v3 source
+00001D24  00000010                                1286+         DC    A(16)             result length
+00001D28  00001D64                                1287+REA29    DC    A(RE29)           result address
+00001D30  00000000 00000000                       1288+         DS    FD                gap
+00001D38  00000000 00000000                       1289+V1O29    DS    XL16              V1 output
+00001D40  00000000 00000000
+00001D48  00000000 00000000                       1290+         DS    FD                gap
+                                                  1291+*
+00001D50                                          1292+X29      DS    0F
+00001D50  E760 8EA4 0806                000010A4  1293+         VL    V22,V1FUDGE
+00001D56  E760 0000 3845                          1294+         VREPI V22,0,3        test instruction  (dest is a source)
+00001D5C  E760 5030 080E                00001D38  1295+         VST   V22,V1O29         save v1 output
+00001D62  07FB                                    1296+         BR    R11               return
+00001D64                                          1297+RE29     DC    0F                xl16 expected result
+00001D64                                          1298+         DROP  R5
+00001D64  00000000 00000000                       1299          DC    2DL8'0'                                  result
+00001D6C  00000000 00000000
+                                                  1300
+                                                  1301          VRI_A VREPI,1,3
+00001D78                                          1302+         DS    0FD
+00001D78                      00001D78            1303+         USING *,R5              base for test data and test routine
+00001D78  00001DC0                                1304+T30      DC    A(X30)            address of test routine
+00001D7C  001E                                    1305+         DC    H'30'             test number
+00001D7E  00                                      1306+         DC    X'00'
+00001D7F  03                                      1307+         DC    HL1'3'            m3 field
+00001D80  0001                                    1308+         DC    HL2'1'            i2 used
+00001D82  E5D9C5D7 C9404040                       1309+         DC    CL8'VREPI'        instruction name
+00001D8C  00001DE4                                1310+         DC    A(RE30+16)        address of v2 source
+00001D90  00001DF4                                1311+         DC    A(RE30+32)        address of v3 source
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    30
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001D94  00000010                                1312+         DC    A(16)             result length
+00001D98  00001DD4                                1313+REA30    DC    A(RE30)           result address
+00001DA0  00000000 00000000                       1314+         DS    FD                gap
+00001DA8  00000000 00000000                       1315+V1O30    DS    XL16              V1 output
+00001DB0  00000000 00000000
+00001DB8  00000000 00000000                       1316+         DS    FD                gap
+                                                  1317+*
+00001DC0                                          1318+X30      DS    0F
+00001DC0  E760 8EA4 0806                000010A4  1319+         VL    V22,V1FUDGE
+00001DC6  E760 0001 3845                          1320+         VREPI V22,1,3        test instruction  (dest is a source)
+00001DCC  E760 5030 080E                00001DA8  1321+         VST   V22,V1O30         save v1 output
+00001DD2  07FB                                    1322+         BR    R11               return
+00001DD4                                          1323+RE30     DC    0F                xl16 expected result
+00001DD4                                          1324+         DROP  R5
+00001DD4  00000000 00000001                       1325          DC    2DL8'1'                                  result
+00001DDC  00000000 00000001
+                                                  1326
+                                                  1327          VRI_A VREPI,2,3
+00001DE8                                          1328+         DS    0FD
+00001DE8                      00001DE8            1329+         USING *,R5              base for test data and test routine
+00001DE8  00001E30                                1330+T31      DC    A(X31)            address of test routine
+00001DEC  001F                                    1331+         DC    H'31'             test number
+00001DEE  00                                      1332+         DC    X'00'
+00001DEF  03                                      1333+         DC    HL1'3'            m3 field
+00001DF0  0002                                    1334+         DC    HL2'2'            i2 used
+00001DF2  E5D9C5D7 C9404040                       1335+         DC    CL8'VREPI'        instruction name
+00001DFC  00001E54                                1336+         DC    A(RE31+16)        address of v2 source
+00001E00  00001E64                                1337+         DC    A(RE31+32)        address of v3 source
+00001E04  00000010                                1338+         DC    A(16)             result length
+00001E08  00001E44                                1339+REA31    DC    A(RE31)           result address
+00001E10  00000000 00000000                       1340+         DS    FD                gap
+00001E18  00000000 00000000                       1341+V1O31    DS    XL16              V1 output
+00001E20  00000000 00000000
+00001E28  00000000 00000000                       1342+         DS    FD                gap
+                                                  1343+*
+00001E30                                          1344+X31      DS    0F
+00001E30  E760 8EA4 0806                000010A4  1345+         VL    V22,V1FUDGE
+00001E36  E760 0002 3845                          1346+         VREPI V22,2,3        test instruction  (dest is a source)
+00001E3C  E760 5030 080E                00001E18  1347+         VST   V22,V1O31         save v1 output
+00001E42  07FB                                    1348+         BR    R11               return
+00001E44                                          1349+RE31     DC    0F                xl16 expected result
+00001E44                                          1350+         DROP  R5
+00001E44  00000000 00000002                       1351          DC    2DL8'2'                                  result
+00001E4C  00000000 00000002
+                                                  1352
+                                                  1353          VRI_A VREPI,99,3
+00001E58                                          1354+         DS    0FD
+00001E58                      00001E58            1355+         USING *,R5              base for test data and test routine
+00001E58  00001EA0                                1356+T32      DC    A(X32)            address of test routine
+00001E5C  0020                                    1357+         DC    H'32'             test number
+00001E5E  00                                      1358+         DC    X'00'
+00001E5F  03                                      1359+         DC    HL1'3'            m3 field
+00001E60  0063                                    1360+         DC    HL2'99'           i2 used
+00001E62  E5D9C5D7 C9404040                       1361+         DC    CL8'VREPI'        instruction name
+00001E6C  00001EC4                                1362+         DC    A(RE32+16)        address of v2 source
+00001E70  00001ED4                                1363+         DC    A(RE32+32)        address of v3 source
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    31
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001E74  00000010                                1364+         DC    A(16)             result length
+00001E78  00001EB4                                1365+REA32    DC    A(RE32)           result address
+00001E80  00000000 00000000                       1366+         DS    FD                gap
+00001E88  00000000 00000000                       1367+V1O32    DS    XL16              V1 output
+00001E90  00000000 00000000
+00001E98  00000000 00000000                       1368+         DS    FD                gap
+                                                  1369+*
+00001EA0                                          1370+X32      DS    0F
+00001EA0  E760 8EA4 0806                000010A4  1371+         VL    V22,V1FUDGE
+00001EA6  E760 0063 3845                          1372+         VREPI V22,99,3       test instruction  (dest is a source)
+00001EAC  E760 5030 080E                00001E88  1373+         VST   V22,V1O32         save v1 output
+00001EB2  07FB                                    1374+         BR    R11               return
+00001EB4                                          1375+RE32     DC    0F                xl16 expected result
+00001EB4                                          1376+         DROP  R5
+00001EB4  00000000 00000063                       1377          DC    2DL8'99'                                 result
+00001EBC  00000000 00000063
+                                                  1378
+                                                  1379          VRI_A VREPI,9999,3
+00001EC8                                          1380+         DS    0FD
+00001EC8                      00001EC8            1381+         USING *,R5              base for test data and test routine
+00001EC8  00001F10                                1382+T33      DC    A(X33)            address of test routine
+00001ECC  0021                                    1383+         DC    H'33'             test number
+00001ECE  00                                      1384+         DC    X'00'
+00001ECF  03                                      1385+         DC    HL1'3'            m3 field
+00001ED0  270F                                    1386+         DC    HL2'9999'         i2 used
+00001ED2  E5D9C5D7 C9404040                       1387+         DC    CL8'VREPI'        instruction name
+00001EDC  00001F34                                1388+         DC    A(RE33+16)        address of v2 source
+00001EE0  00001F44                                1389+         DC    A(RE33+32)        address of v3 source
+00001EE4  00000010                                1390+         DC    A(16)             result length
+00001EE8  00001F24                                1391+REA33    DC    A(RE33)           result address
+00001EF0  00000000 00000000                       1392+         DS    FD                gap
+00001EF8  00000000 00000000                       1393+V1O33    DS    XL16              V1 output
+00001F00  00000000 00000000
+00001F08  00000000 00000000                       1394+         DS    FD                gap
+                                                  1395+*
+00001F10                                          1396+X33      DS    0F
+00001F10  E760 8EA4 0806                000010A4  1397+         VL    V22,V1FUDGE
+00001F16  E760 270F 3845                          1398+         VREPI V22,9999,3     test instruction  (dest is a source)
+00001F1C  E760 5030 080E                00001EF8  1399+         VST   V22,V1O33         save v1 output
+00001F22  07FB                                    1400+         BR    R11               return
+00001F24                                          1401+RE33     DC    0F                xl16 expected result
+00001F24                                          1402+         DROP  R5
+00001F24  00000000 0000270F                       1403          DC    2DL8'9999'                               result
+00001F2C  00000000 0000270F
+                                                  1404
+                                                  1405          VRI_A VREPI,-1,3
+00001F38                                          1406+         DS    0FD
+00001F38                      00001F38            1407+         USING *,R5              base for test data and test routine
+00001F38  00001F80                                1408+T34      DC    A(X34)            address of test routine
+00001F3C  0022                                    1409+         DC    H'34'             test number
+00001F3E  00                                      1410+         DC    X'00'
+00001F3F  03                                      1411+         DC    HL1'3'            m3 field
+00001F40  FFFF                                    1412+         DC    HL2'-1'           i2 used
+00001F42  E5D9C5D7 C9404040                       1413+         DC    CL8'VREPI'        instruction name
+00001F4C  00001FA4                                1414+         DC    A(RE34+16)        address of v2 source
+00001F50  00001FB4                                1415+         DC    A(RE34+32)        address of v3 source
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    32
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001F54  00000010                                1416+         DC    A(16)             result length
+00001F58  00001F94                                1417+REA34    DC    A(RE34)           result address
+00001F60  00000000 00000000                       1418+         DS    FD                gap
+00001F68  00000000 00000000                       1419+V1O34    DS    XL16              V1 output
+00001F70  00000000 00000000
+00001F78  00000000 00000000                       1420+         DS    FD                gap
+                                                  1421+*
+00001F80                                          1422+X34      DS    0F
+00001F80  E760 8EA4 0806                000010A4  1423+         VL    V22,V1FUDGE
+00001F86  E760 FFFF 3845                          1424+         VREPI V22,-1,3       test instruction  (dest is a source)
+00001F8C  E760 5030 080E                00001F68  1425+         VST   V22,V1O34         save v1 output
+00001F92  07FB                                    1426+         BR    R11               return
+00001F94                                          1427+RE34     DC    0F                xl16 expected result
+00001F94                                          1428+         DROP  R5
+00001F94  FFFFFFFF FFFFFFFF                       1429          DC    2DL8'-1'                                  result
+00001F9C  FFFFFFFF FFFFFFFF
+                                                  1430
+                                                  1431          VRI_A VREPI,-2,3
+00001FA8                                          1432+         DS    0FD
+00001FA8                      00001FA8            1433+         USING *,R5              base for test data and test routine
+00001FA8  00001FF0                                1434+T35      DC    A(X35)            address of test routine
+00001FAC  0023                                    1435+         DC    H'35'             test number
+00001FAE  00                                      1436+         DC    X'00'
+00001FAF  03                                      1437+         DC    HL1'3'            m3 field
+00001FB0  FFFE                                    1438+         DC    HL2'-2'           i2 used
+00001FB2  E5D9C5D7 C9404040                       1439+         DC    CL8'VREPI'        instruction name
+00001FBC  00002014                                1440+         DC    A(RE35+16)        address of v2 source
+00001FC0  00002024                                1441+         DC    A(RE35+32)        address of v3 source
+00001FC4  00000010                                1442+         DC    A(16)             result length
+00001FC8  00002004                                1443+REA35    DC    A(RE35)           result address
+00001FD0  00000000 00000000                       1444+         DS    FD                gap
+00001FD8  00000000 00000000                       1445+V1O35    DS    XL16              V1 output
+00001FE0  00000000 00000000
+00001FE8  00000000 00000000                       1446+         DS    FD                gap
+                                                  1447+*
+00001FF0                                          1448+X35      DS    0F
+00001FF0  E760 8EA4 0806                000010A4  1449+         VL    V22,V1FUDGE
+00001FF6  E760 FFFE 3845                          1450+         VREPI V22,-2,3       test instruction  (dest is a source)
+00001FFC  E760 5030 080E                00001FD8  1451+         VST   V22,V1O35         save v1 output
+00002002  07FB                                    1452+         BR    R11               return
+00002004                                          1453+RE35     DC    0F                xl16 expected result
+00002004                                          1454+         DROP  R5
+00002004  FFFFFFFF FFFFFFFE                       1455          DC    2DL8'-2'                                  result
+0000200C  FFFFFFFF FFFFFFFE
+                                                  1456
+                                                  1457          VRI_A VREPI,-720,3
+00002018                                          1458+         DS    0FD
+00002018                      00002018            1459+         USING *,R5              base for test data and test routine
+00002018  00002060                                1460+T36      DC    A(X36)            address of test routine
+0000201C  0024                                    1461+         DC    H'36'             test number
+0000201E  00                                      1462+         DC    X'00'
+0000201F  03                                      1463+         DC    HL1'3'            m3 field
+00002020  FD30                                    1464+         DC    HL2'-720'         i2 used
+00002022  E5D9C5D7 C9404040                       1465+         DC    CL8'VREPI'        instruction name
+0000202C  00002084                                1466+         DC    A(RE36+16)        address of v2 source
+00002030  00002094                                1467+         DC    A(RE36+32)        address of v3 source
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    33
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00002034  00000010                                1468+         DC    A(16)             result length
+00002038  00002074                                1469+REA36    DC    A(RE36)           result address
+00002040  00000000 00000000                       1470+         DS    FD                gap
+00002048  00000000 00000000                       1471+V1O36    DS    XL16              V1 output
+00002050  00000000 00000000
+00002058  00000000 00000000                       1472+         DS    FD                gap
+                                                  1473+*
+00002060                                          1474+X36      DS    0F
+00002060  E760 8EA4 0806                000010A4  1475+         VL    V22,V1FUDGE
+00002066  E760 FD30 3845                          1476+         VREPI V22,-720,3     test instruction  (dest is a source)
+0000206C  E760 5030 080E                00002048  1477+         VST   V22,V1O36         save v1 output
+00002072  07FB                                    1478+         BR    R11               return
+00002074                                          1479+RE36     DC    0F                xl16 expected result
+00002074                                          1480+         DROP  R5
+00002074  FFFFFFFF FFFFFD30                       1481          DC    2DL8'-720'                                result
+0000207C  FFFFFFFF FFFFFD30
+                                                  1482
+                                                  1483          VRI_A VREPI,-31456,3
+00002088                                          1484+         DS    0FD
+00002088                      00002088            1485+         USING *,R5              base for test data and test routine
+00002088  000020D0                                1486+T37      DC    A(X37)            address of test routine
+0000208C  0025                                    1487+         DC    H'37'             test number
+0000208E  00                                      1488+         DC    X'00'
+0000208F  03                                      1489+         DC    HL1'3'            m3 field
+00002090  8520                                    1490+         DC    HL2'-31456'       i2 used
+00002092  E5D9C5D7 C9404040                       1491+         DC    CL8'VREPI'        instruction name
+0000209C  000020F4                                1492+         DC    A(RE37+16)        address of v2 source
+000020A0  00002104                                1493+         DC    A(RE37+32)        address of v3 source
+000020A4  00000010                                1494+         DC    A(16)             result length
+000020A8  000020E4                                1495+REA37    DC    A(RE37)           result address
+000020B0  00000000 00000000                       1496+         DS    FD                gap
+000020B8  00000000 00000000                       1497+V1O37    DS    XL16              V1 output
+000020C0  00000000 00000000
+000020C8  00000000 00000000                       1498+         DS    FD                gap
+                                                  1499+*
+000020D0                                          1500+X37      DS    0F
+000020D0  E760 8EA4 0806                000010A4  1501+         VL    V22,V1FUDGE
+000020D6  E760 8520 3845                          1502+         VREPI V22,-31456,3   test instruction  (dest is a source)
+000020DC  E760 5030 080E                000020B8  1503+         VST   V22,V1O37         save v1 output
+000020E2  07FB                                    1504+         BR    R11               return
+000020E4                                          1505+RE37     DC    0F                xl16 expected result
+000020E4                                          1506+         DROP  R5
+000020E4  FFFFFFFF FFFF8520                       1507          DC    2DL8'-31456'                              result
+000020EC  FFFFFFFF FFFF8520
+                                                  1508
+                                                  1509
+                                                  1510
+000020F4  00000000                                1511          DC    F'0'     END OF TABLE
+000020F8  00000000                                1512          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    34
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1514 *
+                                                  1515 * table of pointers to individual load test
+                                                  1516 *
+000020FC                                          1517 E7TESTS  DS    0F
+                                                  1518          PTTABLE
+000020FC                                          1519+TTABLE   DS    0F
+000020FC  000010C8                                1520+         DC    A(T1)
+00002100  00001138                                1521+         DC    A(T2)
+00002104  000011A8                                1522+         DC    A(T3)
+00002108  00001218                                1523+         DC    A(T4)
+0000210C  00001288                                1524+         DC    A(T5)
+00002110  000012F8                                1525+         DC    A(T6)
+00002114  00001368                                1526+         DC    A(T7)
+00002118  000013D8                                1527+         DC    A(T8)
+0000211C  00001448                                1528+         DC    A(T9)
+00002120  000014B8                                1529+         DC    A(T10)
+00002124  00001528                                1530+         DC    A(T11)
+00002128  00001598                                1531+         DC    A(T12)
+0000212C  00001608                                1532+         DC    A(T13)
+00002130  00001678                                1533+         DC    A(T14)
+00002134  000016E8                                1534+         DC    A(T15)
+00002138  00001758                                1535+         DC    A(T16)
+0000213C  000017C8                                1536+         DC    A(T17)
+00002140  00001838                                1537+         DC    A(T18)
+00002144  000018A8                                1538+         DC    A(T19)
+00002148  00001918                                1539+         DC    A(T20)
+0000214C  00001988                                1540+         DC    A(T21)
+00002150  000019F8                                1541+         DC    A(T22)
+00002154  00001A68                                1542+         DC    A(T23)
+00002158  00001AD8                                1543+         DC    A(T24)
+0000215C  00001B48                                1544+         DC    A(T25)
+00002160  00001BB8                                1545+         DC    A(T26)
+00002164  00001C28                                1546+         DC    A(T27)
+00002168  00001C98                                1547+         DC    A(T28)
+0000216C  00001D08                                1548+         DC    A(T29)
+00002170  00001D78                                1549+         DC    A(T30)
+00002174  00001DE8                                1550+         DC    A(T31)
+00002178  00001E58                                1551+         DC    A(T32)
+0000217C  00001EC8                                1552+         DC    A(T33)
+00002180  00001F38                                1553+         DC    A(T34)
+00002184  00001FA8                                1554+         DC    A(T35)
+00002188  00002018                                1555+         DC    A(T36)
+0000218C  00002088                                1556+         DC    A(T37)
+                                                  1557+*
+00002190  00000000                                1558+         DC    A(0)              END OF TABLE
+00002194  00000000                                1559+         DC    A(0)
+                                                  1560
+00002198  00000000                                1561          DC    F'0'     END OF TABLE
+0000219C  00000000                                1562          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    35
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1564 ***********************************************************************
+                                                  1565 *        Register equates
+                                                  1566 ***********************************************************************
+
+
+                              00000000  00000001  1568 R0       EQU   0
+                              00000001  00000001  1569 R1       EQU   1
+                              00000002  00000001  1570 R2       EQU   2
+                              00000003  00000001  1571 R3       EQU   3
+                              00000004  00000001  1572 R4       EQU   4
+                              00000005  00000001  1573 R5       EQU   5
+                              00000006  00000001  1574 R6       EQU   6
+                              00000007  00000001  1575 R7       EQU   7
+                              00000008  00000001  1576 R8       EQU   8
+                              00000009  00000001  1577 R9       EQU   9
+                              0000000A  00000001  1578 R10      EQU   10
+                              0000000B  00000001  1579 R11      EQU   11
+                              0000000C  00000001  1580 R12      EQU   12
+                              0000000D  00000001  1581 R13      EQU   13
+                              0000000E  00000001  1582 R14      EQU   14
+                              0000000F  00000001  1583 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  1585 ***********************************************************************
+                                                  1586 *        Register equates
+                                                  1587 ***********************************************************************
+
+
+                              00000000  00000001  1589 V0       EQU   0
+                              00000001  00000001  1590 V1       EQU   1
+                              00000002  00000001  1591 V2       EQU   2
+                              00000003  00000001  1592 V3       EQU   3
+                              00000004  00000001  1593 V4       EQU   4
+                              00000005  00000001  1594 V5       EQU   5
+                              00000006  00000001  1595 V6       EQU   6
+                              00000007  00000001  1596 V7       EQU   7
+                              00000008  00000001  1597 V8       EQU   8
+                              00000009  00000001  1598 V9       EQU   9
+                              0000000A  00000001  1599 V10      EQU   10
+                              0000000B  00000001  1600 V11      EQU   11
+                              0000000C  00000001  1601 V12      EQU   12
+                              0000000D  00000001  1602 V13      EQU   13
+                              0000000E  00000001  1603 V14      EQU   14
+                              0000000F  00000001  1604 V15      EQU   15
+                              00000010  00000001  1605 V16      EQU   16
+                              00000011  00000001  1606 V17      EQU   17
+                              00000012  00000001  1607 V18      EQU   18
+                              00000013  00000001  1608 V19      EQU   19
+                              00000014  00000001  1609 V20      EQU   20
+                              00000015  00000001  1610 V21      EQU   21
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    36
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001  1611 V22      EQU   22
+                              00000017  00000001  1612 V23      EQU   23
+                              00000018  00000001  1613 V24      EQU   24
+                              00000019  00000001  1614 V25      EQU   25
+                              0000001A  00000001  1615 V26      EQU   26
+                              0000001B  00000001  1616 V27      EQU   27
+                              0000001C  00000001  1617 V28      EQU   28
+                              0000001D  00000001  1618 V29      EQU   29
+                              0000001E  00000001  1619 V30      EQU   30
+                              0000001F  00000001  1620 V31      EQU   31
+                                                  1621
+                                                  1622          END
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    37
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   151   117   147   148   149
+CTLR0               F    000004C4           4   365   161   162   163   164
+DECNUM              C    00001082          16   422   260   262   268   270   288   290
+DOM4                H    0000038C           2   286   277   281
+E7TEST              4    00000000          72   436   210
+E7TESTS             F    000020FC           4  1517   203
+EDIT                X    00001056          18   417   261   269   289
+ENDTEST             U    00000318           1   246   208
+EOJ                 I    000004A8           4   355   196   249
+EOJPSW              D    00000498           8   353   355
+FAILCONT            U    00000308           1   236
+FAILED              F    00001000           4   396   238   247
+FAILMSG             U    00000304           1   230   220
+FAILPSW             D    000004B0           8   357   359
+FAILTEST            I    000004C0           4   359   250
+FB0001              F    00000280           8   180   184   185   187
+I2                  X    00000008           2   442   267
+I2NEG               H    00000386           2   283   275
+I2ZERO              H    0000037C           2   279   274
+IMAGE               1    00000000        8608     0
+K                   U    00000400           1   380   381   382   383
+K64                 U    00010000           1   382
+M3                  U    00000007           1   441   287
+MB                  U    00100000           1   383
+MSG                 I    000003E0           4   315   195   298
+MSGCMD              C    0000042E           9   345   328   329
+MSGMSG              C    00000437          95   346   322   343   320
+MSGMVC              I    00000428           6   343   326
+MSGOK               I    000003F6           2   324   321
+MSGRET              I    00000416           4   339   332   335
+MSGSAVE             F    0000041C           4   342   318   339
+NEXTE7              U    000002D4           1   205   223   241
+OPNAME              C    0000000A           8   444   265
+PAGE                U    00001000           1   381
+PRT3                C    0000106C          18   420   261   262   263   269   270   271   289   290   291
+PRTI2               C    00001045           5   408   271
+PRTLINE             C    00001008          16   402   412   297
+PRTLNG              U    0000004E           1   412   296
+PRTM3               C    00001053           2   410   291
+PRTNAME             C    00001033           8   405   265
+PRTNUM              C    00001018           3   403   263
+PRTSGN              C    00001044           1   407   276   280   284
+R0                  U    00000000           1  1568   111   161   164   184   186   187   188   193   212   213   237   238   295
+                                                      296   299   315   318   320   322   324   339
+R1                  U    00000001           1  1569   194   218   219   247   248   297   329   343
+R10                 U    0000000A           1  1578   149   158   159
+R11                 U    0000000B           1  1579   215   216   565   591   617   643   669   695   721   747   774   800   826
+                                                      852   878   904   930   956   982  1008  1034  1061  1087  1113  1139  1165
+                                                     1191  1217  1243  1269  1296  1322  1348  1374  1400  1426  1452  1478  1504
+R12                 U    0000000C           1  1580   203   206   222   240
+R13                 U    0000000D           1  1581
+R14                 U    0000000E           1  1582
+R15                 U    0000000F           1  1583   231   256   302   303
+R2                  U    00000002           1  1570   195   259   260   267   268   273   287   288   295   298   299   316   318
+                                                      324   325   326   328   334   339   340
+R3                  U    00000003           1  1571
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    38
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+R4                  U    00000004           1  1572
+R5                  U    00000005           1  1573   206   207   210   257   301   546   567   572   593   598   619   624   645
+                                                      650   671   676   697   702   723   728   749   755   776   781   802   807
+                                                      828   833   854   859   880   885   906   911   932   937   958   963   984
+                                                      989  1010  1015  1036  1042  1063  1068  1089  1094  1115  1120  1141  1146
+                                                     1167  1172  1193  1198  1219  1224  1245  1250  1271  1277  1298  1303  1324
+                                                     1329  1350  1355  1376  1381  1402  1407  1428  1433  1454  1459  1480  1485
+                                                     1506
+R6                  U    00000006           1  1574
+R7                  U    00000007           1  1575
+R8                  U    00000008           1  1576   147   151   152   153   155
+R9                  U    00000009           1  1577   148   155   156   158
+RE1                 F    00001124           4   566   553   554   556
+RE10                F    00001514           4   801   788   789   791
+RE11                F    00001584           4   827   814   815   817
+RE12                F    000015F4           4   853   840   841   843
+RE13                F    00001664           4   879   866   867   869
+RE14                F    000016D4           4   905   892   893   895
+RE15                F    00001744           4   931   918   919   921
+RE16                F    000017B4           4   957   944   945   947
+RE17                F    00001824           4   983   970   971   973
+RE18                F    00001894           4  1009   996   997   999
+RE19                F    00001904           4  1035  1022  1023  1025
+RE2                 F    00001194           4   592   579   580   582
+RE20                F    00001974           4  1062  1049  1050  1052
+RE21                F    000019E4           4  1088  1075  1076  1078
+RE22                F    00001A54           4  1114  1101  1102  1104
+RE23                F    00001AC4           4  1140  1127  1128  1130
+RE24                F    00001B34           4  1166  1153  1154  1156
+RE25                F    00001BA4           4  1192  1179  1180  1182
+RE26                F    00001C14           4  1218  1205  1206  1208
+RE27                F    00001C84           4  1244  1231  1232  1234
+RE28                F    00001CF4           4  1270  1257  1258  1260
+RE29                F    00001D64           4  1297  1284  1285  1287
+RE3                 F    00001204           4   618   605   606   608
+RE30                F    00001DD4           4  1323  1310  1311  1313
+RE31                F    00001E44           4  1349  1336  1337  1339
+RE32                F    00001EB4           4  1375  1362  1363  1365
+RE33                F    00001F24           4  1401  1388  1389  1391
+RE34                F    00001F94           4  1427  1414  1415  1417
+RE35                F    00002004           4  1453  1440  1441  1443
+RE36                F    00002074           4  1479  1466  1467  1469
+RE37                F    000020E4           4  1505  1492  1493  1495
+RE4                 F    00001274           4   644   631   632   634
+RE5                 F    000012E4           4   670   657   658   660
+RE6                 F    00001354           4   696   683   684   686
+RE7                 F    000013C4           4   722   709   710   712
+RE8                 F    00001434           4   748   735   736   738
+RE9                 F    000014A4           4   775   762   763   765
+REA1                A    000010E8           4   556
+REA10               A    000014D8           4   791
+REA11               A    00001548           4   817
+REA12               A    000015B8           4   843
+REA13               A    00001628           4   869
+REA14               A    00001698           4   895
+REA15               A    00001708           4   921
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    39
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+REA16               A    00001778           4   947
+REA17               A    000017E8           4   973
+REA18               A    00001858           4   999
+REA19               A    000018C8           4  1025
+REA2                A    00001158           4   582
+REA20               A    00001938           4  1052
+REA21               A    000019A8           4  1078
+REA22               A    00001A18           4  1104
+REA23               A    00001A88           4  1130
+REA24               A    00001AF8           4  1156
+REA25               A    00001B68           4  1182
+REA26               A    00001BD8           4  1208
+REA27               A    00001C48           4  1234
+REA28               A    00001CB8           4  1260
+REA29               A    00001D28           4  1287
+REA3                A    000011C8           4   608
+REA30               A    00001D98           4  1313
+REA31               A    00001E08           4  1339
+REA32               A    00001E78           4  1365
+REA33               A    00001EE8           4  1391
+REA34               A    00001F58           4  1417
+REA35               A    00001FC8           4  1443
+REA36               A    00002038           4  1469
+REA37               A    000020A8           4  1495
+REA4                A    00001238           4   634
+REA5                A    000012A8           4   660
+REA6                A    00001318           4   686
+REA7                A    00001388           4   712
+REA8                A    000013F8           4   738
+REA9                A    00001468           4   765
+READDR              A    00000020           4   448   218
+REG2LOW             U    000000DD           1   386
+REG2PATT            U    AABBCCDD           1   385
+RELEN               A    0000001C           4   447
+RPTDWSAV            D    000003D0           8   308   295   299
+RPTERROR            I    00000326           4   256   231
+RPTSAVE             F    000003C8           4   305   256   302
+RPTSVR5             F    000003CC           4   306   257   301
+SKL0001             U    0000004E           1   177   193
+SKT0001             C    0000022A          20   174   177   194
+SVOLDPSW            U    00000140           0   113
+T1                  A    000010C8           4   547  1520
+T10                 A    000014B8           4   782  1529
+T11                 A    00001528           4   808  1530
+T12                 A    00001598           4   834  1531
+T13                 A    00001608           4   860  1532
+T14                 A    00001678           4   886  1533
+T15                 A    000016E8           4   912  1534
+T16                 A    00001758           4   938  1535
+T17                 A    000017C8           4   964  1536
+T18                 A    00001838           4   990  1537
+T19                 A    000018A8           4  1016  1538
+T2                  A    00001138           4   573  1521
+T20                 A    00001918           4  1043  1539
+T21                 A    00001988           4  1069  1540
+T22                 A    000019F8           4  1095  1541
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    40
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+T23                 A    00001A68           4  1121  1542
+T24                 A    00001AD8           4  1147  1543
+T25                 A    00001B48           4  1173  1544
+T26                 A    00001BB8           4  1199  1545
+T27                 A    00001C28           4  1225  1546
+T28                 A    00001C98           4  1251  1547
+T29                 A    00001D08           4  1278  1548
+T3                  A    000011A8           4   599  1522
+T30                 A    00001D78           4  1304  1549
+T31                 A    00001DE8           4  1330  1550
+T32                 A    00001E58           4  1356  1551
+T33                 A    00001EC8           4  1382  1552
+T34                 A    00001F38           4  1408  1553
+T35                 A    00001FA8           4  1434  1554
+T36                 A    00002018           4  1460  1555
+T37                 A    00002088           4  1486  1556
+T4                  A    00001218           4   625  1523
+T5                  A    00001288           4   651  1524
+T6                  A    000012F8           4   677  1525
+T7                  A    00001368           4   703  1526
+T8                  A    000013D8           4   729  1527
+T9                  A    00001448           4   756  1528
+TESTING             F    00001004           4   397   213
+TNUM                H    00000004           2   438   212   259
+TSUB                A    00000000           4   437   215
+TTABLE              F    000020FC           4  1519
+V0                  U    00000000           1  1589
+V1                  U    00000001           1  1590
+V10                 U    0000000A           1  1599
+V11                 U    0000000B           1  1600
+V12                 U    0000000C           1  1601
+V13                 U    0000000D           1  1602
+V14                 U    0000000E           1  1603
+V15                 U    0000000F           1  1604
+V16                 U    00000010           1  1605
+V17                 U    00000011           1  1606
+V18                 U    00000012           1  1607
+V19                 U    00000013           1  1608
+V1FUDGE             X    000010A4          16   429   562   588   614   640   666   692   718   744   771   797   823   849   875
+                                                      901   927   953   979  1005  1031  1058  1084  1110  1136  1162  1188  1214
+                                                     1240  1266  1293  1319  1345  1371  1397  1423  1449  1475  1501
+V1O1                X    000010F8          16   558   564
+V1O10               X    000014E8          16   793   799
+V1O11               X    00001558          16   819   825
+V1O12               X    000015C8          16   845   851
+V1O13               X    00001638          16   871   877
+V1O14               X    000016A8          16   897   903
+V1O15               X    00001718          16   923   929
+V1O16               X    00001788          16   949   955
+V1O17               X    000017F8          16   975   981
+V1O18               X    00001868          16  1001  1007
+V1O19               X    000018D8          16  1027  1033
+V1O2                X    00001168          16   584   590
+V1O20               X    00001948          16  1054  1060
+V1O21               X    000019B8          16  1080  1086
+V1O22               X    00001A28          16  1106  1112
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    41
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V1O23               X    00001A98          16  1132  1138
+V1O24               X    00001B08          16  1158  1164
+V1O25               X    00001B78          16  1184  1190
+V1O26               X    00001BE8          16  1210  1216
+V1O27               X    00001C58          16  1236  1242
+V1O28               X    00001CC8          16  1262  1268
+V1O29               X    00001D38          16  1289  1295
+V1O3                X    000011D8          16   610   616
+V1O30               X    00001DA8          16  1315  1321
+V1O31               X    00001E18          16  1341  1347
+V1O32               X    00001E88          16  1367  1373
+V1O33               X    00001EF8          16  1393  1399
+V1O34               X    00001F68          16  1419  1425
+V1O35               X    00001FD8          16  1445  1451
+V1O36               X    00002048          16  1471  1477
+V1O37               X    000020B8          16  1497  1503
+V1O4                X    00001248          16   636   642
+V1O5                X    000012B8          16   662   668
+V1O6                X    00001328          16   688   694
+V1O7                X    00001398          16   714   720
+V1O8                X    00001408          16   740   746
+V1O9                X    00001478          16   767   773
+V1OUTPUT            X    00000030          16   450   219
+V2                  U    00000002           1  1591
+V20                 U    00000014           1  1609
+V21                 U    00000015           1  1610
+V22                 U    00000016           1  1611   562   563   564   588   589   590   614   615   616   640   641   642   666
+                                                      667   668   692   693   694   718   719   720   744   745   746   771   772
+                                                      773   797   798   799   823   824   825   849   850   851   875   876   877
+                                                      901   902   903   927   928   929   953   954   955   979   980   981  1005
+                                                     1006  1007  1031  1032  1033  1058  1059  1060  1084  1085  1086  1110  1111
+                                                     1112  1136  1137  1138  1162  1163  1164  1188  1189  1190  1214  1215  1216
+                                                     1240  1241  1242  1266  1267  1268  1293  1294  1295  1319  1320  1321  1345
+                                                     1346  1347  1371  1372  1373  1397  1398  1399  1423  1424  1425  1449  1450
+                                                     1451  1475  1476  1477  1501  1502  1503
+V23                 U    00000017           1  1612
+V24                 U    00000018           1  1613
+V25                 U    00000019           1  1614
+V26                 U    0000001A           1  1615
+V27                 U    0000001B           1  1616
+V28                 U    0000001C           1  1617
+V29                 U    0000001D           1  1618
+V2ADDR              A    00000014           4   445
+V3                  U    00000003           1  1592
+V30                 U    0000001E           1  1619
+V31                 U    0000001F           1  1620
+V3ADDR              A    00000018           4   446
+V4                  U    00000004           1  1593
+V5                  U    00000005           1  1594
+V6                  U    00000006           1  1595
+V7                  U    00000007           1  1596
+V8                  U    00000008           1  1597
+V9                  U    00000009           1  1598
+X0001               U    000002A8           1   183   171   184
+X1                  F    00001110           4   561   547
+X10                 F    00001500           4   796   782
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    42
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+X11                 F    00001570           4   822   808
+X12                 F    000015E0           4   848   834
+X13                 F    00001650           4   874   860
+X14                 F    000016C0           4   900   886
+X15                 F    00001730           4   926   912
+X16                 F    000017A0           4   952   938
+X17                 F    00001810           4   978   964
+X18                 F    00001880           4  1004   990
+X19                 F    000018F0           4  1030  1016
+X2                  F    00001180           4   587   573
+X20                 F    00001960           4  1057  1043
+X21                 F    000019D0           4  1083  1069
+X22                 F    00001A40           4  1109  1095
+X23                 F    00001AB0           4  1135  1121
+X24                 F    00001B20           4  1161  1147
+X25                 F    00001B90           4  1187  1173
+X26                 F    00001C00           4  1213  1199
+X27                 F    00001C70           4  1239  1225
+X28                 F    00001CE0           4  1265  1251
+X29                 F    00001D50           4  1292  1278
+X3                  F    000011F0           4   613   599
+X30                 F    00001DC0           4  1318  1304
+X31                 F    00001E30           4  1344  1330
+X32                 F    00001EA0           4  1370  1356
+X33                 F    00001F10           4  1396  1382
+X34                 F    00001F80           4  1422  1408
+X35                 F    00001FF0           4  1448  1434
+X36                 F    00002060           4  1474  1460
+X37                 F    000020D0           4  1500  1486
+X4                  F    00001260           4   639   625
+X5                  F    000012D0           4   665   651
+X6                  F    00001340           4   691   677
+X7                  F    000013B0           4   717   703
+X8                  F    00001420           4   743   729
+X9                  F    00001490           4   770   756
+XC0001              U    000002D0           1   197   189
+ZVE7TST             J    00000000        8608   110   113   115   119   123   395   111
+=A(E7TESTS)         A    000004D0           4   370   203
+=AL2(L'MSGMSG)      R    000004DA           2   373   320
+=C' '               C    000004DD           1   375   280
+=C'+'               C    000004DC           1   374   276
+=C'-'               C    000004DE           1   376   284
+=F'1'               F    000004D4           4   371   237
+=F'64'              F    000004CC           4   369   188
+=H'0'               H    000004D8           2   372   315
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    43
+
+ MACRO   DEFN  REFERENCES
+
+FCHECK     63    170
+PTTABLE   511   1518
+VRI_A     469    544    570    596    622    648    674    700    726    753    779    805    831    857    883    909    935    961
+                 987   1013   1040   1066   1092   1118   1144   1170   1196   1222   1248   1275   1301   1327   1353   1379   1405
+                1431   1457   1483
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    44
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    8608  0000-219F  0000-219F
+  Region            8608  0000-219F  0000-219F
+    CSECT  ZVE7TST  8608  0000-219F  0000-219F
+ASMA Ver. 0.7.0  zvector-e7-21-VREPI                                                                03 Apr 2025 15:40:21  Page    45
+
+   STMT                       FILE NAME
+
+1     /home/tn529/sharedvfp/tests/zvector-e7-21-VREPI.asm
+
+
+** NO ERRORS FOUND **
+
+
