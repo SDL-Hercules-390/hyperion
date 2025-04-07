@@ -856,4 +856,9 @@ EXTRA_DIST =                    \
      zvector-e7-25-VSTRS.core		        \
      zvector-e7-25-VSTRS.list		        \
      zvector-e7-25-VSTRS.pdf		        \
-     zvector-e7-25-VSTRS.tst
+     zvector-e7-25-VSTRS.tst		        \
+     zvector-e7-26-VGM.asm		            \
+     zvector-e7-26-VGM.core		            \
+     zvector-e7-26-VGM.list		            \
+     zvector-e7-26-VGM.pdf		            \
+     zvector-e7-26-VGM.tst

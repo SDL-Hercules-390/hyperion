@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
@@ -3870,6 +3870,10 @@
 						RelativePath=".\tests\zvector-e7-25-VSTRS.core"
 	    				>
 					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-26-VGM.core"
+	    				>
+					</File>
 				</Filter>
 				<Filter
 					Name="scripts"
@@ -5265,6 +5269,10 @@
 							RelativePath=".\tests\zvector-e7-25-VSTRS.tst"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-26-VGM.tst"
+							>
+						</File>
 						<Filter
 							Name="subtst"
 							>
@@ -5816,6 +5824,10 @@
 						</File>
 						<File
 							RelativePath=".\tests\zvector-e7-25-VSTRS.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-26-VGM.asm"
 							>
 						</File>
 						<Filter
@@ -6767,6 +6779,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\zvector-e7-25-VSTRS.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-26-VGM.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-26-VGM.pdf"
 								>
 							</File>
 						</Filter>
