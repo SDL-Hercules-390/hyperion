@@ -24,6 +24,7 @@ hdasd_OBJ = \
     $(O)fbadasd.obj    \
     $(O)dasdutil64.obj \
     $(O)fbadasd64.obj  \
+    $(O)lz4.obj        \
     $(O)shared.obj
 
 htape_OBJ = \

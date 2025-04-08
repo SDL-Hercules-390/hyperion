@@ -828,6 +828,9 @@
     <ClCompile Include="zvector2.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lz4.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="crypto\lib\crypto32.pdb">
@@ -3050,7 +3053,7 @@
     <None Include="tests\zvector-e6-08-VLRLR.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
-   <None Include="tests\zvector-e6-08-VLRLR.pdf">
+    <None Include="tests\zvector-e6-08-VLRLR.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\zvector-e6-09-VSTRLR.list">
@@ -3965,6 +3968,9 @@
       <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\include</Filter>
     </ClInclude>
     <ClInclude Include="vsvers.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lz4.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

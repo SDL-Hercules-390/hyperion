@@ -1,3 +1,5 @@
+#include "hstdinc.h"
+
 /*
    LZ4 - Fast LZ compression algorithm
    Copyright (C) 2011-2023, Yann Collet.

@@ -277,6 +277,7 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="lz4.c" />
     <ClCompile Include="_archdep_templ.c" />
     <ClCompile Include="archlvl.c" />
     <ClCompile Include="assist.c" />
@@ -1347,21 +1348,21 @@
     <None Include="tests\zvector-e7-05-VTM.list" />
     <None Include="tests\zvector-e7-05-VTM.pdf" />
     <None Include="tests\zvector-e7-05-VTM.tst" />
-    <None Include="tests\zvector-e7-06-Find.asm"/>
-    <None Include="tests\zvector-e7-06-Find.core"/>
-    <None Include="tests\zvector-e7-06-Find.list"/>
-    <None Include="tests\zvector-e7-06-Find.pdf"/>
-    <None Include="tests\zvector-e7-06-Find.tst"/>
-    <None Include="tests\zvector-e7-07-VGBM.asm"/>
-    <None Include="tests\zvector-e7-07-VGBM.core"/>
-    <None Include="tests\zvector-e7-07-VGBM.list"/>
-    <None Include="tests\zvector-e7-07-VGBM.pdf"/>
-    <None Include="tests\zvector-e7-07-VGBM.tst"/>
-    <None Include="tests\zvector-e7-08-VISTR.asm"/>
-    <None Include="tests\zvector-e7-08-VISTR.core"/>
-    <None Include="tests\zvector-e7-08-VISTR.list"/>
-    <None Include="tests\zvector-e7-08-VISTR.pdf"/>
-    <None Include="tests\zvector-e7-08-VISTR.tst"/>
+    <None Include="tests\zvector-e7-06-Find.asm" />
+    <None Include="tests\zvector-e7-06-Find.core" />
+    <None Include="tests\zvector-e7-06-Find.list" />
+    <None Include="tests\zvector-e7-06-Find.pdf" />
+    <None Include="tests\zvector-e7-06-Find.tst" />
+    <None Include="tests\zvector-e7-07-VGBM.asm" />
+    <None Include="tests\zvector-e7-07-VGBM.core" />
+    <None Include="tests\zvector-e7-07-VGBM.list" />
+    <None Include="tests\zvector-e7-07-VGBM.pdf" />
+    <None Include="tests\zvector-e7-07-VGBM.tst" />
+    <None Include="tests\zvector-e7-08-VISTR.asm" />
+    <None Include="tests\zvector-e7-08-VISTR.core" />
+    <None Include="tests\zvector-e7-08-VISTR.list" />
+    <None Include="tests\zvector-e7-08-VISTR.pdf" />
+    <None Include="tests\zvector-e7-08-VISTR.tst" />
     <None Include="util\awssl-v19g" />
     <None Include="util\awswrite.jcl" />
     <None Include="util\bldlvlck" />
@@ -1423,6 +1424,7 @@
     <ClInclude Include="decNumber\include\decnumber_version.h" />
     <ClInclude Include="decNumber\include\decPacked.h" />
     <ClInclude Include="decNumber\include\decQuad.h" />
+    <ClInclude Include="lz4.h" />
     <ClInclude Include="telnet\include\telnet.h" />
     <ClInclude Include="telnet\include\telnet_version.h" />
     <ClInclude Include="devtype.h" />
