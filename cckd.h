@@ -293,7 +293,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              dha;           /* Number Dasd Hardener threads active */
         int              dhmax;         /* Max Dasd Hardeners        */
         int              dhint;         /* Wait time in seconds      */
-
+        bool             dhstart;       /* 1=start Dasd Hardener     */
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */
         int              gcs;           /* Number garbage collector threads started */
@@ -301,7 +301,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              gcmax;         /* Max garbage collectors    */
         int              gcint;         /* Wait time in seconds      */
         int              gcparm;        /* Adjustment parm           */
-
+        bool             gcstart;       /* 1=start Garbage Collector */
         LOCK             wrlock;        /* I/O lock                  */
         COND             wrcond;        /* I/O condition             */
         int              wrpending;     /* Number writes pending     */

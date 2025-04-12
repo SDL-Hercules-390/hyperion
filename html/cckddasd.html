@@ -1263,6 +1263,10 @@ the <b>cckd</b> command explained below.
         If the above <code>dhint</code> value is set to 0, then setting <code>dhstart</code>
         to 1 accomplishes absolutely nothing.
         <p>
+        Conversely, setting <code>dhstart</code> to 0 will <i>not</i> stop the Dasd Hardner
+        once it has been started. The only way to stop the Hardener once it has been started
+        is to reset the above <code>dhint</code> value back to 0.
+        <p>
         The default is <b>0</b>.
         <br /><br />
     </td>
@@ -1315,12 +1319,12 @@ the <b>cckd</b> command explained below.
         You can specify a number between <b>0</b> and <b>60</b>. A value of 0
         disables the default automatic behavior of the garbage collector,
         converting it to manual on-demand mode instead. When in manual mode,
-        the garbage collector will only run by specific demand via the 'gcstart' option,
-        and once started, will only run through one garbage collection cycle
-        and then exit, requiring you to manually start it again when desired.
+        the garbage collector will only run by specific demand via the <code>gcstart</code>
+        option, and once started, will only run through one garbage collection
+        cycle and then exit, requiring you to manually start it again when desired.
         In automatic mode (gcint > 0), the garbage collector will start itself
         automatically and remain idle (but still running) between each garbage
-        collection cycle, automatically starting the next cycle every 'gcint'
+        collection cycle, automatically starting the next cycle every <code>gcint</code>
         seconds.
         <p>
         It is recommended that this parameter remain set to its default value
