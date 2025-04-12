@@ -38,6 +38,8 @@ Using the **`convto64`** utility to convert existing CCKD files to the CCKD64 fo
 
 The **`convto64`** utility however, directly converts base images _-OR-_ shadow files _<u>individually</u>_, resulting in a new CCKD64 format base image or shadow file.  It does _not_ "merge" them together. Plus, as previously mentioned, it is _significantly_ faster than `dasdcopy64` too.  It is therefore the recommended way to convert existing CCKD dasd images (and shadow files) to the new CCKD64 format.
 
+Also note that `convto64` is also able to copy a dasd image file that is <i>already</i> in CCKD64 format to a new CCKD64 format dasd image file, thus turning `convto64` into a <i>fast</i> and convenient (and <i>safe!</i>) way to "compress" (remove <i>all</i> free space from) an existing CCKD64 dasd image should it ever become excessively fragmented. `convto64` is thus considered to be a much faster and safer alternative free-space removal utility than `dasdcopy64`.
+
 ## Procedure
 
 1. Run **`cckdcdsk -3`** on all existing 32-bit CCKD dasds to correct any existing errors. _**(Critical!)**_
