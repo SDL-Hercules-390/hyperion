@@ -1169,6 +1169,7 @@ the <b>cckd</b> command explained below.
 <tr><td>&nbsp;</td><td><b>debug=</b>n</td>     <td> &nbsp; Turn CCW tracing debug messages on or off</td>
 <tr><td>&nbsp;</td><td><b>dhint=</b>n</td>     <td> &nbsp; Dasd Hardener interval</td>
 <tr><td>&nbsp;</td><td><b>dhstart=</b>n</td>   <td> &nbsp; Dasd Hardener startup</td>
+<tr><td>&nbsp;</td><td><b>dtax=</b>n</td>      <td> &nbsp; Dump Table at exit</td>
 <tr><td>&nbsp;</td><td><b>freepend=</b>n</td>  <td> &nbsp; Set the free pending value</td>
 <tr><td>&nbsp;</td><td><b>fsync=</b>n</td>     <td> &nbsp; Turn fsync on or off</td>
 <tr><td>&nbsp;</td><td><b>gcint=</b>n</td>     <td> &nbsp; Garbage collector interval</td>
@@ -1263,7 +1264,7 @@ the <b>cckd</b> command explained below.
         If the above <code>dhint</code> value is set to 0, then setting <code>dhstart</code>
         to 1 accomplishes absolutely nothing.
         <p>
-        Conversely, setting <code>dhstart</code> to 0 will <i>not</i> stop the Dasd Hardner
+        Conversely, setting <code>dhstart</code> to 0 will <i>not</i> stop the Dasd Hardener
         once it has been started. The only way to stop the Hardener once it has been started
         is to reset the above <code>dhint</code> value back to 0.
         <p>
@@ -1271,6 +1272,13 @@ the <b>cckd</b> command explained below.
         <br /><br />
     </td>
 
+
+<tr><td valign="top"><b>dtax=</b>n</td><td> &nbsp; </td>
+    <td>If set to 1, then the internal trace table will be displayed automatically
+        just before Hercules exits. Otherwise, the table can be displayed manually
+        at any time by issuing the Hercules <code>'k'</code> command.
+        <br /><br />
+    </td>
 
 <tr><td valign="top"><b>freepend=</b>n</td><td> &nbsp; </td>
     <td>Specifies the <em>free pending</em> value for freed space.  When a
