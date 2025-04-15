@@ -1,4 +1,4 @@
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     1
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -52,7 +52,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                     48 *   *Done
                                                     49 *
                                                     50 ***********************************************************************
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     2
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -110,14 +110,14 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                    103          B     EOJ
                                                    104 XC&SYSNDX EQU *
                                                    105          MEND
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     3
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
                                                    107 ***********************************************************************
                                                    108 *        Low core PSWs
                                                    109 ***********************************************************************
-                              00000000  00005A3F   110 ZVE7TST  START 0
+                              00000000  000061FB   110 ZVE7TST  START 0
 00000000                      00000000             111          USING ZVE7TST,R0            Low core addressability
                                                    112
                               00000140  00000000   113 SVOLDPSW EQU   ZVE7TST+X'140'        z/Arch Supervisor call old PSW
@@ -170,7 +170,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00000206  4190 8800                     00000800   155          LA    R9,2048(,R8)     Initalize SECOND base register
 0000020A  4190 9800                     00000800   156          LA    R9,2048(,R9)     Initalize SECOND base register
                                                    157
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     4
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -214,7 +214,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000002C8  4520 8260                     00000460   195+         BAL   R2,MSG
 000002CC  47F0 8328                     00000528   196+         B     EOJ
                               000002D0  00000001   197+XC0001   EQU   *
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     5
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -251,7 +251,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00000314  47F0 80D4                     000002D4   229          B     NEXTE7
                                                    230
 00000318  4700 811C                     0000031C   231 TESTCC   BC    0,CCMSG                 (unexpected condition code?)
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     6
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -299,7 +299,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00000398  5000 8E00                     00001000   274          ST    R0,FAILED
                                                    275
 0000039C  47F0 8100                     00000300   276          B     TESTREST
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     7
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -355,7 +355,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000041C  1211                                     325          LTR   R1,R1
 0000041E  4780 8328                     00000528   326          BZ    EOJ                  No, exit
 00000422  47F0 8340                     00000540   327          B     FAILTEST             Yes, exit with BAD PSW
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     8
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -381,7 +381,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00000448  00000000                                 347 RPTSVR5  DC    F'0'                 R5 save area
 
 00000450  00000000 00000000                        349 RPTDWSAV DC    2D'0'                R0-R2 save area for MSG call
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page     9
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page     9
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -429,7 +429,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000004AE  D4E2C7D5 D6C8405C                        386 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
 000004B7  40404040 40404040                        387 MSGMSG   DC    CL95' '                The message text to be displayed
                                                    388
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    10
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    10
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -469,7 +469,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 
 0000054C                                           409          LTORG ,                Literals pool
 0000054C  00000040                                 410                =F'64'
-00000550  000058DC                                 411                =A(E7TESTS)
+00000550  00006074                                 411                =A(E7TESTS)
 00000554  00000003                                 412                =XL4'3'
 00000558  00000001                                 413                =F'1'
 0000055C  0000                                     414                =H'0'
@@ -484,7 +484,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                    423
                               AABBCCDD  00000001   424 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
                               000000DD  00000001   425 REG2LOW  EQU         X'DD'    (last byte above)
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    11
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    11
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -535,7 +535,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000010A6  A7                                       470 CCPRTGOT DC    C'x'
 000010A7  4B                                       471          DC    C'.'
                               00000055  00000001   472 CCPRTLNG   EQU   *-CCPRTLINE
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    12
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    12
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -557,7 +557,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000010E4  00000000 00000000                        488          DS    XL16                                        gap
 000010F4  FFFFFFFF FFFFFFFF                        489 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
 00001104  00000000 00000000                        490          DS    XL16
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    13
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    13
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -596,7 +596,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                    523 *              EXPECTED RESULT
 
 
-                              00000000  00005A3F   525 ZVE7TST  CSECT ,
+                              00000000  000061FB   525 ZVE7TST  CSECT ,
 00001114                                           526          DS    0F
 
 
@@ -617,7 +617,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                    540 .*                               &CC     - expected CC
                                                    541
                                                    542          LCLA  &XCC(4)  &XCC has mask values for FAILED condition codes
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    14
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    14
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -677,7 +677,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                    596
                                                    597          DROP  R5
                                                    598          MEND
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    15
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    15
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -706,7 +706,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                    619 .*
                                                    620          MEND
                                                    621
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    16
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    16
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -766,7 +766,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001196  E781 0000 0806                00000000   675+         VL    v24,0(R1)         use v24 to test decoder
 0000119C  E766 7000 8F8B                           676+         VSTRS V22,V22,V23,V24,0,0      instruction (dest is a source)
 000011A2  B98D 0020                                677+         EPSW  R2,R0              extract psw
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    17
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    17
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -826,7 +826,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001294  00000000 00000000
 0000129C  01020304 05060708                        726          DC    XL16'0102030405060708 090A0B0C0D0E0F10'   v2
 000012A4  090A0B0C 0D0E0F10
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    18
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    18
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -886,7 +886,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                    773 *Byte
                                                    774          VRR_D VSTRS,0,0,2                               full match
 000013A8                                           775+         DS    0FD
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    19
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    19
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -946,7 +946,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001489  02                                       824+         DC    HL1'2'             CC
 0000148A  0D                                       825+         DC    HL1'13'            CC failed mask
 0000148C  00000000 00000000                        826+         DS    2F                 extracted PSW after test (has CC)
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    20
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    20
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1006,7 +1006,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001588  000015EC                                 875+REA6     DC    A(RE6)            result address
 00001590  00000000 00000000                        876+         DS    FD                gap
 00001598  00000000 00000000                        877+V1O6     DS    XL16              V1 output
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    21
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    21
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1066,7 +1066,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000168E  E761 0000 0806                00000000   925+         VL    v22,0(R1)         use v22 to test decoder
 00001694  E310 5024 0014                00000024   926+         LGF   R1,V3ADDR         load v3 source
 0000169A  E771 0000 0806                00000000   927+         VL    v23,0(R1)         use v23 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    22
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    22
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1126,7 +1126,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001798  07FB                                     976+         BR    R11               return
 0000179C                                           977+RE8      DC    0F                xl16 expected result
 0000179C                                           978+         DROP  R5
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    23
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    23
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1186,7 +1186,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000018A4  00000000 0000000C                       1024          DC    XL16'000000000000000C 0000000000000000'   v4
 000018AC  00000000 00000000
                                                   1025
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    24
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    24
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1246,7 +1246,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001990                                          1075+         DS    0FD
 00001990                      00001990            1076+         USING *,R5              base for test data and test routine
 00001990  000019E8                                1077+T11      DC    A(X11)            address of test routine
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    25
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    25
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1306,7 +1306,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001A74  00000000 00000000                       1126+         DS    2F                 extracted PSW after test (has CC)
 00001A7C  FF                                      1127+         DC    X'FF'              extracted CC, if test failed
 00001A7D  E5E2E3D9 E2404040                       1128+         DC    CL8'VSTRS'        instruction name
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    26
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    26
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1366,7 +1366,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001B78  00000000 00000000                       1177+         DS    FD                gap
 00001B80  00000000 00000000                       1178+V1O13    DS    XL16              V1 output
 00001B88  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    27
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    27
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1426,7 +1426,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001C82  E771 0000 0806                00000000  1227+         VL    v23,0(R1)         use v23 to test decoder
 00001C88  E310 5028 0014                00000028  1228+         LGF   R1,V4ADDR         load v4 source
 00001C8E  E781 0000 0806                00000000  1229+         VL    v24,0(R1)         use v24 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    28
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    28
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1486,7 +1486,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001D84                                          1278+         DROP  R5
 00001D84  00000000 00000010                       1279          DC    XL16'0000000000000010 0000000000000000'   V1
 00001D8C  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    29
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    29
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1546,7 +1546,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001E94  00000000 00000000
                                                   1326
                                                   1327 *Halfword
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    30
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    30
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1606,7 +1606,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00001F7F  02                                      1376+         DC    HL1'2'                  m5 used
 00001F80  02                                      1377+         DC    HL1'2'                  m6 used
 00001F81  02                                      1378+         DC    HL1'2'             CC
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    31
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    31
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1666,7 +1666,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002074  00002104                                1427+         DC    A(RE19+32)        address of v3 source
 00002078  00002114                                1428+         DC    A(RE19+48)        address of v4 source
 0000207C  00000010                                1429+         DC    A(16)             result length
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    32
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    32
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1726,7 +1726,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002180                                          1477+X20      DS    0F
 00002180  E310 5020 0014                00000020  1478+         LGF   R1,V2ADDR         load v2 source
 00002186  E761 0000 0806                00000000  1479+         VL    v22,0(R1)         use v22 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    33
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    33
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1786,7 +1786,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002286  5020 500C                     0000000C  1528+         ST    R2,CCPSW              to save CC
 0000228A  E760 A040 080E                00002240  1529+         VST   V22,V1O21          save v1 output
 00002290  07FB                                    1530+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    34
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    34
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1801,7 +1801,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000022C4  00000000 0000000C                       1536          DC    XL16'000000000000000C 0000000000000000'   v4
 000022CC  00000000 00000000
                                                   1537
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    35
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    35
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1861,7 +1861,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000023B0                                          1587+         DS    0FD
 000023B0                      000023B0            1588+         USING *,R5              base for test data and test routine
 000023B0  00002408                                1589+T23      DC    A(X23)            address of test routine
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    36
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    36
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1921,7 +1921,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002494  00000000 00000000                       1638+         DS    2F                 extracted PSW after test (has CC)
 0000249C  FF                                      1639+         DC    X'FF'              extracted CC, if test failed
 0000249D  E5E2E3D9 E2404040                       1640+         DC    CL8'VSTRS'        instruction name
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    37
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    37
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -1981,7 +1981,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002598  00000000 00000000                       1689+         DS    FD                gap
 000025A0  00000000 00000000                       1690+V1O25    DS    XL16              V1 output
 000025A8  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    38
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    38
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2041,7 +2041,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000026A2  E771 0000 0806                00000000  1739+         VL    v23,0(R1)         use v23 to test decoder
 000026A8  E310 5028 0014                00000028  1740+         LGF   R1,V4ADDR         load v4 source
 000026AE  E781 0000 0806                00000000  1741+         VL    v24,0(R1)         use v24 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    39
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    39
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2101,7 +2101,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000027A4                                          1790+         DROP  R5
 000027A4  00000000 0000000C                       1791          DC    XL16'000000000000000C 0000000000000000'   V1
 000027AC  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    40
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    40
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2161,7 +2161,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000028B4  00000000 00000000
                                                   1838
                                                   1839 *Halfword
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    41
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    41
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2221,7 +2221,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000299F  02                                      1888+         DC    HL1'2'                  m5 used
 000029A0  02                                      1889+         DC    HL1'2'                  m6 used
 000029A1  02                                      1890+         DC    HL1'2'             CC
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    42
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    42
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2281,7 +2281,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002A94  00002B24                                1939+         DC    A(RE31+32)        address of v3 source
 00002A98  00002B34                                1940+         DC    A(RE31+48)        address of v4 source
 00002A9C  00000010                                1941+         DC    A(16)             result length
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    43
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    43
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2341,7 +2341,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002BA0                                          1989+X32      DS    0F
 00002BA0  E310 5020 0014                00000020  1990+         LGF   R1,V2ADDR         load v2 source
 00002BA6  E761 0000 0806                00000000  1991+         VL    v22,0(R1)         use v22 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    44
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    44
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2401,7 +2401,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002CA6  5020 500C                     0000000C  2040+         ST    R2,CCPSW              to save CC
 00002CAA  E760 5040 080E                00002C60  2041+         VST   V22,V1O33          save v1 output
 00002CB0  07FB                                    2042+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    45
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    45
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2461,7 +2461,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002DA4  AAFDFEFF BB010203
 00002DAC  01020304 05060708                       2090          DC    XL16'0102030405060708 090A0B0C0D0E0F10'   v3
 00002DB4  090A0B0C 0D0E0F10
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    46
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    46
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2521,7 +2521,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002EA8                      00002EA8            2138+         USING *,R5              base for test data and test routine
 00002EA8  00002F00                                2139+T36      DC    A(X36)            address of test routine
 00002EAC  0024                                    2140+         DC    H'36'             test number
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    47
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    47
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2566,7 +2566,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00002F6C  00000000 00000008                       2175          DC    XL16'0000000000000008 0000000000000000'   v4
 00002F74  00000000 00000000
                                                   2176
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    48
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    48
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2626,7 +2626,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003058                                          2226+         DS    0FD
 00003058                      00003058            2227+         USING *,R5              base for test data and test routine
 00003058  000030B0                                2228+T38      DC    A(X38)            address of test routine
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    49
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    49
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2686,7 +2686,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000313C  00000000 00000000                       2277+         DS    2F                 extracted PSW after test (has CC)
 00003144  FF                                      2278+         DC    X'FF'              extracted CC, if test failed
 00003145  E5E2E3D9 E2404040                       2279+         DC    CL8'VSTRS'        instruction name
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    50
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    50
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2746,7 +2746,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003240  00000000 00000000                       2328+         DS    FD                gap
 00003248  00000000 00000000                       2329+V1O40    DS    XL16              V1 output
 00003250  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    51
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    51
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2806,7 +2806,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000334A  E771 0000 0806                00000000  2378+         VL    v23,0(R1)         use v23 to test decoder
 00003350  E310 5028 0014                00000028  2379+         LGF   R1,V4ADDR         load v4 source
 00003356  E781 0000 0806                00000000  2380+         VL    v24,0(R1)         use v24 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    52
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    52
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2866,7 +2866,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000344C                                          2429+         DROP  R5
 0000344C  00000000 0000000C                       2430          DC    XL16'000000000000000C 0000000000000000'   V1
 00003454  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    53
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    53
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2926,7 +2926,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000355C  00000000 00000000
                                                   2477
                                                   2478 *Halfword
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    54
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    54
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -2986,7 +2986,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003647  02                                      2527+         DC    HL1'2'                  m5 used
 00003648  02                                      2528+         DC    HL1'2'                  m6 used
 00003649  02                                      2529+         DC    HL1'2'             CC
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    55
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    55
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3046,7 +3046,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000373C  000037CC                                2578+         DC    A(RE46+32)        address of v3 source
 00003740  000037DC                                2579+         DC    A(RE46+48)        address of v4 source
 00003744  00000010                                2580+         DC    A(16)             result length
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    56
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    56
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3106,7 +3106,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003848                                          2628+X47      DS    0F
 00003848  E310 5020 0014                00000020  2629+         LGF   R1,V2ADDR         load v2 source
 0000384E  E761 0000 0806                00000000  2630+         VL    v22,0(R1)         use v22 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    57
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    57
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3166,7 +3166,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 0000394E  5020 500C                     0000000C  2679+         ST    R2,CCPSW              to save CC
 00003952  E760 5040 080E                00003908  2680+         VST   V22,V1O48          save v1 output
 00003958  07FB                                    2681+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    58
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    58
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3226,7 +3226,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003A4C  AAFDFEFF BB010203
 00003A54  01020300 05060700                       2729          DC    XL16'0102030005060700 090A0B0C0D0E0F10'   v3
 00003A5C  090A0B0C 0D0E0F10
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    59
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    59
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3286,7 +3286,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003B50                      00003B50            2777+         USING *,R5              base for test data and test routine
 00003B50  00003BA8                                2778+T51      DC    A(X51)            address of test routine
 00003B54  0033                                    2779+         DC    H'51'             test number
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    60
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    60
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3331,7 +3331,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003C14  00000000 00000008                       2814          DC    XL16'0000000000000008 0000000000000000'   v4
 00003C1C  00000000 00000000
                                                   2815
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    61
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    61
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3391,7 +3391,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003D00                                          2865+         DS    0FD
 00003D00                      00003D00            2866+         USING *,R5              base for test data and test routine
 00003D00  00003D58                                2867+T53      DC    A(X53)            address of test routine
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    62
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    62
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3451,7 +3451,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003DE4  00000000 00000000                       2916+         DS    2F                 extracted PSW after test (has CC)
 00003DEC  FF                                      2917+         DC    X'FF'              extracted CC, if test failed
 00003DED  E5E2E3D9 E2404040                       2918+         DC    CL8'VSTRS'        instruction name
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    63
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    63
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3511,7 +3511,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003EE8  00000000 00000000                       2967+         DS    FD                gap
 00003EF0  00000000 00000000                       2968+V1O55    DS    XL16              V1 output
 00003EF8  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    64
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    64
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3571,7 +3571,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00003FF2  E771 0000 0806                00000000  3017+         VL    v23,0(R1)         use v23 to test decoder
 00003FF8  E310 5028 0014                00000028  3018+         LGF   R1,V4ADDR         load v4 source
 00003FFE  E781 0000 0806                00000000  3019+         VL    v24,0(R1)         use v24 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    65
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    65
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3631,7 +3631,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000040F4                                          3068+         DROP  R5
 000040F4  00000000 00000004                       3069          DC    XL16'0000000000000004 0000000000000000'   V1
 000040FC  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    66
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    66
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3691,7 +3691,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004204  00000000 00000000
                                                   3116
                                                   3117 *Halfword
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    67
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    67
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3751,7 +3751,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000042EF  02                                      3166+         DC    HL1'2'                  m5 used
 000042F0  02                                      3167+         DC    HL1'2'                  m6 used
 000042F1  02                                      3168+         DC    HL1'2'             CC
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    68
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    68
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3811,7 +3811,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000043E4  00004474                                3217+         DC    A(RE61+32)        address of v3 source
 000043E8  00004484                                3218+         DC    A(RE61+48)        address of v4 source
 000043EC  00000010                                3219+         DC    A(16)             result length
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    69
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    69
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3871,7 +3871,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000044F0                                          3267+X62      DS    0F
 000044F0  E310 5020 0014                00000020  3268+         LGF   R1,V2ADDR         load v2 source
 000044F6  E761 0000 0806                00000000  3269+         VL    v22,0(R1)         use v22 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    70
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    70
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3931,7 +3931,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000045F6  5020 500C                     0000000C  3318+         ST    R2,CCPSW              to save CC
 000045FA  E760 5040 080E                000045B0  3319+         VST   V22,V1O63          save v1 output
 00004600  07FB                                    3320+         BR    R11               return
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    71
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    71
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -3946,7 +3946,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004634  00000000 00000008                       3326          DC    XL16'0000000000000008 0000000000000000'   v4
 0000463C  00000000 00000000
                                                   3327
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    72
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    72
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4006,7 +4006,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004720                                          3377+         DS    0FD
 00004720                      00004720            3378+         USING *,R5              base for test data and test routine
 00004720  00004778                                3379+T65      DC    A(X65)            address of test routine
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    73
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    73
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4066,7 +4066,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004804  00000000 00000000                       3428+         DS    2F                 extracted PSW after test (has CC)
 0000480C  FF                                      3429+         DC    X'FF'              extracted CC, if test failed
 0000480D  E5E2E3D9 E2404040                       3430+         DC    CL8'VSTRS'        instruction name
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    74
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    74
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4126,7 +4126,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004908  00000000 00000000                       3479+         DS    FD                gap
 00004910  00000000 00000000                       3480+V1O67    DS    XL16              V1 output
 00004918  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    75
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    75
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4186,7 +4186,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004A12  E771 0000 0806                00000000  3529+         VL    v23,0(R1)         use v23 to test decoder
 00004A18  E310 5028 0014                00000028  3530+         LGF   R1,V4ADDR         load v4 source
 00004A1E  E781 0000 0806                00000000  3531+         VL    v24,0(R1)         use v24 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    76
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    76
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4246,7 +4246,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004B14                                          3580+         DROP  R5
 00004B14  00000000 00000000                       3581          DC    XL16'0000000000000000 0000000000000000'   V1
 00004B1C  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    77
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    77
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4257,7 +4257,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004B44  00000000 00000008                       3584          DC    XL16'0000000000000008 0000000000000000'   v4
 00004B4C  00000000 00000000
                                                   3585
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    78
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    78
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4317,7 +4317,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004C30                                          3635+         DS    0FD
 00004C30                      00004C30            3636+         USING *,R5              base for test data and test routine
 00004C30  00004C88                                3637+T71      DC    A(X71)            address of test routine
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    79
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    79
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4363,7 +4363,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004CF4  00000000 00000005                       3673          DC    XL16'0000000000000005 0000000000000000'   v4
 00004CFC  00000000 00000000
                                                   3674
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    80
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    80
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4423,7 +4423,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004DE0                                          3724+         DS    0FD
 00004DE0                      00004DE0            3725+         USING *,R5              base for test data and test routine
 00004DE0  00004E38                                3726+T73      DC    A(X73)            address of test routine
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    81
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    81
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4483,7 +4483,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004EC4  00000000 00000000                       3775+         DS    2F                 extracted PSW after test (has CC)
 00004ECC  FF                                      3776+         DC    X'FF'              extracted CC, if test failed
 00004ECD  E5E2E3D9 E2404040                       3777+         DC    CL8'VSTRS'        instruction name
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    82
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    82
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4543,7 +4543,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 00004FC8  00000000 00000000                       3826+         DS    FD                gap
 00004FD0  00000000 00000000                       3827+V1O75    DS    XL16              V1 output
 00004FD8  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    83
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    83
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4603,7 +4603,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000050D2  E771 0000 0806                00000000  3876+         VL    v23,0(R1)         use v23 to test decoder
 000050D8  E310 5028 0014                00000028  3877+         LGF   R1,V4ADDR         load v4 source
 000050DE  E781 0000 0806                00000000  3878+         VL    v24,0(R1)         use v24 to test decoder
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    84
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    84
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4663,7 +4663,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000051D4                                          3927+         DROP  R5
 000051D4  00000000 0000000C                       3928          DC    XL16'000000000000000C 0000000000000000'   V1
 000051DC  00000000 00000000
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    85
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    85
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4723,7 +4723,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000052E4  00000000 00000000
                                                   3975
                                                   3976 *Halfword
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    86
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    86
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4783,7 +4783,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000053CF  02                                      4025+         DC    HL1'2'                  m5 used
 000053D0  00                                      4026+         DC    HL1'0'                  m6 used
 000053D1  00                                      4027+         DC    HL1'0'             CC
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    87
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    87
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4843,7 +4843,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000054C0  00005544                                4076+         DC    A(RE81+16)        address of v2 source
 000054C4  00005554                                4077+         DC    A(RE81+32)        address of v3 source
 000054C8  00005564                                4078+         DC    A(RE81+48)        address of v4 source
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    88
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    88
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4903,7 +4903,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
                                                   4126+*
 000055D0                                          4127+X82      DS    0F
 000055D0  E310 5020 0014                00000020  4128+         LGF   R1,V2ADDR         load v2 source
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    89
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    89
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -4963,7 +4963,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000056D2  B98D 0020                               4177+         EPSW  R2,R0              extract psw
 000056D6  5020 500C                     0000000C  4178+         ST    R2,CCPSW              to save CC
 000056DA  E760 5040 080E                00005690  4179+         VST   V22,V1O83          save v1 output
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    90
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    90
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -5023,7 +5023,7 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000057BC  00000000 00000010                       4228          DC    XL16'0000000000000010 0000000000000000'   V1
 000057C4  00000000 00000000
 000057CC  01020301 02010201                       4229          DC    XL16'0102030102010201 0102030501020304'   v2
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    91
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    91
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -5081,190 +5081,658 @@ ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                            
 000058CC  00000000 00000000
                                                   4274
                                                   4275
-000058D4  00000000                                4276          DC    F'0'     END OF TABLE
-000058D8  00000000                                4277          DC    F'0'
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    92
+                                                  4276 *---------------------------------------------------------------------
+                                                  4277 * case 8 - validate zvector-e7-25-VSTRS-performance test cases
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    92
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                                                  4279 *
-                                                  4280 * table of pointers to individual load test
-                                                  4281 *
-000058DC                                          4282 E7TESTS  DS    0F
-                                                  4283          PTTABLE
-000058DC                                          4284+TTABLE   DS    0F
-000058DC  00001120                                4285+         DC    A(T1)
-000058E0  000011F8                                4286+         DC    A(T2)
-000058E4  000012D0                                4287+         DC    A(T3)
-000058E8  000013A8                                4288+         DC    A(T4)
-000058EC  00001480                                4289+         DC    A(T5)
-000058F0  00001558                                4290+         DC    A(T6)
-000058F4  00001630                                4291+         DC    A(T7)
-000058F8  00001708                                4292+         DC    A(T8)
-000058FC  000017E0                                4293+         DC    A(T9)
-00005900  000018B8                                4294+         DC    A(T10)
-00005904  00001990                                4295+         DC    A(T11)
-00005908  00001A68                                4296+         DC    A(T12)
-0000590C  00001B40                                4297+         DC    A(T13)
-00005910  00001C18                                4298+         DC    A(T14)
-00005914  00001CF0                                4299+         DC    A(T15)
-00005918  00001DC8                                4300+         DC    A(T16)
-0000591C  00001EA0                                4301+         DC    A(T17)
-00005920  00001F78                                4302+         DC    A(T18)
-00005924  00002050                                4303+         DC    A(T19)
-00005928  00002128                                4304+         DC    A(T20)
-0000592C  00002200                                4305+         DC    A(T21)
-00005930  000022D8                                4306+         DC    A(T22)
-00005934  000023B0                                4307+         DC    A(T23)
-00005938  00002488                                4308+         DC    A(T24)
-0000593C  00002560                                4309+         DC    A(T25)
-00005940  00002638                                4310+         DC    A(T26)
-00005944  00002710                                4311+         DC    A(T27)
-00005948  000027E8                                4312+         DC    A(T28)
-0000594C  000028C0                                4313+         DC    A(T29)
-00005950  00002998                                4314+         DC    A(T30)
-00005954  00002A70                                4315+         DC    A(T31)
-00005958  00002B48                                4316+         DC    A(T32)
-0000595C  00002C20                                4317+         DC    A(T33)
-00005960  00002CF8                                4318+         DC    A(T34)
-00005964  00002DD0                                4319+         DC    A(T35)
-00005968  00002EA8                                4320+         DC    A(T36)
-0000596C  00002F80                                4321+         DC    A(T37)
-00005970  00003058                                4322+         DC    A(T38)
-00005974  00003130                                4323+         DC    A(T39)
-00005978  00003208                                4324+         DC    A(T40)
-0000597C  000032E0                                4325+         DC    A(T41)
-00005980  000033B8                                4326+         DC    A(T42)
-00005984  00003490                                4327+         DC    A(T43)
-00005988  00003568                                4328+         DC    A(T44)
-0000598C  00003640                                4329+         DC    A(T45)
-00005990  00003718                                4330+         DC    A(T46)
-00005994  000037F0                                4331+         DC    A(T47)
-00005998  000038C8                                4332+         DC    A(T48)
-0000599C  000039A0                                4333+         DC    A(T49)
-000059A0  00003A78                                4334+         DC    A(T50)
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    93
+                                                  4278 *---------------------------------------------------------------------
+                                                  4279 *Byte : zs=1
+                                                  4280 *Not Found CC=0
+                                                  4281
+                                                  4282          VRR_D VSTRS,0,2,0                               not found
+000058D8                                          4283+         DS    0FD
+000058D8                      000058D8            4284+         USING *,R5              base for test data and test routine
+000058D8  00005930                                4285+T86      DC    A(X86)            address of test routine
+000058DC  0056                                    4286+         DC    H'86'             test number
+000058DE  00                                      4287+         DC    X'00'
+000058DF  00                                      4288+         DC    HL1'0'                  m5 used
+000058E0  02                                      4289+         DC    HL1'2'                  m6 used
+000058E1  00                                      4290+         DC    HL1'0'             CC
+000058E2  07                                      4291+         DC    HL1'7'             CC failed mask
+000058E4  00000000 00000000                       4292+         DS    2F                 extracted PSW after test (has CC)
+000058EC  FF                                      4293+         DC    X'FF'              extracted CC, if test failed
+000058ED  E5E2E3D9 E2404040                       4294+         DC    CL8'VSTRS'        instruction name
+000058F8  0000597C                                4295+         DC    A(RE86+16)        address of v2 source
+000058FC  0000598C                                4296+         DC    A(RE86+32)        address of v3 source
+00005900  0000599C                                4297+         DC    A(RE86+48)        address of v4 source
+00005904  00000010                                4298+         DC    A(16)             result length
+00005908  0000596C                                4299+REA86    DC    A(RE86)           result address
+00005910  00000000 00000000                       4300+         DS    FD                gap
+00005918  00000000 00000000                       4301+V1O86    DS    XL16              V1 output
+00005920  00000000 00000000
+00005928  00000000 00000000                       4302+         DS    FD                gap
+                                                  4303+*
+00005930                                          4304+X86      DS    0F
+00005930  E310 5020 0014                00000020  4305+         LGF   R1,V2ADDR         load v2 source
+00005936  E761 0000 0806                00000000  4306+         VL    v22,0(R1)         use v22 to test decoder
+0000593C  E310 5024 0014                00000024  4307+         LGF   R1,V3ADDR         load v3 source
+00005942  E771 0000 0806                00000000  4308+         VL    v23,0(R1)         use v23 to test decoder
+00005948  E310 5028 0014                00000028  4309+         LGF   R1,V4ADDR         load v4 source
+0000594E  E781 0000 0806                00000000  4310+         VL    v24,0(R1)         use v24 to test decoder
+00005954  E766 7020 8F8B                          4311+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+0000595A  B98D 0020                               4312+         EPSW  R2,R0              extract psw
+0000595E  5020 500C                     0000000C  4313+         ST    R2,CCPSW              to save CC
+00005962  E760 5040 080E                00005918  4314+         VST   V22,V1O86          save v1 output
+00005968  07FB                                    4315+         BR    R11               return
+0000596C                                          4316+RE86     DC    0F                xl16 expected result
+0000596C                                          4317+         DROP  R5
+0000596C  00000000 00000010                       4318          DC    XL16'0000000000000010 0000000000000000'   V1
+00005974  00000000 00000000
+0000597C  30303030 30320A6D                       4319          DC    XL16'3030303030320A6D 6E745F69643A0931'   v2
+00005984  6E745F69 643A0931
+0000598C  5069643A 00007069                       4320          DC    XL16'5069643A00007069 646664203E3D2030'   v3
+00005994  64666420 3E3D2030
+0000599C  00000000 00000004                       4321          DC    XL16'0000000000000004 0000000000000000'   v4
+000059A4  00000000 00000000
+                                                  4322
+                                                  4323          VRR_D VSTRS,0,2,0                               not found
+000059B0                                          4324+         DS    0FD
+000059B0                      000059B0            4325+         USING *,R5              base for test data and test routine
+000059B0  00005A08                                4326+T87      DC    A(X87)            address of test routine
+000059B4  0057                                    4327+         DC    H'87'             test number
+000059B6  00                                      4328+         DC    X'00'
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    93
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-000059A4  00003B50                                4335+         DC    A(T51)
-000059A8  00003C28                                4336+         DC    A(T52)
-000059AC  00003D00                                4337+         DC    A(T53)
-000059B0  00003DD8                                4338+         DC    A(T54)
-000059B4  00003EB0                                4339+         DC    A(T55)
-000059B8  00003F88                                4340+         DC    A(T56)
-000059BC  00004060                                4341+         DC    A(T57)
-000059C0  00004138                                4342+         DC    A(T58)
-000059C4  00004210                                4343+         DC    A(T59)
-000059C8  000042E8                                4344+         DC    A(T60)
-000059CC  000043C0                                4345+         DC    A(T61)
-000059D0  00004498                                4346+         DC    A(T62)
-000059D4  00004570                                4347+         DC    A(T63)
-000059D8  00004648                                4348+         DC    A(T64)
-000059DC  00004720                                4349+         DC    A(T65)
-000059E0  000047F8                                4350+         DC    A(T66)
-000059E4  000048D0                                4351+         DC    A(T67)
-000059E8  000049A8                                4352+         DC    A(T68)
-000059EC  00004A80                                4353+         DC    A(T69)
-000059F0  00004B58                                4354+         DC    A(T70)
-000059F4  00004C30                                4355+         DC    A(T71)
-000059F8  00004D08                                4356+         DC    A(T72)
-000059FC  00004DE0                                4357+         DC    A(T73)
-00005A00  00004EB8                                4358+         DC    A(T74)
-00005A04  00004F90                                4359+         DC    A(T75)
-00005A08  00005068                                4360+         DC    A(T76)
-00005A0C  00005140                                4361+         DC    A(T77)
-00005A10  00005218                                4362+         DC    A(T78)
-00005A14  000052F0                                4363+         DC    A(T79)
-00005A18  000053C8                                4364+         DC    A(T80)
-00005A1C  000054A0                                4365+         DC    A(T81)
-00005A20  00005578                                4366+         DC    A(T82)
-00005A24  00005650                                4367+         DC    A(T83)
-00005A28  00005728                                4368+         DC    A(T84)
-00005A2C  00005800                                4369+         DC    A(T85)
-                                                  4370+*
-00005A30  00000000                                4371+         DC    A(0)              END OF TABLE
-00005A34  00000000                                4372+         DC    A(0)
-                                                  4373
-00005A38  00000000                                4374          DC    F'0'     END OF TABLE
-00005A3C  00000000                                4375          DC    F'0'
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    94
+000059B7  00                                      4329+         DC    HL1'0'                  m5 used
+000059B8  02                                      4330+         DC    HL1'2'                  m6 used
+000059B9  00                                      4331+         DC    HL1'0'             CC
+000059BA  07                                      4332+         DC    HL1'7'             CC failed mask
+000059BC  00000000 00000000                       4333+         DS    2F                 extracted PSW after test (has CC)
+000059C4  FF                                      4334+         DC    X'FF'              extracted CC, if test failed
+000059C5  E5E2E3D9 E2404040                       4335+         DC    CL8'VSTRS'        instruction name
+000059D0  00005A54                                4336+         DC    A(RE87+16)        address of v2 source
+000059D4  00005A64                                4337+         DC    A(RE87+32)        address of v3 source
+000059D8  00005A74                                4338+         DC    A(RE87+48)        address of v4 source
+000059DC  00000010                                4339+         DC    A(16)             result length
+000059E0  00005A44                                4340+REA87    DC    A(RE87)           result address
+000059E8  00000000 00000000                       4341+         DS    FD                gap
+000059F0  00000000 00000000                       4342+V1O87    DS    XL16              V1 output
+000059F8  00000000 00000000
+00005A00  00000000 00000000                       4343+         DS    FD                gap
+                                                  4344+*
+00005A08                                          4345+X87      DS    0F
+00005A08  E310 5020 0014                00000020  4346+         LGF   R1,V2ADDR         load v2 source
+00005A0E  E761 0000 0806                00000000  4347+         VL    v22,0(R1)         use v22 to test decoder
+00005A14  E310 5024 0014                00000024  4348+         LGF   R1,V3ADDR         load v3 source
+00005A1A  E771 0000 0806                00000000  4349+         VL    v23,0(R1)         use v23 to test decoder
+00005A20  E310 5028 0014                00000028  4350+         LGF   R1,V4ADDR         load v4 source
+00005A26  E781 0000 0806                00000000  4351+         VL    v24,0(R1)         use v24 to test decoder
+00005A2C  E766 7020 8F8B                          4352+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+00005A32  B98D 0020                               4353+         EPSW  R2,R0              extract psw
+00005A36  5020 500C                     0000000C  4354+         ST    R2,CCPSW              to save CC
+00005A3A  E760 5040 080E                000059F0  4355+         VST   V22,V1O87          save v1 output
+00005A40  07FB                                    4356+         BR    R11               return
+00005A44                                          4357+RE87     DC    0F                xl16 expected result
+00005A44                                          4358+         DROP  R5
+00005A44  00000000 00000010                       4359          DC    XL16'0000000000000010 0000000000000000'   V1
+00005A4C  00000000 00000000
+00005A54  20736861 7265643A                       4360          DC    XL16'207368617265643A 3231206D61737465'   v2
+00005A5C  3231206D 61737465
+00005A64  202D2000 6D6F756E                       4361          DC    XL16'202D20006D6F756E 74696E666F207061'   v3
+00005A6C  74696E66 6F207061
+00005A74  00000000 00000003                       4362          DC    XL16'0000000000000003 0000000000000000'   v4
+00005A7C  00000000 00000000
+                                                  4363
+                                                  4364 *Not Found CC=1
+                                                  4365
+                                                  4366          VRR_D VSTRS,0,2,1                               not found
+00005A88                                          4367+         DS    0FD
+00005A88                      00005A88            4368+         USING *,R5              base for test data and test routine
+00005A88  00005AE0                                4369+T88      DC    A(X88)            address of test routine
+00005A8C  0058                                    4370+         DC    H'88'             test number
+00005A8E  00                                      4371+         DC    X'00'
+00005A8F  00                                      4372+         DC    HL1'0'                  m5 used
+00005A90  02                                      4373+         DC    HL1'2'                  m6 used
+00005A91  01                                      4374+         DC    HL1'1'             CC
+00005A92  0B                                      4375+         DC    HL1'11'            CC failed mask
+00005A94  00000000 00000000                       4376+         DS    2F                 extracted PSW after test (has CC)
+00005A9C  FF                                      4377+         DC    X'FF'              extracted CC, if test failed
+00005A9D  E5E2E3D9 E2404040                       4378+         DC    CL8'VSTRS'        instruction name
+00005AA8  00005B2C                                4379+         DC    A(RE88+16)        address of v2 source
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    94
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                                                  4377 ***********************************************************************
-                                                  4378 *        Register equates
-                                                  4379 ***********************************************************************
-
-
-                              00000000  00000001  4381 R0       EQU   0
-                              00000001  00000001  4382 R1       EQU   1
-                              00000002  00000001  4383 R2       EQU   2
-                              00000003  00000001  4384 R3       EQU   3
-                              00000004  00000001  4385 R4       EQU   4
-                              00000005  00000001  4386 R5       EQU   5
-                              00000006  00000001  4387 R6       EQU   6
-                              00000007  00000001  4388 R7       EQU   7
-                              00000008  00000001  4389 R8       EQU   8
-                              00000009  00000001  4390 R9       EQU   9
-                              0000000A  00000001  4391 R10      EQU   10
-                              0000000B  00000001  4392 R11      EQU   11
-                              0000000C  00000001  4393 R12      EQU   12
-                              0000000D  00000001  4394 R13      EQU   13
-                              0000000E  00000001  4395 R14      EQU   14
-                              0000000F  00000001  4396 R15      EQU   15
-
-
-
-
-
-
-
-
-                                                  4398 ***********************************************************************
-                                                  4399 *        Register equates
-                                                  4400 ***********************************************************************
-
-
-                              00000000  00000001  4402 V0       EQU   0
-                              00000001  00000001  4403 V1       EQU   1
-                              00000002  00000001  4404 V2       EQU   2
-                              00000003  00000001  4405 V3       EQU   3
-                              00000004  00000001  4406 V4       EQU   4
-                              00000005  00000001  4407 V5       EQU   5
-                              00000006  00000001  4408 V6       EQU   6
-                              00000007  00000001  4409 V7       EQU   7
-                              00000008  00000001  4410 V8       EQU   8
-                              00000009  00000001  4411 V9       EQU   9
-                              0000000A  00000001  4412 V10      EQU   10
-                              0000000B  00000001  4413 V11      EQU   11
-                              0000000C  00000001  4414 V12      EQU   12
-                              0000000D  00000001  4415 V13      EQU   13
-                              0000000E  00000001  4416 V14      EQU   14
-                              0000000F  00000001  4417 V15      EQU   15
-                              00000010  00000001  4418 V16      EQU   16
-                              00000011  00000001  4419 V17      EQU   17
-                              00000012  00000001  4420 V18      EQU   18
-                              00000013  00000001  4421 V19      EQU   19
-                              00000014  00000001  4422 V20      EQU   20
-                              00000015  00000001  4423 V21      EQU   21
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    95
+00005AAC  00005B3C                                4380+         DC    A(RE88+32)        address of v3 source
+00005AB0  00005B4C                                4381+         DC    A(RE88+48)        address of v4 source
+00005AB4  00000010                                4382+         DC    A(16)             result length
+00005AB8  00005B1C                                4383+REA88    DC    A(RE88)           result address
+00005AC0  00000000 00000000                       4384+         DS    FD                gap
+00005AC8  00000000 00000000                       4385+V1O88    DS    XL16              V1 output
+00005AD0  00000000 00000000
+00005AD8  00000000 00000000                       4386+         DS    FD                gap
+                                                  4387+*
+00005AE0                                          4388+X88      DS    0F
+00005AE0  E310 5020 0014                00000020  4389+         LGF   R1,V2ADDR         load v2 source
+00005AE6  E761 0000 0806                00000000  4390+         VL    v22,0(R1)         use v22 to test decoder
+00005AEC  E310 5024 0014                00000024  4391+         LGF   R1,V3ADDR         load v3 source
+00005AF2  E771 0000 0806                00000000  4392+         VL    v23,0(R1)         use v23 to test decoder
+00005AF8  E310 5028 0014                00000028  4393+         LGF   R1,V4ADDR         load v4 source
+00005AFE  E781 0000 0806                00000000  4394+         VL    v24,0(R1)         use v24 to test decoder
+00005B04  E766 7020 8F8B                          4395+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+00005B0A  B98D 0020                               4396+         EPSW  R2,R0              extract psw
+00005B0E  5020 500C                     0000000C  4397+         ST    R2,CCPSW              to save CC
+00005B12  E760 5040 080E                00005AC8  4398+         VST   V22,V1O88          save v1 output
+00005B18  07FB                                    4399+         BR    R11               return
+00005B1C                                          4400+RE88     DC    0F                xl16 expected result
+00005B1C                                          4401+         DROP  R5
+00005B1C  00000000 00000010                       4402          DC    XL16'0000000000000010 0000000000000000'   V1
+00005B24  00000000 00000000
+00005B2C  2F677069 6F2F6472                       4403          DC    XL16'2F6770696F2F6472 6976657273000000'   v2
+00005B34  69766572 73000000
+00005B3C  2F647269 76657273                       4404          DC    XL16'2F64726976657273 2F002F7379732F66'   v3
+00005B44  2F002F73 79732F66
+00005B4C  00000000 00000009                       4405          DC    XL16'0000000000000009 0000000000000000'   v4
+00005B54  00000000 00000000
+                                                  4406
+                                                  4407          VRR_D VSTRS,0,2,1                               not found
+00005B60                                          4408+         DS    0FD
+00005B60                      00005B60            4409+         USING *,R5              base for test data and test routine
+00005B60  00005BB8                                4410+T89      DC    A(X89)            address of test routine
+00005B64  0059                                    4411+         DC    H'89'             test number
+00005B66  00                                      4412+         DC    X'00'
+00005B67  00                                      4413+         DC    HL1'0'                  m5 used
+00005B68  02                                      4414+         DC    HL1'2'                  m6 used
+00005B69  01                                      4415+         DC    HL1'1'             CC
+00005B6A  0B                                      4416+         DC    HL1'11'            CC failed mask
+00005B6C  00000000 00000000                       4417+         DS    2F                 extracted PSW after test (has CC)
+00005B74  FF                                      4418+         DC    X'FF'              extracted CC, if test failed
+00005B75  E5E2E3D9 E2404040                       4419+         DC    CL8'VSTRS'        instruction name
+00005B80  00005C04                                4420+         DC    A(RE89+16)        address of v2 source
+00005B84  00005C14                                4421+         DC    A(RE89+32)        address of v3 source
+00005B88  00005C24                                4422+         DC    A(RE89+48)        address of v4 source
+00005B8C  00000010                                4423+         DC    A(16)             result length
+00005B90  00005BF4                                4424+REA89    DC    A(RE89)           result address
+00005B98  00000000 00000000                       4425+         DS    FD                gap
+00005BA0  00000000 00000000                       4426+V1O89    DS    XL16              V1 output
+00005BA8  00000000 00000000
+00005BB0  00000000 00000000                       4427+         DS    FD                gap
+                                                  4428+*
+00005BB8                                          4429+X89      DS    0F
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    95
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                              00000016  00000001  4424 V22      EQU   22
-                              00000017  00000001  4425 V23      EQU   23
-                              00000018  00000001  4426 V24      EQU   24
-                              00000019  00000001  4427 V25      EQU   25
-                              0000001A  00000001  4428 V26      EQU   26
-                              0000001B  00000001  4429 V27      EQU   27
-                              0000001C  00000001  4430 V28      EQU   28
-                              0000001D  00000001  4431 V29      EQU   29
-                              0000001E  00000001  4432 V30      EQU   30
-                              0000001F  00000001  4433 V31      EQU   31
-                                                  4434
-                                                  4435          END
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    96
+00005BB8  E310 5020 0014                00000020  4430+         LGF   R1,V2ADDR         load v2 source
+00005BBE  E761 0000 0806                00000000  4431+         VL    v22,0(R1)         use v22 to test decoder
+00005BC4  E310 5024 0014                00000024  4432+         LGF   R1,V3ADDR         load v3 source
+00005BCA  E771 0000 0806                00000000  4433+         VL    v23,0(R1)         use v23 to test decoder
+00005BD0  E310 5028 0014                00000028  4434+         LGF   R1,V4ADDR         load v4 source
+00005BD6  E781 0000 0806                00000000  4435+         VL    v24,0(R1)         use v24 to test decoder
+00005BDC  E766 7020 8F8B                          4436+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+00005BE2  B98D 0020                               4437+         EPSW  R2,R0              extract psw
+00005BE6  5020 500C                     0000000C  4438+         ST    R2,CCPSW              to save CC
+00005BEA  E760 5040 080E                00005BA0  4439+         VST   V22,V1O89          save v1 output
+00005BF0  07FB                                    4440+         BR    R11               return
+00005BF4                                          4441+RE89     DC    0F                xl16 expected result
+00005BF4                                          4442+         DROP  R5
+00005BF4  00000000 00000010                       4443          DC    XL16'0000000000000010 0000000000000000'   V1
+00005BFC  00000000 00000000
+00005C04  6D2F6472 69766572                       4444          DC    XL16'6D2F647269766572 7300000000000000'   v2
+00005C0C  73000000 00000000
+00005C14  2F647269 76657273                       4445          DC    XL16'2F64726976657273 2F002F7379732F66'   v3
+00005C1C  2F002F73 79732F66
+00005C24  00000000 00000009                       4446          DC    XL16'0000000000000009 0000000000000000'   v4
+00005C2C  00000000 00000000
+                                                  4447 *Full Match CC=2
+                                                  4448
+                                                  4449          VRR_D VSTRS,0,2,2                               full match
+00005C38                                          4450+         DS    0FD
+00005C38                      00005C38            4451+         USING *,R5              base for test data and test routine
+00005C38  00005C90                                4452+T90      DC    A(X90)            address of test routine
+00005C3C  005A                                    4453+         DC    H'90'             test number
+00005C3E  00                                      4454+         DC    X'00'
+00005C3F  00                                      4455+         DC    HL1'0'                  m5 used
+00005C40  02                                      4456+         DC    HL1'2'                  m6 used
+00005C41  02                                      4457+         DC    HL1'2'             CC
+00005C42  0D                                      4458+         DC    HL1'13'            CC failed mask
+00005C44  00000000 00000000                       4459+         DS    2F                 extracted PSW after test (has CC)
+00005C4C  FF                                      4460+         DC    X'FF'              extracted CC, if test failed
+00005C4D  E5E2E3D9 E2404040                       4461+         DC    CL8'VSTRS'        instruction name
+00005C58  00005CDC                                4462+         DC    A(RE90+16)        address of v2 source
+00005C5C  00005CEC                                4463+         DC    A(RE90+32)        address of v3 source
+00005C60  00005CFC                                4464+         DC    A(RE90+48)        address of v4 source
+00005C64  00000010                                4465+         DC    A(16)             result length
+00005C68  00005CCC                                4466+REA90    DC    A(RE90)           result address
+00005C70  00000000 00000000                       4467+         DS    FD                gap
+00005C78  00000000 00000000                       4468+V1O90    DS    XL16              V1 output
+00005C80  00000000 00000000
+00005C88  00000000 00000000                       4469+         DS    FD                gap
+                                                  4470+*
+00005C90                                          4471+X90      DS    0F
+00005C90  E310 5020 0014                00000020  4472+         LGF   R1,V2ADDR         load v2 source
+00005C96  E761 0000 0806                00000000  4473+         VL    v22,0(R1)         use v22 to test decoder
+00005C9C  E310 5024 0014                00000024  4474+         LGF   R1,V3ADDR         load v3 source
+00005CA2  E771 0000 0806                00000000  4475+         VL    v23,0(R1)         use v23 to test decoder
+00005CA8  E310 5028 0014                00000028  4476+         LGF   R1,V4ADDR         load v4 source
+00005CAE  E781 0000 0806                00000000  4477+         VL    v24,0(R1)         use v24 to test decoder
+00005CB4  E766 7020 8F8B                          4478+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+00005CBA  B98D 0020                               4479+         EPSW  R2,R0              extract psw
+00005CBE  5020 500C                     0000000C  4480+         ST    R2,CCPSW              to save CC
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    96
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00005CC2  E760 5040 080E                00005C78  4481+         VST   V22,V1O90          save v1 output
+00005CC8  07FB                                    4482+         BR    R11               return
+00005CCC                                          4483+RE90     DC    0F                xl16 expected result
+00005CCC                                          4484+         DROP  R5
+00005CCC  00000000 00000003                       4485          DC    XL16'0000000000000003 0000000000000000'   V1
+00005CD4  00000000 00000000
+00005CDC  723A3320 2D206465                       4486          DC    XL16'723A33202D206465 7670747320646576'   v2
+00005CE4  76707473 20646576
+00005CEC  202D2000 6D6F756E                       4487          DC    XL16'202D20006D6F756E 74696E666F207061'   v3
+00005CF4  74696E66 6F207061
+00005CFC  00000000 00000003                       4488          DC    XL16'0000000000000003 0000000000000000'   v4
+00005D04  00000000 00000000
+                                                  4489
+                                                  4490          VRR_D VSTRS,0,2,2                               full match
+00005D10                                          4491+         DS    0FD
+00005D10                      00005D10            4492+         USING *,R5              base for test data and test routine
+00005D10  00005D68                                4493+T91      DC    A(X91)            address of test routine
+00005D14  005B                                    4494+         DC    H'91'             test number
+00005D16  00                                      4495+         DC    X'00'
+00005D17  00                                      4496+         DC    HL1'0'                  m5 used
+00005D18  02                                      4497+         DC    HL1'2'                  m6 used
+00005D19  02                                      4498+         DC    HL1'2'             CC
+00005D1A  0D                                      4499+         DC    HL1'13'            CC failed mask
+00005D1C  00000000 00000000                       4500+         DS    2F                 extracted PSW after test (has CC)
+00005D24  FF                                      4501+         DC    X'FF'              extracted CC, if test failed
+00005D25  E5E2E3D9 E2404040                       4502+         DC    CL8'VSTRS'        instruction name
+00005D30  00005DB4                                4503+         DC    A(RE91+16)        address of v2 source
+00005D34  00005DC4                                4504+         DC    A(RE91+32)        address of v3 source
+00005D38  00005DD4                                4505+         DC    A(RE91+48)        address of v4 source
+00005D3C  00000010                                4506+         DC    A(16)             result length
+00005D40  00005DA4                                4507+REA91    DC    A(RE91)           result address
+00005D48  00000000 00000000                       4508+         DS    FD                gap
+00005D50  00000000 00000000                       4509+V1O91    DS    XL16              V1 output
+00005D58  00000000 00000000
+00005D60  00000000 00000000                       4510+         DS    FD                gap
+                                                  4511+*
+00005D68                                          4512+X91      DS    0F
+00005D68  E310 5020 0014                00000020  4513+         LGF   R1,V2ADDR         load v2 source
+00005D6E  E761 0000 0806                00000000  4514+         VL    v22,0(R1)         use v22 to test decoder
+00005D74  E310 5024 0014                00000024  4515+         LGF   R1,V3ADDR         load v3 source
+00005D7A  E771 0000 0806                00000000  4516+         VL    v23,0(R1)         use v23 to test decoder
+00005D80  E310 5028 0014                00000028  4517+         LGF   R1,V4ADDR         load v4 source
+00005D86  E781 0000 0806                00000000  4518+         VL    v24,0(R1)         use v24 to test decoder
+00005D8C  E766 7020 8F8B                          4519+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+00005D92  B98D 0020                               4520+         EPSW  R2,R0              extract psw
+00005D96  5020 500C                     0000000C  4521+         ST    R2,CCPSW              to save CC
+00005D9A  E760 5040 080E                00005D50  4522+         VST   V22,V1O91          save v1 output
+00005DA0  07FB                                    4523+         BR    R11               return
+00005DA4                                          4524+RE91     DC    0F                xl16 expected result
+00005DA4                                          4525+         DROP  R5
+00005DA4  00000000 0000000A                       4526          DC    XL16'000000000000000A 0000000000000000'   V1
+00005DAC  00000000 00000000
+00005DB4  360A696E 6F3A0935                       4527          DC    XL16'360A696E6F3A0935 390A5069643A0939'   v2
+00005DBC  390A5069 643A0939
+00005DC4  5069643A 00007069                       4528          DC    XL16'5069643A00007069 646664203E3D2030'   v3
+00005DCC  64666420 3E3D2030
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    97
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00005DD4  00000000 00000004                       4529          DC    XL16'0000000000000004 0000000000000000'   v4
+00005DDC  00000000 00000000
+                                                  4530
+                                                  4531 *Partial Match CC=3
+                                                  4532
+                                                  4533          VRR_D VSTRS,0,2,3                               partial match
+00005DE8                                          4534+         DS    0FD
+00005DE8                      00005DE8            4535+         USING *,R5              base for test data and test routine
+00005DE8  00005E40                                4536+T92      DC    A(X92)            address of test routine
+00005DEC  005C                                    4537+         DC    H'92'             test number
+00005DEE  00                                      4538+         DC    X'00'
+00005DEF  00                                      4539+         DC    HL1'0'                  m5 used
+00005DF0  02                                      4540+         DC    HL1'2'                  m6 used
+00005DF1  03                                      4541+         DC    HL1'3'             CC
+00005DF2  0E                                      4542+         DC    HL1'14'            CC failed mask
+00005DF4  00000000 00000000                       4543+         DS    2F                 extracted PSW after test (has CC)
+00005DFC  FF                                      4544+         DC    X'FF'              extracted CC, if test failed
+00005DFD  E5E2E3D9 E2404040                       4545+         DC    CL8'VSTRS'        instruction name
+00005E08  00005E8C                                4546+         DC    A(RE92+16)        address of v2 source
+00005E0C  00005E9C                                4547+         DC    A(RE92+32)        address of v3 source
+00005E10  00005EAC                                4548+         DC    A(RE92+48)        address of v4 source
+00005E14  00000010                                4549+         DC    A(16)             result length
+00005E18  00005E7C                                4550+REA92    DC    A(RE92)           result address
+00005E20  00000000 00000000                       4551+         DS    FD                gap
+00005E28  00000000 00000000                       4552+V1O92    DS    XL16              V1 output
+00005E30  00000000 00000000
+00005E38  00000000 00000000                       4553+         DS    FD                gap
+                                                  4554+*
+00005E40                                          4555+X92      DS    0F
+00005E40  E310 5020 0014                00000020  4556+         LGF   R1,V2ADDR         load v2 source
+00005E46  E761 0000 0806                00000000  4557+         VL    v22,0(R1)         use v22 to test decoder
+00005E4C  E310 5024 0014                00000024  4558+         LGF   R1,V3ADDR         load v3 source
+00005E52  E771 0000 0806                00000000  4559+         VL    v23,0(R1)         use v23 to test decoder
+00005E58  E310 5028 0014                00000028  4560+         LGF   R1,V4ADDR         load v4 source
+00005E5E  E781 0000 0806                00000000  4561+         VL    v24,0(R1)         use v24 to test decoder
+00005E64  E766 7020 8F8B                          4562+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+00005E6A  B98D 0020                               4563+         EPSW  R2,R0              extract psw
+00005E6E  5020 500C                     0000000C  4564+         ST    R2,CCPSW              to save CC
+00005E72  E760 5040 080E                00005E28  4565+         VST   V22,V1O92          save v1 output
+00005E78  07FB                                    4566+         BR    R11               return
+00005E7C                                          4567+RE92     DC    0F                xl16 expected result
+00005E7C                                          4568+         DROP  R5
+00005E7C  00000000 0000000F                       4569          DC    XL16'000000000000000F 0000000000000000'   V1
+00005E84  00000000 00000000
+00005E8C  6E6F6465 76097365                       4570          DC    XL16'6E6F646576097365 6375726974796673'   v2
+00005E94  63757269 74796673
+00005E9C  73656C69 6E757866                       4571          DC    XL16'73656C696E757866 73002F7379732F66'   v3
+00005EA4  73002F73 79732F66
+00005EAC  00000000 00000009                       4572          DC    XL16'0000000000000009 0000000000000000'   v4
+00005EB4  00000000 00000000
+                                                  4573
+                                                  4574          VRR_D VSTRS,0,2,3                               partial match
+00005EC0                                          4575+         DS    0FD
+00005EC0                      00005EC0            4576+         USING *,R5              base for test data and test routine
+00005EC0  00005F18                                4577+T93      DC    A(X93)            address of test routine
+00005EC4  005D                                    4578+         DC    H'93'             test number
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    98
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00005EC6  00                                      4579+         DC    X'00'
+00005EC7  00                                      4580+         DC    HL1'0'                  m5 used
+00005EC8  02                                      4581+         DC    HL1'2'                  m6 used
+00005EC9  03                                      4582+         DC    HL1'3'             CC
+00005ECA  0E                                      4583+         DC    HL1'14'            CC failed mask
+00005ECC  00000000 00000000                       4584+         DS    2F                 extracted PSW after test (has CC)
+00005ED4  FF                                      4585+         DC    X'FF'              extracted CC, if test failed
+00005ED5  E5E2E3D9 E2404040                       4586+         DC    CL8'VSTRS'        instruction name
+00005EE0  00005F64                                4587+         DC    A(RE93+16)        address of v2 source
+00005EE4  00005F74                                4588+         DC    A(RE93+32)        address of v3 source
+00005EE8  00005F84                                4589+         DC    A(RE93+48)        address of v4 source
+00005EEC  00000010                                4590+         DC    A(16)             result length
+00005EF0  00005F54                                4591+REA93    DC    A(RE93)           result address
+00005EF8  00000000 00000000                       4592+         DS    FD                gap
+00005F00  00000000 00000000                       4593+V1O93    DS    XL16              V1 output
+00005F08  00000000 00000000
+00005F10  00000000 00000000                       4594+         DS    FD                gap
+                                                  4595+*
+00005F18                                          4596+X93      DS    0F
+00005F18  E310 5020 0014                00000020  4597+         LGF   R1,V2ADDR         load v2 source
+00005F1E  E761 0000 0806                00000000  4598+         VL    v22,0(R1)         use v22 to test decoder
+00005F24  E310 5024 0014                00000024  4599+         LGF   R1,V3ADDR         load v3 source
+00005F2A  E771 0000 0806                00000000  4600+         VL    v23,0(R1)         use v23 to test decoder
+00005F30  E310 5028 0014                00000028  4601+         LGF   R1,V4ADDR         load v4 source
+00005F36  E781 0000 0806                00000000  4602+         VL    v24,0(R1)         use v24 to test decoder
+00005F3C  E766 7020 8F8B                          4603+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+00005F42  B98D 0020                               4604+         EPSW  R2,R0              extract psw
+00005F46  5020 500C                     0000000C  4605+         ST    R2,CCPSW              to save CC
+00005F4A  E760 5040 080E                00005F00  4606+         VST   V22,V1O93          save v1 output
+00005F50  07FB                                    4607+         BR    R11               return
+00005F54                                          4608+RE93     DC    0F                xl16 expected result
+00005F54                                          4609+         DROP  R5
+00005F54  00000000 00000009                       4610          DC    XL16'0000000000000009 0000000000000000'   V1
+00005F5C  00000000 00000000
+00005F64  2F627573 2F677069                       4611          DC    XL16'2F6275732F677069 6F2F647269766572'   v2
+00005F6C  6F2F6472 69766572
+00005F74  2F647269 76657273                       4612          DC    XL16'2F64726976657273 2F002F7379732F66'   v3
+00005F7C  2F002F73 79732F66
+00005F84  00000000 00000009                       4613          DC    XL16'0000000000000009 0000000000000000'   v4
+00005F8C  00000000 00000000
+                                                  4614
+                                                  4615          VRR_D VSTRS,0,2,3                               partial match
+00005F98                                          4616+         DS    0FD
+00005F98                      00005F98            4617+         USING *,R5              base for test data and test routine
+00005F98  00005FF0                                4618+T94      DC    A(X94)            address of test routine
+00005F9C  005E                                    4619+         DC    H'94'             test number
+00005F9E  00                                      4620+         DC    X'00'
+00005F9F  00                                      4621+         DC    HL1'0'                  m5 used
+00005FA0  02                                      4622+         DC    HL1'2'                  m6 used
+00005FA1  03                                      4623+         DC    HL1'3'             CC
+00005FA2  0E                                      4624+         DC    HL1'14'            CC failed mask
+00005FA4  00000000 00000000                       4625+         DS    2F                 extracted PSW after test (has CC)
+00005FAC  FF                                      4626+         DC    X'FF'              extracted CC, if test failed
+00005FAD  E5E2E3D9 E2404040                       4627+         DC    CL8'VSTRS'        instruction name
+00005FB8  0000603C                                4628+         DC    A(RE94+16)        address of v2 source
+00005FBC  0000604C                                4629+         DC    A(RE94+32)        address of v3 source
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page    99
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00005FC0  0000605C                                4630+         DC    A(RE94+48)        address of v4 source
+00005FC4  00000010                                4631+         DC    A(16)             result length
+00005FC8  0000602C                                4632+REA94    DC    A(RE94)           result address
+00005FD0  00000000 00000000                       4633+         DS    FD                gap
+00005FD8  00000000 00000000                       4634+V1O94    DS    XL16              V1 output
+00005FE0  00000000 00000000
+00005FE8  00000000 00000000                       4635+         DS    FD                gap
+                                                  4636+*
+00005FF0                                          4637+X94      DS    0F
+00005FF0  E310 5020 0014                00000020  4638+         LGF   R1,V2ADDR         load v2 source
+00005FF6  E761 0000 0806                00000000  4639+         VL    v22,0(R1)         use v22 to test decoder
+00005FFC  E310 5024 0014                00000024  4640+         LGF   R1,V3ADDR         load v3 source
+00006002  E771 0000 0806                00000000  4641+         VL    v23,0(R1)         use v23 to test decoder
+00006008  E310 5028 0014                00000028  4642+         LGF   R1,V4ADDR         load v4 source
+0000600E  E781 0000 0806                00000000  4643+         VL    v24,0(R1)         use v24 to test decoder
+00006014  E766 7020 8F8B                          4644+         VSTRS V22,V22,V23,V24,0,2      instruction (dest is a source)
+0000601A  B98D 0020                               4645+         EPSW  R2,R0              extract psw
+0000601E  5020 500C                     0000000C  4646+         ST    R2,CCPSW              to save CC
+00006022  E760 5040 080E                00005FD8  4647+         VST   V22,V1O94          save v1 output
+00006028  07FB                                    4648+         BR    R11               return
+0000602C                                          4649+RE94     DC    0F                xl16 expected result
+0000602C                                          4650+         DROP  R5
+0000602C  00000000 0000000F                       4651          DC    XL16'000000000000000F 0000000000000000'   V1
+00006034  00000000 00000000
+0000603C  AAAAAAAA AAAAAAAA                       4652          DC    XL16'AAAAAAAAAAAAAAAA AAAAAAAAAAAAAAAA'   v2
+00006044  AAAAAAAA AAAAAAAA
+0000604C  AABBBBAA AABBAAAA                       4653          DC    XL16'AABBBBAAAABBAAAA BBAAAABBAAAABBAA'   v3
+00006054  BBAAAABB AAAABBAA
+0000605C  00000000 00000002                       4654          DC    XL16'0000000000000002 0000000000000000'   v4
+00006064  00000000 00000000
+                                                  4655
+                                                  4656
+                                                  4657
+0000606C  00000000                                4658          DC    F'0'     END OF TABLE
+00006070  00000000                                4659          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   100
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4661 *
+                                                  4662 * table of pointers to individual load test
+                                                  4663 *
+00006074                                          4664 E7TESTS  DS    0F
+                                                  4665          PTTABLE
+00006074                                          4666+TTABLE   DS    0F
+00006074  00001120                                4667+         DC    A(T1)
+00006078  000011F8                                4668+         DC    A(T2)
+0000607C  000012D0                                4669+         DC    A(T3)
+00006080  000013A8                                4670+         DC    A(T4)
+00006084  00001480                                4671+         DC    A(T5)
+00006088  00001558                                4672+         DC    A(T6)
+0000608C  00001630                                4673+         DC    A(T7)
+00006090  00001708                                4674+         DC    A(T8)
+00006094  000017E0                                4675+         DC    A(T9)
+00006098  000018B8                                4676+         DC    A(T10)
+0000609C  00001990                                4677+         DC    A(T11)
+000060A0  00001A68                                4678+         DC    A(T12)
+000060A4  00001B40                                4679+         DC    A(T13)
+000060A8  00001C18                                4680+         DC    A(T14)
+000060AC  00001CF0                                4681+         DC    A(T15)
+000060B0  00001DC8                                4682+         DC    A(T16)
+000060B4  00001EA0                                4683+         DC    A(T17)
+000060B8  00001F78                                4684+         DC    A(T18)
+000060BC  00002050                                4685+         DC    A(T19)
+000060C0  00002128                                4686+         DC    A(T20)
+000060C4  00002200                                4687+         DC    A(T21)
+000060C8  000022D8                                4688+         DC    A(T22)
+000060CC  000023B0                                4689+         DC    A(T23)
+000060D0  00002488                                4690+         DC    A(T24)
+000060D4  00002560                                4691+         DC    A(T25)
+000060D8  00002638                                4692+         DC    A(T26)
+000060DC  00002710                                4693+         DC    A(T27)
+000060E0  000027E8                                4694+         DC    A(T28)
+000060E4  000028C0                                4695+         DC    A(T29)
+000060E8  00002998                                4696+         DC    A(T30)
+000060EC  00002A70                                4697+         DC    A(T31)
+000060F0  00002B48                                4698+         DC    A(T32)
+000060F4  00002C20                                4699+         DC    A(T33)
+000060F8  00002CF8                                4700+         DC    A(T34)
+000060FC  00002DD0                                4701+         DC    A(T35)
+00006100  00002EA8                                4702+         DC    A(T36)
+00006104  00002F80                                4703+         DC    A(T37)
+00006108  00003058                                4704+         DC    A(T38)
+0000610C  00003130                                4705+         DC    A(T39)
+00006110  00003208                                4706+         DC    A(T40)
+00006114  000032E0                                4707+         DC    A(T41)
+00006118  000033B8                                4708+         DC    A(T42)
+0000611C  00003490                                4709+         DC    A(T43)
+00006120  00003568                                4710+         DC    A(T44)
+00006124  00003640                                4711+         DC    A(T45)
+00006128  00003718                                4712+         DC    A(T46)
+0000612C  000037F0                                4713+         DC    A(T47)
+00006130  000038C8                                4714+         DC    A(T48)
+00006134  000039A0                                4715+         DC    A(T49)
+00006138  00003A78                                4716+         DC    A(T50)
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   101
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000613C  00003B50                                4717+         DC    A(T51)
+00006140  00003C28                                4718+         DC    A(T52)
+00006144  00003D00                                4719+         DC    A(T53)
+00006148  00003DD8                                4720+         DC    A(T54)
+0000614C  00003EB0                                4721+         DC    A(T55)
+00006150  00003F88                                4722+         DC    A(T56)
+00006154  00004060                                4723+         DC    A(T57)
+00006158  00004138                                4724+         DC    A(T58)
+0000615C  00004210                                4725+         DC    A(T59)
+00006160  000042E8                                4726+         DC    A(T60)
+00006164  000043C0                                4727+         DC    A(T61)
+00006168  00004498                                4728+         DC    A(T62)
+0000616C  00004570                                4729+         DC    A(T63)
+00006170  00004648                                4730+         DC    A(T64)
+00006174  00004720                                4731+         DC    A(T65)
+00006178  000047F8                                4732+         DC    A(T66)
+0000617C  000048D0                                4733+         DC    A(T67)
+00006180  000049A8                                4734+         DC    A(T68)
+00006184  00004A80                                4735+         DC    A(T69)
+00006188  00004B58                                4736+         DC    A(T70)
+0000618C  00004C30                                4737+         DC    A(T71)
+00006190  00004D08                                4738+         DC    A(T72)
+00006194  00004DE0                                4739+         DC    A(T73)
+00006198  00004EB8                                4740+         DC    A(T74)
+0000619C  00004F90                                4741+         DC    A(T75)
+000061A0  00005068                                4742+         DC    A(T76)
+000061A4  00005140                                4743+         DC    A(T77)
+000061A8  00005218                                4744+         DC    A(T78)
+000061AC  000052F0                                4745+         DC    A(T79)
+000061B0  000053C8                                4746+         DC    A(T80)
+000061B4  000054A0                                4747+         DC    A(T81)
+000061B8  00005578                                4748+         DC    A(T82)
+000061BC  00005650                                4749+         DC    A(T83)
+000061C0  00005728                                4750+         DC    A(T84)
+000061C4  00005800                                4751+         DC    A(T85)
+000061C8  000058D8                                4752+         DC    A(T86)
+000061CC  000059B0                                4753+         DC    A(T87)
+000061D0  00005A88                                4754+         DC    A(T88)
+000061D4  00005B60                                4755+         DC    A(T89)
+000061D8  00005C38                                4756+         DC    A(T90)
+000061DC  00005D10                                4757+         DC    A(T91)
+000061E0  00005DE8                                4758+         DC    A(T92)
+000061E4  00005EC0                                4759+         DC    A(T93)
+000061E8  00005F98                                4760+         DC    A(T94)
+                                                  4761+*
+000061EC  00000000                                4762+         DC    A(0)              END OF TABLE
+000061F0  00000000                                4763+         DC    A(0)
+                                                  4764
+000061F4  00000000                                4765          DC    F'0'     END OF TABLE
+000061F8  00000000                                4766          DC    F'0'
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   102
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4768 ***********************************************************************
+                                                  4769 *        Register equates
+                                                  4770 ***********************************************************************
+
+
+                              00000000  00000001  4772 R0       EQU   0
+                              00000001  00000001  4773 R1       EQU   1
+                              00000002  00000001  4774 R2       EQU   2
+                              00000003  00000001  4775 R3       EQU   3
+                              00000004  00000001  4776 R4       EQU   4
+                              00000005  00000001  4777 R5       EQU   5
+                              00000006  00000001  4778 R6       EQU   6
+                              00000007  00000001  4779 R7       EQU   7
+                              00000008  00000001  4780 R8       EQU   8
+                              00000009  00000001  4781 R9       EQU   9
+                              0000000A  00000001  4782 R10      EQU   10
+                              0000000B  00000001  4783 R11      EQU   11
+                              0000000C  00000001  4784 R12      EQU   12
+                              0000000D  00000001  4785 R13      EQU   13
+                              0000000E  00000001  4786 R14      EQU   14
+                              0000000F  00000001  4787 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  4789 ***********************************************************************
+                                                  4790 *        Register equates
+                                                  4791 ***********************************************************************
+
+
+                              00000000  00000001  4793 V0       EQU   0
+                              00000001  00000001  4794 V1       EQU   1
+                              00000002  00000001  4795 V2       EQU   2
+                              00000003  00000001  4796 V3       EQU   3
+                              00000004  00000001  4797 V4       EQU   4
+                              00000005  00000001  4798 V5       EQU   5
+                              00000006  00000001  4799 V6       EQU   6
+                              00000007  00000001  4800 V7       EQU   7
+                              00000008  00000001  4801 V8       EQU   8
+                              00000009  00000001  4802 V9       EQU   9
+                              0000000A  00000001  4803 V10      EQU   10
+                              0000000B  00000001  4804 V11      EQU   11
+                              0000000C  00000001  4805 V12      EQU   12
+                              0000000D  00000001  4806 V13      EQU   13
+                              0000000E  00000001  4807 V14      EQU   14
+                              0000000F  00000001  4808 V15      EQU   15
+                              00000010  00000001  4809 V16      EQU   16
+                              00000011  00000001  4810 V17      EQU   17
+                              00000012  00000001  4811 V18      EQU   18
+                              00000013  00000001  4812 V19      EQU   19
+                              00000014  00000001  4813 V20      EQU   20
+                              00000015  00000001  4814 V21      EQU   21
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   103
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001  4815 V22      EQU   22
+                              00000017  00000001  4816 V23      EQU   23
+                              00000018  00000001  4817 V24      EQU   24
+                              00000019  00000001  4818 V25      EQU   25
+                              0000001A  00000001  4819 V26      EQU   26
+                              0000001B  00000001  4820 V27      EQU   27
+                              0000001C  00000001  4821 V28      EQU   28
+                              0000001D  00000001  4822 V29      EQU   29
+                              0000001E  00000001  4823 V30      EQU   30
+                              0000001F  00000001  4824 V31      EQU   31
+                                                  4825
+                                                  4826          END
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   104
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
@@ -5285,11 +5753,12 @@ CCPSW               F    0000000C           4   507   240   678   720   762   80
                                                      2298  2341  2383  2425  2468  2510  2552  2595  2637  2679  2722  2764  2806
                                                      2853  2895  2937  2980  3022  3064  3107  3149  3191  3234  3276  3318  3365
                                                      3407  3449  3492  3534  3576  3623  3665  3712  3754  3796  3839  3881  3923
-                                                     3966  4008  4050  4094  4136  4178  4223  4265
+                                                     3966  4008  4050  4094  4136  4178  4223  4265  4313  4354  4397  4438  4480
+                                                     4521  4564  4605  4646
 CTLR0               F    00000544           4   406   161   162   163   164
 DECNUM              C    000010D4          16   482   248   250   257   259   264   266   285   287   294   296   301   303
 E7TEST              4    00000000          88   496   210
-E7TESTS             F    000058DC           4  4282   203
+E7TESTS             F    00006074           4  4664   203
 EDIT                X    000010A8          18   477   249   258   265   286   295   302
 ENDTEST             U    00000418           1   323   208
 EOJ                 I    00000528           4   396   196   326
@@ -5300,7 +5769,7 @@ FAILMSG             U    000003A0           1   283   226
 FAILPSW             D    00000530           8   398   400
 FAILTEST            I    00000540           4   400   327
 FB0001              F    00000280           8   180   184   185   187
-IMAGE               1    00000000       23104     0
+IMAGE               1    00000000       25084     0
 K                   U    00000400           1   419   420   421   422
 K64                 U    00010000           1   421
 M5                  U    00000007           1   500   293
@@ -5323,12 +5792,12 @@ PRTLNG              U    0000004B           1   454   306
 PRTM5               C    00001044           2   449   297
 PRTM6               C    00001050           2   452   304
 PRTNAME             C    00001033           8   447   290
-PRTNUM              C    00001018           3   445   288
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    97
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   105
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
-R0                  U    00000000           1  4381   111   161   164   184   186   187   188   193   212   213   269   273   274
+PRTNUM              C    00001018           3   445   288
+R0                  U    00000000           1  4772   111   161   164   184   186   187   188   193   212   213   269   273   274
                                                       306   314   315   338   340   356   359   361   363   365   380   677   719
                                                       761   804   846   888   931   973  1015  1062  1104  1146  1189  1231  1273
                                                      1316  1358  1400  1443  1485  1527  1574  1616  1658  1701  1743  1785  1828
@@ -5336,8 +5805,9 @@ R0                  U    00000000           1  4381   111   161   164   184   18
                                                      2424  2467  2509  2551  2594  2636  2678  2721  2763  2805  2852  2894  2936
                                                      2979  3021  3063  3106  3148  3190  3233  3275  3317  3364  3406  3448  3491
                                                      3533  3575  3622  3664  3711  3753  3795  3838  3880  3922  3965  4007  4049
-                                                     4093  4135  4177  4222  4264
-R1                  U    00000001           1  4382   194   219   220   221   224   225   240   241   242   243   270   307   324
+                                                     4093  4135  4177  4222  4264  4312  4353  4396  4437  4479  4520  4563  4604
+                                                     4645
+R1                  U    00000001           1  4773   194   219   220   221   224   225   240   241   242   243   270   307   324
                                                       325   370   384   670   671   672   673   674   675   712   713   714   715
                                                       716   717   754   755   756   757   758   759   797   798   799   800   801
                                                       802   839   840   841   842   843   844   881   882   883   884   885   886
@@ -5377,24 +5847,29 @@ R1                  U    00000001           1  4382   194   219   220   221   22
                                                      3961  3962  3963  4000  4001  4002  4003  4004  4005  4042  4043  4044  4045
                                                      4046  4047  4086  4087  4088  4089  4090  4091  4128  4129  4130  4131  4132
                                                      4133  4170  4171  4172  4173  4174  4175  4215  4216  4217  4218  4219  4220
-                                                     4257  4258  4259  4260  4261  4262
-R10                 U    0000000A           1  4391   149   158   159
-R11                 U    0000000B           1  4392   216   217   680   722   764   807   849   891   934   976  1018  1065  1107
+                                                     4257  4258  4259  4260  4261  4262  4305  4306  4307  4308  4309  4310  4346
+                                                     4347  4348  4349  4350  4351  4389  4390  4391  4392  4393  4394  4430  4431
+                                                     4432  4433  4434  4435  4472  4473  4474  4475  4476  4477  4513  4514  4515
+                                                     4516  4517  4518  4556  4557  4558  4559  4560  4561  4597  4598  4599  4600
+                                                     4601  4602  4638  4639  4640  4641  4642  4643
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   106
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+R10                 U    0000000A           1  4782   149   158   159
+R11                 U    0000000B           1  4783   216   217   680   722   764   807   849   891   934   976  1018  1065  1107
                                                      1149  1192  1234  1276  1319  1361  1403  1446  1488  1530  1577  1619  1661
                                                      1704  1746  1788  1831  1873  1915  1958  2000  2042  2085  2127  2169  2216
                                                      2258  2300  2343  2385  2427  2470  2512  2554  2597  2639  2681  2724  2766
                                                      2808  2855  2897  2939  2982  3024  3066  3109  3151  3193  3236  3278  3320
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    98
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
                                                      3367  3409  3451  3494  3536  3578  3625  3667  3714  3756  3798  3841  3883
-                                                     3925  3968  4010  4052  4096  4138  4180  4225  4267
-R12                 U    0000000C           1  4393   203   206   228   317
-R13                 U    0000000D           1  4394
-R14                 U    0000000E           1  4395
-R15                 U    0000000F           1  4396   271   308   333   343   344
-R2                  U    00000002           1  4383   195   247   248   255   256   257   262   263   264   284   285   292   293
+                                                     3925  3968  4010  4052  4096  4138  4180  4225  4267  4315  4356  4399  4440
+                                                     4482  4523  4566  4607  4648
+R12                 U    0000000C           1  4784   203   206   228   317
+R13                 U    0000000D           1  4785
+R14                 U    0000000E           1  4786
+R15                 U    0000000F           1  4787   271   308   333   343   344
+R2                  U    00000002           1  4774   195   247   248   255   256   257   262   263   264   284   285   292   293
                                                       294   299   300   301   338   339   340   357   359   365   366   367   369
                                                       375   380   381   677   678   719   720   761   762   804   805   846   847
                                                       888   889   931   932   973   974  1015  1016  1062  1063  1104  1105  1146
@@ -5409,10 +5884,11 @@ R2                  U    00000002           1  4383   195   247   248   255   25
                                                      3365  3406  3407  3448  3449  3491  3492  3533  3534  3575  3576  3622  3623
                                                      3664  3665  3711  3712  3753  3754  3795  3796  3838  3839  3880  3881  3922
                                                      3923  3965  3966  4007  4008  4049  4050  4093  4094  4135  4136  4177  4178
-                                                     4222  4223  4264  4265
-R3                  U    00000003           1  4384
-R4                  U    00000004           1  4385
-R5                  U    00000005           1  4386   206   207   210   334   342   649   682   691   724   733   766   776   809
+                                                     4222  4223  4264  4265  4312  4313  4353  4354  4396  4397  4437  4438  4479
+                                                     4480  4520  4521  4563  4564  4604  4605  4645  4646
+R3                  U    00000003           1  4775
+R4                  U    00000004           1  4776
+R5                  U    00000005           1  4777   206   207   210   334   342   649   682   691   724   733   766   776   809
                                                       818   851   860   893   903   936   945   978   987  1020  1034  1067  1076
                                                      1109  1118  1151  1161  1194  1203  1236  1245  1278  1288  1321  1330  1363
                                                      1372  1405  1415  1448  1457  1490  1499  1532  1546  1579  1588  1621  1630
@@ -5425,16 +5901,21 @@ R5                  U    00000005           1  4386   206   207   210   334   34
                                                      3322  3336  3369  3378  3411  3420  3453  3463  3496  3505  3538  3547  3580
                                                      3594  3627  3636  3669  3683  3716  3725  3758  3767  3800  3810  3843  3852
                                                      3885  3894  3927  3937  3970  3979  4012  4021  4054  4065  4098  4107  4140
-                                                     4149  4182  4194  4227  4236  4269
-R6                  U    00000006           1  4387
-R7                  U    00000007           1  4388
-R8                  U    00000008           1  4389   147   151   152   153   155
-R9                  U    00000009           1  4390   148   155   156   158
+                                                     4149  4182  4194  4227  4236  4269  4284  4317  4325  4358  4368  4401  4409
+                                                     4442  4451  4484  4492  4525  4535  4568  4576  4609  4617  4650
+R6                  U    00000006           1  4778
+R7                  U    00000007           1  4779
+R8                  U    00000008           1  4780   147   151   152   153   155
+R9                  U    00000009           1  4781   148   155   156   158
 RE1                 F    000011B4           4   681   660   661   662   664
 RE10                F    0000194C           4  1066  1045  1046  1047  1049
 RE11                F    00001A24           4  1108  1087  1088  1089  1091
 RE12                F    00001AFC           4  1150  1129  1130  1131  1133
 RE13                F    00001BD4           4  1193  1172  1173  1174  1176
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   107
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
 RE14                F    00001CAC           4  1235  1214  1215  1216  1218
 RE15                F    00001D84           4  1277  1256  1257  1258  1260
 RE16                F    00001E5C           4  1320  1299  1300  1301  1303
@@ -5444,10 +5925,6 @@ RE19                F    000020E4           4  1447  1426  1427  1428  1430
 RE2                 F    0000128C           4   723   702   703   704   706
 RE20                F    000021BC           4  1489  1468  1469  1470  1472
 RE21                F    00002294           4  1531  1510  1511  1512  1514
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page    99
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
 RE22                F    0000236C           4  1578  1557  1558  1559  1561
 RE23                F    00002444           4  1620  1599  1600  1601  1603
 RE24                F    0000251C           4  1662  1641  1642  1643  1645
@@ -5495,6 +5972,10 @@ RE61                F    00004454           4  3237  3216  3217  3218  3220
 RE62                F    0000452C           4  3279  3258  3259  3260  3262
 RE63                F    00004604           4  3321  3300  3301  3302  3304
 RE64                F    000046DC           4  3368  3347  3348  3349  3351
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   108
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
 RE65                F    000047B4           4  3410  3389  3390  3391  3393
 RE66                F    0000488C           4  3452  3431  3432  3433  3435
 RE67                F    00004964           4  3495  3474  3475  3476  3478
@@ -5504,10 +5985,6 @@ RE7                 F    000016C4           4   935   914   915   916   918
 RE70                F    00004BEC           4  3626  3605  3606  3607  3609
 RE71                F    00004CC4           4  3668  3647  3648  3649  3651
 RE72                F    00004D9C           4  3715  3694  3695  3696  3698
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   100
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
 RE73                F    00004E74           4  3757  3736  3737  3738  3740
 RE74                F    00004F4C           4  3799  3778  3779  3780  3782
 RE75                F    00005024           4  3842  3821  3822  3823  3825
@@ -5522,7 +5999,16 @@ RE82                F    0000560C           4  4139  4118  4119  4120  4122
 RE83                F    000056E4           4  4181  4160  4161  4162  4164
 RE84                F    000057BC           4  4226  4205  4206  4207  4209
 RE85                F    00005894           4  4268  4247  4248  4249  4251
+RE86                F    0000596C           4  4316  4295  4296  4297  4299
+RE87                F    00005A44           4  4357  4336  4337  4338  4340
+RE88                F    00005B1C           4  4400  4379  4380  4381  4383
+RE89                F    00005BF4           4  4441  4420  4421  4422  4424
 RE9                 F    00001874           4  1019   998   999  1000  1002
+RE90                F    00005CCC           4  4483  4462  4463  4464  4466
+RE91                F    00005DA4           4  4524  4503  4504  4505  4507
+RE92                F    00005E7C           4  4567  4546  4547  4548  4550
+RE93                F    00005F54           4  4608  4587  4588  4589  4591
+RE94                F    0000602C           4  4649  4628  4629  4630  4632
 REA1                A    00001150           4   664
 REA10               A    000018E8           4  1049
 REA11               A    000019C0           4  1091
@@ -5546,6 +6032,10 @@ REA27               A    00002740           4  1772
 REA28               A    00002818           4  1815
 REA29               A    000028F0           4  1857
 REA3                A    00001300           4   748
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   109
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
 REA30               A    000029C8           4  1899
 REA31               A    00002AA0           4  1942
 REA32               A    00002B78           4  1984
@@ -5564,10 +6054,6 @@ REA43               A    000034C0           4  2454
 REA44               A    00003598           4  2496
 REA45               A    00003670           4  2538
 REA46               A    00003748           4  2581
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   101
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
 REA47               A    00003820           4  2623
 REA48               A    000038F8           4  2665
 REA49               A    000039D0           4  2708
@@ -5606,12 +6092,25 @@ REA78               A    00005248           4  3952
 REA79               A    00005320           4  3994
 REA8                A    00001738           4   960
 REA80               A    000053F8           4  4036
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   110
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
 REA81               A    000054D0           4  4080
 REA82               A    000055A8           4  4122
 REA83               A    00005680           4  4164
 REA84               A    00005758           4  4209
 REA85               A    00005830           4  4251
+REA86               A    00005908           4  4299
+REA87               A    000059E0           4  4340
+REA88               A    00005AB8           4  4383
+REA89               A    00005B90           4  4424
 REA9                A    00001810           4  1002
+REA90               A    00005C68           4  4466
+REA91               A    00005D40           4  4507
+REA92               A    00005E18           4  4550
+REA93               A    00005EF0           4  4591
+REA94               A    00005FC8           4  4632
 READDR              A    00000030           4   515   224
 REG2LOW             U    000000DD           1   425
 REG2PATT            U    AABBCCDD           1   424
@@ -5623,117 +6122,126 @@ RPTSVR5             F    00000448           4   347   334   342
 SKL0001             U    0000004E           1   177   193
 SKT0001             C    0000022A          20   174   177   194
 SVOLDPSW            U    00000140           0   113
-T1                  A    00001120           4   650  4285
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   102
+T1                  A    00001120           4   650  4667
+T10                 A    000018B8           4  1035  4676
+T11                 A    00001990           4  1077  4677
+T12                 A    00001A68           4  1119  4678
+T13                 A    00001B40           4  1162  4679
+T14                 A    00001C18           4  1204  4680
+T15                 A    00001CF0           4  1246  4681
+T16                 A    00001DC8           4  1289  4682
+T17                 A    00001EA0           4  1331  4683
+T18                 A    00001F78           4  1373  4684
+T19                 A    00002050           4  1416  4685
+T2                  A    000011F8           4   692  4668
+T20                 A    00002128           4  1458  4686
+T21                 A    00002200           4  1500  4687
+T22                 A    000022D8           4  1547  4688
+T23                 A    000023B0           4  1589  4689
+T24                 A    00002488           4  1631  4690
+T25                 A    00002560           4  1674  4691
+T26                 A    00002638           4  1716  4692
+T27                 A    00002710           4  1758  4693
+T28                 A    000027E8           4  1801  4694
+T29                 A    000028C0           4  1843  4695
+T3                  A    000012D0           4   734  4669
+T30                 A    00002998           4  1885  4696
+T31                 A    00002A70           4  1928  4697
+T32                 A    00002B48           4  1970  4698
+T33                 A    00002C20           4  2012  4699
+T34                 A    00002CF8           4  2055  4700
+T35                 A    00002DD0           4  2097  4701
+T36                 A    00002EA8           4  2139  4702
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   111
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
-T10                 A    000018B8           4  1035  4294
-T11                 A    00001990           4  1077  4295
-T12                 A    00001A68           4  1119  4296
-T13                 A    00001B40           4  1162  4297
-T14                 A    00001C18           4  1204  4298
-T15                 A    00001CF0           4  1246  4299
-T16                 A    00001DC8           4  1289  4300
-T17                 A    00001EA0           4  1331  4301
-T18                 A    00001F78           4  1373  4302
-T19                 A    00002050           4  1416  4303
-T2                  A    000011F8           4   692  4286
-T20                 A    00002128           4  1458  4304
-T21                 A    00002200           4  1500  4305
-T22                 A    000022D8           4  1547  4306
-T23                 A    000023B0           4  1589  4307
-T24                 A    00002488           4  1631  4308
-T25                 A    00002560           4  1674  4309
-T26                 A    00002638           4  1716  4310
-T27                 A    00002710           4  1758  4311
-T28                 A    000027E8           4  1801  4312
-T29                 A    000028C0           4  1843  4313
-T3                  A    000012D0           4   734  4287
-T30                 A    00002998           4  1885  4314
-T31                 A    00002A70           4  1928  4315
-T32                 A    00002B48           4  1970  4316
-T33                 A    00002C20           4  2012  4317
-T34                 A    00002CF8           4  2055  4318
-T35                 A    00002DD0           4  2097  4319
-T36                 A    00002EA8           4  2139  4320
-T37                 A    00002F80           4  2186  4321
-T38                 A    00003058           4  2228  4322
-T39                 A    00003130           4  2270  4323
-T4                  A    000013A8           4   777  4288
-T40                 A    00003208           4  2313  4324
-T41                 A    000032E0           4  2355  4325
-T42                 A    000033B8           4  2397  4326
-T43                 A    00003490           4  2440  4327
-T44                 A    00003568           4  2482  4328
-T45                 A    00003640           4  2524  4329
-T46                 A    00003718           4  2567  4330
-T47                 A    000037F0           4  2609  4331
-T48                 A    000038C8           4  2651  4332
-T49                 A    000039A0           4  2694  4333
-T5                  A    00001480           4   819  4289
-T50                 A    00003A78           4  2736  4334
-T51                 A    00003B50           4  2778  4335
-T52                 A    00003C28           4  2825  4336
-T53                 A    00003D00           4  2867  4337
-T54                 A    00003DD8           4  2909  4338
-T55                 A    00003EB0           4  2952  4339
-T56                 A    00003F88           4  2994  4340
-T57                 A    00004060           4  3036  4341
-T58                 A    00004138           4  3079  4342
-T59                 A    00004210           4  3121  4343
-T6                  A    00001558           4   861  4290
-T60                 A    000042E8           4  3163  4344
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   103
+T37                 A    00002F80           4  2186  4703
+T38                 A    00003058           4  2228  4704
+T39                 A    00003130           4  2270  4705
+T4                  A    000013A8           4   777  4670
+T40                 A    00003208           4  2313  4706
+T41                 A    000032E0           4  2355  4707
+T42                 A    000033B8           4  2397  4708
+T43                 A    00003490           4  2440  4709
+T44                 A    00003568           4  2482  4710
+T45                 A    00003640           4  2524  4711
+T46                 A    00003718           4  2567  4712
+T47                 A    000037F0           4  2609  4713
+T48                 A    000038C8           4  2651  4714
+T49                 A    000039A0           4  2694  4715
+T5                  A    00001480           4   819  4671
+T50                 A    00003A78           4  2736  4716
+T51                 A    00003B50           4  2778  4717
+T52                 A    00003C28           4  2825  4718
+T53                 A    00003D00           4  2867  4719
+T54                 A    00003DD8           4  2909  4720
+T55                 A    00003EB0           4  2952  4721
+T56                 A    00003F88           4  2994  4722
+T57                 A    00004060           4  3036  4723
+T58                 A    00004138           4  3079  4724
+T59                 A    00004210           4  3121  4725
+T6                  A    00001558           4   861  4672
+T60                 A    000042E8           4  3163  4726
+T61                 A    000043C0           4  3206  4727
+T62                 A    00004498           4  3248  4728
+T63                 A    00004570           4  3290  4729
+T64                 A    00004648           4  3337  4730
+T65                 A    00004720           4  3379  4731
+T66                 A    000047F8           4  3421  4732
+T67                 A    000048D0           4  3464  4733
+T68                 A    000049A8           4  3506  4734
+T69                 A    00004A80           4  3548  4735
+T7                  A    00001630           4   904  4673
+T70                 A    00004B58           4  3595  4736
+T71                 A    00004C30           4  3637  4737
+T72                 A    00004D08           4  3684  4738
+T73                 A    00004DE0           4  3726  4739
+T74                 A    00004EB8           4  3768  4740
+T75                 A    00004F90           4  3811  4741
+T76                 A    00005068           4  3853  4742
+T77                 A    00005140           4  3895  4743
+T78                 A    00005218           4  3938  4744
+T79                 A    000052F0           4  3980  4745
+T8                  A    00001708           4   946  4674
+T80                 A    000053C8           4  4022  4746
+T81                 A    000054A0           4  4066  4747
+T82                 A    00005578           4  4108  4748
+T83                 A    00005650           4  4150  4749
+T84                 A    00005728           4  4195  4750
+T85                 A    00005800           4  4237  4751
+T86                 A    000058D8           4  4285  4752
+T87                 A    000059B0           4  4326  4753
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   112
 
      SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
 
-T61                 A    000043C0           4  3206  4345
-T62                 A    00004498           4  3248  4346
-T63                 A    00004570           4  3290  4347
-T64                 A    00004648           4  3337  4348
-T65                 A    00004720           4  3379  4349
-T66                 A    000047F8           4  3421  4350
-T67                 A    000048D0           4  3464  4351
-T68                 A    000049A8           4  3506  4352
-T69                 A    00004A80           4  3548  4353
-T7                  A    00001630           4   904  4291
-T70                 A    00004B58           4  3595  4354
-T71                 A    00004C30           4  3637  4355
-T72                 A    00004D08           4  3684  4356
-T73                 A    00004DE0           4  3726  4357
-T74                 A    00004EB8           4  3768  4358
-T75                 A    00004F90           4  3811  4359
-T76                 A    00005068           4  3853  4360
-T77                 A    00005140           4  3895  4361
-T78                 A    00005218           4  3938  4362
-T79                 A    000052F0           4  3980  4363
-T8                  A    00001708           4   946  4292
-T80                 A    000053C8           4  4022  4364
-T81                 A    000054A0           4  4066  4365
-T82                 A    00005578           4  4108  4366
-T83                 A    00005650           4  4150  4367
-T84                 A    00005728           4  4195  4368
-T85                 A    00005800           4  4237  4369
-T9                  A    000017E0           4   988  4293
+T88                 A    00005A88           4  4369  4754
+T89                 A    00005B60           4  4410  4755
+T9                  A    000017E0           4   988  4675
+T90                 A    00005C38           4  4452  4756
+T91                 A    00005D10           4  4493  4757
+T92                 A    00005DE8           4  4536  4758
+T93                 A    00005EC0           4  4577  4759
+T94                 A    00005F98           4  4618  4760
 TESTCC              I    00000318           4   231   221
 TESTING             F    00001004           4   436   213
 TESTREST            U    00000300           1   223   276
 TNUM                H    00000004           2   498   212   247   284
 TSUB                A    00000000           4   497   216
-TTABLE              F    000058DC           4  4284
-V0                  U    00000000           1  4402
-V1                  U    00000001           1  4403   215
-V10                 U    0000000A           1  4412
-V11                 U    0000000B           1  4413
-V12                 U    0000000C           1  4414
-V13                 U    0000000D           1  4415
-V14                 U    0000000E           1  4416
-V15                 U    0000000F           1  4417
-V16                 U    00000010           1  4418
-V17                 U    00000011           1  4419
-V18                 U    00000012           1  4420
-V19                 U    00000013           1  4421
+TTABLE              F    00006074           4  4666
+V0                  U    00000000           1  4793
+V1                  U    00000001           1  4794   215
+V10                 U    0000000A           1  4803
+V11                 U    0000000B           1  4804
+V12                 U    0000000C           1  4805
+V13                 U    0000000D           1  4806
+V14                 U    0000000E           1  4807
+V15                 U    0000000F           1  4808
+V16                 U    00000010           1  4809
+V17                 U    00000011           1  4810
+V18                 U    00000012           1  4811
+V19                 U    00000013           1  4812
 V1FUDGE             X    000010F4          16   489   215
 V1O1                X    00001160          16   666   679
 V1O10               X    000018F8          16  1051  1064
@@ -5744,10 +6252,6 @@ V1O14               X    00001C58          16  1220  1233
 V1O15               X    00001D30          16  1262  1275
 V1O16               X    00001E08          16  1305  1318
 V1O17               X    00001EE0          16  1347  1360
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   104
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
 V1O18               X    00001FB8          16  1389  1402
 V1O19               X    00002090          16  1432  1445
 V1O2                X    00001238          16   708   721
@@ -5768,6 +6272,10 @@ V1O32               X    00002B88          16  1986  1999
 V1O33               X    00002C60          16  2028  2041
 V1O34               X    00002D38          16  2071  2084
 V1O35               X    00002E10          16  2113  2126
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   113
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
 V1O36               X    00002EE8          16  2155  2168
 V1O37               X    00002FC0          16  2202  2215
 V1O38               X    00003098          16  2244  2257
@@ -5804,10 +6312,6 @@ V1O65               X    00004760          16  3395  3408
 V1O66               X    00004838          16  3437  3450
 V1O67               X    00004910          16  3480  3493
 V1O68               X    000049E8          16  3522  3535
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   105
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
 V1O69               X    00004AC0          16  3564  3577
 V1O7                X    00001670          16   920   933
 V1O70               X    00004B98          16  3611  3624
@@ -5827,12 +6331,25 @@ V1O82               X    000055B8          16  4124  4137
 V1O83               X    00005690          16  4166  4179
 V1O84               X    00005768          16  4211  4224
 V1O85               X    00005840          16  4253  4266
+V1O86               X    00005918          16  4301  4314
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   114
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V1O87               X    000059F0          16  4342  4355
+V1O88               X    00005AC8          16  4385  4398
+V1O89               X    00005BA0          16  4426  4439
 V1O9                X    00001820          16  1004  1017
+V1O90               X    00005C78          16  4468  4481
+V1O91               X    00005D50          16  4509  4522
+V1O92               X    00005E28          16  4552  4565
+V1O93               X    00005F00          16  4593  4606
+V1O94               X    00005FD8          16  4634  4647
 V1OUTPUT            X    00000040          16   517   225
-V2                  U    00000002           1  4404
-V20                 U    00000014           1  4422
-V21                 U    00000015           1  4423
-V22                 U    00000016           1  4424   671   676   679   713   718   721   755   760   763   798   803   806   840
+V2                  U    00000002           1  4795
+V20                 U    00000014           1  4813
+V21                 U    00000015           1  4814
+V22                 U    00000016           1  4815   671   676   679   713   718   721   755   760   763   798   803   806   840
                                                       845   848   882   887   890   925   930   933   967   972   975  1009  1014
                                                      1017  1056  1061  1064  1098  1103  1106  1140  1145  1148  1183  1188  1191
                                                      1225  1230  1233  1267  1272  1275  1310  1315  1318  1352  1357  1360  1394
@@ -5851,8 +6368,10 @@ V22                 U    00000016           1  4424   671   676   679   713   71
                                                      3621  3624  3658  3663  3666  3705  3710  3713  3747  3752  3755  3789  3794
                                                      3797  3832  3837  3840  3874  3879  3882  3916  3921  3924  3959  3964  3967
                                                      4001  4006  4009  4043  4048  4051  4087  4092  4095  4129  4134  4137  4171
-                                                     4176  4179  4216  4221  4224  4258  4263  4266
-V23                 U    00000017           1  4425   673   676   715   718   757   760   800   803   842   845   884   887   927
+                                                     4176  4179  4216  4221  4224  4258  4263  4266  4306  4311  4314  4347  4352
+                                                     4355  4390  4395  4398  4431  4436  4439  4473  4478  4481  4514  4519  4522
+                                                     4557  4562  4565  4598  4603  4606  4639  4644  4647
+V23                 U    00000017           1  4816   673   676   715   718   757   760   800   803   842   845   884   887   927
                                                       930   969   972  1011  1014  1058  1061  1100  1103  1142  1145  1185  1188
                                                      1227  1230  1269  1272  1312  1315  1354  1357  1396  1399  1439  1442  1481
                                                      1484  1523  1526  1570  1573  1612  1615  1654  1657  1697  1700  1739  1742
@@ -5864,18 +6383,19 @@ V23                 U    00000017           1  4425   673   676   715   718   75
                                                      3147  3186  3189  3229  3232  3271  3274  3313  3316  3360  3363  3402  3405
                                                      3444  3447  3487  3490  3529  3532  3571  3574  3618  3621  3660  3663  3707
                                                      3710  3749  3752  3791  3794  3834  3837  3876  3879  3918  3921  3961  3964
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   106
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
                                                      4003  4006  4045  4048  4089  4092  4131  4134  4173  4176  4218  4221  4260
-                                                     4263
-V24                 U    00000018           1  4426   675   676   717   718   759   760   802   803   844   845   886   887   929
+                                                     4263  4308  4311  4349  4352  4392  4395  4433  4436  4475  4478  4516  4519
+                                                     4559  4562  4600  4603  4641  4644
+V24                 U    00000018           1  4817   675   676   717   718   759   760   802   803   844   845   886   887   929
                                                       930   971   972  1013  1014  1060  1061  1102  1103  1144  1145  1187  1188
                                                      1229  1230  1271  1272  1314  1315  1356  1357  1398  1399  1441  1442  1483
                                                      1484  1525  1526  1572  1573  1614  1615  1656  1657  1699  1700  1741  1742
                                                      1783  1784  1826  1827  1868  1869  1910  1911  1953  1954  1995  1996  2037
                                                      2038  2080  2081  2122  2123  2164  2165  2211  2212  2253  2254  2295  2296
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   115
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
                                                      2338  2339  2380  2381  2422  2423  2465  2466  2507  2508  2549  2550  2592
                                                      2593  2634  2635  2676  2677  2719  2720  2761  2762  2803  2804  2850  2851
                                                      2892  2893  2934  2935  2977  2978  3019  3020  3061  3062  3104  3105  3146
@@ -5883,55 +6403,59 @@ V24                 U    00000018           1  4426   675   676   717   718   75
                                                      3446  3447  3489  3490  3531  3532  3573  3574  3620  3621  3662  3663  3709
                                                      3710  3751  3752  3793  3794  3836  3837  3878  3879  3920  3921  3963  3964
                                                      4005  4006  4047  4048  4091  4092  4133  4134  4175  4176  4220  4221  4262
-                                                     4263
-V25                 U    00000019           1  4427
-V26                 U    0000001A           1  4428
-V27                 U    0000001B           1  4429
-V28                 U    0000001C           1  4430
-V29                 U    0000001D           1  4431
+                                                     4263  4310  4311  4351  4352  4394  4395  4435  4436  4477  4478  4518  4519
+                                                     4561  4562  4602  4603  4643  4644
+V25                 U    00000019           1  4818
+V26                 U    0000001A           1  4819
+V27                 U    0000001B           1  4820
+V28                 U    0000001C           1  4821
+V29                 U    0000001D           1  4822
 V2ADDR              A    00000020           4   511   670   712   754   797   839   881   924   966  1008  1055  1097  1139  1182
                                                      1224  1266  1309  1351  1393  1436  1478  1520  1567  1609  1651  1694  1736
                                                      1778  1821  1863  1905  1948  1990  2032  2075  2117  2159  2206  2248  2290
                                                      2333  2375  2417  2460  2502  2544  2587  2629  2671  2714  2756  2798  2845
                                                      2887  2929  2972  3014  3056  3099  3141  3183  3226  3268  3310  3357  3399
                                                      3441  3484  3526  3568  3615  3657  3704  3746  3788  3831  3873  3915  3958
-                                                     4000  4042  4086  4128  4170  4215  4257
-V3                  U    00000003           1  4405
-V30                 U    0000001E           1  4432
-V31                 U    0000001F           1  4433
+                                                     4000  4042  4086  4128  4170  4215  4257  4305  4346  4389  4430  4472  4513
+                                                     4556  4597  4638
+V3                  U    00000003           1  4796
+V30                 U    0000001E           1  4823
+V31                 U    0000001F           1  4824
 V3ADDR              A    00000024           4   512   672   714   756   799   841   883   926   968  1010  1057  1099  1141  1184
                                                      1226  1268  1311  1353  1395  1438  1480  1522  1569  1611  1653  1696  1738
                                                      1780  1823  1865  1907  1950  1992  2034  2077  2119  2161  2208  2250  2292
                                                      2335  2377  2419  2462  2504  2546  2589  2631  2673  2716  2758  2800  2847
                                                      2889  2931  2974  3016  3058  3101  3143  3185  3228  3270  3312  3359  3401
                                                      3443  3486  3528  3570  3617  3659  3706  3748  3790  3833  3875  3917  3960
-                                                     4002  4044  4088  4130  4172  4217  4259
-V4                  U    00000004           1  4406
+                                                     4002  4044  4088  4130  4172  4217  4259  4307  4348  4391  4432  4474  4515
+                                                     4558  4599  4640
+V4                  U    00000004           1  4797
 V4ADDR              A    00000028           4   513   674   716   758   801   843   885   928   970  1012  1059  1101  1143  1186
                                                      1228  1270  1313  1355  1397  1440  1482  1524  1571  1613  1655  1698  1740
                                                      1782  1825  1867  1909  1952  1994  2036  2079  2121  2163  2210  2252  2294
                                                      2337  2379  2421  2464  2506  2548  2591  2633  2675  2718  2760  2802  2849
                                                      2891  2933  2976  3018  3060  3103  3145  3187  3230  3272  3314  3361  3403
                                                      3445  3488  3530  3572  3619  3661  3708  3750  3792  3835  3877  3919  3962
-                                                     4004  4046  4090  4132  4174  4219  4261
-V5                  U    00000005           1  4407
-V6                  U    00000006           1  4408
-V7                  U    00000007           1  4409
-V8                  U    00000008           1  4410
-V9                  U    00000009           1  4411
+                                                     4004  4046  4090  4132  4174  4219  4261  4309  4350  4393  4434  4476  4517
+                                                     4560  4601  4642
+V5                  U    00000005           1  4798
+V6                  U    00000006           1  4799
+V7                  U    00000007           1  4800
+V8                  U    00000008           1  4801
+V9                  U    00000009           1  4802
 X0001               U    000002A8           1   183   171   184
 X1                  F    00001178           4   669   650
 X10                 F    00001910           4  1054  1035
 X11                 F    000019E8           4  1096  1077
 X12                 F    00001AC0           4  1138  1119
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   107
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
 X13                 F    00001B98           4  1181  1162
 X14                 F    00001C70           4  1223  1204
 X15                 F    00001D48           4  1265  1246
 X16                 F    00001E20           4  1308  1289
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   116
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
 X17                 F    00001EF8           4  1350  1331
 X18                 F    00001FD0           4  1392  1373
 X19                 F    000020A8           4  1435  1416
@@ -5984,14 +6508,14 @@ X60                 F    00004340           4  3182  3163
 X61                 F    00004418           4  3225  3206
 X62                 F    000044F0           4  3267  3248
 X63                 F    000045C8           4  3309  3290
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   108
-
-     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
-
 X64                 F    000046A0           4  3356  3337
 X65                 F    00004778           4  3398  3379
 X66                 F    00004850           4  3440  3421
 X67                 F    00004928           4  3483  3464
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   117
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
 X68                 F    00004A00           4  3525  3506
 X69                 F    00004AD8           4  3567  3548
 X7                  F    00001688           4   923   904
@@ -6012,36 +6536,46 @@ X82                 F    000055D0           4  4127  4108
 X83                 F    000056A8           4  4169  4150
 X84                 F    00005780           4  4214  4195
 X85                 F    00005858           4  4256  4237
+X86                 F    00005930           4  4304  4285
+X87                 F    00005A08           4  4345  4326
+X88                 F    00005AE0           4  4388  4369
+X89                 F    00005BB8           4  4429  4410
 X9                  F    00001838           4  1007   988
+X90                 F    00005C90           4  4471  4452
+X91                 F    00005D68           4  4512  4493
+X92                 F    00005E40           4  4555  4536
+X93                 F    00005F18           4  4596  4577
+X94                 F    00005FF0           4  4637  4618
 XC0001              U    000002D0           1   197   189
-ZVE7TST             J    00000000       23104   110   113   115   119   123   434   111
+ZVE7TST             J    00000000       25084   110   113   115   119   123   434   111
 =A(E7TESTS)         A    00000550           4   411   203
 =AL2(L'MSGMSG)      R    0000055E           2   415   361
 =F'1'               F    00000558           4   413   273   314
 =F'64'              F    0000054C           4   410   188
 =H'0'               H    0000055C           2   414   356
 =XL4'3'             X    00000554           4   412   242
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   109
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   118
 
  MACRO   DEFN  REFERENCES
 
 FCHECK     63    170
-PTTABLE   604   4283
+PTTABLE   604   4665
 VRR_D     536    647    689    731    774    816    858    901    943    985   1032   1074   1116   1159   1201   1243   1286   1328
                 1370   1413   1455   1497   1544   1586   1628   1671   1713   1755   1798   1840   1882   1925   1967   2009   2052
                 2094   2136   2183   2225   2267   2310   2352   2394   2437   2479   2521   2564   2606   2648   2691   2733   2775
                 2822   2864   2906   2949   2991   3033   3076   3118   3160   3203   3245   3287   3334   3376   3418   3461   3503
                 3545   3592   3634   3681   3723   3765   3808   3850   3892   3935   3977   4019   4063   4105   4147   4192   4234
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   110
+                4282   4323   4366   4407   4449   4490   4533   4574   4615
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   119
 
    DESC     SYMBOL   SIZE     POS        ADDR
 
 Entry: 0
 
-Image      IMAGE    23104  0000-5A3F  0000-5A3F
-  Region            23104  0000-5A3F  0000-5A3F
-    CSECT  ZVE7TST  23104  0000-5A3F  0000-5A3F
-ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                04 Apr 2025 12:54:34  Page   111
+Image      IMAGE    25084  0000-61FB  0000-61FB
+  Region            25084  0000-61FB  0000-61FB
+    CSECT  ZVE7TST  25084  0000-61FB  0000-61FB
+ASMA Ver. 0.7.0  zvector-e7-25-VSTRS                                                                15 Apr 2025 12:39:24  Page   120
 
    STMT                       FILE NAME
 
