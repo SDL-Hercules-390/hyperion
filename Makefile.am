@@ -410,6 +410,7 @@ libhercu_la_SOURCES = \
   hthreads.c          \
   logger.c            \
   logmsg.c            \
+  lz4.c               \
   machdep.c           \
   memrchr.c           \
   parser.c            \
@@ -1093,6 +1094,7 @@ noinst_HEADERS =          \
   instfmts.h              \
   linklist.h              \
   logger.h                \
+  lz4.h                   \
   machdep.h               \
   memrchr.h               \
   mpc.h                   \

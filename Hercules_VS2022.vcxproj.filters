@@ -432,6 +432,9 @@
     <ClCompile Include="shared.c">
       <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
     </ClCompile>
+	<ClCompile Include="lz4.c">
+      <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="awstape.c">
       <Filter>Source Files\Hercules\Devices\Tape\Source Files</Filter>
     </ClCompile>
@@ -3212,7 +3215,7 @@
     <None Include="tests\zvector-e6-08-VLRLR.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
-   <None Include="tests\zvector-e6-08-VLRLR.pdf">
+    <None Include="tests\zvector-e6-08-VLRLR.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\zvector-e6-09-VSTRLR.list">
@@ -4235,6 +4238,9 @@
       <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\include</Filter>
     </ClInclude>
     <ClInclude Include="vsvers.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lz4.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

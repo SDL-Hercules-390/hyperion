@@ -432,6 +432,9 @@
     <ClCompile Include="shared.c">
       <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
     </ClCompile>
+	<ClCompile Include="lz4.c">
+      <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="awstape.c">
       <Filter>Source Files\Hercules\Devices\Tape\Source Files</Filter>
     </ClCompile>

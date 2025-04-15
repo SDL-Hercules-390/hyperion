@@ -277,6 +277,7 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="lz4.c" />
     <ClCompile Include="_archdep_templ.c" />
     <ClCompile Include="archlvl.c" />
     <ClCompile Include="assist.c" />
@@ -1513,6 +1514,7 @@
     <ClInclude Include="decNumber\include\decnumber_version.h" />
     <ClInclude Include="decNumber\include\decPacked.h" />
     <ClInclude Include="decNumber\include\decQuad.h" />
+    <ClInclude Include="lz4.h" />
     <ClInclude Include="telnet\include\telnet.h" />
     <ClInclude Include="telnet\include\telnet_version.h" />
     <ClInclude Include="devtype.h" />

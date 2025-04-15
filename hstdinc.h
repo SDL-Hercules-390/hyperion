@@ -261,6 +261,9 @@
 #ifdef HAVE_ZLIB_H
   #include <zlib.h>
 #endif
+
+#include "lz4.h"
+
 #ifdef HAVE_SYS_CAPABILITY_H
   #include <sys/capability.h>
 #endif
