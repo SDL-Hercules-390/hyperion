@@ -73,7 +73,7 @@ Hercules: Release Notes
   <p>
     <b>NOTE:</b> Flushing the dasd data cache frequently may increase the host disk activity,
     as frequently-updated tracks would be written more often in this scenario.  For
-    largely-idle Hercules systems, this increase will likely have negligable effects.  For
+    largely-idle Hercules systems, this increase will likely have negligible effects.  For
     busy systems with activity scattered across a broad set of tracks, the data cache should
     already be flushed often, albeit unpredictably.  For busy systems with more-focused
     activity, the high-activity tracks will be written to disk more often, which could
@@ -435,7 +435,7 @@ Hercules: Release Notes
     <a href="https://sdl-hercules-390.github.io/html/hercconf.html#PANOPT"><code>PANOPT</code></a>
     configuration file statement
     that will colorize non-informational Error, Warning and Debug panel messages to make them more
-    noticable to the user (less likely to be missed). Users are <i>strongly encouraged</i> to enable
+    noticeable to the user (less likely to be missed). Users are <i>strongly encouraged</i> to enable
     this new option in their configuration files.
   </p>
 
@@ -937,7 +937,7 @@ Hercules: Release Notes
     implementation still used in the older spinhawk 3.xx series of Hercules).
   </p><p>
     If you experience any anomalies in the behavior of your guest operating
-    system, verify that you are using architecurally valid/correct configuration
+    system, verify that you are using architecturally valid/correct configuration
     settings that your guest operating system expects.
   </p><p>
     Pay <i><u>particular</u></i> attention to your
@@ -991,7 +991,7 @@ Hercules: Release Notes
     from the Hercules HMC command line via the Hercules <code>exec</code> command).
   </p><p>
     Rexx scripts, when run within Hercules via the 'exec' command, can
-    Address the HERCULES enviroment allowing you to issue Hercules commands
+    Address the HERCULES environment allowing you to issue Hercules commands
     and retrieve the results via the builtin 'AWSCMD' Rexx function call.
   </p><p>
     For more information please refer to the new
@@ -1027,7 +1027,7 @@ Hercules: Release Notes
   <dd>
   <p>
     The behavior of the <a href="hercconf.html#DIAG8CMD">DIAG8CMD</a> command's
-    <code>ECHO</code> and <code>NOECHO</code> options has changed. Previosuly
+    <code>ECHO</code> and <code>NOECHO</code> options has changed. Previously
     the echo/noecho option had a a direct impact on the data that was placed into
     the Diagnose 8 instruction's response buffer. This has been fixed so that now
     it does not.
@@ -1176,7 +1176,7 @@ Hercules: Release Notes
                     X'E4', buffer, X'20', buffersize</pre>
   </p><p>
     Again please refer to the provided TMOUNT program for a simple example
-    of how automount support might be implmented on a guest operating system.
+    of how automount support might be implemented on a guest operating system.
   </p>
 </dl>
 
@@ -1191,7 +1191,7 @@ Hercules: Release Notes
   <dd>
   <p>
     The 'conspawn' utility used to process 'sh' commands now recognizes a
-    specially designed keyword "startgui" to accomodate automatic starting
+    specially designed keyword "startgui" to accommodate automatic starting
     of Windows GUI applications via the .RC file or panel command-line.
   </p><p>
     If the first word following 'sh' is "startgui", then the "ShellExecute"
@@ -1237,7 +1237,7 @@ Hercules: Release Notes
     id indicates the tape's physical "segment" location of where the lower 22-
     bit block number is physically located on the tape. (The block-id segment
     is used to allow the tape drive to quickly position itself to the approximate
-    location where the desired block acually resides on the tape and thus allows
+    location where the desired block actually resides on the tape and thus allows
     high-speed positioning for the Locate CCW).
   </p><p>
     If the model of SCSI tape drive you are actually using with Hercules does not
@@ -1314,7 +1314,7 @@ Hercules: Release Notes
     in the form of a new 'INCLUDE' (and associated 'IGNORE') statement, allowing
     configuration files to "include" statements from a different named file.
   </p><p>
-    Additonally, a new "enhanced" symbolic substitution syntax is now also
+    Additionally, a new "enhanced" symbolic substitution syntax is now also
     supported. Refer to the Hercules "Configuration File" documentation for
     further information and details.
   </p><p>

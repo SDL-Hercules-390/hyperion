@@ -223,6 +223,7 @@ HDL_DLL_IMPORT void         hdl_repins   ( bool replace, HDLINS* ins );
 #if !defined( HDL_USE_LIBTOOL )
   #define dlinit()
 #else
+  #include <ltdl.h>
   #define dlinit()                  lt_dlinit()
   #define dlopen(_name, _flags)     lt_dlopen(_name)
   #define dlsym(_handle, _symbol)   lt_dlsym(_handle, _symbol)
