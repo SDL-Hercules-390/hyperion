@@ -2363,9 +2363,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03041 "***********************************************************"
 #define HHC03042 "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
 #define HHC03043 "Total active tracks    = %"PRIu32" tracks"
-#define HHC03044 "Avg. L2-to-track seek  = %.3f MB"
+#define HHC03044 "Avg. L2-to-track seek  = %s"
 #define HHC03045 "Total active blkgrps   = %"PRIu32" groups"
-#define HHC03046 "Avg. L2-to-block seek  = %.3f MB"
+#define HHC03046 "Avg. L2-to-block seek  = %s"
 #define HHC03047 "         File offset    Size (hex)         Size  group(s)"
 #define HHC03048                                                            "\n" \
        "HHC03048I   dh_devid:      %s        (%s-bit C%s%s %s)"             "\n" \
