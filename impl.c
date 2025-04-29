@@ -836,7 +836,7 @@ static void arghelp()
 
     STRLCPY( pgm, sysblk.hercules_pgmname );
 
-    // "Usage: %s [--help[=SHORT|LONG|VERSION|BUILD]] -f config-filename|\"none\" [-o logfile-name] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]] [-p dyn-load-dir] [[-l dynmod-to-load]...] [> logfile]"
+    // "Usage: %s [--help[=SHORT|LONG|VERSION|BUILD]] -f config-filename|\"none\" [-o logfile-name] [-r rcfile-name] [-n] [-b logo-filename] [-s sym=val] [-t [factor]] [-p dyn-load-dir] [[-l dynmod-to-load]...] [> logfile]"
     WRMSG( HHC01407, "S", strtok_r( pgm, ".", &strtok_str ) );
 
     fflush( stderr );
