@@ -551,7 +551,8 @@ at the host's command prompt:
               [ -o <em>logfile</em>]             |  [ --output=<em>logfile</em> ]&nbsp;&nbsp;|&nbsp;&nbsp;[ --logfile=<em>logfile</em> ]
               [ -r <em>rcfile</em> ]             |  [ --rcfile=<em>rcfile</em> ]
               [ -b <em>logofile</em> ]           |  [ --herclogo=<em>logofile</em> ]
-              [ -d ]                    |  [ --daemon ]
+              [ -d ] <i><b>DEPRECATED</b></i>         |  [ --daemon ] <i><b>DEPRECATED</b></i>
+              [ -n ]                    |  [ --NoUI ]
               [ -e ]                    |  [ --externalgui ]
               [ -p <em>modpath</em> ]            |  [ --modpath=<em>modpath</em> ]
               [ -l <em>modname</em> ] ...        |  [ --ldmod=<em>modname</em> ] ...
@@ -603,14 +604,18 @@ where:
             initial welcome screen presented when a TN 3270 terminal connects
             to a hercules 3270 device.
         <p>
-        <dt><code><em>--daemon</em></em></code><p><dd>
+        <dt><code><em>--daemon</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i><p><dd>
 
-            specifies that Hercules is to be run in 'daemon' mode, wherein it
-            runs invisibly with no attached console.
+            This option has been deprecated due to its confusing name. Please use the below <code>'--NoUI'</code> option instead.
         <p>
-            <b>Please Note</b> that Hercules's "daemon mode" is <i>not</i> the same
+        <dt><code><em>--NoUI</em></code><p><dd>
+
+            specifies that Hercules is to be run invisibly in "No User Interface" mode, wherein it
+            runs in the backgroud without any attached console or keyboard.
+        <p>
+            <b>Please Note</b> that Hercules's "No User Interface mode" is <i>not</i> the same
             as e.g. Linux's daemon mode. It is quite different. Refer to our
-            "<a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.DAEMON.md">Running Hercules in Daemon mode</a>"
+            "<a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.DAEMON.md">Running Hercules in "No User Interface" mode</a>"
             web page for more information.
         <p>
         <dt><code><em>--externalgui</em></em></code><p><dd>

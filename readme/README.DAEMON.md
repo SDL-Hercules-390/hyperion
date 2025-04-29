@@ -1,43 +1,45 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
 [Return to master README.md](../README.md)
 
-# Running Hercules in Daemon mode
+# Running Hercules in "No-User-Interface" mode
 
 ## Contents
 
 1. [Introduction](#Introduction)
-2. [How to run in daemon mode](#How-to-run-in-daemon-mode)
-3. [Using the HTTP Server to control Hercules running in daemon mode](#Using-the-HTTP-Server-to-control-Hercules-running-in-daemon-mode)
+2. [How to run in "No UI" mode](#How-to-run-in-no-UI-mode)
+3. [Using the HTTP Server to control Hercules running in No UI mode](#Using-the-HTTP-Server-to-control-Hercules-running-in-no-UI-mode)
 
 ## Introduction
 
-In addition to being able to run Hercules in normal Panel mode or in External GUI mode, it is also able to run in a mode known as Daemon mode.
+In addition to being able to run Hercules in normal Panel/HMC mode or in External GUI mode, it is also able to run in a mode known as "No-UI" (No User Interface) mode.
 
-A daemon is a computer program that runs as a background process (usually, but not always, invisibly), rather than being under the direct control of an interactive user. On Windows platforms these are known as [services](https://en.wikipedia.org/wiki/Windows_service). On Unix and related platforms, they are known as [daemons](https://en.wikipedia.org/wiki/Daemon_(computing)), but the concept is the same.
+"No UI" mode is similar to -- _but is **not** the same as!_ -- running in "daemon" mode.
 
-Running Hercules in daemon mode allows you to start an instance of Hercules (with no terminal/panel user interface) that continues to run, even should you decide to logoff from your host operating system.
+A daemon is a computer program that runs as a background process (usually, but not always, _invisibly_), rather than being under the direct control of an interactive user. On Windows platforms these are known as [services](https://en.wikipedia.org/wiki/Windows_service). On Unix and related platforms, they are known as [daemons](https://en.wikipedia.org/wiki/Daemon_(computing)), but the concept is the same.
+
+Running Hercules in No-UI mode allows you to start an instance of Hercules (with no terminal/panel/keyboard user interface) that continues to run, even should you decide to logoff from your host operating system.
 
 This can prove to be quite convenient when using Hercules as a [Shared Device Server](https://sdl-hercules-390.github.io/html/shared.html) that, by serving other Hercules Shared Device Client instances, must therefore always be running (whereas the normal Hercules client instances can come and go (startup and shutdown) at will, any time they want).
 
-## How to run in daemon mode
+## How to run in no UI mode
 
-To run Hercules in daemon mode, simply specify the `--daemon` or `-d` [command line option](https://sdl-hercules-390.github.io/html/hercinst.html#arguments) when you start Hercules:
+To run Hercules in No UI mode, simply specify the `--NoUI` or `-n` [command line option](https://sdl-hercules-390.github.io/html/hercinst.html#arguments) when you start Hercules:
 
 (Linux):
 <pre>
-    hercules <b><i>--daemon</i></b> --config=hercules.cnf --logfile=hercules.log   <b>< /dev/null > /dev/null 2>&1</b>
+    hercules <b><i>--NoUI</i></b> --config=hercules.cnf --logfile=hercules.log   <b>< /dev/null > /dev/null 2>&1</b>
 </pre>
 
 (Windows):
 <pre>
-    hercules <b><i>--daemon</i></b> --config=hercules.cnf --logfile=hercules.log   <b>< NUL > NUL 2>&1</b>
+    hercules <b><i>--NoUI</i></b> --config=hercules.cnf --logfile=hercules.log   <b>< NUL > NUL 2>&1</b>
 </pre>
 
-When Hercules runs in daemon mode, it does not write or read anything to/from the HMC (hardware panel/terminal). It only writes messages to the specified logfile.
+When Hercules runs in No UI mode, it does not write or read anything to/from the HMC (hardware panel/terminal). It only writes messages to the specified logfile.
 
-As you can see in the above example, `stdout` and `stderr` are both being redirected to `/dev/null` since, when run in daemon mode, all messages are written to the specified logfile instead.
+As you can see in the above example, `stdout` and `stderr` are both being redirected to `/dev/null` since, when run in No UI mode, all messages are written to the specified logfile instead.
 
-Additionally, `stdin` is also being redirected <i><u>from</u></i> `/dev/null` as well, since, when run in daemon mode, Hercules will never read from `stdin`. Instead, it loops forever until it receives the `quit` or `exit` command.
+Additionally, `stdin` is also being redirected <i><u>from</u></i> `/dev/null` as well, since, when run in No UI mode, Hercules will never read from `stdin`. Instead, it loops forever until it receives the `quit` or `exit` command.
 
 For this reason, you _must_ supply some other means for issuing commands to Hercules. The most common and perhaps simplest way to do this is to use Hercules's built-in <i><b>"HTTP Server"</b></i> feature, via the
 [`HTTP PORT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPPORT), [`HTTP ROOT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPROOT) and [`HTTP START`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPSTRT)
@@ -59,13 +61,13 @@ configuration file statements:
     0125  3390  "FOOBAR.cckd64"  ro  cu=3990-6
 </pre>
 
-_**Warning!** If you fail to provide <u>some</u> means for issuing commands to Hercules, you will not be able to shut it down! In such a situation your only choice is to use you host operating system to forcibly "kill" the Hercules process!_
+_**WARNING!** If you fail to provide <u>some</u> means for issuing commands to Hercules, you will not be able to shut it down! In such a situation your only choice is to use you host operating system to forcibly "kill" the Hercules process!_
 
 In the above example configuration file, `NUMCPU 0` is specified because, in this particular example, Hercules is acting solely as a Shared Device Server, wherein no guest operating system is ever IPLed. Instead, Hercules simply waits for Shared Device Clients to connect to it, so that it can then service the client's I/O requests.
 
-Running Hercules in this manner is <i><u>not</u></i> a requirement for running in daemon mode however. It is simply a common reason for doing so. There it nothing stopping you from running a normal guest configuration in daemon mode. In such a situation your Hercules configuration file would look just like normal, with the notable exception of always having a working HTTP PORT, ROOT and START statement in it so that you will have some way of communicating with Hercules in order to eventually issue the `quit` command to shut it down.
+Running Hercules in this manner is <i><u>not</u></i> a requirement for running in No UI mode however. It is simply a common reason for doing so. There is nothing stopping you from running a normal guest configuration in No UI mode. In such a situation your Hercules configuration file would look just like normal, with the notable exception of always having a working HTTP PORT, ROOT and START statement in it so that you will have some way of communicating with Hercules in order to eventually issue the `quit` command to shut it down.
 
-## Using the HTTP Server to control Hercules running in daemon mode
+## Using the HTTP Server to control Hercules running in No UI mode
 
 To use Hercules's HTTP Server, simply open your browser and surf to the following URL:
 

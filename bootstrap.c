@@ -286,7 +286,7 @@ int main( int ac, char* av[] )
     {
         // Normal panel mode?
 
-        if (/*!sysblk.daemon_mode &&*/ isatty( STDERR_FILENO ))
+        if (/*!sysblk.NoUI_mode &&*/ isatty( STDERR_FILENO ))
         {
             // Then disable the [x] Close button for safety
 
@@ -322,7 +322,7 @@ int main( int ac, char* av[] )
     {
         // Normal panel mode?
 
-        if (!sysblk.daemon_mode && isatty( STDERR_FILENO ))
+        if (!sysblk.NoUI_mode && isatty( STDERR_FILENO ))
         {
             // Re-enable the [x] Close button
 
@@ -356,7 +356,7 @@ static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExcept
 
     // Is an external GUI in control?
 
-    if (sysblk.daemon_mode)
+    if (sysblk.NoUI_mode)
     {
         fflush( stdout );
         fflush( stderr );

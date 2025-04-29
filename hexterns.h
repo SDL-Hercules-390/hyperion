@@ -165,7 +165,7 @@ OPCD_DLL_IMPORT  void*  the_real_replace_opcode ( int arch, INSTR_FUNC inst, int
 /*-------------------------------------------------------------------*/
 
 HSYS_DLL_IMPORT  PANDISP*       panel_display;
-HSYS_DLL_IMPORT  PANDISP*       daemon_task;
+HSYS_DLL_IMPORT  PANDISP*       noui_task;
 HSYS_DLL_IMPORT  PANCMD*        panel_command;
 HSYS_DLL_IMPORT  SYSTEMCMD*     system_command;
 HSYS_DLL_IMPORT  REPOPCODE*     replace_opcode;

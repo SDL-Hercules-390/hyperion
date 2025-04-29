@@ -33,7 +33,7 @@
 
 static char shortopts[] =
 
-    "eh::f:o:r:db:vt::p:l:s:";
+    "eh::f:o:r:dnb:vt::p:l:s:";
 
 #if defined(HAVE_GETOPT_LONG)
 static struct option longopts[] =
@@ -45,7 +45,8 @@ static struct option longopts[] =
     { "output",   required_argument, NULL, 'o' },
     { "logfile",  required_argument, NULL, 'o' },
     { "rcfile",   required_argument, NULL, 'r' },
-    { "daemon",         no_argument, NULL, 'd' },
+    { "daemon",         no_argument, NULL, 'd' },  // (deprecated!)
+    { "NoUI",           no_argument, NULL, 'n' },  // (use instead!)
     { "herclogo", required_argument, NULL, 'b' },
     { "verbose",        no_argument, NULL, 'v' },
     { "test",     optional_argument, NULL, 't' },
@@ -779,7 +780,7 @@ DLL_EXPORT  COMMANDHANDLER  getCommandHandler()
 
 /*-------------------------------------------------------------------*/
 /* Process .RC file thread.                                          */
-/* Called synchronously when in daemon mode. Else asynchronously.    */
+/* Called synchronously when in No UI mode. Else asynchronously.     */
 /*-------------------------------------------------------------------*/
 static void* process_rc_file( void* dummy )
 {
@@ -812,7 +813,7 @@ static void* process_rc_file( void* dummy )
 #if 1 // ZZ FIXME: THIS NEEDS TO GO
 
         /* Wait for panel thread to engage */
-        if (!sysblk.daemon_mode)
+        if (!sysblk.NoUI_mode)
             while (!sysblk.panel_init)
                 USLEEP( 10 * 1000 );
 
@@ -1267,14 +1268,14 @@ int     rc, maxprio, minprio;
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end
                                - (uintptr_t)&sysblk.dummyregs);
 
-    /* Set the daemon_mode flag indicating whether we running in
-       background/daemon mode or not (meaning both stdout/stderr
-       are redirected to a non-tty device). Note that this flag
-       needs to be set before logger_init gets called since the
-       logger_logfile_write function relies on its setting.
+    /* Set the NoUI_mode flag indicating whether we're running in
+       background/no-user-interface mode or not (meaning both stdout
+       and stderr are redirected to a non-tty device). Note that this
+       flag needs to be set BEFORE logger_init gets called since the
+       "logger_logfile_write()" function relies on its setting.
     */
     if (!isatty(STDERR_FILENO) && !isatty(STDOUT_FILENO))
-        sysblk.daemon_mode = 1;       /* Leave -d intact */
+        sysblk.NoUI_mode = 1;       /* Leave -n intact */
 
     /* Initialize panel colors */
     set_panel_colors();
@@ -1391,7 +1392,7 @@ int     rc, maxprio, minprio;
        external gui can see the version which was previously possibly
        only displayed to the actual physical screen the first time we
        did it further above (depending on whether we're running in
-       daemon_mode (external gui mode) or not). This is the call that
+       NoUI_mode (external gui mode) or not). This is the call that
        the panel thread or external gui actually "sees".
 
        The first call further above wasn't seen by either since it
@@ -1756,9 +1757,9 @@ int     rc, maxprio, minprio;
     /* Check if various host instructions are available or not */
     check_host_instruction_availability();
 
-    /* Process the .rc file synchronously when in daemon mode. */
+    /* Process the .rc file synchronously when in No UI mode.  */
     /* Otherwise Start up the RC file processing thread.       */
-    if (sysblk.daemon_mode)
+    if (sysblk.NoUI_mode)
         process_rc_file( NULL );
     else
     {
@@ -1782,43 +1783,44 @@ int     rc, maxprio, minprio;
     }
 
     /* Activate the control panel */
-    if (!sysblk.daemon_mode)
+    if (!sysblk.NoUI_mode)
         panel_display();  /* Returns only AFTER Hercules is shutdown */
     else
     {
         /*-----------------------------------------------*/
-        /*            We're in daemon mode...            */
+        /*            We're in No UI mode...             */
         /*-----------------------------------------------*/
 
-        if (daemon_task)    /* External GUI in control? */
-            daemon_task();  /* Returns only when GUI decides to */
+        if (noui_task)    /* External GUI in control? */
+            noui_task();  /* Returns only when GUI decides to */
         else
         {
-            /* daemon mode without any external GUI... */
+            /* No-User-Interface mode without any external GUI... */
 
             process_script_file( "-", true );
 
             /* We come here only if the user did ctl-d on a tty,
                or we reached EOF on stdin.  No quit command has
                been issued (yet) since that (via do_shutdown())
-               would not return.  So we issue the quit here once
-               all CPUs have quiesced, since with no CPUs doing
-               anything and stdin at EOF, there's no longer any
-               reason for us to stick around!
+               would not return.  So we issue the quit command
+               here once all CPUs have quiesced, since with no
+               CPUs doing anything and stdin at EOF, there's no
+               longer any reason for us to stick around!
 
                UNLESS, of course, there were never at any CPUs
-               defined/configured to begin with! (NUMCPU 0 was
-               specified). Such would be the case when Hercules
-               was running solely as a shared dasd server with
-               no guest operating IPLed for example.
+               defined/configured to begin with! (i.e. "NUMCPU 0"
+               was specified, such as would be the case if Hercules
+               was running solely as a Shared Device Server with
+               no guest operating IPLed or running for example).
 
                In such a case we must continue running in order
-               to continue serving shared dasd I/O requests for
-               our clients, so we continue running FOREVER. We
-               NEVER exit. We can only go away (disappear) when
-               the user wants us to, by either manually killing
-               us or by issuing the 'quit' command via our HTTP
-               Server interface.
+               to continue serving Shared Dasd I/O requests for
+               our Shared Device clients. So we continue running
+               FOREVER. (Yes, *FOREVER!*) We NEVER exit. We can
+               only go away (disappear) when the user wants us to,
+               by either explicitly KILLING the Hercules process
+               itself, or by issuing the 'quit' command via e.g.
+               our own builtin HTTP Server interface.
             */
             while (0
                 || sysblk.started_mask  /* CPU(s) still running?     */
@@ -1834,7 +1836,7 @@ int     rc, maxprio, minprio;
     /*
     **  PROGRAMMING NOTE: the following code is only ever reached
     **  if Hercules is run in normal panel mode -OR- when it is run
-    **  under the control of an external GUI (i.e. daemon_task).
+    **  under the control of an external GUI (i.e. noui_task).
     */
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 
@@ -1973,7 +1975,7 @@ static int process_args( int argc, char* argv[] )
                     }
                     else
                     {
-                        // "Invalid help option argument: %s"
+                        // "Invalid help option argument: \"%s\""
                         WRMSG( HHC00025, "E", optarg );
                         arg_error = PROCESS_ARGS_ERROR;  // (forced by help option)
                     }
@@ -2071,9 +2073,24 @@ static int process_args( int argc, char* argv[] )
                 sysblk.msglvl |= MLVL_VERBOSE;
                 break;
 
-            case 'd':
+            case 'd':   // (deprecated)
+            {
+                bool dasddash =
+                (1
+                    && argv[ optind-1 ][0] == '-'
+                    && argv[ optind-1 ][1] == '-'
+                );
 
-                sysblk.daemon_mode = 1;
+                // "Option \"%s\" has been deprecated; use \"%s\" instead"
+                WRMSG( HHC00022, "W", argv[ optind-1 ], dasddash ? "--NoUI" : "-n" );
+
+                sysblk.NoUI_mode = 1;
+                break;
+            }
+
+            case 'n':
+
+                sysblk.NoUI_mode = 1;
                 break;
 
             case 'e':
@@ -2115,7 +2132,7 @@ static int process_args( int argc, char* argv[] )
                 else
                     MSGBUF( buf, "(hex %2.2x)", optopt );
 
-                // "Invalid/unsupported option: %s"
+                // "Invalid/unsupported option: \"%s\""
                 WRMSG( HHC00023, "S", buf );
                 arg_error = PROCESS_ARGS_ERROR;
             }
@@ -2126,7 +2143,7 @@ static int process_args( int argc, char* argv[] )
 
     while (optind < argc)
     {
-        // "Unrecognized option: %s"
+        // "Unrecognized option: \"%s\""
         WRMSG( HHC00024, "S", argv[ optind++ ]);
         arg_error = PROCESS_ARGS_ERROR;
     }

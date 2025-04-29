@@ -209,7 +209,7 @@ Specify the library path for loadable modules, i.e., device managers. This is pa
 Pass "quiet" to redtest to suppress details about test cases.
 
 <b>`-r <number>`</b><br>
-Repeat the composite test script n times.  There is no need to specify -x as hercules terminates without an explicit quit when in daemon mode.
+Repeat the composite test script n times.  There is no need to specify -x as hercules terminates without an explicit quit when in "No User Interface" mode.
 
 <b>`-t <number>`</b><br>
 Passed to hercules (timeout factor)

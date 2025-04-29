@@ -1346,7 +1346,7 @@ static void hdl_register_symbols_ep( REGSYM* regsym )
     HDL_REGISTER( panel_command,                 *hdl_real_pancmd    );
     HDL_REGISTER( replace_opcode,                *hdl_real_repopcode );
 
-    HDL_REGISTER( daemon_task,                   *UNRESOLVED );
+    HDL_REGISTER( noui_task,                     *UNRESOLVED );
     HDL_REGISTER( system_command,                *UNRESOLVED );
     HDL_REGISTER( hdl_devequ,                    *UNRESOLVED );
 
@@ -1377,7 +1377,7 @@ static void hdl_resolve_symbols_ep( GETSYM* getsym )
     HDL_RESOLVE( panel_command                 );
     HDL_RESOLVE( replace_opcode                );
 
-    HDL_RESOLVE( daemon_task                   );
+    HDL_RESOLVE( noui_task                     );
     HDL_RESOLVE( system_command                );
     HDL_RESOLVE( hdl_devequ                    );
 

@@ -225,7 +225,7 @@ static void logger_logfile_write( const void* pBuff, size_t nBytes )
     char* pLeft = (char*) pBuff;
     int   nLeft = (int)   nBytes;
 
-    /* daemon_mode only (wherein both stdout/stderr have both
+    /* NoUI_mode only (wherein both stdout/stderr have both
        been redirected): don't write to hardcopy during shutdown
        to prevent duplicate messages from occurring when stderr
        is redirected to stdout (or vice versa) via the command
@@ -239,7 +239,7 @@ static void logger_logfile_write( const void* pBuff, size_t nBytes )
        being written again to the very same (hardcopy) file.
        The below test prevents this from happening.
     */
-    if (nLeft && (!sysblk.daemon_mode || !sysblk.shutdown))
+    if (nLeft && (!sysblk.NoUI_mode || !sysblk.shutdown))
     {
         /* (ignore any errors; we did the best we could) */
         fwrite( pLeft, nLeft, 1, logger_hrdcpy );
@@ -254,12 +254,12 @@ static void logger_logfile_write( const void* pBuff, size_t nBytes )
  * This should really be part of logmsg, as the stamps currently have
  * the date/time of when the logger READS the message from the pipe.
  * During periods of high system (message) activity however, there can
- * be a CONSIDERABLE delay from the time when the message was actually
- * issued and the time it is actually displayed and/or written to the
- * logfile. Moving date/time stamping to logmsg() instead fixes this.
+ * be a CONSIDERABLE DELAY from the time when the message was actually
+ * ISSUED and the time it is actually DISPLAYED and/or written to the
+ * logfile. Moving date/time stamping to logmsg() instead would fix this.
  *
  * The date/time stamp option should also NOT depend on anything like
- * daemon mode and should always be date/time stamped in a fixed format
+ * No UI mode and should always be date/time stamped in a fixed format
  * such that log readers (e.g. panel.c for example) can then decide on
  * their own whether or not to skip the date/time stamp when displaying
  * and/or logging the message.
@@ -376,10 +376,10 @@ static void* logger_thread( void* arg )
             bytes_read = 0;
         }
 
-        /* If Hercules is not running in daemon mode and panel
+        /* If Hercules is not running in No UI mode and panel
            initialization is not yet complete, write message
            to stderr so the user can see it on the terminal */
-        if (!sysblk.daemon_mode)
+        if (!sysblk.NoUI_mode)
         {
             if (!sysblk.panel_init)
             {
@@ -530,7 +530,7 @@ DLL_EXPORT void logger_init( void )
 
         /* If standard error is redirected, then use standard error
            as the log file. */
-        if (sysblk.daemon_mode)
+        if (sysblk.NoUI_mode)
         {
             STRLCPY( logger_filename, "STDOUT redirected from command line" );
             /* Ignore standard output to the extent that it is

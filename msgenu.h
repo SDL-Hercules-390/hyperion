@@ -253,10 +253,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 // reserve 20-39 for option related
 #define HHC00020 "Test timeout factor %s outside of valid range 1.0 to %3.1f"
 #define HHC00021 "Test timeout factor = %3.1f"
-//efine HHC00022 (available)
-#define HHC00023 "Invalid/unsupported option: %s"
-#define HHC00024 "Unrecognized option: %s"
-#define HHC00025 "Invalid help option argument: %s"
+#define HHC00022 "Option \"%s\" has been deprecated; use \"%s\" instead"
+#define HHC00023 "Invalid/unsupported option: \"%s\""
+#define HHC00024 "Unrecognized option: \"%s\""
+#define HHC00025 "Invalid help option argument: \"%s\""
 #define HHC00026 "WARNING: Host does not support the '%s' instruction"
 //efine HHC00027 - HHC00069 (available)
 

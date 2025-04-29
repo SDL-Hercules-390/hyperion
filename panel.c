@@ -560,7 +560,7 @@ void set_console_title ( char *status )
 {
     char    title[256];
 
-    if ( sysblk.daemon_mode ) return;
+    if (sysblk.NoUI_mode) return;  // (no user interface == no title!)
 
     redraw_status = 1;
 
