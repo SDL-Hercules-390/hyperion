@@ -13,7 +13,7 @@
 
 In addition to being able to run Hercules in normal Panel/HMC mode or in External GUI mode, it is also able to run in a mode known as "No-UI" (No User Interface) mode.
 
-"No UI" mode is similar to -- _but is **not** the same as!_ -- running in "daemon" mode.
+"No UI" mode is similar to -- _(but is **not** the same as!)_ -- running in "daemon" mode.
 
 A daemon is a computer program that runs as a background process (usually, but not always, _invisibly_), rather than being under the direct control of an interactive user. On Windows platforms these are known as [services](https://en.wikipedia.org/wiki/Windows_service). On Unix and related platforms, they are known as [daemons](https://en.wikipedia.org/wiki/Daemon_(computing)), but the concept is the same.
 
@@ -45,6 +45,7 @@ For this reason, you _must_ supply some other means for issuing commands to Herc
 [`HTTP PORT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPPORT), [`HTTP ROOT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPROOT) and [`HTTP START`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPSTRT)
 configuration file statements:
 
+___
 <pre>
     # Shared Device Server with no guest (i.e. NUMCPU 0)
 
@@ -61,7 +62,12 @@ configuration file statements:
     0125  3390  "FOOBAR.cckd64"  ro  cu=3990-6
 </pre>
 
+
+___
+
 _**WARNING!** If you fail to provide <u>some</u> means for issuing commands to Hercules, you will not be able to shut it down! In such a situation your only choice is to use you host operating system to forcibly "kill" the Hercules process!_
+___
+
 
 In the above example configuration file, `NUMCPU 0` is specified because, in this particular example, Hercules is acting solely as a Shared Device Server, wherein no guest operating system is ever IPLed. Instead, Hercules simply waits for Shared Device Clients to connect to it, so that it can then service the client's I/O requests.
 
