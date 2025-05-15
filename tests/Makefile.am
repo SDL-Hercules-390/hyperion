@@ -861,4 +861,19 @@ EXTRA_DIST =                    \
      zvector-e7-26-VGM.core		            \
      zvector-e7-26-VGM.list		            \
      zvector-e7-26-VGM.pdf		            \
-     zvector-e7-26-VGM.tst
+     zvector-e7-26-VGM.tst                  \
+     zvector-e7-27-VERIM.asm                \
+     zvector-e7-27-VERIM.core               \
+     zvector-e7-27-VERIM.list               \
+     zvector-e7-27-VERIM.pdf                \
+     zvector-e7-27-VERIM.tst                \
+     zvector-e7-28-ShiftVector.asm          \
+     zvector-e7-28-ShiftVector.core         \
+     zvector-e7-28-ShiftVector.list         \
+     zvector-e7-28-ShiftVector.pdf          \
+     zvector-e7-28-ShiftVector.tst          \
+     zvector-e7-29-ShiftDoubleByBit.asm     \
+     zvector-e7-29-ShiftDoubleByBit.core    \
+     zvector-e7-29-ShiftDoubleByBit.list    \
+     zvector-e7-29-ShiftDoubleByBit.pdf     \
+     zvector-e7-29-ShiftDoubleByBit.tst     \
