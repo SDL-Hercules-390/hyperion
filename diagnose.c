@@ -842,6 +842,45 @@ U32   code;
         ON_IC_INTERRUPT(regs);
         break;
 
+    case 0xF14:
+    /*-----------------------------------------------------------------*/
+    /* Diagnose F14: Hercules Get Microsecond Time, ONLY on            */
+    /*               - ARCH_900_IDX architecture                       */
+    /*-----------------------------------------------------------------*/
+        /* Only support ARCH_900_IDX architecture
+         */
+        if( sysblk.arch_mode != ARCH_900_IDX)
+            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+        // Convert seconds to microseconds
+        #define SEC_TO_US(sec) ((sec)*1000000)
+        // Convert nanoseconds to microseconds
+        #define NS_TO_US(ns)    ((ns)/1000)
+
+        {
+            U64 ms;
+
+            #if defined( __linux__ )
+                struct timespec ts;
+                clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+                ms = SEC_TO_US((uint64_t)ts.tv_sec) + NS_TO_US((uint64_t)ts.tv_nsec + 500);
+
+            #else
+                // microsecond resolution getimeofday
+                struct timeval  tv;
+                gettimeofday( &tv, NULL );
+                ms = SEC_TO_US((uint64_t)tv.tv_sec) + tv.tv_usec;
+
+            #endif
+
+            regs->GR_G(r1) = ms;
+        }
+
+        #undef SEC_TO_US
+        #undef NS_TO_US
+
+        break;
+
 #if defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY)
     case 0xF18:
     /*---------------------------------------------------------------*/
