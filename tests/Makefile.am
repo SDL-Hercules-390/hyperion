@@ -877,3 +877,8 @@ EXTRA_DIST =                    \
      zvector-e7-29-ShiftDoubleByBit.list    \
      zvector-e7-29-ShiftDoubleByBit.pdf     \
      zvector-e7-29-ShiftDoubleByBit.tst     \
+     zvector-e7-99-performance.asm          \
+     zvector-e7-99-performance.core         \
+     zvector-e7-99-performance.list         \
+     zvector-e7-99-performance.pdf          \
+     zvector-e7-99-performance.tst

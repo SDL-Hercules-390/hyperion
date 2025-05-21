@@ -1467,6 +1467,11 @@
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.list"/>
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.pdf"/>
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.tst"/>
+    <None Include="tests\zvector-e7-99-performance.asm"/>
+    <None Include="tests\zvector-e7-99-performance.core"/>
+    <None Include="tests\zvector-e7-99-performance.list"/>
+    <None Include="tests\zvector-e7-99-performance.pdf"/>
+    <None Include="tests\zvector-e7-99-performance.tst"/>
     <None Include="util\awssl-v19g" />
     <None Include="util\awswrite.jcl" />
     <None Include="util\bldlvlck" />

@@ -3886,6 +3886,10 @@
 						RelativePath=".\tests\zvector-e7-29-ShiftDoubleByBit.core"
 	    				>
 					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-99-performance.core"
+	    				>
+					</File>
 				</Filter>
 				<Filter
 					Name="scripts"
@@ -5297,6 +5301,10 @@
 							RelativePath=".\tests\zvector-e7-29-ShiftDoubleByBit.tst"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-99-performance.tst"
+							>
+						</File>
 						<Filter
 							Name="subtst"
 							>
@@ -5864,6 +5872,10 @@
 						</File>
 						<File
 							RelativePath=".\tests\zvector-e7-29-ShiftDoubleByBit.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-99-performance.asm"
 							>
 						</File>
 						<Filter
@@ -6847,6 +6859,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\zvector-e7-29-ShiftDoubleByBit.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-99-performance.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-99-performance.pdf"
 								>
 							</File>
 						</Filter>
