@@ -237,17 +237,23 @@
 #define FEATURE_VM_BLOCKIO
 /* INTEL X64 processor? */
 #if defined( __x86_64__ ) || defined( _M_X64 )
-  /* MSVC on X64: intrinsics are available and should be used for optimization */
+  /* MSVC on X64: intrinsics are available and could be used for optimization */
   #if defined( _MSC_VER ) || defined( _MSVC_ )
     #define FEATURE_V128_SSE  1
 
-    /* For MSC, assume all HW features are recognized  */
-    /* at compile time and runtime hardware checks are */
-    /* used to determine whether or not an instinsic   */
-    /* is executed.                                    */
+    /* NOTE:                                           */
+    /* MSVC optimization of 16-byte vectors is VERY    */
+    /* limited. Only enable Hardware features when     */
+    /* a performance test confirms significant         */
+    /* performance improvement.                        */
 
-    /* Compile-time Hardware Feature: Carry-less multiply */
-    #define FEATURE_HW_CLMUL  1
+    /* Compile-time Hardware Feature: Carry-less multiply  */
+    /* --------------------------------------------------  */
+    /* MSVC performance test showed a 275% performance     */
+    /* degradation (compared to clang-15 75% improvement). */
+    /* May 2025: Do not enable.                            */
+
+    // #define FEATURE_HW_CLMUL  1
 
 
   /* gcc/clang on X64: intrinsics are available and should be used for optimization */
