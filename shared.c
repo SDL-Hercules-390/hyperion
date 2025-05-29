@@ -364,6 +364,9 @@ init_retry:
             return -1;
         }
 
+        // Correct for endianness difference between server and client, as devt is U16.
+        svr_cu.devt = CSWAP16(SWAP16(svr_cu.devt));
+
         /* verify control unit type and model are the same */
 
         if (0
