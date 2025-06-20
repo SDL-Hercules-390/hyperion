@@ -2658,6 +2658,9 @@ DEF_INST( vector_shift_and_round_decimal )
     iom = (i3 & 0x80) ? true : false;
     rdc = (i3 & 0x1F);
 
+    if (rdc == 0)
+        ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
+
 #if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
     if (iom)
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -3468,6 +3471,9 @@ DEF_INST( vector_shift_and_round_decimal_register )
     iom = (i4 & 0x80) ? true : false;
     drd = (i4 & 0x40) ? true : false;
     rdc = (i4 & 0x1F);
+
+    if (rdc == 0)
+        ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
 #if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
     if (iom)
