@@ -2594,8 +2594,13 @@ DLL_EXPORT bool are_big_endian()
 
 #include <sys/ptrace.h>
 
-#if defined( __APPLE__ )
+#if defined( __APPLE__ ) || defined( __FreeBSD__ )
   #include <sys/sysctl.h>
+#endif
+
+#if defined( __FreeBSD__ ) 
+  #include <sys/user.h>
+  #include <libutil.h>
 #endif
 
 static bool IsDebuggerPresent()
