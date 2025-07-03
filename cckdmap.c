@@ -1150,6 +1150,8 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
 
     if (verbose || info_only)  /* (inaccurate statistics otherwise!) */
     {
+        char percent[16] = {0};
+
         seek_total    = 0;
         active_tracks = 0;
 
@@ -1185,6 +1187,14 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             }
         }
 
+        // Calculate Avg. L2-to-block seek, or
+        // Calculate Avg. L2-to-track seek...
+
+        if (active_tracks)
+            MSGBUF( percent, "%.3f MB", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
+        else
+            STRLCPY( percent, "undefined" );
+
         if (fba)
         {
             // ""
@@ -1192,7 +1202,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             // "Avg. L2-to-block seek  = %.3f MB"
             if (!total_unknown) WRMSG( HHC03020, "I" );
             WRMSG( HHC03045, "I", active_tracks );
-            WRMSG( HHC03046, "I", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
+            WRMSG( HHC03046, "I", percent );
         }
         else
         {
@@ -1201,7 +1211,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             // "Avg. L2-to-track seek  = %.3f MB"
             if (!total_unknown) WRMSG( HHC03020, "I" );
             WRMSG( HHC03043, "I", active_tracks );
-            WRMSG( HHC03044, "I", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
+            WRMSG( HHC03044, "I", percent );
         }
     }
 

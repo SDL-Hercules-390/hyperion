@@ -798,22 +798,30 @@ do { \
 /* of the Hercules build or the host it is currently running on.     */
 /*-------------------------------------------------------------------*/
 
-#ifdef WORDS_BIGENDIAN
- #define CSWAP16(_x)    (_x)            // (result ALWAYS big endian)
- #define CSWAP32(_x)    (_x)            // (result ALWAYS big endian)
- #define CSWAP64(_x)    (_x)            // (result ALWAYS big endian)
- #define CSWAP128(_x)   (_x)            // (result ALWAYS big endian)
-#else
- #define CSWAP16(_x)    bswap_16(_x)    // (result ALWAYS big endian)
- #define CSWAP32(_x)    bswap_32(_x)    // (result ALWAYS big endian)
- #define CSWAP64(_x)    bswap_64(_x)    // (result ALWAYS big endian)
- #define CSWAP128(_x)   bswap_128(_x)   // (result ALWAYS big endian)
+#ifdef WORDS_BIGENDIAN                 // BE (BIG Endian) host...
+
+// (_x) = Z guest BE format, result thus ALWAYS BE (BIG Endian format
+
+ #define CSWAP16(_x)    (_x)           // (result ALWAYS BIG Endian)
+ #define CSWAP32(_x)    (_x)           // (result ALWAYS BIG Endian)
+ #define CSWAP64(_x)    (_x)           // (result ALWAYS BIG Endian)
+ #define CSWAP128(_x)   (_x)           // (result ALWAYS BIG Endian)
+
+#else                                  // LE (Little Endian) host...
+
+// (_x) = Z guest BE format, result thus ALWAYS LE (Little Endian)...
+
+ #define CSWAP16(_x)    bswap_16(_x)   // (result ALWAYS Little Endian)
+ #define CSWAP32(_x)    bswap_32(_x)   // (result ALWAYS Little Endian)
+ #define CSWAP64(_x)    bswap_64(_x)   // (result ALWAYS Little Endian)
+ #define CSWAP128(_x)   bswap_128(_x)  // (result ALWAYS Little Endian)
+
 #endif
 
- #define SWAP16(_x)     bswap_16(_x)    // (result OPPOSITE of input)
- #define SWAP32(_x)     bswap_32(_x)    // (result OPPOSITE of input)
- #define SWAP64(_x)     bswap_64(_x)    // (result OPPOSITE of input)
- #define SWAP128(_x)    bswap_128(_x)   // (result OPPOSITE of input)
+ #define SWAP16(_x)     bswap_16(_x)   // (result OPPOSITE of input)
+ #define SWAP32(_x)     bswap_32(_x)   // (result OPPOSITE of input)
+ #define SWAP64(_x)     bswap_64(_x)   // (result OPPOSITE of input)
+ #define SWAP128(_x)    bswap_128(_x)  // (result OPPOSITE of input)
 
  #define SWAP_OFF_T(o)  (sizeof(o) <= 4 ? SWAP32((U32)o) : SWAP64(o))
 

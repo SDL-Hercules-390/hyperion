@@ -143,7 +143,7 @@ int     debug = 0;              // disable debug code
 void showhelp(char *pgm)
 {
     char part1[256];
-    char part2[512];
+    char part2[1024];
     char part3[4096];
     char part4[1024];
 

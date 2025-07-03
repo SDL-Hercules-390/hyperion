@@ -253,10 +253,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 // reserve 20-39 for option related
 #define HHC00020 "Test timeout factor %s outside of valid range 1.0 to %3.1f"
 #define HHC00021 "Test timeout factor = %3.1f"
-//efine HHC00022 (available)
-#define HHC00023 "Invalid/unsupported option: %s"
-#define HHC00024 "Unrecognized option: %s"
-#define HHC00025 "Invalid help option argument: %s"
+#define HHC00022 "Option \"%s\" has been deprecated; use \"%s\" instead"
+#define HHC00023 "Invalid/unsupported option: \"%s\""
+#define HHC00024 "Unrecognized option: \"%s\""
+#define HHC00025 "Invalid help option argument: \"%s\""
 #define HHC00026 "WARNING: Host does not support the '%s' instruction"
 //efine HHC00027 - HHC00069 (available)
 
@@ -696,7 +696,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00745 "%1d:%04X Shared: CKD file: 'fakewrite' invalid without 'readonly'"
 #define HHC00746 "%1d:%04X Shared: error retrieving control unit information"
 #define HHC00747 "%1d:%04X Shared: client/server device control unit type/model mismatch"
-//efine HHC00748 - HHC00799 (available)
+#define HHC00748 "%1d:%04X Shared: %s cu type/model: %4.4X %2.2X"
+//efine HHC00749 - HHC00799 (available)
 
 // reserve 008xx for processor related messages
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
@@ -1104,7 +1105,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01404 "Could not create the Automatic Operator thread"
 #define HHC01405 "Script file %s not found"
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
-#define HHC01407 "Usage: %s [--help[=SHORT|LONG|VERSION|BUILD]] -f config-filename|\"none\" [-o logfile-name] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]] [-p dyn-load-dir] [[-l dynmod-to-load]...] [> logfile]"
+#define HHC01407 "Usage: %s [--help[=SHORT|LONG|VERSION|BUILD]] -f config-filename|\"none\" [-o logfile-name] [-r rcfile-name] [-n] [-b logo-filename] [-s sym=val] [-t [factor]] [-p dyn-load-dir] [[-l dynmod-to-load]...] [> logfile]"
 #define HHC01408 "Hercules terminating, see previous messages for reason"
 #define HHC01409 "Load of dyngui.dll failed, Hercules terminated"
 #define HHC01410 "Cannot register %s handler: %s"
@@ -2366,9 +2367,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03041 "***********************************************************"
 #define HHC03042 "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
 #define HHC03043 "Total active tracks    = %"PRIu32" tracks"
-#define HHC03044 "Avg. L2-to-track seek  = %.3f MB"
+#define HHC03044 "Avg. L2-to-track seek  = %s"
 #define HHC03045 "Total active blkgrps   = %"PRIu32" groups"
-#define HHC03046 "Avg. L2-to-block seek  = %.3f MB"
+#define HHC03046 "Avg. L2-to-block seek  = %s"
 #define HHC03047 "         File offset    Size (hex)         Size  group(s)"
 #define HHC03048                                                            "\n" \
        "HHC03048I   dh_devid:      %s        (%s-bit C%s%s %s)"             "\n" \

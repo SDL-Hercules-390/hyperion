@@ -41,7 +41,7 @@ DLL_EXPORT int     extgui  =  0;    /* 1 == External GUI is active   */
 /* "HDC1", "HDC2", etc, macros which automatically check for NULL.   */
 /*-------------------------------------------------------------------*/
 
-DLL_EXPORT  PANDISP*       daemon_task     = NULL;
+DLL_EXPORT  PANDISP*       noui_task       = NULL;
 DLL_EXPORT  PANDISP*       panel_display   = NULL;    /* (see above) */
 DLL_EXPORT  PANCMD*        panel_command   = NULL;    /* (see above) */
 DLL_EXPORT  REPOPCODE*     replace_opcode  = NULL;    /* (see above) */

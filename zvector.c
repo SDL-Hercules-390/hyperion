@@ -3736,11 +3736,12 @@ DEF_INST( vector_shift_left_double_by_bit )
     SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
-    for (i = 0; i < 3; i++) {
-        j = SV_D( temp, i ) << i4;
-        k = SV_D( temp, i+1 ) >> ( 64 - i4 );
-        SV_D( temp, i ) = j | k;
-    }
+    if ( i4 > 0 )
+        for (i = 0; i < 3; i++) {
+            j = SV_D( temp, i ) << i4;
+            k = SV_D( temp, i+1 ) >> ( 64 - i4 );
+            SV_D( temp, i ) = j | k;
+        }
 
     regs->VR_D( v1, 0 ) = SV_D( temp, 0 );
     regs->VR_D( v1, 1 ) = SV_D( temp, 1 );
@@ -3773,11 +3774,12 @@ DEF_INST( vector_shift_right_double_by_bit )
     SV_D( temp, 2 ) = regs->VR_D( v3, 0 );
     SV_D( temp, 3 ) = regs->VR_D( v3, 1 );
 
-    for (i = 3; i > 0; i--) {
-        j = SV_D( temp, i-1 ) << ( 64 - i4 );
-        k = SV_D( temp, i ) >> i4;
-        SV_D( temp, i ) = j | k;
-    }
+    if ( i4 > 0 )
+        for (i = 3; i > 0; i--) {
+            j = SV_D( temp, i-1 ) << ( 64 - i4 );
+            k = SV_D( temp, i ) >> i4;
+            SV_D( temp, i ) = j | k;
+        }
 
     regs->VR_D( v1, 0 ) = SV_D( temp, 2 );
     regs->VR_D( v1, 1 ) = SV_D( temp, 3 );

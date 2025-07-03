@@ -180,7 +180,7 @@ a problem need to be diagnosed.)
     git clone  https://github.com/SDL-Hercules-390/hyperion.git  &lt;directory-name&gt;
 </pre><p>
 
-<em><b>Note:</b> By downloading the .zip file (or cloning the repostiory) you agree to the terms
+<em><b>Note:</b> By downloading the .zip file (or cloning the repository) you agree to the terms
     of the <a href="herclic.html">Q Public Licence</a>.</em>
 <br />
 
@@ -494,7 +494,7 @@ In the normal (default) semi-graphical "panel" mode, <b>hercules.exe</b> draws
 to screen directly itself, and does not rely on any terminal manager
 functionality (Terminal or Command-Prompt program). It paints (draws)
 messages and other information (such as its command line and CPU status
-line) on specifc screen lines starting at specific columns, etc:
+line) on specific screen lines starting at specific columns, etc:
 
 <br><br>
 <center>
@@ -506,7 +506,7 @@ line) on specifc screen lines starting at specific columns, etc:
 It relies on certain keystrokes (such as the PageUp and PageDown keys,
 etc) to perform actions such as displaying previously issued messages
 and switching to its alternate semi-graphical display panel via the <b>Esc.
-key</b> (which shows an overal summary of the machine's state, such as its
+key</b> (which shows an overall summary of the machine's state, such as its
 current set of register values, list of devices, etc):
 
 <br><br>
@@ -537,7 +537,7 @@ screen,<br> scrolled back several screens to see previously issued terminal comm
 In standard "<b>herclin.exe</b>" command-line mode, Hercules operates just like any other
 normal command-line program, and you can use the Terminal's scroll bar (if it has
 one) and/or your mouse's scroll wheel to scroll the screen backward or forward to
-see previously issued mesages and/or commands and their responses. Your host
+see previously issued messages and/or commands and their responses. Your host
 operating system's terminal manager is in charge of painting the screen and reading
 the command line, not Hercules.
 
@@ -551,7 +551,8 @@ at the host's command prompt:
               [ -o <em>logfile</em>]             |  [ --output=<em>logfile</em> ]&nbsp;&nbsp;|&nbsp;&nbsp;[ --logfile=<em>logfile</em> ]
               [ -r <em>rcfile</em> ]             |  [ --rcfile=<em>rcfile</em> ]
               [ -b <em>logofile</em> ]           |  [ --herclogo=<em>logofile</em> ]
-              [ -d ]                    |  [ --daemon ]
+              [ -d ] <i><b>DEPRECATED</b></i>         |  [ --daemon ] <i><b>DEPRECATED</b></i>
+              [ -n ]                    |  [ --NoUI ]
               [ -e ]                    |  [ --externalgui ]
               [ -p <em>modpath</em> ]            |  [ --modpath=<em>modpath</em> ]
               [ -l <em>modname</em> ] ...        |  [ --ldmod=<em>modname</em> ] ...
@@ -603,10 +604,19 @@ where:
             initial welcome screen presented when a TN 3270 terminal connects
             to a hercules 3270 device.
         <p>
-        <dt><code><em>--daemon</em></em></code><p><dd>
+        <dt><code><em>--daemon</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i><p><dd>
 
-            specifies that Hercules is to be run in 'daemon' mode,
-            wherein it runs invisibly with no attached console.
+            This option has been deprecated due to its confusing name. Please use the below <code>'--NoUI'</code> option instead.
+        <p>
+        <dt><code><em>--NoUI</em></code><p><dd>
+
+            specifies that Hercules is to be run invisibly in "No User Interface" mode, wherein it
+            runs in the backgroud without any attached console or keyboard.
+        <p>
+            <b>Please Note</b> that Hercules's "No User Interface mode" is <i>not</i> the same
+            as e.g. Linux's daemon mode. It is quite different. Refer to our
+            "<a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.DAEMON.md">Running Hercules in "No User Interface" mode</a>"
+            web page for more information.
         <p>
         <dt><code><em>--externalgui</em></em></code><p><dd>
 
@@ -633,7 +643,7 @@ where:
             the name of a symbol and its associated value to be used in configuration
             file processing or panel commands. See the command 'defsym'
             for more information on using symbols. The '-s' option may be repeated.
-            Note: 'value' may be quoted to contain imbedded blanks.
+            Note: 'value' may be quoted to contain embedded blanks.
         <p>
         <dt><code><em>--verbose</em></code><p><dd>
 
@@ -1104,7 +1114,7 @@ panel commands:
      cpumodel              Set CPU model number
      cpuprio              *(deprecated)
      cpuserial             Set CPU serial number
-     cpuverid             *Set CPU verion number
+     cpuverid             *Set CPU version number
      cr                   *Display or alter control registers
      cscript              *Cancels a running script thread
      ctc                  *Enable/Disable CTC debugging
@@ -1211,7 +1221,7 @@ panel commands:
      s?                   *Query instruction stepping
      savecore             *Save a core image to file
      sclproot             *Set SCLP base directory
-     scpecho              *Set/Display option to echo to console and history of scp replys
+     scpecho              *Set/Display option to echo to console and history of scp replies
      scpimply             *Set/Display option to pass non-hercules commands to the scp
      script               *Run a sequence of panel commands contained in a file
      scsimount            *Automatic SCSI tape mounts

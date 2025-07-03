@@ -6386,6 +6386,7 @@ void cckd_command_opts()
         ","   "compparm=%d"
         ","   "debug=%d"
         ","   "dhint=%d"
+        ","   "dhstart=%d"
         ","   "dtax=%d"
         ","   "freepend=%d"
 
@@ -6393,6 +6394,7 @@ void cckd_command_opts()
         , cckdblk.compparm
         , cckdblk.debug
         , cckdblk.dhint
+        , cckdblk.dhstart
         , cckdblk.dtax
         , cckdblk.freepend
     );
@@ -6406,6 +6408,7 @@ void cckd_command_opts()
         ","   "gcint=%d"
         ","   "gcmsgs=%d"
         ","   "gcparm=%d"
+        ","   "gcstart=%d"
         ","   "linuxnull=%d"
         ","   "nosfd=%d"
 
@@ -6413,6 +6416,7 @@ void cckd_command_opts()
         , cckdblk.gcint
         , cckdblk.gcmsgs
         , cckdblk.gcparm
+        , cckdblk.gcstart
         , cckdblk.linuxnull
         , cckdblk.nosfd
     );
@@ -6668,9 +6672,13 @@ int   rc;
                 WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
-            else if (val == 1)
+            else
             {
-                cckd_dhstart(1);
+                if ((cckdblk.dhstart = val) == true)
+                {
+                    static const bool by_cmdline = true;
+                    cckd_dhstart( by_cmdline );
+                }
             }
         }
         // Dump Table At Exit
@@ -6772,10 +6780,13 @@ int   rc;
                 WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
-            else if (val == 1)
+            else
             {
-                cckd_gcstart();
-                cckd64_gcstart();
+                if ((cckdblk.gcstart = val) == true)
+                {
+                    cckd_gcstart();
+                    cckd64_gcstart();
+                }
             }
         }
         // Check for null linux tracks

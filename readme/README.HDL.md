@@ -177,7 +177,7 @@ HDL_REGISTER_SECTION;
        that provide back-link support (mostly *nix systems)
     */
 
-    HDL_REGISTER ( daemon_task, external_gui_interface );
+    HDL_REGISTER ( noui_task, external_gui_interface );
     HDL_REGISTER ( debug_cpu_state, gui_cpu_state );
     HDL_REGISTER ( panel_command, ProcessCommand );
 }

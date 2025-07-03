@@ -1011,7 +1011,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
                 sys_reset:1,            /* 1 = system in reset state */
                 ipled:1,                /* 1 = guest has been IPL'ed */
                 sfcmd:1,                /* 1 = 'sf' command issued   */
-                daemon_mode:1,          /* Daemon mode active        */
+                NoUI_mode:1,            /* No User Interface mode    */
                 panel_init:1,           /* Panel display initialized */
                 herclin:1,              /* herclin.exe has no panel  */
                 npquiet:1,              /* New Panel quiet indicator */

@@ -1632,20 +1632,20 @@ static void do_shutdown_now()
 
     //                     PROGRAMMING NOTE
 
-    // If we're NOT in "daemon_mode" (i.e. panel_display in control),
-    // -OR- if a daemon_task DOES exist, then THEY are in control of
+    // If we're NOT in "NoUI_mode" (i.e. panel_display in control),
+    // -OR- if a noui_task DOES exist, then THEY are in control of
     // shutdown; THEY are responsible for exiting the system whenever
     // THEY feel it's proper to do so (by simply returning back to the
     // caller thereby allowing 'main' to return back to the operating
     // system).
 
-    // OTHEWRWISE we ARE in "daemon_mode", but a daemon_task does NOT
+    // OTHEWRWISE we ARE in "NoUI_mode", but a noui_task does NOT
     // exist, which means the main thread (tail end of 'impl.c') is
     // stuck in a loop reading log messages and writing them to the
     // logfile, so we need to do the exiting here since it obviously
     // cannot.
 
-    if (sysblk.daemon_mode && !daemon_task)
+    if (sysblk.NoUI_mode && !noui_task)
     {
 #ifdef _MSVC_
         socket_deinit();
