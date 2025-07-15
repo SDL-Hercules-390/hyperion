@@ -1314,6 +1314,14 @@ int     i;                              /* Loop index                */
     /* Obtain device block from our DEVBLK pool and lock the device. */
     dev = get_devblk(lcss, devnum); /* does OBTAIN_DEVLOCK( dev ); */
 
+    /* Clear (re-initialize) any left-over garbage from previous use */
+    if (dev->dasdsfn)
+    {
+        free( dev->dasdsfn );
+        dev->dasdsfn = NULL;
+        dev-> dasdsfx = 0;
+    }
+
     // PROGRAMMING NOTE: the rule is, once a DEVBLK has been obtained
     // from the pool it can be returned back to the pool via a simple
     // call to ret_devblk if the device handler initialization function
