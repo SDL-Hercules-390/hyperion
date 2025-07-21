@@ -907,6 +907,22 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( load_program_status_word_extended_y )
 #endif
 
+#if !defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+     UNDEF_INST( vector_generate_element_masks )
+     UNDEF_INST( vector_evaluate )
+     UNDEF_INST( vector_blend )
+     UNDEF_INST( vector_divide_logical )
+     UNDEF_INST( vector_remainder_logical )
+     UNDEF_INST( vector_divide )
+     UNDEF_INST( vector_remainder )
+#endif
+
+#if !defined( FEATURE_199_VECT_PACKDEC_ENH_FACILITY_3 )
+     UNDEF_INST( vector_convert_to_decimal_128 )
+     UNDEF_INST( vector_convert_to_binary_128 )
+     UNDEF_INST( vector_test_zoned )
+#endif
+
 /*-------------------------------------------------------------------*/
 /*      FEATUREs that DON'T have any facility bits defined           */
 /*-------------------------------------------------------------------*/

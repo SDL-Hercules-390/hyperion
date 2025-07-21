@@ -144,6 +144,8 @@
 //efine FEATURE_194_RESET_DAT_PROT_FACILITY
 //efine FEATURE_196_PROC_ACT_FACILITY
 //efine FEATURE_197_PROC_ACT_EXT_1_FACILITY
+#define FEATURE_198_VECTOR_ENH_FACILITY_3
+#define FEATURE_199_VECT_PACKDEC_ENH_FACILITY_3
 
 /*-------------------------------------------------------------------*/
 /*      FEATUREs that DON'T have any facility bits defined           */

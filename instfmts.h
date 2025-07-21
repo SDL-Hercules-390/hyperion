@@ -116,6 +116,9 @@
 #undef VRI_G
 #undef VRI_H
 #undef VRI_I
+#undef VRI_J
+#undef VRI_K
+#undef VRI_L
 #undef VRR_A
 #undef VRR_B
 #undef VRR_C
@@ -2079,6 +2082,82 @@
 
 
 /*-------------------------------------------------------------------*/
+/*       VRI_J - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRI_J( _inst, _regs, _v1, _v2, _m4, _i3 )  VRI_J_DECODER( _inst, _regs, _v1, _v2, _m4, _i3, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  | ////////  | m4  |    i3     | rxb |    XOP    |    VRI_J
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28          36    40         47
+
+#define VRI_J_DECODER( _inst, _regs, _v1, _v2, _m4, _i3, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_v2) = (temp >> 24) & 0xf;                                     \
+    (_m4) = (temp >> 12) & 0xf;                                     \
+    (_i3) = (temp >>  4) & 0x0ff;                                   \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRI_K - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRI_K( _inst, _regs, _v1, _v2, _v3, _i5, _v4 )  VRI_K_DECODER( _inst, _regs, _v1, _v2, _v3, _i5, _v4, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  | v3  | /// |     i5    | v4  | rxb |    XOP    |    VRI_K
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24          32    36    40         47
+
+#define VRI_K_DECODER( _inst, _regs, _v1, _v2, _v3, _i5, _v4, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_v3) = ((temp >> 20) & 0xf) | ((_rxb & 0x2) << 3);             \
+    (_v4) = ((temp >>  4) & 0xf) | ((_rxb & 0x1) << 4);             \
+    (_i5) = (temp >> 8) & 0xff;                                     \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+#define VRI_L( _inst, _regs, _v1, _v2, _i3 )  VRI_L_DECODER( _inst, _regs, _v1, _v2, _i3, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    |//// | v1  | v2  |           i3          | rxb |    XOP    |    VRI_L
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20                      36    40         47
+
+#define VRI_L_DECODER( _inst, _regs, _v1, _v2, _i3, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_v2) = ((temp >> 20) & 0xf) | ((_rxb & 0x2) << 3);             \
+    (_i3) = (temp >>  4) & 0x0ffff;                                 \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
 /*       VRR_A - vector register-and-immediate operation             */
 /*               and an extended opcode field.                       */
 /*-------------------------------------------------------------------*/
@@ -2249,20 +2328,21 @@
 /*               and an extended opcode field.                       */
 /*-------------------------------------------------------------------*/
 
-#define VRR_G( _inst, _regs, _v1 )  VRR_G_DECODER( _inst, _regs, _v1, 6, 6 )
+#define VRR_G( _inst, _regs, _v1, _i2 )  VRR_G_DECODER( _inst, _regs, _v1, _i2, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-//  |     OP    | /// | v1  | /// | /// | /// | /// | /// | rxb |    XOP    |    VRR_G
+//  |     OP    | /// | v1  | /// |           i2          | rxb |    XOP    |    VRR_G
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40         47
 
-#define VRR_G_DECODER( _inst, _regs, _v1, _len, _ilc )    \
+#define VRR_G_DECODER( _inst, _regs, _v1, _i2, _len, _ilc )    \
 {                                                                   \
     U32 temp = fetch_fw( (_inst) + 1);                              \
                                                                     \
     U32 _rxb = (temp >> 0) & 0xf;                                   \
     (_v1) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_i2) = (temp >>  4) & 0x0ffff;                                 \
                                                                     \
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }

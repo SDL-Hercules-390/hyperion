@@ -3805,6 +3805,22 @@ DEF_INST( store_bear );
 DEF_INST( load_program_status_word_extended_y );
 #endif
 
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+ DEF_INST( vector_generate_element_masks );
+ DEF_INST( vector_evaluate );
+ DEF_INST( vector_blend );
+ DEF_INST( vector_divide_logical );
+ DEF_INST( vector_remainder_logical );
+ DEF_INST( vector_divide );
+ DEF_INST( vector_remainder );
+#endif
+
+#if defined( FEATURE_199_VECT_PACKDEC_ENH_FACILITY_3 )
+ DEF_INST( vector_convert_to_decimal_128 );
+ DEF_INST( vector_convert_to_binary_128 );
+ DEF_INST( vector_test_zoned );
+#endif
+
 /*-------------------------------------------------------------------*/
 /*      FEATUREs that DON'T have any facility bits defined           */
 /*-------------------------------------------------------------------*/
