@@ -66,6 +66,8 @@
 /* E63D VSTRL   - VECTOR STORE RIGHTMOST WITH LENGTH              [VSI]   */
 /* E63F VSTRLR  - VECTOR STORE RIGHTMOST WITH LENGTH (reg)        [VRS-d] */
 /* E649 VLIP    - VECTOR LOAD IMMEDIATE DECIMAL                   [VRI-h] */
+/* E64A VCVDQ   - VECTOR CONVERT TO DECIMAL (128)                 [VRI-j] */
+/* E64E VCVBQ   - VECTOR CONVERT TO BINARY (128)                  [VRR-k] */
 /* E650 VCVB    - VECTOR CONVERT TO BINARY (32)                   [VRR-i] */
 /* E651 VCLZDP  - VECTOR COUNT LEADING ZERO DIGITS                [VRR-k] */
 /* E652 VCVBG   - VECTOR CONVERT TO BINARY (64)                   [VRR-i] */
@@ -89,6 +91,7 @@
 /* E67C VSCSHP  - DECIMAL SCALE AND CONVERT AND SPLIT TO HFP      [VRR-b] */
 /* E67D VCSPH   - VECTOR CONVERT HFP TO SCALED DECIMAL            [VRR-j] */
 /* E67E VSDP    - VECTOR SHIFT AND DIVIDE DECIMAL                 [VRI-f] */
+/* E67F VTZ     - VECTOR TEST ZONED                               [VRI-l] */
 /*------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------*/
@@ -1959,6 +1962,25 @@ DEF_INST( vector_count_leading_zeros )
     ZVECTOR_END( regs );
 }
 
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* E754 VGEM   - VECTOR GENERATE ELEMENT MASKS               [VRR-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_generate_element_masks )
+{
+    int     v1, v2, m3, m4, m5;
+
+    VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    ZVECTOR_CHECK( regs );
+
+    /* FixMe! Write some code! */
+    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+
+    ZVECTOR_END( regs );
+}
+#endif /* defined( FEATURE_198_VECTOR_ENH_FACILITY_3 ) */
+
 /*-------------------------------------------------------------------*/
 /* E756 VLR    - Vector Load Vector                          [VRR-a] */
 /*-------------------------------------------------------------------*/
@@ -3787,6 +3809,44 @@ DEF_INST( vector_shift_right_double_by_bit )
     ZVECTOR_END( regs );
 }
 
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* E788 VEVAL  - VECTOR EVALUATE                             [VRI-k] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_evaluate )
+{
+    int     v1, v2, v3, v4, i5;
+
+    VRI_K( inst, regs, v1, v2, v3, v4, i5 );
+
+    ZVECTOR_CHECK( regs );
+
+    /* FixMe! Write some code! */
+    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+
+    ZVECTOR_END( regs );
+}
+#endif /* defined( FEATURE_198_VECTOR_ENH_FACILITY_3 ) */
+
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* E789 VBLEND - VECTOR BLEND                                [VRR-d] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_blend )
+{
+    int     v1, v2, v3, v4, m5, m6;
+
+    VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    /* FixMe! Write some code! */
+    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+
+    ZVECTOR_END( regs );
+}
+#endif /* defined( FEATURE_198_VECTOR_ENH_FACILITY_3 ) */
+
 /*-------------------------------------------------------------------*/
 /* E78A VSTRC  - Vector String Range Compare                 [VRR-d] */
 /*-------------------------------------------------------------------*/
@@ -5282,6 +5342,82 @@ DEF_INST( vector_multiply_and_add_odd )
 
     ZVECTOR_END( regs );
 }
+
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* E7B0 VDL    - VECTOR DIVIDE LOGICAL                       [VRR-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_divide_logical )
+{
+    int     v1, v2, v3, m4, m5, m6;
+
+    VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    /* FixMe! Write some code! */
+    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+
+    ZVECTOR_END( regs );
+}
+#endif /* defined( FEATURE_198_VECTOR_ENH_FACILITY_3 ) */
+
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* E7B1 VRL    - VECTOR REMAINDER LOGICAL                    [VRR-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_remainder_logical )
+{
+    int     v1, v2, v3, m4, m5, m6;
+
+    VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    /* FixMe! Write some code! */
+    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+
+    ZVECTOR_END( regs );
+}
+#endif /* defined( FEATURE_198_VECTOR_ENH_FACILITY_3 ) */
+
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* E7B2 VD     - VECTOR DIVIDE                               [VRR-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_divide )
+{
+    int     v1, v2, v3, m4, m5, m6;
+
+    VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    /* FixMe! Write some code! */
+    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+
+    ZVECTOR_END( regs );
+}
+#endif /* defined( FEATURE_198_VECTOR_ENH_FACILITY_3 ) */
+
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* E7B3 VR     - VECTOR REMAINDER                            [VRR-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( vector_remainder )
+{
+    int     v1, v2, v3, m4, m5, m6;
+
+    VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    ZVECTOR_CHECK( regs );
+
+    /* FixMe! Write some code! */
+    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+
+    ZVECTOR_END( regs );
+}
+#endif /* defined( FEATURE_198_VECTOR_ENH_FACILITY_3 ) */
 
 /*-------------------------------------------------------------------*/
 /* E7B4 VGFM   - Vector Galois Field Multiply Sum            [VRR-c] */
