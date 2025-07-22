@@ -3827,11 +3827,7 @@ DEF_INST( decimal_scale_and_convert_to_hfp )
     /* scale factor:                                         */
     /*      limited to values less than 8 otherwise results  */
     /*      are unpredictable.                               */
-    if (scale >= 8)
-    {
-        /* unpredicatable --> do nothing  */
-        return;
-    }
+    scale &= 0x07;
 
     /* operands as decNumber and context */
     vr_to_decNumber( regs, v2, &dnv2, false );
@@ -4433,11 +4429,7 @@ DEF_INST(decimal_scale_and_convert_and_split_to_hfp )
     /* scale factor:                                         */
     /*      limited to values less than 8 otherwise results  */
     /*      are unpredictable.                               */
-    if (scale >= 8)
-    {
-        /* unpredicatable --> do nothing  */
-        return;
-    }
+    scale &= 0x07;
 
     /* operands as decNumber and context */
     vr_to_decNumber( regs, v2, &dnv2, false );
@@ -4504,11 +4496,7 @@ DEF_INST( vector_convert_hfp_to_scaled_decimal )
     /* scale factor:                                         */
     /*      must be less than 32 otherwise the result is     */
     /*      unpredictable.                                   */
-    if (scale >= 32)
-    {
-        /* unpredicatable --> do nothing  */
-        return;
-    }
+    scale &= 0x1F;
 
     /* zero check */
     if ( vr_is_true_zero( regs, v2) )
