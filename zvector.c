@@ -185,7 +185,91 @@ typedef union {
 }  U128  ;
 
 /*===================================================================*/
-/* U128 Arithmetic (add, sub, mul)                                   */
+/* Function Prototypes                                               */
+/*===================================================================*/
+static inline void U128_logmsg(const char * msg, U128 u);
+static inline U128 U128_zero( );
+static inline U128 U128_one( );
+static inline bool U128_isZero( U128 a );
+static inline U128 U128_add( U128 a, U128 b);
+static inline U128 U128_sub( U128 a, U128 b);
+static inline U128 U128_divrem(U128 dividend, U128 divisor, U128 *remainder);
+static inline U128 U128_div( U128 a, U128 b);
+static inline U128 U128_rem( U128 a, U128 b);
+static inline void U128_mul( U128 a, U128 b, U128* hi128, U128* lo128);
+static inline U128 U128_mul_64 (U64 aa, U64 bb);
+static inline U128 U128_U32_mul( U128 a, U32 b);
+static inline U128 U128_shl( U128 a, U32 shift);
+static inline U128 U128_shrl( U128 a, U32 shift);
+static inline U128 U128_shra( U128 a, U32 shift);
+static inline U128 U128_S64( U64 a );
+static inline U128 U128_U64( U64 a );
+static inline int U128_cmp( U128 a, U128 b);
+static inline int S128_cmp( U128 a, U128 b);
+static inline U128 S128_add( U128 a, U128 b);
+static inline U128 S128_sub( U128 a, U128 b);
+static inline U128 S128_div( U128 a, U128 b);
+static inline U128 S128_rem( U128 a, U128 b);
+static inline U128 S128_mul_64 (U64 a, U64 b);
+static inline void S128_mul( U128 a, U128 b, U128* hi128, U128* lo128);
+static inline U128 S128_neg( U128 a );
+static inline U64 gf_mul_32( U32 m1, U32 m2);
+static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l);
+
+/*-------------------------------------------------------------------*/
+/* Debug helper for U128                                             */
+/*                                                                   */
+/* Input:                                                            */
+/*      msg     pointer to logmsg context string                     */
+/*      u       U128 number                                          */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static inline void U128_logmsg(const char * msg, U128 u)
+{
+    printf("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", msg, u.Q.D.H.D, u.Q.D.L.D);
+}
+
+/*===================================================================*/
+/* U128 Constants (zero, one)                                        */
+/*===================================================================*/
+
+/*-------------------------------------------------------------------*/
+/* U128_zero: return (U128) 0                                        */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_zero( )
+{
+    U128 temp;
+
+    temp.Q.D.H.D = 0;
+    temp.Q.D.L.D = 0;
+    return temp;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128_one: return (U128) 1                                         */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_one( )
+{
+    U128 temp;
+
+    temp.Q.D.H.D = 0;
+    temp.Q.D.L.D = 1;
+    return temp;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128_isZero: if (U128) a == 0; return true                        */
+/*-------------------------------------------------------------------*/
+static inline bool U128_isZero( U128 a )
+{
+    if ( a.Q.D.H.D == 0  && a.Q.D.L.D == 0 )
+        return true;
+
+    return false;
+}
+
+/*===================================================================*/
+/* U128 Arithmetic (add, sub, div, mul, rem)                         */
 /*===================================================================*/
 
 /*-------------------------------------------------------------------*/
@@ -231,6 +315,152 @@ static inline U128 U128_sub( U128 a, U128 b)
 #endif
 }
 
+static inline U128 U128_divrem(U128 dividend, U128 divisor, U128 *remainder)
+/* long-division, most-significant bit first */
+{
+
+    if(U128_cmp(dividend, divisor) < 0) {            /* trivial small case  */
+        if(remainder) *remainder = dividend;
+        return U128_zero();
+    }
+    if(U128_cmp(dividend, divisor) == 0) {           /* trivial equal case  */
+        if(remainder) *remainder = U128_zero();
+        return U128_one();
+    }
+
+    U128 rem = U128_zero();
+    U128 quo = U128_zero();
+
+    /* step through all 128 bits, MSB→LSB */
+    for (int i = 127; i >= 0; --i) {
+        /* left-shift remainder, pull next dividend bit in ----------------*/
+        rem = U128_shl(rem, 1);
+        rem.Q.D.L.D |= (i >= 64)
+                ? (dividend.Q.D.H.D >> (i-64)) & 1ULL
+                : (dividend.Q.D.L.D >>  i    ) & 1ULL;
+
+        /* compare & subtract --------------------------------------------*/
+        if (U128_cmp(rem, divisor) >= 0) {
+            rem = U128_sub(rem, divisor);
+
+            /* set bit i of quotient */
+            if (i >= 64)
+                quo.Q.D.H.D |= 1ULL << (i-64);
+            else
+                quo.Q.D.L.D |= 1ULL <<  i;
+        }
+    }
+
+    if (remainder) *remainder = rem;
+    return quo;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 Divide: return  a /  b                                       */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_div( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    U128 temp;                           /* temp (return) value      */
+
+    temp.u_128 =  a.u_128 / b.u_128;
+    return temp;
+
+#else
+    U128 quo, rem;
+
+    quo = U128_divrem( a, b, &rem);
+    return quo;
+
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 remainder: return  a %  b                                    */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_rem( U128 a, U128 b)
+{
+#if defined( _USE_128_)
+    U128 temp;                           /* temp (return) value      */
+
+    temp.u_128 =  a.u_128 % b.u_128;
+    return temp;
+
+#else
+    U128 quo, rem;
+
+    quo = U128_divrem( a, b, &rem);
+    return rem;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* U128_mul: 128-bit multiply -> 256-bit result                      */
+/*      return:  hi128 : high 128 bits                               */
+/*               lo128 : low  128 bits                               */
+/*-------------------------------------------------------------------*/
+static inline void U128_mul( U128 a, U128 b, U128* hi128, U128* lo128)
+{
+    U128 temp, temp1, temp2, temp3, temp4;
+    U128 acc128hi, acc128mid, acc128lo;
+    U64  carry;
+
+    /* initialize temp accumulators result */
+    acc128hi.Q.D.H.D = 0;
+    acc128hi.Q.D.L.D = 0;
+
+    acc128mid.Q.D.H.D = 0;
+    acc128mid.Q.D.L.D = 0;
+
+    acc128lo.Q.D.H.D = 0;
+    acc128lo.Q.D.L.D = 0;
+
+    /*  a or b == 0? */
+    if ( ( a.Q.D.H.D  == 0 && a.Q.D.L.D  == 0 ) || ( b.Q.D.H.D  == 0 && b.Q.D.L.D  == 0 ) )
+    {
+       *hi128 = acc128hi;
+       *lo128 = acc128lo;
+       return;
+    }
+
+    /* intermediate results */
+    temp1 = U128_mul_64 ( a.Q.D.L.D, b.Q.D.L.D);
+    temp2 = U128_mul_64 ( a.Q.D.H.D, b.Q.D.L.D);
+    temp3 = U128_mul_64 ( a.Q.D.L.D, b.Q.D.H.D);
+    temp4 = U128_mul_64 ( a.Q.D.H.D, b.Q.D.H.D);
+
+    // U128_logmsg("   temp1: ", temp1 );
+    // U128_logmsg("   temp2: ", temp2 );
+    // U128_logmsg("   temp3: ", temp3 );
+    // U128_logmsg("   temp4: ", temp4 );
+
+    /* middle 128-bits */
+    acc128mid.Q.D.L.D = temp1.Q.D.H.D;
+
+    carry = 0;
+    acc128mid = U128_add( acc128mid, temp2);
+    if ( U128_cmp(acc128mid, temp1) == -1 ) carry++;
+
+    acc128mid = U128_add( acc128mid, temp3);
+    if ( U128_cmp(acc128mid, temp2) == -1 ) carry++;
+
+    temp.Q.D.L.D = 0;
+    temp.Q.D.H.D = temp4.Q.D.L.D;
+    acc128mid = U128_add( acc128mid, temp);
+    if ( U128_cmp(acc128mid, temp) == -1 ) carry++;
+
+    /* repackage 64-bit parts of 256-bit result */
+    acc128lo.Q.D.L.D = temp1.Q.D.L.D;
+    acc128lo.Q.D.H.D = acc128mid.Q.D.L.D;
+
+    acc128hi.Q.D.L.D = acc128mid.Q.D.H.D;
+    acc128hi.Q.D.H.D = temp4.Q.D.H.D + carry;
+
+    *hi128 = acc128hi;
+    *lo128 = acc128lo;
+    return;
+}
+
 /*-------------------------------------------------------------------*/
 /* U128: U64 * U64 Multiply: return a * b (overflow ignored)         */
 /*                                                                   */
@@ -238,7 +468,7 @@ static inline U128 U128_sub( U128 a, U128 b)
 /*                                                                   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static inline U128 U64_mul (U64 aa, U64 bb)
+static inline U128 U128_mul_64 (U64 aa, U64 bb)
 {
 #if defined( _USE_128_)
     U128 temp;                           /* temp (return) value      */
@@ -363,19 +593,476 @@ static inline U128 U128_U32_mul( U128 a, U32 b)
 #endif
 }
 
+/*===================================================================*/
+/* U128 Shift: left, right logical, right arithmetic                 */
+/*===================================================================*/
+
 /*-------------------------------------------------------------------*/
-/* Debug helper for U128                                             */
-/*                                                                   */
-/* Input:                                                            */
-/*      msg     pointer to logmsg context string                     */
-/*      u       U128 number                                          */
-/*                                                                   */
+/* U128_shl: shift left                                              */
+/*      return a  << n                                               */
 /*-------------------------------------------------------------------*/
-static inline void u128_logmsg(const char * msg, U128 u)
+static inline U128 U128_shl( U128 a, U32 shift)
 {
-    printf("%s: u128=%16.16"PRIX64".%16.16"PRIX64" \n", msg, u.Q.D.H.D, u.Q.D.L.D);
+    U128 temp;
+
+#if defined( _USE_128_ )
+    temp.u_128 =   a.u_128 << shift;
+    return temp;
+
+#else
+    /* shift 0 or negative (undefined) */
+    if ( shift <= 0)
+        return a;
+
+    /* shift 1 to 63 */
+    if ( shift < 64 )
+    {
+        temp.Q.D.H.D = a.Q.D.H.D << shift | a.Q.D.L.D >> (64 - shift);
+        temp.Q.D.L.D = a.Q.D.L.D << shift;
+        return temp;
+    }
+
+    /* shift 64 */
+    if ( shift == 64 )
+    {
+        temp.Q.D.H.D = a.Q.D.L.D;
+        temp.Q.D.L.D = 0;
+        return temp;
+    }
+
+    /* shift 65 to 127 */
+    if ( shift < 128 )
+    {
+        temp.Q.D.H.D = a.Q.D.L.D << (shift - 64);
+        temp.Q.D.L.D = 0;
+        return temp;
+    }
+
+    /* shift 128 or greater */
+    temp.Q.D.H.D = 0;
+    temp.Q.D.L.D = 0;
+    return temp;
+
+#endif
 }
 
+/*-------------------------------------------------------------------*/
+/* U128_shrl: shift right logical                                    */
+/*      return a  >> shift                                           */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_shrl( U128 a, U32 shift)
+{
+    U128 temp;
+
+#if defined( _USE_128_ )
+    temp.u_128 =   a.u_128 >> shift;
+    return temp;
+
+#else
+    /* shift 0 or negative (undefined) */
+    if ( shift <= 0)
+        return a;
+
+    /* shift 1 to 63 */
+    if ( shift < 64 )
+    {
+        temp.Q.D.H.D = a.Q.D.H.D >> shift;
+        temp.Q.D.L.D = a.Q.D.L.D >> shift | a.Q.D.H.D << (64 - shift);
+        return temp;
+    }
+
+    /* shift 64 */
+    if ( shift == 64 )
+    {
+        temp.Q.D.H.D = 0;
+        temp.Q.D.L.D = a.Q.D.H.D;
+        return temp;
+    }
+
+    /* shift 65 to 127 */
+    if ( shift < 128 )
+    {
+        temp.Q.D.H.D = 0;
+        temp.Q.D.L.D = a.Q.D.H.D >> (shift - 64);
+        return temp;
+    }
+
+    /* shift 128 or greater */
+    temp.Q.D.H.D = 0;
+    temp.Q.D.L.D = 0;
+    return temp;
+
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* U128_shra: shift right arithmetic                                 */
+/*      return (S128)a  >> shift                                     */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_shra( U128 a, U32 shift)
+{
+    U128 temp;
+
+#if defined( _USE_128_ )
+    temp.u_128 =   a.s_128 >> shift;
+    return temp;
+
+#else
+    S64 sign_bit;
+
+    /* shift 0 or negative (undefined) */
+    if ( shift <= 0)
+        return a;
+
+    sign_bit = a.Q.D.H.D >> 63;
+
+    /* shift 1 to 63 */
+    if ( shift < 64 )
+    {
+        temp.Q.D.H.D = (S64) a.Q.D.H.D >> shift;
+        temp.Q.D.L.D = a.Q.D.L.D >> shift | a.Q.D.H.D << (64 - shift);
+        return temp;
+    }
+
+    /* shift 64 */
+    if ( shift == 64 )
+    {
+        temp.Q.D.H.D = (sign_bit == 0) ? 0 : -1;
+        temp.Q.D.L.D = a.Q.D.H.D;
+        return temp;
+    }
+
+    /* shift 65 to 127 */
+    if ( shift < 128 )
+    {
+        temp.Q.D.H.D = (sign_bit == 0) ? 0 : -1;
+        temp.Q.D.L.D = (S64) a.Q.D.H.D >> (shift - 64);
+        return temp;
+    }
+
+    /* shift 128 or greater */
+    temp.Q.D.H.D = (sign_bit == 0) ? 0 : -1;
+    temp.Q.D.L.D = (sign_bit == 0) ? 0 : -1;
+    return temp;
+
+#endif
+}
+
+/*===================================================================*/
+/* U128 Cast                                                         */
+/*===================================================================*/
+
+/*-------------------------------------------------------------------*/
+/* U128_S64: return (U128) (S64) a                                   */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_S64( U64 a )
+{
+    U128 temp;
+
+    temp.Q.D.H.D = a;
+    temp.Q.D.L.D = 0;
+
+    return U128_shra( temp, 64 );
+}
+
+/*-------------------------------------------------------------------*/
+/* U128_U64: return (U128) a                                         */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_U64( U64 a )
+{
+    U128 temp;
+
+    temp.Q.D.H.D = 0;
+    temp.Q.D.L.D = a;
+
+    return temp;
+}
+
+/*===================================================================*/
+/* U128 Compare                                                      */
+/*===================================================================*/
+
+/*-------------------------------------------------------------------*/
+/* U128 Compare: (U128) a to (U128) b                                */
+/*      return -1:  a <  b                                           */
+/*              0:  a == b                                           */
+/*              1:  a >  b                                           */
+/*-------------------------------------------------------------------*/
+static inline int U128_cmp( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    if ( a.u_128 < b.u_128 )
+        return -1;
+    else if ( a.u_128 > b.u_128 )
+        return 1;
+    else
+        return 0;
+
+#else
+    if ( a.Q.D.H.D < b.Q.D.H.D )
+        return -1;
+    else if ( a.Q.D.H.D > b.Q.D.H.D )
+        return 1;
+    else
+    {
+        if ( a.Q.D.L.D < b.Q.D.L.D )
+            return -1;
+        else if ( a.Q.D.L.D > b.Q.D.L.D )
+            return 1;
+        else
+            return 0;
+    }
+
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* S128 Compare: (S128) a to (S128) b                                */
+/*      return -1:  a <  b                                           */
+/*              0:  a == b                                           */
+/*              1:  a >  b                                           */
+/*-------------------------------------------------------------------*/
+static inline int S128_cmp( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    if ( a.s_128 < b.s_128 )
+        return -1;
+    else if ( a.s_128 > b.s_128 )
+        return 1;
+    else
+        return 0;
+
+#else
+    if ( (S64) a.Q.D.H.D < (S64) b.Q.D.H.D )
+        return -1;
+
+    if ( (S64) a.Q.D.H.D > (S64) b.Q.D.H.D )
+        return 1;
+
+    if ( a.Q.D.L.D == b.Q.D.L.D )
+        return 0;
+
+    if ( a.Q.D.L.D < b.Q.D.L.D )
+        return -1;
+
+    return 1;
+#endif
+}
+
+
+/*===================================================================*/
+/* S128 Arithmetic (add, sub, div, mul, neg, rem)                    */
+/*===================================================================*/
+
+/*-------------------------------------------------------------------*/
+/* S128 Add: return (s128) a + (s128) b                              */
+/*-------------------------------------------------------------------*/
+static inline U128 S128_add( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    U128 temp;                           /* temp (return) value      */
+
+    temp.s_128 =  a.s_128 + b.s_128;
+    return temp;
+
+#else
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  (S64) a.Q.D.H.D + (S64) b.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D + b.Q.D.L.D;
+    if (temp.Q.D.L.D < a.Q.D.L.D) temp.Q.D.H.D++;
+    return temp;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* S128 Subtract: return (s128) a - (s128) b                         */
+/*-------------------------------------------------------------------*/
+static inline U128 S128_sub( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    U128 temp;                           /* temp (return) value      */
+
+    temp.s_128 =  a.s_128 - b.s_128;
+    return temp;
+
+#else
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  (S64) a.Q.D.H.D - (S64) b.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D - b.Q.D.L.D;
+    if (temp.Q.D.L.D > a.Q.D.L.D) temp.Q.D.H.D--;
+    return temp;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* S128 Divide: return  (S128) a /  (S128) b                         */
+/*-------------------------------------------------------------------*/
+static inline U128 S128_div( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    U128 temp;                           /* temp (return) value      */
+
+    temp.s_128 =  a.s_128 / b.s_128;
+    return temp;
+
+#else
+    U128 temp_a, temp_b, tempquo, temprem;
+    bool neg_a, neg_b;
+
+    /* check a,b for negative values */
+    neg_a =  a.Q.D.H.D >> 63;
+    neg_b =  b.Q.D.H.D >> 63;
+
+    temp_a = ( neg_a ) ? S128_neg (a) : a;
+    temp_b = ( neg_b ) ? S128_neg (b) : b;
+
+    tempquo = U128_divrem( temp_a, temp_b, &temprem);
+
+    /* quotant is negative if either dividend/divisor is negative and the other operand is positive */
+    if( neg_a ^ neg_b )
+    {
+        tempquo = S128_neg (tempquo);
+    }
+
+    return tempquo;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* S128 remainder: return  (S128) a % (S128) b                       */
+/*-------------------------------------------------------------------*/
+static inline U128 S128_rem( U128 a, U128 b)
+{
+#if defined( _USE_128_ )
+    U128 temp;                           /* temp (return) value      */
+
+    temp.s_128 =  a.s_128 % b.s_128;
+    return temp;
+
+#else
+    U128 temp_a, temp_b, tempquo, temprem;
+    bool neg_a, neg_b;
+
+    /* check a,b for negative values */
+    neg_a =  a.Q.D.H.D >> 63;
+    neg_b =  b.Q.D.H.D >> 63;
+
+    temp_a = ( neg_a ) ? S128_neg (a) : a;
+    temp_b = ( neg_b ) ? S128_neg (b) : b;
+
+    tempquo = U128_divrem( temp_a, temp_b, &temprem);
+
+    /* remainder is negative is dividend (a) is negative */
+    if( neg_a  )
+    {
+        temprem = S128_neg (temprem);
+    }
+
+    return temprem;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* U128: S64 * S64 Multiply: return (s64) a * (s64) b                */
+/*              (overflow ignored)                                   */
+/* Very simple, standard approach to arithmetic multiply             */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static inline U128 S128_mul_64 (U64 a, U64 b)
+{
+#if defined( _USE_128_)
+    U128 temp;                           /* temp (return) value      */
+
+    temp.s_128 =  (__int128) (S64) a * (__int128) (S64) b;
+    return temp;
+
+#else
+    U128    temp128 ;
+    U64     temp_a, temp_b;
+    bool    neg_a, neg_b;
+
+    /* check a,b for negative values */
+    neg_a =  ( (S64) a < 0) ? 1 : 0;
+    neg_b =  ( (S64) b < 0) ? 1 : 0;
+
+    /* convert neg values to positive */
+    temp_a = ( neg_a ) ? - (S64) a : a;
+    temp_b = ( neg_b ) ? - (S64) b : b;
+
+    temp128 = U128_mul_64( temp_a, temp_b );
+
+    /* is the resulty negative? */
+    if( neg_a ^ neg_b )
+    {
+        /* negate result */
+        temp128 = S128_neg( temp128 );
+    }
+
+    return temp128;
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* S128_mul: signed 128-bit multiply -> signed 256-bit result        */
+/*      return:  hi128 : high 128 bits                               */
+/*               lo128 : low  128 bits                               */
+/*-------------------------------------------------------------------*/
+static inline void S128_mul( U128 a, U128 b, U128* hi128, U128* lo128)
+{
+    U128 temp, temp_a, temp_b, temphi, templo;
+    bool neg_a, neg_b;
+
+    /* check a,b for negative values */
+    neg_a =  a.Q.D.H.D >> 63;
+    neg_b =  b.Q.D.H.D >> 63;
+
+    temp_a = ( neg_a ) ? S128_neg (a) : a;
+    temp_b = ( neg_b ) ? S128_neg (b) : b;
+
+    U128_mul( temp_a, temp_b, &temphi, &templo);
+            // U128_logmsg("mul   temphi: ", temphi );
+            // U128_logmsg("mul   templo: ", templo );
+
+    if( neg_a ^ neg_b )
+    {
+        /* negate result */
+        temphi.Q.D.H.D = ~ temphi.Q.D.H.D;
+        temphi.Q.D.L.D = ~ temphi.Q.D.L.D;
+
+        templo.Q.D.H.D = ~ templo.Q.D.H.D;
+        templo.Q.D.L.D = ~ templo.Q.D.L.D;
+
+        temp = U128_add( templo, U128_one() );
+        if (U128_cmp( temp, templo ) == -1)
+            temphi = U128_add( temphi, U128_one() );
+        templo = temp;
+    }
+
+    *hi128 = temphi;
+    *lo128 = templo;
+}
+
+/*-------------------------------------------------------------------*/
+/* S128_neg: negate signed a                                         */
+/*      return:  - (S128) a                                          */
+/*-------------------------------------------------------------------*/
+static inline U128 S128_neg( U128 a )
+{
+    U128 temp;
+
+#if defined( _USE_128_)
+    temp.s_128 =   - a.s_128 ;
+    return temp;
+
+#else
+    temp.Q.D.H.D = ~ a.Q.D.H.D;
+    temp.Q.D.L.D = ~ a.Q.D.L.D;
+    temp = U128_add( temp, U128_one() );
+    return temp;
+#endif
+}
 
 /*-------------------------------------------------------------------*/
 /* Galois Field Multiply                                             */
@@ -1971,6 +2658,10 @@ DEF_INST( vector_generate_element_masks )
     int     v1, v2, m3, m4, m5;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
+
+    /* m4, m5 are not part of this instruction */
+    UNREFERENCED( m3 );
+    UNREFERENCED( m4 );
 
     ZVECTOR_CHECK( regs );
 
@@ -3838,6 +4529,9 @@ DEF_INST( vector_blend )
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     /* FixMe! Write some code! */
@@ -4622,6 +5316,7 @@ DEF_INST( vector_multiply_logical_high )
 {
     int     v1, v2, v3, m4, m5, m6;
     union   { U64 d; U32 f; U16 h; } temp;
+    U128    u128temp1;
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -4631,6 +5326,9 @@ DEF_INST( vector_multiply_logical_high )
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( (m4 == 3 || m4 == 4) && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m4)
     {
@@ -4658,6 +5356,27 @@ DEF_INST( vector_multiply_logical_high )
             regs->VR_F(v1, i) = temp.d >> 32;
         }
         break;
+
+    case 3:  /* Doubleword */
+        for (i=0; i < 2; i++)
+        {
+            u128temp1 = U128_mul_64(  regs->VR_D(v2, i), regs->VR_D(v3, i) );
+            regs->VR_D(v1, i) = u128temp1.Q.D.H.D;
+        }
+        break;
+
+    case 4:  /* Quadword */
+        {
+            U128 tempv2, tempv3;
+            U128 temphi, templo;
+
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            U128_mul(  tempv2, tempv3, &temphi, &templo );
+            regs->VR_Q(v1) = temphi.Q;
+        }
+        break;
+
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -4673,6 +5392,7 @@ DEF_INST( vector_multiply_low )
 {
     int     v1, v2, v3, m4, m5, m6;
     union   { U64 d; U32 f; U16 h; } temp;
+    U128    u128temp1;
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -4682,6 +5402,10 @@ DEF_INST( vector_multiply_low )
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( (m4 == 3 || m4 == 4) && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
 
     switch (m4)
     {
@@ -4709,6 +5433,27 @@ DEF_INST( vector_multiply_low )
             regs->VR_F(v1, i) = temp.d & 0xFFFFFFFF;
         }
         break;
+
+    case 3:  /* Doubleword */
+        for (i=0; i < 2; i++)
+        {
+            u128temp1 = S128_mul_64(  regs->VR_D(v2, i), regs->VR_D(v3, i) );
+            regs->VR_D(v1, i) = u128temp1.Q.D.L.D;
+        }
+        break;
+
+    case 4:  /* Quadword */
+        {
+            U128 tempv2, tempv3;
+            U128 temphi, templo;
+
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            S128_mul(  tempv2, tempv3, &temphi, &templo );
+            regs->VR_Q(v1) = templo.Q;
+        }
+        break;
+
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -4724,6 +5469,7 @@ DEF_INST( vector_multiply_high )
 {
     int     v1, v2, v3, m4, m5, m6;
     union   { S64 sd; S32 sf; S16 sh; } temp;
+    U128    u128temp1;
     int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -4733,6 +5479,9 @@ DEF_INST( vector_multiply_high )
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( (m4 == 3 || m4 == 4) && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m4)
     {
@@ -4760,6 +5509,27 @@ DEF_INST( vector_multiply_high )
             regs->VR_F(v1, i) = temp.sd >> 32;
         }
         break;
+
+    case 3:  /* Doubleword */
+        for (i=0; i < 2; i++)
+        {
+            u128temp1 = S128_mul_64(  regs->VR_D(v2, i), regs->VR_D(v3, i) );
+            regs->VR_D(v1, i) = u128temp1.Q.D.H.D;
+        }
+        break;
+
+    case 4:  /* Quadword */
+        {
+            U128 tempv2, tempv3;
+            U128 temphi, templo;
+
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            S128_mul(  tempv2, tempv3, &temphi, &templo );
+            regs->VR_Q(v1) = temphi.Q;
+        }
+        break;
+
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -4775,6 +5545,7 @@ DEF_INST( vector_multiply_logical_even )
 {
     int     v1, v2, v3, m4, m5, m6;
     union   { U64 d; U32 f; U16 h; } temp;
+    U128    u128temp1;
     int     i, j;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -4784,6 +5555,9 @@ DEF_INST( vector_multiply_logical_even )
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( (m4 == 3 || m4 == 4) && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m4)
     {
@@ -4811,6 +5585,12 @@ DEF_INST( vector_multiply_logical_even )
             regs->VR_D(v1, j) = temp.d;
         }
         break;
+
+    case 3:  /* Doubleword */
+        u128temp1 = U128_mul_64(  regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
+        regs->VR_Q(v1) = u128temp1.Q;
+        break;
+
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -4826,6 +5606,7 @@ DEF_INST( vector_multiply_logical_odd )
 {
     int     v1, v2, v3, m4, m5, m6;
     union   { U64 d; U32 f; U16 h; } temp;
+    U128    u128temp1;
     int     i, j;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -4835,6 +5616,9 @@ DEF_INST( vector_multiply_logical_odd )
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( (m4 == 3 || m4 == 4) && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m4)
     {
@@ -4846,6 +5630,7 @@ DEF_INST( vector_multiply_logical_odd )
             regs->VR_H(v1, j) = temp.h;
         }
         break;
+
     case 1:  /* Halfword */
         for (i=1, j=0; i < 8; i+=2, j++)
         {
@@ -4854,6 +5639,7 @@ DEF_INST( vector_multiply_logical_odd )
             regs->VR_F(v1, j) = temp.f;
         }
         break;
+
     case 2:  /* Word */
         for (i=1, j=0; i < 4; i+=2, j++)
         {
@@ -4862,6 +5648,12 @@ DEF_INST( vector_multiply_logical_odd )
             regs->VR_D(v1, j) = temp.d;
         }
         break;
+
+    case 3:  /* Doubleword */
+        u128temp1 = U128_mul_64(  regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
+        regs->VR_Q(v1) = u128temp1.Q;
+        break;
+
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -4877,6 +5669,7 @@ DEF_INST( vector_multiply_even )
 {
     int     v1, v2, v3, m4, m5, m6;
     union   { S64 sd; S32 sf; S16 sh; } temp;
+    U128    u128temp1;
     int     i, j;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -4886,6 +5679,9 @@ DEF_INST( vector_multiply_even )
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( m4 == 3 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m4)
     {
@@ -4897,6 +5693,7 @@ DEF_INST( vector_multiply_even )
             regs->VR_H(v1, j) = temp.sh;
         }
         break;
+
     case 1:  /* Halfword */
         for (i=0, j=0; i < 8; i+=2, j++)
         {
@@ -4905,6 +5702,7 @@ DEF_INST( vector_multiply_even )
             regs->VR_F(v1, j) = temp.sf;
         }
         break;
+
     case 2:  /* Word */
         for (i=0, j=0; i < 4; i+=2, j++)
         {
@@ -4913,6 +5711,12 @@ DEF_INST( vector_multiply_even )
             regs->VR_D(v1, j) = temp.sd;
         }
         break;
+
+    case 3:  /* Doubleword */
+        u128temp1 = S128_mul_64(  regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
+        regs->VR_Q(v1) = u128temp1.Q;
+        break;
+
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -4928,6 +5732,7 @@ DEF_INST( vector_multiply_odd )
 {
     int     v1, v2, v3, m4, m5, m6;
     union   { S64 sd; S32 sf; S16 sh; } temp;
+    U128    u128temp1;
     int     i, j;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -4937,6 +5742,9 @@ DEF_INST( vector_multiply_odd )
     UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( m4 == 3 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m4)
     {
@@ -4964,6 +5772,12 @@ DEF_INST( vector_multiply_odd )
             regs->VR_D(v1, j) = temp.sd;
         }
         break;
+
+    case 3:  /* Doubleword */
+        u128temp1 = S128_mul_64(  regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
+        regs->VR_Q(v1) = u128temp1.Q;
+        break;
+
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -5353,6 +6167,9 @@ DEF_INST( vector_divide_logical )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     /* FixMe! Write some code! */
@@ -5371,6 +6188,9 @@ DEF_INST( vector_remainder_logical )
     int     v1, v2, v3, m4, m5, m6;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -5391,6 +6211,9 @@ DEF_INST( vector_divide )
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
+
     ZVECTOR_CHECK( regs );
 
     /* FixMe! Write some code! */
@@ -5409,6 +6232,9 @@ DEF_INST( vector_remainder )
     int     v1, v2, v3, m4, m5, m6;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
+
+    /* m6 is not part of this instruction */
+    UNREFERENCED( m6 );
 
     ZVECTOR_CHECK( regs );
 
@@ -5513,8 +6339,8 @@ DEF_INST( vector_multiply_sum_logical )
     switch (m5)
     {
     case 3:  /* Doubleword */
-        intere = U64_mul( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
-        intero = U64_mul( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
+        intere = U128_mul_64( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
+        intero = U128_mul_64( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
         if (M6_ES)
             intere = U128_U32_mul( intere, 2 );  // Shift left
         if (M6_OS)
@@ -6267,6 +7093,28 @@ DEF_INST( vector_average_logical )
         }
         break;
 
+    case 4:         /* Quadword */
+        {
+            U128 tempv1, tempv2, tempv3;
+            U128 temp1, temp2;
+            int carry = 0;
+
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+
+            temp1 = U128_add( tempv2, tempv3);
+            if ( U128_cmp( temp1, tempv2) == -1 )   carry++;
+
+            temp2 = U128_add( temp1, U128_one() );
+            if ( U128_cmp( temp2, temp1) == -1 )    carry++;
+
+            tempv1 = U128_shrl( temp2, 1 );
+            if ( carry ) tempv1.Q.D.H.D |= 0x8000000000000000ull;
+
+            regs->VR_Q(v1) = tempv1.Q;
+        }
+        break;
+
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -6406,6 +7254,48 @@ DEF_INST( vector_average )
             {
                 /* different signs */
                 regs->VR_D(v1, i) = (U64) ( ( (S64) regs->VR_D(v2, i) + (S64) regs->VR_D(v3, i) + 1) >> 1 );
+            }
+        }
+        break;
+
+    case 4:         /* Quadword */
+        {
+            U128 temp128, tempv2, tempv3;
+
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+
+            if  (
+                    ( regs->VR_D(v2, 0) & 0x8000000000000000ull )  ==
+                    ( regs->VR_D(v3, 0) & 0x8000000000000000ull )
+                )
+            {
+                /* same signs: possible overflow */
+                if  ( regs->VR_D(v2, 0) & 0x8000000000000000ull )
+                {
+                    /* negative signs: allow overflow, round and force back to negative */
+                    temp128 = S128_add( tempv2, tempv3 );
+                    temp128 = S128_add( temp128, U128_one() );
+                    temp128 = U128_shrl( temp128, 1 );
+                    temp128.Q.D.H.D |= 0x8000000000000000ull;
+                    regs->VR_Q(v1) = temp128.Q;
+                }
+                else
+                {
+                    /* positive signs: handle as U6128 values */
+                    temp128 = S128_add( tempv2, tempv3 );
+                    temp128 = S128_add( temp128, U128_one() );
+                    temp128 = U128_shrl( temp128, 1 );
+                    regs->VR_Q(v1) = temp128.Q;
+                }
+            }
+            else
+            {
+                /* different signs */
+                temp128 = S128_add( tempv2, tempv3 );
+                temp128 = S128_add( temp128, U128_one() );
+                temp128 = U128_shrl( temp128, 1 );
+                regs->VR_Q(v1) = temp128.Q;
             }
         }
         break;
@@ -6852,6 +7742,9 @@ DEF_INST( vector_minimum_logical )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m4 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m4)
     {
     case 0:         /* Byte */
@@ -6875,6 +7768,15 @@ DEF_INST( vector_minimum_logical )
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = regs->VR_D(v2, i) <= regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
+        }
+        break;
+
+    case 4:         /* Quadword */
+        {
+            U128 tempv2, tempv3;
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            regs->VR_Q(v1) = ( U128_cmp( tempv2,  tempv3) == -1)  ? regs->VR_Q(v2) : regs->VR_Q(v3);
         }
         break;
 
@@ -6903,6 +7805,9 @@ DEF_INST( vector_maximum_logical )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m4 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m4)
     {
     case 0:         /* Byte */
@@ -6926,6 +7831,15 @@ DEF_INST( vector_maximum_logical )
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = regs->VR_D(v2, i) >= regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
+        }
+        break;
+
+    case 4:         /* Quadword */
+        {
+            U128 tempv2, tempv3;
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            regs->VR_Q(v1) = ( U128_cmp( tempv2,  tempv3) == 1)  ? regs->VR_Q(v2) : regs->VR_Q(v3);
         }
         break;
 
@@ -6954,6 +7868,9 @@ DEF_INST( vector_minimum )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m4 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m4)
     {
     case 0:         /* Byte */
@@ -6977,6 +7894,15 @@ DEF_INST( vector_minimum )
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = (S64) regs->VR_D(v2, i) <= (S64) regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
+        }
+        break;
+
+    case 4:         /* Quadword */
+        {
+            U128 tempv2, tempv3;
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            regs->VR_Q(v1) = ( S128_cmp( tempv2,  tempv3) == -1)  ? regs->VR_Q(v2) : regs->VR_Q(v3);
         }
         break;
 
@@ -7004,6 +7930,9 @@ DEF_INST( vector_maximum )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m4 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m4)
     {
     case 0:         /* Byte */
@@ -7027,6 +7956,16 @@ DEF_INST( vector_maximum )
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = (S64) regs->VR_D(v2, i) >= (S64) regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
+        }
+        break;
+
+    case 4:         /* Quadword */
+        {
+            U128 tempv2, tempv3;
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            regs->VR_Q(v1) = ( S128_cmp( tempv2,  tempv3) == 1)  ? regs->VR_Q(v2) : regs->VR_Q(v3);
+
         }
         break;
 
