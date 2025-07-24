@@ -318,6 +318,8 @@ static inline U128 U128_sub( U128 a, U128 b)
 static inline U128 U128_divrem(U128 dividend, U128 divisor, U128 *remainder)
 /* long-division, most-significant bit first */
 {
+    U128 rem, quo;
+    int i;
 
     if(U128_cmp(dividend, divisor) < 0) {            /* trivial small case  */
         if(remainder) *remainder = dividend;
@@ -328,11 +330,11 @@ static inline U128 U128_divrem(U128 dividend, U128 divisor, U128 *remainder)
         return U128_one();
     }
 
-    U128 rem = U128_zero();
-    U128 quo = U128_zero();
+    rem = U128_zero();
+    quo = U128_zero();
 
     /* step through all 128 bits, MSB→LSB */
-    for (int i = 127; i >= 0; --i) {
+    for (i = 127; i >= 0; --i) {
         /* left-shift remainder, pull next dividend bit in ----------------*/
         rem = U128_shl(rem, 1);
         rem.Q.D.L.D |= (i >= 64)
