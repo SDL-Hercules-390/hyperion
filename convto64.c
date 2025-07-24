@@ -290,9 +290,19 @@ CKD_DEVHDR      devhdr;                 /* Device header             */
         ofile = argv[1];
     }
 
+    /* Ensure specified i/p and o/p files are not the same file */
+    hostpath( pathname, ifile, sizeof( pathname )); ifile = strdup( pathname );
+    hostpath( pathname, ofile, sizeof( pathname )); ofile = strdup( pathname );
+
+    if (str_caseless_eq( ofile, ifile ))
+    {
+        // "Output file cannot be the same as input file!"
+        FWRMSG( stderr, HHC02963, "E" );
+        return -1;
+    }
+
     /* Open input file and verify correct format */
-    hostpath( pathname, ifile, sizeof( pathname ));
-    if ((ifd = HOPEN( pathname, O_RDONLY | O_BINARY )) < 0)
+    if ((ifd = HOPEN( ifile, O_RDONLY | O_BINARY )) < 0)
     {
         // "Error in function %s: %s"
         FWRMSG( stderr, HHC02958, "E", "open()", strerror( errno ));
@@ -300,7 +310,7 @@ CKD_DEVHDR      devhdr;                 /* Device header             */
     }
 
     // "Converting \"%s\" to CCKD64 file format..."
-    WRMSG( HHC02962, "I", pathname );
+    WRMSG( HHC02962, "I", ifile );
 
     /* Read the input file's device header */
     size = (U32) sizeof( devhdr );
@@ -328,8 +338,7 @@ CKD_DEVHDR      devhdr;                 /* Device header             */
         fba = true;
 
     /* Open ouput file */
-    hostpath( pathname, ofile, sizeof( pathname ));
-    if ((ofd = HOPEN( pathname,
+    if ((ofd = HOPEN( ofile,
         O_CREAT | O_WRONLY | O_BINARY | (replace ? 0 : O_EXCL),
         S_IRUSR | S_IWUSR | S_IRGRP)) < 0)
     {

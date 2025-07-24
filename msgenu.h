@@ -2287,7 +2287,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02960 "Dasd image file format unsupported or unrecognized: %s"
 #define HHC02961 "DASD operation completed"
 #define HHC02962 "Converting \"%s\" to CCKD64 file format..."
-//efine HHC02963 - HHC02974 (available)
+#define HHC02963 "Output file cannot be the same as input file!"
+//efine HHC02964 - HHC02974 (available)
 
 // dasdpdsu
 #define HHC02975 "Usage: %s infile [sf=shadow-file] pdsname [ASCII] [odir]" "\n" \
