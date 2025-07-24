@@ -4526,6 +4526,7 @@ DEF_INST( vector_evaluate )
 DEF_INST( vector_blend )
 {
     int     v1, v2, v3, v4, m5, m6;
+    int     i;
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -4534,8 +4535,60 @@ DEF_INST( vector_blend )
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Write some code! */
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+    switch (m5)
+    {
+    case 0:  /* Byte */
+        for (i=0; i<16; i++)
+        {
+            if (regs->VR_B(v4, i) & 0x80)
+                regs->VR_B(v1, i) = regs->VR_B(v2, i);
+            else
+                regs->VR_B(v1, i) = regs->VR_B(v3, i);
+        }
+        break;
+    case 1:  /* Halfword */
+        for (i=0; i<8; i++)
+        {
+            if (regs->VR_H(v4, i) & 0x8000)
+                regs->VR_H(v1, i) = regs->VR_H(v2, i);
+            else
+                regs->VR_H(v1, i) = regs->VR_H(v3, i);
+        }
+        break;
+    case 2:  /* Word */
+        for (i=0; i<4; i++)
+        {
+            if (regs->VR_F(v4, i) & 0x80000000)
+                regs->VR_F(v1, i) = regs->VR_F(v2, i);
+            else
+                regs->VR_F(v1, i) = regs->VR_F(v3, i);
+        }
+        break;
+    case 3:  /* Doublword */
+        for (i=0; i<2; i++)
+        {
+            if (regs->VR_D(v4, i) & 0x8000000000000000ull )
+                regs->VR_D(v1, i) = regs->VR_D(v2, i);
+            else
+                regs->VR_D(v1, i) = regs->VR_D(v3, i);
+        }
+        break;
+    case 4:  /* Quadword */
+        if (regs->VR_D(v4, 0) & 0x8000000000000000ull )
+        {
+            regs->VR_D(v1, 0) = regs->VR_D(v2, 0);
+            regs->VR_D(v1, 1) = regs->VR_D(v2, 1);
+        }
+        else
+        {
+            regs->VR_D(v1, 0) = regs->VR_D(v3, 0);
+            regs->VR_D(v1, 1) = regs->VR_D(v3, 1);
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
 
     ZVECTOR_END( regs );
 }

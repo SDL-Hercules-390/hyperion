@@ -683,6 +683,107 @@ static inline bool  vr_packed_valid_digits ( REGS* regs, int v1 )
     return valid;
 }
 
+static inline bool  vr_packed_valid_digits_enhanced ( REGS* regs, int v1,
+                             int et,   /* Enhanced Testing (ET) (value FALSE or TRUE) */
+                             int bpt,  /* Byte-Padding Test (BPT) (value FALSE or TRUE) */
+                             int dc )  /* Digits Count (DC) (value 0-31) */
+{
+    int     i, j;                           /* Array subscript           */
+    bool    valid = true;                   /* valid result              */
+
+    if (et == FALSE)
+    {
+        /* Enhanced Testing (ET) is not required. */
+        /* Codes 0-9 are considered valid in all digit positions. */
+        i = j = 0;
+        for ( ; i < MAX_DECIMAL_DIGITS && valid; i++)
+        {
+            if (i & 1)
+                valid = PACKED_LOW ( regs->VR_B( v1, j++ ) ) < 10;
+            else
+                valid = PACKED_HIGH ( regs->VR_B( v1, j ) ) < 10;
+        }
+    }
+    else
+    {
+        /* Enhanced Testing (ET) is required */
+        if (dc == 0)
+        {
+            /* N=0                                                   */
+            /* Codes 0-F are considered valid in all digit positions */
+            /* (that is, none of the digit positions are tested for  */
+            /* validity).                                            */
+        }
+        else
+        {
+            /* N>0                                                   */
+            i = j = ( MAX_DECIMAL_DIGITS - dc ) / 2;
+            if (dc & 1)
+            {
+                /* N>0 and odd                                       */
+                /* Codes 0-9 are considered valid in the rightmost N */
+                /* digit positions. Codes 0-F are considered valid   */
+                /* in the remaining leftmost digit positions (that   */
+                /* is, the remaining leftmost digit positions are    */
+                /* not tested for validity).                         */
+                for ( ; i < MAX_DECIMAL_DIGITS && valid; i++)
+                {
+                    if (i & 1)
+                        valid = PACKED_LOW ( regs->VR_B( v1, j++ ) ) < 10;
+                    else
+                        valid = PACKED_HIGH ( regs->VR_B( v1, j ) ) < 10;
+                }
+            }
+            else
+            {
+                /* N>0 and even                                      */
+                if (bpt == FALSE)
+                {
+                    /* N>0 and even & BPT=0                          */
+                    /* Codes 0-9 are considered valid in the         */
+                    /* rightmost N digit positions. Codes 0-F are    */
+                    /* considered valid in the remaining leftmost    */
+                    /* digit positions (that is, the remaining       */
+                    /* leftmost digit positions are not tested for   */
+                    /* validity)                                     */
+                    i++;
+                    for ( ; i < MAX_DECIMAL_DIGITS && valid; i++)
+                    {
+                        if (i & 1)
+                            valid = PACKED_LOW ( regs->VR_B( v1, j++ ) ) < 10;
+                        else
+                            valid = PACKED_HIGH ( regs->VR_B( v1, j ) ) < 10;
+                    }
+                }
+                else
+                {
+                    /* N>0 and even & BPT=1                          */
+                    /* Codes 0-9 are considered valid in the         */
+                    /* rightmost N digit positions. Code 0 is        */
+                    /* considered valid in the digit position        */
+                    /* immediately to the left of the rightmost N    */
+                    /* digit positions.                              */
+                    /* Codes 0-F are considered valid in the         */
+                    /* remaining leftmost digit positions (that is,  */
+                    /* the remaining leftmost digit positions are    */
+                    /* not tested for validity).                     */
+                    valid = PACKED_HIGH ( regs->VR_B( v1, j ) ) == 0;
+                    i++;
+                    for ( ; i < MAX_DECIMAL_DIGITS && valid; i++)
+                    {
+                        if (i & 1)
+                            valid = PACKED_LOW ( regs->VR_B( v1, j++ ) ) < 10;
+                        else
+                            valid = PACKED_HIGH ( regs->VR_B( v1, j ) ) < 10;
+                    }
+                }
+            }
+        }
+    }
+
+    return valid;
+}
+
 /*-------------------------------------------------------------------*/
 /* Check a signed packed decimal VR for a valid sign                 */
 /*                                                                   */
@@ -697,6 +798,97 @@ static inline bool  vr_packed_valid_digits ( REGS* regs, int v1 )
 static inline bool  vr_packed_valid_sign ( REGS* regs, int v1 )
 {
     return PACKED_SIGN ( regs->VR_B( v1, VR_PACKED_SIGN ) ) > 9;
+}
+
+static inline bool  vr_packed_valid_sign_enhanced ( REGS* regs, int v1,
+                             int et,   /* Enhanced Testing (ET) (value FALSE or TRUE) */
+                             int stc,  /* Sign-Test Control (STC) (value 0-7) */
+                             int dc )  /* Digits Count (DC) (value 0-31) */
+{
+    int     sign;                           /* Sign                      */
+    int     i, j;                           /* Array subscript           */
+    bool    allzeros = TRUE;                /* All N digits are zeros    */
+    bool    valid = TRUE;                   /* valid result              */
+
+    sign = PACKED_SIGN (regs->VR_B( v1, VR_PACKED_SIGN ));
+
+    if (et == FALSE)
+    {
+        /* Enhanced Testing (ET) is not required. */
+        valid = sign >= 0xA;
+    }
+    else
+    {
+        /* Enhanced Testing (ET) is required */
+
+        switch (stc)
+        {
+        case 1:  /* STC = 001 */
+        case 3:  /* STC = 011 */
+        case 7:  /* STC = 111 */
+            if (dc == 0)
+            {
+                /* N=0 */
+                allzeros = FALSE;
+            }
+            else
+            {
+                /* N>0 */
+                i = j = ( MAX_DECIMAL_DIGITS - dc ) / 2;
+                if (!(dc & 1)) i++;
+                for ( ; i < MAX_DECIMAL_DIGITS && allzeros; i++)
+                {
+                    if (i & 1)
+                        allzeros = PACKED_LOW ( regs->VR_B( v1, j++ ) ) == 0;
+                    else
+                        allzeros = PACKED_HIGH ( regs->VR_B( v1, j ) ) == 0;
+                }
+            }
+            break;
+        default:
+            break;
+        }
+
+        switch (stc)
+        {
+        case 0:  /* STC = 000 */
+            valid = sign >= 0xA;
+            break;
+        case 1:  /* STC = 001 */
+            if (!allzeros)
+                valid = sign >= 0xA;
+            else
+                valid = sign == 0xA || sign == 0xC || sign == 0xE || sign == 0xF;
+            break;
+        case 2:  /* STC = 010 */
+            valid = sign == 0xC || sign == 0xD;
+            break;
+        case 3:  /* STC = 011 */
+            if (!allzeros)
+                valid = sign == 0xC || sign == 0xD;
+            else
+                valid = sign == 0xC;
+            break;
+        case 4:  /* STC = 100 */
+        case 5:  /* STC = 101 */
+            valid = sign == 0xF;
+            break;
+        case 6:  /* STC = 110 */
+            valid = sign == 0xC || sign == 0xD || sign == 0xF;
+            break;
+        case 7:  /* STC = 111 */
+            if (!allzeros)
+                valid = sign == 0xC || sign == 0xD || sign == 0xF;
+            else
+                valid = sign == 0xC || sign == 0xF;
+            break;
+        default:
+            break;
+        }
+
+    }
+
+    return valid;
 }
 
 /*-------------------------------------------------------------------*/
@@ -3232,8 +3424,8 @@ DEF_INST( vector_unpack_zoned_low )
 DEF_INST( vector_test_decimal )
 {
     int     v1, i2;            /* Instruction parts                  */
-    bool    et;                /* Enhanced Testing (ET)              */
-    bool    bpt;               /* Byte-Padding Test (BPT)            */
+    int     et;                /* Enhanced Testing (ET)              */
+    int     bpt;               /* Byte-Padding Test (BPT)            */
     int     stc;               /* Sign-Test Control (STC)            */
     int     dc;                /* Digits Count (DC)                  */
     bool    valid_decimal;     /* decimal validation failed?         */
@@ -3260,13 +3452,11 @@ DEF_INST( vector_test_decimal )
         }
     }
 
-    /* FixMe! Implenent the i2 controls! */
-
     /* validate decimals */
-    valid_decimal = vr_packed_valid_digits( regs, v1 );
+    valid_decimal = vr_packed_valid_digits_enhanced( regs, v1, et, bpt, dc );
 
     /* validate sign */
-    valid_sign = vr_packed_valid_sign( regs, v1 );
+    valid_sign = vr_packed_valid_sign_enhanced( regs, v1, et, stc, dc );
 
     /* set condition code */
     cc = (valid_decimal) ?  ( (valid_sign) ? 0 : 1) :
