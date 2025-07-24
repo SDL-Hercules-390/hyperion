@@ -289,6 +289,8 @@
 #undef  FEATURE_194_RESET_DAT_PROT_FACILITY
 #undef  FEATURE_196_PROC_ACT_FACILITY
 #undef  FEATURE_197_PROC_ACT_EXT_1_FACILITY
+#undef  FEATURE_198_VECTOR_ENH_FACILITY_3
+#undef  FEATURE_199_VECT_PACKDEC_ENH_FACILITY_3
 
 /*-------------------------------------------------------------------*/
 /*      FEATUREs that DON'T have any facility bits defined           */

@@ -722,9 +722,15 @@ FT( NONE, NONE, NONE, 196_PROC_ACT )
 FT( NONE, NONE, NONE, 197_PROC_ACT_EXT_1 )
 #endif
 
-FT( NONE, NONE, NONE, 198_UNDEFINED )
-FT( NONE, NONE, NONE, 199_UNDEFINED )
-FT( NONE, NONE, NONE, 200_UNDEFINED )
+#if defined(  FEATURE_198_VECTOR_ENH_FACILITY_3 )
+FT( Z900, Z900, NONE, 198_VECTOR_ENH_3 )
+#endif
+
+#if defined(  FEATURE_199_VECT_PACKDEC_ENH_FACILITY_3 )
+FT( Z900, Z900, NONE, 199_VECT_PACKDEC_ENH_3 )
+#endif
+
+FT( NONE, NONE, NONE, 200_IBM_INTERNAL )
 
 /*-------------------------------------------------------------------*/
 /*                      Hercules Facility bits                       */
@@ -922,6 +928,8 @@ static  bool  mod192    ( bool enable, int bitno, int archnum, const char* actio
 static  bool  mod194    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* opp_actioning, const char* target_facname );
 static  bool  mod196    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* opp_actioning, const char* target_facname );
 static  bool  mod197    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* opp_actioning, const char* target_facname );
+static  bool  mod198    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* opp_actioning, const char* target_facname );
+static  bool  mod199    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* opp_actioning, const char* target_facname );
 
 static  bool  modtcp    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* opp_actioning, const char* target_facname );
 
@@ -988,6 +996,8 @@ static  void  instr192  ( int arch, bool enable );
 static  void  instr193  ( int arch, bool enable );
 static  void  instr194  ( int arch, bool enable );
 static  void  instr196  ( int arch, bool enable );
+static  void  instr198  ( int arch, bool enable );
+static  void  instr199  ( int arch, bool enable );
 
 static  void  hercmvcin ( int arch, bool enable );
 static  void  hercsvs   ( int arch, bool enable );
@@ -1226,9 +1236,9 @@ FT2( mod194,    instr194,  194_RESET_DAT_PROT,         "Reset-DAT-Protection Fac
 FT2( NULL,      NULL,      195_UNDEFINED,              "Undefined" )
 FT2( mod196,    instr196,  196_PROC_ACT,               "Processor-Activity-Instrumentation Facility" )
 FT2( mod197,    NULL,      197_PROC_ACT_EXT_1,         "Processor-Activity-Instrumentation Extension 1 Facility" )
-FT2( NULL,      NULL,      198_UNDEFINED,              "Undefined" )
-FT2( NULL,      NULL,      199_UNDEFINED,              "Undefined" )
-FT2( NULL,      NULL,      200_UNDEFINED,              "Undefined" )
+FT2( mod198,    instr198,  198_VECTOR_ENH_3,           "Vector-Enhancements Facility 3" )
+FT2( mod199,    instr199,  199_VECT_PACKDEC_ENH_3,     "Vector-Packed-Decimal-Enhancement Facility 3" )
+FT2( NULL,      NULL,      200_IBM_INTERNAL,           "Assigned to IBM internal use" )
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules facilities                             */
@@ -2480,7 +2490,7 @@ FAC_MOD_OK_FUNC           ( mod081 )
 /*-------------------------------------------------------------------*/
 /*                           mod129                                  */
 /*-------------------------------------------------------------------*/
-/*             required by 134, 135, 148, 152, 165, 192              */
+/*        required by 134, 135, 148, 152, 165, 192, 198, 199         */
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod129 )
 {
@@ -2505,6 +2515,12 @@ FAC_MOD_OK_FUNC            ( mod129 )
 
         if (FACILITY_ENABLED_ARCH( 192_VECT_PACKDEC_ENH_2, archnum ))
             return HHC00890E( STFL_192_VECT_PACKDEC_ENH_2 );
+
+        if (FACILITY_ENABLED_ARCH( 198_VECTOR_ENH_3, archnum ))
+            return HHC00890E( STFL_198_VECTOR_ENH_3 );
+
+        if (FACILITY_ENABLED_ARCH( 199_VECT_PACKDEC_ENH_3, archnum ))
+            return HHC00890E( STFL_199_VECT_PACKDEC_ENH_3 );
     }
     return true;
 }
@@ -2537,7 +2553,7 @@ FAC_MOD_OK_FUNC            ( mod134 )
 /*-------------------------------------------------------------------*/
 /*                           mod135                                  */
 /*-------------------------------------------------------------------*/
-/*               also requires 129; required by 148                  */
+/*             also requires 129; required by 148, 198               */
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod135 )
 {
@@ -2552,6 +2568,9 @@ FAC_MOD_OK_FUNC            ( mod135 )
     {
         if (FACILITY_ENABLED_ARCH( 148_VECTOR_ENH_2, archnum ))
             return HHC00890E( STFL_148_VECTOR_ENH_2 );
+
+        if (FACILITY_ENABLED_ARCH( 198_VECTOR_ENH_3, archnum ))
+            return HHC00890E( STFL_198_VECTOR_ENH_3 );
     }
     return true;
 }
@@ -2667,7 +2686,7 @@ FAC_MOD_OK_FUNC            ( mod149 )
 /*-------------------------------------------------------------------*/
 /*                           mod152                                  */
 /*-------------------------------------------------------------------*/
-/*               also requires 129, 134; required by 192             */
+/*           also requires 129, 134; required by 192, 199            */
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod152 )
 {
@@ -2684,7 +2703,10 @@ FAC_MOD_OK_FUNC            ( mod152 )
     else // disabling
     {
         if (FACILITY_ENABLED_ARCH( 192_VECT_PACKDEC_ENH_2, archnum ))
-            return HHC00890E(  STFL_192_VECT_PACKDEC_ENH_2 );
+            return HHC00890E( STFL_192_VECT_PACKDEC_ENH_2 );
+
+        if (FACILITY_ENABLED_ARCH( 199_VECT_PACKDEC_ENH_3, archnum ))
+            return HHC00890E( STFL_199_VECT_PACKDEC_ENH_3 );
     }
     return true;
 }
@@ -2845,6 +2867,55 @@ FAC_MOD_OK_FUNC           ( mod197 )
     {
         if (!FACILITY_ENABLED_ARCH( 196_PROC_ACT, archnum ))
             return HHC00890E(  STFL_196_PROC_ACT );
+    }
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                           mod198                                  */
+/*-------------------------------------------------------------------*/
+/*                  also requires 129, 135, 148                      */
+/*-------------------------------------------------------------------*/
+FAC_MOD_OK_FUNC            ( mod198 )
+{
+    UNREFERENCED( opp_actioning );
+
+    if (enable)
+    {
+        if (!FACILITY_ENABLED_ARCH( 129_ZVECTOR, archnum ))
+            return HHC00890E(  STFL_129_ZVECTOR );
+
+        if (!FACILITY_ENABLED_ARCH( 135_ZVECTOR_ENH_1, archnum ))
+            return HHC00890E(  STFL_135_ZVECTOR_ENH_1 );
+
+        if (!FACILITY_ENABLED_ARCH( 148_VECTOR_ENH_2, archnum ))
+            return HHC00890E(  STFL_148_VECTOR_ENH_2 );
+    }
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                           mod199                                  */
+/*-------------------------------------------------------------------*/
+/*                also requires 129, 134, 152, 192                   */
+/*-------------------------------------------------------------------*/
+FAC_MOD_OK_FUNC            ( mod199 )
+{
+    UNREFERENCED( opp_actioning );
+
+    if (enable)
+    {
+        if (!FACILITY_ENABLED_ARCH( 129_ZVECTOR , archnum ))
+            return HHC00890E(  STFL_129_ZVECTOR );
+
+        if (!FACILITY_ENABLED_ARCH( 134_ZVECTOR_PACK_DEC, archnum ))
+            return HHC00890E(  STFL_134_ZVECTOR_PACK_DEC );
+
+        if (!FACILITY_ENABLED_ARCH( 152_VECT_PACKDEC_ENH, archnum ))
+            return HHC00890E(  STFL_152_VECT_PACKDEC_ENH );
+
+        if (!FACILITY_ENABLED_ARCH( 192_VECT_PACKDEC_ENH_2, archnum ))
+            return HHC00890E(  STFL_192_VECT_PACKDEC_ENH_2 );
     }
     return true;
 }
@@ -4145,6 +4216,30 @@ END_DIS_FAC_INS_FUNC()
 BEG_DIS_FAC_INS_FUNC( instr196 )
 {
     DIS_FAC_INS( B28F, "QPACI   B28F  QUERY PROCESSOR ACTIVITY COUNTER INFORMATION" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( instr198 )
+{
+    DIS_FAC_INS( E754, "VGEM	E754  VECTOR GENERATE ELEMENT MASKS" );
+    DIS_FAC_INS( E788, "VEVAL	E788  VECTOR EVALUATE" );
+    DIS_FAC_INS( E789, "VBLEND	E789  VECTOR BLEND" );
+    DIS_FAC_INS( E7B0, "VDL	E7B0  VECTOR DIVIDE LOGICAL" );
+    DIS_FAC_INS( E7B1, "VRL	E7B1  VECTOR REMAINDER LOGICAL" );
+    DIS_FAC_INS( E7B2, "VD	E7B2  VECTOR DIVIDE" );
+    DIS_FAC_INS( E7B3, "VR	E7B3  VECTOR REMAINDER" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( instr199 )
+{
+    DIS_FAC_INS( E64A, "VCVDQ   E64A  VECTOR CONVERT TO DECIMAL" );
+    DIS_FAC_INS( E64E, "VCVBQ   E64E  VECTOR CONVERT TO BINARY" );
+    DIS_FAC_INS( E67F, "VTZ     E67F  VECTOR TEST ZONED" );
 }
 END_DIS_FAC_INS_FUNC()
 
