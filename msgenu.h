@@ -485,9 +485,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00384 "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
 #define HHC00385 "Skipping garbage collection for CCKD%s file[%d] %1d:%04X %s due to space errors"
 #define HHC00386 "Collected %u bytes of garbage for CCKD%s file[%d] %1d:%04X %s..."
-#define HHC00387 "%1d:%04X CCKD%s image %s is SEVERELY fragmented!"
-#define HHC00388 "%1d:%04X CCKD%s image %s is moderately fragmented"
-#define HHC00389 "%1d:%04X CCKD%s image %s is slightly fragmented"
+#define HHC00387 "%1d:%04X CCKD%s image %s is very fragmented."
+#define HHC00388 "%1d:%04X CCKD%s image %s is moderately fragmented."
+#define HHC00389 "%1d:%04X CCKD%s image %s is slightly fragmented."
 #define HHC00390 "%1d:%04X CCKD file: device has no shadow files"
 #define HHC00391 "Starting CCKD Dasd Hardener pass..."
 #define HHC00392 "CCKD Dasd Hardener pass complete."
@@ -2377,7 +2377,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC03048I   dh_highcyl:    %u"                                      "\n" \
        "HHC03048I   dh_serial:     %s"
 #define HHC03049 "Total unknown space    = %s bytes"
-#define HHC03050 "Image is %s fragmented%s"
+#define HHC03050 "Image is %s fragmented."
 //efine HHC03051 - HHC03099 (available)
 
 // dasdser

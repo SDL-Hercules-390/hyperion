@@ -835,23 +835,23 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
 
     /* Retrieve and report garbage collector state, but ONLY if
        the image is over 100MB in size. This prevents "scaring"
-       the user about SEVERELY fragmented files when the file
-       is too small to be much of a concern, as is usually the
-       case with e.g. shadow files.
+       the user about very fragmented files when the file is
+       too small to be much of a concern, as is usually the case
+       with e.g. shadow files.
     */
     if (cdevhdr.cdh_size > (100 * _1M))
     {
         int gc = dev_gc_state();
         const char *gc_str, *sev;
 
-             if (gc <= 1) gc_str = "SEVERELY",   sev = "W";
-        else if (gc <= 2) gc_str = "moderately", sev = "W";
+             if (gc <= 1) gc_str = "very",       sev = "W";
+        else if (gc <= 2) gc_str = "moderately", sev = "I";
         else if (gc <= 3) gc_str = "slightly",   sev = "I";
         else              gc_str = "not",        sev = "I";
 
-        // "Image is %s fragmented%s"
+        // "Image is %s fragmented."
         WRMSG( HHC03020, "I" );
-        WRMSG( HHC03050, sev, gc_str, gc <= 1 ? "!" : "." );
+        WRMSG( HHC03050, sev, gc_str );
     }
 
     /* FBA devices don't have tracks, so cannot report track information */

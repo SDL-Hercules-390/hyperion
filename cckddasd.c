@@ -5413,9 +5413,9 @@ void cckd_gc_rpt_state( DEVBLK* dev )
 
     /* Retrieve and report garbage collector state, but ONLY if
        the image is over 100MB in size. This prevents "scaring"
-       the user about SEVERELY fragmented files when the file
-       is too small to be much of a concern, as is usually the
-       case with e.g. shadow files.
+       the user about very fragmented files when the file is
+       too small to be much of a concern, as is usually the case
+       with e.g. shadow files.
     */
     if (cckd->cdevhdr->cdh_size < (100 * _1M))
         return;
@@ -5427,21 +5427,21 @@ void cckd_gc_rpt_state( DEVBLK* dev )
         case 0:     // critical!
         case 1:     // severe
 
-            // "%1d:%04X CCKD%s image %s is SEVERELY fragmented!"
+            // "%1d:%04X CCKD%s image %s is very fragmented."
             WRMSG( HHC00387, "W", LCSS_DEVNUM, "",
                 TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
             break;
 
         case 2:     // moderate
 
-            // "%1d:%04X CCKD%s image %s is moderately fragmented"
-            WRMSG( HHC00388, "W", LCSS_DEVNUM, "",
+            // "%1d:%04X CCKD%s image %s is moderately fragmented."
+            WRMSG( HHC00388, "I", LCSS_DEVNUM, "",
                 TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
             break;
 
         case 3:     // light
 
-            // "%1d:%04X CCKD%s image %s is slightly fragmented"
+            // "%1d:%04X CCKD%s image %s is slightly fragmented."
             WRMSG( HHC00389, "I", LCSS_DEVNUM, "",
                 TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
             break;
