@@ -11,6 +11,7 @@
 *        E7FF VMX    - VECTOR MAXIMUM
 *
 *        James Wekel July 2024
+*                    July 2025 - Vector-enhancements facility 3 update
 ***********************************************************************
                                                                 SPACE 2
 ***********************************************************************
@@ -178,6 +179,12 @@ BEGIN    BALR  R8,0             Initalize FIRST base register
 ***********************************************************************
 
          FCHECK 129,'z/Architecture vector facility'
+                                                                EJECT
+***********************************************************************
+* Is z/Architecture vector facility installed  (bit 198)
+***********************************************************************
+
+         FCHECK 198,'Vector-enhancements facility 3'
                                                                 EJECT
 ***********************************************************************
 *              Do tests in the E7TESTS table
@@ -526,6 +533,24 @@ TTABLE   DS    0F
          DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   v2
          DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
 
+* quadword
+         VRR_C VMX,4
+         DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   expected result
+         DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   v2
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMX,4
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'  expected result
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   v2
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMX,4
+         DC    XL16'00020001FFFE000100AA800112340020'   expected result
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   v2
+         DC    XL16'00020001FFFE000100AA800112340020'   v3
+
 *---------------------------------------------------------------------
 * VMXL   - VECTOR MAXIMUM LOGICAL
 *---------------------------------------------------------------------
@@ -552,6 +577,24 @@ TTABLE   DS    0F
          DC    XL16'FFFFFFFFFFFFFFFF0000000000000020'   expected result
          DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   v2
          DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMXL,4
+         DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   expected result
+         DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   v2
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMXL,4
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'  expected result
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   v2
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMXL,4
+         DC    XL16'00020001FFFE000100AA800112340020'   expected result
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   v2
+         DC    XL16'00020001FFFE000100AA800112340020'   v3
 
 *---------------------------------------------------------------------
 *  VMN    - VECTOR MINIMUM
@@ -580,6 +623,25 @@ TTABLE   DS    0F
          DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   v2
          DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
 
+
+* quadword
+         VRR_C VMN,4
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   expected result
+         DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   v2
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMN,4
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'  expected result
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   v2
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMN,4
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   expected result
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   v2
+         DC    XL16'00020001FFFE000100AA800112340020'   v3
+
 *---------------------------------------------------------------------
 * VMNL   - VECTOR MINIMUM LOGICAL
 *---------------------------------------------------------------------
@@ -607,6 +669,24 @@ TTABLE   DS    0F
          DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   v2
          DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
 
+* quadword
+         VRR_C VMNL,4
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   expected result
+         DC    XL16'FFFFFFFFFFFFFFFF000000000000001F'   v2
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMNL,4
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'  expected result
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   v2
+         DC    XL16'FFFFFFFFFFFFFFFD0000000000000020'   v3
+
+* quadword
+         VRR_C VMNL,4
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   expected result
+         DC    XL16'0001FFFFFFFD80007FFF80000123001F'   v2
+         DC    XL16'00020001FFFE000100AA800112340020'   v3
+
 *---------------------------------------------------------------------
 * VAVG   - VECTOR AVERAGE
 *---------------------------------------------------------------------
@@ -618,7 +698,7 @@ TTABLE   DS    0F
 
 * Halfword
          VRR_C VAVG,1
-         DC    XL16'FF7FFF7FFF7FFF7FFF7FFF7FFF7FFF7F '   expected result
+         DC    XL16'FF7FFF7FFF7FFF7FFF7FFF7FFF7FFF7F'   expected result
          DC    XL16'7C7C7C7C7C7C7C7C7C7C7C7C7C7C7C7C'   v2
          DC    XL16'82828282828282828282828282828282'   v3
 
@@ -658,6 +738,35 @@ TTABLE   DS    0F
          DC    XL16'80000000000000028000000000000002'   v2
          DC    XL16'80000000000000028000000000000002'   v3
 
+* Quadword
+         VRR_C VAVG,4
+         DC    XL16'7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F'   expected result
+         DC    XL16'7C7C7C7C7C7C7C7C7C7C7C7C7C7C7C7C'   v2
+         DC    XL16'82828282828282828282828282828282'   v3
+
+* Quadword
+         VRR_C VAVG,4
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   expected result
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   v2
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   v3
+
+* Quadword
+         VRR_C VAVG,4
+         DC    XL16'7FFFFFFFFFFFFFFF7FFFFFFFFFFFFFFF'   expected result
+         DC    XL16'80000000000000028000000000000002'   v2
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   v3
+
+* Quadword
+         VRR_C VAVG,4
+         DC    XL16'7FFFFFFFFFFFFFFF7FFFFFFFFFFFFFFF'   expected result
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   v2
+         DC    XL16'80000000000000028000000000000002'   v3
+
+* Quadword
+         VRR_C VAVG,4
+         DC    XL16'80000000000000028000000000000002'   expected result
+         DC    XL16'80000000000000028000000000000002'   v2
+         DC    XL16'80000000000000028000000000000002'   v3
 
 *---------------------------------------------------------------------
 *VAVGL  - VECTOR AVERAGE LOGICAL
@@ -709,6 +818,39 @@ TTABLE   DS    0F
          DC    XL16'80000000000000028000000000000002'   expected result
          DC    XL16'80000000000000028000000000000002'   v2
          DC    XL16'80000000000000028000000000000002'   v3
+
+
+
+* Quadword
+         VRR_C VAVGL,4
+         DC    XL16'7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F'   expected result
+         DC    XL16'7C7C7C7C7C7C7C7C7C7C7C7C7C7C7C7C'   v2
+         DC    XL16'82828282828282828282828282828282'   v3
+
+* Quadword
+         VRR_C VAVGL,4
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   expected result
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   v2
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   v3
+
+* Quadword
+         VRR_C VAVGL,4
+         DC    XL16'7FFFFFFFFFFFFFFF7FFFFFFFFFFFFFFF'   expected result
+         DC    XL16'80000000000000028000000000000002'   v2
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   v3
+
+* Quadword
+         VRR_C VAVGL,4
+         DC    XL16'7FFFFFFFFFFFFFFF7FFFFFFFFFFFFFFF'   expected result
+         DC    XL16'7FFFFFFFFFFFFFFC7FFFFFFFFFFFFFFC'   v2
+         DC    XL16'80000000000000028000000000000002'   v3
+
+* Quadword
+         VRR_C VAVGL,4
+         DC    XL16'80000000000000028000000000000002'   expected result
+         DC    XL16'80000000000000028000000000000002'   v2
+         DC    XL16'80000000000000028000000000000002'   v3
+
 
 
          DC    F'0'     END OF TABLE
