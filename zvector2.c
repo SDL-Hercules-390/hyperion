@@ -689,14 +689,13 @@ static inline bool  vr_packed_valid_digits_enhanced ( REGS* regs, int v1,
                              int dc )  /* Digits Count (DC) (value 0-31) */
 {
     int     i, j;                           /* Array subscript           */
-    bool    valid = true;                   /* valid result              */
+    bool    valid = TRUE;                   /* valid result              */
 
     if (et == FALSE)
     {
         /* Enhanced Testing (ET) is not required. */
         /* Codes 0-9 are considered valid in all digit positions. */
-        i = j = 0;
-        for ( ; i < MAX_DECIMAL_DIGITS && valid; i++)
+        for (i=0, j=0; i < MAX_DECIMAL_DIGITS && valid; i++)
         {
             if (i & 1)
                 valid = PACKED_LOW ( regs->VR_B( v1, j++ ) ) < 10;
@@ -717,7 +716,8 @@ static inline bool  vr_packed_valid_digits_enhanced ( REGS* regs, int v1,
         else
         {
             /* N>0                                                   */
-            i = j = ( MAX_DECIMAL_DIGITS - dc ) / 2;
+            i = MAX_DECIMAL_DIGITS - dc;
+            j = i / 2;
             if (dc & 1)
             {
                 /* N>0 and odd                                       */
@@ -746,7 +746,6 @@ static inline bool  vr_packed_valid_digits_enhanced ( REGS* regs, int v1,
                     /* digit positions (that is, the remaining       */
                     /* leftmost digit positions are not tested for   */
                     /* validity)                                     */
-                    i++;
                     for ( ; i < MAX_DECIMAL_DIGITS && valid; i++)
                     {
                         if (i & 1)
@@ -834,7 +833,8 @@ static inline bool  vr_packed_valid_sign_enhanced ( REGS* regs, int v1,
             else
             {
                 /* N>0 */
-                i = j = ( MAX_DECIMAL_DIGITS - dc ) / 2;
+                i = MAX_DECIMAL_DIGITS - dc;
+                j = i / 2;
                 if (!(dc & 1)) i++;
                 for ( ; i < MAX_DECIMAL_DIGITS && allzeros; i++)
                 {
