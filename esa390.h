@@ -2779,6 +2779,7 @@ typedef struct PTFFQSI PTFFQSI;
 #define VXC_IEEE_OVERFLOW       0x03    /* IEEE overflow             */
 #define VXC_IEEE_UNDERFLOW      0x04    /* IEEE underflow            */
 #define VXC_IEEE_INEXACT        0x05    /* IEEE inexact              */
+#define VXC_INTEGER_DIVIDE      0x08    /* Integer divide            */
 
 /*-------------------------------------------------------------------*/
 /* Decimal rounding modes */

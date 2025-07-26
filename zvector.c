@@ -1289,6 +1289,27 @@ static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
     }
 }
 
+/*-------------------------------------------------------------------*/
+/* Vector-processing exception.                                      */
+/*-------------------------------------------------------------------*/
+/* Create the VXC from the VIX and the VIC.                          */
+/* Bits 0-3 of the VXC are the vector index (VIX).                   */
+/*   The VIX is the index of the source element that caused          */
+/*   the trapping exception. If trapping conditions exist for        */
+/*   multiple elements, the exception of the lowest-indexed          */
+/*   source element is recognized.                                   */
+/* Bits 4-7 of the VXC are the vector interrupt code (VIC).          */
+/*-------------------------------------------------------------------*/
+static void vector_processing_trap( REGS *regs, int vix, U32 vic )
+{
+    U32 vxc;
+    vxc = ( vix << VXC_VIX_SHIFT ) | vic;  /* Build VXC            */
+    regs->dxc = vxc;                       /* Save VXC in PSA      */
+    regs->fpc &= ~FPC_DXC;                 /* Clear DXC/VXC in FPC */
+    regs->fpc |= (vxc << FPC_DXC_SHIFT);   /* Insert VXC into FPC  */
+    regs->program_interrupt( regs, PGM_VECTOR_PROCESSING_EXCEPTION );
+}
+
 #endif /*!defined(_ZVECTOR_ARCH_INDEPENDENT_)*/
 
 /*===================================================================*/
@@ -6476,6 +6497,7 @@ DEF_INST( vector_multiply_and_add_odd )
 DEF_INST( vector_divide_logical )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -6484,8 +6506,62 @@ DEF_INST( vector_divide_logical )
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Write some code! */
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+#define M5_IDC ((m5 & 0x8) != 0)  // Integer-Divide Control
+
+    switch (m4)
+    {
+    case 2:  /* Word */
+        for (i=0; i < 4; i++)
+        {
+            if (regs->VR_F( v3, i ) == 0)
+            {
+                if (M5_IDC)
+                {
+                    regs->VR_F( v1, i ) = 0;
+                    continue;
+                }
+                else
+                    vector_processing_trap( regs, i, VXC_INTEGER_DIVIDE );
+            }
+            regs->VR_F( v1, i ) = regs->VR_F( v2, i ) / regs->VR_F( v3, i );
+        }
+        break;
+    case 3:  /* Doubleword */
+        for (i=0; i < 2; i++)
+        {
+            if (regs->VR_D( v3, i ) == 0)
+            {
+                if (M5_IDC)
+                {
+                    regs->VR_D( v1, i ) = 0;
+                    continue;
+                }
+                else
+                    vector_processing_trap( regs, i, VXC_INTEGER_DIVIDE );
+            }
+            regs->VR_D( v1, i ) = regs->VR_D( v2, i ) / regs->VR_D( v3, i );
+        }
+        break;
+    case 4:  /* Quadword */
+        if (regs->VR_D( v3, 0 ) == 0 && regs->VR_D( v3, 1 ) == 0)
+        {
+            if (M5_IDC)
+            {
+                regs->VR_D( v1, 0 ) = 0;
+                regs->VR_D( v1, 1 ) = 0;
+                break;
+            }
+            else
+                vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
+        }
+        vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
+#undef M5_IDC
 
     ZVECTOR_END( regs );
 }
@@ -6498,6 +6574,7 @@ DEF_INST( vector_divide_logical )
 DEF_INST( vector_remainder_logical )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -6506,8 +6583,62 @@ DEF_INST( vector_remainder_logical )
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Write some code! */
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+#define M5_IDC ((m5 & 0x8) != 0)  // Integer-Divide Control
+
+    switch (m4)
+    {
+    case 2:  /* Word */
+        for (i=0; i < 4; i++)
+        {
+            if (regs->VR_F( v3, i ) == 0)
+            {
+                if (M5_IDC)
+                {
+                    regs->VR_F( v1, i ) = 0;
+                    continue;
+                }
+                else
+                    vector_processing_trap( regs, i, VXC_INTEGER_DIVIDE );
+            }
+            regs->VR_F( v1, i ) = regs->VR_F( v2, i ) % regs->VR_F( v3, i );
+        }
+        break;
+    case 3:  /* Doubleword */
+        for (i=0; i < 2; i++)
+        {
+            if (regs->VR_D( v3, i ) == 0)
+            {
+                if (M5_IDC)
+                {
+                    regs->VR_D( v1, i ) = 0;
+                    continue;
+                }
+                else
+                    vector_processing_trap( regs, i, VXC_INTEGER_DIVIDE );
+            }
+            regs->VR_D( v1, i ) = regs->VR_D( v2, i ) % regs->VR_D( v3, i );
+        }
+        break;
+    case 4:  /* Quadword */
+        if (regs->VR_D( v3, 0 ) == 0 && regs->VR_D( v3, 1 ) == 0)
+        {
+            if (M5_IDC)
+            {
+                regs->VR_D( v1, 0 ) = 0;
+                regs->VR_D( v1, 1 ) = 0;
+                break;
+            }
+            else
+                vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
+        }
+        vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
+#undef M5_IDC
 
     ZVECTOR_END( regs );
 }
@@ -6520,6 +6651,7 @@ DEF_INST( vector_remainder_logical )
 DEF_INST( vector_divide )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -6528,8 +6660,64 @@ DEF_INST( vector_divide )
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Write some code! */
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+#define M5_IDC ((m5 & 0x8) != 0)  // Integer-Divide Control
+
+    switch (m4)
+    {
+    case 2:  /* Word */
+        for (i=0; i < 4; i++)
+        {
+            if (regs->VR_F( v3, i ) == 0 ||
+               ((regs->VR_F( v3, i ) == 0xFFFFFFFF) && (regs->VR_F( v2, i ) == 0x80000000)) )
+            {
+                if (M5_IDC)
+                {
+                    regs->VR_F( v1, i ) = 0;
+                    continue;
+                }
+                else
+                    vector_processing_trap( regs, i, VXC_INTEGER_DIVIDE );
+            }
+            regs->VR_F( v1, i ) = (S32)regs->VR_F( v2, i ) / (S32)regs->VR_F( v3, i );
+        }
+        break;
+    case 3:  /* Doubleword */
+        for (i=0; i < 2; i++)
+        {
+            if (regs->VR_D( v3, i ) == 0 ||
+               ((regs->VR_D( v3, i ) == 0xFFFFFFFFFFFFFFFFull) && (regs->VR_D( v2, i ) == 0x8000000000000000ull)) )
+            {
+                if (M5_IDC)
+                {
+                    regs->VR_D( v1, i ) = 0;
+                    continue;
+                }
+                else
+                    vector_processing_trap( regs, i, VXC_INTEGER_DIVIDE );
+            }
+            regs->VR_D( v1, i ) = (S64)regs->VR_D( v2, i ) / (S64)regs->VR_D( v3, i );
+        }
+        break;
+    case 4:  /* Quadword */
+        if (regs->VR_D( v3, 0 ) == 0 && regs->VR_D( v3, 1 ) == 0)
+        {
+            if (M5_IDC)
+            {
+                regs->VR_D( v1, 0 ) = 0;
+                regs->VR_D( v1, 1 ) = 0;
+                break;
+            }
+            else
+                vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
+        }
+        vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
+#undef M5_IDC
 
     ZVECTOR_END( regs );
 }
@@ -6542,6 +6730,7 @@ DEF_INST( vector_divide )
 DEF_INST( vector_remainder )
 {
     int     v1, v2, v3, m4, m5, m6;
+    int     i;
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -6550,8 +6739,62 @@ DEF_INST( vector_remainder )
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Write some code! */
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+#define M5_IDC ((m5 & 0x8) != 0)  // Integer-Divide Control
+
+    switch (m4)
+    {
+    case 2:  /* Word */
+        for (i=0; i < 4; i++)
+        {
+            if (regs->VR_F( v3, i ) == 0)
+            {
+                if (M5_IDC)
+                {
+                    regs->VR_F( v1, i ) = 0;
+                    continue;
+                }
+                else
+                    vector_processing_trap( regs, i, VXC_INTEGER_DIVIDE );
+            }
+            regs->VR_F( v1, i ) = (S32)regs->VR_F( v2, i ) % (S32)regs->VR_F( v3, i );
+        }
+        break;
+    case 3:  /* Doubleword */
+        for (i=0; i < 2; i++)
+        {
+            if (regs->VR_D( v3, i ) == 0)
+            {
+                if (M5_IDC)
+                {
+                    regs->VR_D( v1, i ) = 0;
+                    continue;
+                }
+                else
+                    vector_processing_trap( regs, i, VXC_INTEGER_DIVIDE );
+            }
+            regs->VR_D( v1, i ) = (S64)regs->VR_D( v2, i ) % (S64)regs->VR_D( v3, i );
+        }
+        break;
+    case 4:  /* Quadword */
+        if (regs->VR_D( v3, 0 ) == 0 && regs->VR_D( v3, 1 ) == 0)
+        {
+            if (M5_IDC)
+            {
+                regs->VR_D( v1, 0 ) = 0;
+                regs->VR_D( v1, 1 ) = 0;
+                break;
+            }
+            else
+                vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
+        }
+        vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
+
+#undef M5_IDC
 
     ZVECTOR_END( regs );
 }
