@@ -196,7 +196,7 @@ static inline bool U128_isZero( U128 a );
 static inline U128 U128_add( U128 a, U128 b);
 static inline U128 U128_sub( U128 a, U128 b);
 static inline U128 U128_divrem(U128 dividend, U128 divisor, U128 *remainder);
-static inline U128 U128_div( U128 a, U128 b);
+static inline U128 U128_div(U128 a, U128 b);
 static inline U128 U128_rem( U128 a, U128 b);
 static inline void U128_mul( U128 a, U128 b, U128* hi128, U128* lo128);
 static inline U128 U128_mul_64 (U64 aa, U64 bb);
@@ -214,7 +214,7 @@ static inline int S128_cmp( U128 a, U128 b);
 
 static inline U128 S128_add( U128 a, U128 b);
 static inline U128 S128_sub( U128 a, U128 b);
-static inline U128 S128_div( U128 a, U128 b);
+static inline U128 S128_div(U128 a, U128 b);
 static inline U128 S128_rem( U128 a, U128 b);
 static inline U128 S128_mul_64 (U64 a, U64 b);
 static inline void S128_mul( U128 a, U128 b, U128* hi128, U128* lo128);
@@ -371,7 +371,7 @@ static inline U128 U128_divrem(U128 dividend, U128 divisor, U128 *remainder)
 /*-------------------------------------------------------------------*/
 /* U128 Divide: return  a /  b                                       */
 /*-------------------------------------------------------------------*/
-static inline U128 U128_div( U128 a, U128 b)
+static inline U128 U128_div(U128 a, U128 b)
 {
 #if defined( _USE_128_ )
     U128 temp;                           /* temp (return) value      */
@@ -6543,18 +6543,25 @@ DEF_INST( vector_divide_logical )
         }
         break;
     case 4:  /* Quadword */
-        if (regs->VR_D( v3, 0 ) == 0 && regs->VR_D( v3, 1 ) == 0)
         {
-            if (M5_IDC)
+            U128 quotient, dividend, divisor;
+
+            divisor.Q = regs->VR_Q( v3 );
+            if (U128_isZero( divisor ))
             {
-                regs->VR_D( v1, 0 ) = 0;
-                regs->VR_D( v1, 1 ) = 0;
-                break;
+                if (M5_IDC)
+                {
+                    quotient = U128_zero();
+                    regs->VR_Q(v1) = quotient.Q;
+                    break;
+                }
+                else
+                    vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
             }
-            else
-                vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
+            dividend.Q = regs->VR_Q( v2 );
+            quotient = U128_div( dividend, divisor );
+            regs->VR_Q( v1 ) = quotient.Q;
         }
-        vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -6620,18 +6627,25 @@ DEF_INST( vector_remainder_logical )
         }
         break;
     case 4:  /* Quadword */
-        if (regs->VR_D( v3, 0 ) == 0 && regs->VR_D( v3, 1 ) == 0)
         {
-            if (M5_IDC)
+            U128 quotient, remainder, dividend, divisor;
+
+            divisor.Q = regs->VR_Q( v3 );
+            if (U128_isZero( divisor ))
             {
-                regs->VR_D( v1, 0 ) = 0;
-                regs->VR_D( v1, 1 ) = 0;
-                break;
+                if (M5_IDC)
+                {
+                    quotient = U128_zero();
+                    regs->VR_Q(v1) = quotient.Q;
+                    break;
+                }
+                else
+                    vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
             }
-            else
-                vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
+            dividend.Q = regs->VR_Q( v2 );
+            quotient = U128_divrem( dividend, divisor, &remainder );
+            regs->VR_Q( v1 ) = remainder.Q;
         }
-        vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -6699,18 +6713,25 @@ DEF_INST( vector_divide )
         }
         break;
     case 4:  /* Quadword */
-        if (regs->VR_D( v3, 0 ) == 0 && regs->VR_D( v3, 1 ) == 0)
         {
-            if (M5_IDC)
+            U128 quotient, dividend, divisor;
+
+            divisor.Q = regs->VR_Q( v3 );
+            if (U128_isZero( divisor ))
             {
-                regs->VR_D( v1, 0 ) = 0;
-                regs->VR_D( v1, 1 ) = 0;
-                break;
+                if (M5_IDC)
+                {
+                    quotient = U128_zero();
+                    regs->VR_Q(v1) = quotient.Q;
+                    break;
+                }
+                else
+                    vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
             }
-            else
-                vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
+            dividend.Q = regs->VR_Q( v2 );
+            quotient = S128_div(  dividend, divisor );
+            regs->VR_Q( v1 ) = quotient.Q;
         }
-        vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -6776,18 +6797,26 @@ DEF_INST( vector_remainder )
         }
         break;
     case 4:  /* Quadword */
-        if (regs->VR_D( v3, 0 ) == 0 && regs->VR_D( v3, 1 ) == 0)
         {
-            if (M5_IDC)
+            U128 quotient, remainder, dividend, divisor;
+
+            divisor.Q = regs->VR_Q( v3 );
+            if (U128_isZero( divisor ))
             {
-                regs->VR_D( v1, 0 ) = 0;
-                regs->VR_D( v1, 1 ) = 0;
-                break;
+                if (M5_IDC)
+                {
+                    quotient = U128_zero();
+                    regs->VR_Q(v1) = quotient.Q;
+                    break;
+                }
+                else
+                    vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
             }
-            else
-                vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );
+            dividend.Q = regs->VR_Q( v2 );
+            vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
+        /*  quotient = S128_divrem( dividend, divisor, &remainder );        FixMe! Need to write S128_divrem!  */
+            regs->VR_Q( v1 ) = remainder.Q;
         }
-        vector_processing_trap( regs, 0, VXC_INTEGER_DIVIDE );       // FixMe! Temporary!
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
