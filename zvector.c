@@ -2716,22 +2716,82 @@ DEF_INST( vector_count_leading_zeros )
 
 #if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
 /*-------------------------------------------------------------------*/
-/* E754 VGEM   - VECTOR GENERATE ELEMENT MASKS               [VRR-a] */
+/* E754 VGEM   - Vector Generate Element Masks               [VRR-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_generate_element_masks )
 {
     int     v1, v2, m3, m4, m5;
+    int     i;
+    U32     mask;
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
     /* m4, m5 are not part of this instruction */
-    UNREFERENCED( m3 );
     UNREFERENCED( m4 );
+    UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Write some code! */
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+    mask = regs->VR_F(v2, 0);
+
+    switch (m3)
+    {
+    case 0:  /* Byte */
+        for (i=0; i < 16; i++)
+        {
+            if (mask & 0x80000000)
+                regs->VR_B(v1, i) = 0xFF;
+            else
+                regs->VR_B(v1, i) = 0x00;
+            mask <<= 1;
+        }
+        break;
+    case 1:  /* Halfword */
+        for (i=0; i < 8; i++)
+        {
+            if (mask & 0x80000000)
+                regs->VR_H(v1, i) = 0xFFFF;
+            else
+                regs->VR_H(v1, i) = 0x0000;
+            mask <<= 1;
+        }
+        break;
+    case 2:  /* Word */
+        for (i=0; i < 4; i++)
+        {
+            if (mask & 0x80000000)
+                regs->VR_F(v1, i) = 0xFFFFFFFF;
+            else
+                regs->VR_F(v1, i) = 0x00000000;
+            mask <<= 1;
+        }
+        break;
+    case 3:  /* Doubleword */
+        for (i=0; i < 2; i++)
+        {
+            if (mask & 0x80000000)
+                regs->VR_D(v1, i) = 0xFFFFFFFFFFFFFFFFull;
+            else
+                regs->VR_D(v1, i) = 0x0000000000000000ull;
+            mask <<= 1;
+        }
+        break;
+    case 4:  /* Quadword */
+        if (mask & 0x80000000)
+        {
+            regs->VR_D(v1, 0) = 0xFFFFFFFFFFFFFFFFull;
+            regs->VR_D(v1, 1) = 0xFFFFFFFFFFFFFFFFull;
+        }
+        else
+        {
+            regs->VR_D(v1, 0) = 0x0000000000000000ull;
+            regs->VR_D(v1, 1) = 0x0000000000000000ull;
+        }
+        break;
+    default:
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        break;
+    }
 
     ZVECTOR_END( regs );
 }
@@ -4586,7 +4646,7 @@ DEF_INST( vector_evaluate )
 
 #if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
 /*-------------------------------------------------------------------*/
-/* E789 VBLEND - VECTOR BLEND                                [VRR-d] */
+/* E789 VBLEND - Vector Blend                                [VRR-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_blend )
 {
