@@ -3387,8 +3387,8 @@ DEF_INST( vector_nor )
 
     ZVECTOR_CHECK( regs );
 
-    regs->VR_D(v1, 0) = ~regs->VR_D(v2, 0) & ~regs->VR_D(v3, 0);
-    regs->VR_D(v1, 1) = ~regs->VR_D(v2, 1) & ~regs->VR_D(v3, 1);
+    regs->VR_D(v1, 0) = ~(regs->VR_D(v2, 0) | regs->VR_D(v3, 0));
+    regs->VR_D(v1, 1) = ~(regs->VR_D(v2, 1) | regs->VR_D(v3, 1));
 
     ZVECTOR_END( regs );
 }
@@ -3456,8 +3456,8 @@ DEF_INST( vector_nand )
 
     ZVECTOR_CHECK( regs );
 
-    regs->VR_D(v1, 0) = ~regs->VR_D(v2, 0) | ~regs->VR_D(v3, 0);
-    regs->VR_D(v1, 1) = ~regs->VR_D(v2, 1) | ~regs->VR_D(v3, 1);
+    regs->VR_D(v1, 0) = ~(regs->VR_D(v2, 0) & regs->VR_D(v3, 0));
+    regs->VR_D(v1, 1) = ~(regs->VR_D(v2, 1) & regs->VR_D(v3, 1));
 
     ZVECTOR_END( regs );
 }
@@ -4717,10 +4717,10 @@ DEF_INST( vector_evaluate )
             bitX = bitA & (bitB | bitC);
             break;
         case 8:    /* 00001 000  AND(A,NOR(B,C))  */
-            bitX = bitA & (~bitB & ~bitC);
+            bitX = bitA & ( ~(bitB | bitC) );
             break;
         case 9:    /* 00001 001  AND(A,NXOR(B,C))  */
-            bitX = bitA & (~(bitB | bitC) | ~(~bitB | ~bitC));
+            bitX = bitA & ( ~(bitB ^ bitC) );
             break;
         case 10:   /* 00001 010 */
             break;
@@ -4731,7 +4731,7 @@ DEF_INST( vector_evaluate )
         case 13:   /* 00001 101 */
             break;
         case 14:   /* 00001 110  AND(A,NAND(B,C))  */
-            bitX = bitA & (~bitB | ~bitC);
+            bitX = bitA & ( ~(bitB & bitC) );
             break;
         case 15:   /* 00001 111 */
             break;
@@ -4991,7 +4991,7 @@ DEF_INST( vector_evaluate )
         case 142:  /* 10001 110 */
             break;
         case 143:  /* 10001 111  OR(A,NOR(B,C))  */
-            bitX = bitA | (~bitB & ~bitC);
+            bitX = bitA | ( ~(bitB | bitC) );
             break;
         case 144:  /* 10010 000 */
             break;
@@ -5024,7 +5024,7 @@ DEF_INST( vector_evaluate )
         case 158:  /* 10011 110 */
             break;
         case 159:  /* 10011 111  OR(A,NXOR(B,C))  */
-            bitX = bitA | (~(bitB | bitC) | ~(~bitB | ~bitC));
+            bitX = bitA | ( ~(bitB ^ bitC) );
             break;
         case 160:  /* 10100 000 */
             break;
@@ -5185,7 +5185,7 @@ DEF_INST( vector_evaluate )
         case 238:  /* 11101 110 */
             break;
         case 239:  /* 11101 111  OR(A,NAND(B,C))  */
-            bitX = bitA | (~bitB | ~bitC);
+            bitX = bitA | ( ~(bitB & bitC) );
             break;
         case 240:  /* 11110 000 */
             break;
