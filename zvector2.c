@@ -2508,10 +2508,8 @@ DEF_INST( vector_convert_to_binary_32 )
     /* m4 parts */
     iom = (m4 & 0x08) ? true : false;
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     /* valid checks */
     valid_decimals2 = vr_packed_valid_digits( regs, v2 );
@@ -2657,10 +2655,8 @@ DEF_INST( vector_convert_to_binary_64 )
     /* m4 parts */
     iom = (m4 & 0x08) ? true : false;
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     /* valid checks */
     valid_decimals2 = vr_packed_valid_digits( regs, v2 );
@@ -2801,10 +2797,8 @@ DEF_INST( vector_convert_to_decimal_32 )
     iom = (i3 & 0x80) ? true : false;
     rdc = (i3 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -2914,13 +2908,12 @@ DEF_INST( vector_shift_and_round_decimal )
     iom = (i3 & 0x80) ? true : false;
     rdc = (i3 & 0x1F);
 
-    if (rdc == 0)
+
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (rdc == 0)
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     /* i4 parts */
     drd   = (i4 & 0x80) ? true : false;
@@ -3043,10 +3036,8 @@ DEF_INST( vector_convert_to_decimal_64 )
     iom = (i3 & 0x80) ? true : false;
     rdc = (i3 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -3151,10 +3142,8 @@ DEF_INST( vector_perform_sign_operation_decimal )
     iom = (i3 & 0x80) ? true : false;
     rdc = (i3 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -3166,13 +3155,14 @@ DEF_INST( vector_perform_sign_operation_decimal )
     pc = (i4 & 0x02) ? true : false;
     sv = (i4 & 0x01) ? true : false;
 
+    if (!FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
+    {
+        nv = false;        /* validate digits  */
+        nz = false;        /* no negative zero */
+    }
+
     /* m5 parts */
     cs = (m5 & 0x01) ? true : false;
-
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    nv = false;        /* validate digits  */
-    nz = false;        /* no negative zero */
-#endif
 
     /* valid checks */
     valid_decimals2 = ( nv ) ? true : vr_packed_valid_digits( regs, v2 );
@@ -3496,14 +3486,6 @@ DEF_INST( vector_pack_zoned_register )
     bool    valid_decimals;    /* are decimals valid?                */
     BYTE    cc;                /* condition code                     */
 
-
-    /* FixMe, maybe! Should the #if/#endif be changes to the following?          */
-    /*  if ( FACILITY_ENABLED( 192_VECT_PACKDEC_ENH_2, regs ) )                  */
-    /*      ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );  */
-#if !defined( FEATURE_192_VECT_PACKDEC_ENH_2_FACILITY )
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
-#endif
-
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
@@ -3643,10 +3625,8 @@ DEF_INST( vector_add_decimal )
     iom = (i4 & 0x80) ? true : false;
     rdc = (i4 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -3751,13 +3731,11 @@ DEF_INST( vector_shift_and_round_decimal_register )
     drd = (i4 & 0x40) ? true : false;
     rdc = (i4 & 0x1F);
 
-    if (rdc == 0)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (rdc == 0)
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     /* m5 parts */
     p2 = (m5 & 0x08) ? true : false;
@@ -3888,10 +3866,8 @@ DEF_INST( vector_subtract_decimal )
     iom = (i4 & 0x80) ? true : false;
     rdc = (i4 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -4184,10 +4160,8 @@ DEF_INST( vector_multiply_decimal )
     iom = (i4 & 0x80) ? true : false;
     rdc = (i4 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -4288,10 +4262,8 @@ DEF_INST( vector_multiply_and_shift_decimal )
     iom   = (i4 & 0x80) ? true : false;
     shamt = (i4 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     /* m5 parts */
     p2 = (m5 & 0x08) ? true : false;
@@ -4393,10 +4365,8 @@ DEF_INST( vector_divide_decimal )
     iom = (i4 & 0x80) ? true : false;
     rdc = (i4 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -4498,10 +4468,8 @@ DEF_INST( vector_remainder_decimal )
     iom = (i4 & 0x80) ? true : false;
     rdc = (i4 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -4778,10 +4746,8 @@ DEF_INST( vector_shift_and_divide_decimal )
     iom   = (i4 & 0x80) ? true : false;
     shamt = (i4 & 0x1F);
 
-#if !defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
-    if (iom)
+    if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
-#endif
 
     /* m5 parts */
     p2 = (m5 & 0x08) ? true : false;
