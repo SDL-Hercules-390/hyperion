@@ -2113,7 +2113,7 @@
 /*               and an extended opcode field.                       */
 /*-------------------------------------------------------------------*/
 
-#define VRI_K( _inst, _regs, _v1, _v2, _v3, _i5, _v4 )  VRI_K_DECODER( _inst, _regs, _v1, _v2, _v3, _i5, _v4, 6, 6 )
+#define VRI_K( _inst, _regs, _v1, _v2, _v3, _v4, _i5 )  VRI_K_DECODER( _inst, _regs, _v1, _v2, _v3, _v4, _i5, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -2121,7 +2121,7 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24          32    36    40         47
 
-#define VRI_K_DECODER( _inst, _regs, _v1, _v2, _v3, _i5, _v4, _len, _ilc )    \
+#define VRI_K_DECODER( _inst, _regs, _v1, _v2, _v3, _v4, _i5, _len, _ilc )    \
 {                                                                   \
     U32 temp = fetch_fw( (_inst) + 1);                              \
                                                                     \
