@@ -37,7 +37,7 @@ facility  code  test#   Instruction                                             
     vd       x   09     E63F VECTOR STORE RIGHTMOST WITH LENGTH  (reg)          VSTRLR      VRS-d
     vd       x   10     E649 VECTOR LOAD IMMEDIATE DECIMAL                      VLIP        VRI-h
     vd3                 E64A VECTOR CONVERT TO DECIMAL (128)                    VCVDQ       VRI-j
-    vd3                 E64E VECTOR CONVERT TO BINARY (128)                     VCVBQ       VRR-k
+    vd3      x          E64E VECTOR CONVERT TO BINARY (128)                     VCVBQ       VRR-k
     vd       x   11     E650 VECTOR CONVERT TO BINARY (32)                      VCVB        VRR-i
     vd2      x   12     E651 VECTOR COUNT LEADING ZERO DIGITS                   VCLZDP      VRR-k
     vd       x   11     E652 VECTOR CONVERT TO BINARY (64)                      VCVBG       VRR-i
@@ -2459,22 +2459,34 @@ DEF_INST( vector_convert_to_decimal_128 )
 DEF_INST( vector_convert_to_binary_128 )
 {
     int     v1, v2, m3;          /* Instruction parts                */
-//    bool    p2;                  /* Force Operand 2 Positive (P2)    */
-//    bool    lb;                  /* Logical Binary (LB)              */
-//    bool    cs;                  /* Condition Code Set (CS)          */
-//    bool    iom;                 /* Instruction-Overflow Mask (IOM)  */
-//    U128    result;              /* converted binary                 */
-//    bool    overflow;            /* did an overfor occur             */
+    bool    p2;                  /* Force Operand 2 Positive (P2)    */
+    bool    lb;                  /* Logical Binary (LB)              */
+    U128    result;              /* converted binary                 */
 
-//    bool    valid_sign2;         /* v2: is sign valid?               */
-//    bool    valid_decimals2;     /* v2: are decimals valid?          */
+    bool    valid_sign2;         /* v2: is sign valid?               */
+    bool    valid_decimals2;     /* v2: are decimals valid?          */
 
     VRR_K( inst, regs, v1, v2, m3 );
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Write some code! */
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+    /* m3 parts */
+    p2 = (m3 & 0x08) ? true : false;
+    lb = (m3 & 0x02) ? true : false;
+
+    /* valid checks */
+    valid_decimals2 = vr_packed_valid_digits( regs, v2 );
+    valid_sign2 = (p2) ? true : vr_packed_valid_sign( regs, v2 );
+
+    if ( !valid_decimals2 || !valid_sign2 )
+    {
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) ( regs, PGM_DATA_EXCEPTION );
+    }
+
+    result = vr_to_U128( regs, v2, ( (lb) ? true : p2 ) );
+
+    regs->VR_Q(v1) = result.Q;
 
     ZVECTOR_END( regs );
 }
@@ -2490,6 +2502,7 @@ DEF_INST( vector_convert_to_binary_32 )
     bool    lb;                  /* Logical Binary (LB)              */
     bool    cs;                  /* Condition Code Set (CS)          */
     bool    iom;                 /* Instruction-Overflow Mask (IOM)  */
+    bool    orc;                 /* Overflow-Result Control (ORC)    */
     U128    result;              /* converted binary                 */
     bool    overflow;            /* did an overflow occur            */
 
@@ -2507,9 +2520,31 @@ DEF_INST( vector_convert_to_binary_32 )
 
     /* m4 parts */
     iom = (m4 & 0x08) ? true : false;
+    orc = (m4 & 0x04) ? true : false;
 
+    /*  Note:
+        Z16: POP SA22-7832-13
+            Instruction-Overflow Mask (IOM): When the
+            vector-packed-decimal-enhancement facility 1 is
+            not installed, bit 0 is reserved and must contain zero; otherwise,
+            a specification exception is recognized.
+
+        Z17: POP SA22-7832-14
+            Instruction-Overflow Mask (IOM): When the
+            vector-packed-decimal-enhancement facility 1 is
+            not installed, bit 0 is reserved and should be
+            zero; otherwise the program may not operate
+            compatibly in the future.
+
+        Use SA22-7832-14 definition; just ignore IOM if
+        vector-packed-decimal-enhancement facility 1 is not installed.
+    */
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
-        ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
+        iom = false;
+        /* ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION ); */
+
+    if (orc && !FACILITY_ENABLED( 199_VECT_PACKDEC_ENH_3, regs ))
+        orc = false;
 
     /* valid checks */
     valid_decimals2 = vr_packed_valid_digits( regs, v2 );
@@ -2536,8 +2571,11 @@ DEF_INST( vector_convert_to_binary_32 )
 
     /* CC and 32 bit results */
     //logmsg("... result=%16.16lX.%16.16lX \n", result.Q.D.H.D, result.Q.D.L.D);
+    if (orc && overflow)
+        regs->GR_L(r1) = 0;
+    else
+        regs->GR_L(r1) = (U32) (result.Q.D.L.D & 0xFFFFFFFF);
 
-    regs->GR_L(r1) = (U32) (result.Q.D.L.D & 0xFFFFFFFF);
     if (cs) regs->psw.cc = ( overflow ) ? 3 : 0;
 
     /* note: operation is completed before any fixed-point overflow exception */
@@ -2637,9 +2675,9 @@ DEF_INST( vector_convert_to_binary_64 )
     bool    lb;                  /* Logical Binary (LB)              */
     bool    cs;                  /* Condition Code Set (CS)          */
     bool    iom;                 /* Instruction-Overflow Mask (IOM)  */
+    bool    orc;                 /* Overflow-Result Control (ORC)    */
     U128    result;              /* converted binary                 */
     bool    overflow;            /* did an overfor occur             */
-
     bool    valid_sign2;         /* v2: is sign valid?               */
     bool    valid_decimals2;     /* v2: are decimals valid?          */
 
@@ -2654,9 +2692,31 @@ DEF_INST( vector_convert_to_binary_64 )
 
     /* m4 parts */
     iom = (m4 & 0x08) ? true : false;
+    orc = (m4 & 0x04) ? true : false;
 
+    /*  Note:
+        Z16: POP SA22-7832-13
+            Instruction-Overflow Mask (IOM): When the
+            vector-packed-decimal-enhancement facility 1 is
+            not installed, bit 0 is reserved and must contain zero; otherwise,
+            a specification exception is recognized.
+
+        Z17: POP SA22-7832-14
+            Instruction-Overflow Mask (IOM): When the
+            vector-packed-decimal-enhancement facility 1 is
+            not installed, bit 0 is reserved and should be
+            zero; otherwise the program may not operate
+            compatibly in the future.
+
+        Use SA22-7832-14 definition; just ignore IOM if
+        vector-packed-decimal-enhancement facility 1 is not installed.
+    */
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
-        ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
+        iom = false;
+        /* ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION ); */
+
+    if (orc && !FACILITY_ENABLED( 199_VECT_PACKDEC_ENH_3, regs ))
+        orc = false;
 
     /* valid checks */
     valid_decimals2 = vr_packed_valid_digits( regs, v2 );
@@ -2681,10 +2741,13 @@ DEF_INST( vector_convert_to_binary_64 )
             overflow = ( result.Q.D.H.D != (U64) -1 ) || ( (result.Q.D.L.D & 0x8000000000000000ULL) == 0 );
     }
 
-    /* CC and 32 bit results */
+    /* CC and 64 bit results */
     //logmsg("... result=%16.16lX.%16.16lX \n", result.Q.D.H.D, result.Q.D.L.D);
+    if (orc && overflow)
+        regs->GR_G(r1) = 0;
+    else
+        regs->GR_G(r1) = result.Q.D.L.D;
 
-    regs->GR_G(r1) = result.Q.D.L.D;
     if (cs) regs->psw.cc = ( overflow ) ? 3 : 0;
 
     /* note: operation is completed before any fixed-point overflow exception */
