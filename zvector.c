@@ -4654,7 +4654,6 @@ DEF_INST( vector_evaluate )
 {
     int     v1, v2, v3, v4, i5;
     int     i;
-    int     rowindex, colindex;
     int     bitA, bitB, bitC, bitX;
     U128    tempv1, tempv2, tempv3, tempv4;
     U128    bitmask, bitresult;
@@ -4671,618 +4670,751 @@ DEF_INST( vector_evaluate )
     bitmask.Q.D.H.D = 0x8000000000000000ull;
     bitmask.Q.D.L.D = 0x0000000000000000ull;
 
-    rowindex = i5 << 3;  /* FixMe! This is currently a guess! */
-
     for (i=0; i<128; i++)
     {
         bitresult = U128_zero();
         bitA = bitB = bitC = bitX = 0;
-        colindex = 0;
 
         if ((tempv2.Q.D.H.D & bitmask.Q.D.H.D) || (tempv2.Q.D.L.D & bitmask.Q.D.L.D))
-        {
-            colindex |= 0x4;
             bitA = 1;
-        }
         if ((tempv3.Q.D.H.D & bitmask.Q.D.H.D) || (tempv3.Q.D.L.D & bitmask.Q.D.L.D))
-        {
-            colindex |= 0x2;
             bitB = 1;
-        }
         if ((tempv4.Q.D.H.D & bitmask.Q.D.H.D) || (tempv4.Q.D.L.D & bitmask.Q.D.L.D))
-        {
-            colindex |= 0x1;
             bitC = 1;
-        }
 
-        switch (rowindex + colindex)  /* FixMe! This is currently a guess! */
+        switch (i5)
         {
-
-        case 0:    /* 00000 000  |||  */
+        /* Row 0 */
+        case 0:     /* 00000 000  |||  */
             break;
-        case 1:    /* 00000 001  AND(A,B,C)  */
+        case 1:     /* 00000 001  AND(A,B,C)  */
             bitX = bitA & bitB & bitC;
             break;
-        case 2:    /* 00000 010 */
+        case 2:     /* 00000 010  +++  */
             break;
-        case 3:    /* 00000 011  |||  */
+        case 3:     /* 00000 011  |||  */
             break;
-        case 4:    /* 00000 100 */
+        case 4:     /* 00000 100  +++  */
             break;
-        case 5:    /* 00000 101  |||  */
+        case 5:     /* 00000 101  |||  */
             break;
-        case 6:    /* 00000 110  AND(A,XOR(B,C))  */
+        case 6:     /* 00000 110  AND(A,XOR(B,C))  */
             bitX = bitA & (bitB ^ bitC);
             break;
-        case 7:    /* 00000 111  AND(A,OR(B,C))  */
+        case 7:     /* 00000 111  AND(A,OR(B,C))  */
             bitX = bitA & (bitB | bitC);
             break;
-
-        case 8:    /* 00001 000  AND(A,NOR(B,C))  */
+        /* Row 1 */
+        case 8:     /* 00001 000  AND(A,NOR(B,C))  */
             bitX = bitA & (~(bitB | bitC));
             break;
-        case 9:    /* 00001 001  AND(A,NXOR(B,C))  */
+        case 9:     /* 00001 001  AND(A,NXOR(B,C))  */
             bitX = bitA & (~(bitB ^ bitC));
             break;
-        case 10:   /* 00001 010  |||  */
+        case 10:    /* 00001 010  |||  */
             break;
-        case 11:   /* 00001 011 */
+        case 11:    /* 00001 011  +++  */
             break;
-        case 12:   /* 00001 100  |||  */
+        case 12:    /* 00001 100  |||  */
             break;
-        case 13:   /* 00001 101 */
+        case 13:    /* 00001 101  +++  */
             break;
-        case 14:   /* 00001 110  AND(A,NAND(B,C))  */
+        case 14:    /* 00001 110  AND(A,NAND(B,C))  */
             bitX = bitA & (~(bitB & bitC));
             break;
-        case 15:   /* 00001 111  |||  */
+        case 15:    /* 00001 111  |||  */
             break;
-
-        case 16:   /* 00010 000   NOR(A,NAND(B,C))  */
+        /* Row 2 */
+        case 16:    /* 00010 000  NOR(A,NAND(B,C))  */
             bitX = ~(bitA | (~(bitB & bitC)));
             break;
-        case 17:   /* 00010 001  |||  */
+        case 17:    /* 00010 001  |||  */
             break;
-        case 18:   /* 00010 010 */
+        case 18:    /* 00010 010  +++  */
             break;
-        case 19:   /* 00010 011 */
+        case 19:    /* 00010 011  +++  */
             break;
-        case 20:   /* 00010 100 */
+        case 20:    /* 00010 100  +++  */
             break;
-        case 21:   /* 00010 101 */
+        case 21:    /* 00010 101  +++  */
             break;
-        case 22:   /* 00010 110  SEL(A,XOR(B,C),AND(B,C))  */
+        case 22:    /* 00010 110  SEL(A,XOR(B,C),AND(B,C))  */
             if (bitA)
                 bitX = bitB ^ bitC;
             else
                 bitX = bitB & bitC;
             break;
-        case 23:   /* 00010 111  MAJOR(A,B,C)  */
+        case 23:    /* 00010 111  MAJOR(A,B,C)  */
             if ( (bitA + bitB + bitC) >= 2 )
                 bitX = 1;
             else
                 bitX = 0;
             break;
-
-        case 24:   /* 00011 000  SEL(A,NOR(B,C),AND(B,C))  */
+        /* Row 3 */
+        case 24:    /* 00011 000  SEL(A,NOR(B,C),AND(B,C))  */
             if (bitA)
                 bitX = ~(bitB | bitC);
             else
                 bitX = bitB & bitC;
             break;
-        case 25:   /* 00011 001  SEL(A,NXOR(B,C),AND(B,C))  */
+        case 25:    /* 00011 001  SEL(A,NXOR(B,C),AND(B,C))  */
             if (bitA)
                 bitX = ~(bitB ^ bitC);
             else
                 bitX = bitB & bitC;
             break;
-        case 26:   /* 00011 010 */
+        case 26:    /* 00011 010  +++  */
             break;
-        case 27:   /* 00011 011  |||  */
+        case 27:    /* 00011 011  |||  */
             break;
-        case 28:   /* 00011 100  SEL(A,NOT(B),AND(B,C)) */
+        case 28:    /* 00011 100  SEL(A,NOT(B),AND(B,C)) */
             if (bitA)
                 bitX = ~bitB;
             else
                 bitX = bitB & bitC;
             break;
-        case 29:   /* 00011 101  |||  */
+        case 29:    /* 00011 101  |||  */
             break;
-        case 30:   /* 00011 110  XOR(A,AND(B,C))  */
+        case 30:    /* 00011 110  XOR(A,AND(B,C))  */
             bitX = bitA ^ (bitB & bitC);
             break;
-        case 31:   /* 00011 111  OR(A,AND(B,C))  */
+        case 31:    /* 00011 111  OR(A,AND(B,C))  */
             bitX = bitA | (bitB & bitC);
             break;
-
-        case 32:   /* 00100 000 */
+        /* Row 4 */
+        case 32:    /* 00100 000  +++  */
             break;
-        case 33:   /* 00100 001 */
+        case 33:    /* 00100 001  +++  */
             break;
-        case 34:   /* 00100 010  |||  */
+        case 34:    /* 00100 010  |||  */
             break;
-        case 35:   /* 00100 011 */
+        case 35:    /* 00100 011  +++  */
             break;
-        case 36:   /* 00100 100 */
+        case 36:    /* 00100 100  +++  */
             break;
-        case 37:   /* 00100 101 */
+        case 37:    /* 00100 101  +++  */
             break;
-        case 38:   /* 00100 110 */
+        case 38:    /* 00100 110  +++  */
             break;
-        case 39:   /* 00100 111  |||  */
+        case 39:    /* 00100 111  |||  */
             break;
-
-        case 40:   /* 00101 000 */
+        /* Row 5 */
+        case 40:    /* 00101 000  +++  */
             break;
-        case 41:   /* 00101 001 */
+        case 41:    /* 00101 001  +++  */
             break;
-        case 42:   /* 00101 010 */
+        case 42:    /* 00101 010  +++  */
             break;
-        case 43:   /* 00101 011 */
+        case 43:    /* 00101 011  +++  */
             break;
-        case 44:   /* 00101 100 */
+        case 44:    /* 00101 100  +++  */
             break;
-        case 45:   /* 00101 101 */
+        case 45:    /* 00101 101  +++  */
             break;
-        case 46:   /* 00101 110 */
+        case 46:    /* 00101 110  +++  */
             break;
-        case 47:   /* 00101 111 */
+        case 47:    /* 00101 111  +++  */
             break;
-
-        case 48:   /* 00110 000  |||  */
+        /* Row 6 */
+        case 48:    /* 00110 000  |||  */
             break;
-        case 49:   /* 00110 001 */
+        case 49:    /* 00110 001  +++  */
             break;
-        case 50:   /* 00110 010 */
+        case 50:    /* 00110 010  +++  */
             break;
-        case 51:   /* 00110 011  |||  */
+        case 51:    /* 00110 011  |||  */
             break;
-        case 52:   /* 00110 100 */
+        case 52:    /* 00110 100  +++  */
             break;
-        case 53:   /* 00110 101  |||  */
+        case 53:    /* 00110 101  |||  */
             break;
-        case 54:   /* 00110 110 */
+        case 54:    /* 00110 110  +++  */
             break;
-        case 55:   /* 00110 111 */
+        case 55:    /* 00110 111  +++  */
             break;
-
-        case 56:   /* 00111 000 */
+        /* Row 7 */
+        case 56:    /* 00111 000  +++  */
             break;
-        case 57:   /* 00111 001 */
+        case 57:    /* 00111 001  +++  */
             break;
-        case 58:   /* 00111 010 */
+        case 58:    /* 00111 010  +++  */
             break;
-        case 59:   /* 00111 011 */
+        case 59:    /* 00111 011  +++  */
             break;
-        case 60:   /* 00111 100  |||  */
+        case 60:    /* 00111 100  |||  */
             break;
-        case 61:   /* 00111 101 */
+        case 61:    /* 00111 101  +++  */
             break;
-        case 62:   /* 00111 110 */
+        case 62:    /* 00111 110  +++  */
             break;
-        case 63:   /* 00111 111  |||  */
+        case 63:    /* 00111 111  |||  */
             break;
-
-        case 64:   /* 01000 000 */
+        /* Row 8 */
+        case 64:    /* 01000 000  +++  */
             break;
-        case 65:   /* 01000 001 */
+        case 65:    /* 01000 001  +++  */
             break;
-        case 66:   /* 01000 010 */
+        case 66:    /* 01000 010  +++  */
             break;
-        case 67:   /* 01000 011 */
+        case 67:    /* 01000 011  +++  */
             break;
-        case 68:   /* 01000 100  |||  */
+        case 68:    /* 01000 100  |||  */
             break;
-        case 69:   /* 01000 101 */
+        case 69:    /* 01000 101  +++  */
             break;
-        case 70:   /* 01000 110 */
+        case 70:    /* 01000 110  +++  */
             break;
-        case 71:   /* 01000 111  |||  */
+        case 71:    /* 01000 111  |||  */
             break;
-
-        case 72:   /* 01001 000 */
+        /* Row 9  */
+        case 72:    /* 01001 000  +++  */
             break;
-        case 73:   /* 01001 001 */
+        case 73:    /* 01001 001  +++  */
             break;
-        case 74:   /* 01001 010 */
+        case 74:    /* 01001 010  +++  */
             break;
-        case 75:   /* 01001 011 */
+        case 75:    /* 01001 011  +++  */
             break;
-        case 76:   /* 01001 100 */
+        case 76:    /* 01001 100  +++  */
             break;
-        case 77:   /* 01001 101 */
+        case 77:    /* 01001 101  +++  */
             break;
-        case 78:   /* 01001 110 */
+        case 78:    /* 01001 110  +++  */
             break;
-        case 79:   /* 01001 111 */
+        case 79:    /* 01001 111  +++  */
             break;
-
-        case 80:   /* 01010 000  |||  */
+        /* Row 10 */
+        case 80:    /* 01010 000  |||  */
             break;
-        case 81:   /* 01010 001  SEL(A,AND(B,C),C  */
+        case 81:    /* 01010 001  SEL(A,AND(B,C),C)  */
             if (bitA)
                 bitX = bitB & bitC;
             else
                 bitX = bitC;
             break;
-        case 82:   /* 01010 010 */
+        case 82:    /* 01010 010  +++  */
             break;
-        case 83:   /* 01010 011  |||  */
+        case 83:    /* 01010 011  |||  */
             break;
-        case 84:   /* 01010 100 */
+        case 84:    /* 01010 100  +++  */
             break;
-        case 85:   /* 01010 101  |||  */
+        case 85:    /* 01010 101  |||  */
             break;
-        case 86:   /* 01010 110 */
+        case 86:    /* 01010 110  +++  */
             break;
-        case 87:   /* 01010 111 */
+        case 87:    /* 01010 111  +++  */
             break;
-
-        case 88:   /* 01011 000  SEL(A,NOR(B,C),C)  */
+        /* Row 11 */
+        case 88:    /* 01011 000  SEL(A,NOR(B,C),C)  */
+            if (bitA)
+                bitX = ~(bitB | bitC);
+            else
+                bitX = bitC;
             break;
-        case 89:   /* 01011 001  SEL(A,NXOR(B,C),C)  */
+        case 89:    /* 01011 001  SEL(A,NXOR(B,C),C)  */
+            if (bitA)
+                bitX = ~(bitB ^ bitC);
+            else
+                bitX = bitC;
             break;
-        case 90:   /* 01011 010  |||  */
+        case 90:    /* 01011 010  |||  */
             break;
-        case 91:   /* 01011 011  */
+        case 91:    /* 01011 011   +++  */
             break;
-        case 92:   /* 01011 100  SEL(A,NOT(B),C)  */
+        case 92:    /* 01011 100  SEL(A,NOT(B),C)  */
+            if (bitA)
+                bitX = ~bitB;
+            else
+                bitX = bitC;
             break;
-        case 93:   /* 01011 101 */
+        case 93:    /* 01011 101  +++  */
             break;
-        case 94:   /* 01011 110  SEL(A,NAND(B,C),C  */
+        case 94:    /* 01011 110  SEL(A,NAND(B,C),C)  */
+            if (bitA)
+                bitX = ~(bitB & bitC);
+            else
+                bitX = bitC;
             break;
-        case 95:   /* 01011 111  |||  */
+        case 95:    /* 01011 111  |||  */
             break;
-
-        case 96:   /* 01100 000  NOR(A,NXOR(B,C))  */
+        /* Row 12 */
+        case 96:    /* 01100 000  NOR(A,NXOR(B,C))  */
+            bitX = ~(bitA | (~(bitB ^ bitC)));
             break;
-        case 97:   /* 01100 001  SEL(A,AND(B,C),XOR(B,C))  */
+        case 97:    /* 01100 001  SEL(A,AND(B,C),XOR(B,C))  */
+            if (bitA)
+                bitX = bitB & bitC;
+            else
+                bitX = bitB ^ bitC;
             break;
-        case 98:   /* 01100 010  */
+        case 98:    /* 01100 010   +++  */
             break;
-        case 99:   /* 01100 011  SEL(A,B,XOR(B,C))  */
+        case 99:    /* 01100 011  SEL(A,B,XOR(B,C))  */
+            if (bitA)
+                bitX = bitB;
+            else
+                bitX = bitB ^ bitC;
             break;
-        case 100:  /* 01100 100 */
+        case 100:   /* 01100 100  +++  */
             break;
-        case 101:  /* 01100 101 */
+        case 101:   /* 01100 101  +++  */
             break;
-        case 102:  /* 01100 110  |||  */
+        case 102:   /* 01100 110  |||  */
             break;
-        case 103:  /* 01100 111  SEL(A,OR(B,C),XOR(B,C))  */
+        case 103:   /* 01100 111  SEL(A,OR(B,C),XOR(B,C))  */
+            if (bitA)
+                bitX = bitB | bitC;
+            else
+                bitX = bitB ^ bitC;
             break;
-
-        case 104:  /* 01101 000  SEL(A,NOR(B,C),XOR(B,C))  */
+        /* Row 13 */
+        case 104:   /* 01101 000  SEL(A,NOR(B,C),XOR(B,C))  */
+            if (bitA)
+                bitX = ~(bitB | bitC);
+            else
+                bitX = bitB ^ bitC;
             break;
-        case 105:  /* 01101 001  XOR(A,B,C)  */
+        case 105:   /* 01101 001  XOR(A,B,C)  */
+            bitX = bitA ^ bitB ^ bitC;
             break;
-        case 106:  /* 01101 010 */
+        case 106:   /* 01101 010  +++  */
             break;
-        case 107:  /* 01101 011 */
+        case 107:   /* 01101 011  +++  */
             break;
-        case 108:  /* 01101 100 */
+        case 108:   /* 01101 100  +++  */
             break;
-        case 109:  /* 01101 101 */
+        case 109:   /* 01101 101  +++  */
             break;
-        case 110:  /* 01101 110 */
+        case 110:   /* 01101 110  +++  */
             break;
-        case 111:  /* 01101 111  OR(A,XOR(B,C))  */
+        case 111:   /* 01101 111  OR(A,XOR(B,C))  */
+            bitX = bitA | (bitB ^ bitC);
             break;
-
-        case 112:  /* 01110 000  NOR(A,NOR(B,C))  */
+        /* Row 14 */
+        case 112:   /* 01110 000  NOR(A,NOR(B,C))  */
+            bitX = ~(bitA | (~(bitB | bitC)));
             break;
-        case 113:  /* 01110 001  SEL(A,AND(B,C),OR(B,C)  */
+        case 113:   /* 01110 001  SEL(A,AND(B,C),OR(B,C))  */
+            if (bitA)
+                bitX = bitB & bitC;
+            else
+                bitX = bitB | bitC;
             break;
-        case 114:  /* 01110 010 */
+        case 114:   /* 01110 010  +++  */
             break;
-        case 115:  /* 01110 011  SEL(A,B,OR(B,C))  */
+        case 115:   /* 01110 011  SEL(A,B,OR(B,C))  */
+            if (bitA)
+                bitX = bitB;
+            else
+                bitX = bitB | bitC;
             break;
-        case 116:  /* 01110 100 */
+        case 116:   /* 01110 100  +++  */
             break;
-        case 117:  /* 01110 101 */
+        case 117:   /* 01110 101  +++  */
             break;
-        case 118:  /* 01110 110 */
+        case 118:   /* 01110 110  +++  */
             break;
-        case 119:  /* 01110 111  |||  */
+        case 119:   /* 01110 111  |||  */
             break;
-
-        case 120:  /* 01111 000  XOR(A,OR(B,C))  */
+        /* Row 15 */
+        case 120:   /* 01111 000  XOR(A,OR(B,C))  */
+            bitX = bitA ^ (bitB | bitC);
             break;
-        case 121:  /* 01111 001  SEL(A,NXOR(B,C),OR(B,C))  */
+        case 121:   /* 01111 001  SEL(A,NXOR(B,C),OR(B,C))  */
+            if (bitA)
+                bitX = ~(bitB ^ bitC);
+            else
+                bitX = bitB | bitC;
             break;
-        case 122:  /* 01111 010 */
+        case 122:   /* 01111 010  +++  */
             break;
-        case 123:  /* 01111 011 */
+        case 123:   /* 01111 011  +++  */
             break;
-        case 124:  /* 01111 100  SEL(A,NOT(B),OR(B,C))  */
+        case 124:   /* 01111 100  SEL(A,NOT(B),OR(B,C))  */
+            if (bitA)
+                bitX = ~bitB;
+            else
+                bitX = bitB | bitC;
             break;
-        case 125:  /* 01111 101 */
+        case 125:   /* 01111 101  +++  */
             break;
-        case 126:  /* 01111 110  SEL(A,NAND(B,C),OR(B,C))  */
+        case 126:   /* 01111 110  SEL(A,NAND(B,C),OR(B,C))  */
+            if (bitA)
+                bitX = ~(bitB & bitC);
+            else
+                bitX = bitB | bitC;
             break;
-        case 127:  /* 01111 111  OR(A,B,C)  */
+        case 127:   /* 01111 111  OR(A,B,C)  */
             bitX = bitA | bitB | bitC;
             break;
-
-        case 128:  /* 10000 000 */
+        /* Row 16 */
+        case 128:   /* 10000 000  NOR(A,B,C)  */
+            bitX = ~(bitA | bitB | bitC);
             break;
-        case 129:  /* 10000 001 */
+        case 129:   /* 10000 001  SEL(A,AND(B,C),NOR(B,C))  */
+            if (bitA)
+                bitX = bitB & bitC;
+            else
+                bitX = ~(bitB | bitC);
             break;
-        case 130:  /* 10000 010 */
+        case 130:   /* 10000 010  +++  */
             break;
-        case 131:  /* 10000 011 */
+        case 131:   /* 10000 011  SEL(A,B,NOR(B,C))  */
+            if (bitA)
+                bitX = bitB;
+            else
+                bitX = ~(bitB | bitC);
             break;
-        case 132:  /* 10000 100 */
+        case 132:   /* 10000 100  +++  */
             break;
-        case 133:  /* 10000 101 */
+        case 133:   /* 10000 101  +++  */
             break;
-        case 134:  /* 10000 110 */
+        case 134:   /* 10000 110  SEL(A,XOR(B,C),NOR(B,C))  */
+            if (bitA)
+                bitX = bitB ^ bitC;
+            else
+                bitX = ~(bitB | bitC);
             break;
-        case 135:  /* 10000 111 */
+        case 135:   /* 10000 111  NXOR(A,OR(B,C))  */
+            bitX = ~(bitA ^ (bitB | bitC));
             break;
-
-        case 136:  /* 10001 000  |||  */
+        /* Row 17 */
+        case 136:   /* 10001 000  |||  */
             break;
-        case 137:  /* 10001 001 */
+        case 137:   /* 10001 001  +++  */
             break;
-        case 138:  /* 10001 010 */
+        case 138:   /* 10001 010  +++  */
             break;
-        case 139:  /* 10001 011 */
+        case 139:   /* 10001 011  +++  */
             break;
-        case 140:  /* 10001 100 */
+        case 140:   /* 10001 100  SEL(A,NOT(B),NOR(B,C))  */
+            if (bitA)
+                bitX = ~bitB;
+            else
+                bitX = ~(bitB | bitC);
             break;
-        case 141:  /* 10001 101 */
+        case 141:   /* 10001 101  +++  */
             break;
-        case 142:  /* 10001 110 */
+        case 142:   /* 10001 110  SEL(A,NAND(B,C),NOR(B,C))  */
+            if (bitA)
+                bitX = ~(bitB & bitC);
+            else
+                bitX = ~(bitB | bitC);
             break;
-        case 143:  /* 10001 111  OR(A,NOR(B,C))  */
-            bitX = bitA | ( ~(bitB | bitC) );
+        case 143:   /* 10001 111  OR(A,NOR(B,C))  */
+            bitX = bitA | (~(bitB | bitC));
             break;
-
-        case 144:  /* 10010 000 */
+        /* Row 18 */
+        case 144:   /* 10010 000  NOR(A,XOR(B,C))  */
+            bitX = ~(bitA | (bitB ^ bitC));
             break;
-        case 145:  /* 10010 001 */
+        case 145:   /* 10010 001  +++  */
             break;
-        case 146:  /* 10010 010 */
+        case 146:   /* 10010 010  +++  */
             break;
-        case 147:  /* 10010 011 */
+        case 147:   /* 10010 011  +++  */
             break;
-        case 148:  /* 10010 100 */
+        case 148:   /* 10010 100  +++  */
             break;
-        case 149:  /* 10010 101 */
+        case 149:   /* 10010 101  +++  */
             break;
-        case 150:  /* 10010 110 */
+        case 150:   /* 10010 110  NXOR(A,B,C)  */
+            bitX = ~(bitA ^ bitB ^ bitC);
             break;
-        case 151:  /* 10010 111 */
+        case 151:   /* 10010 111  SEL(A,OR(B,C),NXOR(B,C))  */
+            if (bitA)
+                bitX = bitB | bitC;
+            else
+                bitX = ~(bitB ^ bitC);
             break;
-
-        case 152:  /* 10011 000 */
+        /* Row 19 */
+        case 152:   /* 10011 000  SEL(A,NOR(B,C),NXOR(B,C))  */
+            if (bitA)
+                bitX = ~(bitB | bitC);
+            else
+                bitX = ~(bitB ^ bitC);
             break;
-        case 153:  /* 10011 001  |||  */
+        case 153:   /* 10011 001  |||  */
             break;
-        case 154:  /* 10011 010 */
+        case 154:   /* 10011 010  +++  */
             break;
-        case 155:  /* 10011 011 */
+        case 155:   /* 10011 011  +++  */
             break;
-        case 156:  /* 10011 100 */
+        case 156:   /* 10011 100  SEL(A,NOT(B),NXOR(B,C))  */
+            if (bitA)
+                bitX = ~bitB;
+            else
+                bitX = ~(bitB ^ bitC);
             break;
-        case 157:  /* 10011 101 */
+        case 157:   /* 10011 101  +++  */
             break;
-        case 158:  /* 10011 110 */
+        case 158:   /* 10011 110  SEL(A,NAND(B,C),NXOR(B,C))  */
+            if (bitA)
+                bitX = ~(bitB & bitC);
+            else
+                bitX = ~(bitB ^ bitC);
             break;
-        case 159:  /* 10011 111  OR(A,NXOR(B,C))  */
-            bitX = bitA | ( ~(bitB ^ bitC) );
+        case 159:   /* 10011 111  OR(A,NXOR(B,C))  */
+            bitX = bitA | (~(bitB ^ bitC));
             break;
-
-        case 160:  /* 10100 000 * |||  */
+        /* Row 20 */
+        case 160:   /* 10100 000 * |||  */
             break;
-        case 161:  /* 10100 001 */
+        case 161:   /* 10100 001  SEL(A,AND(B,C),NOT(C))  */
+            if (bitA)
+                bitX = bitB & bitC;
+            else
+                bitX = ~bitC;
             break;
-        case 162:  /* 10100 010 */
+        case 162:   /* 10100 010  +++  */
             break;
-        case 163:  /* 10100 011 */
+        case 163:   /* 10100 011  SEL(A,B,NOT(C))  */
+            if (bitA)
+                bitX = bitA;
+            else
+                bitX = ~bitC;
             break;
-        case 164:  /* 10100 100 */
+        case 164:   /* 10100 100  +++  */
             break;
-        case 165:  /* 10100 101  |||  */
+        case 165:   /* 10100 101  |||  */
             break;
-        case 166:  /* 10100 110 */
+        case 166:   /* 10100 110  SEL(A,XOR(B,C),NOT(C)  */
+            if (bitA)
+                bitX = bitB ^ bitC;
+            else
+                bitX = ~bitC;
             break;
-        case 167:  /* 10100 111 */
+        case 167:   /* 10100 111  SEL(A,OR(B,C),NOT(C))  */
+            if (bitA)
+                bitX = bitB | bitC;
+            else
+                bitX = ~bitC;
             break;
-
-        case 168:  /* 10101 000 */
+        /* Row 21 */
+        case 168:   /* 10101 000  +++  */
             break;
-        case 169:  /* 10101 001 */
+        case 169:   /* 10101 001  +++  */
             break;
-        case 170:  /* 10101 010  |||  */
+        case 170:   /* 10101 010  |||  */
             break;
-        case 171:  /* 10101 011 */
+        case 171:   /* 10101 011  +++  */
             break;
-        case 172:  /* 10101 100 */
+        case 172:   /* 10101 100  SEL(A,NOT(B),NOT(C))  */
+            if (bitA)
+                bitX = ~bitB;
+            else
+                bitX = ~bitC;
             break;
-        case 173:  /* 10101 101 */
+        case 173:   /* 10101 101  +++  */
             break;
-        case 174:  /* 10101 110 */
+        case 174:   /* 10101 110  SEL(A,NAND(B,C),NOT(C))  */
+            if (bitA)
+                bitX = ~(bitB & bitC);
+            else
+                bitX = ~bitC;
             break;
-        case 175:  /* 10101 111  |||  */
+        case 175:   /* 10101 111  |||  */
             break;
-
-        case 176:  /* 10110 000 */
+        /* Row 22 */
+        case 176:   /* 10110 000  +++  */
             break;
-        case 177:  /* 10110 001 */
+        case 177:   /* 10110 001  +++  */
             break;
-        case 178:  /* 10110 010 */
+        case 178:   /* 10110 010  +++  */
             break;
-        case 179:  /* 10110 011 */
+        case 179:   /* 10110 011  +++  */
             break;
-        case 180:  /* 10110 100 */
+        case 180:   /* 10110 100  +++  */
             break;
-        case 181:  /* 10110 101 */
+        case 181:   /* 10110 101  +++  */
             break;
-        case 182:  /* 10110 110 */
+        case 182:   /* 10110 110  +++  */
             break;
-        case 183:  /* 10110 111 */
+        case 183:   /* 10110 111  +++  */
             break;
-
-        case 184:  /* 10111 000 */
+        /* Row 23 */
+        case 184:   /* 10111 000  +++  */
             break;
-        case 185:  /* 10111 001 */
+        case 185:   /* 10111 001  +++  */
             break;
-        case 186:  /* 10111 010 */
+        case 186:   /* 10111 010  +++  */
             break;
-        case 187:  /* 10111 011  |||  */
+        case 187:   /* 10111 011  |||  */
             break;
-        case 188:  /* 10111 100 */
+        case 188:   /* 10111 100  +++  */
             break;
-        case 189:  /* 10111 101 */
+        case 189:   /* 10111 101  +++  */
             break;
-        case 190:  /* 10111 110 */
+        case 190:   /* 10111 110  +++  */
             break;
-        case 191:  /* 10111 111 */
+        case 191:   /* 10111 111  +++  */
             break;
-
-        case 192:  /* 11000 000  |||  */
+        /* Row 24 */
+        case 192:   /* 11000 000  |||  */
             break;
-        case 193:  /* 11000 001 */
+        case 193:   /* 11000 001  +++  */
             break;
-        case 194:  /* 11000 010 */
+        case 194:   /* 11000 010  +++  */
             break;
-        case 195:  /* 11000 011  |||  */
+        case 195:   /* 11000 011  |||  */
             break;
-        case 196:  /* 11000 100 */
+        case 196:   /* 11000 100  +++  */
             break;
-        case 197:  /* 11000 101 */
+        case 197:   /* 11000 101  +++  */
             break;
-        case 198:  /* 11000 110 */
+        case 198:   /* 11000 110  +++  */
             break;
-        case 199:  /* 11000 111 */
+        case 199:   /* 11000 111  +++  */
             break;
-
-        case 200:  /* 11001 000 */
+        /* Row 25 */
+        case 200:   /* 11001 000  +++  */
             break;
-        case 201:  /* 11001 001 */
+        case 201:   /* 11001 001  +++  */
             break;
-        case 202:  /* 11001 010 */
+        case 202:   /* 11001 010  +++  */
             break;
-        case 203:  /* 11001 011 */
+        case 203:   /* 11001 011  +++  */
             break;
-        case 204:  /* 11001 100  |||  */
+        case 204:   /* 11001 100  |||  */
             break;
-        case 205:  /* 11001 101 */
+        case 205:   /* 11001 101  +++  */
             break;
-        case 206:  /* 11001 110 */
+        case 206:   /* 11001 110  +++  */
             break;
-        case 207:  /* 11001 111 */
+        case 207:   /* 11001 111  ||| */
             break;
-
-        case 208:  /* 11010 000 */
+        /* Row 26 */
+        case 208:   /* 11010 000  +++  */
             break;
-        case 209:  /* 11010 001 */
+        case 209:   /* 11010 001  +++  */
             break;
-        case 210:  /* 11010 010 */
+        case 210:   /* 11010 010  +++  */
             break;
-        case 211:  /* 11010 011 */
+        case 211:   /* 11010 011  +++  */
             break;
-        case 212:  /* 11010 100 */
+        case 212:   /* 11010 100  +++  */
             break;
-        case 213:  /* 11010 101 */
+        case 213:   /* 11010 101  +++  */
             break;
-        case 214:  /* 11010 110 */
+        case 214:   /* 11010 110  +++  */
             break;
-        case 215:  /* 11010 111 */
+        case 215:   /* 11010 111  +++  */
             break;
-
-        case 216:  /* 11011 000 */
+        /* Row 27 */
+        case 216:   /* 11011 000  +++  */
             break;
-        case 217:  /* 11011 001 */
+        case 217:   /* 11011 001  +++  */
             break;
-        case 218:  /* 11011 010 */
+        case 218:   /* 11011 010  +++  */
             break;
-        case 219:  /* 11011 011 */
+        case 219:   /* 11011 011  +++  */
             break;
-        case 220:  /* 11011 100 */
+        case 220:   /* 11011 100  +++  */
             break;
-        case 221:  /* 11011 101  |||  */
+        case 221:   /* 11011 101  |||  */
             break;
-        case 222:  /* 11011 110 */
+        case 222:   /* 11011 110  +++  */
             break;
-        case 223:  /* 11011 111 */
+        case 223:   /* 11011 111  +++  */
             break;
-
-        case 224:  /* 11100 000 */
+        /* Row 28 */
+        case 224:   /* 11100 000  NOR(A,AND(B,C))  */
+            bitX = ~(bitA | (bitB & bitC));
             break;
-        case 225:  /* 11100 001 */
+        case 225:   /* 11100 001  NXOR(A,AND(B,C))  */
+            bitX = ~(bitA ^ (bitB & bitC));
             break;
-        case 226:  /* 11100 010 */
+        case 226:   /* 11100 010  +++  */
             break;
-        case 227:  /* 11100 011 */
+        case 227:   /* 11100 011  SEL(A,B,NAND(B,C))  */
+            if (bitA)
+                bitX = bitB;
+            else
+                bitX = ~(bitB & bitC);
             break;
-        case 228:  /* 11100 100 */
+        case 228:   /* 11100 100  +++  */
             break;
-        case 229:  /* 11100 101  |||  */
+        case 229:   /* 11100 101  +++  */
             break;
-        case 230:  /* 11100 110 */
+        case 230:   /* 11100 110  SEL(A,XOR(B,C),NAND(B,C))  */
+            if (bitA)
+                bitX = bitB ^ bitC;
+            else
+                bitX = ~(bitB & bitC);
             break;
-        case 231:  /* 11100 111 */
+        case 231:   /* 11100 111  SEL(A,OR(B,C),NAND(B,C))  */
+            if (bitA)
+                bitX = bitB | bitC;
+            else
+                bitX = ~(bitB & bitC);
             break;
-
-        case 232:  /* 11101 000  MINOR(A,B,C)  */
+        /* Row 29 */
+        case 232:   /* 11101 000  MINOR(A,B,C)  */
             if ( (bitA + bitB + bitC) <= 1 )
                 bitX = 1;
             else
                 bitX = 0;
             break;
-        case 233:  /* 11101 001 */
+        case 233:   /* 11101 001  SEL(A,NXOR(B,C),NAND(B,C))  */
+            if (bitA)
+                bitX = ~(bitB ^ bitC);
+            else
+                bitX = ~(bitB & bitC);
             break;
-        case 234:  /* 11101 010 */
+        case 234:   /* 11101 010  +++  */
             break;
-        case 235:  /* 11101 011 */
+        case 235:   /* 11101 011  +++  */
             break;
-        case 236:  /* 11101 100 */
+        case 236:   /* 11101 100  +++  */
             break;
-        case 237:  /* 11101 101 */
+        case 237:   /* 11101 101  +++  */
             break;
-        case 238:  /* 11101 110  |||  */
+        case 238:   /* 11101 110  |||  */
             break;
-        case 239:  /* 11101 111  OR(A,NAND(B,C))  */
-            bitX = bitA | ( ~(bitB & bitC) );
+        case 239:   /* 11101 111  OR(A,NAND(B,C))  */
+            bitX = bitA | (~(bitB & bitC));
             break;
-
-        case 240:  /* 11110 000  |||  */
+        /* Row 30 */
+        case 240:   /* 11110 000  |||  */
             break;
-        case 241:  /* 11110 001 */
+        case 241:   /* 11110 001  NAND(A,NAND(B,C))  */
+            bitX = ~(bitA & (~(bitB & bitC)));
             break;
-        case 242:  /* 11110 010 */
+        case 242:   /* 11110 010  +++  */
             break;
-        case 243:  /* 11110 011  |||  */
+        case 243:   /* 11110 011  |||  */
             break;
-        case 244:  /* 11110 100 */
+        case 244:   /* 11110 100  +++  */
             break;
-        case 245:  /* 11110 101  |||  */
+        case 245:   /* 11110 101  |||  */
             break;
-        case 246:  /* 11110 110 */
+        case 246:   /* 11110 110  NAND(A,NXOR(B,C))  */
+            bitX = ~(bitA & (~(bitB ^ bitC)));
             break;
-        case 247:  /* 11110 111 */
+        case 247:   /* 11110 111  NAND(A,NOR(B,C))  */
+            bitX = ~(bitA & (bitB | bitC));
             break;
-
-        case 248:  /* 11111 000 */
+        /* Row 31 */
+        case 248:   /* 11111 000  NAND(A,OR(B,C)  */
+            bitX = ~(bitA & (bitB | bitC));
             break;
-        case 249:  /* 11111 001 */
+        case 249:   /* 11111 001  NAND(A,XOR(B,C))  */
+            bitX = ~(bitA & (bitB ^ bitC));
             break;
-        case 250:  /* 11111 010  |||  */
+        case 250:   /* 11111 010  |||  */
             break;
-        case 251:  /* 11111 011 */
+        case 251:   /* 11111 011  +++  */
             break;
-        case 252:  /* 11111 100  |||  */
+        case 252:   /* 11111 100  |||  */
             break;
-        case 253:  /* 11111 101 */
+        case 253:   /* 11111 101  +++  */
             break;
-        case 254:  /* 11111 110 */
+        case 254:   /* 11111 110  NAND(A,B,C)  */
+            bitX = ~(bitA & bitB & bitC);
             break;
-        case 255:  /* 11111 111  |||  */
+        case 255:   /* 11111 111  |||  */
             break;
-
+        /* Should not occur! */
         default:
             break;
         }
