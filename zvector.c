@@ -193,39 +193,48 @@ static inline U128 U128_zero( );
 static inline U128 U128_one( );
 static inline bool U128_isZero( U128 a );
 
-static inline U128 U128_add( U128 a, U128 b);
-static inline U128 U128_sub( U128 a, U128 b);
-static inline U128 U128_divrem(U128 dividend, U128 divisor, U128 *remainder);
-static inline U128 U128_div(U128 a, U128 b);
-static inline U128 U128_rem( U128 a, U128 b);
-static inline void U128_mul( U128 a, U128 b, U128* hi128, U128* lo128);
-static inline U128 U128_mul_64 (U64 aa, U64 bb);
-static inline U128 U128_U32_mul( U128 a, U32 b);
+static inline U128 U128_add( U128 a, U128 b );
+static inline U128 U128_sub( U128 a, U128 b );
+static inline U128 U128_divrem(U128 dividend, U128 divisor, U128 *remainder );
+static inline U128 U128_div(U128 a, U128 b );
+static inline U128 U128_rem( U128 a, U128 b );
+static inline void U128_mul( U128 a, U128 b, U128* hi128, U128* lo128 );
+static inline U128 U128_mul_64 (U64 aa, U64 bb );
+static inline U128 U128_mul_32( U128 a, U32 b );
 
-static inline U128 U128_shl( U128 a, U32 shift);
-static inline U128 U128_shrl( U128 a, U32 shift);
-static inline U128 U128_shra( U128 a, U32 shift);
+static inline U128 U128_shl( U128 a, U32 shift );
+static inline U128 U128_shrl( U128 a, U32 shift );
+static inline U128 U128_shra( U128 a, U32 shift );
 
 static inline U128 U128_S64( U64 a );
 static inline U128 U128_U64( U64 a );
 
-static inline int U128_cmp( U128 a, U128 b);
-static inline int S128_cmp( U128 a, U128 b);
+static inline int U128_cmp( U128 a, U128 b );
+static inline int S128_cmp( U128 a, U128 b );
 
-static inline U128 S128_add( U128 a, U128 b);
-static inline U128 S128_sub( U128 a, U128 b);
-static inline U128 S128_div(U128 a, U128 b);
-static inline U128 S128_rem( U128 a, U128 b);
-static inline U128 S128_mul_64 (U64 a, U64 b);
-static inline void S128_mul( U128 a, U128 b, U128* hi128, U128* lo128);
+static inline U128 S128_add( U128 a, U128 b );
+static inline U128 S128_sub( U128 a, U128 b );
+static inline U128 S128_div(U128 a, U128 b );
+static inline U128 S128_rem( U128 a, U128 b );
+static inline U128 S128_mul_64 (U64 a, U64 b );
+static inline void S128_mul( U128 a, U128 b, U128* hi128, U128* lo128 );
 static inline U128 S128_neg( U128 a );
 static inline bool S128_isNeg( U128 a );
 
 static inline void U256_add_U128( U128 *ahi, U128 *alo, U128 b, U128 *chi, U128 *clo );
 static inline void S256_add_S128( U128 *ahi, U128 *alo, U128 b, U128 *chi, U128 *clo );
 
-static inline U64 gf_mul_32( U32 m1, U32 m2);
-static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l);
+static inline U64 gf_mul_32( U32 m1, U32 m2 );
+static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l );
+
+static inline U128 U128_and( U128 a, U128 b );
+static inline U128 U128_or( U128 a, U128 b );
+static inline U128 U128_xor( U128 a, U128 b );
+static inline U128 U128_nand( U128 a, U128 b );
+static inline U128 U128_nor( U128 a, U128 b );
+static inline U128 U128_nxor( U128 a, U128 b );
+static inline U128 U128_not( U128 a );
+static inline bool U128_biton( U128 a, U128 b );
 
 /*-------------------------------------------------------------------*/
 /* Debug helper for U128                                             */
@@ -558,7 +567,7 @@ static inline U128 U128_mul_64 (U64 aa, U64 bb)
 /*                                                                   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static inline U128 U128_U32_mul( U128 a, U32 b)
+static inline U128 U128_mul_32( U128 a, U32 b)
 {
 #if defined( _USE_128_ )
     U128 temp;                           /* temp (return) value      */
@@ -1287,6 +1296,136 @@ static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
             mcandU128l <<= 1;
         }
     }
+}
+
+/*===================================================================*/
+/* U128 bitwise boolean                                              */
+/*===================================================================*/
+/*-------------------------------------------------------------------*/
+/* U128 AND: return a & b                                            */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_and( U128 a, U128 b )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  a.Q.D.H.D  &  b.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D  &  b.Q.D.L.D;
+    return temp;
+}
+/*-------------------------------------------------------------------*/
+/* U128 OR: return a | b                                             */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_or( U128 a, U128 b )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  a.Q.D.H.D  |  b.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D  |  b.Q.D.L.D;
+    return temp;
+}
+/*-------------------------------------------------------------------*/
+/* U128 XOR: return a ^ b                                            */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_xor( U128 a, U128 b )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  a.Q.D.H.D  ^  b.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D  ^  b.Q.D.L.D;
+    return temp;
+}
+/*-------------------------------------------------------------------*/
+/* U128 NAND: return ~(a & b)                                        */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_nand( U128 a, U128 b )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  ~(a.Q.D.H.D  &  b.Q.D.H.D);
+    temp.Q.D.L.D =  ~(a.Q.D.L.D  &  b.Q.D.L.D);
+    return temp;
+}
+/*-------------------------------------------------------------------*/
+/* U128 NOR: return ~(a | b)                                         */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_nor( U128 a, U128 b )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  ~(a.Q.D.H.D  |  b.Q.D.H.D);
+    temp.Q.D.L.D =  ~(a.Q.D.L.D  |  b.Q.D.L.D);
+    return temp;
+}
+/*-------------------------------------------------------------------*/
+/* U128 NXOR: return ~(a ^ b)                                        */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_nxor( U128 a, U128 b )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  ~(a.Q.D.H.D  ^  b.Q.D.H.D);
+    temp.Q.D.L.D =  ~(a.Q.D.L.D  ^  b.Q.D.L.D);
+    return temp;
+}
+/*-------------------------------------------------------------------*/
+/* U128 NOT: return ~a                                               */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_not( U128 a )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  ~(a.Q.D.H.D);
+    temp.Q.D.L.D =  ~(a.Q.D.L.D);
+    return temp;
+}
+/*-------------------------------------------------------------------*/
+/* U128 BITON: if (a & b) return true or false                       */
+/*-------------------------------------------------------------------*/
+static inline bool U128_biton( U128 a, U128 b )
+{
+    if ((a.Q.D.H.D & b.Q.D.H.D) || (a.Q.D.L.D & b.Q.D.L.D))
+        return TRUE;
+
+    return FALSE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Retun MAJOR(A,B,C) or MINOR(A,B,C)                                */
+/*-------------------------------------------------------------------*/
+static U128 U128_major_minor( U128 a, U128 b, U128 c, bool ind )
+{
+    U128    answer, mask;
+    int     bits;
+    int     i;
+
+    answer.Q.D.H.D = 0x0000000000000000ull;
+    answer.Q.D.L.D = 0x0000000000000000ull;
+    mask.Q.D.H.D = 0x8000000000000000ull;
+    mask.Q.D.L.D = 0x0000000000000000ull;
+
+    for (i=0; i<128; i++)
+    {
+        bits = 0;
+
+        if ((a.Q.D.H.D & mask.Q.D.H.D) || (a.Q.D.L.D & mask.Q.D.L.D))
+            bits++;
+        if ((b.Q.D.H.D & mask.Q.D.H.D) || (b.Q.D.L.D & mask.Q.D.L.D))
+            bits++;
+        if ((c.Q.D.H.D & mask.Q.D.H.D) || (c.Q.D.L.D & mask.Q.D.L.D))
+            bits++;
+
+        if (bits >= 2)
+        {
+            answer.Q.D.H.D |= mask.Q.D.H.D;
+            answer.Q.D.L.D |= mask.Q.D.L.D;
+        }
+
+        mask = U128_shrl( mask, 1 );
+    }
+
+    if (ind == TRUE) return answer;
+    answer = U128_not(answer);
+    return answer;
 }
 
 /*-------------------------------------------------------------------*/
@@ -4653,10 +4792,9 @@ DEF_INST( vector_shift_right_double_by_bit )
 DEF_INST( vector_evaluate )
 {
     int     v1, v2, v3, v4, i5;
-    int     i;
-    int     bitA, bitB, bitC, bitX;
     U128    tempv1, tempv2, tempv3, tempv4;
-    U128    bitmask, bitresult;
+    U128    tnotv2;
+    U128    tempv1x, tempv1y, /* tempv2x, tempv2y, */ tempv3x, tempv3y, tempv4x, tempv4y;
 
     VRI_K( inst, regs, v1, v2, v3, v4, i5 );
 
@@ -4666,769 +4804,919 @@ DEF_INST( vector_evaluate )
     tempv2.Q = regs->VR_Q(v2);
     tempv3.Q = regs->VR_Q(v3);
     tempv4.Q = regs->VR_Q(v4);
+    tnotv2 = U128_not( tempv2 );
 
-    bitmask.Q.D.H.D = 0x8000000000000000ull;
-    bitmask.Q.D.L.D = 0x0000000000000000ull;
-
-    for (i=0; i<128; i++)
+    switch (i5)
     {
-        bitresult = U128_zero();
-        bitA = bitB = bitC = bitX = 0;
-
-        if ((tempv2.Q.D.H.D & bitmask.Q.D.H.D) || (tempv2.Q.D.L.D & bitmask.Q.D.L.D))
-            bitA = 1;
-        if ((tempv3.Q.D.H.D & bitmask.Q.D.H.D) || (tempv3.Q.D.L.D & bitmask.Q.D.L.D))
-            bitB = 1;
-        if ((tempv4.Q.D.H.D & bitmask.Q.D.H.D) || (tempv4.Q.D.L.D & bitmask.Q.D.L.D))
-            bitC = 1;
-
-        switch (i5)
-        {
-        /* Row 0 */
-        case 0:     /* 00000 000  |||  */
-            break;
-        case 1:     /* 00000 001  AND(A,B,C)  */
-            bitX = bitA & bitB & bitC;
-            break;
-        case 2:     /* 00000 010  +++  */
-            break;
-        case 3:     /* 00000 011  |||  */
-            break;
-        case 4:     /* 00000 100  +++  */
-            break;
-        case 5:     /* 00000 101  |||  */
-            break;
-        case 6:     /* 00000 110  AND(A,XOR(B,C))  */
-            bitX = bitA & (bitB ^ bitC);
-            break;
-        case 7:     /* 00000 111  AND(A,OR(B,C))  */
-            bitX = bitA & (bitB | bitC);
-            break;
-        /* Row 1 */
-        case 8:     /* 00001 000  AND(A,NOR(B,C))  */
-            bitX = bitA & (~(bitB | bitC));
-            break;
-        case 9:     /* 00001 001  AND(A,NXOR(B,C))  */
-            bitX = bitA & (~(bitB ^ bitC));
-            break;
-        case 10:    /* 00001 010  |||  */
-            break;
-        case 11:    /* 00001 011  +++  */
-            break;
-        case 12:    /* 00001 100  |||  */
-            break;
-        case 13:    /* 00001 101  +++  */
-            break;
-        case 14:    /* 00001 110  AND(A,NAND(B,C))  */
-            bitX = bitA & (~(bitB & bitC));
-            break;
-        case 15:    /* 00001 111  |||  */
-            break;
-        /* Row 2 */
-        case 16:    /* 00010 000  NOR(A,NAND(B,C))  */
-            bitX = ~(bitA | (~(bitB & bitC)));
-            break;
-        case 17:    /* 00010 001  |||  */
-            break;
-        case 18:    /* 00010 010  +++  */
-            break;
-        case 19:    /* 00010 011  +++  */
-            break;
-        case 20:    /* 00010 100  +++  */
-            break;
-        case 21:    /* 00010 101  +++  */
-            break;
-        case 22:    /* 00010 110  SEL(A,XOR(B,C),AND(B,C))  */
-            if (bitA)
-                bitX = bitB ^ bitC;
-            else
-                bitX = bitB & bitC;
-            break;
-        case 23:    /* 00010 111  MAJOR(A,B,C)  */
-            if ( (bitA + bitB + bitC) >= 2 )
-                bitX = 1;
-            else
-                bitX = 0;
-            break;
-        /* Row 3 */
-        case 24:    /* 00011 000  SEL(A,NOR(B,C),AND(B,C))  */
-            if (bitA)
-                bitX = ~(bitB | bitC);
-            else
-                bitX = bitB & bitC;
-            break;
-        case 25:    /* 00011 001  SEL(A,NXOR(B,C),AND(B,C))  */
-            if (bitA)
-                bitX = ~(bitB ^ bitC);
-            else
-                bitX = bitB & bitC;
-            break;
-        case 26:    /* 00011 010  +++  */
-            break;
-        case 27:    /* 00011 011  |||  */
-            break;
-        case 28:    /* 00011 100  SEL(A,NOT(B),AND(B,C)) */
-            if (bitA)
-                bitX = ~bitB;
-            else
-                bitX = bitB & bitC;
-            break;
-        case 29:    /* 00011 101  |||  */
-            break;
-        case 30:    /* 00011 110  XOR(A,AND(B,C))  */
-            bitX = bitA ^ (bitB & bitC);
-            break;
-        case 31:    /* 00011 111  OR(A,AND(B,C))  */
-            bitX = bitA | (bitB & bitC);
-            break;
-        /* Row 4 */
-        case 32:    /* 00100 000  +++  */
-            break;
-        case 33:    /* 00100 001  +++  */
-            break;
-        case 34:    /* 00100 010  |||  */
-            break;
-        case 35:    /* 00100 011  +++  */
-            break;
-        case 36:    /* 00100 100  +++  */
-            break;
-        case 37:    /* 00100 101  +++  */
-            break;
-        case 38:    /* 00100 110  +++  */
-            break;
-        case 39:    /* 00100 111  |||  */
-            break;
-        /* Row 5 */
-        case 40:    /* 00101 000  +++  */
-            break;
-        case 41:    /* 00101 001  +++  */
-            break;
-        case 42:    /* 00101 010  +++  */
-            break;
-        case 43:    /* 00101 011  +++  */
-            break;
-        case 44:    /* 00101 100  +++  */
-            break;
-        case 45:    /* 00101 101  +++  */
-            break;
-        case 46:    /* 00101 110  +++  */
-            break;
-        case 47:    /* 00101 111  +++  */
-            break;
-        /* Row 6 */
-        case 48:    /* 00110 000  |||  */
-            break;
-        case 49:    /* 00110 001  +++  */
-            break;
-        case 50:    /* 00110 010  +++  */
-            break;
-        case 51:    /* 00110 011  |||  */
-            break;
-        case 52:    /* 00110 100  +++  */
-            break;
-        case 53:    /* 00110 101  |||  */
-            break;
-        case 54:    /* 00110 110  +++  */
-            break;
-        case 55:    /* 00110 111  +++  */
-            break;
-        /* Row 7 */
-        case 56:    /* 00111 000  +++  */
-            break;
-        case 57:    /* 00111 001  +++  */
-            break;
-        case 58:    /* 00111 010  +++  */
-            break;
-        case 59:    /* 00111 011  +++  */
-            break;
-        case 60:    /* 00111 100  |||  */
-            break;
-        case 61:    /* 00111 101  +++  */
-            break;
-        case 62:    /* 00111 110  +++  */
-            break;
-        case 63:    /* 00111 111  |||  */
-            break;
-        /* Row 8 */
-        case 64:    /* 01000 000  +++  */
-            break;
-        case 65:    /* 01000 001  +++  */
-            break;
-        case 66:    /* 01000 010  +++  */
-            break;
-        case 67:    /* 01000 011  +++  */
-            break;
-        case 68:    /* 01000 100  |||  */
-            break;
-        case 69:    /* 01000 101  +++  */
-            break;
-        case 70:    /* 01000 110  +++  */
-            break;
-        case 71:    /* 01000 111  |||  */
-            break;
-        /* Row 9  */
-        case 72:    /* 01001 000  +++  */
-            break;
-        case 73:    /* 01001 001  +++  */
-            break;
-        case 74:    /* 01001 010  +++  */
-            break;
-        case 75:    /* 01001 011  +++  */
-            break;
-        case 76:    /* 01001 100  +++  */
-            break;
-        case 77:    /* 01001 101  +++  */
-            break;
-        case 78:    /* 01001 110  +++  */
-            break;
-        case 79:    /* 01001 111  +++  */
-            break;
-        /* Row 10 */
-        case 80:    /* 01010 000  |||  */
-            break;
-        case 81:    /* 01010 001  SEL(A,AND(B,C),C)  */
-            if (bitA)
-                bitX = bitB & bitC;
-            else
-                bitX = bitC;
-            break;
-        case 82:    /* 01010 010  +++  */
-            break;
-        case 83:    /* 01010 011  |||  */
-            break;
-        case 84:    /* 01010 100  +++  */
-            break;
-        case 85:    /* 01010 101  |||  */
-            break;
-        case 86:    /* 01010 110  +++  */
-            break;
-        case 87:    /* 01010 111  +++  */
-            break;
-        /* Row 11 */
-        case 88:    /* 01011 000  SEL(A,NOR(B,C),C)  */
-            if (bitA)
-                bitX = ~(bitB | bitC);
-            else
-                bitX = bitC;
-            break;
-        case 89:    /* 01011 001  SEL(A,NXOR(B,C),C)  */
-            if (bitA)
-                bitX = ~(bitB ^ bitC);
-            else
-                bitX = bitC;
-            break;
-        case 90:    /* 01011 010  |||  */
-            break;
-        case 91:    /* 01011 011   +++  */
-            break;
-        case 92:    /* 01011 100  SEL(A,NOT(B),C)  */
-            if (bitA)
-                bitX = ~bitB;
-            else
-                bitX = bitC;
-            break;
-        case 93:    /* 01011 101  +++  */
-            break;
-        case 94:    /* 01011 110  SEL(A,NAND(B,C),C)  */
-            if (bitA)
-                bitX = ~(bitB & bitC);
-            else
-                bitX = bitC;
-            break;
-        case 95:    /* 01011 111  |||  */
-            break;
-        /* Row 12 */
-        case 96:    /* 01100 000  NOR(A,NXOR(B,C))  */
-            bitX = ~(bitA | (~(bitB ^ bitC)));
-            break;
-        case 97:    /* 01100 001  SEL(A,AND(B,C),XOR(B,C))  */
-            if (bitA)
-                bitX = bitB & bitC;
-            else
-                bitX = bitB ^ bitC;
-            break;
-        case 98:    /* 01100 010   +++  */
-            break;
-        case 99:    /* 01100 011  SEL(A,B,XOR(B,C))  */
-            if (bitA)
-                bitX = bitB;
-            else
-                bitX = bitB ^ bitC;
-            break;
-        case 100:   /* 01100 100  +++  */
-            break;
-        case 101:   /* 01100 101  +++  */
-            break;
-        case 102:   /* 01100 110  |||  */
-            break;
-        case 103:   /* 01100 111  SEL(A,OR(B,C),XOR(B,C))  */
-            if (bitA)
-                bitX = bitB | bitC;
-            else
-                bitX = bitB ^ bitC;
-            break;
-        /* Row 13 */
-        case 104:   /* 01101 000  SEL(A,NOR(B,C),XOR(B,C))  */
-            if (bitA)
-                bitX = ~(bitB | bitC);
-            else
-                bitX = bitB ^ bitC;
-            break;
-        case 105:   /* 01101 001  XOR(A,B,C)  */
-            bitX = bitA ^ bitB ^ bitC;
-            break;
-        case 106:   /* 01101 010  +++  */
-            break;
-        case 107:   /* 01101 011  +++  */
-            break;
-        case 108:   /* 01101 100  +++  */
-            break;
-        case 109:   /* 01101 101  +++  */
-            break;
-        case 110:   /* 01101 110  +++  */
-            break;
-        case 111:   /* 01101 111  OR(A,XOR(B,C))  */
-            bitX = bitA | (bitB ^ bitC);
-            break;
-        /* Row 14 */
-        case 112:   /* 01110 000  NOR(A,NOR(B,C))  */
-            bitX = ~(bitA | (~(bitB | bitC)));
-            break;
-        case 113:   /* 01110 001  SEL(A,AND(B,C),OR(B,C))  */
-            if (bitA)
-                bitX = bitB & bitC;
-            else
-                bitX = bitB | bitC;
-            break;
-        case 114:   /* 01110 010  +++  */
-            break;
-        case 115:   /* 01110 011  SEL(A,B,OR(B,C))  */
-            if (bitA)
-                bitX = bitB;
-            else
-                bitX = bitB | bitC;
-            break;
-        case 116:   /* 01110 100  +++  */
-            break;
-        case 117:   /* 01110 101  +++  */
-            break;
-        case 118:   /* 01110 110  +++  */
-            break;
-        case 119:   /* 01110 111  |||  */
-            break;
-        /* Row 15 */
-        case 120:   /* 01111 000  XOR(A,OR(B,C))  */
-            bitX = bitA ^ (bitB | bitC);
-            break;
-        case 121:   /* 01111 001  SEL(A,NXOR(B,C),OR(B,C))  */
-            if (bitA)
-                bitX = ~(bitB ^ bitC);
-            else
-                bitX = bitB | bitC;
-            break;
-        case 122:   /* 01111 010  +++  */
-            break;
-        case 123:   /* 01111 011  +++  */
-            break;
-        case 124:   /* 01111 100  SEL(A,NOT(B),OR(B,C))  */
-            if (bitA)
-                bitX = ~bitB;
-            else
-                bitX = bitB | bitC;
-            break;
-        case 125:   /* 01111 101  +++  */
-            break;
-        case 126:   /* 01111 110  SEL(A,NAND(B,C),OR(B,C))  */
-            if (bitA)
-                bitX = ~(bitB & bitC);
-            else
-                bitX = bitB | bitC;
-            break;
-        case 127:   /* 01111 111  OR(A,B,C)  */
-            bitX = bitA | bitB | bitC;
-            break;
-        /* Row 16 */
-        case 128:   /* 10000 000  NOR(A,B,C)  */
-            bitX = ~(bitA | bitB | bitC);
-            break;
-        case 129:   /* 10000 001  SEL(A,AND(B,C),NOR(B,C))  */
-            if (bitA)
-                bitX = bitB & bitC;
-            else
-                bitX = ~(bitB | bitC);
-            break;
-        case 130:   /* 10000 010  +++  */
-            break;
-        case 131:   /* 10000 011  SEL(A,B,NOR(B,C))  */
-            if (bitA)
-                bitX = bitB;
-            else
-                bitX = ~(bitB | bitC);
-            break;
-        case 132:   /* 10000 100  +++  */
-            break;
-        case 133:   /* 10000 101  +++  */
-            break;
-        case 134:   /* 10000 110  SEL(A,XOR(B,C),NOR(B,C))  */
-            if (bitA)
-                bitX = bitB ^ bitC;
-            else
-                bitX = ~(bitB | bitC);
-            break;
-        case 135:   /* 10000 111  NXOR(A,OR(B,C))  */
-            bitX = ~(bitA ^ (bitB | bitC));
-            break;
-        /* Row 17 */
-        case 136:   /* 10001 000  |||  */
-            break;
-        case 137:   /* 10001 001  +++  */
-            break;
-        case 138:   /* 10001 010  +++  */
-            break;
-        case 139:   /* 10001 011  +++  */
-            break;
-        case 140:   /* 10001 100  SEL(A,NOT(B),NOR(B,C))  */
-            if (bitA)
-                bitX = ~bitB;
-            else
-                bitX = ~(bitB | bitC);
-            break;
-        case 141:   /* 10001 101  +++  */
-            break;
-        case 142:   /* 10001 110  SEL(A,NAND(B,C),NOR(B,C))  */
-            if (bitA)
-                bitX = ~(bitB & bitC);
-            else
-                bitX = ~(bitB | bitC);
-            break;
-        case 143:   /* 10001 111  OR(A,NOR(B,C))  */
-            bitX = bitA | (~(bitB | bitC));
-            break;
-        /* Row 18 */
-        case 144:   /* 10010 000  NOR(A,XOR(B,C))  */
-            bitX = ~(bitA | (bitB ^ bitC));
-            break;
-        case 145:   /* 10010 001  +++  */
-            break;
-        case 146:   /* 10010 010  +++  */
-            break;
-        case 147:   /* 10010 011  +++  */
-            break;
-        case 148:   /* 10010 100  +++  */
-            break;
-        case 149:   /* 10010 101  +++  */
-            break;
-        case 150:   /* 10010 110  NXOR(A,B,C)  */
-            bitX = ~(bitA ^ bitB ^ bitC);
-            break;
-        case 151:   /* 10010 111  SEL(A,OR(B,C),NXOR(B,C))  */
-            if (bitA)
-                bitX = bitB | bitC;
-            else
-                bitX = ~(bitB ^ bitC);
-            break;
-        /* Row 19 */
-        case 152:   /* 10011 000  SEL(A,NOR(B,C),NXOR(B,C))  */
-            if (bitA)
-                bitX = ~(bitB | bitC);
-            else
-                bitX = ~(bitB ^ bitC);
-            break;
-        case 153:   /* 10011 001  |||  */
-            break;
-        case 154:   /* 10011 010  +++  */
-            break;
-        case 155:   /* 10011 011  +++  */
-            break;
-        case 156:   /* 10011 100  SEL(A,NOT(B),NXOR(B,C))  */
-            if (bitA)
-                bitX = ~bitB;
-            else
-                bitX = ~(bitB ^ bitC);
-            break;
-        case 157:   /* 10011 101  +++  */
-            break;
-        case 158:   /* 10011 110  SEL(A,NAND(B,C),NXOR(B,C))  */
-            if (bitA)
-                bitX = ~(bitB & bitC);
-            else
-                bitX = ~(bitB ^ bitC);
-            break;
-        case 159:   /* 10011 111  OR(A,NXOR(B,C))  */
-            bitX = bitA | (~(bitB ^ bitC));
-            break;
-        /* Row 20 */
-        case 160:   /* 10100 000 * |||  */
-            break;
-        case 161:   /* 10100 001  SEL(A,AND(B,C),NOT(C))  */
-            if (bitA)
-                bitX = bitB & bitC;
-            else
-                bitX = ~bitC;
-            break;
-        case 162:   /* 10100 010  +++  */
-            break;
-        case 163:   /* 10100 011  SEL(A,B,NOT(C))  */
-            if (bitA)
-                bitX = bitA;
-            else
-                bitX = ~bitC;
-            break;
-        case 164:   /* 10100 100  +++  */
-            break;
-        case 165:   /* 10100 101  |||  */
-            break;
-        case 166:   /* 10100 110  SEL(A,XOR(B,C),NOT(C)  */
-            if (bitA)
-                bitX = bitB ^ bitC;
-            else
-                bitX = ~bitC;
-            break;
-        case 167:   /* 10100 111  SEL(A,OR(B,C),NOT(C))  */
-            if (bitA)
-                bitX = bitB | bitC;
-            else
-                bitX = ~bitC;
-            break;
-        /* Row 21 */
-        case 168:   /* 10101 000  +++  */
-            break;
-        case 169:   /* 10101 001  +++  */
-            break;
-        case 170:   /* 10101 010  |||  */
-            break;
-        case 171:   /* 10101 011  +++  */
-            break;
-        case 172:   /* 10101 100  SEL(A,NOT(B),NOT(C))  */
-            if (bitA)
-                bitX = ~bitB;
-            else
-                bitX = ~bitC;
-            break;
-        case 173:   /* 10101 101  +++  */
-            break;
-        case 174:   /* 10101 110  SEL(A,NAND(B,C),NOT(C))  */
-            if (bitA)
-                bitX = ~(bitB & bitC);
-            else
-                bitX = ~bitC;
-            break;
-        case 175:   /* 10101 111  |||  */
-            break;
-        /* Row 22 */
-        case 176:   /* 10110 000  +++  */
-            break;
-        case 177:   /* 10110 001  +++  */
-            break;
-        case 178:   /* 10110 010  +++  */
-            break;
-        case 179:   /* 10110 011  +++  */
-            break;
-        case 180:   /* 10110 100  +++  */
-            break;
-        case 181:   /* 10110 101  +++  */
-            break;
-        case 182:   /* 10110 110  +++  */
-            break;
-        case 183:   /* 10110 111  +++  */
-            break;
-        /* Row 23 */
-        case 184:   /* 10111 000  +++  */
-            break;
-        case 185:   /* 10111 001  +++  */
-            break;
-        case 186:   /* 10111 010  +++  */
-            break;
-        case 187:   /* 10111 011  |||  */
-            break;
-        case 188:   /* 10111 100  +++  */
-            break;
-        case 189:   /* 10111 101  +++  */
-            break;
-        case 190:   /* 10111 110  +++  */
-            break;
-        case 191:   /* 10111 111  +++  */
-            break;
-        /* Row 24 */
-        case 192:   /* 11000 000  |||  */
-            break;
-        case 193:   /* 11000 001  +++  */
-            break;
-        case 194:   /* 11000 010  +++  */
-            break;
-        case 195:   /* 11000 011  |||  */
-            break;
-        case 196:   /* 11000 100  +++  */
-            break;
-        case 197:   /* 11000 101  +++  */
-            break;
-        case 198:   /* 11000 110  +++  */
-            break;
-        case 199:   /* 11000 111  +++  */
-            break;
-        /* Row 25 */
-        case 200:   /* 11001 000  +++  */
-            break;
-        case 201:   /* 11001 001  +++  */
-            break;
-        case 202:   /* 11001 010  +++  */
-            break;
-        case 203:   /* 11001 011  +++  */
-            break;
-        case 204:   /* 11001 100  |||  */
-            break;
-        case 205:   /* 11001 101  +++  */
-            break;
-        case 206:   /* 11001 110  +++  */
-            break;
-        case 207:   /* 11001 111  ||| */
-            break;
-        /* Row 26 */
-        case 208:   /* 11010 000  +++  */
-            break;
-        case 209:   /* 11010 001  +++  */
-            break;
-        case 210:   /* 11010 010  +++  */
-            break;
-        case 211:   /* 11010 011  +++  */
-            break;
-        case 212:   /* 11010 100  +++  */
-            break;
-        case 213:   /* 11010 101  +++  */
-            break;
-        case 214:   /* 11010 110  +++  */
-            break;
-        case 215:   /* 11010 111  +++  */
-            break;
-        /* Row 27 */
-        case 216:   /* 11011 000  +++  */
-            break;
-        case 217:   /* 11011 001  +++  */
-            break;
-        case 218:   /* 11011 010  +++  */
-            break;
-        case 219:   /* 11011 011  +++  */
-            break;
-        case 220:   /* 11011 100  +++  */
-            break;
-        case 221:   /* 11011 101  |||  */
-            break;
-        case 222:   /* 11011 110  +++  */
-            break;
-        case 223:   /* 11011 111  +++  */
-            break;
-        /* Row 28 */
-        case 224:   /* 11100 000  NOR(A,AND(B,C))  */
-            bitX = ~(bitA | (bitB & bitC));
-            break;
-        case 225:   /* 11100 001  NXOR(A,AND(B,C))  */
-            bitX = ~(bitA ^ (bitB & bitC));
-            break;
-        case 226:   /* 11100 010  +++  */
-            break;
-        case 227:   /* 11100 011  SEL(A,B,NAND(B,C))  */
-            if (bitA)
-                bitX = bitB;
-            else
-                bitX = ~(bitB & bitC);
-            break;
-        case 228:   /* 11100 100  +++  */
-            break;
-        case 229:   /* 11100 101  +++  */
-            break;
-        case 230:   /* 11100 110  SEL(A,XOR(B,C),NAND(B,C))  */
-            if (bitA)
-                bitX = bitB ^ bitC;
-            else
-                bitX = ~(bitB & bitC);
-            break;
-        case 231:   /* 11100 111  SEL(A,OR(B,C),NAND(B,C))  */
-            if (bitA)
-                bitX = bitB | bitC;
-            else
-                bitX = ~(bitB & bitC);
-            break;
-        /* Row 29 */
-        case 232:   /* 11101 000  MINOR(A,B,C)  */
-            if ( (bitA + bitB + bitC) <= 1 )
-                bitX = 1;
-            else
-                bitX = 0;
-            break;
-        case 233:   /* 11101 001  SEL(A,NXOR(B,C),NAND(B,C))  */
-            if (bitA)
-                bitX = ~(bitB ^ bitC);
-            else
-                bitX = ~(bitB & bitC);
-            break;
-        case 234:   /* 11101 010  +++  */
-            break;
-        case 235:   /* 11101 011  +++  */
-            break;
-        case 236:   /* 11101 100  +++  */
-            break;
-        case 237:   /* 11101 101  +++  */
-            break;
-        case 238:   /* 11101 110  |||  */
-            break;
-        case 239:   /* 11101 111  OR(A,NAND(B,C))  */
-            bitX = bitA | (~(bitB & bitC));
-            break;
-        /* Row 30 */
-        case 240:   /* 11110 000  |||  */
-            break;
-        case 241:   /* 11110 001  NAND(A,NAND(B,C))  */
-            bitX = ~(bitA & (~(bitB & bitC)));
-            break;
-        case 242:   /* 11110 010  +++  */
-            break;
-        case 243:   /* 11110 011  |||  */
-            break;
-        case 244:   /* 11110 100  +++  */
-            break;
-        case 245:   /* 11110 101  |||  */
-            break;
-        case 246:   /* 11110 110  NAND(A,NXOR(B,C))  */
-            bitX = ~(bitA & (~(bitB ^ bitC)));
-            break;
-        case 247:   /* 11110 111  NAND(A,NOR(B,C))  */
-            bitX = ~(bitA & (bitB | bitC));
-            break;
-        /* Row 31 */
-        case 248:   /* 11111 000  NAND(A,OR(B,C)  */
-            bitX = ~(bitA & (bitB | bitC));
-            break;
-        case 249:   /* 11111 001  NAND(A,XOR(B,C))  */
-            bitX = ~(bitA & (bitB ^ bitC));
-            break;
-        case 250:   /* 11111 010  |||  */
-            break;
-        case 251:   /* 11111 011  +++  */
-            break;
-        case 252:   /* 11111 100  |||  */
-            break;
-        case 253:   /* 11111 101  +++  */
-            break;
-        case 254:   /* 11111 110  NAND(A,B,C)  */
-            bitX = ~(bitA & bitB & bitC);
-            break;
-        case 255:   /* 11111 111  |||  */
-            break;
-        /* Should not occur! */
-        default:
-            break;
-        }
-
-        if (bitX & 1)
-        {
-            bitresult.Q.D.H.D = 0x8000000000000000ull;
-            bitresult.Q.D.L.D = 0x0000000000000000ull;
-            bitresult = U128_shrl( bitresult, i );
-            tempv1.Q.D.H.D |= bitresult.Q.D.H.D;
-            tempv1.Q.D.L.D |= bitresult.Q.D.L.D;
-        }
-
-        bitmask = U128_shrl( bitmask, 1 );
+    /* Row 0 */
+    case 0:     /* 00000 000  |||  */
+        break;
+    case 1:     /* 00000 001  AND(A,B,C)  */
+        tempv1 = U128_and(tempv2, U128_and(tempv3, tempv4));
+        break;
+    case 2:     /* 00000 010  +++  */
+        break;
+    case 3:     /* 00000 011  |||  */
+        break;
+    case 4:     /* 00000 100  +++  */
+        break;
+    case 5:     /* 00000 101  |||  */
+        break;
+    case 6:     /* 00000 110  AND(A,XOR(B,C))  */
+        tempv1 = U128_and(tempv2, U128_xor(tempv3, tempv4));
+        break;
+    case 7:     /* 00000 111  AND(A,OR(B,C))  */
+        tempv1 = U128_and(tempv2, U128_or(tempv3, tempv4));
+        break;
+    /* Row 1 */
+    case 8:     /* 00001 000  AND(A,NOR(B,C))  */
+        tempv1 = U128_and(tempv2, U128_nor(tempv3, tempv4));
+        break;
+    case 9:     /* 00001 001  AND(A,NXOR(B,C))  */
+        tempv1 = U128_and(tempv2, U128_nxor(tempv3, tempv4));
+        break;
+    case 10:    /* 00001 010  |||  */
+        break;
+    case 11:    /* 00001 011  +++  */
+        break;
+    case 12:    /* 00001 100  |||  */
+        break;
+    case 13:    /* 00001 101  +++  */
+        break;
+    case 14:    /* 00001 110  AND(A,NAND(B,C))  */
+        tempv1 = U128_and(tempv2, U128_nand(tempv3, tempv4));
+        break;
+    case 15:    /* 00001 111  |||  */
+        break;
+    /* Row 2 */
+    case 16:    /* 00010 000  NOR(A,NAND(B,C))  */
+        tempv1 = U128_nor(tempv2, U128_nand(tempv3, tempv4));
+        break;
+    case 17:    /* 00010 001  |||  */
+        break;
+    case 18:    /* 00010 010  +++  */
+        break;
+    case 19:    /* 00010 011  +++  */
+        break;
+    case 20:    /* 00010 100  +++  */
+        break;
+    case 21:    /* 00010 101  +++  */
+        break;
+    case 22:    /* 00010 110  SEL(A,XOR(B,C),AND(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_xor(tempv3x, tempv4x);
+        tempv1y = U128_and(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 23:    /* 00010 111  MAJOR(A,B,C)  */
+        tempv1 = U128_major_minor(tempv2, tempv3, tempv4, TRUE);
+        break;
+    /* Row 3 */
+    case 24:    /* 00011 000  SEL(A,NOR(B,C),AND(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nor(tempv3x, tempv4x);
+        tempv1y = U128_and(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 25:    /* 00011 001  SEL(A,NXOR(B,C),AND(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nxor(tempv3x, tempv4x);
+        tempv1y = U128_and(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 26:    /* 00011 010  +++  */
+        break;
+    case 27:    /* 00011 011  |||  */
+        break;
+    case 28:    /* 00011 100  SEL(A,NOT(B),AND(B,C)) */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_not(tempv3x);
+        tempv1y = U128_and(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 29:    /* 00011 101  |||  */
+        break;
+    case 30:    /* 00011 110  XOR(A,AND(B,C))  */
+        tempv1 = U128_xor(tempv2, U128_and(tempv3, tempv4));
+        break;
+    case 31:    /* 00011 111  OR(A,AND(B,C))  */
+        tempv1 = U128_or(tempv2, U128_and(tempv3, tempv4));
+        break;
+    /* Row 4 */
+    case 32:    /* 00100 000  +++  */
+        break;
+    case 33:    /* 00100 001  +++  */
+        break;
+    case 34:    /* 00100 010  |||  */
+        break;
+    case 35:    /* 00100 011  +++  */
+        break;
+    case 36:    /* 00100 100  +++  */
+        break;
+    case 37:    /* 00100 101  +++  */
+        break;
+    case 38:    /* 00100 110  +++  */
+        break;
+    case 39:    /* 00100 111  |||  */
+        break;
+    /* Row 5 */
+    case 40:    /* 00101 000  +++  */
+        break;
+    case 41:    /* 00101 001  +++  */
+        break;
+    case 42:    /* 00101 010  +++  */
+        break;
+    case 43:    /* 00101 011  +++  */
+        break;
+    case 44:    /* 00101 100  +++  */
+        break;
+    case 45:    /* 00101 101  +++  */
+        break;
+    case 46:    /* 00101 110  +++  */
+        break;
+    case 47:    /* 00101 111  +++  */
+        break;
+    /* Row 6 */
+    case 48:    /* 00110 000  |||  */
+        break;
+    case 49:    /* 00110 001  +++  */
+        break;
+    case 50:    /* 00110 010  +++  */
+        break;
+    case 51:    /* 00110 011  |||  */
+        break;
+    case 52:    /* 00110 100  +++  */
+        break;
+    case 53:    /* 00110 101  |||  */
+        break;
+    case 54:    /* 00110 110  +++  */
+        break;
+    case 55:    /* 00110 111  +++  */
+        break;
+    /* Row 7 */
+    case 56:    /* 00111 000  +++  */
+        break;
+    case 57:    /* 00111 001  +++  */
+        break;
+    case 58:    /* 00111 010  +++  */
+        break;
+    case 59:    /* 00111 011  +++  */
+        break;
+    case 60:    /* 00111 100  |||  */
+        break;
+    case 61:    /* 00111 101  +++  */
+        break;
+    case 62:    /* 00111 110  +++  */
+        break;
+    case 63:    /* 00111 111  |||  */
+        break;
+    /* Row 8 */
+    case 64:    /* 01000 000  +++  */
+        break;
+    case 65:    /* 01000 001  +++  */
+        break;
+    case 66:    /* 01000 010  +++  */
+        break;
+    case 67:    /* 01000 011  +++  */
+        break;
+    case 68:    /* 01000 100  |||  */
+        break;
+    case 69:    /* 01000 101  +++  */
+        break;
+    case 70:    /* 01000 110  +++  */
+        break;
+    case 71:    /* 01000 111  |||  */
+        break;
+    /* Row 9  */
+    case 72:    /* 01001 000  +++  */
+        break;
+    case 73:    /* 01001 001  +++  */
+        break;
+    case 74:    /* 01001 010  +++  */
+        break;
+    case 75:    /* 01001 011  +++  */
+        break;
+    case 76:    /* 01001 100  +++  */
+        break;
+    case 77:    /* 01001 101  +++  */
+        break;
+    case 78:    /* 01001 110  +++  */
+        break;
+    case 79:    /* 01001 111  +++  */
+        break;
+    /* Row 10 */
+    case 80:    /* 01010 000  |||  */
+        break;
+    case 81:    /* 01010 001  SEL(A,AND(B,C),C)  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_and(tempv3x, tempv4x);
+        tempv1y = tempv4y;
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 82:    /* 01010 010  +++  */
+        break;
+    case 83:    /* 01010 011  |||  */
+        break;
+    case 84:    /* 01010 100  +++  */
+        break;
+    case 85:    /* 01010 101  |||  */
+        break;
+    case 86:    /* 01010 110  +++  */
+        break;
+    case 87:    /* 01010 111  +++  */
+        break;
+    /* Row 11 */
+    case 88:    /* 01011 000  SEL(A,NOR(B,C),C)  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nor(tempv3x, tempv4x);
+        tempv1y = tempv4y;
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 89:    /* 01011 001  SEL(A,NXOR(B,C),C)  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nxor(tempv3x, tempv4x);
+        tempv1y = tempv4y;
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 90:    /* 01011 010  |||  */
+        break;
+    case 91:    /* 01011 011   +++  */
+        break;
+    case 92:    /* 01011 100  SEL(A,NOT(B),C)  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_not(tempv3x);
+        tempv1y = tempv4y;
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 93:    /* 01011 101  +++  */
+        break;
+    case 94:    /* 01011 110  SEL(A,NAND(B,C),C)  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nand(tempv3x, tempv4x);
+        tempv1y = tempv4y;
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 95:    /* 01011 111  |||  */
+        break;
+    /* Row 12 */
+    case 96:    /* 01100 000  NOR(A,NXOR(B,C))  */
+        tempv1 = U128_nor(tempv2, U128_nxor(tempv3, tempv4));
+        break;
+    case 97:    /* 01100 001  SEL(A,AND(B,C),XOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_and(tempv3x, tempv4x);
+        tempv1y = U128_xor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 98:    /* 01100 010   +++  */
+        break;
+    case 99:    /* 01100 011  SEL(A,B,XOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = tempv3x;
+        tempv1y = U128_xor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 100:   /* 01100 100  +++  */
+        break;
+    case 101:   /* 01100 101  +++  */
+        break;
+    case 102:   /* 01100 110  |||  */
+        break;
+    case 103:   /* 01100 111  SEL(A,OR(B,C),XOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_or(tempv3x, tempv4x);
+        tempv1y = U128_xor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    /* Row 13 */
+    case 104:   /* 01101 000  SEL(A,NOR(B,C),XOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nor(tempv3x, tempv4x);
+        tempv1y = U128_xor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 105:   /* 01101 001  XOR(A,B,C)  */
+        tempv1 = U128_xor(tempv2, U128_xor(tempv3, tempv4));
+        break;
+    case 106:   /* 01101 010  +++  */
+        break;
+    case 107:   /* 01101 011  +++  */
+        break;
+    case 108:   /* 01101 100  +++  */
+        break;
+    case 109:   /* 01101 101  +++  */
+        break;
+    case 110:   /* 01101 110  +++  */
+        break;
+    case 111:   /* 01101 111  OR(A,XOR(B,C))  */
+        tempv1 = U128_or(tempv2, U128_xor(tempv3, tempv4));
+        break;
+    /* Row 14 */
+    case 112:   /* 01110 000  NOR(A,NOR(B,C))  */
+        tempv1 = U128_nor(tempv2, U128_nor(tempv3, tempv4));
+        break;
+    case 113:   /* 01110 001  SEL(A,AND(B,C),OR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_and(tempv3x, tempv4x);
+        tempv1y = U128_or(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 114:   /* 01110 010  +++  */
+        break;
+    case 115:   /* 01110 011  SEL(A,B,OR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = tempv3x;
+        tempv1y = U128_or(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 116:   /* 01110 100  +++  */
+        break;
+    case 117:   /* 01110 101  +++  */
+        break;
+    case 118:   /* 01110 110  +++  */
+        break;
+    case 119:   /* 01110 111  |||  */
+        break;
+    /* Row 15 */
+    case 120:   /* 01111 000  XOR(A,OR(B,C))  */
+        tempv1 = U128_xor(tempv2, U128_or(tempv3, tempv4));
+        break;
+    case 121:   /* 01111 001  SEL(A,NXOR(B,C),OR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nxor(tempv3x, tempv4x);
+        tempv1y = U128_or(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 122:   /* 01111 010  +++  */
+        break;
+    case 123:   /* 01111 011  +++  */
+        break;
+    case 124:   /* 01111 100  SEL(A,NOT(B),OR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_not(tempv3x);
+        tempv1y = U128_or(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 125:   /* 01111 101  +++  */
+        break;
+    case 126:   /* 01111 110  SEL(A,NAND(B,C),OR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nand(tempv3x, tempv4x);
+        tempv1y = U128_or(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 127:   /* 01111 111  OR(A,B,C)  */
+        tempv1 = U128_or(tempv2, U128_or(tempv3, tempv4));
+        break;
+    /* Row 16 */
+    case 128:   /* 10000 000  NOR(A,B,C)  */
+        tempv1 = U128_nor(tempv2, U128_nor(tempv3, tempv4));
+        break;
+    case 129:   /* 10000 001  SEL(A,AND(B,C),NOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_and(tempv3x, tempv4x);
+        tempv1y = U128_nor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 130:   /* 10000 010  +++  */
+        break;
+    case 131:   /* 10000 011  SEL(A,B,NOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = tempv3x;
+        tempv1y = U128_nor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 132:   /* 10000 100  +++  */
+        break;
+    case 133:   /* 10000 101  +++  */
+        break;
+    case 134:   /* 10000 110  SEL(A,XOR(B,C),NOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_xor(tempv3x, tempv4x);
+        tempv1y = U128_nor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 135:   /* 10000 111  NXOR(A,OR(B,C))  */
+        tempv1 = U128_nxor(tempv2, U128_or(tempv3, tempv4));
+        break;
+    /* Row 17 */
+    case 136:   /* 10001 000  |||  */
+        break;
+    case 137:   /* 10001 001  +++  */
+        break;
+    case 138:   /* 10001 010  +++  */
+        break;
+    case 139:   /* 10001 011  +++  */
+        break;
+    case 140:   /* 10001 100  SEL(A,NOT(B),NOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_not(tempv3x);
+        tempv1y = U128_nor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 141:   /* 10001 101  +++  */
+        break;
+    case 142:   /* 10001 110  SEL(A,NAND(B,C),NOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nand(tempv3x, tempv4x);
+        tempv1y = U128_nor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 143:   /* 10001 111  OR(A,NOR(B,C))  */
+        tempv1 = U128_or(tempv2, U128_nor(tempv3, tempv4));
+        break;
+    /* Row 18 */
+    case 144:   /* 10010 000  NOR(A,XOR(B,C))  */
+        tempv1 = U128_nor(tempv2, U128_xor(tempv3, tempv4));
+        break;
+    case 145:   /* 10010 001  +++  */
+        break;
+    case 146:   /* 10010 010  +++  */
+        break;
+    case 147:   /* 10010 011  +++  */
+        break;
+    case 148:   /* 10010 100  +++  */
+        break;
+    case 149:   /* 10010 101  +++  */
+        break;
+    case 150:   /* 10010 110  NXOR(A,B,C)  */
+        tempv1 = U128_nxor(tempv2, U128_nxor(tempv3, tempv4));
+        break;
+    case 151:   /* 10010 111  SEL(A,OR(B,C),NXOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_or(tempv3x, tempv4x);
+        tempv1y = U128_nxor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    /* Row 19 */
+    case 152:   /* 10011 000  SEL(A,NOR(B,C),NXOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nor(tempv3x, tempv4x);
+        tempv1y = U128_nxor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 153:   /* 10011 001  |||  */
+        break;
+    case 154:   /* 10011 010  +++  */
+        break;
+    case 155:   /* 10011 011  +++  */
+        break;
+    case 156:   /* 10011 100  SEL(A,NOT(B),NXOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_not(tempv3x);
+        tempv1y = U128_nxor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 157:   /* 10011 101  +++  */
+        break;
+    case 158:   /* 10011 110  SEL(A,NAND(B,C),NXOR(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nand(tempv3x, tempv4x);
+        tempv1y = U128_nxor(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 159:   /* 10011 111  OR(A,NXOR(B,C))  */
+        tempv1 = U128_or(tempv2, U128_nxor(tempv3, tempv4));
+        break;
+    /* Row 20 */
+    case 160:   /* 10100 000 * |||  */
+        break;
+    case 161:   /* 10100 001  SEL(A,AND(B,C),NOT(C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_and(tempv3x, tempv4x);
+        tempv1y = U128_not(tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 162:   /* 10100 010  +++  */
+        break;
+    case 163:   /* 10100 011  SEL(A,B,NOT(C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = tempv3x;
+        tempv1y = U128_not(tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 164:   /* 10100 100  +++  */
+        break;
+    case 165:   /* 10100 101  |||  */
+        break;
+    case 166:   /* 10100 110  SEL(A,XOR(B,C),NOT(C)  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_xor(tempv3x, tempv4x);
+        tempv1y = U128_not(tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 167:   /* 10100 111  SEL(A,OR(B,C),NOT(C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_or(tempv3x, tempv4x);
+        tempv1y = U128_not(tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    /* Row 21 */
+    case 168:   /* 10101 000  +++  */
+        break;
+    case 169:   /* 10101 001  +++  */
+        break;
+    case 170:   /* 10101 010  |||  */
+        break;
+    case 171:   /* 10101 011  +++  */
+        break;
+    case 172:   /* 10101 100  SEL(A,NOT(B),NOT(C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_not(tempv3x);
+        tempv1y = U128_not(tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 173:   /* 10101 101  +++  */
+        break;
+    case 174:   /* 10101 110  SEL(A,NAND(B,C),NOT(C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nand(tempv3x, tempv4x);
+        tempv1y = U128_not(tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 175:   /* 10101 111  |||  */
+        break;
+    /* Row 22 */
+    case 176:   /* 10110 000  +++  */
+        break;
+    case 177:   /* 10110 001  +++  */
+        break;
+    case 178:   /* 10110 010  +++  */
+        break;
+    case 179:   /* 10110 011  +++  */
+        break;
+    case 180:   /* 10110 100  +++  */
+        break;
+    case 181:   /* 10110 101  +++  */
+        break;
+    case 182:   /* 10110 110  +++  */
+        break;
+    case 183:   /* 10110 111  +++  */
+        break;
+    /* Row 23 */
+    case 184:   /* 10111 000  +++  */
+        break;
+    case 185:   /* 10111 001  +++  */
+        break;
+    case 186:   /* 10111 010  +++  */
+        break;
+    case 187:   /* 10111 011  |||  */
+        break;
+    case 188:   /* 10111 100  +++  */
+        break;
+    case 189:   /* 10111 101  +++  */
+        break;
+    case 190:   /* 10111 110  +++  */
+        break;
+    case 191:   /* 10111 111  +++  */
+        break;
+    /* Row 24 */
+    case 192:   /* 11000 000  |||  */
+        break;
+    case 193:   /* 11000 001  +++  */
+        break;
+    case 194:   /* 11000 010  +++  */
+        break;
+    case 195:   /* 11000 011  |||  */
+        break;
+    case 196:   /* 11000 100  +++  */
+        break;
+    case 197:   /* 11000 101  +++  */
+        break;
+    case 198:   /* 11000 110  +++  */
+        break;
+    case 199:   /* 11000 111  +++  */
+        break;
+    /* Row 25 */
+    case 200:   /* 11001 000  +++  */
+        break;
+    case 201:   /* 11001 001  +++  */
+        break;
+    case 202:   /* 11001 010  +++  */
+        break;
+    case 203:   /* 11001 011  +++  */
+        break;
+    case 204:   /* 11001 100  |||  */
+        break;
+    case 205:   /* 11001 101  +++  */
+        break;
+    case 206:   /* 11001 110  +++  */
+        break;
+    case 207:   /* 11001 111  ||| */
+        break;
+    /* Row 26 */
+    case 208:   /* 11010 000  +++  */
+        break;
+    case 209:   /* 11010 001  +++  */
+        break;
+    case 210:   /* 11010 010  +++  */
+        break;
+    case 211:   /* 11010 011  +++  */
+        break;
+    case 212:   /* 11010 100  +++  */
+        break;
+    case 213:   /* 11010 101  +++  */
+        break;
+    case 214:   /* 11010 110  +++  */
+        break;
+    case 215:   /* 11010 111  +++  */
+        break;
+    /* Row 27 */
+    case 216:   /* 11011 000  +++  */
+        break;
+    case 217:   /* 11011 001  +++  */
+        break;
+    case 218:   /* 11011 010  +++  */
+        break;
+    case 219:   /* 11011 011  +++  */
+        break;
+    case 220:   /* 11011 100  +++  */
+        break;
+    case 221:   /* 11011 101  |||  */
+        break;
+    case 222:   /* 11011 110  +++  */
+        break;
+    case 223:   /* 11011 111  +++  */
+        break;
+    /* Row 28 */
+    case 224:   /* 11100 000  NOR(A,AND(B,C))  */
+        tempv1 = U128_nor(tempv2, U128_and(tempv3, tempv4));
+        break;
+    case 225:   /* 11100 001  NXOR(A,AND(B,C))  */
+        tempv1 = U128_nxor(tempv2, U128_and(tempv3, tempv4));
+        break;
+    case 226:   /* 11100 010  +++  */
+        break;
+    case 227:   /* 11100 011  SEL(A,B,NAND(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = tempv3x;
+        tempv1y = U128_nand(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 228:   /* 11100 100  +++  */
+        break;
+    case 229:   /* 11100 101  +++  */
+        break;
+    case 230:   /* 11100 110  SEL(A,XOR(B,C),NAND(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_xor(tempv3x, tempv4x);
+        tempv1y = U128_nand(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 231:   /* 11100 111  SEL(A,OR(B,C),NAND(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_or(tempv3x, tempv4x);
+        tempv1y = U128_nand(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    /* Row 29 */
+    case 232:   /* 11101 000  MINOR(A,B,C)  */
+        tempv1 = U128_major_minor(tempv2, tempv3, tempv4, FALSE);
+        break;
+    case 233:   /* 11101 001  SEL(A,NXOR(B,C),NAND(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_nxor(tempv3x, tempv4x);
+        tempv1y = U128_nand(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+        tempv1 = U128_or(tempv1x, tempv1y);
+        break;
+    case 234:   /* 11101 010  +++  */
+        break;
+    case 235:   /* 11101 011  +++  */
+        break;
+    case 236:   /* 11101 100  +++  */
+        break;
+    case 237:   /* 11101 101  +++  */
+        break;
+    case 238:   /* 11101 110  |||  */
+        break;
+    case 239:   /* 11101 111  OR(A,NAND(B,C))  */
+        tempv1 = U128_or(tempv2, U128_nand(tempv3, tempv4));
+        break;
+    /* Row 30 */
+    case 240:   /* 11110 000  |||  */
+        break;
+    case 241:   /* 11110 001  NAND(A,NAND(B,C))  */
+        tempv1 = U128_nand(tempv2, U128_nand(tempv3, tempv4));
+        break;
+    case 242:   /* 11110 010  +++  */
+        break;
+    case 243:   /* 11110 011  |||  */
+        break;
+    case 244:   /* 11110 100  +++  */
+        break;
+    case 245:   /* 11110 101  |||  */
+        break;
+    case 246:   /* 11110 110  NAND(A,NXOR(B,C))  */
+        tempv1 = U128_nand(tempv2, U128_nxor(tempv3, tempv4));
+        break;
+    case 247:   /* 11110 111  NAND(A,NOR(B,C))  */
+        tempv1 = U128_nand(tempv2, U128_nor(tempv3, tempv4));
+        break;
+    /* Row 31 */
+    case 248:   /* 11111 000  NAND(A,OR(B,C))  */
+        tempv1 = U128_nand(tempv2, U128_or(tempv3, tempv4));
+        break;
+    case 249:   /* 11111 001  NAND(A,XOR(B,C))  */
+        tempv1 = U128_nand(tempv2, U128_xor(tempv3, tempv4));
+        break;
+    case 250:   /* 11111 010  |||  */
+        break;
+    case 251:   /* 11111 011  +++  */
+        break;
+    case 252:   /* 11111 100  |||  */
+        break;
+    case 253:   /* 11111 101  +++  */
+        break;
+    case 254:   /* 11111 110  NAND(A,B,C)  */
+        tempv1 = U128_nand(tempv2, U128_nand(tempv3, tempv4));
+        break;
+    case 255:   /* 11111 111  |||  */
+        break;
     }
 
     regs->VR_Q(v1) = tempv1.Q;
@@ -7691,9 +7979,9 @@ DEF_INST( vector_multiply_sum_logical )
         intere = U128_mul_64( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
         intero = U128_mul_64( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
         if (M6_ES)
-            intere = U128_U32_mul( intere, 2 );  // Shift left
+            intere = U128_mul_32( intere, 2 );  // Shift left
         if (M6_OS)
-            intero = U128_U32_mul( intero, 2 );  // Shift left
+            intero = U128_mul_32( intero, 2 );  // Shift left
         intere = U128_add( intere, intero );
 #if defined( _MSVC_ )
         copyv4.Q = regs->VR_Q(v4);
