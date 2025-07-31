@@ -4793,8 +4793,8 @@ DEF_INST( vector_evaluate )
 {
     int     v1, v2, v3, v4, i5;
     U128    tempv1, tempv2, tempv3, tempv4;
-    U128    tnotv2;
-    U128    tempv1x, tempv1y, /* tempv2x, tempv2y, */ tempv3x, tempv3y, tempv4x, tempv4y;
+    U128    tnotv2, tnotv3, tnotv4;
+    U128    tempv1x, tempv1y, tempv2x, tempv2y, tempv3x, tempv3y, tempv4x, tempv4y;
 
     VRI_K( inst, regs, v1, v2, v3, v4, i5 );
 
@@ -4805,6 +4805,8 @@ DEF_INST( vector_evaluate )
     tempv3.Q = regs->VR_Q(v3);
     tempv4.Q = regs->VR_Q(v4);
     tnotv2 = U128_not( tempv2 );
+    tnotv3 = U128_not( tempv3 );
+    tnotv4 = U128_not( tempv4 );
 
     switch (i5)
     {
@@ -5716,6 +5718,43 @@ DEF_INST( vector_evaluate )
         tempv1 = U128_nand(tempv2, U128_nand(tempv3, tempv4));
         break;
     case 255:   /* 11111 111  |||  */
+        break;
+    default:
+//  The default code is here to 1) prevent compiler warnings,
+//  and 2) as examples of possible future requirements. I've
+//  assumed B is B,C,A, but it might equally be B,A,C!  C,A
+//  or A,C doesn't matter in the example below, but there are
+//  SEL's were the order would matter, e.g. SEL(B,C,NOT(A)).
+//  case 22:    /* 00010 110  SEL(A,XOR(B,C),AND(B,C))  */
+        tempv3x = U128_and(tempv3, tempv2);
+        tempv3y = U128_and(tempv3, tnotv2);
+        tempv4x = U128_and(tempv4, tempv2);
+        tempv4y = U128_and(tempv4, tnotv2);
+        tempv1x = U128_xor(tempv3x, tempv4x);
+        tempv1y = U128_and(tempv3y, tempv4y);
+        tempv1x = U128_and(tempv1x, tempv2);
+        tempv1y = U128_and(tempv1y, tnotv2);
+//      tempv1 = U128_or(tempv1x, tempv1y);
+//  case ??:    /* ????? ???  SEL(B,XOR(C,A),AND(C,A))  */
+        tempv4x = U128_and(tempv4, tempv3);
+        tempv4y = U128_and(tempv4, tnotv3);
+        tempv2x = U128_and(tempv2, tempv3);
+        tempv2y = U128_and(tempv2, tnotv3);
+        tempv1x = U128_xor(tempv4x, tempv2x);
+        tempv1y = U128_and(tempv4y, tempv2y);
+        tempv1x = U128_and(tempv1x, tempv3);
+        tempv1y = U128_and(tempv1y, tnotv3);
+//      tempv1 = U128_or(tempv1x, tempv1y);
+//  case ??:    /* ????? ???  SEL(C,XOR(A,B),AND(A,B))  */
+        tempv2x = U128_and(tempv2, tempv4);
+        tempv2y = U128_and(tempv2, tnotv4);
+        tempv3x = U128_and(tempv3, tempv4);
+        tempv3y = U128_and(tempv3, tnotv4);
+        tempv1x = U128_xor(tempv2x, tempv3x);
+        tempv1y = U128_and(tempv2y, tempv3y);
+        tempv1x = U128_and(tempv1x, tempv4);
+        tempv1y = U128_and(tempv1y, tnotv4);
+//      tempv1 = U128_or(tempv1x, tempv1y);
         break;
     }
 
