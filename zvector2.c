@@ -4381,15 +4381,19 @@ DEF_INST( vector_convert_to_decimal_64 )
 DEF_INST( vector_perform_sign_operation_decimal )
 {
     int     v1, v2, i4, m5, i3; /* Instruction parts                 */
+
                                /* i3 bits                            */
     bool    iom;               /* Instruction-Overflow Mask (IOM)    */
     int     rdc;               /* Result Digits Count (RDC): Bits 3-7*/
+
                                /* i4 bits                            */
     bool    nv;                /* No Validation (NV): bit 0          */
     bool    nz;                /* Negative Zero (NZ): bit 1          */
+    bool    ps;                /* Preserve sign (PS) control: bit 3  */
     U8      so;                /* Sign Operation (SO): Bits 4-5      */
     bool    pc;                /* Positive Sign Code (PC): bit 6     */
     bool    sv;                /* Op 2 Sign Validation (SV): bit 7   */
+
                                /* m5 bits                            */
     bool    cs;                /* Condition Code Set (CS):     bit 3 */
 
@@ -4423,6 +4427,7 @@ DEF_INST( vector_perform_sign_operation_decimal )
     /* i4 parts */
     nv = (i4 & 0x80) ? true : false;
     nz = (i4 & 0x40) ? true : false;
+    ps = (i4 & 0x10) ? true : false;
     so = (i4 & 0x0C) >> 2;
     pc = (i4 & 0x02) ? true : false;
     sv = (i4 & 0x01) ? true : false;
@@ -4431,6 +4436,11 @@ DEF_INST( vector_perform_sign_operation_decimal )
     {
         nv = false;        /* validate digits  */
         nz = false;        /* no negative zero */
+    }
+
+    if ( !FACILITY_ENABLED( 199_VECT_PACKDEC_ENH_3, regs ) )
+    {
+        ps = false;        /* preserve sign  */
     }
 
     /* m5 parts */
@@ -4467,39 +4477,60 @@ DEF_INST( vector_perform_sign_operation_decimal )
     {
         case 0x00:                     /* 00 (maintain)       */
         {
-            if (isZero)
-            {
-               if ( LV_HAS_PLUS_SIGN( LV2 ) && pc )
-                    { cc = 0; SET_VR_SIGN( v1, PREFERRED_ZONE);  break;  }
+            if (ps)
+            {   /* PS==1; Perserve Sign*/
+                if (isZero)
+                {
+                        { cc = 0; break;  }
+                }
+                else
+                {
+                    if ( LV_HAS_PLUS_SIGN( LV2 ) )
+                        { cc = 2; break;  }
 
-                if ( LV_HAS_PLUS_SIGN( LV2 ) && !pc )
-                    { cc = 0; SET_VR_SIGN( v1, PREFERRED_PLUS);  break;  }
+                    if ( LV_HAS_MINUS_SIGN( LV2 ) )
+                        { cc = 1;  break;  }
 
-                if ( LV_HAS_MINUS_SIGN( LV2 ) && !pc && !nz )
-                    { cc = 0; SET_VR_SIGN( v1, PREFERRED_PLUS);  break;  }
-
-                if ( LV_HAS_MINUS_SIGN( LV2 ) && pc && !nz )
-                    { cc = 0; SET_VR_SIGN( v1, PREFERRED_ZONE);  break;  }
-
-                if ( LV_HAS_MINUS_SIGN( LV2 ) && nz )
-                    { cc = 0; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
-
-                if ( !LV_HAS_VALID_SIGN( LV2 ) )
-                    { cc = 0; break;  }
+                    if ( !LV_HAS_VALID_SIGN( LV2 ) )
+                        { cc = 2; break;  }
+                }
             }
             else
-            {
+            {   /* PS==0; Perserve Sign*/
+                if (isZero)
+                {
                 if ( LV_HAS_PLUS_SIGN( LV2 ) && pc )
-                    { cc = 2; SET_VR_SIGN( v1, PREFERRED_ZONE);  break;  }
+                        { cc = 0; SET_VR_SIGN( v1, PREFERRED_ZONE);  break;  }
 
-                if ( LV_HAS_PLUS_SIGN( LV2 ) && !pc )
-                    { cc = 2; SET_VR_SIGN( v1, PREFERRED_PLUS);  break;  }
+                    if ( LV_HAS_PLUS_SIGN( LV2 ) && !pc )
+                        { cc = 0; SET_VR_SIGN( v1, PREFERRED_PLUS);  break;  }
 
-                if ( LV_HAS_MINUS_SIGN( LV2 ) )
-                    { cc = 1; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
+                    if ( LV_HAS_MINUS_SIGN( LV2 ) && !pc && !nz )
+                        { cc = 0; SET_VR_SIGN( v1, PREFERRED_PLUS);  break;  }
 
-                if ( !LV_HAS_VALID_SIGN( LV2 ) )
-                    { cc = 2; break;  }
+                    if ( LV_HAS_MINUS_SIGN( LV2 ) && pc && !nz )
+                        { cc = 0; SET_VR_SIGN( v1, PREFERRED_ZONE);  break;  }
+
+                    if ( LV_HAS_MINUS_SIGN( LV2 ) && nz )
+                        { cc = 0; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
+
+                    if ( !LV_HAS_VALID_SIGN( LV2 ) )
+                        { cc = 0; break;  }
+                }
+                else
+                {
+                    if ( LV_HAS_PLUS_SIGN( LV2 ) && pc )
+                        { cc = 2; SET_VR_SIGN( v1, PREFERRED_ZONE);  break;  }
+
+                    if ( LV_HAS_PLUS_SIGN( LV2 ) && !pc )
+                        { cc = 2; SET_VR_SIGN( v1, PREFERRED_PLUS);  break;  }
+
+                    if ( LV_HAS_MINUS_SIGN( LV2 ) )
+                        { cc = 1; SET_VR_SIGN( v1, PREFERRED_MINUS);  break;  }
+
+                    if ( !LV_HAS_VALID_SIGN( LV2 ) )
+                        { cc = 2; break;  }
+                }
             }
         }
         break;
