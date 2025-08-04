@@ -3360,7 +3360,7 @@ IPRINT_FUNC(ASMFMT_VRI_L);
     UNREFERENCED(regs);
     v1 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
     v2 = ((inst[2] >> 4) & 0x0F) | ((inst[4] & 0x02) << 3);
-    i3 = ((inst[3] & 0x0F) << 12) | ((inst[4] & 0xFF) << 4) | ((inst[5] & 0xF0) >> 4);
+    i3 = ((inst[2] & 0x0F) << 12) | ((inst[3] & 0xFF) << 4) | ((inst[4] & 0xF0) >> 4);
     IPRINT_PRINT("%d,%d,%d", v1, v2, i3)
 
 IPRINT_FUNC(ASMFMT_VRR_A);
