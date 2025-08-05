@@ -2860,6 +2860,130 @@ static inline void hexNumberToExtendedFloat( hexNumber* hn, EXTENDED_FLOAT* ef )
     ef->expo = hn->exponent + hn->digits +64;
 }
 
+
+/*-------------------------------------------------------------------*/
+/* Extended Zone Format helpers                                        */
+/*-------------------------------------------------------------------*/
+
+/* zoned byte  */
+enum ZONED_BYTE_FORMAT
+{
+    SD_BYTE =1,         // SD-byte format (sign and digit)
+    ZD_BYTE,            // ZD-byte format (zone and digit)
+    SP_BYTE,            // SP-byte format (space)
+    SS_BYTE             // SS-byte format (separate sign)
+};
+
+/*-------------------------------------------------------------------*/
+/* Check a zoned source vector sign is valid                         */
+/*                                                                   */
+/* Input:                                                            */
+/*      sign    signed byte                                          */
+/*      zsf     zoned byte format of sign                            */
+/*      isZero  is the zoned =number zero?                           */
+/*      stc     Sign-Test Control (STC) (value 0-7)                  */
+/*                                                                   */
+/* Returns:                                                          */
+/*              true:  the sign is valid                             */
+/*              false: the sign is invalid                           */
+/*-------------------------------------------------------------------*/
+static inline bool  zoned_valid_sign_enhanced (
+                            BYTE sign,        /* zoned byte containing the sign     */
+                            enum ZONED_BYTE_FORMAT zsf,  /* sign format              */
+                            bool isZero,     /* is the zone number zero?           */
+                            int  stc)        /* Sign-Test Control (STC) (value 0-7) */
+{
+    bool    valid = TRUE;                   /* valid result              */
+
+    if (zsf == SS_BYTE)
+    {
+        /* SS formated sign */
+        switch (stc)
+        {
+            case 2: /* STC = 010 */
+                valid =  sign == 0X4E || sign == 0X60;
+                break;
+
+            case 3: /* STC = 010 */
+                if (isZero)
+                {
+                    valid =  sign == 0X4E;
+                }
+                else
+                {
+                    valid =  sign == 0X4E || sign == 0X60;
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    else
+    {
+        /* SD formated sign */
+        sign = ZONED_SIGN( sign ) ;
+        switch (stc)
+        {
+            case 0:  /* STC = 000 */
+                valid =  sign >= 0X0A;
+                break;
+
+            case 1:  /* STC = 001 */
+                if (isZero)
+                {
+                    valid =  sign == 0x0A || sign == 0x0C || sign == 0x0E || sign == 0x0F;
+                }
+                else
+                {
+                    valid =  sign >= 0X0A;
+                }
+                break;
+
+            case 2:  /* STC = 010 */
+                valid =  sign == 0x0C || sign == 0x0D;
+                break;
+
+            case 3:  /* STC = 011 */
+                if (isZero)
+                {
+                    valid =  sign == 0X0C;
+                }
+                else
+                {
+                    valid =  sign == 0x0C || sign == 0x0D;
+                }
+                break;
+
+            case 4:  /* STC = 100 */
+            case 5:  /* STC = 101 */
+                valid =  sign == 0X0F;
+                break;
+
+            case 6:  /* STC = 110 */
+                valid =  sign == 0x0C || sign == 0x0D || sign == 0x0F;
+                break;
+
+            case 7:  /* STC = 111 */
+                if (isZero)
+                {
+                    valid =  sign == 0x0C || sign == 0x0F;
+                }
+                else
+                {
+                    valid =  sign == 0x0C || sign == 0x0D || sign == 0x0F;
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    return valid;
+}
+
 #endif /*!defined(_ZVECTOR2_ARCH_INDEPENDENT_)*/
 
 
@@ -6119,21 +6243,218 @@ DEF_INST( vector_shift_and_divide_decimal )
 
 #if defined( FEATURE_199_VECT_PACKDEC_ENH_FACILITY_3 )
 /*-------------------------------------------------------------------*/
-/* E67F VTZ    - VECTOR TEST ZONED                           [VRI-l] */
+/* E67F VTZ    - Vector Test Zoned                           [VRI-l] */
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_test_zoned )
 {
-    int     v1, v2, i3;        /* Instruction parts                  */
-//    bool    valid_decimal;     /* decimal validation failed?         */
-//    bool    valid_sign;        /* sign validation failed?            */
-//    U8      cc;                /* condition code                     */
+    int     v1, v2, i3;        /* Instruction parts                        */
+
+                               /* i3 bits                                  */
+    bool    ssc;               /* Separate-Sign Control (SSC): bit 1       */
+    bool    ls;                /* Leading Sign (LS): bit 2                 */
+    U8      dsc;               /* Disallowed-Spaces Count (DSC): bits 3-7  */
+    U8      stc;               /* Sign-Test Control (STC): Bits 8-10       */
+    U8      dc;                /* Digits Count (DC): Bits 11-15            */
+
+    SV      temp;              /* 32 byte source vector                    */
+    bool    valid_decimal;     /* decimal validation failed?               */
+    bool    valid_sign;        /* sign validation failed?                  */
+    U8      cc;                /* condition code                           */
+
+    int     i;                  /* array index                             */
+    bool    isZero;             /* is the zoned value 0?                   */
+    BYTE    sign;               /* sign byte                               */
+    enum ZONED_BYTE_FORMAT zsf; /* zoned sign byte format                  */
 
     VRI_L( inst, regs, v1, v2, i3 );
 
     ZVECTOR_CHECK( regs );
 
-    /* FixMe! Write some code! */
-    ARCH_DEP(program_interrupt)( regs, PGM_OPERATION_EXCEPTION );
+    valid_decimal =  true;
+    valid_sign = true;
+    isZero = false;
+
+    SV_D( temp, 0 ) = regs->VR_D( v1, 0 );
+    SV_D( temp, 1 ) = regs->VR_D( v1, 1 );
+    SV_D( temp, 2 ) = regs->VR_D( v2, 0 );
+    SV_D( temp, 3 ) = regs->VR_D( v2, 1 );
+
+    /* i3 parts */
+    ssc = (i3 & 0x4000) ? true : false;
+    ls  = (i3 & 0x2000) ? true : false;
+    dsc = (i3 & 0x1F00) >> 8;
+    stc = (i3 & 0x00E0) >> 5;
+    dc  = (i3 & 0x001F);
+
+    // logmsg("VTZ: i3=%d, ssc: %d, ls: %d, dsc: %d, stc: %d, dc: %d\n", i3, ssc, ls, dsc, stc, dc);
+
+    if ( dc == 0 )          /* zero dc => Specficitcation excp    */
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* validation depends on the type of zoned format   */
+    /* Pop SA22-7832-14: Figure 25-7, page 25-34        */
+
+    if ( ssc == 0 && ls == 0 && dsc == dc )
+    {   /* ETS-type-zoned format */
+        zsf = SD_BYTE;
+        sign = SV_B( temp, 31);
+
+        /* validate digits & check isZero */
+        /* sign byte */
+        isZero = (sign & 0X0F) ? false : true;
+        valid_decimal =  ( (sign & 0X0F) <= 9 ) ? true : false;
+
+        /* N-1 ZD bytes */
+        for (i=1; i < dc ; i++)
+        {
+            if ( SV_B( temp, 31-i) < 0xF0 || SV_B( temp, 31-i) > 0xF9 )
+                {
+                    valid_decimal = false;
+                    isZero = false;
+                }
+            else
+                if ( SV_B( temp, 31-i) != 0xF0 )
+                    isZero = false;
+        }
+
+        /* validate sign */
+        valid_sign = zoned_valid_sign_enhanced( sign, zsf, isZero, stc);
+
+        // logmsg("VTZ: ETS-type: sign: %x, isZero: %d, valid_decimal: %d, valid_sign: %d\n", sign, isZero, valid_decimal, valid_sign);
+    }
+
+    else if ( ssc == 0 && ls == 0 && dsc < dc )
+    {   /* SETS-type-zoned format */
+        zsf = SD_BYTE;
+        sign = SV_B( temp, 31);
+
+        /* validate digits & check isZero */
+        /* sign byte */
+        isZero = (sign & 0X0F) ? false : true;
+        valid_decimal =  ( (sign & 0X0F) <= 9 ) ? true : false;
+
+        /* dsc ZD bytes */
+        for (i=1; i < dsc ; i++)
+        {
+            if ( SV_B( temp, 31-i) < 0xF0 || SV_B( temp, 31-i) > 0xF9 )
+                {
+                    valid_decimal = false;
+                    isZero = false;
+                }
+            else
+                if ( SV_B( temp, 31-i) != 0xF0 )
+                    isZero = false;
+        }
+
+        /* dc-dsc ZD bytes */
+        for (i=dsc; i < dc ; i++)
+        {
+            if ( SV_B( temp, 31-i) != 0x40 && ( SV_B( temp, 31-i) < 0xF0 || SV_B( temp, 31-i) > 0xF9 ) )
+                {
+                    valid_decimal = false;
+                    isZero = false;
+                }
+            else
+                if ( SV_B( temp, 31-i) != 0xF0 )
+                    isZero = false;
+        }
+
+        /* validate sign */
+        valid_sign = zoned_valid_sign_enhanced( sign, zsf, isZero, stc);
+
+        // logmsg("VTZ: SETS-type: sign: %x, isZero: %d, valid_decimal: %d, valid_sign: %d\n", sign, isZero, valid_decimal, valid_sign);
+    }
+
+    else if ( ssc == 0 && ls == 1 )
+    {   /* ELS-type-zoned format */
+        zsf = SD_BYTE;
+        sign = SV_B( temp, 31 - dc );    //imbedded sign
+
+        /* validate digits & check isZero */
+        /* sign byte */
+        isZero = (sign & 0X0F) ? false : true;
+        valid_decimal =  ( (sign & 0X0F) <= 9 ) ? true : false;
+
+        /* N-1 ZD bytes */
+        for (i=0; i < dc-1 ; i++)
+        {
+            if ( SV_B( temp, 31-i) < 0xF0 || SV_B( temp, 31-i) > 0xF9 )
+                {
+                    valid_decimal = false;
+                    isZero = false;
+                }
+            else
+                if ( SV_B( temp, 31-i) != 0xF0 )
+                    isZero = false;
+        }
+
+        /* validate sign */
+        valid_sign = zoned_valid_sign_enhanced( sign, zsf, isZero, stc);
+
+        // logmsg("VTZ: ELS-type: sign: %x, isZero: %d, valid_decimal: %d, valid_sign: %d\n", sign, isZero, valid_decimal, valid_sign);
+    }
+
+    else if ( ssc == 1 && ls == 0 )
+    {   /* STS-type-zoned format */
+        zsf = SS_BYTE;
+        sign = SV_B( temp, 31);
+
+        /* validate digits & check isZero */
+        isZero = true;
+        valid_decimal =  true;
+
+        /* N-1 ZD bytes */
+        for (i=1; i < dc ; i++)
+        {
+            if ( SV_B( temp, 31-i) < 0xF0 || SV_B( temp, 31-i) > 0xF9 )
+                {
+                    valid_decimal = false;
+                    isZero = false;
+                }
+            else
+                if ( SV_B( temp, 31-i) != 0xF0 )
+                    isZero = false;
+        }
+
+        valid_sign = zoned_valid_sign_enhanced( sign, zsf, isZero, stc);
+
+        // logmsg("VTZ: STS-type: sign: %x, isZero: %d, valid_decimal: %d, valid_sign: %d\n", sign, isZero, valid_decimal, valid_sign);
+    }
+
+    else if ( ssc == 1 && ls == 1 )
+    {   /* SLS-type-zoned format */
+        zsf = SS_BYTE;
+        sign = SV_B( temp, 31 - dc );     //separate leading sign
+
+        /* validate digits & check isZero */
+        isZero = true;
+        valid_decimal =  true;
+
+        /* N-1 ZD bytes */
+        for (i=0; i < dc ; i++)
+        {
+            if ( SV_B( temp, 31-i) < 0xF0 || SV_B( temp, 31-i) > 0xF9 )
+                {
+                    valid_decimal = false;
+                    isZero = false;
+                }
+            else
+                if ( SV_B( temp, 31-i) != 0xF0 )
+                    isZero = false;
+        }
+
+        valid_sign = zoned_valid_sign_enhanced( sign, zsf, isZero, stc);
+
+        // logmsg("VTZ: SLS-type: sign: %x, isZero: %d, valid_decimal: %d, valid_sign: %d\n", sign, isZero, valid_decimal, valid_sign);
+    }
+
+    /* set condition code */
+    cc = (valid_decimal) ?  ( (valid_sign) ? 0 : 1) :
+                            ( (valid_sign) ? 2 : 3) ;
+
+    // logmsg("VTZ: cc: %d\n", cc);
+
+    regs->psw.cc = cc;
 
     ZVECTOR_END( regs );
 }
