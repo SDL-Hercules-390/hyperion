@@ -2086,7 +2086,7 @@
 /*               and an extended opcode field.                       */
 /*-------------------------------------------------------------------*/
 
-#define VRI_J( _inst, _regs, _v1, _v2, _m4, _i3 )  VRI_J_DECODER( _inst, _regs, _v1, _v2, _m4, _i3, 6, 6 )
+#define VRI_J( _inst, _regs, _v1, _v2, _i3, _m4 )  VRI_J_DECODER( _inst, _regs, _v1, _v2, _i3, _m4, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -2094,15 +2094,15 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28          36    40         47
 
-#define VRI_J_DECODER( _inst, _regs, _v1, _v2, _m4, _i3, _len, _ilc )    \
+#define VRI_J_DECODER( _inst, _regs, _v1, _v2, _i3, _m4, _len, _ilc )    \
 {                                                                   \
     U32 temp = fetch_fw( (_inst) + 1);                              \
                                                                     \
     U32 _rxb = (temp >> 0) & 0xf;                                   \
     (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
-    (_v2) = (temp >> 24) & 0xf;                                     \
-    (_m4) = (temp >> 12) & 0xf;                                     \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
     (_i3) = (temp >>  4) & 0x0ff;                                   \
+    (_m4) = (temp >> 12) & 0xf;                                     \
                                                                     \
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }

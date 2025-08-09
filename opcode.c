@@ -3339,12 +3339,19 @@ IPRINT_FUNC(ASMFMT_VRI_I);
     IPRINT_PRINT("%d,%d,%d,%d", v1, r2, i3, m4)
 
 IPRINT_FUNC(ASMFMT_VRI_J);
-    int v1, v2, m4, i3;
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  | ////////  | m4  |    i3     | rxb |    XOP    |    VRI_J
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28          36    40         47
+
+    int v1, v2, i3, m4;
     UNREFERENCED(regs);
     v1 = ((inst[1] >> 4) & 0x0F) | ((inst[4] & 0x08) << 1);
     v2 = ((inst[1] >> 0) & 0x0F) | ((inst[4] & 0x04) << 2);
-    m4 = ( (inst[3] & 0xF0) >> 4);
     i3 = ( (inst[3] & 0x0F) << 4) | ( (inst[4] & 0xF0) >> 4);
+    m4 = ( (inst[3] & 0xF0) >> 4);
     IPRINT_PRINT("%d,%d,%d,%d", v1, v2, i3, m4)
 
 IPRINT_FUNC(ASMFMT_VRI_K);

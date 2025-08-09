@@ -3682,7 +3682,7 @@ DEF_INST( vector_load_immediate_decimal )
 /*-------------------------------------------------------------------*/
 DEF_INST( vector_convert_to_decimal_128 )
 {
-    int     v1, v2, m4, i3;      /* Instruction parts                */
+    int     v1, v2, i3, m4;      /* Instruction parts                */
     bool    iom;                 /* Instruction-Overflow Mask (IOM)  */
     int     rdc;                 /* Result Digits Count(RDC) Bit 3-7 */
     bool    p1;                  /* Force Operand 1 Positive (P1)    */
@@ -3699,8 +3699,7 @@ DEF_INST( vector_convert_to_decimal_128 )
     int     temp;                /* temp                             */
     bool    overflow;            /* did an overfor occur             */
 
-    /* FixMe: fix VRI_J decoder to be i3, m4*/
-    VRI_J( inst, regs, v1, v2, m4, i3 );
+    VRI_J( inst, regs, v1, v2, i3, m4 );
 
     ZVECTOR_CHECK( regs );
 
