@@ -191,6 +191,7 @@ static inline void U128_logmsg(const char * msg, U128 u);
 
 static inline U128 U128_zero( );
 static inline U128 U128_one( );
+static inline U128 U128_minus_one( );
 static inline bool U128_isZero( U128 a );
 
 static inline U128 U128_add( U128 a, U128 b );
@@ -274,6 +275,18 @@ static inline U128 U128_one( )
 
     temp.Q.D.H.D = 0;
     temp.Q.D.L.D = 1;
+    return temp;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128_minus_one: return (U128) -1                                  */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_minus_one( )
+{
+    U128 temp;
+
+    temp.Q.D.H.D = -1;
+    temp.Q.D.L.D = -1;
     return temp;
 }
 
@@ -2726,6 +2739,9 @@ DEF_INST( vector_count_trailing_zeros )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m3 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m3)
     {
     case 0:  /* Byte */
@@ -2774,6 +2790,17 @@ DEF_INST( vector_count_trailing_zeros )
             regs->VR_D(v1, i) = count;
         }
         break;
+    case 4:  /* Quadword */
+        count = 0;
+        for (j=15; j >= 0; j--)
+        {
+            k = TrailingZerosInByte[regs->VR_B(v2, j)];
+            count += k;
+            if (k != 8) break;
+        }
+        regs->VR_D(v1, 0) = 0;
+        regs->VR_D(v1, 1) = count;
+        break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -2817,6 +2844,9 @@ DEF_INST( vector_count_leading_zeros )
     UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( m3 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m3)
     {
@@ -2865,6 +2895,17 @@ DEF_INST( vector_count_leading_zeros )
             }
             regs->VR_D(v1, i) = count;
         }
+        break;
+    case 4:  /* Quadword */
+        count = 0;
+        for (j=0; j < 16; j++)
+        {
+            k = LeadingZerosInByte[regs->VR_B(v2, j)];
+            count += k;
+            if (k != 8) break;
+        }
+        regs->VR_D(v1, 0) = 0;
+        regs->VR_D(v1, 1) = count;
         break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -6654,7 +6695,6 @@ DEF_INST( vector_multiply_logical_high )
             regs->VR_F(v1, i) = temp.d >> 32;
         }
         break;
-
     case 3:  /* Doubleword */
         for (i=0; i < 2; i++)
         {
@@ -6662,7 +6702,6 @@ DEF_INST( vector_multiply_logical_high )
             regs->VR_D(v1, i) = u128temp1.Q.D.H.D;
         }
         break;
-
     case 4:  /* Quadword */
         {
             U128 tempv2, tempv3;
@@ -6674,7 +6713,6 @@ DEF_INST( vector_multiply_logical_high )
             regs->VR_Q(v1) = temphi.Q;
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -6730,7 +6768,6 @@ DEF_INST( vector_multiply_low )
             regs->VR_F(v1, i) = temp.d & 0xFFFFFFFF;
         }
         break;
-
     case 3:  /* Doubleword */
         for (i=0; i < 2; i++)
         {
@@ -6738,7 +6775,6 @@ DEF_INST( vector_multiply_low )
             regs->VR_D(v1, i) = u128temp1.Q.D.L.D;
         }
         break;
-
     case 4:  /* Quadword */
         {
             U128 tempv2, tempv3;
@@ -6750,7 +6786,6 @@ DEF_INST( vector_multiply_low )
             regs->VR_Q(v1) = templo.Q;
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -6806,7 +6841,6 @@ DEF_INST( vector_multiply_high )
             regs->VR_F(v1, i) = temp.sd >> 32;
         }
         break;
-
     case 3:  /* Doubleword */
         for (i=0; i < 2; i++)
         {
@@ -6814,7 +6848,6 @@ DEF_INST( vector_multiply_high )
             regs->VR_D(v1, i) = u128temp1.Q.D.H.D;
         }
         break;
-
     case 4:  /* Quadword */
         {
             U128 tempv2, tempv3;
@@ -6826,7 +6859,6 @@ DEF_INST( vector_multiply_high )
             regs->VR_Q(v1) = temphi.Q;
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -6882,12 +6914,10 @@ DEF_INST( vector_multiply_logical_even )
             regs->VR_D(v1, j) = temp.d;
         }
         break;
-
     case 3:  /* Doubleword */
         u128temp1 = U128_mul_64( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
         regs->VR_Q(v1) = u128temp1.Q;
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -6927,7 +6957,6 @@ DEF_INST( vector_multiply_logical_odd )
             regs->VR_H(v1, j) = temp.h;
         }
         break;
-
     case 1:  /* Halfword */
         for (i=1, j=0; i < 8; i+=2, j++)
         {
@@ -6936,7 +6965,6 @@ DEF_INST( vector_multiply_logical_odd )
             regs->VR_F(v1, j) = temp.f;
         }
         break;
-
     case 2:  /* Word */
         for (i=1, j=0; i < 4; i+=2, j++)
         {
@@ -6945,12 +6973,10 @@ DEF_INST( vector_multiply_logical_odd )
             regs->VR_D(v1, j) = temp.d;
         }
         break;
-
     case 3:  /* Doubleword */
         u128temp1 = U128_mul_64( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
         regs->VR_Q(v1) = u128temp1.Q;
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -6990,7 +7016,6 @@ DEF_INST( vector_multiply_even )
             regs->VR_H(v1, j) = temp.sh;
         }
         break;
-
     case 1:  /* Halfword */
         for (i=0, j=0; i < 8; i+=2, j++)
         {
@@ -6999,7 +7024,6 @@ DEF_INST( vector_multiply_even )
             regs->VR_F(v1, j) = temp.sf;
         }
         break;
-
     case 2:  /* Word */
         for (i=0, j=0; i < 4; i+=2, j++)
         {
@@ -7008,12 +7032,10 @@ DEF_INST( vector_multiply_even )
             regs->VR_D(v1, j) = temp.sd;
         }
         break;
-
     case 3:  /* Doubleword */
         u128temp1 = S128_mul_64( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
         regs->VR_Q(v1) = u128temp1.Q;
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -7069,12 +7091,10 @@ DEF_INST( vector_multiply_odd )
             regs->VR_D(v1, j) = temp.sd;
         }
         break;
-
     case 3:  /* Doubleword */
         u128temp1 = S128_mul_64( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
         regs->VR_Q(v1) = u128temp1.Q;
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -7132,7 +7152,6 @@ DEF_INST( vector_multiply_and_add_logical_high )
             regs->VR_F(v1, i) = temp.d >> 32;
         }
         break;
-
     case 3:  /* Doubleword */
         for (i=0; i < 2; i++)
         {
@@ -7141,7 +7160,6 @@ DEF_INST( vector_multiply_and_add_logical_high )
             regs->VR_D(v1, i) = u128temp1.Q.D.H.D;
         }
         break;
-
     case 4:  /* Quadword */
         {
             U128 tempv2, tempv3, tempv4;
@@ -7156,7 +7174,6 @@ DEF_INST( vector_multiply_and_add_logical_high )
             regs->VR_Q(v1) = temphi.Q;
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -7214,7 +7231,6 @@ DEF_INST(vector_multiply_and_add_low)
             regs->VR_F(v1, i) = temp.d & 0xFFFFFFFF;
         }
         break;
-
     case 3:  /* Doubleword */
         for (i=0; i < 2; i++)
         {
@@ -7223,7 +7239,6 @@ DEF_INST(vector_multiply_and_add_low)
             regs->VR_D(v1, i) = u128temp1.Q.D.L.D;
         }
         break;
-
     case 4:  /* Quadword */
         {
             U128 tempv2, tempv3, tempv4;
@@ -7238,7 +7253,6 @@ DEF_INST(vector_multiply_and_add_low)
             regs->VR_Q(v1) = templo.Q;
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -7296,7 +7310,6 @@ DEF_INST( vector_multiply_and_add_high )
             regs->VR_F(v1, i) = temp.sd >> 32;
         }
         break;
-
     case 3:  /* Doubleword */
         for (i=0; i < 2; i++)
         {
@@ -7305,7 +7318,6 @@ DEF_INST( vector_multiply_and_add_high )
             regs->VR_D(v1, i) = u128temp1.Q.D.H.D;
         }
         break;
-
     case 4:  /* Quadword */
         {
             U128 tempv2, tempv3, tempv4;
@@ -7320,7 +7332,6 @@ DEF_INST( vector_multiply_and_add_high )
             regs->VR_Q(v1) = temphi.Q;
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -7378,14 +7389,12 @@ DEF_INST( vector_multiply_and_add_logical_even )
             regs->VR_D(v1, j) = temp.d;
         }
         break;
-
     case 3:  /* Doubleword */
         u128temp2.Q = regs->VR_Q(v4);
         u128temp1 = U128_mul_64( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
         u128temp1 = U128_add ( u128temp1, u128temp2 );
         regs->VR_Q(v1) = u128temp1.Q;
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -7443,14 +7452,12 @@ DEF_INST( vector_multiply_and_add_logical_odd )
             regs->VR_D(v1, j) = temp.d;
         }
         break;
-
     case 3:  /* Doubleword */
         u128temp2.Q = regs->VR_Q(v4);
         u128temp1 = U128_mul_64( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
         u128temp1 = U128_add ( u128temp1, u128temp2 );
         regs->VR_Q(v1) = u128temp1.Q;
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -7508,14 +7515,12 @@ DEF_INST( vector_multiply_and_add_even )
             regs->VR_D(v1, j) = temp.sd;
         }
         break;
-
     case 3:  /* Doubleword */
         u128temp2.Q = regs->VR_Q(v4);
         u128temp1 = S128_mul_64( regs->VR_D(v2, 0), regs->VR_D(v3, 0) );
         u128temp1 = S128_add ( u128temp1, u128temp2 );
         regs->VR_Q(v1) = u128temp1.Q;
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -7573,14 +7578,12 @@ DEF_INST( vector_multiply_and_add_odd )
             regs->VR_D(v1, j) = temp.sd;
         }
         break;
-
     case 3:  /* Doubleword */
         u128temp2.Q = regs->VR_Q(v4);
         u128temp1 = S128_mul_64( regs->VR_D(v2, 1), regs->VR_D(v3, 1) );
         u128temp1 = S128_add ( u128temp1, u128temp2 );
         regs->VR_Q(v1) = u128temp1.Q;
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -8288,6 +8291,9 @@ DEF_INST( vector_unpack_logical_low )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m3 == 3 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m3)
     {
     case 0:  /* Byte */
@@ -8307,6 +8313,10 @@ DEF_INST( vector_unpack_logical_low )
             temp.d[i] = (U64) regs->VR_F(v2, i + 2);
         for (i = 0; i < 2; i++)
             regs->VR_D(v1, i) = temp.d[i];
+        break;
+    case 3:  /* Doubleword */
+        regs->VR_D(v1, 1) = regs->VR_D(v2, 1);
+        regs->VR_D(v1, 0) = 0x0000000000000000ull;
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -8332,6 +8342,9 @@ DEF_INST( vector_unpack_logical_high )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m3 == 3 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m3)
     {
     case 0:  /* Byte */
@@ -8351,6 +8364,10 @@ DEF_INST( vector_unpack_logical_high )
             temp.d[i] = (U64) regs->VR_F(v2, i);
         for (i = 0; i < 2; i++)
             regs->VR_D(v1, i) = temp.d[i];
+        break;
+    case 3:  /* Doubleword */
+        regs->VR_D(v1, 1) = regs->VR_D(v2, 0);
+        regs->VR_D(v1, 0) = 0x0000000000000000ull;
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -8376,6 +8393,9 @@ DEF_INST( vector_unpack_low )
     UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( m3 == 3 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m3)
     {
@@ -8406,6 +8426,18 @@ DEF_INST( vector_unpack_low )
         for (i = 0; i < 2; i++)
             regs->VR_D(v1, i) = temp.sd[i];
         break;
+    case 3:  /* Doubleword */
+        if (regs->VR_D(v2, 1) & 0x8000000000000000ull)
+        {
+            regs->VR_D(v1, 1) = regs->VR_D(v2, 1);
+            regs->VR_D(v1, 0) = 0xFFFFFFFFFFFFFFFFull;
+        }
+        else
+        {
+            regs->VR_D(v1, 1) = regs->VR_D(v2, 1);
+            regs->VR_D(v1, 0) = 0x0000000000000000ull;
+        }
+        break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
@@ -8430,6 +8462,9 @@ DEF_INST( vector_unpack_high )
     UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( m3 == 3 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m3)
     {
@@ -8459,6 +8494,18 @@ DEF_INST( vector_unpack_high )
         }
         for (i = 0; i < 2; i++)
             regs->VR_D(v1, i) = temp.sd[i];
+        break;
+    case 3:  /* Doubleword */
+        if (regs->VR_D(v2, 0) & 0x8000000000000000ull)
+        {
+            regs->VR_D(v1, 1) = regs->VR_D(v2, 0);
+            regs->VR_D(v1, 0) = 0xFFFFFFFFFFFFFFFFull;
+        }
+        else
+        {
+            regs->VR_D(v1, 1) = regs->VR_D(v2, 0);
+            regs->VR_D(v1, 0) = 0x0000000000000000ull;
+        }
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -8519,6 +8566,9 @@ DEF_INST( vector_element_compare_logical )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m3 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m3)
     {
     case 0:  /* Byte */
@@ -8553,6 +8603,22 @@ DEF_INST( vector_element_compare_logical )
         else
             regs->psw.cc = 2;
         break;
+    case 4:  /* Quadword */
+        {
+            U128 tempv1, tempv2;
+            int  rc;
+
+            tempv1.Q = regs->VR_Q(v1);
+            tempv2.Q = regs->VR_Q(v2);
+            rc = U128_cmp( tempv1, tempv2 );
+            if (rc == 0)
+                regs->psw.cc = 0;
+            else if (rc == -1)
+                regs->psw.cc = 1;
+            else
+                regs->psw.cc = 2;
+        }
+        break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
@@ -8575,6 +8641,9 @@ DEF_INST( vector_element_compare )
     UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( m3 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m3)
     {
@@ -8610,6 +8679,22 @@ DEF_INST( vector_element_compare )
         else
             regs->psw.cc = 2;
         break;
+    case 4:  /* Quadword */
+        {
+            U128 tempv1, tempv2;
+            int  rc;
+
+            tempv1.Q = regs->VR_Q(v1);
+            tempv2.Q = regs->VR_Q(v2);
+            rc = S128_cmp( tempv1, tempv2 );
+            if (rc == 0)
+                regs->psw.cc = 0;
+            else if (rc == -1)
+                regs->psw.cc = 1;
+            else
+                regs->psw.cc = 2;
+        }
+        break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         break;
@@ -8634,6 +8719,9 @@ DEF_INST( vector_load_complement )
 
     ZVECTOR_CHECK( regs );
 
+    if ( m3 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m3)
     {
     case 0:  /* Byte */
@@ -8651,6 +8739,15 @@ DEF_INST( vector_load_complement )
     case 3:  /* Doubleword */
         for (i=0; i < 2; i++)
             regs->VR_D( v1, i ) = ~(S64)regs->VR_D( v2, i ) + 1;
+        break;
+    case 4:  /* Quadword */
+        {
+            U128 tempv1, tempv2;
+
+            tempv2.Q = regs->VR_Q(v2);
+            tempv1 = S128_neg( tempv2 );
+            regs->VR_Q(v1) = tempv1.Q;
+        }
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -8675,6 +8772,9 @@ DEF_INST( vector_load_positive )
     UNREFERENCED( m5 );
 
     ZVECTOR_CHECK( regs );
+
+    if ( m3 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     switch (m3)
     {
@@ -8701,6 +8801,18 @@ DEF_INST( vector_load_positive )
             regs->VR_D( v1, i ) = (S64)regs->VR_D( v2, i ) < 0 ?
                                          -((S64)regs->VR_D( v2, i )) :
                                          (S64)regs->VR_D( v2, i );
+        break;
+    case 4:  /* Quadword */
+        {
+            U128 tempv1, tempv2;
+
+            tempv2.Q = regs->VR_Q(v2);
+            if (S128_isNeg( tempv2 ))
+                tempv1 = S128_neg( tempv2 );
+            else
+                tempv1 = tempv2;
+            regs->VR_Q(v1) = tempv1.Q;
+        }
         break;
     default:
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -8736,19 +8848,16 @@ DEF_INST( vector_average_logical )
             regs->VR_B(v1, i) = (U8) ( ( (U16) regs->VR_B(v2, i) + (U16) regs->VR_B(v3, i) + 1) >> 1 );
         }
         break;
-
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
             regs->VR_H(v1, i) = (U16) ( ( (U32) regs->VR_H(v2, i) + (U32) regs->VR_H(v3, i) + 1) >> 1 );
         }
         break;
-
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
             regs->VR_F(v1, i) = (U32) ( ( (U64) regs->VR_F(v2, i) + (U64) regs->VR_F(v3, i) + 1) >> 1 );
         }
         break;
-
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             /* U128 a + U64 b */
@@ -8768,7 +8877,6 @@ DEF_INST( vector_average_logical )
             regs->VR_D(v1, i) = (lsa >> 1) | ( msa << 63 );
         }
         break;
-
     case 4:         /* Quadword */
         {
             U128 tempv1, tempv2, tempv3;
@@ -8790,7 +8898,6 @@ DEF_INST( vector_average_logical )
             regs->VR_Q(v1) = tempv1.Q;
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -8892,19 +8999,16 @@ DEF_INST( vector_average )
             regs->VR_B(v1, i) = ( (S16) ( (S8) regs->VR_B(v2, i) + (S8) regs->VR_B(v3, i) ) + 1) >> 1;
         }
         break;
-
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
             regs->VR_H(v1, i) = ( (S32) ( (S16) regs->VR_H(v2, i) + (S16) regs->VR_H(v3, i) ) + 1) >> 1;
         }
         break;
-
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
             regs->VR_F(v1, i) = ( (S64) ( (S32) regs->VR_F(v2, i) + (S32) regs->VR_F(v3, i) ) + 1) >> 1;
         }
         break;
-
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             if  (
@@ -8933,7 +9037,6 @@ DEF_INST( vector_average )
             }
         }
         break;
-
     case 4:         /* Quadword */
         {
             U128 temp128, tempv2, tempv3;
@@ -8975,7 +9078,6 @@ DEF_INST( vector_average )
             }
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -9170,6 +9272,9 @@ DEF_INST( vector_compare_equal )
 
 #define M5_CS ((m5 & 0x1) != 0) // Condition Code Set
 
+    if ( m4 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m4)
     {
     case 0:  /* Byte */
@@ -9216,6 +9321,25 @@ DEF_INST( vector_compare_equal )
             }
         }
         break;
+    case 4:  /* Quadword */
+        {
+            U128 tempv1, tempv2, tempv3;
+            int  rc;
+
+            el = 1;
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            rc = U128_cmp( tempv2, tempv3 );
+            if (rc == 0) {
+                tempv1 = U128_minus_one();
+                eq++;
+            }
+            else {
+                tempv1 = U128_zero();
+            }
+            regs->VR_Q(v1) = tempv1.Q;
+        }
+        break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -9249,6 +9373,9 @@ DEF_INST( vector_compare_high_logical )
 
 #define M5_CS ((m5 & 0x1) != 0) // Condition Code Set
 
+    if ( m4 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m4)
     {
     case 0:         /* Byte */
@@ -9262,7 +9389,6 @@ DEF_INST( vector_compare_high_logical )
             }
         }
         break;
-
     case 1:        /* Halfword */
         for (el=8, i=0; i < 8; i++) {
             if (regs->VR_H(v2, i) > regs->VR_H(v3, i)) {
@@ -9274,7 +9400,6 @@ DEF_INST( vector_compare_high_logical )
             }
         }
         break;
-
     case 2:         /* Word */
         for (el=4, i=0; i < 4; i++) {
             if (regs->VR_F(v2, i) > regs->VR_F(v3, i)) {
@@ -9286,7 +9411,6 @@ DEF_INST( vector_compare_high_logical )
             }
         }
         break;
-
     case 3:        /* Doubleword */
         for (el=2, i=0; i < 2; i++) {
             if (regs->VR_D(v2, i) > regs->VR_D(v3, i)) {
@@ -9298,7 +9422,25 @@ DEF_INST( vector_compare_high_logical )
             }
         }
         break;
+    case 4:  /* Quadword */
+        {
+            U128 tempv1, tempv2, tempv3;
+            int  rc;
 
+            el = 1;
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            rc = U128_cmp( tempv2, tempv3 );
+            if (rc == 1) {
+                tempv1 = U128_minus_one();
+                hi++;
+            }
+            else {
+                tempv1 = U128_zero();
+            }
+            regs->VR_Q(v1) = tempv1.Q;
+        }
+        break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -9332,6 +9474,9 @@ DEF_INST( vector_compare_high )
 
 #define M5_CS ((m5 & 0x1) != 0) // Condition Code Set
 
+    if ( m4 == 4 && !FACILITY_ENABLED( 198_VECTOR_ENH_3, regs ) )
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
     switch (m4)
     {
     case 0:         /* Byte */
@@ -9345,7 +9490,6 @@ DEF_INST( vector_compare_high )
             }
         }
         break;
-
     case 1:        /* Halfword */
         for (el=8, i=0; i < 8; i++) {
             if ( (S16) regs->VR_H(v2, i) > (S16) regs->VR_H(v3, i) ) {
@@ -9357,7 +9501,6 @@ DEF_INST( vector_compare_high )
             }
         }
         break;
-
     case 2:         /* Word */
         for (el=4, i=0; i < 4; i++) {
             if ( (S32) regs->VR_F(v2, i) > (S32) regs->VR_F(v3, i) ) {
@@ -9369,7 +9512,6 @@ DEF_INST( vector_compare_high )
             }
         }
         break;
-
     case 3:        /* Doubleword */
         for (el=2, i=0; i < 2; i++) {
             if ( (S64) regs->VR_D(v2, i) > (S64) regs->VR_D(v3, i) ) {
@@ -9381,7 +9523,25 @@ DEF_INST( vector_compare_high )
             }
         }
         break;
+    case 4:        /* Quadword */
+        {
+            U128 tempv1, tempv2, tempv3;
+            int  rc;
 
+            el = 1;
+            tempv2.Q = regs->VR_Q(v2);
+            tempv3.Q = regs->VR_Q(v3);
+            rc = S128_cmp( tempv2, tempv3 );
+            if (rc == 1) {
+                tempv1 = U128_minus_one();
+                hi++;
+            }
+            else {
+                tempv1 = U128_zero();
+            }
+            regs->VR_Q(v1) = tempv1.Q;
+        }
+        break;
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -9407,7 +9567,6 @@ DEF_INST( vector_compare_high )
 DEF_INST( vector_minimum_logical )
 {
     int     v1, v2, v3, m4, m5, m6;
-
     int i;                          /* loop index                    */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -9428,34 +9587,30 @@ DEF_INST( vector_minimum_logical )
             regs->VR_B(v1, i) =  regs->VR_B(v2, i) <= regs->VR_B(v3, i) ? regs->VR_B(v2, i) : regs->VR_B(v3, i);
         }
         break;
-
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
             regs->VR_H(v1, i) = regs->VR_H(v2, i) <= regs->VR_H(v3, i) ? regs->VR_H(v2, i) : regs->VR_H(v3, i);
         }
         break;
-
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
             regs->VR_F(v1, i) = regs->VR_F(v2, i) <= regs->VR_F(v3, i) ? regs->VR_F(v2, i) : regs->VR_F(v3, i);
         }
         break;
-
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = regs->VR_D(v2, i) <= regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
         }
         break;
-
     case 4:         /* Quadword */
         {
             U128 tempv2, tempv3;
+
             tempv2.Q = regs->VR_Q(v2);
             tempv3.Q = regs->VR_Q(v3);
             regs->VR_Q(v1) = ( U128_cmp( tempv2,  tempv3) == -1)  ? regs->VR_Q(v2) : regs->VR_Q(v3);
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -9470,7 +9625,6 @@ DEF_INST( vector_minimum_logical )
 DEF_INST( vector_maximum_logical )
 {
     int     v1, v2, v3, m4, m5, m6;
-
     int i;                          /* loop index                    */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -9491,34 +9645,30 @@ DEF_INST( vector_maximum_logical )
             regs->VR_B(v1, i) =  regs->VR_B(v2, i) >= regs->VR_B(v3, i) ? regs->VR_B(v2, i) : regs->VR_B(v3, i);
         }
         break;
-
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
             regs->VR_H(v1, i) = regs->VR_H(v2, i) >= regs->VR_H(v3, i) ? regs->VR_H(v2, i) : regs->VR_H(v3, i);
         }
         break;
-
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
             regs->VR_F(v1, i) = regs->VR_F(v2, i) >= regs->VR_F(v3, i) ? regs->VR_F(v2, i) : regs->VR_F(v3, i);
         }
         break;
-
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = regs->VR_D(v2, i) >= regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
         }
         break;
-
     case 4:         /* Quadword */
         {
             U128 tempv2, tempv3;
+
             tempv2.Q = regs->VR_Q(v2);
             tempv3.Q = regs->VR_Q(v3);
             regs->VR_Q(v1) = ( U128_cmp( tempv2,  tempv3) == 1)  ? regs->VR_Q(v2) : regs->VR_Q(v3);
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -9533,7 +9683,6 @@ DEF_INST( vector_maximum_logical )
 DEF_INST( vector_minimum )
 {
     int     v1, v2, v3, m4, m5, m6;
-
     int i;                          /* loop index                    */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -9554,34 +9703,30 @@ DEF_INST( vector_minimum )
             regs->VR_B(v1, i) = (S8) regs->VR_B(v2, i) <= (S8) regs->VR_B(v3, i) ? regs->VR_B(v2, i) : regs->VR_B(v3, i);
         }
         break;
-
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
             regs->VR_H(v1, i) = (S16) regs->VR_H(v2, i) <= (S16) regs->VR_H(v3, i) ? regs->VR_H(v2, i) : regs->VR_H(v3, i);
         }
         break;
-
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
             regs->VR_F(v1, i) = (S32) regs->VR_F(v2, i) <= (S32) regs->VR_F(v3, i) ? regs->VR_F(v2, i) : regs->VR_F(v3, i);
         }
         break;
-
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = (S64) regs->VR_D(v2, i) <= (S64) regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
         }
         break;
-
     case 4:         /* Quadword */
         {
             U128 tempv2, tempv3;
+
             tempv2.Q = regs->VR_Q(v2);
             tempv3.Q = regs->VR_Q(v3);
             regs->VR_Q(v1) = ( S128_cmp( tempv2,  tempv3) == -1)  ? regs->VR_Q(v2) : regs->VR_Q(v3);
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
@@ -9595,7 +9740,6 @@ DEF_INST( vector_minimum )
 DEF_INST( vector_maximum )
 {
     int     v1, v2, v3, m4, m5, m6;
-
     int i;                          /* loop index                    */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
@@ -9616,35 +9760,30 @@ DEF_INST( vector_maximum )
             regs->VR_B(v1, i) = (S8) regs->VR_B(v2, i) >= (S8) regs->VR_B(v3, i) ? regs->VR_B(v2, i) : regs->VR_B(v3, i);
         }
         break;
-
     case 1:         /* Halfword */
         for (i=0; i < 8; i++) {
             regs->VR_H(v1, i) = (S16) regs->VR_H(v2, i) >= (S16) regs->VR_H(v3, i) ? regs->VR_H(v2, i) : regs->VR_H(v3, i);
         }
         break;
-
     case 2:         /* Word */
         for (i=0; i < 4; i++) {
             regs->VR_F(v1, i) = (S32) regs->VR_F(v2, i) >= (S32) regs->VR_F(v3, i) ? regs->VR_F(v2, i) : regs->VR_F(v3, i);
         }
         break;
-
     case 3:         /* Doubleword */
         for (i=0; i < 2; i++) {
             regs->VR_D(v1, i) = (S64) regs->VR_D(v2, i) >= (S64) regs->VR_D(v3, i) ? regs->VR_D(v2, i) : regs->VR_D(v3, i);
         }
         break;
-
     case 4:         /* Quadword */
         {
             U128 tempv2, tempv3;
+
             tempv2.Q = regs->VR_Q(v2);
             tempv3.Q = regs->VR_Q(v3);
             regs->VR_Q(v1) = ( S128_cmp( tempv2,  tempv3) == 1)  ? regs->VR_Q(v2) : regs->VR_Q(v3);
-
         }
         break;
-
     default:
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
