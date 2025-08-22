@@ -198,17 +198,7 @@
 /*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------*/
-/* See nnpa.c for the following Specialized-Function-Assist instructions.     */
-/*----------------------------------------------------------------------------*/
-/* E655 VCNF   - VECTOR FP CONVERT TO NNP                             [VRR-a] */
-/* E656 VCLFNH - VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH         [VRR_a] */
-/* E65D VCFN   - VECTOR FP CONVERT FROM NNP                           [VRR-a] */
-/* E65E VCLFNL - VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW          [VRR-a] */
-/* E675 VCRNF  - VECTOR FP CONVERT AND ROUND TO NNP                   [VRR-c] */
-/*----------------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------------*/
-/* See ieee.c for the following Vector Floating-Point instructions.           */
+/* See zvector3.c for the following Vector Floating-Point instructions.       */
 /*----------------------------------------------------------------------------*/
 /* E74A VFTCI  - VECTOR FP TEST DATA CLASS IMMEDIATE                  [VRI-e] */
 /* E78E VFMS   - VECTOR FP MULTIPLY AND SUBTRACT                      [VRR-e] */
@@ -239,6 +229,16 @@
 /* E7EB VFCH   - VECTOR FP COMPARE HIGH                               [VRR-c] */
 /* E7EE VFMIN  - VECTOR FP MINIMUM                                    [VRR-c] */
 /* E7EF VFMAX  - VECTOR FP MAXIMUM                                    [VRR-c] */
+/*----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------*/
+/* See nnpa.c for the following Specialized-Function-Assist instructions.     */
+/*----------------------------------------------------------------------------*/
+/* E655 VCNF   - VECTOR FP CONVERT TO NNP                             [VRR-a] */
+/* E656 VCLFNH - VECTOR FP CONVERT AND LENGTHEN FROM NNP HIGH         [VRR_a] */
+/* E65D VCFN   - VECTOR FP CONVERT FROM NNP                           [VRR-a] */
+/* E65E VCLFNL - VECTOR FP CONVERT AND LENGTHEN FROM NNP LOW          [VRR-a] */
+/* E675 VCRNF  - VECTOR FP CONVERT AND ROUND TO NNP                   [VRR-c] */
 /*----------------------------------------------------------------------------*/
 
 /*===================================================================*/

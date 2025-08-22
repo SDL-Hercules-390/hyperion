@@ -475,6 +475,7 @@
     <ClCompile Include="zfcp.c" />
     <ClCompile Include="zvector.c" />
     <ClCompile Include="zvector2.c" />
+    <ClCompile Include="zvector3.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".travis.yml" />

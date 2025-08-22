@@ -530,7 +530,8 @@ libherc_la_SOURCES = \
   x75.c              \
   xstore.c           \
   zvector.c          \
-  zvector2.c          \
+  zvector2.c         \
+  zvector3.c         \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \

@@ -1243,6 +1243,10 @@
 							RelativePath=".\zvector2.c"
 							>
 						</File>
+						<File
+							RelativePath=".\zvector3.c"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Header Files"
