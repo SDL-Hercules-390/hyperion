@@ -83,6 +83,8 @@ facility  code  test#   Instruction                                             
 #include "opcode.h"
 #include "inline.h"
 
+#include "zvector.h"
+
 #if defined( FEATURE_165_NNET_ASSIST_FACILITY )
 
 /*-------------------------------------------------------------------*/

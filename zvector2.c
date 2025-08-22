@@ -95,6 +95,8 @@ facility  code  test#   Instruction                                             
 #include "opcode.h"
 #include "inline.h"
 
+#include "zvector.h"
+
 #if defined(FEATURE_129_ZVECTOR_FACILITY)
 
 

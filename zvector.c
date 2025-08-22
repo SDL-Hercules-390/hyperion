@@ -17,6 +17,8 @@
 #include "opcode.h"
 #include "inline.h"
 
+#include "zvector.h"
+
 /* ====================================================================== */
 /* ZVECTOR_END macro for debugging Vector instructions                    */
 /* Note: block comments are used to avoid gcc                             */

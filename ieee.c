@@ -118,6 +118,8 @@
 #include "opcode.h"
 #include "inline.h"
 
+#include "zvector.h"
+
 #if defined( FEATURE_BINARY_FLOATING_POINT )
 
 #if !defined( _IEEE_NONARCHDEP_ )

@@ -1634,6 +1634,7 @@
     <ClInclude Include="w32util.h" />
     <ClInclude Include="x75.h" />
     <ClInclude Include="zfcp.h" />
+    <ClInclude Include="zvector.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="decNumber\decNumber.readme.txt" />

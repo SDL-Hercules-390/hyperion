@@ -1627,6 +1627,10 @@
 							RelativePath=".\x75.h"
 							>
 						</File>
+						<File
+							RelativePath=".\zvector.h"
+							>
+						</File>
 					</Filter>
 				</Filter>
 				<Filter

@@ -1135,7 +1135,8 @@ noinst_HEADERS =          \
   w32util.c               \
   w32util.h               \
   x75.h                   \
-  zfcp.h
+  zfcp.h                  \
+  zvector.h
 
 ###############################################################################
 #                         B U I L D   R U L E S

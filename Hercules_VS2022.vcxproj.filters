@@ -4255,6 +4255,9 @@
     <ClInclude Include="x75.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="zvector.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="decNumber\include\decContext.h">
       <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
