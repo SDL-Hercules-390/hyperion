@@ -2023,7 +2023,8 @@ noinst_HEADERS = \
   w32util.c               \
   w32util.h               \
   x75.h                   \
-  zfcp.h
+  zfcp.h                  \
+  zvector.h
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
