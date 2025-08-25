@@ -489,7 +489,7 @@ AIPSX (const SCSW* scsw)
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
 static INLINE void
-queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
+queue_io_interrupt_and_update_status_locked( DEVBLK* dev, int clrbsy, BYTE qdioact )
 {
     OBTAIN_IOINTQLK();
     {
@@ -503,50 +503,21 @@ queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
         subchannel_interrupt_queue_cleanup( dev );
 
         /* Update interrupts */
-        UPDATE_IC_IOPENDING_QLOCKED();
-    }
-    RELEASE_IOINTQLK();
-
-#if defined( OPTION_SHARED_DEVICES )
-    /* Wake up any waiters if the device isn't active or reserved */
-    if (!(dev->scsw.flag3 & (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC)) &&
-        !dev->reserved)
-    {
-        dev->shioactive = DEV_SYS_NONE;
-        if (dev->shiowaiters)
-            signal_condition (&dev->shiocond);
-    }
-#endif // defined( OPTION_SHARED_DEVICES )
-}
-
-static INLINE void
-queue_io_interrupt_and_update_status_locked_q(DEVBLK* dev, int clrbsy, BYTE q)
-{
-    OBTAIN_IOINTQLK();
-    {
-        /* Ensure the interrupt is queued/dequeued per pending flag */
-        if (dev->scsw.flag3 & SCSW3_SC_PEND)
-            QUEUE_IO_INTERRUPT_QLOCKED( &dev->ioint, clrbsy );
-        else
-            DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->ioint );
-
-        /* Perform cleanup for DEVBLK flags being deprecated */
-        subchannel_interrupt_queue_cleanup( dev );
-
-        /* Update interrupts */
-        if (!q)
+        if (!qdioact)
             UPDATE_IC_IOPENDING_QLOCKED();
     }
     RELEASE_IOINTQLK();
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Wake up any waiters if the device isn't active or reserved */
-    if (!(dev->scsw.flag3 & (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC)) &&
-        !dev->reserved)
+    if (1
+        && !(dev->scsw.flag3 & (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC))
+        && !dev->reserved
+    )
     {
         dev->shioactive = DEV_SYS_NONE;
         if (dev->shiowaiters)
-            signal_condition (&dev->shiocond);
+            signal_condition( &dev->shiocond );
     }
 #endif // defined( OPTION_SHARED_DEVICES )
 }
@@ -572,7 +543,7 @@ queue_io_interrupt_and_update_status(DEVBLK* dev, int clrbsy)
         {
             OBTAIN_DEVLOCK( dev );
             {
-                queue_io_interrupt_and_update_status_locked( dev, clrbsy );
+                queue_io_interrupt_and_update_status_locked( dev, clrbsy, FALSE );
             }
             RELEASE_DEVLOCK( dev );
         }
@@ -1981,7 +1952,7 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
 void
 perform_clear_subchan (DEVBLK *dev)
 {
-    BYTE q;     // QDIO active flag
+    BYTE qdioact;   // QDIO active flag
 
     /* Dequeue pending interrupts */
     OBTAIN_IOINTQLK();
@@ -2009,7 +1980,7 @@ perform_clear_subchan (DEVBLK *dev)
         dev->scsw.flag0 = 0;
         dev->scsw.flag1 = 0;
         dev->scsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
-        q = dev->scsw.flag2 & SCSW2_Q;
+        qdioact = dev->scsw.flag2 & SCSW2_Q;
         dev->scsw.flag2 &= ~SCSW2_Q;
         dev->scsw.flag2 |= SCSW2_FC_CLEAR;
         /* Shortcut setting of flag3 due to clear and setting of just the
@@ -2026,7 +1997,7 @@ perform_clear_subchan (DEVBLK *dev)
         /* Queue the pending interrupt and update status */
         QUEUE_IO_INTERRUPT_QLOCKED( &dev->ioint, TRUE );
         subchannel_interrupt_queue_cleanup( dev );
-        if (!q)
+        if (!qdioact)
             UPDATE_IC_IOPENDING_QLOCKED();
     }
     RELEASE_IOINTQLK();
@@ -2160,9 +2131,9 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 void
 perform_halt_and_release_lock (DEVBLK *dev)
 {
-    BYTE q;     // QDIO active flag
+    BYTE qdioact;   // QDIO active flag
 
-    q = dev->scsw.flag2 & SCSW2_Q;
+    qdioact = dev->scsw.flag2 & SCSW2_Q;
     dev->scsw.flag2 &= ~SCSW2_Q;
 
     /* If status incomplete,
@@ -2232,7 +2203,7 @@ perform_halt_and_release_lock (DEVBLK *dev)
     }
 
     /* Queue pending I/O interrupt and update status */
-    queue_io_interrupt_and_update_status_locked_q(dev,TRUE,q);
+    queue_io_interrupt_and_update_status_locked( dev, TRUE, qdioact );
 
     RELEASE_DEVLOCK( dev );
 }
@@ -5261,10 +5232,10 @@ execute_halt:
 
                         /* Present the interrupt and return */
                         if (dev->scsw.flag3 & SCSW3_SC_PEND)
-                            queue_io_interrupt_and_update_status_locked(dev,FALSE);
+                            queue_io_interrupt_and_update_status_locked( dev, FALSE, FALSE);
 
                         RELEASE_DEVLOCK( dev );
-                        RELEASE_INTLOCK(NULL);
+                        RELEASE_INTLOCK( NULL );
 
                         if (dev->scsw.flag2 & (SCSW2_AC_CLEAR | SCSW2_AC_HALT))
                         {
@@ -6091,7 +6062,7 @@ breakchain:
             }
 
             /* Present the interrupt and return */
-            queue_io_interrupt_and_update_status_locked( dev, TRUE );
+            queue_io_interrupt_and_update_status_locked( dev, TRUE, FALSE );
         }
         RELEASE_DEVLOCK( dev );
     }
