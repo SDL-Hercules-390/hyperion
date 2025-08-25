@@ -1981,6 +1981,8 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
 void
 perform_clear_subchan (DEVBLK *dev)
 {
+    BYTE q;     // QDIO active flag
+
     /* Dequeue pending interrupts */
     OBTAIN_IOINTQLK();
     {
@@ -2007,7 +2009,6 @@ perform_clear_subchan (DEVBLK *dev)
         dev->scsw.flag0 = 0;
         dev->scsw.flag1 = 0;
         dev->scsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
-        BYTE q;
         q = dev->scsw.flag2 & SCSW2_Q;
         dev->scsw.flag2 &= ~SCSW2_Q;
         dev->scsw.flag2 |= SCSW2_FC_CLEAR;
@@ -2159,9 +2160,11 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 void
 perform_halt_and_release_lock (DEVBLK *dev)
 {
-    BYTE q;
+    BYTE q;     // QDIO active flag
+
     q = dev->scsw.flag2 & SCSW2_Q;
     dev->scsw.flag2 &= ~SCSW2_Q;
+
     /* If status incomplete,
      * [15.4.2] Perform halt function signaling
      */
