@@ -1430,7 +1430,7 @@ U16 offph;
             /* Allocate a buffer to which the request will be copied */
             /* and then modified, to become the response.            */
             FETCH_FW(rqsize,req_th->length);
-            rsp_bhr = alloc_buffer( dev, rqsize+100 );
+            rsp_bhr = alloc_buffer( dev, rqsize + 4095 );
             if (!rsp_bhr)
                 break;
             rsp_bhr->datalen = rqsize;
@@ -1451,7 +1451,10 @@ U16 offph;
             ipa = (MPC_IPA*)((BYTE*)rsp_th + offdata);
 
             /* Modify the response MPC_TH and MPC_RRH. */
-            STORE_FW( rsp_th->seqnum, 0 );
+            /* STORE_FW( rsp_th->seqnum, 0 ); */
+            grp->seqnumth = -2;
+            grp->seqnumcm = 0;
+            STORE_FW( rsp_th->seqnum, ++grp->seqnumth );
             STORE_HW( rsp_th->unknown10, 0x0FFC );        /* !!! */
             rsp_rrh->proto = PROTOCOL_UNKNOWN;
             memcpy( rsp_rrh->token, grp->gtulpconn, MPC_TOKEN_LENGTH );
@@ -1799,7 +1802,11 @@ U16 offph;
                     else if (proto == IPA_PROTO_IPV6)
                     {
                       FETCH_FW(flags,ipa_sip->data.ip6.flags);
-                      if (flags == IPA_SIP_DEFAULT)
+                      if (0
+                          || flags == IPA_SIP_DEFAULT
+                          || flags == IPA_SIP_VIPA
+                          || flags == IPA_SIP_TAKEOVER
+                      )
                       {
                         /* Register the IPv6 address */
                         rc = register_ipv6(grp, dev, (BYTE*)ipa_sip->data.ip6.addr);
@@ -2029,7 +2036,11 @@ U16 offph;
                     if (proto == IPA_PROTO_IPV4)
                     {
                       FETCH_FW(flags,ipa_sip->data.ip4.flags);
-                      if (flags == IPA_SIP_DEFAULT)
+                      if (0
+                          || flags == IPA_SIP_DEFAULT
+                          || flags == IPA_SIP_VIPA
+                          || flags == IPA_SIP_TAKEOVER
+                      )
                       {
 
                         /* Unregister the IPv4 address */
@@ -2046,7 +2057,11 @@ U16 offph;
                     else if (proto == IPA_PROTO_IPV6)
                     {
                       FETCH_FW(flags,ipa_sip->data.ip6.flags);
-                      if (flags == IPA_SIP_DEFAULT)
+                      if (0
+                          || flags == IPA_SIP_DEFAULT
+                          || flags == IPA_SIP_VIPA
+                          || flags == IPA_SIP_TAKEOVER
+                      )
                       {
 
                         /* Register the IPv6 address */
@@ -2378,7 +2393,7 @@ U16 reqtype;
 
     /* Allocate a buffer to which the IEA will be copied */
     /* and then modified, to become the IEAR.            */
-    rsp_bhr = alloc_buffer( dev, ieasize+10 );
+    rsp_bhr = alloc_buffer( dev, ieasize );
     if (!rsp_bhr)
         return;
     rsp_bhr->datalen = ieasize;
@@ -3867,6 +3882,9 @@ static void qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
                 */
                 signal_condition( &grp->q_idxrt_cond );
                 wait_condition( &grp->q_hread_cond, &grp->qlock );
+                unregister_all_ipv4( grp );
+                unregister_all_ipv6( grp );
+                unregister_all_mac( grp );
                 PTT_QETH_TRACE( "af halt read", 0,0,0 );
             }
             DBGTRC( dev, "Read device halted" );
@@ -3897,6 +3915,12 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
                 VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
                 wait_condition( &grp->q_hdata_cond, &grp->qlock );
                 dev->scsw.flag2 &= ~SCSW2_Q;
+#if defined( OPTION_W32_CTCI )
+                /* If the interface is still enabled/up we need to */
+                /* bring it down (disable it) to avoid "late" I/O  */
+                if (grp->enabled)
+                    VERIFY( qeth_disable_interface( dev, grp ) == 0);
+#endif
                 PTT_QETH_TRACE( "af halt data", 0,0,0 );
             }
             DBGTRC( dev, "Data device halted" );
@@ -5817,7 +5841,7 @@ U16 uLength4;
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -5928,7 +5952,7 @@ U16 uLength4;
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -6136,7 +6160,7 @@ U16 uLength4;
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -6263,7 +6287,7 @@ U16 uLength4;
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -6379,7 +6403,7 @@ U16 uLength4;
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );

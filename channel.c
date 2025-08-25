@@ -519,6 +519,37 @@ queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
 #endif // defined( OPTION_SHARED_DEVICES )
 }
 
+static INLINE void
+queue_io_interrupt_and_update_status_locked_q(DEVBLK* dev, int clrbsy, BYTE q)
+{
+    OBTAIN_IOINTQLK();
+    {
+        /* Ensure the interrupt is queued/dequeued per pending flag */
+        if (dev->scsw.flag3 & SCSW3_SC_PEND)
+            QUEUE_IO_INTERRUPT_QLOCKED( &dev->ioint, clrbsy );
+        else
+            DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->ioint );
+
+        /* Perform cleanup for DEVBLK flags being deprecated */
+        subchannel_interrupt_queue_cleanup( dev );
+
+        /* Update interrupts */
+        if (!q)
+            UPDATE_IC_IOPENDING_QLOCKED();
+    }
+    RELEASE_IOINTQLK();
+
+#if defined( OPTION_SHARED_DEVICES )
+    /* Wake up any waiters if the device isn't active or reserved */
+    if (!(dev->scsw.flag3 & (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC)) &&
+        !dev->reserved)
+    {
+        dev->shioactive = DEV_SYS_NONE;
+        if (dev->shiowaiters)
+            signal_condition (&dev->shiocond);
+    }
+#endif // defined( OPTION_SHARED_DEVICES )
+}
 
 /*--------------------------------------------------------------------*/
 /*  Queue I/O interrupt and update status                             */
@@ -1976,6 +2007,9 @@ perform_clear_subchan (DEVBLK *dev)
         dev->scsw.flag0 = 0;
         dev->scsw.flag1 = 0;
         dev->scsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
+        BYTE q;
+        q = dev->scsw.flag2 & SCSW2_Q;
+        dev->scsw.flag2 &= ~SCSW2_Q;
         dev->scsw.flag2 |= SCSW2_FC_CLEAR;
         /* Shortcut setting of flag3 due to clear and setting of just the
          * status pending flag:
@@ -1991,7 +2025,8 @@ perform_clear_subchan (DEVBLK *dev)
         /* Queue the pending interrupt and update status */
         QUEUE_IO_INTERRUPT_QLOCKED( &dev->ioint, TRUE );
         subchannel_interrupt_queue_cleanup( dev );
-        UPDATE_IC_IOPENDING_QLOCKED();
+        if (!q)
+            UPDATE_IC_IOPENDING_QLOCKED();
     }
     RELEASE_IOINTQLK();
 
@@ -2124,6 +2159,9 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 void
 perform_halt_and_release_lock (DEVBLK *dev)
 {
+    BYTE q;
+    q = dev->scsw.flag2 & SCSW2_Q;
+    dev->scsw.flag2 &= ~SCSW2_Q;
     /* If status incomplete,
      * [15.4.2] Perform halt function signaling
      */
@@ -2191,7 +2229,7 @@ perform_halt_and_release_lock (DEVBLK *dev)
     }
 
     /* Queue pending I/O interrupt and update status */
-    queue_io_interrupt_and_update_status_locked(dev,TRUE);
+    queue_io_interrupt_and_update_status_locked_q(dev,TRUE,q);
 
     RELEASE_DEVLOCK( dev );
 }
