@@ -229,9 +229,25 @@ DLL_EXPORT pid_t  fork( void )
 #if !defined( HAVE_SCHED_YIELD )
 
 DLL_EXPORT int sched_yield ( void )
-{
+{ 
+    //                     ***  SwitchToThread  ***
+    //
+    // Note: The yield is limited to THE PROCESSOR OF THE CALLING THREAD!
+    // The operating system will *NOT* SWITCH EXECUTION TO ANOTHER PROCESSOR!
+    // (even if that processor is idle or is running a thread of lower priority!)
+
     if (!SwitchToThread())
+
+        //                      ***  Sleep  ***
+        //
+        // A value of zero causes the thread to relinquish the remainder of its
+        // time slice to any other thread OF EQUAL PRIORITY that is ready to run.
+        //
+        // If there are no other threads OF EQUAL PRIORITY ready to run,
+        // the function returns immediately, AND THE THREAD CONTINUES EXECUTION!
+
         Sleep(0);
+
     return 0;
 }
 

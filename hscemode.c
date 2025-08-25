@@ -2315,6 +2315,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     for (io = sysblk.iointq; io; io = io->next)
     {
+        // "device %1d:%04X: %s%s%s%s pri ISC %02X CSS %02X CU %02X"
         WRMSG( HHC00882, "I", SSID_TO_LCSS(io->dev->ssid), io->dev->devnum
                 ,io->pending      ? " normal, " : ""
                 ,io->pcipending   ? " PCI,    " : ""
