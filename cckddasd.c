@@ -96,6 +96,7 @@ int cckd_dasd_init( int argc, BYTE* argv[] )
     cckdblk.wrmax      = CCKD_DEF_WRITER;
     cckdblk.dhmax      = CCKD_DEF_DHMAX;
     cckdblk.dhint      = CCKD_DEF_DHINT;
+    cckdblk.dhstart    = CCKD_DEF_DHSTART;
     cckdblk.gcmax      = CCKD_DEF_GCOL;
     cckdblk.gcint      = CCKD_DEF_GCINT;
     cckdblk.gcparm     = CCKD_DEF_GCPARM;
@@ -1847,8 +1848,12 @@ bool            cont = true;
 
         if (cckdblk.debug)
         {
+            char curtime[128];
+            strlcpy( curtime, ctime( &tt_now ), sizeof( curtime ));
+            RTRIM( curtime );
+
             // "Thread '%s': sleeping for %d seconds at %s..."
-            WRMSG( HHC00393, "D", CCKD_DH_THREAD_NAME, cckdblk.dhint, ctime( &tt_now ));
+            WRMSG( HHC00393, "D", CCKD_DH_THREAD_NAME, cckdblk.dhint, curtime );
         }
 
         tm.tv_sec = tv_now.tv_sec + cckdblk.dhint;

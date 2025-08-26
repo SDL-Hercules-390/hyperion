@@ -257,15 +257,16 @@ typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 #define CCKD_DEF_FREEPEND     -1        /* Def free pending cycles   */
 #define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
-#define CCKD_MIN_DHMAX         0        /* Min DASD hardeners allowed  */
-#define CCKD_DEF_DHMAX         1        /* Def DASD hardeners allowed  */
-#define CCKD_MAX_DHMAX         1        /* Max DASD hardeners allowed  */
-                                        /* *** ONLY ONE ALLOWED! ***   */
+#define CCKD_DEF_DHSTART       1        /* Def DASD hardener start   */
 
-#define CCKD_MIN_DHINT         0        /* Min DASD hardening interval */
-#define CCKD_DEF_DHINT         0        /* Def DASD hardening interval */
-#define CCKD_MAX_DHINT         999      /* Max DASD hardening interval */
+#define CCKD_MIN_DHINT         0        /* Min DASD hardener interval*/
+#define CCKD_DEF_DHINT         10       /* Def DASD hardener interval*/
+#define CCKD_MAX_DHINT         999      /* Max DASD hardener interval*/
 
+#define CCKD_MIN_DHMAX         0        /* Min DASD hardeners allowed*/
+#define CCKD_DEF_DHMAX         1        /* Def DASD hardeners allowed*/
+#define CCKD_MAX_DHMAX         1        /* Max DASD hardeners allowed*/
+                                        /* *** ONLY ONE ALLOWED ***  */
 
 /*-------------------------------------------------------------------*/
 /*                   Global CCKD dasd block                          */
