@@ -224,6 +224,44 @@ static FCBTAB fcbtab[] =    // table of predefined fcb/cctape names
     { FCBTYPE_CCTAPE, "fcb2id1",  cctape_fcb2id1   },
 };
 
+#if !defined( _MSVC_ )
+/*-------------------------------------------------------------------*/
+/*  Pipe receiver signal handler.                                    */
+/*-------------------------------------------------------------------*/
+static void pipe_signal_handler(int signum)
+{
+    int fd;
+    int rc = 0;
+
+    if ((fd = open("/dev/null", O_RDONLY)) != -1)
+    {
+        if (dup2( fd, STDIN_FILENO ) == STDIN_FILENO)
+        {
+            close(fd);
+        }
+        else
+        {
+             // "%1d:%04X %s: error in function %s: %s"
+             // Note: device is set to 0000:0000 as we do not have accesss
+             //       to the actual device number here
+             WRMSG( HHC01250, "E", 0, 0,
+                 "Printer", "dup2()", strerror( errno ));
+             rc = signum;
+        }
+    }
+    else
+    {
+        // "%1d:%04X %s: error in function %s: %s"
+        // see note above
+        WRMSG( HHC01250, "E", 0, 0,
+            "Printer", "open()", strerror( errno ));
+        rc = signum;
+    }
+
+    _exit( rc );
+}
+#endif
+
 /*-------------------------------------------------------------------*/
 /*  Write data to printer.    Return 0 if successful, else unitstat. */
 /*-------------------------------------------------------------------*/
@@ -1665,7 +1703,9 @@ off_t           filesize = 0;           /* file size for ftruncate   */
     }
 
     /* Fork a child process to receive the pipe data */
-    if ((pid = fork()) < 0)
+    pid = fork();
+
+    if (pid < 0)
     {
         // "%1d:%04X COMM: outgoing call failed during %s command: %s"
         WRMSG( HHC01005, "E", LCSS_DEVNUM,
@@ -1678,8 +1718,6 @@ off_t           filesize = 0;           /* file size for ftruncate   */
     /* The child process executes the pipe receiver program... */
     if (pid == 0)
     {
-        // "%1d:%04X Printer: pipe receiver with pid %d starting"
-        WRMSG( HHC01106, "I", LCSS_DEVNUM, getpid() );
 
         /* Close the write end of the pipe */
         close_pipe( pipefd[1] );
@@ -1703,19 +1741,16 @@ off_t           filesize = 0;           /* file size for ftruncate   */
         /* Redirect stderr (screen) to hercules log task */
         dup2( STDOUT_FILENO, STDERR_FILENO );
 
+        /* set up signal handler to "close" stdin on SIGTERM */
+        signal(SIGTERM, pipe_signal_handler);
+
         /* Relinquish any ROOT authority before calling shell */
         SETMODE( TERM );
 
         /* Execute the specified pipe receiver program */
         rc = system( dev->filename+1 );
 
-        if (rc == 0)
-        {
-            // "%1d:%04X Printer: pipe receiver with pid %d terminating"
-            WRMSG( HHC01107, "I", LCSS_DEVNUM,
-                getpid() );
-        }
-        else
+        if (rc != 0)
         {
             // "%1d:%04X Printer: unable to execute file %s: %s"
             WRMSG( HHC01108, "E", LCSS_DEVNUM,
@@ -1729,6 +1764,9 @@ off_t           filesize = 0;           /* file size for ftruncate   */
     } /* end if (pid == 0) */
 
     /* The parent process continues as the pipe sender */
+
+    // "%1d:%04X Printer: pipe receiver with pid %d starting"
+    WRMSG( HHC01106, "I", LCSS_DEVNUM, pid);
 
     /* Close the read end of the pipe */
     close_pipe( pipefd[0] );
@@ -1761,6 +1799,26 @@ int fd = dev->fd;
     {
 #if !defined( _MSVC_ )
         close_pipe (fd);
+
+        // "%1d:%04X Printer: sending pipe receiver with pid %d signal %d"
+        WRMSG( HHC01114, "I", LCSS_DEVNUM, dev->ptpcpid, SIGTERM);
+
+        if (kill(dev->ptpcpid,SIGTERM) == 0)
+        {
+            // wait for child receiver to end
+            if (waitpid(dev->ptpcpid, NULL, 0) == -1)
+            {
+                // "%1d:%04X %s: error in function %s: %s"
+                WRMSG( HHC01250, "E", LCSS_DEVNUM,
+                        "Printer", "waitpid()", strerror( errno ));
+            }
+        }
+        else
+        {
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", LCSS_DEVNUM,
+                    "Printer", "kill()", strerror( errno ));
+        }
 #else /* defined( _MSVC_ ) */
         close (fd);
 #endif /* defined( _MSVC_ ) */
