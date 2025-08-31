@@ -164,6 +164,7 @@ S64 quotient, remainder;
 
     if (d == 0) return 1;
     dividend = (U64)high << 32 | lo;
+    if ((S32)d == -1 && dividend == 0x8000000000000000ULL) return 1;
     quotient = (S64)dividend / (S32)d;
     remainder = (S64)dividend % (S32)d;
     if (quotient < -2147483648LL || quotient > 2147483647LL) return 1;
