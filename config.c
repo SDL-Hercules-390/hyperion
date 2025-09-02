@@ -772,7 +772,6 @@ static int detach_devblk (DEVBLK *dev, int locked, const char *msg,
 {
 int     i;                              /* Loop index                */
 
-    /* Free the entire group if this is a grouped device */
     if (free_group( dev->group, locked, msg, errdev ))
     {
         /* Group successfully freed. All devices in the group
@@ -793,10 +792,8 @@ int     i;                              /* Loop index                */
     if(dev->pmcw.flag5 & PMCW5_V)
         DelDevnumFastLookup(LCSS_DEVNUM);
 
-    /* Close file or socket */
-    if ((dev->fd >= 0) || dev->console)
-        /* Call the device close handler */
-        (dev->hnd->close)(dev);
+    /* Close file or socket: Call the device close handler */
+    (dev->hnd->close)(dev);
 
     /* Issue device detached message and build channel report */
     if (dev != errdev)
@@ -1657,7 +1654,6 @@ DLL_EXPORT BYTE free_group( DEVGRP *group, int locked,
             // entire group at once in case it is a grouped device.
             // Therefore we must clear dev->group to NULL *before*
             // calling detach_devblk to prevent infinite recursion.
-
             dev->group = NULL;
             detach_devblk( dev, dev == errdev && locked, msg, errdev,
                            group );

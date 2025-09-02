@@ -530,8 +530,7 @@ libherc_la_SOURCES = \
   x75.c              \
   xstore.c           \
   zvector.c          \
-  zvector2.c         \
-  zvector3.c         \
+  zvector2.c          \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
@@ -1137,7 +1136,7 @@ noinst_HEADERS =          \
   w32util.h               \
   x75.h                   \
   zfcp.h                  \
-  zvector.h
+  compat/linux/sockios.h
 
 ###############################################################################
 #                         B U I L D   R U L E S

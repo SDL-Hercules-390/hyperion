@@ -142,6 +142,10 @@ extern int      TUNTAP_DelRoute         ( char*   pszNetDevName,
                                           int     iFlags );
 #endif
 
+#if defined(__FreeBSD__)
+extern int	TUNTAP_Close		( int     fd );
+#endif
+
 #if defined( OPTION_W32_CTCI )   // CTCI-WIN v3.7.0 or greater
   #if defined( TT32QIFDSTADDRS ) // CTCI-WIN v3.7.0 or greater
     extern int TT32_AddIPAddr ( int fd, BYTE* ipv4addr  );
@@ -186,12 +190,14 @@ extern void net_data_trace( DEVBLK* dev, BYTE* addr, int len, BYTE dir, BYTE sev
   #define TUNTAP_IOCtl          tt32_ioctl
 #else // !defined( OPTION_W32_CTCI )
   #define TUNTAP_Open           open
-  #define TUNTAP_Close          close
   #define TUNTAP_Read           read
   #define TUNTAP_Write          write
   #define TUNTAP_BegMWrite(f,n)
   #define TUNTAP_EndMWrite(f)
   #define TUNTAP_IOCtl          ioctl
+#if !defined(__FreeBSD__)
+  #define TUNTAP_Close          close
+#endif // !defined (__FreeBSD__)
 #endif // defined( OPTION_W32_CTCI )
 
 #endif // __TUNTAP_H_
