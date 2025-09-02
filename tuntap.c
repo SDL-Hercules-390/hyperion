@@ -430,6 +430,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 #endif // defined (__FreeBSD__)
 }   // End of function  TUNTAP_CreateInterface()
 
+
 //
 // Redefine 'TUNTAP_IOCtl' for the remainder of the functions.
 // This forces all 'ioctl' calls to go to 'hercifc'.
@@ -1382,10 +1383,10 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     const char* pszCfgCmd;     // Interface config command
     CTLREQ      ctlreq;
 
-//#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
     char*       request_name;  // debugging: name of ioctl request
     char        unknown_request[] = "Unknown (0x00000000)";
-//#endif
+#endif
 
     UNREFERENCED( fd );
 

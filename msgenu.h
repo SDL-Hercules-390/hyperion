@@ -999,7 +999,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01111 "%1d:%04X Printer: channel 1 is undefined"
 #define HHC01112 "%1d:%04X Printer: invalid fcb: maximum channel codes exceeded"
 #define HHC01113 "%1d:%04X Printer: incompatible '%s' and 'lpp' values detected"
-//efine HHC01114 - HHC01149 (available)
+#define HHC01114 "%1d:%04X Printer: sending pipe receiver with pid %d signal %d"
+//efine HHC01115 - HHC01149 (available)
 
 // HIM device (him.c)
 #define HHC01150 "%1d:%04X HIM: Error in function %s: %s"
