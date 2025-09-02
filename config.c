@@ -795,7 +795,7 @@ int     i;                              /* Loop index                */
 
     /* Close file or socket */
     if ((dev->fd >= 0) || dev->console) 
-	/* Call the device close handler */
+        /* Call the device close handler */
         (dev->hnd->close)(dev);
 
     /* Issue device detached message and build channel report */
