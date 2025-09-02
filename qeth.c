@@ -4662,13 +4662,13 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         PTT_QETH_TRACE( "b4 clos ttfd", 0,0,0 );
         grp->ttfd = -1;
         dev->fd = -1;
-        if(ttfd > 0) 
+        if(ttfd > 0)
             TUNTAP_Close(ttfd);
         PTT_QETH_TRACE( "af clos ttfd", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos pipe", 0,0,0 );
-        if(grp->ppfd[0]) 
-      	    close_pipe(grp->ppfd[0]);
+        if(grp->ppfd[0])
+            close_pipe(grp->ppfd[0]);
         if(grp->ppfd[1])
             close_pipe(grp->ppfd[1]);
         PTT_QETH_TRACE( "af clos pipe", 0,0,0 );
