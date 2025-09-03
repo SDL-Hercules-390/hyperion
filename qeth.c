@@ -1227,7 +1227,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             MSGBUF( buf, "TUNTAP_SetDestAddr(\"%s\") failed", grp->ttipaddr );
             return QERRMSG( dev, grp, errno, "E", buf );
         }
-#else /* Linux */
+#else /* Linux - and FreeBSD, albeit not very pretty */
         if ((rc = TUNTAP_SetIPAddr( grp->ttifname, grp->ttipaddr )) != 0)
         {
             char buf[64];
@@ -5840,7 +5840,7 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
+    // Allocate a buffer in which the response will be built.
     rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
@@ -5951,7 +5951,7 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
+    // Allocate a buffer in which the response will be built.
     rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
@@ -6159,7 +6159,7 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
+    // Allocate a buffer in which the response will be built.
     rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
@@ -6286,7 +6286,7 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
+    // Allocate a buffer in which the response will be built.
     rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
@@ -6402,7 +6402,7 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
+    // Allocate a buffer in which the response will be built.
     rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;

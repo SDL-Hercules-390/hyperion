@@ -1137,7 +1137,8 @@ noinst_HEADERS =          \
   w32util.h               \
   x75.h                   \
   zfcp.h                  \
-  zvector.h
+  zvector.h               \
+  compat/linux/sockios.h
 
 ###############################################################################
 #                         B U I L D   R U L E S

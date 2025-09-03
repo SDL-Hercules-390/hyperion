@@ -2872,4 +2872,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 // range 98000 - 98999 available
 // range 99000 - 99999 available
 
+#define HHC99998 "FreeBSD: %s %s"   // Dumping all FreeBSD debugging in one spot
+#define HHC99999 "FreeBSD: %s" 	    // Dumping all FreeBSD debugging in one spot
+
 #endif // _MSGENU_H_
