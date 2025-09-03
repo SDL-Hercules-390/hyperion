@@ -143,7 +143,7 @@ extern int      TUNTAP_DelRoute         ( char*   pszNetDevName,
 #endif
 
 #if defined(__FreeBSD__)
-extern int	TUNTAP_Close		( int     fd );
+extern int      TUNTAP_Close            ( int     fd );
 #endif
 
 #if defined( OPTION_W32_CTCI )   // CTCI-WIN v3.7.0 or greater

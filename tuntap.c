@@ -58,9 +58,9 @@
 #include <sys/user.h>
 #include <sys/sysctl.h>
 
-#define FBSD_TUN_EXT	'E'
-#define FBSD_TUN_INT	'I'
-char FBSD_TUN_MODE = '\0';
+#define FBSD_TUN_EXT    'E'
+#define FBSD_TUN_INT    'I'
+char FBSD_TUN_MODE =    '\0';
 #endif
 
 // ====================================================================
@@ -248,96 +248,98 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
     int fd;                        // File descriptor
 
 #if defined (__FreeBSD__)
-	// Were we passed a device name?
-	if(*pszNetDevName) {
-		// Yes, we got a name. 
-		char device[PATH_MAX] = "/dev/"; 
-		strlcat(device, pszNetDevName, sizeof(device));
+    // Were we passed a device name?
+    if(*pszNetDevName) {
+        // Yes, we got a name. 
+        char device[PATH_MAX] = "/dev/"; 
+        strlcat(device, pszNetDevName, sizeof(device));
 
-        	fd = TUNTAP_Open( device, O_RDWR );
+        fd = TUNTAP_Open( device, O_RDWR );
 
-		// Does it exist?
-        	if( fd < 0 ) {
-			if (ENOENT == errno) {
-				// It doesn't exist. 
-				WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device doesn't exist yet:", device);
-				FBSD_TUN_MODE = FBSD_TUN_INT;
+        // Does it exist?
+        if( fd < 0 ) {
+            if (ENOENT == errno) {
+                // It doesn't exist. 
+                WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device doesn't exist yet:", device);
+                FBSD_TUN_MODE = FBSD_TUN_INT;
 
-				// Open /dev/tun itself to trigger creation of a new device
-        			fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
+                // Open /dev/tun itself to trigger creation of a new device
+                fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
 
-				if( fd < 0 ) { 
-					// Something is not right. Bailing.
-					WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
-					return -1;
-				}	
+                if( fd < 0 ) { 
+                    // Something is not right. Bailing.
+                    WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
+                    return -1;
+                }    
 
-				// Setting explicit IFF_POINTOPOINT. Not sure if necessary but...
-				int mode = IFF_POINTOPOINT;
-				if (ioctl(fd, TUNSIFMODE, &mode) < 0) {
-					WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
-					return -1;
-				}
+                // Setting explicit IFF_POINTOPOINT. Not sure if necessary but...
+                int mode = IFF_POINTOPOINT;
+                if (ioctl(fd, TUNSIFMODE, &mode) < 0) {
+                    WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
+                    return -1;
+                }
 
-			        struct ifreq ifr;
-			        memset(&ifr, 0, sizeof(ifr));
+                struct ifreq ifr;
+                memset(&ifr, 0, sizeof(ifr));
 
-			        if (ioctl(fd, TUNGIFNAME, &ifr) < 0) {
-			                WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: ioctl(fd, TUNGIFNAME, &ifr) failed:", strerror( errno ));
-			                return -1;
-			        }
+                if (ioctl(fd, TUNGIFNAME, &ifr) < 0) {
+                    WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: ioctl(fd, TUNGIFNAME, &ifr) failed:", strerror( errno ));
+                    return -1;
+                }
 
-				// What is our current device name and what do we want it to be
-			        ifr.ifr_data = pszNetDevName;
+                // What is our current device name and what do we want it to be
+                ifr.ifr_data = pszNetDevName;
 
-        			int sock = socket(AF_LOCAL, SOCK_DGRAM, 0);
-        			if (sock < 0) {
-                			WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: socket(AF_LOCAL, SOCK_DGRAM, 0) failed:", strerror( errno ));
-                			return -1;
-        			}
-        			if (TUNTAP_IOCtl(sock, SIOCSIFNAME, &ifr) < 0) {
-                			WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: ioctl(sock, SIOCSIFNAME, &ifr) failed:", strerror( errno ));
-                			return -1;
-        			}
+                int sock = socket(AF_LOCAL, SOCK_DGRAM, 0);
+                if (sock < 0) {
+                    WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: socket(AF_LOCAL, SOCK_DGRAM, 0) failed:", strerror( errno ));
+                    return -1;
+                }
 
-        			close(sock);
-			} else {
-				// It exists but we can't work with it. Bailing.
-				WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
-				return -1;
-			}
-        	} else {
-			// It exists, and we can open it. Cool.
-			FBSD_TUN_MODE = FBSD_TUN_EXT;
-			WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device exists and is usable:", device);
-		} 
-	} else {
-		// No, we didn't get a name. Create the first available tun device and go with it.
-		FBSD_TUN_MODE = FBSD_TUN_INT;
+                if (TUNTAP_IOCtl(sock, SIOCSIFNAME, &ifr) < 0) {
+                    WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: ioctl(sock, SIOCSIFNAME, &ifr) failed:", strerror( errno ));
+                    return -1;
+                }
 
-        	fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
-		if( fd < 0 ) { 
-			// Something is not right. Bailing.
-			WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
-			return -1;
-		}	
-		
-		struct ifreq ifr;
-		memset(&ifr, 0, sizeof(ifr));
+                close(sock);
 
-		// Fetching the name of the created device
-		if (ioctl(fd, TUNGIFNAME, &ifr) < 0) {
-			WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: ioctl(fd, TUNGIFNAME, &ifr) failed:", strerror( errno ));
-			return -1;
-		}
-	
-		strcpy( pszNetDevName, ifr.ifr_name );
-	
-		WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device was created:", ifr.ifr_name);
-	}
+            } else {
+                // It exists but we can't work with it. Bailing.
+                WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
+                return -1;
+            }
+        } else {
+            // It exists, and we can open it. Cool.
+            FBSD_TUN_MODE = FBSD_TUN_EXT;
+            WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device exists and is usable:", device);
+        } 
+    } else {
+        // No, we didn't get a name. Create the first available tun device and go with it.
+        FBSD_TUN_MODE = FBSD_TUN_INT;
 
-        *pfd = fd;
-        return 0;
+        fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
+        if( fd < 0 ) { 
+            // Something is not right. Bailing.
+            WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
+            return -1;
+        }    
+        
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof(ifr));
+
+        // Fetching the name of the created device
+        if (ioctl(fd, TUNGIFNAME, &ifr) < 0) {
+            WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: ioctl(fd, TUNGIFNAME, &ifr) failed:", strerror( errno ));
+            return -1;
+        }
+    
+        strcpy( pszNetDevName, ifr.ifr_name );
+    
+        WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device was created:", ifr.ifr_name);
+    }
+
+    *pfd = fd;
+    return 0;
 #else
 
 #if !defined( OPTION_W32_CTCI )
@@ -458,36 +460,36 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 #if defined (__FreeBSD__)
 int             TUNTAP_Close( int fd )
 {
-	struct ifreq ifr;
-	memset(&ifr, 0, sizeof(ifr));
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
 
-	if (ioctl(fd, TUNGIFNAME, &ifr) < 0) {
-		WRMSG( HHC99998, "E", "TUNTAP_Close: ioctl(fd, TUNGIFNAME, &ifr) failed:", strerror( errno ));
-		return -1;
-	}
+    if (ioctl(fd, TUNGIFNAME, &ifr) < 0) {
+        WRMSG( HHC99998, "E", "TUNTAP_Close: ioctl(fd, TUNGIFNAME, &ifr) failed:", strerror( errno ));
+        return -1;
+    }
 
-	WRMSG( HHC99998, "I", "TUNTAP_Close: Closing", ifr.ifr_name);
+    WRMSG( HHC99998, "I", "TUNTAP_Close: Closing", ifr.ifr_name);
 
-	if (close(fd) < 0) {
-		WRMSG( HHC99999, "E", "TUNTAP_Close: Closing the file descriptor failed!");
-		return -1;
-	} 
+    if (close(fd) < 0) {
+        WRMSG( HHC99999, "E", "TUNTAP_Close: Closing the file descriptor failed!");
+        return -1;
+    } 
 
-	// Only remove the device from the OS if we created it outselves
-	if (FBSD_TUN_MODE && FBSD_TUN_MODE == FBSD_TUN_INT) {
-		int sock = socket(AF_INET, SOCK_DGRAM, 0);
-		if (sock < 0) {
-			return -1;
-		}
+    // Only remove the device from the OS if we created it outselves
+    if (FBSD_TUN_MODE && FBSD_TUN_MODE == FBSD_TUN_INT) {
+        int sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sock < 0) {
+            return -1;
+        }
 
-		if (ioctl(sock, SIOCIFDESTROY, &ifr) < 0) {
-			WRMSG( HHC99998, "E", "TUNTAP_Close: ioctl(sock, SIOCIFDESTROY, &ifr) failed:", strerror( errno ));
-			close(sock);
-			return -1;
-		}
-	}
+        if (ioctl(sock, SIOCIFDESTROY, &ifr) < 0) {
+            WRMSG( HHC99998, "E", "TUNTAP_Close: ioctl(sock, SIOCIFDESTROY, &ifr) failed:", strerror( errno ));
+            close(sock);
+            return -1;
+        }
+    }
 
-	return 0;
+    return 0;
 }
 #endif
 
@@ -522,76 +524,76 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
                                   char*  pszIPAddr )
 {
 #if defined (__FreeBSD__)
-	int sock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock < 0) {
-		return -1;
-	}
-	
-	struct ifreq ifr;
-	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
-	
-	// Get current flags - directly because hercifc doesn't know GET ioctls
-	if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: ioctl(sock, SIOCGIFFLAGS, &ifr) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-	}
-	
-	// Set IFF_UP and IFF_POINTOPOINT flags
-	ifr.ifr_flags |= ( IFF_UP | IFF_POINTOPOINT);
-	if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: ioctl(sock, SIOCSIFFLAGS, &ifr) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-	}
-	
-	// Prepwork 
-	struct in_aliasreq ifra;
-	memset(&ifra, 0, sizeof(ifra));
-	strncpy(ifra.ifra_name, pszNetDevName, IFNAMSIZ);
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        return -1;
+    }
+    
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
+    
+    // Get current flags - directly because hercifc doesn't know GET ioctls
+    if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: ioctl(sock, SIOCGIFFLAGS, &ifr) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+    }
+    
+    // Set IFF_UP and IFF_POINTOPOINT flags
+    ifr.ifr_flags |= ( IFF_UP | IFF_POINTOPOINT);
+    if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: ioctl(sock, SIOCSIFFLAGS, &ifr) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+    }
+    
+    // Prepwork 
+    struct in_aliasreq ifra;
+    memset(&ifra, 0, sizeof(ifra));
+    strncpy(ifra.ifra_name, pszNetDevName, IFNAMSIZ);
 
-	// Local address
-	memset(&ifra.ifra_addr, 0, sizeof(ifra.ifra_addr));
-	ifra.ifra_addr.sin_len = sizeof(struct sockaddr_in);
-	ifra.ifra_addr.sin_family = AF_INET;
-	if (inet_pton(AF_INET, pszIPAddr, &ifra.ifra_addr.sin_addr) != 1) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: inet_pton(AF_INET, pszIPAddr, &ifra.ifra_addr.sin_addr) failed:", strerror( errno ));
-		return -1;
-	}
-	
-	// Dest address 
-	// We don't know the dest address in this function but the ioctl needs it to set up the device.
-	// We have to set a dummy address which will be overwritten later in TUNTAP_SetDestAddr.
-	// Using an address in the 192.0.2.0/24 range which according to RFC 5737 cannot be used for anything but documentation purposes.
-	char* dummy_ip = "192.0.2.1"; // RFC 5737
-	memset(&ifra.ifra_dstaddr, 0, sizeof(ifra.ifra_dstaddr));
-	ifra.ifra_dstaddr.sin_len = sizeof(struct sockaddr_in);
-	ifra.ifra_dstaddr.sin_family = AF_INET;
-	if (inet_pton(AF_INET, dummy_ip, &ifra.ifra_dstaddr.sin_addr) != 1) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: inet_pton(AF_INET, dummy_ip, &ifra.ifra_dstaddr.sin_addr) failed:", strerror( errno ));
-		return -1;
-	}
+    // Local address
+    memset(&ifra.ifra_addr, 0, sizeof(ifra.ifra_addr));
+    ifra.ifra_addr.sin_len = sizeof(struct sockaddr_in);
+    ifra.ifra_addr.sin_family = AF_INET;
+    if (inet_pton(AF_INET, pszIPAddr, &ifra.ifra_addr.sin_addr) != 1) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: inet_pton(AF_INET, pszIPAddr, &ifra.ifra_addr.sin_addr) failed:", strerror( errno ));
+        return -1;
+    }
+    
+    // Dest address 
+    // We don't know the dest address in this function but the ioctl needs it to set up the device.
+    // We have to set a dummy address which will be overwritten later in TUNTAP_SetDestAddr.
+    // Using an address in the 192.0.2.0/24 range which according to RFC 5737 cannot be used for anything but documentation purposes.
+    char* dummy_ip = "192.0.2.1"; // RFC 5737
+    memset(&ifra.ifra_dstaddr, 0, sizeof(ifra.ifra_dstaddr));
+    ifra.ifra_dstaddr.sin_len = sizeof(struct sockaddr_in);
+    ifra.ifra_dstaddr.sin_family = AF_INET;
+    if (inet_pton(AF_INET, dummy_ip, &ifra.ifra_dstaddr.sin_addr) != 1) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: inet_pton(AF_INET, dummy_ip, &ifra.ifra_dstaddr.sin_addr) failed:", strerror( errno ));
+        return -1;
+    }
 
-	// Netmask
-	// We don't know the netmask either.
-	// Set it to 255.255.255.255 until it gets overwritten later in TUNTAP_SetNetmask.
-	memset(&ifra.ifra_mask, 0, sizeof(ifra.ifra_mask));
-	ifra.ifra_mask.sin_len = sizeof(struct sockaddr_in);
-	ifra.ifra_mask.sin_family = AF_INET;
-	if (inet_pton(AF_INET, "255.255.255.255", &ifra.ifra_mask.sin_addr) != 1) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: inet_pton(AF_INET, \"255.255.255.255\", &ifra.ifra_mask.sin_addr) failed:", strerror( errno ));
-		return -1;
-	}
+    // Netmask
+    // We don't know the netmask either.
+    // Set it to 255.255.255.255 until it gets overwritten later in TUNTAP_SetNetmask.
+    memset(&ifra.ifra_mask, 0, sizeof(ifra.ifra_mask));
+    ifra.ifra_mask.sin_len = sizeof(struct sockaddr_in);
+    ifra.ifra_mask.sin_family = AF_INET;
+    if (inet_pton(AF_INET, "255.255.255.255", &ifra.ifra_mask.sin_addr) != 1) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: inet_pton(AF_INET, \"255.255.255.255\", &ifra.ifra_mask.sin_addr) failed:", strerror( errno ));
+        return -1;
+    }
 
-	if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
-		WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-	}
+    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
+        WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+    }
 
-	close(sock);
-	return 0;
+    close(sock);
+    return 0;
 #else 
 
     struct hifr         hifr;
@@ -632,72 +634,71 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
                                     char*  pszDestAddr )
 {
 #if defined (__FreeBSD__)
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        return -1;
+    }
+    
+    struct ifreq ifr;
 
-	int sock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock < 0) {
-		return -1;
-	}
-	
-	struct ifreq ifr;
+    // Fetch existing IP
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
+    if (ioctl(sock, SIOCGIFADDR, &ifr) < 0) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: ioctl(sock, SIOCGIFADDR, &ifr) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+    }
+    struct in_addr existing_ip = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
 
-	// Fetch existing IP
-	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
-	if (ioctl(sock, SIOCGIFADDR, &ifr) < 0) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: ioctl(sock, SIOCGIFADDR, &ifr) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-	}
-	struct in_addr existing_ip = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
+    // Fetch existing netmask
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
+    if (ioctl(sock, SIOCGIFNETMASK, &ifr) < 0) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: ioctl(sock, SIOCGIFNETMASK, &ifr) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+        }
+    struct in_addr existing_netmask = ((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr;
 
-	// Fetch existing netmask
-	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
-	if (ioctl(sock, SIOCGIFNETMASK, &ifr) < 0) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: ioctl(sock, SIOCGIFNETMASK, &ifr) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-    	}
-	struct in_addr existing_netmask = ((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr;
+    // Create request
+    struct in_aliasreq ifra;
+    memset(&ifra, 0, sizeof(ifra));
+    strncpy(ifra.ifra_name, pszNetDevName, IFNAMSIZ);
 
-	// Create request
-	struct in_aliasreq ifra;
-	memset(&ifra, 0, sizeof(ifra));
-	strncpy(ifra.ifra_name, pszNetDevName, IFNAMSIZ);
+    struct sockaddr_in* tmp_sin;
 
-	struct sockaddr_in* tmp_sin;
+    // Source address
+    tmp_sin = (struct sockaddr_in*)&ifra.ifra_addr;
+    tmp_sin->sin_len = sizeof(struct sockaddr_in);
+    tmp_sin->sin_family = AF_INET;
+    tmp_sin->sin_addr = existing_ip;    
 
-	// Source address
-	tmp_sin = (struct sockaddr_in*)&ifra.ifra_addr;
-	tmp_sin->sin_len = sizeof(struct sockaddr_in);
-	tmp_sin->sin_family = AF_INET;
-	tmp_sin->sin_addr = existing_ip;	
+    // Destination address
+    // We have the 'real' destination IP now, so we can overwrite the RFC 5737 IP.
+    tmp_sin = (struct sockaddr_in*)&ifra.ifra_dstaddr;
+    tmp_sin->sin_len = sizeof(struct sockaddr_in);
+    tmp_sin->sin_family = AF_INET;
+    if (inet_pton(AF_INET, pszDestAddr, &tmp_sin->sin_addr) != 1) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: inet_pton(AF_INET, pszDestAddr, &tmp_sin->sin_addr) failed:", strerror( errno ));    
+        close(sock);
+        return 1;
+    }
 
-	// Destination address
-	// We have the 'real' destination IP now, so we can overwrite the RFC 5737 IP.
-	tmp_sin = (struct sockaddr_in*)&ifra.ifra_dstaddr;
-	tmp_sin->sin_len = sizeof(struct sockaddr_in);
-	tmp_sin->sin_family = AF_INET;
-	if (inet_pton(AF_INET, pszDestAddr, &tmp_sin->sin_addr) != 1) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: inet_pton(AF_INET, pszDestAddr, &tmp_sin->sin_addr) failed:", strerror( errno ));	
-		close(sock);
-		return 1;
-	}
+    // Netmask
+    tmp_sin = (struct sockaddr_in*)&ifra.ifra_mask;
+    tmp_sin->sin_len = sizeof(struct sockaddr_in);
+    tmp_sin->sin_family = AF_INET;
+    tmp_sin->sin_addr = existing_netmask;
+    
+    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
+        WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+    }
 
-	// Netmask
-	tmp_sin = (struct sockaddr_in*)&ifra.ifra_mask;
-	tmp_sin->sin_len = sizeof(struct sockaddr_in);
-	tmp_sin->sin_family = AF_INET;
-	tmp_sin->sin_addr = existing_netmask;
-	
-	if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
-		WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-	}
-
-	close(sock);
-	return 0;
+    close(sock);
+    return 0;
 #else 
 
     struct hifr         hifr;
@@ -737,71 +738,71 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
                                  char*  pszNetMask )
 {
 #if defined (__FreeBSD__)
-	int sock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock < 0) {
-		return -1;
-	}
-	
-	struct ifreq ifr;
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        return -1;
+    }
+    
+    struct ifreq ifr;
 
-	// Fetch existing IP, set in TUNTAP_SetIPAddr()
-	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
-	if (ioctl(sock, SIOCGIFADDR, &ifr) < 0) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: ioctl(sock, SIOCGIFADDR, &ifr) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-	}
-	struct in_addr existing_src_ip = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
+    // Fetch existing IP, set in TUNTAP_SetIPAddr()
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
+    if (ioctl(sock, SIOCGIFADDR, &ifr) < 0) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: ioctl(sock, SIOCGIFADDR, &ifr) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+    }
+    struct in_addr existing_src_ip = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
 
-	// Fetch existing destination IP - proper one or dummy 
-	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
-	if (ioctl(sock, SIOCGIFDSTADDR, &ifr) < 0) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: ioctl(sock, SIOCGIFDSTADDR, &ifr) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-    	}
-	struct in_addr existing_dst_ip = ((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr;
+    // Fetch existing destination IP - proper one or dummy 
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
+    if (ioctl(sock, SIOCGIFDSTADDR, &ifr) < 0) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: ioctl(sock, SIOCGIFDSTADDR, &ifr) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+        }
+    struct in_addr existing_dst_ip = ((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr;
 
-	// Create request
-	struct in_aliasreq ifra;
-	memset(&ifra, 0, sizeof(ifra));
-	strncpy(ifra.ifra_name, pszNetDevName, IFNAMSIZ);
+    // Create request
+    struct in_aliasreq ifra;
+    memset(&ifra, 0, sizeof(ifra));
+    strncpy(ifra.ifra_name, pszNetDevName, IFNAMSIZ);
 
-	struct sockaddr_in* tmp_sin;
+    struct sockaddr_in* tmp_sin;
 
-	// Source address
-	tmp_sin = (struct sockaddr_in*)&ifra.ifra_addr;
-	tmp_sin->sin_len = sizeof(struct sockaddr_in);
-	tmp_sin->sin_family = AF_INET;
-	tmp_sin->sin_addr = existing_src_ip;	
+    // Source address
+    tmp_sin = (struct sockaddr_in*)&ifra.ifra_addr;
+    tmp_sin->sin_len = sizeof(struct sockaddr_in);
+    tmp_sin->sin_family = AF_INET;
+    tmp_sin->sin_addr = existing_src_ip;    
 
-	// Destination address
-	tmp_sin = (struct sockaddr_in*)&ifra.ifra_dstaddr;
-	tmp_sin->sin_len = sizeof(struct sockaddr_in);
-	tmp_sin->sin_family = AF_INET;
-	tmp_sin->sin_addr = existing_dst_ip;	
+    // Destination address
+    tmp_sin = (struct sockaddr_in*)&ifra.ifra_dstaddr;
+    tmp_sin->sin_len = sizeof(struct sockaddr_in);
+    tmp_sin->sin_family = AF_INET;
+    tmp_sin->sin_addr = existing_dst_ip;    
 
-	// Netmask
-	// We have the 'real' netmask now, so we can overwrite the default 255.255.255.255 netmask.
-	tmp_sin = (struct sockaddr_in*)&ifra.ifra_mask;
-	tmp_sin->sin_len = sizeof(struct sockaddr_in);
-	tmp_sin->sin_family = AF_INET;
-	if (inet_pton(AF_INET, pszNetMask, &tmp_sin->sin_addr) != 1) {
-		WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: inet_pton(AF_INET, pszNetMask, &tmp_sin->sin_addr) failed:", strerror( errno ));	
-		close(sock);
-		return 1;
-	}
-	
-	if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
-		WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
-		close(sock);
-		return -1;
-	}
+    // Netmask
+    // We have the 'real' netmask now, so we can overwrite the default 255.255.255.255 netmask.
+    tmp_sin = (struct sockaddr_in*)&ifra.ifra_mask;
+    tmp_sin->sin_len = sizeof(struct sockaddr_in);
+    tmp_sin->sin_family = AF_INET;
+    if (inet_pton(AF_INET, pszNetMask, &tmp_sin->sin_addr) != 1) {
+        WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: inet_pton(AF_INET, pszNetMask, &tmp_sin->sin_addr) failed:", strerror( errno ));    
+        close(sock);
+        return 1;
+    }
+    
+    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
+        WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
+        close(sock);
+        return -1;
+    }
 
-	close(sock);
-	return 0;
+    close(sock);
+    return 0;
 #else
 
     struct hifr         hifr;
@@ -879,9 +880,9 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
                                    char*  pszPrefixSize6 )
 {
 #if defined (__FreeBSD__)
-        // Soon, soon 
-        WRMSG( HHC99999, "I", "TUNTAP_SetIPAddr6: IPv6 has not been implemented yet." );
-	return 0;
+    // Soon, soon 
+    WRMSG( HHC99999, "I", "TUNTAP_SetIPAddr6: IPv6 has not been implemented yet." );
+    return 0;
 #else 
 
     struct hifr         hifr;
