@@ -165,9 +165,8 @@ TRY765   CLI   GH765,0                      First time here?
          MVC   PROGNEW+3(2),=XL2'0000'      Switch back to AM24 again
          LPSWE RSTRTNEW                     Do all AM tests all over again
 BAD765   BAS   R14,FAIL765                  GH #765 FAILURE                  
-         LTORG ,
          ORG   PRNOTEST+X'400'
-OKAYPSW  DC    X'00020001800000000000000000000000' SUCCESSFUL wait PSW
+         LTORG ,                    Literals pool
 AM       DC    AL1(24)              current addressing mode
 GH765    DC    X'00'                FF = try GH #765 test, 00 = don't
          ORG   PRNOTEST+X'480'
