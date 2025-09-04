@@ -16,17 +16,21 @@
 *          - If a test fails, the test sequence is aborted
 *            and a disabled wait state X'000000000000DEAD' is entered.
 *
+* Fish 2025-09-02:
+*                  1.  Do each test for each addressing mode too
+*                  2.  Added GitHub #765 test ==> Addresssing Exception
+*
          PRINT OFF  (register equates)
-R0       EQU   0
-R1       EQU   1
-R2       EQU   2
-R3       EQU   3
-R4       EQU   4
-R5       EQU   5
-R6       EQU   6
-R7       EQU   7
-R8       EQU   8
-R9       EQU   9
+R0       EQU   0 
+R1       EQU   1 
+R2       EQU   2 
+R3       EQU   3 
+R4       EQU   4 
+R5       EQU   5 
+R6       EQU   6 
+R7       EQU   7 
+R8       EQU   8 
+R9       EQU   9 
 R10      EQU   10
 R11      EQU   11
 R12      EQU   12
@@ -36,10 +40,14 @@ R15      EQU   15
          PRINT ON
 PRNOTEST CSECT
          USING *,0
-         ORG   PRNOTEST+X'1A0'
-         DC    X'00000001800000000000000000000200' # z/Arch restart PSW
-         ORG   PRNOTEST+X'1D0'
-         DC    X'0002000180000000000000000000DEAD' # z/Arch pgm new PSW
+         ORG   PRNOTEST+X'1A0'                     # z/Arch restart PSW
+RSTRTNEW DC    X'00000000000000000000000000000200' # z/Arch restart PSW  (24-bit mode)
+**       DC    X'00000000800000000000000000000200' # z/Arch restart PSW  (31-bit mode)
+**       DC    X'00000001800000000000000000000200' # z/Arch restart PSW  (64-bit mode)
+         ORG   PRNOTEST+X'1D0'                     # z/Arch pgm new PSW
+PROGNEW  DC    X'0002000000000000000000000000DEAD' # z/Arch pgm new PSW  (24-bit mode)
+**       DC    X'0002000080000000000000000000DEAD' # z/Arch pgm new PSW  (31-bit mode)
+**       DC    X'0002000180000000000000000000DEAD' # z/Arch pgm new PSW  (64-bit mode)
          ORG   PRNOTEST+X'200'
 ***
 ***      QUERY
@@ -114,18 +122,54 @@ PRNOTEST CSECT
          LGFI  R0,114         R0->function code 114: TRNG
          LA    R2,FO          R2->first  operand address
          LGFI  R3,64          R3->first  operand length
-         LA    R4,SO          R2->second operand address
-         LGFI  R5,64          R3->second operand length
-         PRNO  R2,R4          perform random number generate operation
-         CLC   FO(64),PBNULL  first operand zero ..
+         LA    R4,SO          R4->second operand address
+         LGFI  R5,64          R5->second operand length
+         CLI   GH765,0        normal test?
+         BE    PRNO           yes, continue
+         LG    R5,=X'0505050500000040'      #765 salva-rczero
+         MVC   PROGNEW+12(4),=AL4(0)        Program Intgerrupt handler
+*                                           (Addr Exception expected!)
+PRNO     PRNO  R2,R4          perform random number generate operation
+         CLI   GH765,0        Normal run?
+         BE    CONT           Yes, continue
+         CLI   AM,64          64-bit addressing mode?
+         BNE   CONT           No, continue
+FAIL765  LPSWE PSW765         WTF?! We should have Program Checked!!
+PSW765   DC    0D'0',X'00020001800000000000000000000765' GH765 FAILURE!
+CONT     CLC   FO(64),PBNULL  first operand zero ..
          BNE   *+6            .. is not plausible
          DC    H'0'           disabled wait DEAD if first operand zero
          CLC   SO(64),PBNULL  seconf operand zero ..
          BNE   *+6            .. is not plausible
          DC    H'0'           disabled wait DEAD if second operand zero
-         LPSWE WAITPSW        load enabled wait PSW
+         CLI   AM,24          AM24 done?
+         BE    AM31           Yes, Then test AM31
+         CLI   AM,31          AM31 done?
+         BE    AM64           Yes, Then test AM64
+         CLI   AM,64          AM64 done?
+         BE    TRY765         Yes, Do GitHub #765 test if we haven't yet
+         DC    H'0'           WTF?!
+AM31     MVC   RSTRTNEW+3(2),=XL2'0080'   Switch to AM31
+         MVC   PROGNEW+3(2),=XL2'0080'    Switch to AM31
+         MVI   AM,31                      Switch to AM31
+         LPSWE RSTRTNEW                   Do all in AM31
+AM64     MVC   RSTRTNEW+3(2),=XL2'0180'   Switch to AM64
+         MVC   PROGNEW+3(2),=XL2'0180'    Switch to AM64
+         MVI   AM,64                      Switch to AM64
+         LPSWE RSTRTNEW                   Do all in AM64
+TRY765   CLI   GH765,0                      First time here?
+         BNE   BAD765                       No?! WTF?!
+         MVI   GH765,X'FF'                  Remember what we're doing
+         MVI   AM,24                        Switch back to AM24 again
+         MVC   RSTRTNEW+3(2),=XL2'0000'     Switch back to AM24 again
+         MVC   PROGNEW+3(2),=XL2'0000'      Switch back to AM24 again
+         LPSWE RSTRTNEW                     Do all AM tests all over again
+BAD765   BAS   R14,FAIL765                  GH #765 FAILURE                  
+         LTORG ,
          ORG   PRNOTEST+X'400'
-WAITPSW  DC    X'00020001800000000000000000000000' SUCCESS wait PSW
+OKAYPSW  DC    X'00020001800000000000000000000000' SUCCESSFUL wait PSW
+AM       DC    AL1(24)              current addressing mode
+GH765    DC    X'00'                FF = try GH #765 test, 00 = don't
          ORG   PRNOTEST+X'480'
 PB       DS    XL240          current parameter block
 SO       DS    XL64           second operand
