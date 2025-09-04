@@ -5034,13 +5034,13 @@ DEF_INST(dyn_perform_random_number_operation)
   int msa;
 #ifdef OPTION_PRNO_DEBUG
   uint n;
-#endif /* #ifdef OPTION_PRNO_DEBUG */
+#endif
   U64 randbytes;
   U64 randnum;
-  U64 randidx;
   U64 randaddr;
   BYTE entropy_input[512];
-  char * randbuf;
+#define         RAND_CHUNK_SIZE     256
+  BYTE randbuf[ RAND_CHUNK_SIZE ] = {0};
   struct DRNG_parmblock {
     BYTE rsvd1[4];
     U32  rc;
@@ -5118,7 +5118,7 @@ DEF_INST(dyn_perform_random_number_operation)
   WRMSG(HHC90104, "D", r1 + 1, regs->GR(r1+1));
   WRMSG(HHC90104, "D", r2, regs->GR(r2));
   WRMSG(HHC90104, "D", r2 + 1, regs->GR(r2+1));
-#endif /* #ifdef OPTION_PRNO_DEBUG */
+#endif
 
   if (!sysblk.PRNOrandhand)
     VERIFY( hopen_CSRNG( &sysblk.PRNOrandhand ) );
@@ -5144,24 +5144,24 @@ DEF_INST(dyn_perform_random_number_operation)
       /*      */
       if (GR0_m(regs))
       {
-
-        randbytes = regs->GR( r2 + 1 );
-        randaddr = GR_A(r2, regs);
-        randnum = min(256, randbytes);
+        randbytes = GR_A( r2 + 1, regs );
+        randaddr  = GR_A( r2,     regs );
+        randnum   = min( RAND_CHUNK_SIZE, randbytes );
         ARCH_DEP(vfetchc)(entropy_input, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-	if (randbytes > 256) ARCH_DEP(vfetchc)(entropy_input + 256, randbytes - 257, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+        if (randbytes > RAND_CHUNK_SIZE)
+            ARCH_DEP(vfetchc)(entropy_input + RAND_CHUNK_SIZE, randbytes - (RAND_CHUNK_SIZE+1), randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PRNO_DEBUG
         logmsg("DRNG Seed: Input Parmblock = ");
         for(n=0; n < 240; n++)
           logmsg("%02x",(unsigned char) DRNG.drng_parmblock[n]);
         logmsg("\n");
-        logmsg("DRNG Seed: Entropy Size = %lu\n", (U64) (regs->GR( r2 + 1 )));
+        logmsg("DRNG Seed: Entropy Size = %"PRIu64"\n", (U64) (GR_A( r2 + 1, regs )));
         logmsg("DRNG Seed: Entropy Data = ");
         for(n=0; n < randbytes; n++)
           logmsg("%02x",entropy_input[n]);
         logmsg("\n");
-#endif /* #ifdef OPTION_PRNO_DEBUG */
+#endif
         /* known answer test */
         if ((randbytes == 64) && (!memcmp(entropy, entropy_input, 64)))
         {
@@ -5183,19 +5183,18 @@ DEF_INST(dyn_perform_random_number_operation)
       for(n=0; n < 240; n++)
         logmsg("%02x",(unsigned char) DRNG.drng_parmblock[n]);
       logmsg("\n");
-#endif /* #ifdef OPTION_PRNO_DEBUG */
+#endif
       }
       else
       /*          */
       /* generate */
       /*          */
       {
-        randbytes = regs->GR( r1 + 1 );
-        randaddr = GR_A(r1, regs);
-
+        randaddr  = GR_A( r1,     regs );
+        randbytes = GR_A( r1 + 1, regs );
 #ifdef OPTION_PRNO_DEBUG
-        logmsg("DRNG Generate: randbytes = %lu\n", (U64) (regs->GR( r1 + 1 )));
-#endif /* #ifdef OPTION_PRNO_DEBUG */
+        LOGMSG("+++ %s mode DRNG Generate: r1+1 randbytes = %"PRIu64"\n", regs->psw.amode64 ? "64" : regs->psw.amode ? "31" : "24",  randbytes );
+#endif
 
         /* known answer test */
         if ((randbytes == 64) && (!memcmp(parmblock_seeded, DRNG.drng_parmblock, 240)))
@@ -5207,31 +5206,27 @@ DEF_INST(dyn_perform_random_number_operation)
         else
         /* real generate */
         {
-          randbuf = (char *) malloc(randbytes);
-          VERIFY( hget_random_bytes( randbuf, randbytes, &sysblk.PRNOrandhand ) );
-          randidx = 0;
           do
           {
-            randnum = min(256, randbytes);
-            ARCH_DEP(vstorec)(randbuf + randidx, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-	    if (randbytes > 256)
+            randnum = min( RAND_CHUNK_SIZE, randbytes );
+            VERIFY( hget_random_bytes( randbuf, randnum, &sysblk.PRNOrandhand ));
+            ARCH_DEP(vstorec)(randbuf, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+            if (randbytes > RAND_CHUNK_SIZE)
             {
-              randbytes -= 256;
-              randaddr += 256;
-              randidx += 256;
+              randbytes -=  RAND_CHUNK_SIZE;
+              randaddr  +=  RAND_CHUNK_SIZE;
             }
-	    else randbytes = 0;
+            else randbytes = 0;
           }
           while (randbytes);
-          free(randbuf);
           DRNG.drng.rc = ARCH_DEP(vfetch4) ( regs->GR( 1 ) + 4, regs->GR( 1 ), regs ) + 1;
           DRNG.drng.rc = CSWAP32( DRNG.drng.rc );
-          DRNG.drng.sb = ARCH_DEP(vfetch8) ( regs->GR( 1 ) + 8, regs->GR( 1 ), regs ) + regs->GR( r1 + 1 );
-	  DRNG.drng.sb = CSWAP64( DRNG.drng.sb );
+          DRNG.drng.sb = ARCH_DEP(vfetch8) ( regs->GR( 1 ) + 8, regs->GR( 1 ), regs ) + GR_A( r1 + 1, regs );
+          DRNG.drng.sb = CSWAP64( DRNG.drng.sb );
           VERIFY( hget_random_bytes( DRNG.drng.V, 111, &sysblk.PRNOrandhand ) );
           ARCH_DEP(vstorec)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
         }
-	SET_GR_A(r1 + 1, regs, 0);
+        SET_GR_A( r1 + 1, regs, 0 );
       }
       /* Set condition code 0 */
       regs->psw.cc = 0;
@@ -5247,63 +5242,53 @@ DEF_INST(dyn_perform_random_number_operation)
     }
     case 114: /* TRNG */
     {
-      if ( regs->GR(r1 + 1) != 0 )
+      if (GR_A( r1 + 1, regs ) != 0 )
       {
-        randbytes = regs->GR( r1 + 1 );
-	randaddr = GR_A(r1, regs);
-        randbuf = (char *) malloc(randbytes);
-        VERIFY( hget_random_bytes( randbuf, randbytes, &sysblk.PRNOrandhand ) );
-        randidx = 0;
+        randaddr  = GR_A( r1,     regs );
+        randbytes = GR_A( r1 + 1, regs );
+#ifdef OPTION_PRNO_DEBUG
+        LOGMSG("+++ %s mode TRNG Generate: r1+1 randbytes = %"PRIu64"\n", regs->psw.amode64 ? "64" : regs->psw.amode ? "31" : "24", randbytes );
+#endif
         do
         {
-          randnum = min(256, randbytes);
-          ARCH_DEP(vstorec)(randbuf + randidx, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-	  if (randbytes > 256)
+          randnum = min( RAND_CHUNK_SIZE, randbytes );
+          VERIFY( hget_random_bytes( randbuf, randnum, &sysblk.PRNOrandhand ));
+          ARCH_DEP(vstorec)(randbuf, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+          if (randbytes > RAND_CHUNK_SIZE)
           {
-            randbytes -= 256;
-            randaddr += 256;
-            randidx += 256;
+            randbytes -=  RAND_CHUNK_SIZE;
+            randaddr  +=  RAND_CHUNK_SIZE;
           }
-	  else randbytes = 0;
+          else randbytes = 0;
         }
         while (randbytes);
-        free(randbuf);
 
-#ifdef OPTION_PRNO_DEBUG
-        logmsg("TRNG Raw        : randbytes = %lu\n", (U64) (regs->GR( r1 + 1 )));
-#endif /* #ifdef OPTION_PRNO_DEBUG */
-
-        SET_GR_A(r1, regs, regs->GR(r1) + regs->GR(r1 + 1));
-        SET_GR_A(r1 + 1, regs, 0);
+        SET_GR_A( r1,     regs, regs->GR(r1) + GR_A(r1 + 1, regs));
+        SET_GR_A( r1 + 1, regs, 0 );
       }
-      if ( regs->GR(r2 + 1) != 0 )
+      if (GR_A(r2 + 1, regs) != 0)
       {
-        randbytes = regs->GR( r2 + 1 );
-	randaddr = GR_A(r2, regs);
-        randbuf = (char *) malloc(randbytes);
-        VERIFY( hget_random_bytes( randbuf, randbytes, &sysblk.PRNOrandhand ) );
-        randidx = 0;
+        randaddr  = GR_A( r2,     regs);
+        randbytes = GR_A( r2 + 1, regs );
+#ifdef OPTION_PRNO_DEBUG
+        LOGMSG("+++ %s mode TRNG Generate: r2+1 randbytes = %"PRIu64"\n", regs->psw.amode64 ? "64" : regs->psw.amode ? "31" : "24", randbytes );
+#endif
         do
         {
-          randnum = min(256, randbytes);
-          ARCH_DEP(vstorec)(randbuf + randidx, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-	  if (randbytes > 256)
+          randnum = min( RAND_CHUNK_SIZE, randbytes );
+          VERIFY( hget_random_bytes( randbuf, randnum, &sysblk.PRNOrandhand ));
+          ARCH_DEP(vstorec)(randbuf, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
+          if (randbytes > RAND_CHUNK_SIZE)
           {
-            randbytes -= 256;
-            randaddr += 256;
-            randidx += 256;
+            randbytes -=  RAND_CHUNK_SIZE;
+            randaddr  +=  RAND_CHUNK_SIZE;
           }
-	  else randbytes = 0;
+          else randbytes = 0;
         }
         while (randbytes);
-        free(randbuf);
 
-#ifdef OPTION_PRNO_DEBUG
-        logmsg("TRNG Conditioned: randbytes = %lu\n", (U64) (regs->GR( r2 + 1 )));
-#endif /* #ifdef OPTION_PRNO_DEBUG */
-
-        SET_GR_A(r2, regs, regs->GR(r2) + regs->GR(r2 + 1));
-        SET_GR_A(r2 + 1, regs, 0);
+        SET_GR_A( r2,     regs, regs->GR(r2) + GR_A(r2 + 1, regs));
+        SET_GR_A( r2 + 1, regs, 0);
       }
       /* Set condition code 0 */
       regs->psw.cc = 0;
