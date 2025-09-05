@@ -356,6 +356,8 @@ struct  _CTCBLK
     char        szTUNCharDevName[256];    // TUN/TAP special char device filename (/dev/net/tun)
     char        szTUNIfName[IFNAMSIZ];    // Network Interface Name (e.g. tun0)
     char        szMACAddress[32];         // MAC Address
+
+    int         internal;                 // Was this device created by Hercules?
 };
 
 
@@ -736,6 +738,8 @@ struct  _LCSDEV
     U16         iFrameOffset;           // Curr Offset into Buffer
     U16         iMaxFrameBufferSize;    // Device Buffer Size
     BYTE        bFrameBuffer[CTC_DEF_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
+
+    int         internal;               // Did Hercules create this device?
 };
 
 
@@ -788,6 +792,8 @@ struct  _LCSPORT
     char        szNetIfName[IFNAMSIZ];    // Network Interface Name (e.g. tap0)
     char        szMACAddress[32];         // MAC Address
     char        szGWAddress[32];          // Gateway for W32
+
+    int         internal;                 // Did Hercules create this device?
 };
 
 // --------------------------------------------------------------------

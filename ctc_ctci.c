@@ -245,7 +245,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 #endif // __HERCIFC_H_
                                  IFF_TUN | IFF_NO_PI,
                                  &pDevCTCBLK->fd,
-                                 pDevCTCBLK->szTUNIfName );
+                                 pDevCTCBLK->szTUNIfName,
+                                 &pDevCTCBLK->internal
+                                 );
 
     if( rc < 0 ) return -1;
 
@@ -1098,7 +1100,7 @@ static void*  CTCI_ReadThread( void* arg )
 
     // We must do the close since we were the one doing the i/o...
 
-    VERIFY( pCTCBLK->fd == -1 || TUNTAP_Close( pCTCBLK->fd ) == 0 );
+    VERIFY( pCTCBLK->fd == -1 || TUNTAP_Close( pCTCBLK->fd, pCTCBLK->internal ) == 0 );
     pCTCBLK->fd = -1;
 
     return NULL;

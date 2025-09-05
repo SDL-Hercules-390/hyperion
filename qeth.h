@@ -206,6 +206,8 @@ typedef struct _OSA_GRP {
 
     int   enabled;              /* Interface is enabled (IFF_UP)     */
 
+    int   internal;             /* Interface was created by Hercules */
+
     u_int debugmask;            /* Debug mask                        */
 
 #define DBGQETHPACKET   0x00000001  /* Packet                        */

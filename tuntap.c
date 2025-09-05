@@ -58,9 +58,8 @@
 #include <sys/user.h>
 #include <sys/sysctl.h>
 
-#define FBSD_TUN_EXT    'E'
-#define FBSD_TUN_INT    'I'
-char FBSD_TUN_MODE =    '\0';
+#define FBSD_TUN_EXT 0
+#define FBSD_TUN_INT 1
 #endif
 
 // ====================================================================
@@ -239,11 +238,16 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 //      pfd            Pointer to receive the file descriptor of the
 //                       TUN/TAP interface.
 //      pszNetDevName  Pointer to receive the name of the interface.
+//      pinternal      Pointer to receive the status of the interface;
+//                     1 for devices created by Hercules, 0 for pre-existing
+//                     devices. To be used on systems that impose manual 
+//                     removal of devices (e.g. FreeBSD).
 
 int             TUNTAP_CreateInterface( char* pszTUNDevice,
                                         int   iFlags,
                                         int*  pfd,
-                                        char* pszNetDevName )
+                                        char* pszNetDevName,
+                                        int*  pinternal )
 {
     int fd;                        // File descriptor
 
@@ -261,7 +265,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             if (ENOENT == errno) {
                 // It doesn't exist. 
                 WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device doesn't exist yet:", device);
-                FBSD_TUN_MODE = FBSD_TUN_INT;
+                *pinternal = FBSD_TUN_INT;
 
                 // Open /dev/tun itself to trigger creation of a new device
                 fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
@@ -310,12 +314,12 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             }
         } else {
             // It exists, and we can open it. Cool.
-            FBSD_TUN_MODE = FBSD_TUN_EXT;
+            *pinternal = FBSD_TUN_EXT;
             WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device exists and is usable:", device);
         } 
     } else {
         // No, we didn't get a name. Create the first available tun device and go with it.
-        FBSD_TUN_MODE = FBSD_TUN_INT;
+        *pinternal = FBSD_TUN_INT;
 
         fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
         if( fd < 0 ) { 
@@ -458,7 +462,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 //
 
 #if defined (__FreeBSD__)
-int             TUNTAP_Close( int fd )
+int             TUNTAP_Close( int fd, int internal )
 {
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
@@ -476,7 +480,7 @@ int             TUNTAP_Close( int fd )
     } 
 
     // Only remove the device from the OS if we created it outselves
-    if (FBSD_TUN_MODE && FBSD_TUN_MODE == FBSD_TUN_INT) {
+    if (internal) {
         int sock = socket(AF_INET, SOCK_DGRAM, 0);
         if (sock < 0) {
             return -1;

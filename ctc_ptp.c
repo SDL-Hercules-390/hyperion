@@ -478,7 +478,8 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 #endif //defined(BUILD_HERCIFC)
                                  IFF_TUN | IFF_NO_PI,
                                  &pPTPBLK->fd,
-                                 pPTPBLK->szTUNIfName );
+                                 pPTPBLK->szTUNIfName,
+                                 &pPTPBLK->internal );
     if (rc < 0)
     {
         // Disconnect the DEVGRP from the PTPBLK.
@@ -581,7 +582,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // HHC00102 "Error in function create_thread(): %s"
         WRMSG(HHC00102, "E", strerror(rc));
         // Close the TUN interface.
-        VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd ) == 0 );
+        VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd, pPTPBLK->internal ) == 0 );
         pPTPBLK->fd = -1;
         // Disconnect the DEVGRP from the PTPBLK.
         pDEVBLK->group->grp_data = NULL;
@@ -2081,7 +2082,7 @@ void*  ptp_read_thread( void* arg )
     if (!pTunBuf)                    // if the allocate failed...
     {
         // Close the TUN interface.
-        VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd ) == 0 );
+        VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd, pPTPBLK->internal ) == 0 );
         pPTPBLK->fd = -1;
         // Nothing else to be done.
         return NULL;
@@ -2327,7 +2328,7 @@ void*  ptp_read_thread( void* arg )
     }   /* while( pPTPBLK->fd != -1 && !pPTPBLK->fCloseInProgress ) */
 
     // We must do the close since we were the one doing the i/o...
-    VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd ) == 0 );
+    VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd, pPTPBLK->internal ) == 0 );
     pPTPBLK->fd = -1;
 
     // Release the TUN read buffer.

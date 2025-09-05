@@ -440,7 +440,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
                                          IFF_TAP | IFF_NO_PI,
                                          &pLCSPORT->fd,
-                                         pLCSPORT->szNetIfName );
+                                         pLCSPORT->szNetIfName, 
+                                         &pLCSPORT->internal );
 
             if (rc < 0)
             {
@@ -2699,7 +2700,7 @@ static void*  LCS_PortThread( void* arg)
 
     // We must do the close since we were the one doing the i/o...
 
-    VERIFY( pLCSPORT->fd == -1 || TUNTAP_Close( pLCSPORT->fd ) == 0 );
+    VERIFY( pLCSPORT->fd == -1 || TUNTAP_Close( pLCSPORT->fd, pLCSPORT->internal ) == 0 );
 
     // Housekeeping - Cleanup Port Block
 
