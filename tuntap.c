@@ -238,7 +238,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 //      pfd            Pointer to receive the file descriptor of the
 //                       TUN/TAP interface.
 //      pszNetDevName  Pointer to receive the name of the interface.
-//      pinternal      Pointer to receive the status of the interface;
+//      pinternal      Pointer to receive the origin of the interface:
 //                     1 for devices created by Hercules, 0 for pre-existing
 //                     devices. To be used on systems that impose manual 
 //                     removal of devices (e.g. FreeBSD).
