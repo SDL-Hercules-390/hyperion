@@ -357,7 +357,7 @@ struct  _CTCBLK
     char        szTUNIfName[IFNAMSIZ];    // Network Interface Name (e.g. tun0)
     char        szMACAddress[32];         // MAC Address
 
-    int         internal;                 // Was this device created by Hercules?
+    int         internal;                 // Did Hercules create this device?
 };
 
 

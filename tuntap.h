@@ -198,7 +198,7 @@ extern void net_data_trace( DEVBLK* dev, BYTE* addr, int len, BYTE dir, BYTE sev
   #define TUNTAP_EndMWrite(f)
   #define TUNTAP_IOCtl          ioctl
 #if !defined(__FreeBSD__)
-  #define TUNTAP_Close(a, b)    close(a)
+  #define TUNTAP_Close(a, b)    close(a) // The second parameter - creation status - is currently only used on FreeBSD.
 #endif // !defined (__FreeBSD__)
 #endif // defined( OPTION_W32_CTCI )
 

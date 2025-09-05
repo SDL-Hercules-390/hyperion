@@ -206,7 +206,7 @@ typedef struct _OSA_GRP {
 
     int   enabled;              /* Interface is enabled (IFF_UP)     */
 
-    int   internal;             /* Interface was created by Hercules */
+    int   internal;             /* Did Hercules create this device?  */
 
     u_int debugmask;            /* Debug mask                        */
 
