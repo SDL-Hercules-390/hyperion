@@ -346,6 +346,8 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
     return 0;
 #else
 
+    *pinternal = 0;
+
 #if !defined( OPTION_W32_CTCI )
     struct utsname utsbuf;
 
