@@ -178,6 +178,8 @@ struct  _PTPBLK
     BYTE        bTerminate4;               // IPv4 termination progress
     BYTE        bTerminate6;               // IPv6 termination progress
     BYTE        bTerminateLL6;             // IPv6 link local termination progress
+
+    int         internal;                  // Did Hercules create this device?
 };
 
 #define HEASKEDME_START       0x80         // He asked me Start

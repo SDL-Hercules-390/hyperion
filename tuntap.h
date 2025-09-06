@@ -77,7 +77,8 @@
 extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice,
                                           int     iFlags,
                                           int*    pfd,
-                                          char*   pszNetDevName );
+                                          char*   pszNetDevName,
+                                          int*    pinternal );
 //
 // TUNTAP_CreateInterface flag: open as SOCKET (CTCI-WIN v3.3+ only)
 //
@@ -143,7 +144,8 @@ extern int      TUNTAP_DelRoute         ( char*   pszNetDevName,
 #endif
 
 #if defined(__FreeBSD__)
-extern int      TUNTAP_Close            ( int     fd );
+extern int      TUNTAP_Close            ( int     fd,
+                                          int     internal );
 #endif
 
 #if defined( OPTION_W32_CTCI )   // CTCI-WIN v3.7.0 or greater
@@ -196,7 +198,7 @@ extern void net_data_trace( DEVBLK* dev, BYTE* addr, int len, BYTE dir, BYTE sev
   #define TUNTAP_EndMWrite(f)
   #define TUNTAP_IOCtl          ioctl
 #if !defined(__FreeBSD__)
-  #define TUNTAP_Close          close
+  #define TUNTAP_Close(a, b)    close(a) // The second parameter - creation status - is currently only used on FreeBSD.
 #endif // !defined (__FreeBSD__)
 #endif // defined( OPTION_W32_CTCI )
 

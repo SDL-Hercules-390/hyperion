@@ -1132,7 +1132,8 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             | (grp->l3 ? IFF_TUN : IFF_TAP)
         ,
         &grp->ttfd,
-        grp->ttifname
+        grp->ttifname,
+        &grp->internal
 
     )) != 0)
         return QERRMSG( dev, grp, errno,
@@ -4663,7 +4664,7 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         grp->ttfd = -1;
         dev->fd = -1;
         if(ttfd > 0)
-            TUNTAP_Close(ttfd);
+            TUNTAP_Close(ttfd, grp->internal);
         PTT_QETH_TRACE( "af clos ttfd", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos pipe", 0,0,0 );
