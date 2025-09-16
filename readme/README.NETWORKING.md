@@ -241,8 +241,6 @@ For `IP` modes, the Entry-specific information is as follows:
 
 When the operation mode is `IP`, specify only the even (read) address; the odd (write) address is created automatically. If an odd address is specified the read/write functions of the pair are swapped.
 
-Note: SNA mode does not currently work.
-
 Additionally, two other statements can be included in the address translation file. The `HWADD` and `ROUTE` statements.
 
 Use `HWADD` to specify a hardware (MAC) address for a virtual adapter. The first parameter after `HWADD` specifies with relative adapter for which the address is applied.
