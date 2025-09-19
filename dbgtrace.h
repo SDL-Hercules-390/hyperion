@@ -148,7 +148,7 @@
   #ifndef _ENABLE_TRACING_STMTS_DEBUGGERTRACE_DEFINED
   #define _ENABLE_TRACING_STMTS_DEBUGGERTRACE_DEFINED
 
-    static inline void DebuggerTrace( char* fmt, ...) 
+    static inline void DebuggerTrace( char* fmt, ...)
     {
         const int       chunksize  = 512;
               int       buffsize   = 0;

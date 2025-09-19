@@ -1968,7 +1968,7 @@ static void dumpdata( char *label, BYTE *data, int len )
         ascii_hex[index++] = hex[*data & 0xF];
 
         space_chk++;
- 
+
         if ( space_chk % 4 == 0 )
             ascii_hex[index++] = ' ';
 
@@ -1978,7 +1978,7 @@ static void dumpdata( char *label, BYTE *data, int len )
             debug_pf( "%s\n", ascii_hex );
             index = space_chk = 0;
         }
- 
+
         data++;
     }
 

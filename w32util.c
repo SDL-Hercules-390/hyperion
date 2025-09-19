@@ -229,7 +229,7 @@ DLL_EXPORT pid_t  fork( void )
 #if !defined( HAVE_SCHED_YIELD )
 
 DLL_EXPORT int sched_yield ( void )
-{ 
+{
     //                     ***  SwitchToThread  ***
     //
     // Note: The yield is limited to THE PROCESSOR OF THE CALLING THREAD!

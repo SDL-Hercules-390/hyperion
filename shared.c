@@ -2088,7 +2088,7 @@ char     trcmsg[32];
             struct { U16 devt; BYTE model; } temp;
 
             // Correct for endianness difference between server and client, as devt is U16, and little-endian is needed.
-            // This is for the server side, the same correction was applied higher up on the client side. 
+            // This is for the server side, the same correction was applied higher up on the client side.
             temp.devt  = CSWAP16 (SWAP16 (dev->ckdcu->devt ));
 
             temp.model = dev->ckdcu->model;

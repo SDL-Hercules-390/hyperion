@@ -2598,7 +2598,7 @@ DLL_EXPORT bool are_big_endian()
   #include <sys/sysctl.h>
 #endif
 
-#if defined( __FreeBSD__ ) 
+#if defined( __FreeBSD__ )
   #include <sys/user.h>
   #include <libutil.h>
 #endif

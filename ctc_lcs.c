@@ -440,7 +440,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
                                          IFF_TAP | IFF_NO_PI,
                                          &pLCSPORT->fd,
-                                         pLCSPORT->szNetIfName, 
+                                         pLCSPORT->szNetIfName,
                                          &pLCSPORT->internal );
 
             if (rc < 0)

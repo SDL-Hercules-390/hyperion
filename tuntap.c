@@ -240,7 +240,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 //      pszNetDevName  Pointer to receive the name of the interface.
 //      pinternal      Pointer to receive the origin of the interface:
 //                     1 for devices created by Hercules, 0 for pre-existing
-//                     devices. To be used on systems that impose manual 
+//                     devices. To be used on systems that impose manual
 //                     removal of devices (e.g. FreeBSD).
 
 int             TUNTAP_CreateInterface( char* pszTUNDevice,
@@ -254,8 +254,8 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 #if defined (__FreeBSD__)
     // Were we passed a device name?
     if(*pszNetDevName) {
-        // Yes, we got a name. 
-        char device[PATH_MAX] = "/dev/"; 
+        // Yes, we got a name.
+        char device[PATH_MAX] = "/dev/";
         strlcat(device, pszNetDevName, sizeof(device));
 
         fd = TUNTAP_Open( device, O_RDWR );
@@ -263,18 +263,18 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         // Does it exist?
         if( fd < 0 ) {
             if (ENOENT == errno) {
-                // It doesn't exist. 
+                // It doesn't exist.
                 WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device doesn't exist yet:", device);
                 *pinternal = FBSD_TUN_INT;
 
                 // Open /dev/tun itself to trigger creation of a new device
                 fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
 
-                if( fd < 0 ) { 
+                if( fd < 0 ) {
                     // Something is not right. Bailing.
                     WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
                     return -1;
-                }    
+                }
 
                 // Setting explicit IFF_POINTOPOINT. Not sure if necessary but...
                 int mode = IFF_POINTOPOINT;
@@ -316,18 +316,18 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             // It exists, and we can open it. Cool.
             *pinternal = FBSD_TUN_EXT;
             WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device exists and is usable:", device);
-        } 
+        }
     } else {
         // No, we didn't get a name. Create the first available tun device and go with it.
         *pinternal = FBSD_TUN_INT;
 
         fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
-        if( fd < 0 ) { 
+        if( fd < 0 ) {
             // Something is not right. Bailing.
             WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
             return -1;
-        }    
-        
+        }
+
         struct ifreq ifr;
         memset(&ifr, 0, sizeof(ifr));
 
@@ -336,9 +336,9 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             WRMSG( HHC99998, "E", "TUNTAP_CreateInterface: ioctl(fd, TUNGIFNAME, &ifr) failed:", strerror( errno ));
             return -1;
         }
-    
+
         strcpy( pszNetDevName, ifr.ifr_name );
-    
+
         WRMSG( HHC99998, "I", "TUNTAP_CreateInterface: Device was created:", ifr.ifr_name);
     }
 
@@ -452,11 +452,11 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 // TUNTAP_Close
 //
 //
-// Closes a TUN/TAP network interface. 
+// Closes a TUN/TAP network interface.
 //
-// On Linux, TUNTAP_Close is defined as close() but contrary to Linux, 
-// FreeBSD does not remove the interface after close()ing it. 
-// This leaves the device visible in e.g. ifconfig in a disconnected state. 
+// On Linux, TUNTAP_Close is defined as close() but contrary to Linux,
+// FreeBSD does not remove the interface after close()ing it.
+// This leaves the device visible in e.g. ifconfig in a disconnected state.
 // Removing it requires an explicit ioctl.
 //
 // Input:
@@ -479,7 +479,7 @@ int             TUNTAP_Close( int fd, int internal )
     if (close(fd) < 0) {
         WRMSG( HHC99999, "E", "TUNTAP_Close: Closing the file descriptor failed!");
         return -1;
-    } 
+    }
 
     // Only remove the device from the OS if we created it outselves
     if (internal) {
@@ -534,18 +534,18 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
     if (sock < 0) {
         return -1;
     }
-    
+
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
-    
+
     // Get current flags - directly because hercifc doesn't know GET ioctls
     if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
         WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: ioctl(sock, SIOCGIFFLAGS, &ifr) failed:", strerror( errno ));
         close(sock);
         return -1;
     }
-    
+
     // Set IFF_UP and IFF_POINTOPOINT flags
     ifr.ifr_flags |= ( IFF_UP | IFF_POINTOPOINT);
     if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0) {
@@ -553,8 +553,8 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
         close(sock);
         return -1;
     }
-    
-    // Prepwork 
+
+    // Prepwork
     struct in_aliasreq ifra;
     memset(&ifra, 0, sizeof(ifra));
     strncpy(ifra.ifra_name, pszNetDevName, IFNAMSIZ);
@@ -567,8 +567,8 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
         WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: inet_pton(AF_INET, pszIPAddr, &ifra.ifra_addr.sin_addr) failed:", strerror( errno ));
         return -1;
     }
-    
-    // Dest address 
+
+    // Dest address
     // We don't know the dest address in this function but the ioctl needs it to set up the device.
     // We have to set a dummy address which will be overwritten later in TUNTAP_SetDestAddr.
     // Using an address in the 192.0.2.0/24 range which according to RFC 5737 cannot be used for anything but documentation purposes.
@@ -592,7 +592,7 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
         return -1;
     }
 
-    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
+    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) {
         WRMSG( HHC99998, "E", "TUNTAP_SetIPAddr: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
         close(sock);
         return -1;
@@ -600,7 +600,7 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
 
     close(sock);
     return 0;
-#else 
+#else
 
     struct hifr         hifr;
     struct sockaddr_in* sin;
@@ -644,7 +644,7 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
     if (sock < 0) {
         return -1;
     }
-    
+
     struct ifreq ifr;
 
     // Fetch existing IP
@@ -678,7 +678,7 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
     tmp_sin = (struct sockaddr_in*)&ifra.ifra_addr;
     tmp_sin->sin_len = sizeof(struct sockaddr_in);
     tmp_sin->sin_family = AF_INET;
-    tmp_sin->sin_addr = existing_ip;    
+    tmp_sin->sin_addr = existing_ip;
 
     // Destination address
     // We have the 'real' destination IP now, so we can overwrite the RFC 5737 IP.
@@ -686,7 +686,7 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
     tmp_sin->sin_len = sizeof(struct sockaddr_in);
     tmp_sin->sin_family = AF_INET;
     if (inet_pton(AF_INET, pszDestAddr, &tmp_sin->sin_addr) != 1) {
-        WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: inet_pton(AF_INET, pszDestAddr, &tmp_sin->sin_addr) failed:", strerror( errno ));    
+        WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: inet_pton(AF_INET, pszDestAddr, &tmp_sin->sin_addr) failed:", strerror( errno ));
         close(sock);
         return 1;
     }
@@ -696,8 +696,8 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
     tmp_sin->sin_len = sizeof(struct sockaddr_in);
     tmp_sin->sin_family = AF_INET;
     tmp_sin->sin_addr = existing_netmask;
-    
-    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
+
+    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) {
         WRMSG( HHC99998, "E", "TUNTAP_SetDestAddr: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
         close(sock);
         return -1;
@@ -705,7 +705,7 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
 
     close(sock);
     return 0;
-#else 
+#else
 
     struct hifr         hifr;
     struct sockaddr_in* sin;
@@ -748,7 +748,7 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
     if (sock < 0) {
         return -1;
     }
-    
+
     struct ifreq ifr;
 
     // Fetch existing IP, set in TUNTAP_SetIPAddr()
@@ -761,7 +761,7 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
     }
     struct in_addr existing_src_ip = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
 
-    // Fetch existing destination IP - proper one or dummy 
+    // Fetch existing destination IP - proper one or dummy
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, pszNetDevName, IFNAMSIZ);
     if (ioctl(sock, SIOCGIFDSTADDR, &ifr) < 0) {
@@ -782,13 +782,13 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
     tmp_sin = (struct sockaddr_in*)&ifra.ifra_addr;
     tmp_sin->sin_len = sizeof(struct sockaddr_in);
     tmp_sin->sin_family = AF_INET;
-    tmp_sin->sin_addr = existing_src_ip;    
+    tmp_sin->sin_addr = existing_src_ip;
 
     // Destination address
     tmp_sin = (struct sockaddr_in*)&ifra.ifra_dstaddr;
     tmp_sin->sin_len = sizeof(struct sockaddr_in);
     tmp_sin->sin_family = AF_INET;
-    tmp_sin->sin_addr = existing_dst_ip;    
+    tmp_sin->sin_addr = existing_dst_ip;
 
     // Netmask
     // We have the 'real' netmask now, so we can overwrite the default 255.255.255.255 netmask.
@@ -796,12 +796,12 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
     tmp_sin->sin_len = sizeof(struct sockaddr_in);
     tmp_sin->sin_family = AF_INET;
     if (inet_pton(AF_INET, pszNetMask, &tmp_sin->sin_addr) != 1) {
-        WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: inet_pton(AF_INET, pszNetMask, &tmp_sin->sin_addr) failed:", strerror( errno ));    
+        WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: inet_pton(AF_INET, pszNetMask, &tmp_sin->sin_addr) failed:", strerror( errno ));
         close(sock);
         return 1;
     }
-    
-    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) { 
+
+    if (ioctl(sock, SIOCAIFADDR, &ifra) < 0) {
         WRMSG( HHC99998, "E", "TUNTAP_SetNetMask: ioctl(sock, SIOCAIFADDR, &ifra) failed:", strerror( errno ));
         close(sock);
         return -1;
@@ -886,10 +886,10 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
                                    char*  pszPrefixSize6 )
 {
 #if defined (__FreeBSD__)
-    // Soon, soon 
+    // Soon, soon
     WRMSG( HHC99999, "I", "TUNTAP_SetIPAddr6: IPv6 has not been implemented yet." );
     return 0;
-#else 
+#else
 
     struct hifr         hifr;
     int                 iPfxSiz;

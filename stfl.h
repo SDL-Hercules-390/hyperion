@@ -451,7 +451,7 @@
                                                also one.                 */
 
 #define STFL_198_VECTOR_ENH_3        198    /* Vector-enhancements fac-
-                                               ility 3 installed. When 
+                                               ility 3 installed. When
                                                bit 198 is one, bits 129,
                                                135 and 148 are also one. */
 
@@ -460,7 +460,7 @@
                                                bit 199 is one, bits 129,
                                                134, 152 and 192 are also
                                                one.                      */
-                                               
+
 #define STFL_200_IBM_INTERNAL        153    /* IBM internal use          */
 
 #define STFL_IBM_LAST_BIT            200    /* Last defined IBM facility */
