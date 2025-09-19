@@ -241,6 +241,8 @@ For `IP` modes, the Entry-specific information is as follows:
 
 When the operation mode is `IP`, specify only the even (read) address; the odd (write) address is created automatically. If an odd address is specified the read/write functions of the pair are swapped.
 
+_(For more information regarding SNA configuration, please see our "Hercules SNA support" ([README.SNA](https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.SNA.md)) document.)_
+
 Additionally, two other statements can be included in the address translation file. The `HWADD` and `ROUTE` statements.
 
 Use `HWADD` to specify a hardware (MAC) address for a virtual adapter. The first parameter after `HWADD` specifies with relative adapter for which the address is applied.
