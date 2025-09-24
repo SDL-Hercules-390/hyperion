@@ -252,6 +252,7 @@
     #define _USE_128_
 #endif
 
+
 /*-------------------------------------------------------------------*/
 /* U128                                                              */
 /*-------------------------------------------------------------------*/
@@ -279,6 +280,46 @@ typedef union {
 
 }  U128  ;
 
+/*-------------------------------------------------------------------*/
+/* QW access helpers                                                 */
+/*-------------------------------------------------------------------*/
+#if defined(WORDS_BIGENDIAN)
+  #define QW_D(_i)  d[(_i)]                 /* Doubleword            */
+  #define QW_F(_i)  f[(_i)]                 /* Fullword              */
+  #define QW_H(_i)  h[(_i)]                 /* Halfword              */
+  #define QW_B(_i)  b[(_i)]                 /* Byte                  */
+#else
+  #define QW_D(_i)  d[1-(_i)]                /* Doubleword           */
+  #define QW_F(_i)  f[3-(_i)]                /* Fullword             */
+  #define QW_H(_i)  h[7-(_i)]                /* Halfword             */
+  #define QW_B(_i)  b[15-(_i)]               /* Byte                 */
+#endif
+
+/*-------------------------------------------------------------------*/
+/* U128 access helpers                                               */
+/*-------------------------------------------------------------------*/
+#if defined(WORDS_BIGENDIAN)
+  #define UU_D(_i)  u_64[(_i)]                /* unsigned Doubleword */
+  #define UU_F(_i)  u_32[(_i)]                /* unsigned Fullword   */
+  #define UU_H(_i)  u_16[(_i)]                /* unsigned Halfword   */
+  #define UU_B(_i)  u_8[(_i)]                 /* unsigned Byte       */
+
+  #define US_D(_i)  s_64[(_i)]                /* signed Doubleword   */
+  #define US_F(_i)  s_32[(_i)]                /* signed Fullword     */
+  #define US_H(_i)  s_16[(_i)]                /* signed Halfword     */
+  #define US_B(_i)  s_8[(_i)]                 /* signed Byte         */
+#else
+  #define UU_D(_i)  u_64[1-(_i)]              /* unsigned Doubleword */
+  #define UU_F(_i)  u_32[3-(_i)]              /* unsigned Fullword   */
+  #define UU_H(_i)  u_16[7-(_i)]              /* unsigned Halfword   */
+  #define UU_B(_i)  u_8[15-(_i)]              /* unsigned Byte       */
+
+  #define US_D(_i)  s_64[1-(_i)]              /* signed Doubleword   */
+  #define US_F(_i)  s_32[3-(_i)]              /* signed Fullword     */
+  #define US_H(_i)  s_16[7-(_i)]              /* signed Halfword     */
+  #define US_B(_i)  s_8[15-(_i)]              /* signed Byte         */
+#endif
+
 /*===================================================================*/
 /* Function Prototypes                                               */
 /*===================================================================*/
@@ -288,6 +329,8 @@ static inline U128 U128_zero( );
 static inline U128 U128_one( );
 static inline U128 U128_minus_one( );
 static inline bool U128_isZero( U128 a );
+static inline bool U128_isOne( U128 a );
+static inline bool U128_isMinusOne( U128 a );
 
 static inline U128 U128_add( U128 a, U128 b );
 static inline U128 U128_sub( U128 a, U128 b );
@@ -332,6 +375,18 @@ static inline U128 U128_nxor( U128 a, U128 b );
 static inline U128 U128_not( U128 a );
 static inline bool U128_biton( U128 a, U128 b );
 
+static inline U128 U128_and3( U128 a, U128 b, U128 c );
+static inline U128 U128_or3( U128 a, U128 b, U128 c );
+static inline U128 U128_xor3( U128 a, U128 b, U128 c );
+static inline U128 U128_nand3( U128 a, U128 b, U128 c );
+static inline U128 U128_nor3( U128 a, U128 b, U128 c );
+static inline U128 U128_nxor3( U128 a, U128 b, U128 c );
+static inline U128 U128_select( U128 a, U128 b, U128 c );
+static inline U128 U128_major( U128 a, U128 b, U128 c );
+static inline U128 U128_minor( U128 a, U128 b, U128 c );
+
+static inline void SetZero_128 (void* addr);
+
 /*-------------------------------------------------------------------*/
 /* Debug helper for U128                                             */
 /*                                                                   */
@@ -346,7 +401,7 @@ static inline void U128_logmsg(const char * msg, U128 u)
 }
 
 /*===================================================================*/
-/* U128 Constants (zero, one)                                        */
+/* U128 Constants (zero, one, minus one)                             */
 /*===================================================================*/
 
 /*-------------------------------------------------------------------*/
@@ -391,6 +446,28 @@ static inline U128 U128_minus_one( )
 static inline bool U128_isZero( U128 a )
 {
     if ( a.Q.D.H.D == 0  && a.Q.D.L.D == 0 )
+        return true;
+
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128_isOne: if (U128) a == 1; return true                         */
+/*-------------------------------------------------------------------*/
+static inline bool U128_isOne( U128 a )
+{
+    if ( a.Q.D.H.D == 0  && a.Q.D.L.D == 1 )
+        return true;
+
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128_isMinusOne: if (U128) a == -1; return true                   */
+/*-------------------------------------------------------------------*/
+static inline bool U128_isMinusOne( U128 a )
+{
+    if ( a.Q.D.H.D == (U64) -1  && a.Q.D.L.D == (U64) -1 )
         return true;
 
     return false;
@@ -1498,6 +1575,157 @@ static inline bool U128_biton( U128 a, U128 b )
 }
 
 /*===================================================================*/
+/* U128 3 value bitwise boolean functions                            */
+/*===================================================================*/
+
+/*-------------------------------------------------------------------*/
+/* U128 AND3: return a & b & c                                       */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_and3( U128 a, U128 b, U128 c )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  a.Q.D.H.D  &  b.Q.D.H.D  &  c.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D  &  b.Q.D.L.D  &  c.Q.D.L.D;
+    return temp;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 OR3: return a | b | c                                        */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_or3( U128 a, U128 b, U128 c )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  a.Q.D.H.D  |  b.Q.D.H.D  |  c.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D  |  b.Q.D.L.D  |  c.Q.D.L.D;
+    return temp;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 XOR3: return a ^ b ^ c                                       */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_xor3( U128 a, U128 b, U128 c )
+{
+    U128 temp;                           /* temp (return) value      */
+
+    temp.Q.D.H.D =  a.Q.D.H.D  ^  b.Q.D.H.D  ^  c.Q.D.H.D;
+    temp.Q.D.L.D =  a.Q.D.L.D  ^  b.Q.D.L.D  ^  c.Q.D.L.D;
+    return temp;
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 NAND3: return not (a and b and c)                            */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_nand3( U128 a, U128 b, U128 c )
+{
+    return U128_not( U128_and3( a, b, c ) );
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 NOR3: return not (a or b or c)                               */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_nor3( U128 a, U128 b, U128 c )
+{
+    return U128_not( U128_or3( a, b, c ) );
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 NXOR3: return not (a xor b xor c)                            */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_nxor3( U128 a, U128 b, U128 c )
+{
+    return U128_not( U128_xor3( a, b, c ) );
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 Select:                                                      */
+/*      Select function (Condition(Cf), Select1(S1), Select2(S2)).   */
+/*      For each bit in a,                                           */
+/*         if the bit is 1 then select the corresponding bit in b.   */
+/*         if the bit is 0 then select the corresponding bit in c.   */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_select( U128 a, U128 b, U128 c )
+{
+    return  U128_or( U128_and( a, b ),
+                     U128_and( U128_not( a ), c )
+                   );
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 MAJOR(A,B,C):                                                */
+/*     A three-input boolean operation that returns a value of 1     */
+/*     when two or three of its inputs are 1, and 0 otherwise.       */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_major( U128 a, U128 b, U128 c )
+{
+    return  U128_or3
+            (
+                U128_and ( a, b ),
+                U128_and ( a, c ),
+                U128_and ( b, c )
+            );
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 MINOR(A,B,C):                                                */
+/*     A three-input boolean operation that returns a value of 1     */
+/*     when zero or one of its inputs are 1, and 0 otherwise.        */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_minor( U128 a, U128 b, U128 c )
+{
+    return  U128_not( U128_major( a, b, c ) );
+}
+
+/*-------------------------------------------------------------------*/
+/* U128 evaluate(A,B,C,tt):                                          */
+/*   For each bit in the source operands (A, B, C), the value from   */
+/*   the first, second and third operands are concatenated to form   */
+/*   a 3-bit index. The index is used to select the corresponding    */
+/*   bit from the tt operand. The value of the selected bit is       */
+/*   placed in the corresponding bit position of the result.         */
+/*                                                                   */
+/*   The tt parameter provides the result column of a truth table:   */
+/*       A-bit    B-bit   C-bit     tt                               */
+/*       -----    -----   -----   ------                             */
+/*         0       0       0       bit 0                             */
+/*         0       0       1       bit 1                             */
+/*         0       1       0       bit 2                             */
+/*                ...                                                */
+/*         1       1       0       bit 6                             */
+/*         1       1       1       bit 7                             */
+/*-------------------------------------------------------------------*/
+static inline U128 U128_evaluate( U128 a, U128 b, U128 c, U8 tt )
+{
+    U128    result;
+    U8      tt_bit;
+    int     i, index;
+
+    result = U128_zero();
+
+    for (i=0; i<128; i++)
+    {
+        result = U128_shrl(result,1);
+        index = 0;
+        if ((a.UU_B(15) & 0x01))
+            index += 4;
+        if ((b.UU_B(15) & 0x01))
+            index += 2;
+        if ((c.UU_B(15) & 0x01))
+            index += 1;
+
+        tt_bit = (tt >> (7-index) ) & 0x01 ;
+        result.UU_B(0) |=  tt_bit << 7;
+
+        a = U128_shrl(a,1);
+        b = U128_shrl(b,1);
+        c = U128_shrl(c,1);
+    }
+
+    return result;
+}
+
+/*===================================================================*/
 /* Utility Helpers                                                   */
 /*===================================================================*/
 
@@ -1505,25 +1733,11 @@ static inline bool U128_biton( U128 a, U128 b )
 /* Set 16 bytes (128 bits) to zero                                   */
 /*                                                                   */
 /* Input:                                                            */
-/*      addr    address of 16-byte asrea to zero                     */
-/*                                                                   */
-/* version depends on whether intrinsics are being used              */
+/*      addr    address of 16-byte area to zero                      */
 /*-------------------------------------------------------------------*/
-#if defined(__V128_SSE__)
-
-static inline void SetZero_128 (void* addr)
-{
-    __m128i v = _mm_setzero_si128();
-    memcpy( addr, &v, sizeof( __m128i ));
-}
-
-#else
-
 static inline void SetZero_128 (void* addr)
 {
     memset( addr, 0, sizeof(U128) );
 }
-
-#endif
 
 #endif // __ZVECTOR_H_
