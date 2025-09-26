@@ -1697,6 +1697,10 @@ static inline U128 U128_minor( U128 a, U128 b, U128 c )
 /*-------------------------------------------------------------------*/
 static inline U128 U128_evaluate( U128 a, U128 b, U128 c, U8 tt )
 {
+    static const U8 tt_bit_mask[8] =
+            { 0x80, 0x40, 0x20, 0x10,
+              0x08, 0x04, 0x02, 0x01 };
+
     U128    result;
     U8      tt_bit;
     int     i, index;
@@ -1714,8 +1718,8 @@ static inline U128 U128_evaluate( U128 a, U128 b, U128 c, U8 tt )
         if ((c.UU_B(15) & 0x01))
             index += 1;
 
-        tt_bit = (tt >> (7-index) ) & 0x01 ;
-        result.UU_B(0) |=  tt_bit << 7;
+        tt_bit = (tt & tt_bit_mask[index]) ? 0x80 : 0x00;
+        result.UU_B(0) |=  tt_bit;
 
         a = U128_shrl(a,1);
         b = U128_shrl(b,1);
