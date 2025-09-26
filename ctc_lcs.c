@@ -237,9 +237,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     char        thread_name[32];        // Thread name
 
 
-    pDEVBLK->devtype = 0x3088;
-
-    pDEVBLK->excps   = 0;
+    pDEVBLK->devtype  = 0x3088;
+    pDEVBLK->numsense = 2;
+    pDEVBLK->excps    = 0;
 
     // Return when an existing group has been joined but is still incomplete
     if (!group_device( pDEVBLK, 0 ) && pDEVBLK->group)
