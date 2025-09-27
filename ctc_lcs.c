@@ -754,9 +754,8 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         break;
 
     case 0x02:  // MMMMMM10  READ
-    case 0x0C:  // MMMM1100  RDBACK
         // -----------------------------------------------------------
-        // READ & READ BACKWARDS
+        // READ                    
         // -----------------------------------------------------------
 
         // Read data and set unit status and residual byte count
@@ -813,6 +812,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     case 0x43:  // 00XXX011  SBM
         // -----------------------------------------------------------
         // SET BASIC MODE
+        // -----------------------------------------------------------
         // Also called Enable Compatability Mode (ECM) by SNA,
         // ECM is the last CCW issued after the XCA is inactivated.
         // -----------------------------------------------------------
@@ -837,6 +837,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     case 0xC3:  // 11000011  SEM
         // -----------------------------------------------------------
         // SET EXTENDED MODE
+        // -----------------------------------------------------------
         // Also called Disable Compatability Mode (DCM) by SNA.
         // DCM is the first CCW issued after the XCA is activated.
         // -----------------------------------------------------------
@@ -938,8 +939,6 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         pDEVBLK->sense[0] = SENSE_CR;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
     }
-
-    return;
 }
 
 // ====================================================================
