@@ -755,7 +755,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
     case 0x02:  // MMMMMM10  READ
         // -----------------------------------------------------------
-        // READ                    
+        // READ
         // -----------------------------------------------------------
 
         // Read data and set unit status and residual byte count
@@ -1418,6 +1418,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                 WRMSG( HHC00936, "E",
                         SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
+                *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
                 LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
@@ -1556,6 +1557,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             // "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
             WRMSG( HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
             ASSERT( FALSE );
+            *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
             LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
@@ -4494,6 +4496,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
                     PTT_DEBUG(        "REL  InOutLock    ", 000, pDEVBLK->devnum, -1 );
                     release_lock( &pLCSDEV->InOutLock   );
                     ASSERT( FALSE );
+                    *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
                     pDEVBLK->sense[0] = SENSE_EC;
                     *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
 //??                LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
@@ -4614,6 +4617,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
                 // "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
                 WRMSG( HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
                 ASSERT( FALSE );
+                *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
 //??            LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
@@ -4642,6 +4646,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
         WRMSG( HHC00936, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                               pDEVBLK->filename, strerror( pLCSDEV->iTuntapErrno ) );
 
+        *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
         pDEVBLK->sense[0] = SENSE_EC;
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
 
