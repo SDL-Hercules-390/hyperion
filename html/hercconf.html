@@ -4850,31 +4850,66 @@ ROUTE  00  172.21.3.32  255.255.255.224
         Specifies the type of control unit to which this device is attached.
         The use of this parameter does not necessarily imply that
         all functions of the specified control unit are emulated.
-        Its sole purpose is to force a particular control unit type
+        Its primary purpose is to force a particular control unit type
         to be indicated in the data returned by SENSE ID and similar CCW's.
         <p>
-        The default value depends on the device type:
+        <b>Please note</b> that this option must be specified in lower case "<code>cu=</code>".
+        Using upper case "<code>CU=</code>" will <u><i>not</i></u> be recognized and will result in an error.
+        <p>
+        The <i><u>default</u></i> <code>cu=</code> value depends on the device type:
+
         <blockquote>
             <table border=1 cellpadding=3>
-            <tr align="center"><th>&nbsp;Dasd Device type&nbsp;</th><th>&nbsp;Default 'cu=' Control Unit Type&nbsp;</th></tr>
-            <tr align="center"><td>2311</td><td>2841</td></tr>
-            <tr align="center"><td>2314</td><td>2314</td></tr>
-            <tr align="center"><td>3330 3340<br>3350 3375<br>3380</td><td>3880</td></tr>
-            <tr align="center"><td>3390</td><td>3990</td></tr>
-            <tr align="center"><td>9345</td><td>9343</td></tr>
+            <tr align="center"><th>&nbsp; DASD Device type &nbsp;</th><th>&nbsp; Default &nbsp;Control Unit Type &nbsp;</th></tr>
+            <tr align="center"><td> 2305 </td><td> 2835 </td></tr>
+            <tr align="center"><td> 2311 </td><td> 2841 </td></tr>
+            <tr align="center"><td> 2314 </td><td> 2314 </td></tr>
+            <tr align="center"><td> 3330 </td><td> 3830 </td></tr>
+            <tr align="center"><td> 3340 </td><td> 3830 </td></tr>
+            <tr align="center"><td> 3350 </td><td> 3830 </td></tr>
+            <tr align="center"><td> 3375 </td><td> 3880 </td></tr>
+            <tr align="center"><td> 3380 </td><td> 3880 </td></tr>
+            <tr align="center"><td> <b>3390</b> </td><td> <b>2107</b> </td></tr>
+            <tr align="center"><td> 9345 </td><td> 9343 </td></tr>
             </table>
         </blockquote>
+
         <p>
-        Other values which may be specified for 3390 dasd device types are
-        <code>3990-3</code> and <code>3990-6</code>.
+
+        Other supported <code>cu=</code> values, each with a different set of features, are:
+
         <p>
-        For modern "z" operating systems such as z/OS and z/VM using 3390 dasds,
-        <code>cu=3990-6</code> should be specified. For older legacy type operating
-        systems, <code>cu=3990-3</code> is probably what should be specified instead.
-        The default control unit type of <code>cu=3990</code> is rarely what you actually want.
+
+        <blockquote>
+            <table border=1 cellpadding=3>
+            <tr align="center"><th>&nbsp; Dasd Device type &nbsp;</th><th>&nbsp; Other Control Unit Types &nbsp;</th></tr>
+            <tr align="center"><td> 3375 </td><td> 3880-1 </td></tr>
+            <tr align="center"><td> 3380 </td><td> 3880-3 </td></tr>
+            <tr align="center"><td> 3390 </td><td> 3990<br> 3990-2<br> 3990-3<br> 3990-6</td></tr>
+            <tr align="center"><td> 9345 </td><td> 9343-0 </td></tr>
+            </table>
+        </blockquote>
+
         <p>
-        <i>Please note</i> that this option must be specified in lower case "<code>cu=</code>".
-        Using upper case "<code>CU=</code>" will not be recognized and will result in an error.
+
+        For modern "z" operating systems (such as z/OS and z/VM, etc) using 3390 dasds,
+        <code>'cu=2107'</code> should usually be specified <i>(which is the <b>new default</b>
+        for 3390 dasds).</i><br>
+        
+        <p>
+
+        The <i>old (prior)</i> default of <code>'cu=3990-6'</code> will still work for those
+        guest operating systems which do <i>not</i> require support for the E7 Prefix CCW,
+        but for those guest operating systems which <b><i><u>do</u></i></b> require support
+        for the E7 Prefix CCW <i>(such as <b>z/VM</b> for example)</i>, you should
+        <i><u>no longer</u></i> use <code>'cu=3990-6'</code>. Instead, you should now use
+        <code>'cu=2107'</code>.
+
+        <p>
+
+        For older legacy type operating systems using 3390 dasd, <code>'cu=3990-3'</code>
+        is probably what should be used instead.
+
         <p>
 
 <a name="ckdser"></a>

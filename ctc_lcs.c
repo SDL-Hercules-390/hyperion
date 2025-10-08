@@ -18,8 +18,7 @@
 #include "opcode.h"
 #include "herc_getopt.h"
 
-#define MAX_TRACE_LEN 128
-
+#define MAX_TRACE_LEN      128
 #define FROM_GUEST         '<'
 #define TO_GUEST           '>'
 #define NO_DIRECTION       ' '

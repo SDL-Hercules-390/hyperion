@@ -12,6 +12,44 @@ Hercules: Release Notes
 
 <h1>Hercules Release Notes and Known Issues</h1>
 
+<a name=4.9></a>
+<hr noshade>
+
+<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.9">SDL Hyperion 4.9</a>
+</h2>
+
+<p>
+<dl>
+
+
+  <dt>New default and recommended <code>'cu='</code> Control Unit value for 3390 dasds!
+  <dd>
+  <p>
+    In previous versions of Hercules, the default <code>'cu='</code> Control Unit value
+    for 3390 dasds was <code>'cu=3990'</code>. Additionally, it was recommended in our
+    documentation that <code>'cu=3990-6'</code> should be used for modern "z" guest
+    operating systems.
+  <p>
+    <b>This is no longer true.</b>
+  <p>
+    Extensive effort has been done to try and make Hecules's Dasd Control Unit handling
+    more accurate according to best available IBM documentation. Starting with Hercules
+    version 4.9, the default <code>'cu='</code> value for 3390 dasd is now
+    <b><code>'cu=2107'</code></b> instead.
+  <p>
+    Additionally, support for the X'E7' Prefix CCW has been removed from the 3990-6
+    Control Unit specification such that any guest operating system that requires it
+    <i>(such as <b>z/VM</b>)</i>, will now <b><i><u>FAIL</u></i></b> sholuld the prior
+    <i>[incorrectly recommended]</i> <code>'cu=3990-6'</code> be used instead.
+  <p>
+    As a result of this change, some users may need to adjust their Hercules configuration
+    file dasd statements to ensure the correct <code>'cu='</code> value is being specified
+    when running SDL Hercules 4.9 Hyperion or greater.
+
+</dl>
+
+<!-- --------------------------------------------------------------------------------- -->
+
 <a name=4.8></a>
 <hr noshade>
 

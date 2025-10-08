@@ -61,7 +61,7 @@ typedef struct _CKDDEV {                /* CKD Device table entry    */
 #define CKDDEV_SIZE sizeof(CKDDEV)
 
 /*-------------------------------------------------------------------*/
-/* Definition of a CKD DASD control unit entry                       */
+/* Definition of a CKD DASD cu control unit entry                    */
 /*-------------------------------------------------------------------*/
 typedef struct _CKDCU {                 /* CKD Control Unit entry    */
         char   *name;                   /* Control Unit name         */

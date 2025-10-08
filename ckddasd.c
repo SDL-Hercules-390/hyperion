@@ -1542,7 +1542,7 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
             || (dev->devtype == 0x2305 )
         )
         {
-            /* (do nothing) */
+            ;   // do nothing (i.e. NOP)
         }
         else
         {
@@ -2284,15 +2284,19 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 int ckd_chaining_check( DEVBLK* dev, BYTE* unitstat)
 {
-    /* For 3990, command reject if not preceded by Seek, Seek Cyl,
+    /* For 3990, Command Reject if not preceded by Seek, Seek Cyl,
        Locate Record, Read IPL, or Recalibrate command. The same
-       requirement is in place for 3880 with FC 3005. The 2105 and
-       later machines however, are not (yet?) considered.
+       requirement is in place for 3880 with FC 3005.
+
+       :AE: The same requirement is valid for 2105 and 2107 as well.
+       The 'ckdlocat' flag is set by both LRE and LR.
     */
     if (1
         && (0
             || dev->ckd3880
             || dev->ckd3990
+            || dev->ckdcu->devt == 0x2105
+            || dev->ckdcu->devt == 0x2107
            )
         && !dev->ckdseek
         && !dev->ckdskcyl
@@ -2378,6 +2382,14 @@ BYTE            sector;                 /* Sector number             */
 BYTE            key[256];               /* Key for search operations */
 BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
+#define RMID    0X4E                    /* Dasd READ MESSAGE ID CCW  */
+#define SMR     0x5B                    /* Dasd SUSPEND MULTIPATH
+                                                RECONNECTION CCW     */
+#define RDC     0x64                    /* Dasd READ DEVICE
+                                                CHARACTERISTICS CCW  */
+#define RCD     0xFA                    /* Dasd READ CONFIGURATION
+                                                DATA CCW             */
+
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */
     if (chained & CCW_FLAGS_CD)
@@ -2425,6 +2437,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* ISW20030819-1 : Clear Write HA flag */
         dev->ckdwrha = 0;
         dev->ckdssdlen = 0;
+        dev->ckdUCnxt = 0;      // :AE:
+        dev->ckdPostRSSD = 0;   // :AE:
+        dev->ckdPostSSM = 0;    // :AE:
 
         /* Set initial define extent parameters */
         dev->ckdxtdef = 0;
@@ -2482,14 +2497,66 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* If within Locate Record Extended domain and not RT command
        reject with status that includes Unit Check (Command Reject,
        format X'02', Invalid Command Sequence) */
+
     if (1
         && dev->ckdlmask
         && code != 0xDE // READ TRACK
     )
     {
+        ckd_build_sense(dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* :AE: Note that this can be merged with previous tests */
+    /* If the previous command does now allow chaining, force
+       Unit Check (CMDREJ, Fmt X'02': Invalid Command Sequence) */
+
+    if (dev->ckdUCnxt)
+    {
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return;
+    }
+
+    /* :AE: Implement checking on what is chained from the RSSD CCW.
+       Another PSF(+RSSD) may follow, or for 2107 a DSO */
+
+    if (dev->ckdPostRSSD)
+    {
+        if (1
+            && (0
+                || (code == 0x27)
+                || (code == 0xF7 && dev->ckdcu->devt == 0x2107)
+               )
+            && iobuf[0] == 0x18
+        )
+        {
+            dev->ckdPostRSSD = 0;      //Reset flag and continue
+        }
+        else
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return;
+        }
+    }
+
+    /* :AE: Implement checking on what is chained from the
+       SSM CCW. Only a Read Message ID is allowed. */
+
+    if (dev->ckdPostSSM)
+    {
+        if (code == RMID)             // 0x4E
+        {
+            dev->ckdPostSSM = 0;      // Reset flag and continue
+        }
+        else
+        {
+            ckd_build_sense(dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return;
+        }
     }
 
     /* Process depending on CCW opcode */
@@ -2575,6 +2642,24 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* RESTORE                                                       */
     /*---------------------------------------------------------------*/
+        /* :AE: This command has been removed from modern DASDs */
+        if (0
+            || (dev->devtype == 0x3390)
+
+            ||     (dev->ckdcu->devt  == 0x2105)
+            ||     (dev->ckdcu->devt  == 0x2107)
+            ||     (dev->ckdcu->devt  == 0x9343)    // (probably)
+            || (1
+                && (dev->ckdcu->devt  == 0x3990)
+                && (dev->ckdcu->model == 0xE9)      // cu=3990-6
+               )
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
@@ -2961,10 +3046,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Command is not available on older machinery */
         if (!(0
               || (dev->ckd3990)
-              || (dev->ckdcu->devt == 0x3880)
               || (dev->ckdcu->devt == 0x2105)
-             )
-        )
+              || (dev->ckdcu->devt == 0x2107)       // :AE: 9345?
+              || (dev->ckdcu->devt == 0x3880)
+        ))
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3014,7 +3099,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             */
             if (dev->ckdcu->devt == 0x3880)
             {
-                if ((dev->ckdfmask & CKDMASK_AAUTH_DIAG) != CKDMASK_AAUTH_DIAG)
+                if (!(dev->ckdfmask & CKDMASK_AAUTH_DIAG))
                 {
                     ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_5 );
                     *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3024,13 +3109,24 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
             /* For 3990, diagnostic commands must be allowed.
                Bits 5+6 should be '10'. */
-            if (dev->ckd3990)
+
+            /* :AE: This requirement is also documented for 2105     */
+            /* and 2107, but this setting of file mask bits is not   */
+            /* allowed. So only the above path via Locate is avail-  */
+            /* able to run a successful RSHA CCW. By including 2105  */
+            /* and 2107 in this test, any attempt via non-Locate     */
+            /* will be unsuccessful.                                 */
+
+            if (0
+                || dev->ckd3990
+                || (dev->ckdcu->devt == 0x2105)
+                || (dev->ckdcu->devt == 0x2107)
+            )
             {
                 if (!(1
-                      && ((dev->ckdfmask & CKDMASK_AAUTH_DIAG) == CKDMASK_AAUTH_DIAG)
-                      && ((dev->ckdfmask & CKDMASK_AAUTH_DSF) == 0)
-                     )
-                )
+                      &&  (dev->ckdfmask & CKDMASK_AAUTH_DIAG)
+                      && !(dev->ckdfmask & CKDMASK_AAUTH_DSF)
+                ))
                 {
                     ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_5 );
                     *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3462,6 +3558,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* PREFIX        (SA22-1025 IBM Subsystem Reference Guide)       */
     /*---------------------------------------------------------------*/
+        /*:AE: Command Reject if the PFX command is not avail-  */
+        /* able. Test in the data for the 64 command, built for */
+        /* all DASD device types. PFX is indicated by bit 6 in  */
+        /* features byte 6.                                     */
+
+        if (!(dev->devchar[6] & 0x02))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
 
         *residual = 0;  // ZZ FIXME (Fish: always?! I question this!)
 
@@ -3542,15 +3649,87 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
         break;
 
+    case 0xF7: // :AE: (IBM RAMAC Array)
+    /*---------------------------------------------------------------*/
+    /* DEFINE SUBSYSTEM OPERATION                                    */
+    /*---------------------------------------------------------------*/
+
+        /* The F7, Define System Operation is introduced with 2107   */
+
+        if (dev->ckdcu->devt != 0x2107)
+        {
+            ckd_build_sense(dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* How does the RAMAC Array play with Hercules?              */
+
+        /* Command Reject if not logically 'first-in-chain'
+           or chained from another DSO or RSSD                       */
+
+        if (0
+            || (chained && prevcode != 0xF7 && prevcode != 0x3E && prevcode != SMR)
+            || (chained && prevcode == SMR && ccwseq > 1)
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* The DSO command has many similarities to PSF and there is */
+        /* some overlap, so the same code is used by Hercules to     */
+        /* emulate the functions/orders sent                         */
+
+        goto PSForDSO;
+
+
     case 0x27: // PERFORM SUBSYSTEM FUNCTION (maybe! see below!)
-    case 0xF7: // DSOP: DEFINE SUBSYSTEM OPERATION (IBM RAMAC Array, GC26-7006-01)
+//  case 0xF7: // DSOP: DEFINE SUBSYSTEM OPERATION (IBM RAMAC Array)
+               // :AE: added unique code just above
     /*---------------------------------------------------------------*/
     /* PERFORM SUBSYSTEM FUNCTION                                    */
     /*---------------------------------------------------------------*/
-        /* If the control unit is not a 3990 then CCW code 0x27 is
-           treated as a SEEK AND SET SECTOR (Itel 7330 controller) */
-        if (dev->ckd3990 == 0)
-            goto seek_0x27;
+        /* :AE: For 2305, the 27 command, Vary Sensing is used
+           to try recovery from data checks, so with Hercules,
+           let it operate as a NOP. */
+
+        if (dev->ckdcu->devt == 0x2835)
+        {
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+            break;
+        }
+
+        /* For 3990 and more modern equipment, 27 it is PSF.
+           If none of these, assume Itel controller.
+
+           PSF was available for some cache funcions on 3880 but
+           this is not part of Hercules emulation.
+           3990 had some unique usage as well.
+
+           If the control unit is not a 3990 then CCW code 0x27 is
+           treated as a SEEK AND SET SECTOR (Itel 7330 controller)
+        */
+        if (0
+            || dev->ckd3990
+            || (dev->ckdcu->devt == 0x2105)
+            || (dev->ckdcu->devt == 0x2107)
+            || (dev->ckdcu->devt == 0x9343)
+        )
+        {
+            goto PSForDSO;
+        }
+        else
+        {
+            goto seek_0x27;     // (Itel controller presumed)
+        }
+
+        /* PSF and DSO has some orders which require 'first-in-chain,
+           but this has to be verfied inside the 'helper' routine */
+
+PSForDSO:
 
         if (PerformSubsystemFunction( dev, code, flags, chained, count, prevcode,
                                       ccwseq, iobuf, more, unitstat, residual ))
@@ -3559,7 +3738,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
         break;
 
-    seek_0x27: /* SEEK AND SET SECTOR (Itel 7330 controller only) */
+seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
     case 0x07: /* SEEK */
     case 0x0B: /* SEEK CYLINDER */
     case 0x1B: /* SEEK HEAD */
@@ -3576,8 +3755,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For 3990, command reject if Seek Head not preceded by Seek,
            Seek Cylinder, Locate Record, Read IPL, or Recalibrate */
+
         if (1
-            && dev->ckd3990
+            && (0
+                || dev->ckd3990
+                || dev->ckdcu->devt == 0x2105  // :AE:
+                || dev->ckdcu->devt == 0x2107  // :AE:
+               )
             && code == 0x1B // SEEK HEAD
             && dev->ckdseek  == 0
             && dev->ckdskcyl == 0
@@ -3668,8 +3852,18 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* RECALIBRATE                                                   */
     /*---------------------------------------------------------------*/
-        /* Command reject if recalibrate is issued to a 3390 */
-        if (dev->devtype == 0x3390)
+        /* :AE: This command has been removed from modern DASDs */
+        if (0
+            || (dev->devtype == 0x3390)
+
+            ||     (dev->ckdcu->devt  == 0x2105)
+            ||     (dev->ckdcu->devt  == 0x2107)
+            ||     (dev->ckdcu->devt  == 0x9343)    // (probably)
+            || (1
+                && (dev->ckdcu->devt  == 0x3990)
+                && (dev->ckdcu->model == 0xE9)      // cu=3990-6
+               )
+        )
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3686,6 +3880,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* File protected if the file mask does not allow recalibrate,
            or if the file mask specifies diagnostic authorization */
+
         if ((dev->ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_ALLSKR
             || (dev->ckdfmask & CKDMASK_AAUTH) == CKDMASK_AAUTH_DIAG)
         {
@@ -3753,6 +3948,31 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
+        }
+
+        /* :AE: 2105 and 2107 have limits on Access Authorization.   */
+        /* This will actually prevent the RSHA command from running  */
+        /* except in a Locate domain. Setting 10 is rejected and 11  */
+        /* shall work as 01. */
+
+        if (dev->ckdcu->devt == 0x2105 ||
+            dev->ckdcu->devt == 0x2107)
+        {
+            if (dev->ckdfmask & CKDMASK_AAUTH_DIAG)
+            {
+                if (!(dev->ckdfmask & CKDMASK_AAUTH_DSF))
+                {
+                    // 10 is rejected
+                    ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
+                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                    break;
+                }
+                else
+                {
+                    // 11 shall operate as 01
+                    dev->ckdfmask &= ~CKDMASK_AAUTH_DIAG;
+                }
+            }
         }
 
         /* Set command processed flag */
@@ -4700,6 +4920,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /*---------------------------------------------------------------*/
         /* LOCATE RECORD                                                 */
         /*---------------------------------------------------------------*/
+        /*:AE: Command Reject if ECKD CCW set is not available. */
+        /* Test in the data for the 64 command, built for all   */
+        /* DASD device types. ECKD is indicated by bits 0+1 in  */
+        /* CU model byte. */
+
+        if ((dev->devchar[2] & 0xC0) != 0xC0)
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
 
         /* Calculate residual byte count */
         num = (count < 16) ? count : 16;
@@ -4983,6 +5214,26 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* LOCATE RECORD EXTENDED                                        */
     /*---------------------------------------------------------------*/
+        /*:AE: Command Reject if the LRE CCW is not available.
+           It was introduced with the 3990-6 control unit
+           and available on new DASD CU machines from then on.
+           9345 Probably?
+        */
+
+        if (!(0
+              || (dev->ckdcu->devt == 0x2107)
+              || (dev->ckdcu->devt == 0x2105)
+              || (dev->ckdcu->devt == 0x9343)       // (probably)
+              ||  (1
+                   && (dev->ckdcu->devt == 0x3990)
+                   && (dev->ckdcu->model == 0xE9)   // cu=3990-6
+                  )
+        ))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
 
         if (LocateRecordExtended( dev, code, flags, chained, count, prevcode,
                                   ccwseq, iobuf, more, unitstat, residual ))
@@ -4995,6 +5246,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* DEFINE EXTENT                                                 */
     /*---------------------------------------------------------------*/
+        /*:AE: Command Reject if ECKD CCW set is not available. */
+        /* Test in the data for the 64 command, built for all   */
+        /* DASD device types. ECKD is indicated by bits 0+1 in  */
+        /* CU model byte. */
+
+        if ((dev->devchar[2] & 0xC0) != 0xC0)
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
 
         if (DefineExtent( dev, code, flags, chained, count, prevcode,
                           ccwseq, iobuf, more, unitstat, residual ))
@@ -5003,7 +5265,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
         break;
 
-    case 0x64:
+    case RDC: // 0x64
     /*---------------------------------------------------------------*/
     /* READ DEVICE CHARACTERISTICS                                   */
     /*---------------------------------------------------------------*/
@@ -5043,6 +5305,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Command reject if within the domain of a Locate Record,
            or if subsystem data has not been prepared in the channel
            buffer by a previous Perform Subsystem Function command */
+
         if (dev->ckdlcount > 0 || dev->ckdssdlen == 0)
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
@@ -5058,12 +5321,79 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Subsystem data is already in the channel buffer, so
            just return channel end and device end */
         *unitstat = CSW_CE | CSW_DE;
+
+        /*  :AE: Reset the length to zero so that additional
+            PSF/DSO+RSSD commands become possible to execute
+            in the same chain. */
+        dev->ckdssdlen = 0;
+
+        /* :AE: Set flag to force checking of any CCW that may
+           follow in the chain. */
+        dev->ckdPostRSSD = 1;
+
         break;
 
-    case 0x5B:
+    case RMID: // 0x4E
+        /*---------------------------------------------------------------*/
+        /* READ MESSAGE ID                                               */
+        /*---------------------------------------------------------------*/
+        /* :AE: Command Reject if within the domain of a Locate
+           Record, or if not immediately preceded in the chain
+           by a PSF or SSM CCW which requests a response message */
+
+        if (dev->ckdlcount > 0 ||
+            (chained && prevcode != 0x27 && prevcode != 0x87))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Generate a fake message ID                                */
+        /* A good and complete reponse will be returned when it is   */
+        /* fetched.                                                  */
+        memset(iobuf, 0xff, 4);
+
+        /* Calculate residual byte count */
+        num = (count < 4) ? count : 4;
+        *residual = count - num;
+        if (count < 4) *more = 1;
+
+        /* Subsystem data is already in the channel buffer, so
+           just return channel end and device end */
+        *unitstat = CSW_CE | CSW_DE;
+
+        /* Set flag to force rejecting any CCW that may follow
+           in the chain                                              */
+        dev->ckdUCnxt = 1;
+
+        break;
+
+
+    case SMR: // 0x5B
     /*---------------------------------------------------------------*/
     /* SUSPEND MULTIPATH RECONNECTION                                */
     /*---------------------------------------------------------------*/
+        /* :AE: Command Reject if device does not support path       */
+        /* grouping. This was introduced with 3880 and 3380 dasd     */
+        /* and is supported with all more modern DASDs.              */
+        /*                                                           */
+        /* TODO: Add first in chain and Suspend Multipath check.     */
+        /* There is no such formal requirement in the book, but      */
+        /* it will be the regular way to use it. (9345?)             */
+        /*                                                           */
+        /* To give the intended result, the CCW would be first in    */
+        /* chain, but this is not a formally documented requirement! */
+
+        if ((dev->devtype != 0x3380) &&
+            (dev->devtype != 0x3390) &&
+            (dev->devtype != 0x9345))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
@@ -5170,7 +5500,87 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Perform the operation of a sense command */
         goto sense;
 
-    case 0x14: /* UNCONDITIONAL RESERVE */
+    case 0x44:
+        /*---------------------------------------------------------------*/
+        /* RESET ALLEGIANCE                                              */
+        /*---------------------------------------------------------------*/
+        /* :AE: This command was introduced with the 3990 to be */
+        /* used instead of the UR to recover from cu problems   */
+        /* without the reserve 'side effect'. This code avoids  */
+        /* the CMDREJ but will otherwise have no effect on any  */
+        /* processing in Hercules.                              */
+
+        if (!(0
+              || (dev->ckdcu->devt == 0x3990)
+              || (dev->ckdcu->devt == 0x2105)
+              || (dev->ckdcu->devt == 0x2107)
+              || (dev->ckdcu->devt == 0x9343)      // (probably)
+        ))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Command reject if not the first command in the chain
+           or indeed if preceded by any command at all apart from
+           Suspend Multipath Reconnection */
+        if (0
+            || ccwseq > 1
+            || (1
+                && chained
+                && prevcode != SMR
+                )
+            )
+        {
+            ckd_build_sense(dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* The data to be resturned will indicate only if the        */
+        /* device was reserved. It is not a zero sense!              */
+        memset(iobuf, 0, 32);
+        if (dev->reserved == 1) iobuf[0] = 0x90; else iobuf[0] = 0x80;
+        iobuf[1] = 0x20;
+        memcpy(iobuf+5, dev->pgid, 11);
+
+        /* Calculate residual byte count */
+        num = (count < 32) ? count : 32;
+        *residual = count - num;
+        if (count < 32) *more = 1;
+
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    case 0x14:
+        /*---------------------------------------------------------------*/
+        /* UNCONDITIONAL RESERVE                                         */
+        /*---------------------------------------------------------------*/
+        /* :AE: This command was introduced with the 3880 but only   */
+        /* for 3350 and 3375 and more modern equipment. It was in-   */
+        /* vented to allow restarting 'hung' cu's, so it is unlikely */
+        /* that it will ever be used in a Hercules environment.      */
+        /* For some CU's, any command chained after UR should be     */
+        /* CMDREJ'ed, but this is not implemented                    */
+
+        if (!(0
+              || (1
+                  && (dev->devtype == 0x3350)
+                  && (dev->ckdcu->devt == 0x3880)
+                 )
+              ||     (dev->devtype == 0x3375)
+              ||     (dev->devtype == 0x3380)
+              ||     (dev->devtype == 0x9345)       // (probably)
+              ||     (dev->devtype == 0x3390)
+             )
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
     case 0xB4: /* DEVICE RESERVE */
     /*---------------------------------------------------------------*/
     /* DEVICE RESERVE                                                */
@@ -5180,7 +5590,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            Suspend Multipath Reconnection */
         if (dev->ckdlcount > 0
             || ccwseq > 1
-            || (chained && prevcode != 0x5B))
+            || (chained && prevcode != SMR))
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5268,6 +5678,39 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* SENSE PATH GROUP ID                                           */
     /*---------------------------------------------------------------*/
+        /* :AE: Command Reject if device does not support path       */
+        /* grouping. This was introduced with 3880 and 3380 dasd     */
+        /* and is supported with all more modern DASDs.              */
+        /*                                                           */
+        /* TODO: Add first in chain and Suspend Multipath check.     */
+        /* (9345?)                                                   */
+
+        if ((dev->devtype != 0x3380) &&
+            (dev->devtype != 0x3390) &&
+            (dev->devtype != 0x9345))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* TODO: Implement chaining requirements.                    */
+        /* :AE: Command Reject if not first command in the chain,    */
+        /* or indeed if preceded by any command at all apart from    */
+        /* Suspend Multipath Reconnection */
+
+        if (0
+            || ccwseq > 1
+            || (1
+                && chained
+                && prevcode != SMR
+               )
+        )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
 
         /* Calculate residual byte count */
         num = (count < 12) ? count : 12;
@@ -5288,6 +5731,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Bytes 1-11 contain the path group identifier */
         memcpy (iobuf+1, dev->pgid, 11);
 
+        /* :AE: This CCW must be THE last in the chain. Force
+            CMDREJ if something follows. */
+        dev->ckdUCnxt = 1;
+
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
@@ -5296,6 +5743,39 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* SET PATH GROUP ID                                             */
     /*---------------------------------------------------------------*/
+        /* :AE: Command Reject if device does not support path       */
+        /* grouping. This was introduced with 3880 and 3380 dasd     */
+        /* and is supported with all more modern DASDs.              */
+        /*                                                           */
+        /* TODO: Add first in chain and Suspend Multipath check.     */
+        /* (9345?)                                                   */
+
+        if ((dev->devtype != 0x3380) &&
+            (dev->devtype != 0x3390) &&
+            (dev->devtype != 0x9345))
+        {
+            ckd_build_sense(dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* TODO: Implement chaining requirements.                    */
+        /* :AE: Command Reject if not first command in the chain,    */
+        /* or indeed if preceded by any command at all apart from    */
+        /* Suspend Multipath Reconnection */
+
+        if (0
+            || ccwseq > 1
+            || (1
+                && chained
+                && prevcode != SMR
+               )
+            )
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
 
         /* Calculate residual byte count */
         num = (count < 12) ? count : 12;
@@ -5304,9 +5784,27 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Control information length must be at least 12 bytes */
         if (count < 12)
         {
-            dev->sense[0] = SENSE_CR;
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
+        }
+
+        /* Parameter validation                                      */
+        /* Must have a valid function                                */
+        /* Bits 3-7 must be zero                                     */
+        /* Zeros is not a valid groupid                              */
+        /* If path is already grouped, same groupid must be specified*/
+        if ( ((iobuf[0] & SPG_SET_COMMAND) == SPG_SET_COMMAND_RESV)   ||          //Invalid function '11'
+             ((iobuf[0] & SPG_SET_RESV) != 0x00)                      ||          //Must be zero bits
+             (memcmp(iobuf+1,                                                     //Specified groupid is zeros
+                    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 11) == 0) ||
+             ( (memcmp(dev->pgid,                                                 //Path is already grouped
+                    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 11) != 0) &&
+               (memcmp(dev->pgid, iobuf + 1, 11) != 0) ) )                         //and specified id mismatches
+        {
+           ckd_build_sense(dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+           *unitstat = CSW_CE | CSW_DE | CSW_UC;
+           break;
         }
 
         /* Byte 0 is the path group state byte */
@@ -5319,14 +5817,32 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                  "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 11)
               && memcmp(dev->pgid, iobuf+1, 11))
             {
-                dev->sense[0] = SENSE_CR;
+                ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 break;
             }
 
-            /* Bytes 1-11 contain the path group identifier */
-            memcpy (dev->pgid, iobuf+1, 11);
+            /* :AE: Note that PATHMODE will be indicated as SINGLE   */
+            /* by the SNID command, as Hercules does not provide for */
+            /* multipathing */
+
+            /* Bytes 1-11 contain the path group identifier          */
+            memcpy( dev->pgid, iobuf+1, 11 );
         }
+
+        /* Since there is no multipath type group in Hercules,       */
+        /* both Disband and Resign will do the same, i.e. clear any  */
+        /* indication that the path is grouped                       */
+        if (((iobuf[0] & SPG_SET_COMMAND) == SPG_SET_DISBAND) ||
+            ((iobuf[0] & SPG_SET_COMMAND) == SPG_SET_RESIGN) )
+        {
+            memset(dev->pgid, 0x00, 11);
+        }
+
+        /* :AE: This CCW must be the last command in the chain.
+           Force a CMDREJ if something follows. */
+
+        dev->ckdUCnxt = 1;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -5336,15 +5852,32 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* SENSE SUBSYSTEM STATUS                                        */
     /*---------------------------------------------------------------*/
-        /* Command reject if within the domain of a Locate Record,
+        /* :AE: This command was introduced with the 3880 cache  */
+        /* machines. Now these are not emulated by Hercules, so  */
+        /* 3990 will be the first machine to provide it.         */
+
+        if (!(0
+              || (dev->ckdcu->devt == 0x3990)
+              || (dev->ckdcu->devt == 0x2105)
+              || (dev->ckdcu->devt == 0x2107)
+              || (dev->ckdcu->devt == 0x9343)   // (probably)
+        ))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Command reject if within the domain of a Locate Record,ucne
            or if chained from any command unless the preceding command
            is Read Device Characteristics, Read Configuration Data, or
            a Suspend Multipath Reconnection command that was the first
            command in the chain */
+
         if (dev->ckdlcount > 0
-            || (chained && prevcode != 0x64 && prevcode != 0xFA
-                && prevcode != 0x5B)
-            || (chained && prevcode == 0x5B && ccwseq > 1))
+            || (chained && prevcode != RDC && prevcode != RCD
+                && prevcode != SMR)
+            || (chained && prevcode == SMR && ccwseq > 1))
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5358,6 +5891,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *residual = count < num ? 0 : count - num;
         *more = count < num;
 
+
+        /* :AE: This CCW must be the last command in the chain.  */
+        /* Force a CMDREJ if something follows. This requirement */
+        /* is not documented for 2107. */
+
+        if (dev->ckdcu->devt != 0x2107)
+            dev->ckdUCnxt = 1;
+
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
@@ -5370,11 +5911,29 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            or if chained from any command unless the preceding command
            is Read Device Characteristics, Read Configuration Data, or
            a Suspend Multipath Reconnection command that was the first
-           command in the chain */
-        if (dev->ckdlcount > 0
-            || (chained && prevcode != 0x64 && prevcode != 0xFA
-                && prevcode != 0x5B)
-            || (chained && prevcode == 0x5B && ccwseq > 1))
+           command in the chain
+
+           :AE: NOTE: None of my books indicate any other chaining
+           requirement other than it should not appear in a Locate
+           domain. But Hercules MVS TK system runs fine with the
+           extra tests for first-in chain or previous CCWs, so we
+           will check for that anyway.
+        */
+
+        if (0
+            || dev->ckdlcount > 0
+            || (1
+                && chained
+                && prevcode != RDC
+                && prevcode != RCD
+                && prevcode != SMR
+               )
+            || (1
+                && chained
+                && prevcode == SMR
+                && ccwseq > 1
+               )
+        )
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5397,22 +5956,58 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* Set Subsystem Mode                                            */
     /*---------------------------------------------------------------*/
+        /* :AE: Command was introduced with the cache models. */
+        /* Command Reject on older types */
 
-        /* Command reject if within the domain of a Locate Record */
-        if (dev->ckdlcount > 0)
+        if (0
+            || (1
+                && dev->ckdcu->devt == 0x3990
+                && (0
+                    || dev->ckdcu->model == 0xec
+                    || dev->ckdcu->model == 0xe9
+                   )
+               )
+            || (dev->ckdcu->devt == 0x2105)
+            || (dev->ckdcu->devt == 0x2107)
+            || (dev->ckdcu->devt == 0x9343)
+        )
+        {
+            ;   // do nothing (i.e. NOP)
+        }
+        else
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+#if 0   // :AE: Previous [incorrect] code left in for comparison...
+        // (How can you ever be BOTH first-in-chain AND within
+        // a Locate domain?! That doesn't make any sense to me!)
+
+        /* Command reject if not a cached device, first in chain, or */
+        /* immediately preceded by Suspend Multipath Connection      */
+        /* TODO: Add first in chain and Suspend Multipath check      */
+        /*                                                           */
+        if (0
+            || (dev->ckdcu->devt != 0x3990 &&
+                dev->ckdcu->devt != 0x2105)
+            || (dev->ckdcu->model & 0x07) == 0x02   // (3990-1/2)
+        )
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
+#endif
+        /* Command reject if within the domain of a Locate Record */
+        /* The CCW must also be first-in-chain                    */
 
-        /* Command reject if not a cached device, first in chain, or */
-        /* immediately preceded by Suspend Multipath Connection      */
-        /*                                                           */
-        /* TBD: Add first in chain and Suspend Multipath check       */
-        /*                                                           */
-        if ((dev->ckdcu->devt != 0x3990 && dev->ckdcu->devt != 0x2105)
-            || (dev->ckdcu->model & 0x07) == 0x02)      /* 3990-1/2  */
+        if (0
+            || dev->ckdlcount > 0
+            || ccwseq > 1
+            || (chained && prevcode != SMR)
+        )
         {
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5436,13 +6031,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /*              message id check                            */
 
         /* Validate operands -- Refer to 2105 validation sequence   */
-        if (((iobuf[0] & 0x02) != 0) || ((iobuf[1] & 0x07) != 0)    ||
-            ((iobuf[1] & 0x18) != 0) /* zero unless in TPF mode */  ||
-            ((iobuf[0] & 0xE0) > 0xA0)                              ||
+/*      if (((iobuf[0] & 0x02) != 0) || ((iobuf[1] & 0x07) != 0) ||
+            ((iobuf[1] & 0x18) != 0) */ /* zero unless in TPF mode */ /* ||    */
+/*            ((iobuf[0] & 0xE0) > 0xA0) ||
             ((iobuf[0] & 0x1C) > 0x14)                              ||
             ((iobuf[1] & 0xE0) > 0xA0)                              ||
-            ((iobuf[1] & 0x18) == 0x18) /* TPF reserved */          ||
-            (((iobuf[0] & 0x10) != 0) && (
+            ((iobuf[1] & 0x18) == 0x18)  */  /* TPF reserved */    /* ||   */
+    /*        (((iobuf[0] & 0x10) != 0) && (
                ((iobuf[0] & 0xE0) >  0x80) ||
                ((iobuf[0] & 0xE0) <  0x40) ||
                ((iobuf[0] & 0x1C) != 0x10) ||
@@ -5457,18 +6052,137 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
+        }       */
+
+        /* TODO / Future:        Cache Fast Write Data Control       */
+        /* :AE: Replacing the above and add some more tests          */
+        /* Validate the parameters specified                         */
+        {
+            BYTE CacheOP, CFWOP, NVSOP, RecCntlOP;
+            int  CacheCHG = 1, CFWCHG = 1, NVSCHG = 1, RecCntlCHG = 1;
+            int  badparm = 0;            // Invalid setting is a NOP
+            int  allowMSGREQ = 0;        // Allow Message Required flag
+                                         // Asynch, slow operation
+
+            /* Validate Cache operation request                      */
+            CacheOP = (iobuf[0] >> 5) & 0x07;       // Bits 0-2
+            switch (CacheOP) {
+            case 0:
+                CacheCHG = 0;
+                break;
+            case 1:          //Activate cache for device
+                break;
+            case 2:          //Deactivate cache for device
+                allowMSGREQ = 1;
+                break;
+            case 3:          //Activate subsystem cache
+                allowMSGREQ = 1;
+                break;
+            case 4:          //Deactivate subsystem cache
+                allowMSGREQ = 1;
+                break;
+            case 5:          //Force deactivate subsysstem cache
+                break;
+            default:
+                badparm = 1; break;
+            }
+
+            /* Validate CFW operation request                        */
+            CFWOP = (iobuf[0] >> 2) & 0x07;       // Bits 3-5
+            switch (CFWOP) {
+            case 0:
+                CFWCHG = 0;
+                break;
+            case 3:          //Activate CFW for subsystem
+                break;
+            case 4:          //Deactivate CFW for subsystem
+                allowMSGREQ = 1;
+                break;
+            default:
+                badparm = 1; break;
+            }
+
+            /* Validate NVS operation request                        */
+            NVSOP = (iobuf[1] >> 5) & 0x07;       // Bits 8-10
+            switch (NVSOP) {
+            case 0:
+                NVSCHG = 0;
+                break;
+            case 1:          //Activate DFW for device
+                break;
+            case 2:          //Deactivate DFW for device
+                allowMSGREQ = 1;
+                break;
+            case 3:          //Force Deactivate DFW for device
+                break;
+            case 4:          //Activate NVS for subsystem
+                allowMSGREQ = 1;
+                break;
+            case 5:          //Deactivate NVS for subsystem
+                allowMSGREQ = 1;
+                break;
+            default:
+                badparm = 1; break;
+            }
+
+            /* Validate Record Control operation request             */
+            RecCntlOP = (iobuf[1] >> 3) & 0x03;       // Bits 11-12
+            switch (RecCntlOP) {
+            case 0:
+                RecCntlCHG = 0;
+                break;
+            case 1:          //Allow Record cache for device
+                break;
+            case 2:          //Disallow Record cache for device
+                break;
+            default:
+                badparm = 1; break;
+            }
+
+            /* Verify correct input parameters                       */
+            if (((iobuf[0] & 0x02) != 0x00)    ||   //Bit 6 must be zero
+                ((iobuf[1] & 0x07) != 0x00)    ||   //Bits 13-15 must be zero
+                ((CacheCHG + CFWCHG + NVSCHG + RecCntlCHG) > 1) ||   //Multiple requessts
+                (((iobuf[0] & 0x01) == 0x01) && (allowMSGREQ == 0))  //Messsage request not valid for fast op
+               )
+            {
+                ckd_build_sense(dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
         }
 
-        /* TBD / Future:        Cache Fast Write Data Control        */
+        /* The SSM command shall be last in chain or when message is */
+        /* required a RMID Read Message ID may follow                */
+
+        if (iobuf[0] & 0x01)
+            dev->ckdPostSSM = 1;
+        else
+            dev->ckdUCnxt = 1;
 
         /* Treat as NOP and Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0xFA:
+    case RCD: // 0xFA
     /*---------------------------------------------------------------*/
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
+        /* :AE: This command was introduced with the 3990 */
+        /* and is valid for the CUs that followed.        */
+
+        if (!(0
+              || (dev->ckdcu->devt == 0x3990)
+              || (dev->ckdcu->devt == 0x2105)
+              || (dev->ckdcu->devt == 0x2107)
+              || (dev->ckdcu->devt == 0x9343)
+        ))
+        {
+            ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
@@ -5857,7 +6571,7 @@ static bool PerformSubsystemFunction
             || ccwseq > 1
             || (1
                 && chained
-                && prevcode != 0x5B // SUSPEND MULTIPATH RECONNECTION
+                && prevcode != SMR
                )
         )
         {
@@ -6014,7 +6728,12 @@ static bool LocateRecordExtended
     UNREFERENCED( ccwseq   );
     UNREFERENCED( more     );
 
-    /* LRE only valid for 3990-3 or 3990-6 (or greater) */
+    /* :AE: This test has been replaced with testing when validating
+        a PFX or explicit LRE command. LRE is only valid for 3990-3
+        or 3990-6 (or greater). And this was slightly wrong since
+        there was no LRE for 3990 model 3.
+    */
+#if 0
     if (0
         || dev->ckdcu->devt != 0x3990
         || !(0
@@ -6023,11 +6742,12 @@ static bool LocateRecordExtended
             )
     )
     {
-        /* Set command reject sense byte, and unit check status */
+           Set command reject sense byte, and unit check status
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return false;
     }
+#endif
 
     /*
      * The Storage Director initially requests 20 bytes of parameters
@@ -6812,6 +7532,31 @@ static bool DefineExtent
         ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return false;
+    }
+
+    /* :AE: 2105 and 2107 have limits on Access Authorization.   */
+    /* This will actually prevent the RSHA command from running  */
+    /* except within a Locate domain. Setting 10 is rejected,    */
+    /* and 11 shall work as 01. */
+
+    if (dev->ckdcu->devt == 0x2105 ||
+        dev->ckdcu->devt == 0x2107)
+    {
+        if (dev->ckdfmask & CKDMASK_AAUTH_DIAG)
+        {
+            if (!(dev->ckdfmask & CKDMASK_AAUTH_DSF))
+            {
+                // 10 is rejected
+                ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4 );
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                return false;
+            }
+            else
+            {
+                // 11 shall operate as 01
+                dev->ckdfmask &= ~CKDMASK_AAUTH_DIAG;
+            }
+        }
     }
 
     /* Bytes 2-3 contain the extent block size */

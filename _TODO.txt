@@ -106,8 +106,8 @@
 
 --------------------------------------------------------------------------------
 
-  Windows block device support (i.e. ability to define an entire drive
-  (Windows drive letter / partition) as a Hercules dasd)
+  Windows block device support (i.e. ability to define an entire physical host
+  drive (Windows drive letter / partition) as a Hercules dasd)
 
 --------------------------------------------------------------------------------
 

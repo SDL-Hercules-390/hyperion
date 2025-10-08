@@ -1953,6 +1953,9 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* Line above ISW20030819-1  */
         u_int   ckdfakewr:1;            /* 1=Fake successful write
                                              for read only file      */
+        u_int   ckdUCnxt:1;             /* 1=CMDREJ next chained CCW     :AE: */
+        u_int   ckdPostRSSD:1;          /* 1=Prev CCW was RSSD           :AE: */
+        u_int   ckdPostSSM:1;           /* 1=Prev CCW was SSM            :AE: */
         BYTE    ckdnvs:1;               /* 1=NVS defined             */
         BYTE    ckdraid:1;              /* 1=RAID device             */
         U16     ckdssdlen;              /* #of bytes of data prepared
