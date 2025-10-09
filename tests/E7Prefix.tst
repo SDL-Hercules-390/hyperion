@@ -1,9 +1,9 @@
-*Testcase Various CKD dasd I/O tests
+*Testcase E7Prefix - Various CKD dasd I/O tests
 mainsize    2
 numcpu      1
 sysclear
 archmode    z/Arch
-attach      0A80 3390 "$(testpath)/3390.cckd64" ro sf="./3390-shadow_*.cckd64" cu=3990-6
+attach      0A80 3390 "$(testpath)/3390.cckd64" ro sf="./3390-shadow_*.cckd64" cu=2107
 sf+a80
 loadcore    "$(testpath)/E7Prefix.core"
 diag8cmd    enable
