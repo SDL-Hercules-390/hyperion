@@ -6060,7 +6060,6 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
         {
             BYTE CacheOP, CFWOP, NVSOP, RecCntlOP;
             int  CacheCHG = 1, CFWCHG = 1, NVSCHG = 1, RecCntlCHG = 1;
-            int  badparm = 0;            // Invalid setting is a NOP
             int  allowMSGREQ = 0;        // Allow Message Required flag
                                          // Asynch, slow operation
 
@@ -6084,7 +6083,7 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
             case 5:          //Force deactivate subsysstem cache
                 break;
             default:
-                badparm = 1; break;
+                break;
             }
 
             /* Validate CFW operation request                        */
@@ -6099,7 +6098,7 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
                 allowMSGREQ = 1;
                 break;
             default:
-                badparm = 1; break;
+                break;
             }
 
             /* Validate NVS operation request                        */
@@ -6122,7 +6121,7 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
                 allowMSGREQ = 1;
                 break;
             default:
-                badparm = 1; break;
+                break;
             }
 
             /* Validate Record Control operation request             */
@@ -6136,7 +6135,7 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
             case 2:          //Disallow Record cache for device
                 break;
             default:
-                badparm = 1; break;
+                break;
             }
 
             /* Verify correct input parameters                       */
