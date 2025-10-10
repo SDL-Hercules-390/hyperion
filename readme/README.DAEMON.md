@@ -57,9 +57,9 @@ ___
 
     # Shared Dasd devices...
 
-    0123  3390  "FOO001.cckd64"  ro  cu=3990-6
-    0124  3390  "BAR002.cckd64"  ro  cu=3990-6
-    0125  3390  "FOOBAR.cckd64"  ro  cu=3990-6
+    0123  3390  "FOO001.cckd64"  ro  cu=2107
+    0124  3390  "BAR002.cckd64"  ro  cu=2107
+    0125  3390  "FOOBAR.cckd64"  ro  cu=2107
 </pre>
 
 

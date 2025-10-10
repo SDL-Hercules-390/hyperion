@@ -146,7 +146,8 @@ static CKDCU ckdcutab[] =       // (NOTE: prior/previous value kept as comment)
 /*-------------------------------------------------------------------*/
 /*                    CKD device definitions                         */
 /*-------------------------------------------------------------------*/
-static CKDDEV ckdtab[] = {
+static CKDDEV ckdtab[] =       // (NOTE: prior/previous value kept as comment)
+{
 /*  name         type model clas code prime a hd    r0    r1 har0   len sec    rps  f f1  f2   f3   f4 f5 f6   cu */
   {"2305-1",    0x2305,0x00,0x20,0x00,   48,6, 8,14568,14136, 432,14568, 90,0x0000,-1,202,432,  0,   0,  0,0,"2835"},
   {"2305",      0x2305,0x00,0x20,0x00,   48,6, 8,14568,14136, 432,14568, 90,0x0000,-1,202,432,  0,   0,  0,0,"2835"},
