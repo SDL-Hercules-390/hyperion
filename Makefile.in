@@ -2026,7 +2026,8 @@ noinst_HEADERS = \
   w32util.h               \
   x75.h                   \
   zfcp.h                  \
-  zvector.h
+  zvector.h               \
+  compat/linux/sockios.h
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
