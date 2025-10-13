@@ -13,6 +13,40 @@ Hercules: What's new
 
 <!-- ---------------------------------------------------------------------------- -->
 
+<h2>What's new in Version 4.9
+</h2>
+
+<p>Release date: 15 October 2025
+
+<br>Official Source and Binaries:
+<a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.9">Release_4.9</a>
+<br><i>Please refer to the <a href="hercrnot.html#4.9">Release Notes</a> for important information.</i>
+
+<ul>
+<li>zVector Facility updates: fixes/performance improvements to existing instructions, addition of new instructions, etc. (Ian Shorter, James Wekel)
+<li>More historically correct/accurate Dasd CCW and Dasd Control Unit implementation (Anders Edlund, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/748>748</a>)
+<li>LCS device fixes and enhancements (Ian shorter, Fish, Harold Grovesteen, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/773>773</a>, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/774>774</a>, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/775>775</a>, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/776>776</a>)
+<li>Support for Microsoft VS2026 (Bill Lewis)
+<li>Fix crash in PRNO instruction for large lengths (salva-rczero, Fish, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/765>765</a>)
+<li>Fix FreeBSD QETH (OSA) TunTap support (Lennert Van Alboom, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/754>754</a>, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/764>764</a>)
+<li>Fix Intermittent print to pipe subprocess launch failure (Bill Pappas, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/757>757</a>)
+<li>Fix DR/D Divide instructions crash (Ian Shorter)
+<li>Enable and Start CCKD/CFBA Dasd Hardener facility by default (Fish, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/756>756</a>)
+<li>Fix QETH/OSA asynchronous HSCH/CSCH handling (Juergen Winkelmann)
+<li>DOC: Add new "defragmenting" section to <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.CCKD64.md">README.CCKD64</a> (Fish)
+<li>Fix convto64 to disallow identical input and output files (Fish)
+<li>Fix improper shadow file error on DEVBLK reuse (Fish)
+<li>Fix for big-endian shared DASD server (Peter Jansen)
+<li>Improved Carryless Multiply performance for MSVC builds (James Wekel)
+<li>New z/Arch-only Diagnose F14: Hercules Get OS Microsecond Time (James Wekel)
+<li>"Daemon Mode" renamed to "NoUI mode" instead (Patrik Schindler, #<a href=https://github.com/SDL-Hercules-390/hyperion/issues/746>746</a>)
+<li>Fix buffer overflow CRASH in FBA dasdcopy (Fish)
+</ul>
+
+<p>
+
+<!-- ---------------------------------------------------------------------------- -->
+
 <h2>What's new in Version 4.8
 </h2>
 
