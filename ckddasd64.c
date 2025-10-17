@@ -1,4 +1,5 @@
 /* CKDDASD64.C  (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2023                             */
 /*              ESA/390 CKD Direct Access Storage Device Handler     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -15,6 +16,7 @@
 /* GA32-0099 IBM 3990 Storage Control Reference (Models 1, 2, and 3) */
 /* GA32-0274 IBM 3990,9390 Storage Control Reference                 */
 /* GC26-7006 IBM RAMAC Array Subsystem Reference                     */
+/* SA22-1025 IBM Subsystem Reference Guide        (E7 Prefix CCW)    */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -25,6 +27,8 @@
 /*        Pogonchenko                                                */
 /*      Track overflow write fix by Roger Bowler, thanks to Valery   */
 /*        Pogonchenko and Volker Bandke             V1.71 16/01/2001 */
+/*      More historically accurate Dasd Control Unit and             */
+/*       CCW support -- Anders Edlund.                               */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"

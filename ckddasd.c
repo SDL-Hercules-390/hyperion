@@ -27,6 +27,8 @@
 /*        Pogonchenko                                                */
 /*      Track overflow write fix by Roger Bowler, thanks to Valery   */
 /*        Pogonchenko and Volker Bandke             V1.71 16/01/2001 */
+/*      More historically accurate Dasd Control Unit and             */
+/*       CCW support -- Anders Edlund.                               */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
