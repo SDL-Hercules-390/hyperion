@@ -17,6 +17,8 @@
 /* GA32-0274 IBM 3990,9390 Storage Control Reference                 */
 /* GC26-7006 IBM RAMAC Array Subsystem Reference                     */
 /* SA22-1025 IBM Subsystem Reference Guide        (E7 Prefix CCW)    */
+/* SC26-7298 Enterprise Storage Server Command Reference:            */
+/*           2105 Models E10, E20, F10, and F20                      */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
