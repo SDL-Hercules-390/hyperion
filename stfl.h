@@ -461,7 +461,7 @@
                                                134, 152 and 192 are also
                                                one.                      */
 
-#define STFL_200_IBM_INTERNAL        153    /* IBM internal use          */
+#define STFL_200_IBM_INTERNAL        200    /* IBM internal use          */
 
 #define STFL_IBM_LAST_BIT            200    /* Last defined IBM facility */
 
