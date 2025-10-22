@@ -927,6 +927,43 @@
 #endif /* defined( OPTION_OPTINST ) */
 
 /*-------------------------------------------------------------------*/
+/*  RXY - register & indexed storage w/ext.opcode and long displ.    */
+/*-------------------------------------------------------------------*/
+// This is z/Arch RXY-c.
+// Note: Normal address arithmetic is not used, the address
+// computation is performed by the instruction.
+
+#define RXY_C( _inst, _regs, _r1, _x2, _b2, _dx2 )  RXY_DECODER_C( _inst, _regs, _r1, _x2, _b2, _dx2, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | r1  | x2  | b2  |       dl2       |    dh2    |    XOP    |    RXY-c
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40    44   47
+
+#define RXY_DECODER_C( _inst, _regs, _r1, _x2, _b2, _dx2, _len, _ilc ) \
+{                                                                   \
+    S32 disp2; U32 temp = fetch_fw( _inst );                        \
+                                                                    \
+    disp2 = (temp >>  0) & 0xfff;                                   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
+    (_x2) = (temp >> 16) & 0xf;                                     \
+    (_r1) = (temp >> 20) & 0xf;                                     \
+                                                                    \
+    if (unlikely((_inst)[4]))       /* long displacement?  */       \
+    {                                                               \
+        disp2 |= (_inst[4] << 12);                                  \
+                                                                    \
+        if (disp2 & 0x80000)        /* high order bit on?  */       \
+            disp2 |= 0xfff00000;    /* make disp2 negative */       \
+    }                                                               \
+                                                                    \
+    (_dx2) = disp2;                                                 \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+/*-------------------------------------------------------------------*/
 /*    RS - register and storage with additional R3 or M3 field       */
 /*-------------------------------------------------------------------*/
 // This is z/Arch RS-a and -b formats.

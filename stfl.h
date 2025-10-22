@@ -250,7 +250,11 @@
 #define STFL_082_IBM_INTERNAL         82    /* IBM internal use          */
 
 #define STFL_083_UNDEFINED            83    /* Undefined                 */
-#define STFL_084_UNDEFINED            84    /* Undefined                 */
+
+#define STFL_084_MISC_INSTR_EXT_4     84    /* Miscellaneous-instruction-
+                                               extensions facility 4 is
+                                               installed.                */
+
 #define STFL_085_UNDEFINED            85    /* Undefined                 */
 #define STFL_086_UNDEFINED            86    /* Undefined                 */
 #define STFL_087_UNDEFINED            87    /* Undefined                 */

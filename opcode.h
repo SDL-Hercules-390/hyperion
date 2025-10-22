@@ -3575,6 +3575,23 @@ DEF_INST(convert_dfp_ext_to_packed);
 DEF_INST(convert_dfp_long_to_packed);
 #endif
 
+#if defined( FEATURE_084_MISC_INSTR_EXT_FACILITY_4 )
+DEF_INST( bit_deposit );
+DEF_INST( bit_extract );
+DEF_INST( count_leading_zeros );
+DEF_INST( count_trailing_zeros );
+DEF_INST( load_logical_indexed_address_shift_0 );
+DEF_INST( load_logical_indexed_address_shift_1 );
+DEF_INST( load_logical_indexed_address_shift_2 );
+DEF_INST( load_logical_indexed_address_shift_3 );
+DEF_INST( load_logical_indexed_address_shift_4 );
+DEF_INST( load_indexed_address_shift_0 );
+DEF_INST( load_indexed_address_shift_1 );
+DEF_INST( load_indexed_address_shift_2 );
+DEF_INST( load_indexed_address_shift_3 );
+DEF_INST( load_indexed_address_shift_4 );
+#endif
+
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
 DEF_INST(vector_load_element_8);
 DEF_INST(vector_load_element_16);
