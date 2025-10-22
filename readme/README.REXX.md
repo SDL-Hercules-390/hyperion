@@ -30,7 +30,7 @@ Support for either package can be enabled or disabled (Linux only) by simply spe
 * `--disable-object-rexx` and/or  
 * `--enable-regina-rexx`  
 
-configure option at build time. Note that enabling both packages requires them to be installed in different paths, for example ooRexx in /usr local and Regina Rexx in /usr. If both packages are installed in the same path, scripts transfering data from and to Rexx variables or stems may produce incorrect results or hang the whole Hercules system, particularly if they are executed in the background.
+configure option at build time. Note that enabling both packages requires them to be installed in different paths, for example ooRexx in /usr/local and Regina Rexx in /usr. If both packages are installed in the same path, scripts transfering data from and to Rexx variables or stems may produce incorrect results or hang the whole Hercules system, particularly if they are executed in the background.
   
 On Windows, the only way to purposely disable support is to rename the header file(s) to prevent Hercules from finding them.
 
