@@ -313,6 +313,255 @@ inline QW bswap_128( QW input )
     return swapped;
 }
 
+/*-------------------------------------------------------------------*/
+/*                    Bit functions                                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* clz_64: count leading zero bits in a U64                          */
+/*-------------------------------------------------------------------*/
+static inline int clz_64( U64 a )
+{
+    if (a == 0)     //Note: check for 0 as __builtin_clzll( a ) is undefined when a ==0
+        return 64;
+
+    #if ( (defined( __clang_major__ ) && __clang_major__ > 9  ) ||  \
+          (defined( __GNUC__ ) && __GNUC__ > 8  )                   \
+        )
+
+        return __builtin_clzll( a );
+
+    #else
+    {
+        static const BYTE LeadingZerosInByte[256] =
+        /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+        /* 0- */ { 8,  7,  6,  6,  5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  4,
+        /* 1- */   3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+        /* 2- */   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+        /* 3- */   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+        /* 4- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+        /* 5- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+        /* 6- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+        /* 7- */   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+        /* 8- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        /* 9- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        /* A- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        /* B- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        /* C- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        /* D- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        /* E- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        /* F- */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 };
+
+        union {DBLWRD aa; U64 a;} temp;
+        int count, i;
+        BYTE b;
+
+        temp.a = a;
+        count = 0;
+        for (i=0; i < 8; i++)
+        {
+            #if defined( WORDS_BIGENDIAN )
+                b = temp.aa[i];
+            #else
+                b = temp.aa[7-i];
+            #endif
+
+            if (b == 0)
+                count += 8;
+            else
+            {
+                count += LeadingZerosInByte[b];
+                break;
+            }
+        }
+
+        return count;
+    }
+
+    #endif
+}
+
+/*-------------------------------------------------------------------*/
+/* ctz_64: count trailing zero bits in a U64                         */
+/*-------------------------------------------------------------------*/
+static inline int ctz_64( U64 a )
+{
+    if (a == 0)     //Note: check for 0 as __builtin_ctzll( a ) is undefined when a ==0
+        return 64;
+
+    #if ( (defined( __clang_major__ ) && __clang_major__ > 9  ) ||  \
+          (defined( __GNUC__ ) && __GNUC__ > 8  )                   \
+        )
+
+    return __builtin_ctzll( a );
+
+    #else
+    {
+        static const BYTE TrailingZerosInByte[256] =
+        /*        -0  -1  -2  -3  -4  -5  -6  -7  -8  -9  -A  -B  -C  -D  -E  -F */
+        /* 0- */ { 8,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 1- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 2- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 3- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 4- */   6,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 5- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 6- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 7- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 8- */   7,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* 9- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* A- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* B- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* C- */   6,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* D- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* E- */   5,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0,
+        /* F- */   4,  0,  1,  0,  2,  0,  1,  0,  3,  0,  1,  0,  2,  0,  1,  0 };
+
+        union {DBLWRD aa; U64 a;} temp;
+        int count, i;
+        BYTE b;
+
+        temp.a = a;
+        count = 0;
+        for (i=7; i >=0; i--)
+        {
+            #if defined( WORDS_BIGENDIAN )
+                b = temp.aa[i];
+            #else
+                b = temp.aa[7-i];
+            #endif
+
+            if (b == 0)
+                count += 8;
+            else
+            {
+                count += TrailingZerosInByte[b];
+                break;
+            }
+        }
+
+        return count;
+    }
+
+    #endif
+}
+
+/*-------------------------------------------------------------------*/
+/* bit_extract_64: extract bits based on mask                        */
+/*       See PoP SA22-7832-14: page 7-36                             */
+/*-------------------------------------------------------------------*/
+static inline U64 bit_extract_64( U64 a, U64 mask )
+{
+    U64 extracted = 0;
+    int extractedpos = 0;
+    U64 bitmask;
+    int bitpos;
+
+    if ( mask == 0 )
+        return extracted;
+
+    for ( ; mask != 0 ; )
+    {
+        bitpos = clz_64( mask );
+        bitmask = 0x8000000000000000ull >> bitpos;
+        if( a & bitmask )
+        {
+            extracted |= 0x8000000000000000ull >> extractedpos;
+        }
+
+        //printf("  >>bit_extract_64: mask=%16LX, bitmask=%16LX, bitpos=%2d, extracted=%16LX, \n", mask, bitmask, bitpos, extracted);
+
+        // next bit
+        mask ^= bitmask;
+        extractedpos++;
+    }
+
+    return extracted;
+}
+
+/*-------------------------------------------------------------------*/
+/* bit_deposit_64: deposit bits based on mask                        */
+/*       See PoP SA22-7832-14: page 7-35                             */
+/*-------------------------------------------------------------------*/
+static inline U64 bit_deposit_64( U64 a, U64 mask )
+{
+    U64 deposit = 0;
+    U64 bitmask;
+    int bitpos;
+
+    if ( mask == 0 )
+        return deposit;
+
+    for ( ; mask != 0 ; )
+    {
+        bitpos = clz_64( mask );
+        bitmask = 0x8000000000000000ull >> bitpos;
+        if( a & 0x8000000000000000ull )
+        {
+            deposit |= bitmask;
+        }
+
+        //printf("  >>bit_deposit_64: mask=%16LX, bitmask=%16LX, bitpos=%2d, extracted=%16LX, \n", mask, bitmask, bitpos, deposit);
+
+        // next bit
+        mask ^= bitmask;
+        a <<= 1;
+    }
+
+    return deposit;
+}
+
+/*-------------------------------------------------------------------*/
+/*                 Index adressing functions                         */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* get_address_from_index:                                           */
+/* Note: Normal address arithmetic is not used.                      */
+/*       See PoP SA22-7832-14: page 7-316                            */
+/*-------------------------------------------------------------------*/
+static inline U64 get_address_from_index( REGS* regs, int x2, int b2, int dx2, int leftshift )
+{
+    U64 temp64;
+    S32 idx;                          // signed int index
+
+    // intermediate signed x2 (bits 32 to 63) plus signed dx2 displacement
+    idx =  ( x2 ) ? (S32) regs->GR_L( x2 ) : 0;
+    idx += dx2;
+
+    // sign extend intermediate
+    temp64 = (S64) idx;
+
+    // left shift for type of index
+    temp64 <<= leftshift;
+
+    temp64 += ( b2 ) ? regs->GR_G( b2 ) : 0;
+    return temp64;
+}
+
+/*-------------------------------------------------------------------*/
+/* get_address_from_logical_index:                                   */
+/* Note: Normal address arithmetic is not used.                      */
+/*       See PoP SA22-7832-14: page 7-321                            */
+/*-------------------------------------------------------------------*/
+static inline U64 get_address_from_logical_index( REGS* regs, int x2, int b2, int dx2, int leftshift )
+{
+    U64 temp64;
+    U32 idx;                          // unsigned int index
+
+    // intermediate unsigbed x2 (bits 32 to 63) plus signed dx2 displacement
+    idx =  ( x2 ) ? regs->GR_L( x2 ) : 0;
+    idx += dx2 ;
+
+    // unsign extend intermediate
+    temp64 = (U64) idx;
+
+    // left shift for type of index
+    temp64 <<= leftshift;
+
+    temp64 += ( b2 ) ? regs->GR_G( b2 ) : 0;
+    return temp64;
+}
+
 #endif // defined( _INLINE_H )
 
 /*-------------------------------------------------------------------*/

@@ -4527,6 +4527,191 @@ U32     u32;                            /* Second operand value      */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 #endif /* defined( FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY ) */
 
+#if defined( FEATURE_084_MISC_INSTR_EXT_FACILITY_4 )
+
+/*-------------------------------------------------------------------*/
+/* B968 CLZG  - Count Leading Zeros                          [RRE  ] */
+/*-------------------------------------------------------------------*/
+DEF_INST( count_leading_zeros )
+{
+    int r1, r2;
+
+    /* Decode instruction */
+    RRE( inst, regs, r1, r2 );
+
+    regs->GR_G( r1 ) = clz_64( regs->GR_G( r2 ) );
+}
+
+/*-------------------------------------------------------------------*/
+/* B969 CTZG  - Count Training Zeros                         [RRE  ] */
+/*-------------------------------------------------------------------*/
+DEF_INST( count_trailing_zeros )
+{
+    int r1, r2;
+
+    /* Decode instruction */
+    RRE( inst, regs, r1, r2 );
+
+    regs->GR_G( r1 ) = ctz_64( regs->GR_G( r2 ) );
+}
+
+/*-------------------------------------------------------------------*/
+/* B96C BEXTG - Bit Extract                                  [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( bit_extract )
+{
+    int r1, r2, r3;
+
+    /* Decode instruction */
+    RRR(inst, regs, r1, r2, r3);
+
+    regs->GR_G( r1 ) = bit_extract_64( regs->GR_G( r2 ), regs->GR_G( r3 ) );
+}
+
+/*-------------------------------------------------------------------*/
+/* B96D BDEPG - Bit Deposit                                  [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( bit_deposit )
+{
+    int r1, r2, r3;
+
+    /* Decode instruction */
+    RRR(inst, regs, r1, r2, r3);
+
+    regs->GR_G( r1 ) = bit_deposit_64( regs->GR_G( r2 ), regs->GR_G( r3 ) );
+}
+
+/*-------------------------------------------------------------------*/
+/* E360 LXAB  - load indexed address (shift left 0)          [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_indexed_address_shift_0 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_index( regs, x2, b2, dx2, 0 ) & ADDRESS_MAXWRAP( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E361 LLXAB - load logical indexed address (shift left 0)  [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_logical_indexed_address_shift_0 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_logical_index( regs, x2, b2, dx2, 0 ) & ADDRESS_MAXWRAP( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E362 LXAH  - load indexed address (shift left 1)          [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_indexed_address_shift_1 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_index( regs, x2, b2, dx2, 1 ) & ADDRESS_MAXWRAP( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E363 LLXAH - load logical indexed address (shift left 1)  [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_logical_indexed_address_shift_1 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_logical_index( regs, x2, b2, dx2, 1 ) & ADDRESS_MAXWRAP( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E364 LXAF  - load indexed address (shift left 2)          [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_indexed_address_shift_2 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_index( regs, x2, b2, dx2, 2 ) & ADDRESS_MAXWRAP( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E365 LLXAF - load logical indexed address (shift left 2)  [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_logical_indexed_address_shift_2 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_logical_index( regs, x2, b2, dx2, 2 ) & ADDRESS_MAXWRAP( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E366 LXAG  - load indexed address (shift left 3)          [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_indexed_address_shift_3 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_index( regs, x2, b2, dx2, 3 ) & ADDRESS_MAXWRAP( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E367 LLXAG - load logical indexed address (shift left 3)  [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_logical_indexed_address_shift_3 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_logical_index( regs, x2, b2, dx2, 3 ) & ADDRESS_MAXWRAP( regs );
+}
+/*-------------------------------------------------------------------*/
+/* E368 LXAQ  - load indexed address (shift left 4)          [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_indexed_address_shift_4 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_index( regs, x2, b2, dx2, 4 ) & ADDRESS_MAXWRAP( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* E369 LLXAQ - load logical indexed address (shift left 4)  [RXY-c] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_logical_indexed_address_shift_4 )
+{
+    int r1, x2, b2, dx2;
+
+    /* Decode instruction */
+    RXY_C(inst, regs, r1, x2, b2, dx2);
+
+    regs->GR_G( r1 ) = get_address_from_logical_index( regs, x2, b2, dx2, 4 ) & ADDRESS_MAXWRAP( regs );
+}
+
+#endif /* defined( FEATURE_084_MISC_INSTR_EXT_FACILITY_4 ) */
+
 
 #if !defined( _GEN_ARCH )
 

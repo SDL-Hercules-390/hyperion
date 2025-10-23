@@ -506,7 +506,11 @@ FT( Z900, Z900, NONE, 081_PPA_IN_ORDER )
 FT( NONE, NONE, NONE, 082_IBM_INTERNAL )
 
 FT( NONE, NONE, NONE, 083_UNDEFINED )
-FT( NONE, NONE, NONE, 084_UNDEFINED )
+
+#if defined(  FEATURE_084_MISC_INSTR_EXT_FACILITY_4 )
+FT( Z900, Z900, NONE, 084_MISC_INSTR_EXT_4 )
+#endif
+
 FT( NONE, NONE, NONE, 085_UNDEFINED )
 FT( NONE, NONE, NONE, 086_UNDEFINED )
 FT( NONE, NONE, NONE, 087_UNDEFINED )
@@ -980,6 +984,7 @@ static  void  instr76   ( int arch, bool enable );
 static  void  instr77   ( int arch, bool enable );
 static  void  instr78   ( int arch, bool enable );
 static  void  instr80   ( int arch, bool enable );
+static  void  instr84   ( int arch, bool enable );
 static  void  instr129  ( int arch, bool enable );
 static  void  instr133  ( int arch, bool enable );
 static  void  instr134  ( int arch, bool enable );
@@ -1121,7 +1126,7 @@ FT2( mod080,    instr80,   080_DFP_PACK_CONV,          "Decimal-Floating-Point-P
 FT2( mod081,    NULL,      081_PPA_IN_ORDER,           "PPA-in-order Facility" )
 FT2( NULL,      NULL,      082_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      NULL,      083_UNDEFINED,              "Undefined" )
-FT2( NULL,      NULL,      084_UNDEFINED,              "Undefined" )
+FT2( NULL,      instr84,   084_MISC_INSTR_EXT_4,       "Miscellaneous-Instruction-Extensions Facility 4" )
 FT2( NULL,      NULL,      085_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      086_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      087_UNDEFINED,              "Undefined" )
@@ -3903,6 +3908,27 @@ BEG_DIS_FAC_INS_FUNC( instr80 )
     DIS_FAC_INS( EDAF, "CXPT    EDAF  CONVERT FROM PACKED (to extended DFP)" );
     DIS_FAC_INS( EDAC, "CPDT    EDAC  CONVERT TO PACKED (from long DFP)" );
     DIS_FAC_INS( EDAD, "CPXT    EDAD  CONVERT TO PACKED (from extended DFP)" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( instr84 )
+{
+    DIS_FAC_INS( B96D, "BDEPG   B96D  BIT DEPOSIT" );
+    DIS_FAC_INS( B96C, "BEXTG   B96C  BIT EXTRACT" );
+    DIS_FAC_INS( B968, "CLZG    B968  COUNT LEADING ZEROS" );
+    DIS_FAC_INS( B969, "CTZG    B969  COUNT TRAILING ZEROS" );
+    DIS_FAC_INS( E361, "LLXAB   E361  LOAD LOGICAL INDEXED ADDRESS (shift left 0)" );
+    DIS_FAC_INS( E365, "LLXAF   E365  LOAD LOGICAL INDEXED ADDRESS (shift left 2)" );
+    DIS_FAC_INS( E367, "LLXAG   E367  LOAD LOGICAL INDEXED ADDRESS (shift left 3)" );
+    DIS_FAC_INS( E363, "LLXAH   E363  LOAD LOGICAL INDEXED ADDRESS (shift left 1)" );
+    DIS_FAC_INS( E369, "LLXAQ   E369  LOAD LOGICAL INDEXED ADDRESS (shift left 4)" );
+    DIS_FAC_INS( E360, "LXAB    E360  LOAD INDEXED ADDRESS (shift left 0)" );
+    DIS_FAC_INS( E364, "LXAF    E364  LOAD INDEXED ADDRESS (shift left 2)" );
+    DIS_FAC_INS( E366, "LXAG    E366  LOAD INDEXED ADDRESS (shift left 3)" );
+    DIS_FAC_INS( E362, "LXAH    E362  LOAD INDEXED ADDRESS (shift left 1)" );
+    DIS_FAC_INS( E368, "LXAQ    E368  LOAD INDEXED ADDRESS (shift left 4)" );
 }
 END_DIS_FAC_INS_FUNC()
 
