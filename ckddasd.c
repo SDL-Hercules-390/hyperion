@@ -645,14 +645,8 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         return -1;
     }
 
-    /* Log the device geometry */
-    if (!dev->quiet)
-        // "%1d:%04X %s file %s: model %s cyls %d heads %d tracks %d trklen %d"
-        WRMSG( HHC00414, "I", LCSS_DEVNUM, CKDTYP( cckd, 0 ), filename, dev->ckdtab->name,
-               dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
-
     /* Locate the CKD control unit dasd table entry */
-    dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
+    dev->ckdcu = dasd_lookup( DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0 );
     if (dev->ckdcu == NULL)
     {
         // "%1d:%04X %s file %s: control unit %s not found in dasd table"
@@ -660,6 +654,13 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
                filename, cu ? cu : dev->ckdtab->cu );
         return -1;
     }
+
+    /* Log the device geometry */
+    if (!dev->quiet)
+        // "%1d:%04X %s file %s: model %s cu %s cyls %d heads %d tracks %d trklen %d"
+        WRMSG( HHC00414, "I", LCSS_DEVNUM, CKDTYP( cckd, 0 ), filename,
+            dev->ckdtab->name,dev->ckdcu->name,
+            dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
 
     /* Set number of sense bytes according to controller specification */
     dev->numsense = dev->ckdcu->senselength;
@@ -714,33 +715,36 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
     {
         if ( dev->ckdnumfd > 1)
         {
-            snprintf( buffer, buflen, "%s%s %s%s[%d cyls] [%d segs] IO[%"PRIu64"]",
+            snprintf( buffer, buflen, "%s%s %s%s[cu %s] [%d cyls] [%d segs] IO[%"PRIu64"]",
                       dev->cckd64 ? "*64* " : "",
                       filename,
                       dev->ckdrdonly ? "ro " : "",
                       dev->ckdfakewr ? "fw " : "",
+                      dev->ckdcu->name,
                       dev->ckdcyls,
                       dev->ckdnumfd,
                       dev->excps );
         }
         else
         {
-            snprintf( buffer, buflen, "%s%s %s%s[%d cyls] IO[%"PRIu64"]",
+            snprintf( buffer, buflen, "%s%s %s%s[cu %s] [%d cyls] IO[%"PRIu64"]",
                       dev->cckd64 ? "*64* " : "",
                       filename,
                       dev->ckdrdonly ? "ro " : "",
                       dev->ckdfakewr ? "fw " : "",
+                      dev->ckdcu->name,
                       dev->ckdcyls,
                       dev->excps );
         }
     }
     else
     {
-        snprintf( buffer, buflen, "%s%s %s%s[%d cyls] [%d sfs] IO[%"PRIu64"]",
+        snprintf( buffer, buflen, "%s%s %s%s[cu %s] [%d cyls] [%d sfs] IO[%"PRIu64"]",
                   dev->cckd64 ? "*64* " : "",
                   filename,
                   dev->ckdrdonly ? "ro " : "",
                   dev->ckdfakewr ? "fw " : "",
+                  dev->ckdcu->name,
                   dev->ckdcyls,
                   cckd->sfn,
                   dev->excps );
