@@ -826,8 +826,8 @@ char  buf[512];
 
     //  "State: %s"
     WRMSG( HHC02313, "I", rc == 0 ? "Running Normal"   :
-                          rc == 1 ? "Enabled Wait  "   :
-                          rc == 2 ? "Disabled Wait "   :
+                          rc == 1 ? "Enabled Wait"     :
+                          rc == 2 ? "Disabled Wait"    :
                           rc == 3 ? "Instruction Step" :
                           rc == 4 ? "Manual Mode"      : "unknown" );
                                  
