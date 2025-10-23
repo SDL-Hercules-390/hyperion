@@ -1468,7 +1468,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02275 "SCSI auto-mount: %s"
 #define HHC02276 "Floating point control register: %08"PRIX32
 #define HHC02277 "Prefix register: %s"
-#define HHC02278 "Program status word: %s"
+#define HHC02278 "Processor %s%02X PSW: %s"
 #define HHC02279 "%s" // devlist command
 #define HHC02280 "%s" // qd command
 #define HHC02281 "%s" // pgmtrace_cmd
@@ -1503,7 +1503,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02310 "Panel command %s is not supported in this build; see option %s"
 #define HHC02311 "%s completed"
 #define HHC02312 "Empty list"
-//efine HHC02313 (available)
+#define HHC02313 "State: %s" // 'psw_cmd' state: enabled wait, instuction step, running normal,  etc.
 #define HHC02314 "No scripts currently running"
 #define HHC02315 "Script id:%d, tid:"TIDPAT", level:%d, name:%s"
 #define HHC02316 "Script %s not found"

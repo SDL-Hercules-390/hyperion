@@ -794,9 +794,12 @@ char  buf[512];
         regs->aie = INVALID_AIE;
     }
 
-    /* Display the PSW and PSW field by field */
-    DISPLAY_PSW( regs, buf );
-    WRMSG( HHC02278, "I", buf );
+    /* Display the PSW and each of its individual fields... */
+
+    DISPLAY_PSW( regs, buf ); // (just the raw hex PSW value)
+    // "Processor %s%02X PSW: %s"
+    WRMSG( HHC02278, "I", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, buf );
+    // "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"PRIX64
     WRMSG( HHC02300, "I",
         regs->psw.sysmask,
         regs->psw.pkey >> 4,
@@ -820,6 +823,14 @@ char  buf[512];
     else if ( sysblk.instbreak )                    rc = 3; /* Instruction Step */
     else if ( regs->cpustate == CPUSTATE_STOPPED )  rc = 4; /* Manual Mode */
     else                                            rc = 0; /* Running Normal */
+
+    //  "State: %s"
+    WRMSG( HHC02313, "I", rc == 0 ? "Running Normal"   :
+                          rc == 1 ? "Enabled Wait  "   :
+                          rc == 2 ? "Disabled Wait "   :
+                          rc == 3 ? "Instruction Step" :
+                          rc == 4 ? "Manual Mode"      : "unknown" );
+                                 
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
