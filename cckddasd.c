@@ -1244,7 +1244,7 @@ BYTE           *buf;                    /* Read buffer               */
     CCKD_TRACE( "%d rdtrk     %d", ra, trk);
 
     maxlen = cckd->ckddasd ? dev->ckdtrksz
-                           : CFBA_BLKGRP_SIZE + CKD_TRKHDR_SIZE;
+                           : CKD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE;
 
     if (!ra) obtain_lock (&cckd->cckdiolock);
 
@@ -2337,7 +2337,7 @@ BYTE            buf2[ 64*1024 ];        /* 64K Compress buffer       */
         )
         {
             CCKD_TRACE( "writer[%d] cache[%2.2d] %d signalling write complete",
-                       writer, o, trk );
+                         writer, o, trk );
 
             broadcast_condition( &cckd->cckdiocond );
         }
@@ -2405,15 +2405,15 @@ off_t           fpos;
     )
     {
         CCKD_TRACE( "cdevhdr[%d] size   %10d used   %10d free   0x%8.8x",
-                    sfx,cckd->cdevhdr[sfx].cdh_size,cckd->cdevhdr[sfx].cdh_used,
+                    sfx, cckd->cdevhdr[sfx].cdh_size, cckd->cdevhdr[sfx].cdh_used,
                     cckd->cdevhdr[sfx].free_off);
         CCKD_TRACE( "           nbr   %10d total  %10d imbed  %10d largest %10d",
                     cckd->cdevhdr[sfx].free_num,
-                    cckd->cdevhdr[sfx].free_total,cckd->cdevhdr[sfx].free_imbed,
+                    cckd->cdevhdr[sfx].free_total, cckd->cdevhdr[sfx].free_imbed,
                     cckd->cdevhdr[sfx].free_largest);
         CCKD_TRACE( "free %p nbr %d 1st %d last %d avail %d",
-                    cckd->ifb,cckd->free_count,cckd->free_idx1st,
-                    cckd->free_idxlast,cckd->free_idxavail);
+                    cckd->ifb,cckd->free_count, cckd->free_idx1st,
+                    cckd->free_idxlast, cckd->free_idxavail);
         CCKD_TRACE( "found nbr %d total %ld largest %ld",n,(long)total,(long)largest);
         fpos = cckd->cdevhdr[sfx].free_off;
         for (n = 0, i = cckd->free_idx1st; i >= 0; i = cckd->ifb[i].ifb_idxnxt)
@@ -3943,7 +3943,7 @@ BYTE            buf2[65536];            /* Null track buffer         */
 /*-------------------------------------------------------------------*/
 /* Verify a track/block header and return track/block number         */
 /*-------------------------------------------------------------------*/
-int cckd_cchh (DEVBLK *dev, BYTE *buf, int trk)
+int cckd_cchh( DEVBLK* dev, BYTE* buf, int trk )
 {
 CCKD_EXT       *cckd;                   /* -> cckd extension         */
 U16             cyl;                    /* Cylinder                  */
@@ -3956,9 +3956,9 @@ BYTE            badcomp=0;              /* 1=Unsupported compression */
     /* CKD dasd header verification */
     if (cckd->ckddasd)
     {
-        cyl = fetch_hw (buf + 1);
-        head = fetch_hw (buf + 3);
-        t = cyl * dev->ckdheads + head;
+        cyl  = fetch_hw( buf + 1 );
+        head = fetch_hw( buf + 3 );
+        t    = cyl * dev->ckdheads + head;
 
         if (1
             && cyl  < dev->ckdcyls
@@ -3972,8 +3972,8 @@ BYTE            badcomp=0;              /* 1=Unsupported compression */
                 {
                     if (cckdblk.bytemsgs++ < 10)
                         // "%1d:%04X CCKD file[%d] %s: invalid byte 0 trk %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
-                        WRMSG (HHC00307, "E", LCSS_DEVNUM, cckd->sfn,
-                            cckd_sf_name (dev, cckd->sfn), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
+                        WRMSG( HHC00307, "E", LCSS_DEVNUM, cckd->sfn,
+                            cckd_sf_name( dev, cckd->sfn ), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 }
             }
@@ -3994,8 +3994,8 @@ BYTE            badcomp=0;              /* 1=Unsupported compression */
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
                     // "%1d:%04X CCKD file[%d] %s: invalid byte 0 blkgrp %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
-                    WRMSG (HHC00308, "E", LCSS_DEVNUM, cckd->sfn,
-                            cckd_sf_name (dev, cckd->sfn), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
+                    WRMSG( HHC00308, "E", LCSS_DEVNUM, cckd->sfn,
+                            cckd_sf_name( dev, cckd->sfn ), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 }
             }
@@ -4009,18 +4009,18 @@ BYTE            badcomp=0;              /* 1=Unsupported compression */
     if (badcomp)
     {
         // "%1d:%04X CCKD file[%d] %s: invalid %s hdr %s %d: %s compression unsupported"
-        WRMSG (HHC00309, "E", LCSS_DEVNUM, cckd->sfn, cckd_sf_name (dev, cckd->sfn),
+        WRMSG( HHC00309, "E", LCSS_DEVNUM, cckd->sfn, cckd_sf_name( dev, cckd->sfn ),
                 cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", t, compname[buf[0]]);
     }
     else
     {
         // "%1d:%04X CCKD file[%d] %s: invalid %s hdr %s %d buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x"
-        WRMSG (HHC00310, "E", LCSS_DEVNUM, cckd->sfn, cckd_sf_name (dev, cckd->sfn),
+        WRMSG( HHC00310, "E", LCSS_DEVNUM, cckd->sfn, cckd_sf_name( dev, cckd->sfn ),
                 cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", trk,
                 buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
-        cckd_print_itrace ();
+        cckd_print_itrace();
     }
 
     return -1;
@@ -5155,7 +5155,7 @@ void cckd_lock_devchain( int flag )
         {
             cckdblk.devwaiters++;
             {
-#if FALSE
+#if 0
                 {
                     struct timespec  tm;
                     struct timeval   now;
@@ -5686,7 +5686,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
     /* garbage collection cycle... */
     while (moved < size && after < 4)
     {
-        obtain_lock (&cckd->filelock);
+        obtain_lock( &cckd->filelock );
         sfx = cckd->sfn;
 
         /* Exit if no more free space */

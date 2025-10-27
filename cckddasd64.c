@@ -786,7 +786,8 @@ int             maxlen;                 /* Size for cache entry      */
         {
             len = cache_getval(CACHE_DEVBUF, dev->cache) + CKD_TRKHDR_SIZE;
             newbuf = cckd64_uncompress (dev, cbuf, len, maxlen, blkgrp);
-            if (newbuf == NULL) {
+            if (newbuf == NULL)
+            {
                 dev->sense[0] = SENSE_EC;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 dev->bufcur = dev->cache = -1;
@@ -1413,8 +1414,9 @@ BYTE            buf2[ 64*1024 ];        /* 64K Compress buffer       */
                 || !cckd->wrpending
                )
         )
-        {   CCKD_TRACE( "writer[%d] cache[%2.2d] %d signalling write complete",
-                        writer, o, trk );
+        {
+            CCKD_TRACE( "writer[%d] cache[%2.2d] %d signalling write complete",
+                         writer, o, trk );
 
             broadcast_condition( &cckd->cckdiocond );
         }
@@ -3359,7 +3361,7 @@ sf_new_error:
 /*-------------------------------------------------------------------*/
 /* Add a shadow file  (sf+)                                          */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void *cckd64_sf_add (void *data)
+DLL_EXPORT void* cckd64_sf_add( void* data )
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
@@ -3413,7 +3415,8 @@ CCKD64_EXT     *cckd;                   /* -> cckd extension         */
         cckd64_harden (dev);
 
         /* Create a new shadow file */
-        if (cckd64_sf_new (dev) < 0) {
+        if (cckd64_sf_new (dev) < 0)
+        {
             WRMSG (HHC00319, "E", LCSS_DEVNUM, cckd->sfn+1,
                      cckd_sf_name(dev, cckd->sfn+1)?cckd_sf_name(dev, cckd->sfn+1):"(null)");
             goto cckd_sf_add_exit;
@@ -3571,11 +3574,11 @@ BYTE            buf[64*1024];           /* Buffer                    */
     /* Attempt to re-open the `to' file read-write */
     cckd64_close( dev, to_sfx );
     if (to_sfx > 0 || !dev->ckdrdonly || force)
-        cckd64_open( dev, to_sfx, O_RDWR|O_BINARY, 1 );
+        cckd64_open( dev, to_sfx, O_RDWR | O_BINARY, 1 );
     if (cckd->fd[to_sfx] < 0)
     {
         /* `from' file can't be opened read-write */
-        cckd64_open( dev, to_sfx, O_RDONLY|O_BINARY, 0 );
+        cckd64_open( dev, to_sfx, O_RDONLY | O_BINARY, 0 );
         if (merge)
         {
             // "%1d:%04X CCKD file[%d] %s: shadow file not merged: file[%d] %s%s"
@@ -3757,7 +3760,7 @@ sf_remove_exit:
     /* Re-read the l1 to set L2_bounds, L2ok */
     cckd64_read_l1( dev );
 
-    release_lock (&cckd->filelock);
+    release_lock( &cckd->filelock );
 
     obtain_lock( &cckd->cckdiolock );
     {
@@ -3996,7 +3999,7 @@ int             level = 2;              /* Check level               */
 /*-------------------------------------------------------------------*/
 /* Display shadow file statistics   (sfd)                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void *cckd64_sf_stats (void *data)
+DLL_EXPORT void* cckd64_sf_stats( void* data )
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
@@ -4366,22 +4369,22 @@ int             gc;                     /* Garbage collection state  */
     /* Sync the file */
     if (cckdblk.fsync && cckd->lastsync + 10 <= tv_now->tv_sec)
     {
-        obtain_lock (&cckd->filelock);
+        obtain_lock( &cckd->filelock );
         {
             rc = fdatasync (cckd->fd[cckd->sfn]);
             cckd->lastsync = tv_now->tv_sec;
         }
-        release_lock (&cckd->filelock);
+        release_lock( &cckd->filelock );
     }
 
     /* Flush the free space */
     if (cckd->cdevhdr[cckd->sfn].free_num)
     {
-        obtain_lock (&cckd->filelock);
+        obtain_lock( &cckd->filelock );
         {
             cckd64_flush_space (dev);
         }
-        release_lock (&cckd->filelock);
+        release_lock( &cckd->filelock );
     }
 }
 
@@ -4849,8 +4852,8 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
     }
 
     /* Uncompress the track image */
-    switch (comp) {
-
+    switch (comp)
+    {
     case CCKD_COMPRESS_NONE:
         newlen = cckd_trklen (dev, from);
         to = from;
