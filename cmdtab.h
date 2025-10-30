@@ -828,12 +828,12 @@
 #define logopt_cmd_help         \
                                 \
   "Format: \"LOGOPT [DATESTAMP | NODATESTAMP] [TIMESTAMP | NOTIMESTAMP]\".\n\n" \
-  "Sets logfile options. \"TIMESTAMP\" inserts a time stamp in front of\n"     \
-  "each log message. \"NOTIMESTAMP\" logs messages without time stamps.\n"      \
-  "Similarly, \"DATESTAMP\" and \"NODATESTAMP\" prefixes logfile messages\n"    \
-  "with or without the current date. Entering the command with no arguments\n"  \
-  "displays current logging options. The current resolution of the stamp\n"     \
-  "is one second.\n"
+  "Sets logfile options. \"TIMESTAMP\" (the default) inserts a time stamp\n"    \
+  "in front of each log message. \"NOTIMESTAMP\" logs messages without time\n"  \
+  "stamps. Similarly, \"DATESTAMP\" and \"NODATESTAMP\" prefixes logfile\n"     \
+  "messages with or without the current date. Entering the command with no\n"   \
+  "arguments displays current logging options. The current resolution of the\n" \
+  "stamp is one second.\n"
 
 #define lparname_cmd_desc       "Set LPAR name"
 #define lparname_cmd_help       \
