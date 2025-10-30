@@ -3959,32 +3959,70 @@ static void*  qeth_halt_or_clear_thread( void* arg)
         OBTAIN_DEVLOCK( dev  );
     }
     {
-        if (QTYPE_READ == dev->qtype) // "read" device?
+        switch (dev->qtype)
         {
-            qtype = "read";
-
-            // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+            case 0:     // guest OSA/QETH open/initialization...
             {
-                qeth_halt_read_device( dev, grp );
-            }
-            // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
-        }
-        else if (QTYPE_DATA == dev->qtype) // "data device?
-        {
-            qtype = "data";
+                qtype = "this";
 
-            // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
-            {
-                qeth_halt_data_device( dev, grp );
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+                {
+                    // (qtype not assigned yet; do nothing)
+                }
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
             }
-            // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+            break;
+
+            case QTYPE_READ:
+            {
+                qtype = "Read";
+
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+                {
+                    qeth_halt_read_device( dev, grp );
+                }
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+                }
+            break;
+
+            case QTYPE_WRITE:
+            {
+                qtype = "Write";
+
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+                {
+                    // (nothing to do!) 
+                }
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+            }
+            break;
+
+            case QTYPE_DATA:
+            {
+                qtype = "Data";
+
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+                {
+                    qeth_halt_data_device( dev, grp );
+                }
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+            }
+            break;
+
+            default: // (should never occur!)
+            {
+                BREAK_INTO_DEBUGGER();
+            }
+            break;
         }
-        else
-            BREAK_INTO_DEBUGGER(); // (should never occur!)
 
         /* Halt/Clear request completed */
         dev->halting = 0;
