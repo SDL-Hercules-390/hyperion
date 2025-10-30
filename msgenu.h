@@ -1408,7 +1408,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02215 "Command quiet ignored: external GUI active"
 #define HHC02216 "Empty list"
 #define HHC02217 "%c%s"
-#define HHC02218 "Logic error"
+#define HHC02218 "** UNEXPECTED! ** file \"%s\", line %d, function \"%s\""
 #define HHC02219 "Error in function %s: %s"
 #define HHC02220 "Entry deleted%s"
 #define HHC02221 "Entry not found"

@@ -32,12 +32,51 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
+#ifndef LOG_UNEXPECTED_DEFINED
+#define LOG_UNEXPECTED_DEFINED
+
+static void log_unexpected( const char* file, int line, const char* func )
+{
+    char* p;
+    p = strrchr( file, '\\' );          // Windows
+    if (!p) p = strrchr( file, '/' );   // non-Windows
+    if (p) ++p;
+    if (p) file = p;
+
+    // HHC02218 "** UNEXPECTED! ** file \"%s\", line %d, function \"%s\""
+    fprintf( stdout, "HHC02218E ** UNEXPECTED! ** file \"%s\", line %d, function \"%s\"\n",
+        file, line, func );
+}
+#endif
+
 #undef BREAK_INTO_DEBUGGER
 
 #if defined( _MSVC_ )
-  #define BREAK_INTO_DEBUGGER()     do { if (IsDebuggerPresent())         __debugbreak();  } while(0)
+
+  #define BREAK_INTO_DEBUGGER()                                     \
+                                                                    \
+    do                                                              \
+    {                                                               \
+      log_unexpected( __FILE__, __LINE__, __FUNCTION__ );           \
+                                                                    \
+      if (IsDebuggerPresent())                                      \
+        __debugbreak();                                             \
+    }                                                               \
+    while(0)
+
 #else
-  #define BREAK_INTO_DEBUGGER()     do { if (sysblk.is_debugger_present) raise( SIGTRAP ); } while(0)
+
+  #define BREAK_INTO_DEBUGGER()                                     \
+                                                                    \
+    do                                                              \
+    {                                                               \
+      log_unexpected( __FUNCTION__, __FILE__, __LINE__ );           \
+                                                                    \
+      if (sysblk.is_debugger_present)                               \
+        raise( SIGTRAP );                                           \
+    }                                                               \
+    while(0)
+
 #endif
 
 /*-------------------------------------------------------------------*/

@@ -1730,7 +1730,7 @@ int rc;
         {
             default:     /* (oops!) */
             {
-                WRMSG(HHC02218, "E");
+                BREAK_INTO_DEBUGGER(); // (should never occur!)
                 return -1;
             }
 
