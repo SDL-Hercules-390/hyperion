@@ -197,7 +197,7 @@ void cckd_dasd_term_if_appropriate()
         release_lock( &cckdblk.dhlock );
     }
 
-    /* Terminate all garbage collection threads... */
+    /* Terminate all Garbage Collection threads... (Should be only one!) */
     obtain_lock( &cckdblk.gclock );
     {
         max = cckdblk.gcmax;    /* Save current value */
@@ -303,10 +303,15 @@ char         buf[32];                   /* Work buffer                      */
 
     /* Insert the device into the cckd device queue */
     cckd_lock_devchain(1);
-    for (cckd = NULL, dev2 = cckdblk.dev1st; dev2; dev2 = cckd->devnext)
-        cckd = dev2->cckd_ext;
-    if (cckd) cckd->devnext = dev;
-    else cckdblk.dev1st = dev;
+    {
+        for (cckd = NULL, dev2 = cckdblk.dev1st; dev2; dev2 = cckd->devnext)
+            cckd = dev2->cckd_ext;
+
+        if (cckd)
+            cckd->devnext = dev;
+        else
+            cckdblk.dev1st = dev;
+    }
     cckd_unlock_devchain();
 
     cckdblk.batch = dev->batch;
@@ -1717,9 +1722,9 @@ void cckd_dhstart(int by_cmdline)
 }
 
 /*-------------------------------------------------------------------*/
-/* Dasd Hardener thread                                              */
+/* Dasd Hardener thread             (handles both CCKD and CCKD64)   */
 /*-------------------------------------------------------------------*/
-void* cckd_dh(void* arg)
+void* cckd_dh( void* arg )
 {
 int             dhid;                   /* Identifier                */
 struct timeval  tv_now;                 /* Time-of-day (as timeval)  */
@@ -5280,7 +5285,7 @@ void cckd_gcstart()
 /*-------------------------------------------------------------------*/
 void* cckd_gcol(void* arg)
 {
-int             gcol;                   /* Identifier                */
+int             gcol;                   /* GC thread Identifier      */
 DEVBLK         *dev;                    /* -> device block           */
 CCKD_EXT       *cckd;                   /* -> cckd extension         */
 struct timeval  tv_now;                 /* Time-of-day (as timeval)  */
@@ -5294,7 +5299,7 @@ int             gcs;
 
     obtain_lock (&cckdblk.gclock);
 
-    gcol = ++cckdblk.gca;
+    gcol = ++cckdblk.gca;           // (gc thread identifier)
 
     /* Return without messages if too many already started */
     if (gcol > cckdblk.gcmax)
@@ -5353,8 +5358,13 @@ int             gcs;
         // Get the time of day again for cckd_gcol_dev's file sync check
         gettimeofday (&tv_now, NULL);
         tt_now = tv_now.tv_sec + ((tv_now.tv_usec + 500000)/1000000);
+
         CCKD_TRACE( CCKD_GC_THREAD_NAME " wait %d seconds at %s",
                     cckdblk.gcint, ctime (&tt_now));
+
+        // "Waiting %d seconds to start next CCKD garbage collection cycle..."
+        if (cckdblk.gcmsgs)
+            WRMSG( HHC00394, "I", cckdblk.gcint );
 
         tm.tv_sec = tv_now.tv_sec + cckdblk.gcint;
         tm.tv_nsec = tv_now.tv_usec * 1000;
