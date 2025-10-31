@@ -32,22 +32,26 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#ifndef LOG_UNEXPECTED_DEFINED
-#define LOG_UNEXPECTED_DEFINED
+#undef ISSUE_UNEXPECTED_MSG
 
-static void log_unexpected( const char* file, int line, const char* func )
-{
-    char* p;
-    p = strrchr( file, '\\' );          // Windows
-    if (!p) p = strrchr( file, '/' );   // non-Windows
-    if (p) ++p;
-    if (p) file = p;
-
-    // HHC02218 "** UNEXPECTED! ** file \"%s\", line %d, function \"%s\""
-    fprintf( stdout, "HHC02218E ** UNEXPECTED! ** file \"%s\", line %d, function \"%s\"\n",
-        file, line, func );
-}
-#endif
+#define ISSUE_UNEXPECTED_MSG()                                      \
+    do                                                              \
+    {                                                               \
+        const char*  file  = __FILE__;                              \
+        const char*  func  = __FUNCTION__;                          \
+        int          line  = __LINE__;                              \
+                                                                    \
+        char*   p = strrchr( file, '\\' );   /* Windows */          \
+        if (!p) p = strrchr( file, '/' );    /* non-Windows */      \
+        if (p) ++p;                                                 \
+        if (p) file = p;                                            \
+                                                                    \
+        /* HHC02218 "** UNEXPECTED! ** file \"%s\", line %d, function \"%s\"" */ \
+                                                                    \
+        fprintf( stdout, "HHC02218E ** UNEXPECTED! ** file \"%s\", line %d, function \"%s\"\n", \
+            file, line, func );                                     \
+    }                                                               \
+    while(0)
 
 #undef BREAK_INTO_DEBUGGER
 
@@ -57,8 +61,7 @@ static void log_unexpected( const char* file, int line, const char* func )
                                                                     \
     do                                                              \
     {                                                               \
-      log_unexpected( __FILE__, __LINE__, __FUNCTION__ );           \
-                                                                    \
+      ISSUE_UNEXPECTED_MSG();                                       \
       if (IsDebuggerPresent())                                      \
         __debugbreak();                                             \
     }                                                               \
@@ -70,8 +73,7 @@ static void log_unexpected( const char* file, int line, const char* func )
                                                                     \
     do                                                              \
     {                                                               \
-      log_unexpected( __FUNCTION__, __FILE__, __LINE__ );           \
-                                                                    \
+      ISSUE_UNEXPECTED_MSG();                                       \
       if (sysblk.is_debugger_present)                               \
         raise( SIGTRAP );                                           \
     }                                                               \
