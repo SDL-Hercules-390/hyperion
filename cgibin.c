@@ -1596,6 +1596,7 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /*     "command": "",                                                */
 /*     "msgcount": 22,                                               */
 /*     "syslog": "[<array of lines from syslog based on msgcount>]"  */
+/*     "index": index_to_last_msg                                    */
 /* }                                                                 */
 /*-------------------------------------------------------------------*/
 /* Notes:                                                            */
@@ -1605,6 +1606,9 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /* - msgcount is a variable and can be changed via get/post/cookie   */
 /*   and controls the number of lines returned in "syslog",          */
 /*   the default is 22 lines                                         */
+/* - index is a variable and represents the byte position in the log */
+/*   buffer to request data from                                     */
+/*   NOTE: mgscount if set > 0 takes precedence over index           */
 /*-------------------------------------------------------------------*/
 void cgibin_api_v1_syslog(WEBBLK *webblk)
 {
@@ -1615,6 +1619,7 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
     char   *command;
     char   *value;
     int     msgcount = 22;
+    int     index = -1;
 
     json_header( webblk );
 
@@ -1631,58 +1636,90 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
 
     if((value = cgi_variable(webblk,"msgcount")))
         msgcount = atoi(value);
+    
+    if((value = cgi_variable(webblk,"index")))
+        index = atoi(value);
 
     hprintf(webblk->sock,"\"msgcount\": %d,",msgcount);
-    hprintf(webblk->sock,"\"syslog\": [\"");
+    hprintf(webblk->sock,"\"syslog\": [");
 
-
-    logbuf_idx = msgcount ? log_line( msgcount ) : -1;
+    logbuf_idx = msgcount ? log_line( msgcount ) : index;
 
     if ((num_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
     {
         char   *wrk_bufptr      = malloc( num_bytes );
         char   *sav_wrk         = NULL;
+        int    eol = true;
+        int    first = true;
 
         if (wrk_bufptr)
         {
             sav_wrk = wrk_bufptr;
-            strncpy( wrk_bufptr,  logbuf_ptr, num_bytes );
+            memcpy( wrk_bufptr,  logbuf_ptr, num_bytes );
         }
-        else         wrk_bufptr = logbuf_ptr;
-
+        else
+            wrk_bufptr = logbuf_ptr;
 
         // We need to escape certain characters that are
-        // not supported in JSON, namely '"', '\n' and '\'"
-
+        // not supported in JSON, namely '"', '\'", etc.
+        // A new line (\n) here means start new JSON array item
+        
         while ( num_bytes-- )
-        {
-            switch ( *wrk_bufptr )
+        {   
+            if  ( eol )
             {
-            case '\\':
-                hwrite( webblk->sock, "\\\\"    , 2);
+                if ( ! first) 
+                    hwrite( webblk->sock, ",", 1);
+                else
+                    first = false;
+                hwrite( webblk->sock, "\"", 1);
+                eol = false;
+            }
+            switch (*wrk_bufptr )
+            {
+            case '\n':      // end of this line - new array element
+                hwrite(webblk->sock,"\"", 1);
+                eol = true;
                 break;
-            case '\n':
-                //hwrite( webblk->sock, "\\n"    , 2                );
-        hprintf(webblk->sock,"\",\"");
+            case '\r':
+                hwrite( webblk->sock, "\\r", 2);
+                break;
+            case '\f':
+                hwrite( webblk->sock, "\\f", 2);
+                break;
+            case '\b':
+                hwrite( webblk->sock, "\\b", 2);
+                break;
+            case '\t':
+                hwrite( webblk->sock, "\\t", 2);
+                break;
+            case '/':
+                hwrite( webblk->sock, "\\/", 2);
+                break;
+            case '\\':
+                hwrite( webblk->sock, "\\\\", 2);
                 break;
             case '"':
-                hwrite( webblk->sock, "\\\""    , 2  );
+                hwrite( webblk->sock, "\\\"", 2);
                 break;
             default:
-                hwrite( webblk->sock, wrk_bufptr , 1              );
+                if (isprint(*wrk_bufptr))
+                    hwrite( webblk->sock, wrk_bufptr , 1);
+                else
+                    hprintf( webblk->sock, "\\u%04X", *wrk_bufptr);  // unicode like
                 break;
             }
-
             wrk_bufptr++;
         }
 
         // (free our work buffer if it's really ours)
-
         if ( sav_wrk )
             free( sav_wrk );
     }
 
-    hprintf(webblk->sock,"\"]}");
+    hprintf(webblk->sock,"],");
+    hprintf(webblk->sock,"\"index\": %d",logbuf_idx);
+    hprintf(webblk->sock,"}");
 }
 
 /*-------------------------------------------------------------------*/
