@@ -2502,7 +2502,7 @@ PTPHDR*  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize )
     if (!pPTPHDR)                      // if the allocate was not successful...
     {
         // Report the bad news.
-        MSGBUF( etext, "malloc(%n)", &iBufLen );
+        MSGBUF( etext, "malloc(%d)", iBufLen );
         // HHC00900 "%1d:%04X %s: error in function %s: %s"
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              etext, strerror(errno) );
@@ -2535,7 +2535,7 @@ void*  alloc_storage( DEVBLK* pDEVBLK, int iSize )
     if (!pStorPtr)                     // if the allocate was not successful...
     {
         // Report the bad news.
-        MSGBUF( etext, "malloc(%n)", &iStorLen );
+        MSGBUF( etext, "malloc(%d)", iStorLen );
         // HHC00900 "%1d:%04X %s: error in function %s: %s"
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              etext, strerror(errno) );
