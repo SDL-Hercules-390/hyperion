@@ -6587,7 +6587,7 @@ static OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
     if (!bhr)                              // if the allocate was not successful...
     {
         // Report the bad news.
-        MSGBUF( etext, "malloc(%n)", &buflen );
+        MSGBUF( etext, "malloc(%d)", buflen );
         // HHC00900 "%1d:%04X %s: error in function %s: %s"
         WRMSG(HHC00900, "E", LCSS_DEVNUM, dev->typname,
                              etext, strerror(errno) );
