@@ -67,6 +67,48 @@
 #include "httpmisc.h"
 
 /*-------------------------------------------------------------------*/
+/* Helpers: properly escape a string for safe inclusion in JSON      */
+/* NOTE: char version required for when no trailing \0 - syslog !    */
+/*-------------------------------------------------------------------*/
+static void json_escape_char(int sock, char c)
+{
+    switch (c)
+    {
+        case '"':   hprintf(sock, "\\\"");  break;
+        case '\\':  hprintf(sock, "\\\\");  break;
+        case '\b':  hprintf(sock, "\\b");   break;
+        case '\f':  hprintf(sock, "\\f");   break;
+        case '\n':  hprintf(sock, "\\n");   break;
+        case '\r':  hprintf(sock, "\\r");   break;
+        case '\t':  hprintf(sock, "\\t");   break;
+        default  :
+            if (isprint(c))
+                hprintf(sock, "%c", c);
+            else
+                hprintf(sock, "\\u%04X", c);
+            break;
+    }
+}  
+
+static void json_escape_string(int sock, const char *str)
+{
+    char c;
+    
+    if (!str || !*str)
+    {
+        hprintf(sock, "\"\"");
+        return;
+    }
+
+    hprintf(sock, "\"");
+
+    while ((c = *str++))
+       json_escape_char(sock, c);
+    
+    hprintf(sock, "\"");
+}
+
+/*-------------------------------------------------------------------*/
 /*                     cgibin_blinkenlights_cpu                      */
 /*-------------------------------------------------------------------*/
 /*     contributed by Doug Wegscheid [dwegscheid@sbcglobal.net]      */
@@ -214,7 +256,8 @@ void cgibin_psw(WEBBLK *webblk)
     {
         hprintf(webblk->sock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
         hprintf(webblk->sock, "Refresh Interval: ");
-        hprintf(webblk->sock, "<INPUT type=text size=2 name=\"refresh_interval\" value=%d>\n",
+        hprintf(webblk->sock, "<INPUT type=\"text\" size=\"3\" name=\"refresh_interval\" "
+           "pattern=\"[1-9][0-9]*\" value=\"%d\" title=\"Must be an integer > 0\">\n",
            refresh_interval);
     }
     else
@@ -263,17 +306,13 @@ void cgibin_psw(WEBBLK *webblk)
 
 /*-------------------------------------------------------------------*/
 /*                         cgibin_syslog                             */
+/* Processes and supplied command and then use Javascript to access  */
+/* the log via the JSON API interface below.                         */
 /*-------------------------------------------------------------------*/
 void cgibin_syslog(WEBBLK *webblk)
 {
-int     num_bytes;
-int     logbuf_idx;
-char   *logbuf_ptr;
-char   *command;
-char   *value;
-int     autorefresh = 0;
-int     refresh_interval = 5;
-int     msgcount = 22;
+    char   *command;
+    extern void http_download();
 
     if ((command = cgi_variable(webblk,"command")))
     {
@@ -282,150 +321,8 @@ int     msgcount = 22;
         // the command issues a lot of messages
         USLEEP(50000);
     }
-
-    if((value = cgi_variable(webblk,"msgcount")))
-        msgcount = atoi(value);
-    else
-        if((value = cgi_cookie(webblk,"msgcount")))
-            msgcount = atoi(value);
-
-    if ((value = cgi_variable(webblk,"refresh_interval")))
-        refresh_interval = atoi(value);
-
-    if (cgi_variable(webblk,"autorefresh"))
-        autorefresh = 1;
-    else if (cgi_variable(webblk,"norefresh"))
-        autorefresh = 0;
-    else if (cgi_variable(webblk,"refresh"))
-        autorefresh = 1;
-
-    html_header(webblk);
-
-    hprintf(webblk->sock,"<script language=\"JavaScript\">\n"
-                          "<!--\n"
-                          "document.cookie = \"msgcount=%d\";\n"
-                          "//-->\n"
-                          "</script>\n",
-                          msgcount);
-
-    hprintf(webblk->sock, "<H2>Hercules System Log</H2>\n");
-    hprintf(webblk->sock, "<PRE>\n");
-
-    // Get the index to our desired starting message...
-
-    logbuf_idx = msgcount ? log_line( msgcount ) : -1;
-
-    // Now read the logfile starting at that index. The return
-    // value is the total #of bytes of messages data there is.
-
-    if ((num_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
-    {
-        // Copy the message data to a work buffer for processing.
-        // This is to allow for the possibility, however remote,
-        // that the logfile buffer actually wraps around and over-
-        // lays the message data we were going to display (which
-        // could happen if there's a sudden flood of messages)
-
-        char   *wrk_bufptr      = malloc( num_bytes );
-        char   *sav_wrk         = NULL;
-
-        if (wrk_bufptr)
-        {
-            sav_wrk = wrk_bufptr;
-            strncpy( wrk_bufptr,  logbuf_ptr, num_bytes );
-        }
-        else         wrk_bufptr = logbuf_ptr;
-
-
-        // We need to convert certain characters that might
-        // possibly be erroneously interpreted as HTML code
-
-#define  AMP_LT    "&lt;"       // (HTML code for '<')
-#define  AMP_GT    "&gt;"       // (HTML code for '>')
-#define  AMP_AMP   "&amp;"      // (HTML code for '&')
-
-        while ( num_bytes-- )
-        {
-            switch ( *wrk_bufptr )
-            {
-            case '<':
-                hwrite( webblk->sock, AMP_LT     , sizeof(AMP_LT) );
-                break;
-            case '>':
-                hwrite( webblk->sock, AMP_GT     , sizeof(AMP_GT) );
-                break;
-            case '&':
-                hwrite( webblk->sock, AMP_AMP    , sizeof(AMP_AMP));
-                break;
-            default:
-                hwrite( webblk->sock, wrk_bufptr , 1              );
-                break;
-            }
-
-            wrk_bufptr++;
-        }
-
-        // (free our work buffer if it's really ours)
-
-        if ( sav_wrk )
-            free( sav_wrk );
-    }
-
-    hprintf(webblk->sock, "</PRE>\n");
-
-    hprintf(webblk->sock, "<FORM method=post>Command:\n");
-    hprintf(webblk->sock, "<INPUT type=text name=command size=80 autofocus>\n");
-    hprintf(webblk->sock, "<INPUT type=submit name=send value=\"Send\">\n");
-    hprintf(webblk->sock, "<INPUT type=hidden name=%srefresh value=1>\n",autorefresh ? "auto" : "no");
-    hprintf(webblk->sock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
-    hprintf(webblk->sock, "<INPUT type=hidden name=msgcount value=%d>\n",msgcount);
-    hprintf(webblk->sock, "</FORM>\n<BR>\n");
-
-    hprintf(webblk->sock, "<A name=bottom>\n");
-
-    hprintf(webblk->sock, "<FORM method=post>\n");
-    if(!autorefresh)
-    {
-        hprintf(webblk->sock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
-        hprintf(webblk->sock, "Refresh Interval: ");
-        hprintf(webblk->sock, "<INPUT type=text name=\"refresh_interval\" size=2 value=%d>\n",
-           refresh_interval);
-    }
-    else
-    {
-        hprintf(webblk->sock, "<INPUT type=submit name=norefresh value=\"Stop Refreshing\">\n");
-        hprintf(webblk->sock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
-        hprintf(webblk->sock, " Refresh Interval: %2d \n", refresh_interval);
-    }
-    hprintf(webblk->sock, "<INPUT type=hidden name=msgcount value=%d>\n",msgcount);
-    hprintf(webblk->sock, "</FORM>\n");
-
-    hprintf(webblk->sock, "<FORM method=post>\n");
-    hprintf(webblk->sock, "Only show last ");
-    hprintf(webblk->sock, "<INPUT type=text name=msgcount size=3 value=%d>",msgcount);
-    hprintf(webblk->sock, " lines (zero for all loglines)\n");
-    hprintf(webblk->sock, "<INPUT type=hidden name=%srefresh value=1>\n",autorefresh ? "auto" : "no");
-    hprintf(webblk->sock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
-    hprintf(webblk->sock, "</FORM>\n");
-
-    if (autorefresh)
-    {
-        /* JavaScript to cause automatic page refresh */
-        hprintf(webblk->sock, "<script language=\"JavaScript\">\n");
-        hprintf(webblk->sock, "<!--\nsetTimeout('window.location.replace(\"%s"
-               "?refresh_interval=%d"
-               "&refresh=1"
-               "&msgcount=%d"
-               "\")', %d)\n",
-               cgi_baseurl(webblk),
-               refresh_interval,
-               msgcount,
-               refresh_interval*1000);
-        hprintf(webblk->sock, "//-->\n</script>\n");
-    }
-
-    html_footer(webblk);
-
+    
+    http_download(webblk, "/panel_log.html");
 }
 
 /*-------------------------------------------------------------------*/
@@ -1596,6 +1493,7 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /*     "command": "",                                                */
 /*     "msgcount": 22,                                               */
 /*     "syslog": "[<array of lines from syslog based on msgcount>]"  */
+/*     "index": index_to_last_msg                                    */
 /* }                                                                 */
 /*-------------------------------------------------------------------*/
 /* Notes:                                                            */
@@ -1605,6 +1503,9 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /* - msgcount is a variable and can be changed via get/post/cookie   */
 /*   and controls the number of lines returned in "syslog",          */
 /*   the default is 22 lines                                         */
+/* - index is a variable and represents the byte position in the log */
+/*   buffer to request data from                                     */
+/*   NOTE: mgscount if set > 0 takes precedence over index           */
 /*-------------------------------------------------------------------*/
 void cgibin_api_v1_syslog(WEBBLK *webblk)
 {
@@ -1615,6 +1516,9 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
     char   *command;
     char   *value;
     int     msgcount = 22;
+    int     index = -1;
+    int     newline = true;
+    int     first = true;
 
     json_header( webblk );
 
@@ -1631,14 +1535,16 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
 
     if((value = cgi_variable(webblk,"msgcount")))
         msgcount = atoi(value);
+    
+    if((value = cgi_variable(webblk,"index")))
+        index = atoi(value);
 
     hprintf(webblk->sock,"\"msgcount\": %d,",msgcount);
-    hprintf(webblk->sock,"\"syslog\": [\"");
+    hprintf(webblk->sock,"\"syslog\": [");
 
+    logbuf_idx = msgcount ? log_line( msgcount ) : index;
 
-    logbuf_idx = msgcount ? log_line( msgcount ) : -1;
-
-    if ((num_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
+    while ((num_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
     {
         char   *wrk_bufptr      = malloc( num_bytes );
         char   *sav_wrk         = NULL;
@@ -1646,43 +1552,46 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
         if (wrk_bufptr)
         {
             sav_wrk = wrk_bufptr;
-            strncpy( wrk_bufptr,  logbuf_ptr, num_bytes );
+            memcpy( wrk_bufptr,  logbuf_ptr, num_bytes );
         }
-        else         wrk_bufptr = logbuf_ptr;
-
+        else
+            wrk_bufptr = logbuf_ptr;
 
         // We need to escape certain characters that are
-        // not supported in JSON, namely '"', '\n' and '\'"
-
+        // not supported in JSON, namely '"', '\'", etc.
+        // A new line (\n) here means start new JSON array item
+        
         while ( num_bytes-- )
-        {
-            switch ( *wrk_bufptr )
+        {   
+            int c;
+            
+            if  ( newline )
             {
-            case '\\':
-                hwrite( webblk->sock, "\\\\"    , 2);
-                break;
-            case '\n':
-                //hwrite( webblk->sock, "\\n"    , 2                );
-        hprintf(webblk->sock,"\",\"");
-                break;
-            case '"':
-                hwrite( webblk->sock, "\\\""    , 2  );
-                break;
-            default:
-                hwrite( webblk->sock, wrk_bufptr , 1              );
-                break;
+                if ( ! first) 
+                    hwrite( webblk->sock, ",", 1);
+                else
+                    first = false;
+                hwrite( webblk->sock, "\"", 1);
+                newline = false;
             }
+            if ((c = *wrk_bufptr++) == '\n' )   // end of this line - new array element
+            {     
+                hwrite(webblk->sock,"\"", 1);
+                newline = true;
+            }
+            else
+                json_escape_char(webblk->sock, c);
 
-            wrk_bufptr++;
         }
 
         // (free our work buffer if it's really ours)
-
         if ( sav_wrk )
             free( sav_wrk );
     }
 
-    hprintf(webblk->sock,"\"]}");
+    hprintf(webblk->sock,"],");
+    hprintf(webblk->sock,"\"index\": %d",logbuf_idx);
+    hprintf(webblk->sock,"}");
 }
 
 /*-------------------------------------------------------------------*/
@@ -1804,21 +1713,25 @@ void cgibin_api_v1_devices(WEBBLK *webblk)
                 }
             }
 
-             hprintf(webblk->sock,"{\"devnum\":\"%4.4X\","
-                                   "\"subchannel\":\"%4.4X\","
-                                   "\"devclass\": \"%s\","
-                                   "\"devtype\": \"%4.4X\","
-                                   "\"status\": \"%s%s%s\","
-                                   "\"assignment\": \"%s\"}"
-                                   "%s",
-                                   dev->devnum,dev->subchan,
-                                   devclass,
-                                   dev->devtype,
-                                   (dev->fd >= 0       ? "open "    : ""),
-                                   (dev->busy          ? "busy "    : ""),
-                                   (IOPENDING(dev)     ? "pending " : ""),
-                                   devnam,
-                                   (count == total - 1 ? ""         : "," ));
+            hprintf(webblk->sock,
+                "{\"devnum\":\"%4.4X\","
+                "\"subchannel\":\"%4.4X\","
+                "\"devclass\":\"%s\","
+                "\"devtype\":\"%4.4X\","
+                "\"status\":\"%s%s%s\","
+                "\"assignment\":",
+                dev->devnum, dev->subchan,
+                devclass,
+                dev->devtype,
+                (dev->fd >= 0       ? "open "    : ""),
+                (dev->busy          ? "busy "    : ""),
+                (IOPENDING(dev)     ? "pending " : ""));
+
+            json_escape_string(webblk->sock, devnam);
+
+            hprintf(webblk->sock,
+                "}%s",
+                (count == total - 1 ? "" : ","));
         }
         count++;
     }
@@ -1853,6 +1766,13 @@ void cgibin_hwrite(WEBBLK *webblk, char *msg, int msg_len)
 
     // Note that sizeof(X) where X is a #define string literal is 1 greater
     // than strlen(X).
+    
+    // We need to convert certain characters that might
+    // possibly be erroneously interpreted as HTML code
+
+#define  AMP_LT    "&lt;"       // (HTML code for '<')
+#define  AMP_GT    "&gt;"       // (HTML code for '>')
+#define  AMP_AMP   "&amp;"      // (HTML code for '&')
 
     for (i = 0; i < msg_len; i++)
     {
@@ -1995,3 +1915,4 @@ CGITAB cgidir[] =
 };
 
 /*-------------------------------------------------------------------*/
+
