@@ -55,6 +55,7 @@ dist_pkgdata_DATA =   \
     index.html        \
     rexx.html         \
     shared.html       \
+    syslog_js.html    \
     tasks.html        \
     telnet.html
 
