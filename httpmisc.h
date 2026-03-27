@@ -96,7 +96,20 @@ struct WEBBLK
 typedef struct WEBBLK   WEBBLK;
 
 /*-------------------------------------------------------------------*/
+/* Constants for http rate limiting window control                   */
+/* sliding time window with a maximum requests per time window       */
+/* Default allows for one request per second + a couple more         */
+/*-------------------------------------------------------------------*/
+#define HTTP_MAX_REQ_PER_INT 12
+#define WINDOW_SIZE_SEC      10
 
+struct RATE_CONTROL 
+{
+    time_t  window_start_time;
+    int     requests_in_window;
+};
+
+/*-------------------------------------------------------------------*/
 typedef void cgibin_func( WEBBLK* webblk );
 
 struct CGITAB
