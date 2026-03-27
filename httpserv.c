@@ -496,7 +496,7 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
 /*-------------------------------------------------------------------*/
 /*                         http_download                             */
 /*-------------------------------------------------------------------*/
-static void http_download(WEBBLK *webblk, char *filename)
+void http_download(WEBBLK *webblk, char *filename)
 {
     char buffer[HTTP_PATH_LENGTH];
     char tbuf[80];
@@ -543,6 +543,42 @@ static void http_download(WEBBLK *webblk, char *filename)
 }
 
 /*-------------------------------------------------------------------*/
+/*                          is_rate_limit_needed                     */
+/* implements a sliding window request rate limiting function        */
+/* the time window is fixed (normally a few seconds)                 */
+/* NOTES:                                                            */
+/* Access to static pages is NOT rate limited.                       */
+/* MUST be called with a lock on http_rate_control as requests are   */
+/* handled by separate threads                                       */
+/*-------------------------------------------------------------------*/
+struct RATE_CONTROL http_rate_control = { 0, 0 };
+LOCK   http_rate_lock;
+
+bool is_rate_limit_needed(struct RATE_CONTROL *rate_tab) 
+{
+    time_t now = time(NULL);
+
+    // Initialize window start time on first request
+    if (rate_tab->window_start_time == 0) 
+        rate_tab->window_start_time = now;
+
+    // Reset window if time has passed
+    if (difftime(now, rate_tab->window_start_time) >= WINDOW_SIZE_SEC)
+    {
+        rate_tab->window_start_time = now;
+        rate_tab->requests_in_window = 0;
+    }
+
+    // Check limit
+    if (rate_tab->requests_in_window < HTTP_MAX_REQ_PER_INT)
+    {
+        rate_tab->requests_in_window++;
+        return false; // Allowed
+    }
+
+    return true; // Rate limited
+}
+/*-------------------------------------------------------------------*/
 /*                          http_request                             */
 /*-------------------------------------------------------------------*/
 static void *http_request(void* arg)
@@ -556,6 +592,8 @@ static void *http_request(void* arg)
     CGITAB *cgient;
     int content_length = 0;
     int sock = (int) (uintptr_t) arg;
+    bool rate_limited;
+    int  l;
 
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
@@ -666,9 +704,35 @@ static void *http_request(void* arg)
         http_download(webblk,url);
     else
         url += 9;
-
+    
+    /* check http request rate and give 429 if excessive */
+    obtain_lock( &http_rate_lock );
+    rate_limited = is_rate_limit_needed(&http_rate_control);
+    release_lock( &http_rate_lock );
+    
+    if ( rate_limited ) 
+    {
+        char tbuf[80];
+        
+        USLEEP(200000);     /* pause to help rate limiting */
+        sprintf(tbuf,"Retry-After: %d\n", WINDOW_SIZE_SEC);
+        http_error(webblk, "429 Too Many Requests", tbuf, 
+                    "This request is rate limited");
+    }
+    
+    // at this point url is beyond /cgi-bin/
     while(*url == '/')
         url++;
+    
+    // eat any trailing / characters
+    l = strlen(url);
+    while (l-- > 0) 
+    {
+        if (url[l] == '/')
+            url[l] = '\0';
+        else
+            break;
+    }
 
 #ifdef DEBUG_HTTPSERV
     http_dump_cgi_variables(webblk);
@@ -907,6 +971,8 @@ struct timeval      timeout;            /* timeout value             */
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = http_serv.httpport;
     server.sin_port = htons(server.sin_port);
+    
+    initialize_lock( &http_rate_lock );
 
     http_serv.httpbinddone = FALSE;
     /* Attempt to bind the socket to the port */
