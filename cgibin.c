@@ -204,7 +204,7 @@ void cgibin_psw(WEBBLK *webblk)
         autorefresh = 1;
 
     if ((value = cgi_variable(webblk,"refresh_interval")))
-        refresh_interval = atoi(value);
+        refresh_interval = max(atoi(value), 1);
 
     hprintf(webblk->sock, "<H2>Program Status Word</H2>\n");
 
@@ -214,7 +214,8 @@ void cgibin_psw(WEBBLK *webblk)
     {
         hprintf(webblk->sock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
         hprintf(webblk->sock, "Refresh Interval: ");
-        hprintf(webblk->sock, "<INPUT type=text size=2 name=\"refresh_interval\" value=%d>\n",
+        hprintf(webblk->sock, "<INPUT type=\"text\" size=\"2\" name=\"refresh_interval\" "
+           "pattern=\"[1-9][0-9]*\" value=\"%d\" title=\"Must be an integer > 0\">\n",
            refresh_interval);
     }
     else
@@ -290,7 +291,7 @@ int     msgcount = 22;
             msgcount = atoi(value);
 
     if ((value = cgi_variable(webblk,"refresh_interval")))
-        refresh_interval = atoi(value);
+        refresh_interval = max(atoi(value),1);
 
     if (cgi_variable(webblk,"autorefresh"))
         autorefresh = 1;
@@ -388,7 +389,8 @@ int     msgcount = 22;
     {
         hprintf(webblk->sock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
         hprintf(webblk->sock, "Refresh Interval: ");
-        hprintf(webblk->sock, "<INPUT type=text name=\"refresh_interval\" size=2 value=%d>\n",
+        hprintf(webblk->sock, "<INPUT type=text name=\"refresh_interval\" size=2 value=%d "
+                              "pattern=\"[1-9][0-9]*\" title=\"Must be an integer > 0\">\n",
            refresh_interval);
     }
     else
@@ -1201,6 +1203,48 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
+/* Helpers: properly escape a string for safe inclusion in JSON      */
+/* NOTE: char version required for when no trailing \0 - syslog !    */
+/*-------------------------------------------------------------------*/
+static void json_escape_char(int sock, char c)
+{
+    switch (c)
+    {
+        case '"':   hprintf(sock, "\\\"");  break;
+        case '\\':  hprintf(sock, "\\\\");  break;
+        case '\b':  hprintf(sock, "\\b");   break;
+        case '\f':  hprintf(sock, "\\f");   break;
+        case '\n':  hprintf(sock, "\\n");   break;
+        case '\r':  hprintf(sock, "\\r");   break;
+        case '\t':  hprintf(sock, "\\t");   break;
+        default  :
+            if (isprint(c))
+                hprintf(sock, "%c", c);
+            else
+                hprintf(sock, "\\u%04X", c);
+            break;
+    }
+}  
+
+static void json_escape_string(int sock, const char *str)
+{
+    char c;
+    
+    if (!str || !*str)
+    {
+        hprintf(sock, "\"\"");
+        return;
+    }
+
+    hprintf(sock, "\"");
+
+    while ((c = *str++))
+       json_escape_char(sock, c);
+    
+    hprintf(sock, "\"");
+}
+
+/*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1                                */
 /*-------------------------------------------------------------------*/
 /* Returns a JSON file of all the available APIs:                    */
@@ -1596,6 +1640,7 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /*     "command": "",                                                */
 /*     "msgcount": 22,                                               */
 /*     "syslog": "[<array of lines from syslog based on msgcount>]"  */
+/*     "index": index_to_last_msg                                    */
 /* }                                                                 */
 /*-------------------------------------------------------------------*/
 /* Notes:                                                            */
@@ -1605,6 +1650,15 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /* - msgcount is a variable and can be changed via get/post/cookie   */
 /*   and controls the number of lines returned in "syslog",          */
 /*   the default is 22 lines                                         */
+/* - index is a variable and represents the byte position in the log */
+/*   buffer to request data from                                     */
+/*   NOTE: mgscount if set > 0 takes precedence over index           */
+/*                                                                   */
+/* To read ALL of the log and poll for updates use the following     */
+/*  /cgi-bin/api/v1/syslog?msgcount=0                                */
+/*  FOREVER                                                          */ 
+/*      /cgi-bin/api/v1/syslog?index=<value_returned_in_JSON_index>  */
+/*      PAUSE a_few_seconds
 /*-------------------------------------------------------------------*/
 void cgibin_api_v1_syslog(WEBBLK *webblk)
 {
@@ -1615,6 +1669,9 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
     char   *command;
     char   *value;
     int     msgcount = 22;
+    int     index = -1;
+    int     newline = true;
+    int     first = true;
 
     json_header( webblk );
 
@@ -1631,12 +1688,14 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
 
     if((value = cgi_variable(webblk,"msgcount")))
         msgcount = atoi(value);
+    
+    if((value = cgi_variable(webblk,"index")))
+        index = atoi(value);
 
     hprintf(webblk->sock,"\"msgcount\": %d,",msgcount);
-    hprintf(webblk->sock,"\"syslog\": [\"");
+    hprintf(webblk->sock,"\"syslog\": [");
 
-
-    logbuf_idx = msgcount ? log_line( msgcount ) : -1;
+    logbuf_idx = msgcount ? log_line( msgcount ) : index;
 
     while ((num_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
     {
@@ -1646,43 +1705,46 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
         if (wrk_bufptr)
         {
             sav_wrk = wrk_bufptr;
-            strncpy( wrk_bufptr,  logbuf_ptr, num_bytes );
+            memcpy( wrk_bufptr,  logbuf_ptr, num_bytes );
         }
-        else         wrk_bufptr = logbuf_ptr;
-
+        else
+            wrk_bufptr = logbuf_ptr;
 
         // We need to escape certain characters that are
-        // not supported in JSON, namely '"', '\n' and '\'"
-
+        // not supported in JSON, namely '"', '\'", etc.
+        // A new line (\n) here means start new JSON array item
+        
         while ( num_bytes-- )
-        {
-            switch ( *wrk_bufptr )
+        {   
+            int c;
+            
+            if  ( newline )
             {
-            case '\\':
-                hwrite( webblk->sock, "\\\\"    , 2);
-                break;
-            case '\n':
-                //hwrite( webblk->sock, "\\n"    , 2                );
-        hprintf(webblk->sock,"\",\"");
-                break;
-            case '"':
-                hwrite( webblk->sock, "\\\""    , 2  );
-                break;
-            default:
-                hwrite( webblk->sock, wrk_bufptr , 1              );
-                break;
+                if ( ! first) 
+                    hwrite( webblk->sock, ",", 1);
+                else
+                    first = false;
+                hwrite( webblk->sock, "\"", 1);
+                newline = false;
             }
+            if ((c = *wrk_bufptr++) == '\n' )   // end of this line - new array element
+            {     
+                hwrite(webblk->sock,"\"", 1);
+                newline = true;
+            }
+            else
+                json_escape_char(webblk->sock, c);
 
-            wrk_bufptr++;
         }
 
         // (free our work buffer if it's really ours)
-
         if ( sav_wrk )
             free( sav_wrk );
     }
 
-    hprintf(webblk->sock,"\"]}");
+    hprintf(webblk->sock,"],");
+    hprintf(webblk->sock,"\"index\": %d",logbuf_idx);
+    hprintf(webblk->sock,"}");
 }
 
 /*-------------------------------------------------------------------*/
@@ -1804,21 +1866,25 @@ void cgibin_api_v1_devices(WEBBLK *webblk)
                 }
             }
 
-             hprintf(webblk->sock,"{\"devnum\":\"%4.4X\","
-                                   "\"subchannel\":\"%4.4X\","
-                                   "\"devclass\": \"%s\","
-                                   "\"devtype\": \"%4.4X\","
-                                   "\"status\": \"%s%s%s\","
-                                   "\"assignment\": \"%s\"}"
-                                   "%s",
-                                   dev->devnum,dev->subchan,
-                                   devclass,
-                                   dev->devtype,
-                                   (dev->fd >= 0       ? "open "    : ""),
-                                   (dev->busy          ? "busy "    : ""),
-                                   (IOPENDING(dev)     ? "pending " : ""),
-                                   devnam,
-                                   (count == total - 1 ? ""         : "," ));
+            hprintf(webblk->sock,
+                "{\"devnum\":\"%4.4X\","
+                "\"subchannel\":\"%4.4X\","
+                "\"devclass\":\"%s\","
+                "\"devtype\":\"%4.4X\","
+                "\"status\":\"%s%s%s\","
+                "\"assignment\":",
+                dev->devnum, dev->subchan,
+                devclass,
+                dev->devtype,
+                (dev->fd >= 0       ? "open "    : ""),
+                (dev->busy          ? "busy "    : ""),
+                (IOPENDING(dev)     ? "pending " : ""));
+
+            json_escape_string(webblk->sock, devnam);
+
+            hprintf(webblk->sock, "}%s",
+                (count == total - 1 ? "" : ","));
+
         }
         count++;
     }
