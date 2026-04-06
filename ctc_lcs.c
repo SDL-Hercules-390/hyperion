@@ -3379,6 +3379,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                 return -1;
             }
 
+            if ( pLCSBLK->pszTUNDevice ) { free( pLCSBLK->pszTUNDevice ); }
             pLCSBLK->pszTUNDevice = strdup( optarg );
             break;
 
@@ -3418,6 +3419,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
         case 'o':
 
+            if ( pLCSBLK->pszOATFilename ) { free( pLCSBLK->pszOATFilename ); }
             pLCSBLK->pszOATFilename = strdup( optarg );
             saw_conf = 1;
             break;
