@@ -171,8 +171,8 @@ DEVBLK *dev;                            /* -> device block           */
 /* SQSB sets a return code in bits 24-31 of r3 as follows (decimal):                */
 /*    rc =  0:      no error, all buffer states changed                             */
 /*    rc =  3:      device error. Value in Zlinux is UNDEFINED.                     */
-/*    rc = 32:      buffer error. A buffer owned by the adapter was encounterd      */
-/*    rc = 96:      incomplete error. A buffer owned by the OS was encounterd       */
+/*    rc = 32:      buffer error. A buffer owned by the adapter was encountered     */
+/*    rc = 96:      incomplete error. A buffer owned by the OS was encountered      */
 /*                  with a different state. Try the operation again.                */
 /*----------------------------------------------------------------------------------*/
 /*                                                                                  */
@@ -306,7 +306,7 @@ U64     slsba;                 /* Storage list state block address   */
 /*              unexpected; likely an adapter owned buffer state.                   */
 /*                                                                                  */
 /*       rc 96: under what conditions should rc 96 be returned? A buffer state      */
-/*              change was identified, currenlty just returning rc=0.               */
+/*              change was identified, currently just returning rc=0.               */
 /*                                                                                  */
 /*       rc 97: assumption: this is a hardware state 'problem' were the instruction */
 /*              can not currently be executed. For example, the adapter is in some  */
@@ -328,7 +328,7 @@ VADR    effective_addr2 = 0;  /* effective address                   */
 
 DEVBLK  *dev;                 /* Data device DEVBLK                  */
 
-int     autoack;              /* Flag for auto-acknowkledgement      */
+int     autoack;              /* Flag for auto-acknowledgement       */
 BYTE    state;                /* State extracted from first buffer   */
 BYTE    nextstate;            /*    next buffer                      */
 U32     queues;               /* Total number of queues              */

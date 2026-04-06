@@ -1291,7 +1291,7 @@ DLL_EXPORT const char* trimloc( const char* loc )
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
 /* being exactly 26 characters long (27 bytes with null terminator). */
 /* pTV points to the TIMEVAL to be formatted. If NULL is passed then */
-/* the curent time of day as returned by a call to 'gettimeofday' is */
+/* the current time of day returned by a call to 'gettimeofday' is   */
 /* used instead. buf must point to a char work buffer where the time */
 /* is formatted into and must not be NULL. bufsz is the size of buf  */
 /* and must be >= 2. If successful then the value of buf is returned */
@@ -1409,7 +1409,7 @@ DLL_EXPORT size_t fmt_S64( char dst[32], S64 num )
 /* initializes the global 'extgui' flag, initializes SYSBLK "detach" */
 /* and "join" create_thread attributes (the remainder of SYSBLK is   */
 /* set to low values), initializes the translation codepage to the   */
-/* system default, and lastly, intitializes the HOSTINFO structure.  */
+/* system default, and lastly, initializes the HOSTINFO structure.   */
 /* (but it doesn't necessarily do all that in that order of course)  */
 /*                                                                   */
 /* The program name (without .ext) is optionally returned in *pgm    */
@@ -1745,7 +1745,7 @@ DLL_EXPORT char* trim( char* str, const char* dlm )   // (trim both)
 
 #if defined( HAVE_PTHREAD_SETNAME_NP ) // !defined( _MSVC_ ) implied
 /*-------------------------------------------------------------------*/
-/* Set thead name           (nonstandard GNU extension)              */
+/* Set thread name          (nonstandard GNU extension)              */
 /*                          (note: retcode is error code, NOT errno) */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
@@ -2512,7 +2512,7 @@ DLL_EXPORT const char* perc2name( BYTE perc, char* buf, size_t bufsiz )
             break;
         }
 
-#if 0 // (probbaly illegal? i.e. should never occur?)
+#if 0 // (probably illegal? i.e. should never occur?)
 
         case 0x2C:
         {

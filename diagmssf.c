@@ -91,7 +91,7 @@ typedef struct _SPCCB_CONFIG_INFO {
                                            machine-storage-area-
                                            description list.        */
         BYTE    loadparm[8];            /* Load parameter.  This field
-                                           conains eight bytes of
+                                           contains eight bytes of
                                            EBCDIC information specified
                                            by the operator for the
                                            manually initiated load

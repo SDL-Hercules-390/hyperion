@@ -365,7 +365,7 @@ CCKD64_EXT     *cckd;                   /* -> cckd extension         */
 /* Open a cckd file                                                  */
 /*                                                                   */
 /* If O_CREAT is not set and mode is non-zero then the error message */
-/* will be supressed.                                                */
+/* will be suppressed.                                               */
 /*-------------------------------------------------------------------*/
 int cckd64_open (DEVBLK *dev, int sfx, int flags, mode_t mode)
 {
@@ -1021,7 +1021,7 @@ cckd_read_trk_retry:
 
         release_lock (&cckd->cckdiolock);
 
-        /* Asynchrously schedule readaheads */
+        /* Asynchronously schedule readaheads */
         if (curtrk > 0 && trk > curtrk && trk <= curtrk + 2)
             cckd_readahead (dev, trk);
 

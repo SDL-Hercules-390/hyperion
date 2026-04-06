@@ -560,7 +560,7 @@ VADR    newia;                          /* New instruction address   */
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
-        regs->psw.ilc = 0; // indcates regs->ip not updated
+        regs->psw.ilc = 0; // indicates regs->ip not updated
         regs->CR(12) = ARCH_DEP(trace_br) (regs->psw.amode, regs->GR_L(r2), regs);
         regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
@@ -3982,7 +3982,7 @@ int ARCH_DEP( mem_cmp_first_equ )
 /*-------------------------------------------------------------------*/
 /* mem_cmp_first_substr - compare memory for first possible substring*/
 /*                                                                   */
-/* Possile substrings are searched right to left to find the         */
+/* Possible substrings are searched right to left to find the        */
 /* rightmost non-equal byte. The next byte establishes the next      */
 /* possible substring starting position for comparison.              */
 /*-------------------------------------------------------------------*/
@@ -3994,7 +3994,7 @@ int ARCH_DEP( mem_cmp_first_equ )
 /*      b2      Operand-2 base register                              */
 /*      len     Compare length                                       */
 /*      sublen  Substring length                                     */
-/*     *equlen  possile substring length (if requested)              */
+/*     *equlen  possible substring length (if requested)             */
 /* Output:                                                           */
 /*      rc      MEM_CMP_NPOS : no equ byte                           */
 /*              0 to (len-1) : index of first possible substring     */
@@ -4342,7 +4342,7 @@ DEF_INST( compare_until_substring_equal )
             break;
         }
 
-        /* interrupt and cc=3 checks: last comparision was unequal */
+        /* interrupt and cc=3 checks: last comparison was unequal */
         if ( equlen == 0 )
         {
             /* If 4096 bytes have been compared, and the last bytes
@@ -6505,7 +6505,7 @@ CREG    n;                              /* Work                      */
         return;
 
     /* The Monitor Call instruction is restricted in transaction
-       execution mode when a monitor-event conditon recognized */
+       execution mode when a monitor-event condition recognized */
     TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_036_ENH_MONITOR_FACILITY )
@@ -6516,7 +6516,7 @@ CREG    n;                              /* Work                      */
         PSA *psa;                       /* -> Prefixed storage area  */
         RADR cao;           /* Enhanced Monitor Counter Array Origin */
         U32  cal;           /* Enhanced Monitor Counter Array Length */
-        U32  ec;         /* Enhanced Montior Counter Exception Count */
+        U32  ec;         /* Enhanced Monitor Counter Exception Count */
         RADR ceh;                        /* HW Counter Entry address */
         RADR cew;                        /* FW Counter Entry address */
         RADR px;
@@ -7234,7 +7234,7 @@ BYTE    termchar;                       /* Terminating character     */
 /*-------------------------------------------------------------------*/
 DEF_INST(move_with_offset)
 {
-int     l1, l2;                         /* Lenght values             */
+int     l1, l2;                         /* Length values             */
 int     b1, b2;                         /* Values of base registers  */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */

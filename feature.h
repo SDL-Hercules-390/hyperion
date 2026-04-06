@@ -92,7 +92,7 @@
   /*  *SHIFT* amount used by the Storage Key functions is *always*   */
   /*  **11 bits** (i.e. 2048 bytes = 2K) in order to properly index  */
   /*  into the storkeys byte array to reach the proper storage key   */
-  /*  byte or pair of bytes, and this is alway true REGARDLESS of    */
+  /*  byte or pair of bytes, and this is always true REGARDLESS of   */
   /*  whether the key for a 2K page -OR- 4K page is being accessed.  */
   /*                                                                 */
   /*  WHICH IS ADMITTEDLY SOMEWHAT COUNTER-INTUITIVE!                */

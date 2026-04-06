@@ -24,7 +24,7 @@ typedef struct _COMMADPT_RING
 
 struct COMMADPT
 {
-    DEVBLK *dev;                /* the devblk to which this CA is attched   */
+    DEVBLK *dev;                /* the devblk to which this CA is attached  */
     BYTE lnctl;                 /* Line control used                        */
     BYTE term;                  /* Terminal type                            */
     BYTE* code_table_toebcdic;  /* correspondence or EBCD code tables       */
@@ -57,7 +57,7 @@ struct COMMADPT
     U16  dialcount;             /* data count for dial                      */
     BYTE pollix;                /* Next POLL Index                          */
     U16  pollused;              /* Count of Poll data used during Poll      */
-    u_int enabled:1;            /* An ENABLE CCW has been sucesfully issued */
+    u_int enabled:1;            /* ENABLE CCW has been successfully issued  */
     u_int connect:1;            /* A connection exists with the remote peer */
     u_int eibmode:1;            /* EIB Setmode issued                       */
     u_int dialin:1;             /* This is a SWITCHED DIALIN line           */

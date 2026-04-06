@@ -651,7 +651,7 @@ inline void ARCH_DEP( vstore4 )( U32 value, VADR addr, int arn, REGS* regs )
 inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
 {
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
-    /* Check alignement. If aligned then we are guaranteed
+    /* Check alignment. If aligned then we are guaranteed
        not to cross a page boundary */
     if (likely(!((VADR_L)addr & 0x07)))
     {
@@ -670,7 +670,7 @@ inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
            crossing a page boundary. This cannot be the same
            code as above because casting U64* to a non aligned
            pointer may break on those architectures mandating
-           strict alignement */
+           strict alignment */
         if (likely(((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-7)))
         {
             /* Non aligned but not crossing page boundary */
@@ -692,7 +692,7 @@ inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
 inline void ARCH_DEP( vstore16 )( QW value, VADR addr, int arn, REGS* regs )
 {
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
-    /* Check alignement. If aligned then we are guaranteed
+    /* Check alignment. If aligned then we are guaranteed
        not to cross a page boundary */
     if (likely(!((VADR_L)addr & 0x0F)))
     {
@@ -711,7 +711,7 @@ inline void ARCH_DEP( vstore16 )( QW value, VADR addr, int arn, REGS* regs )
            crossing a page boundary. This cannot be the same
            code as above because casting U64* to a non aligned
            pointer may break on those architectures mandating
-           strict alignement */
+           strict alignment */
         if (likely(((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-15)))
         {
             /* Non aligned but not crossing page boundary */

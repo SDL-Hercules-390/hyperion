@@ -6,7 +6,7 @@
 /* Use of this program is governed by the QPL License                */
 /* Original Author : Ivan Warren                                     */
 /*-------------------------------------------------------------------*/
-/* To a Hercules guest OS, this code impelements a subset of a 2703  */
+/* To a Hercules guest OS, this code implements a subset of a 2703   */
 /* BISYNC communications adaptor.  To the outside world, it appears  */
 /* as a system which implements (most of) the TCPNJE protocol, also  */
 /* known as VMNET protocol described here:                           */
@@ -61,8 +61,8 @@
  /* 0 : Command is NOT an immediate command                           */
  /* 1 : Command is an immediate command                               */
  /* Note : An immediate command is defined as a command which returns */
- /* CE (channel end) during initialisation (that is, no data is       */
- /* actually transfered. In this case, IL is not indicated for a CCW  */
+ /* CE (channel end) during initialization (that is, no data is       */
+ /* actually transferred. In this case, IL is not indicated for a CCW */
  /* Format 0 or for a CCW Format 1 when IL Suppression Mode is in     */
  /* effect                                                            */
  /*-------------------------------------------------------------------*/
@@ -1425,7 +1425,7 @@ static void *tcpnje_thread(void *vtn)
     int tn_shutdown;            /* Thread shutdown internal flag     */
     int init_signaled;          /* Thread initialisation signaled    */
     int TTBlength = 0;          /* Length of TTB in host byte order  */
-    int eintrcount = 0;         /* Number of times EINTR occured     */
+    int eintrcount = 0;         /* Number of times EINTR occurred    */
     int errorcount067 = 0;      /* Number of times HHCTN067E issued  */
     int errorcount100 = 0;      /* Number of times HHCTN100E issued  */
     struct sockaddr_in remaddr;                /* For accept()       */
@@ -1666,7 +1666,7 @@ static void *tcpnje_thread(void *vtn)
                                     /* Call initiated - FD will be ready */
                                     /* for writing when the connect ends */
                                     /* getsockopt/SOERROR will tell if   */
-                                    /* the call was sucessfull or not    */
+                                    /* the call was successful or not    */
                                     FD_SET(tn->afd, &wfd);
 #if defined(_MSVC_)
                                     FD_SET(tn->afd, &xfd);
@@ -1803,7 +1803,7 @@ static void *tcpnje_thread(void *vtn)
             maxfd = maxfd < tn->sfd ? tn->sfd : maxfd;
         }
 
-        /* The the MAX File Desc for Arg 1 of SELECT */
+        /* The MAX File Desc for Arg 1 of SELECT */
         maxfd++;
 
         DBGMSG(512, "HHCTN125D %4.4X:TCPNJE - Entering select(). Operation: %s\n",
@@ -2855,7 +2855,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         rc = create_thread(&tn->thread, DETACHED, tcpnje_thread, tn, thread_name);
         if (rc)
         {
-            logmsg("HHCTN022E TCPNJE - error creating communiction thread: %s\n", strerror(rc));
+            logmsg("HHCTN022E TCPNJE - error creating communication thread: %s\n", strerror(rc));
             release_lock(&tn->lock);
             return -1;
         }
@@ -2872,7 +2872,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
 
         /* Release the TCPNJE lock */
         release_lock(&tn->lock);
-        /* Indicate succesfull completion */
+        /* Indicate successful completion */
         return 0;
 }
 
@@ -3206,7 +3206,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* EON is ignored                                                */
         /* format is : AAA/SEP/BBB/SEP/CCC/SEP/DDD/SEP/PPPP              */
         /*          where A,B,C,D,P are numbers from 0 to 9              */
-        /* This perfoms an outgoing call to AAA.BBB.CCC.DDD port PPPP    */
+        /* This performs an outgoing call to AAA.BBB.CCC.DDD port PPPP   */
         /*---------------------------------------------------------------*/
         /* NOTE:  DIAL is mostly as it was in commadpt with tweaks to    */
         /*        adapt it to the TCPNJE environment.  It is most        */
@@ -3643,7 +3643,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     }
                 }
 
-                /* If this record contains an FCS, the VMNET equipvelant at the other end will have acted  */
+                /* If this record contains an FCS, the VMNET equivalent at the other end will have acted   */
                 /* on it already.  If it requests transmission be stopped and we pass it on to our RSCS,   */
                 /* we will get all hung up so we should set the FCS to cause RSCS to proceed as normal.    */
                 /* On the other hand, if our outgoing TCP/IP buffers are full, we need to set the FCS so   */
@@ -3856,14 +3856,14 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         }
                         tn->resetoutbcb = 0;
                     }
-                    /* Also check for "permssion to open stream" response  */
+                    /* Also check for "permission to open stream" response */
                     /* going out and suppress it if FASTOPEN flag was used */
                     /* on the "open stream" request.  This falls short of  */
                     /* the full response called for but it is better than  */
                     /* doing nothing at all.                               */
                     if ((count >= 7) && (tpb->rcb == 0xa0) && (tn->fastopen == tpb->srcb))
                     {
-                        DBGMSG(2048, "HHCTN087I %4.4X:TCPNJE WRITE - Permission to open stream %2.2X suppressed due to preceeding FASTOPEN\n",
+                        DBGMSG(2048, "HHCTN087I %4.4X:TCPNJE WRITE - Permission to open stream %2.2X suppressed due to preceding FASTOPEN\n",
                                 dev->devnum, tn->fastopen);
                         tn->fastopen = 0;
                         tn->resetoutbcb = 1;
@@ -3935,7 +3935,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         }
                         if ((count >= (5 + 0x25)) && (tpb->nccifeat[0] & 0x80))
                         {
-                            DBGMSG(16, "HHCTN093W %4.4X:TCPNJE - resetting forced use of unsuppored PREPARE protocol by local RSCS name %s\n",
+                            DBGMSG(16, "HHCTN093W %4.4X:TCPNJE - resetting forced use of unsupported PREPARE protocol by local RSCS name %s\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring), tpb->nccinode));
                             tpb->nccifeat[0] &= 0x7f;
                         }
@@ -4163,7 +4163,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* PREPARE                                                       */
         /* NOTE : DO NOT SET RESIDUAL to 0 : Otherwise, channel.c        */
         /*        will reflect a channel prot check - residual           */
-        /*        should indicate NO data was transfered for this        */
+        /*        should indicate NO data was transferred for this       */
         /*        pseudo-read operation                                  */
         /*---------------------------------------------------------------*/
         /* NOTE:  PREPARE is mostly as it was in commadpt with tweaks to */
@@ -4307,7 +4307,7 @@ DEVHND tcpnje_device_hndinfo = {
 };
 
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 #if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
 #define hdl_ddev hdtTCPNJE_LTX_hdl_ddev

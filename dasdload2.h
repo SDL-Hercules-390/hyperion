@@ -1358,7 +1358,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     store_hw( f4dscb->ds4vtoce.xtecyl, endcyl );
     store_hw( f4dscb->ds4vtoce.xtetrk, endhead );
 
-    /* Calculate the mimimum volume size */
+    /* Calculate the minimum volume size */
     if (prealloc)
     {
         /* The VTOC was preallocated, so the minimum volume
@@ -3721,7 +3721,7 @@ read_ctrl_stmt (FILE *cfp, char *cfname, char *stmt, int sbuflen,
             return -1;
         }
 
-        /* Indicate input file progess */
+        /* Indicate input file progress */
         EXTGUIMSG( "IPOS=%"PRId64"\n", (U64) ftell( cfp ));
 
         /* Check for DOS end of file character */
@@ -4289,7 +4289,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
             fsflag = 1;
         }
 
-        /* Indicate output file progess */
+        /* Indicate output file progress */
         if ((outcyl % 10) == 0)
         {
             EXTGUIMSG( "OUTCYL=%d\n", outcyl );
@@ -4376,7 +4376,7 @@ int             outcyl;                 /* Output cylinder number    */
 int             outhead;                /* Output head number        */
 char            stmt[256];              /* Control file statement    */
 int             stmtno;                 /* Statement number          */
-BYTE            comp = 0xff;            /* Compression algoritm      */
+BYTE            comp = 0xff;            /* Compression algorithm     */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
 int             flagECmode = 1;         /* IPL PSW mode flag         */
 int             flagMachinecheck = 0;   /* IPL PSW machine check flag*/

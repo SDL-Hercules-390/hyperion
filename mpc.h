@@ -336,7 +336,7 @@ struct _MPC_PUS                    /*                                */
                                    /*      Is the 0x0009 a length?   */
                                    /*      If so, does this mean     */
                                    /*      there could be other      */
-                                   /*      stuctures?                */
+                                   /*      structures?               */
          } pus_0C;                 /*                                */
 #define SIZE_PUS_0C  0x000D        /* Size of MPC_PUS_0C             */
 
@@ -380,7 +380,7 @@ typedef struct _MPC_IEA {
    2 bit fields, the first field is 6-bits long, the second field
    is 2-bits long. If there are 3 (or more!) bit fields, things
    are less certain. The last 2 bits (bits  6-7) are a field,
-   and the preceeding 2 bits (bits 4-5) are probably a field,
+   and the preceding 2 bits (bits 4-5) are probably a field,
    10 indicating read and 01 indicating write. What the first
    4 bits (bits 0-3, only seen 0001) signify is unknown. What
    the second byte (only seen 0x01) signifies is also unknown.       */
@@ -457,7 +457,7 @@ typedef struct _MPC_IEAR {
 /*-------------------------------------------------------------------*/
 typedef struct _MPC_IPA {
 /*000*/ BYTE    cmd;            /* Command                           */
-/*001*/ BYTE    iid;            /* Initator Identifier               */
+/*001*/ BYTE    iid;            /* Initiator Identifier              */
 #define IPA_IID_HOST    0x00
 #define IPA_IID_ADAPTER 0x01
 #define IPA_IID_REPLY   0x80
@@ -519,7 +519,7 @@ typedef struct _MPC_IPA {
 /*  using layer 2 is unknown. A guest requests the use of an assist  */
 /*  with an IPA_CMD_SETADPPARMS (0xB8) command with an               */
 /*  IPA_SAS_CMD_START (0x0001) subcommand. Assist requests are       */
-/*  generally propocol dependant, e.g. IPA_ARP_PROCESSING is only    */
+/*  generally protocol dependent, e.g. IPA_ARP_PROCESSING is only    */
 /*  requested for IPv4.                                              */
 
 /*  Below is the assists that Hercules claims to support.            */
@@ -657,7 +657,7 @@ typedef struct _MPC_IPA_SAP {
 #define IPA_SAP_SETDIAG   0x00002000L  /* Set Diag Assist */
 #define IPA_SAP_SETACCESS 0x00010000L  /* Set Access Control */
 #define IPA_SAP_QOAT      0x00080000L  /* Query OAT */
-#define IPA_SAP_QSWTATTR  0x00100000L  /* Query Switch Attrubutes */
+#define IPA_SAP_QSWTATTR  0x00100000L  /* Query Switch Attributes */
 
 #define IPA_SAP_SUPP ( 0 \
                      | IPA_SAP_QUERY \
@@ -744,7 +744,7 @@ struct MPC_IPA_SAS_HDR {
                                 /* total length of the length field  */
                                 /* and the following fields. It does */
                                 /* not include the length of the     */
-                                /* preceeding assist number field.   */
+                                /* preceding assist number field.    */
 /*006*/ HWORD   cmd;            /* Command code                      */
 #define IPA_SAS_CMD_START      0x0001
 #define IPA_SAS_CMD_STOP       0x0002
@@ -823,7 +823,7 @@ struct _MPC_PIX                    /*                                */
 /*003*/  BYTE   iptype;            /* IP address type                */
 #define PIX_IPV4     0x04          /*                                */
 #define PIX_IPV6     0x06          /*                                */
-/*004*/  HWORD  idnum;             /* An identifcation number.       */
+/*004*/  HWORD  idnum;             /* An identification number.      */
 /*006*/  HWORD  rcode;             /* Return code.                   */
                                    /*    0  Successful               */
                                    /*    4  Not supported            */

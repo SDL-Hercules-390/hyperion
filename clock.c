@@ -1263,7 +1263,7 @@ TOD update_tod_clock()
 //-------------------------------------------------------------------
 //                      _FEATURE_XXX code
 //-------------------------------------------------------------------
-// Place any _FEATURE_XXX depdendent functions (WITH the underscore)
+// Place any _FEATURE_XXX dependent functions (WITH the underscore)
 // here. You may need to define such functions whenever one or more
 // build architectures has a given FEATURE_XXX (WITHOUT underscore)
 // defined for it. The underscore means AT LEAST ONE of the build

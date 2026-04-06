@@ -85,7 +85,7 @@
 /* in header stfl.h (e.g. FT( 044_PFPO, ..) ==> STFL_044_PFPO 44).   */
 /*                                                                   */
 /* Also note that the entries in the below table do NOT have to be   */
-/* in any facility bit sequence as it is always seached serially.    */
+/* in any facility bit sequence as it is always searched serially.   */
 /* However, it is greatly preferred that it be kept in sequence.     */
 /*                                                                   */
 /* Sup (Supported) means the facility is supported by Hercules for   */
@@ -105,7 +105,7 @@
 /*                                                                   */
 /*                     ***  CRITICAL!   ***                          */
 /*                                                                   */
-/* All of the below FT macro invokations should be wrapped with an   */
+/* All of the below FT macro invocations should be wrapped with an   */
 /* #if defined( FEATURE_nnn... ) statement WITHOUT the underscore!   */
 /*                                                                   */
 /* This is because the below tables are ARCH_DEP tables which are    */
@@ -842,7 +842,7 @@ FT( Z900, NONE, NONE, HERC_ZVM_ESSA ) // z/VM ESSA Extract and Set Storage Attri
 /*-------------------------------------------------------------------*/
 /*          Facility Not Enabled Program Check function              */
 /*-------------------------------------------------------------------*/
-/* The following intruction function is used to force an immediate   */
+/* The following instruction function is used to force an immediate  */
 /* Operation Exception Program Check interruption for instructions   */
 /* pertaining to a disabled facility. When a facility is disabled,   */
 /* the opcode table for instructions associated with that facility   */

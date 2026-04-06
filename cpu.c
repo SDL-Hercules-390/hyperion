@@ -457,7 +457,7 @@ DLL_EXPORT void ARCH_DEP( trace_program_interrupt )( REGS* regs, int pcode, int 
     int code = (pcode & 0xFF);
 
     /* If the program interrupt code is zero, or if it's not, if the
-       code isn't one they're interested in seeing (as determiend by
+       code isn't one they're interested in seeing (as determined by
        OSTAILOR/pgmtrace) AND instruction tracing is NOT active, then
        there's nothing for us to do.
     */
@@ -482,7 +482,7 @@ DLL_EXPORT void ARCH_DEP( trace_program_interrupt )( REGS* regs, int pcode, int 
        Otherwise if the instruction that program checked (i.e. after
        backing up 'ip' by 'ilc' amount) appears to be in the previous
        mainstor page (meaning the instruction itself crossed a page
-       boundary), use the the copy of the instruction that was saved
+       boundary), use the copy of the instruction that was saved
        in regs->inst for our instruction pointer instead.
 
        If neither condition is true (the most common case) then we
@@ -633,7 +633,7 @@ DLL_EXPORT int ARCH_DEP( fix_program_interrupt_PSW )( REGS* regs )
 /* Program interrupt old PSW field in low core followed by loading   */
 /* the Program interrupt new PSW and then jumping via regs->progjmp  */
 /* back to the run_cpu instruction execution loop to begin executing */
-/* instructions at the Progran new PSW location.                     */
+/* instructions at the Program new PSW location.                     */
 /*-------------------------------------------------------------------*/
 void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt ))( REGS* regs, int pcode )
 {
@@ -1274,7 +1274,7 @@ bool    intercept;                      /* False for virtual pgmint  */
             /* or doubleword at PSA+176               */
             /* ISW20090110-1 ZSIEMCFIX                */
             /* In the event of a z/Arch guest being   */
-            /* intercepted during a succesful Monitor */
+            /* intercepted during a successful Monitor */
             /* call, the monitor code is not stored   */
             /* at psa->moncode (which is beyond sie2bk->ip */
             /* but rather at the same location as an  */
@@ -2075,7 +2075,7 @@ int     aswitch;
     // When a transaction is active, we use the third (slowest) loop
     // called 'txf_slower_loop', using the 'TXF_EXECUTE_INSTRUCTION'
     // and 'TXF_UNROLLED_EXECUTE' macros, which contain code that
-    // enforces certain Transaction-Exceution Facility constraints.
+    // enforces certain Transaction-Execution Facility constraints.
     //--------------------------------------------------------------
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
@@ -2294,7 +2294,7 @@ void ARCH_DEP( process_trace )( REGS* regs, BYTE* dest )
 /* nor can you call "ARCH_DEP(func)(args)" anywhere in your code!    */
 /*                                                                   */
 /* Basically you MUST NOT use any architecture dependent macro that  */
-/* is #defined in the "feature.h" header.  If you you need to use    */
+/* is #defined in the "feature.h" header.  If you need to use        */
 /* any of them, then your function MUST be an "ARCH_DEP" function    */
 /* that is placed within the ARCH_DEP section at the beginning of    */
 /* this module where it can be compiled multiple times, once for     */

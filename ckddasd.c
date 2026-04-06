@@ -3713,7 +3713,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* For 3990 and more modern equipment, 27 it is PSF.
            If none of these, assume Itel controller.
 
-           PSF was available for some cache funcions on 3880 but
+           PSF was available for some cache functions on 3880 but
            this is not part of Hercules emulation.
            3990 had some unique usage as well.
 
@@ -3735,7 +3735,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* PSF and DSO has some orders which require 'first-in-chain,
-           but this has to be verfied inside the 'helper' routine */
+           but this has to be verified inside the 'helper' routine */
 
 PSForDSO:
 
@@ -5358,7 +5358,7 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
         }
 
         /* Generate a fake message ID                                */
-        /* A good and complete reponse will be returned when it is   */
+        /* A good and complete response will be returned when it is  */
         /* fetched.                                                  */
         memset(iobuf, 0xff, 4);
 
@@ -5546,7 +5546,7 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
             break;
         }
 
-        /* The data to be resturned will indicate only if the        */
+        /* The data to be returned will indicate only if the         */
         /* device was reserved. It is not a zero sense!              */
         memset(iobuf, 0, 32);
         if (dev->reserved == 1) iobuf[0] = 0x90; else iobuf[0] = 0x80;
@@ -6088,7 +6088,7 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
             case 4:          //Deactivate subsystem cache
                 allowMSGREQ = 1;
                 break;
-            case 5:          //Force deactivate subsysstem cache
+            case 5:          //Force deactivate subsystem cache
                 break;
             default:
                 break;
@@ -6149,8 +6149,8 @@ seek_0x27:     /* SEEK AND SET SECTOR (Itel 7330 controller only) */
             /* Verify correct input parameters                       */
             if (((iobuf[0] & 0x02) != 0x00)    ||   //Bit 6 must be zero
                 ((iobuf[1] & 0x07) != 0x00)    ||   //Bits 13-15 must be zero
-                ((CacheCHG + CFWCHG + NVSCHG + RecCntlCHG) > 1) ||   //Multiple requessts
-                (((iobuf[0] & 0x01) == 0x01) && (allowMSGREQ == 0))  //Messsage request not valid for fast op
+                ((CacheCHG + CFWCHG + NVSCHG + RecCntlCHG) > 1) ||   //Multiple requests
+                (((iobuf[0] & 0x01) == 0x01) && (allowMSGREQ == 0))  //Message request not valid for fast op
                )
             {
                 ckd_build_sense(dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
@@ -7714,7 +7714,7 @@ DLL_EXPORT  DEVHND  ckd_dasd_device_hndinfo =
     NULL,                             /* Device Attention           */
     NULL,                             /* Immediate CCW Codes        */
     NULL,                             /* Signal Adapter Input       */
-    NULL,                             /* Signal Adapter Ouput       */
+    NULL,                             /* Signal Adapter Output      */
     NULL,                             /* Signal Adapter Sync        */
     NULL,                             /* Signal Adapter Output Mult */
     NULL,                             /* QDIO subsys desc           */

@@ -39,7 +39,7 @@ struct bind_struct          // Bind structure for "Socket Devices"
 
                             // NOTE: Following 2 fields malloc'ed.
     char    *clientname;    // connected client's hostname
-    char    *clientip;      // conencted client's ip address
+    char    *clientip;      // connected client's ip address
 
     ONCONNECT    fn;        // ptr to onconnect callback func (opt)
     void        *arg;       // argument for callback function (opt)

@@ -173,7 +173,7 @@ void ARCH_DEP(hdiagf18_FC) (U32, VADR, REGS *);
 
 void ARCH_DEP(diagf18_call) (int r1, int r2, REGS *regs)
 {
-/* Guest related paramters and values                                */
+/* Guest related parameters and values                               */
 U16     options;                     /* supplied options             */
 
 #if 0

@@ -337,7 +337,7 @@ CKD_DEVHDR      devhdr;                 /* Device header             */
     if (imgtyp & FBA32_CMP_OR_SF_TYP)
         fba = true;
 
-    /* Open ouput file */
+    /* Open output file */
     if ((ofd = HOPEN( ofile,
         O_CREAT | O_WRONLY | O_BINARY | (replace ? 0 : O_EXCL),
         S_IRUSR | S_IWUSR | S_IRGRP)) < 0)

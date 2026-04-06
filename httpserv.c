@@ -14,7 +14,7 @@
 /* When a request comes in a http_request thread is started,         */
 /* which will handle the request.                                    */
 /*                                                                   */
-/* When authentification is required (auth parm on the HTTPPORT      */
+/* When authentication is required (auth parm on the HTTPPORT      */
 /* statement) then the user will be authenticated based on the       */
 /* userid and password supplied on the HTTPPORT statement, if        */
 /* these where not supplied then the userid and password of the      */

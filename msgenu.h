@@ -36,7 +36,7 @@ HHCnnnnns message-text...
   S   Severe error. Hercules cannot continue.
   E   Error. Hercules continues.
   W   Warning message.
-  I   Informatonal message.
+  I   Informational message.
   A   Action. Hercules needs input.
   D   Debugging message.
 
@@ -185,7 +185,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 /*                                                                   */
 /* Then simply issue your message using the WRMSG macro specifying   */
 /* the message number for the first message. The format should be    */
-/* defined with as many "%s" as you have mesages. This will prefix   */
+/* defined with as many "%s" as you have messages. This will prefix  */
 /* the first message with the desired message number and terminate   */
 /* the last message with a newline, and then write the entire group  */
 /* in one fell swoop.                                                */
@@ -423,7 +423,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00317 "%1d:%04X CCKD file: device is not a cckd device"
 #define HHC00318 "%1d:%04X CCKD file[%d] %s: error adding shadow file, sf command busy on device"
 #define HHC00319 "%1d:%04X CCKD file[%d] %s: error adding shadow file"
-#define HHC00320 "%1d:%04X CCKD file[%d] %s: shadow file succesfully added"
+#define HHC00320 "%1d:%04X CCKD file[%d] %s: shadow file successfully added"
 #define HHC00321 "%1d:%04X CCKD file: merging shadow files..."
 #define HHC00322 "%1d:%04X CCKD file[%d] %s: error merging shadow file, sf command busy on device"
 #define HHC00323 "%1d:%04X CCKD file[%d] %s: cannot remove base file"
@@ -1166,7 +1166,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01463 "%1d:%04X device initialization failed"
 #define HHC01464 "%1d:%04X %s does not exist"
 #define HHC01465 "%1d:%04X %s detached"
-#define HHC01466 "Unspecified error occured while parsing Logical Channel Subsystem Identification"
+#define HHC01466 "Unspecified error occurred while parsing Logical Channel Subsystem Identification"
 #define HHC01467 "No more than 1 Logical Channel Subsystem Identification may be specified"
 #define HHC01468 "Non-numeric Logical Channel Subsystem Identification %s"
 #define HHC01469 "Logical Channel Subsystem Identification %d exceeds maximum of %d"
@@ -1508,7 +1508,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02310 "Panel command %s is not supported in this build; see option %s"
 #define HHC02311 "%s completed"
 #define HHC02312 "Empty list"
-#define HHC02313 "State: %s" // 'psw_cmd' state: enabled wait, instuction step, running normal,  etc.
+#define HHC02313 "State: %s" // 'psw_cmd' state: enabled wait, instruction step, running normal,  etc.
 #define HHC02314 "No scripts currently running"
 #define HHC02315 "Script id:%d, tid:"TIDPAT", level:%d, name:%s"
 #define HHC02316 "Script %s not found"
@@ -1601,7 +1601,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC02405I       flags          indicates how to format selected members:\n" \
        "HHC02405I\n"                                                                \
        "HHC02405I                         'c'    as 72 or 80 column card images\n"  \
-       "HHC02405I                         's'    indicates 'c' shoud be 80 cols\n"  \
+       "HHC02405I                         's'    indicates 'c' should be 80 cols\n" \
        "HHC02405I                         'a'    as plain unformatted ASCII\n"      \
        "HHC02405I                         '?'    member CCCCHHR/size info only\n"   \
        "HHC02405I\n"                                                                \
@@ -1646,7 +1646,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02417 "Invalid track header at offset 0x%16.16"PRIX64
 #define HHC02418 "Expected CCHH %04X%04X, found CCHH %04X%04X"
 #define HHC02419 "Invalid record header (rc %d) at offset %04X in trk at CCHH %04X%04X at offset 0x%16.16"PRIX64" in file %s"
-#define HHC02420 "%u cylinders succesfully written to file %s"
+#define HHC02420 "%u cylinders successfully written to file %s"
 #define HHC02421 "Cylinder count %u is outside range %u-%u"
 #define HHC02422 "Converting %04X volume %s: %u cyls, %u trks/cyl, %u bytes/trk"
 #define HHC02423 "DASD operation completed"

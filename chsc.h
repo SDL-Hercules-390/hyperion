@@ -104,7 +104,7 @@ struct _CHSC_RSP;
 typedef struct _CHSC_RSP CHSC_RSP;
 struct _CHSC_RSP {
 /*000*/ HWORD   length;                 /* Length of response field  */
-/*002*/ HWORD   rsp;                    /* Reponse code              */
+/*002*/ HWORD   rsp;                    /* Response code             */
 #define CHSC_REQ_OK             0x0001  /* No error                  */
 #define CHSC_REQ_INVALID        0x0002  /* Invalid request           */
 #define CHSC_REQ_ERRREQ         0x0003  /* Error in request block    */
@@ -352,7 +352,7 @@ struct _CHSC_REQ10 {                    /* Store Channel-Subsystem Characteristi
 
 
 /*-------------------------------------------------------------------*/
-/* CHSC_RSP10: Store Channel-Subsystem Characteristics reponse       */
+/* CHSC_RSP10: Store Channel-Subsystem Characteristics response      */
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by CHSC_RSP10 */
 struct _CHSC_RSP10;

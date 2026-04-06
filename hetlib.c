@@ -1933,7 +1933,7 @@ het_bsb( HETB *hetb )
 /*==DOC==
 
     NAME
-            het_fsb - Foward space a block in an HET file
+            het_fsb - Forward space a block in an HET file
 
     SYNOPSIS
             #include "hetlib.h"
@@ -2385,9 +2385,9 @@ het_error( int rc )
 
     RETURN VALUE
             >=0 The actual cursor offset
-            <0 An error occured.
+            <0 An error occurred.
                 Possible errors are :
-                HETE_ERROR - File system error occured
+                HETE_ERROR - File system error occurred
 
     EXAMPLE
             //

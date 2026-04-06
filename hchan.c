@@ -192,7 +192,7 @@ static DEVHND hchan_device_hndinfo =
         NULL                           /* Hercules resume            */
 };
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

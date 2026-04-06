@@ -346,7 +346,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     int    space_ctl;           /* This is used to control address space selection */
     int    i;
     int    res;                 /* I/O integer results */
-    int    handle = 0;          /* Host file file handle for this file */
+    int    handle = 0;          /* Host file handle for this file */
     U32    ghandle = 0;         /* Guest file descriptor */
     struct fkeeper *fk = NULL;  /* Host file structure */
     struct fkeeper *rfk = NULL; /* Restart structure */
@@ -586,7 +586,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     }
 
     /*-------------------------------------------------------------*/
-    /* Interruptible operation initilization                       */
+    /* Interruptible operation initialization                      */
     /*-------------------------------------------------------------*/
 
     if ( (options & SPACE_MASK) == DF18_REAL_SPACE)
@@ -981,7 +981,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
                 set_reg(15,R15);
             }
             if (rfk->data <= 0)
-            {   /* All done, we reached EOF (or an error occured) */
+            {   /* All done, we reached EOF (or an error occurred) */
                 break;
             }
 
@@ -1090,7 +1090,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
             set_reg(2,R2);
             R4 -= res;
             set_reg(4,R4);
-            /* update the accumlated total */
+            /* update the accumulated total */
             R15 += res;
             set_reg(15,R15);
         }

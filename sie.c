@@ -328,14 +328,14 @@ int     i;                              /* (work)                    */
     //             IMPORTANT SIE PROGRAMMING NOTE!
     //-----------------------------------------------------------
     // NOTE: Our execution architectural mode is that of the SIE
-    // HOST and our 'regs' variable is pointing the the HOST's
+    // HOST and our 'regs' variable is pointing the HOST's
     // registers. Since the GUEST could be running in a completely
     // different architecture from the HOST, if you need to call
     // a ARCH_DEP function for the GUEST (passing it GUESTREGS),
     // you must TAKE SPECIAL CARE to ensure the correct version
     // of that function is called! You cannot simply call the
     // "ARCH_DEP" version of that function as they are for the
-    // architectue of the HOST, not the GUEST! (i.e. you cannot
+    // architecture of the HOST, not the GUEST! (i.e. you cannot
     // call a "z900_xxx" function expecting it to work correctly
     // if the GUEST is supposed to call "s390_xxx" functions!)
     //-----------------------------------------------------------
@@ -853,7 +853,7 @@ int     i;                              /* (work)                    */
 
         OBTAIN_INTLOCK( regs );
         {
-            /* Intialize guest timers... */
+            /* Initialize guest timers... */
 
             /* CPU timer */
             if (CPU_TIMER( GUESTREGS ) < 0)
@@ -887,7 +887,7 @@ int     i;                              /* (work)                    */
                 FETCH_FW( olditimer, GUESTREGS->psa->inttimer );
 
                 /* Bit position 23 of the interval timer is decremented
-                   once for each multiple of 3,333 usecs containded in
+                   once for each multiple of 3,333 usecs contained in
                    bit position 0-19 of the residue counter.
                 */
                 itimer = olditimer - ((residue / 3333) >> 4);
@@ -990,7 +990,7 @@ static int ARCH_DEP( run_sie )( REGS* regs )
     // behalf of the HOST (passing it 'regs'), you must be careful
     // to ensure the correct version of that function is called!
     // You cannot simply call the "ARCH_DEP" version of a function
-    // as they are for the architectue of the GUEST, not the HOST!
+    // as they are for the architecture of the GUEST, not the HOST!
     // (e.g. you cannot call a "s390_xxxx" function expecting it
     // to work correctly if the HOST function that SHOULD have been
     // called should have been "z900_xxxx"!) YOU HAVE BEEN WARNED!
@@ -1198,7 +1198,7 @@ sie_fetch_instruction:
                 // When a transaction is active, we use the third (slowest) loop
                 // called 'txf_slower_loop', using the 'TXF_EXECUTE_INSTRUCTION'
                 // and 'TXF_UNROLLED_EXECUTE' macros, which contain code that
-                // enforces certain Transaction-Exceution Facility constraints.
+                // enforces certain Transaction-Execution Facility constraints.
                 //--------------------------------------------------------------
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
@@ -1397,7 +1397,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     // behalf of the GUEST (passing it 'GUESTREGS'), you must be
     // careful to ensure the correct version of that function is
     // called! You cannot simply call the "ARCH_DEP" version of
-    // a function as they are for the architectue of the HOST,
+    // a function as they are for the architecture of the HOST,
     // not the GUEST! (e.g. you can't call a "z900_xxx" function
     // and expect it to work correctly if the GUEST is actually
     // supposed to be run in s390 mode!) YOU HAVE BEEN WARNED!
@@ -1651,7 +1651,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     for (n=0; n < 16; n++)
         STORE_W( STATEBK->cr[ n ], GUESTREGS->CR( n ));
 
-    /* Update the approprate host registers */
+    /* Update the appropriate host registers */
     memcpy( regs->gr,  GUESTREGS->gr,  14 * sizeof( regs->gr [0] ));
     memcpy( regs->ar,  GUESTREGS->ar,  16 * sizeof( regs->ar [0] ));
     memcpy( regs->vfp, GUESTREGS->vfp, 32 * sizeof( regs->vfp[0] ));
@@ -1997,7 +1997,7 @@ U32    newgr1;
 /* instruction and will always cause a program check when attempted  */
 /* to be executed natively. It is a z/VM-ONLY instruction that can   */
 /* only be used (executed) by guests running under z/VM via z/VM     */
-/* instruction interception and simulation. An operation execption   */
+/* instruction interception and simulation. An operation exception   */
 /* program interrupt will always occur if this instruction is not    */
 /* intercepted by z/VM.                                              */
 /* Ref: page 895 of SC24-6272-03 "zVM 7.1 CP Programming Services"   */
@@ -2021,7 +2021,7 @@ DEF_INST( store_hypervisor_information )
 /* instruction and will always cause a program check when attempted  */
 /* to be executed natively. It is a z/VM-ONLY instruction that can   */
 /* only be used (executed) by guests running under z/VM via z/VM     */
-/* instruction interception and simulation. An operation execption   */
+/* instruction interception and simulation. An operation exception   */
 /* program interrupt will always occur if this instruction is not    */
 /* intercepted by z/VM.                                              */
 /* Ref: page 870 of SC24-6272-03 "zVM 7.1 CP Programming Services"   */
@@ -2092,7 +2092,7 @@ static const char* sie_icode_2str( int icode )
         "External interrupt",           // SIE_INTERCEPT_EXTREQ    (-6)
         "I/O interrupt",                // SIE_INTERCEPT_IOREQ     (-7)
         "Wait state loaded",            // SIE_INTERCEPT_WAIT      (-8)
-        "STOP reqeust",                 // SIE_INTERCEPT_STOPREQ   (-9)
+        "STOP request",                 // SIE_INTERCEPT_STOPREQ   (-9)
         "Restart interrupt",            // SIE_INTERCEPT_RESTART  (-10)
         "Machine Check interrupt",      // SIE_INTERCEPT_MCK      (-11)
         "External interrupt pending",   // SIE_INTERCEPT_EXT      (-12)

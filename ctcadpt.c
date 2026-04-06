@@ -14,7 +14,7 @@
 
 // Notes:
 //   This module contains the remaining CTC emulation modes that
-//   have not been moved to seperate modules. There is also logic
+//   have not been moved to separate modules. There is also logic
 //   to allow old style 3088 device definitions for compatibility
 //   and may be removed in a future release.
 //
@@ -74,7 +74,7 @@ typedef struct _CTCE_INFO
                                        /* indicating ready to be     */
                                        /* presented, yielding ...    */
     u_int              sent : 1;       /* = 1 : CTCE_Send done       */
-    u_int              attn_can : 1;   /* = 1 : Atttention Cancelled */
+    u_int              attn_can : 1;   /* = 1 : Attention Cancelled  */
     u_int              con_lost : 1;   /* = 1 : contention lost      */
     u_int              con_won  : 1;   /* = 1 : contention won       */
     u_int              sel_reset : 1;  /* = 1 : selective reset      */
@@ -96,7 +96,7 @@ enum CTCE_Cmd_Xfr
     CTCE_SND,                          /* Cmd Sent to y-side         */
     CTCE_RCV,                          /* Cmd Received from y-side   */
     CTCE_SND_NS,                       /* Cmd Send not possible      */
-    CTCE_SND_NSR                       /* Cmd Send not poasible and  */
+    CTCE_SND_NSR                       /* Cmd Send not possible and  */
                                        /*     also not receiving     */
 };
 
@@ -327,7 +327,7 @@ static BYTE CTCE_command[256] = {
 /* These are numbered 0 thru 7 as per the     */
 /* column numbers 0-3 and 4-7 in the table    */
 /* in section 2.13 in SA22-7203-00 by IBM,    */
-/* which is (alomost) the same as the table   */
+/* which is (almost) the same as the table    */
 /* in section 3.15 in SA22-7901-01 by IBM.    */
 /*                                            */
 /* But in base (non-extended) mode, the table */
@@ -429,13 +429,13 @@ static char *CTCE_StaStr[8] = {"P", "C", "R", "W", "A", "N", "X", "I"};
 /* device emulates can be found in IBM publications SA22-7203-00 in   */
 /* section 2.13, and in SA22-7091-01 sections 2.13 and 3.15.  The     */
 /* tables show the device states of both sides, and the influence of  */
-/* CCW commands depending on this state.  Our CTCE implemention is    */
+/* CCW commands depending on this state.  Our CTCE implement ion is   */
 /* assisted by a Finite State Machine (FSM) table closely matching    */
-/* the figures in these prublications.                                */
+/* the figures in these publications.                                 */
 /*                                                                    */
-/* Eeach CTCE side is in a given state at any point in time, which    */
+/* Each CTCE side is in a given state at any point in time, which     */
 /* corresponds to the columns in the FSM table, matching columns 0    */
-/* through 7 in the publications mentionned.  Each CCW command has a  */
+/* through 7 in the publications mentioned.  Each CCW command has a   */
 /* row in the FSM table.  A CCW command received will (1) trigger a   */
 /* transition to a new_state, (2) cause a Unit Status update, and (3) */
 /* cause a number of actions to be carried out.                       */
@@ -581,7 +581,7 @@ static const CTCE_FSM_CELL CTCE_Fsm[16][8] = {
 /* (which are processed as synthetic commands) on the local (x-)side, as */
 /* well as received from the remote (y-)side of the CTC connection.      */
 /* The Hercules generic CCW tracing (t+ and t- commands) includes this.  */
-/* The "ctc debug { on | off | startup } <devnum>" comamnd can be used   */
+/* The "ctc debug { on | off | startup } <devnum>" command can be used   */
 /* to limit the tracing to the CTC commands avoiding the channel traces. */
 /* The startup option produces CTCE command traces during startup only,  */
 /* disabling itself after a limited number of CTC commands, or after a   */
@@ -616,7 +616,7 @@ static const CTCE_FSM_CELL CTCE_Fsm[16][8] = {
 /* 1 : Command is an immediate command                                */
 /* Note : An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialisation (that is, no data is        */
-/* actually transfered). In this case, IL is not indicated for a CCW  */
+/* actually transferred). In this case, IL is not indicated for a CCW */
 /* Format 0 or for a CCW Format 1 when IL Suppression Mode is in      */
 /* effect                                                             */
 /**********************************************************************/
@@ -1086,7 +1086,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     // Initialize the file descriptor for the socket connection
 
     // It's a little confusing, but we're using a couple of the
-    // members of the server paramter structure to initiate the
+    // members of the server parameter structure to initiate the
     // outgoing connection.  Saves a couple of variable declarations,
     // though.  If we feel strongly about it, we can declare separate
     // variables...
@@ -1571,7 +1571,7 @@ int  CTCE_Close( DEVBLK* pDEVBLK )
 //   The implementation is based mostly on IBM publications,
 //   "ESCON Channel-to-Channel Adapter", SA22-7203-00, and
 //   also  "Channel-to-Channel Adapter", SA22-7091-01, although
-//   no claim for completeness of this implemenation is feasible.
+//   no claim for completeness of this implementation is feasible.
 //
 //   The CTCE configuration is similar to the CTCT device.  The
 //   MTU bufsize parameter is optional, but when specified must be
@@ -1657,7 +1657,7 @@ int  CTCE_Close( DEVBLK* pDEVBLK )
 //
 //   The above example omits <rdevnum>, and values for this
 //   below 0100 = 0x0100 = 256 are not allowed.  But single hex
-//   digit <rdevnum> values have a special menaing.  They will be used to
+//   digit <rdevnum> values have a special meaning.  They will be used to
 //   construct <rdevnum>'s by exclusive-or-ing the <ldevnum> with such
 //   value.  As an example :
 //
@@ -1878,7 +1878,7 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     // We merge a Unit Check in case the Y state is Not Ready.
     // But only when pUnitStat is still 0 or Unit Check or Busy (no Attn).
     // sense byte 0 bit 1 (Intervention Required) will be set,
-    // and also bit 7 (Interface Discconect / Operation Check).
+    // and also bit 7 (Interface Disconnect / Operation Check).
     if( IS_CTCE_YNR( pDEVBLK -> ctceyState ) &&
         ( ( *pUnitStat & (~ ( CSW_BUSY | CSW_UC ) ) ) == 0 ) )
     {
@@ -1959,7 +1959,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
 //  SetSIDInfo( dev, 0x3088, 0x60, ...          ); OSA/2 adapter
 //  SetSIDInfo( dev, 0x3088, 0x61, ...          ); CISCO 7206 CLAW protocol ESCON connected
 //  SetSIDInfo( dev, 0x3088, 0x62, ...          ); OSA/D device
-//  But the orignal CTCX_init had this :
+//  But the original CTCX_init had this :
 //  SetSIDInfo( dev, 0x3088, 0x08, 0x3088, 0x01 );
 //  Which is what we used until we made the VM TSAF connection work as well which needed :
     SetSIDInfo( dev, 0x3088, 0x08, 0x0000, 0x01 );
@@ -2036,7 +2036,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
     // remote side of the point-to-point link
     remaddr = argv[next_arg++];
 
-    // The remote IP address can be optionally preceeded by the
+    // The remote IP address can be optionally preceded by the
     // CCUU address of the CTCE at the remote side followed by an
     // equal sign without intervening blanks, e.g. 0C40=192.168.1.230
     if ( ( equal_sign = strchr( remaddr, '=' ) ) )
@@ -2057,7 +2057,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
         // are used to compute the actual remote CCUU address from the
         // local CCUU address by flipping certain bits in it.  The special
         // interesting values are 0, 1, 3, 5 and 9.  0 yields remote equal
-        // local.  1 flips the least signigicant bit so that local / remote
+        // local.  1 flips the least significant bit so that local / remote
         // are always odd / even (or vice versa), as do values 3, 5, and 9,
         // except that another bit in the least significant hex digit is
         // flipped as well.  This may be useful when defining multiple
@@ -2700,7 +2700,7 @@ static void*  CTCE_RecvThread( void* argp )
     // When the receiver thread is (re-)started, the CTCE devblk is (re-)initialized
     OBTAIN_DEVLOCK( pDEVBLK );
 
-    // Enhanced CTC adapter intiialization for y-side command register.
+    // Enhanced CTC adapter initialization for y-side command register.
     pDEVBLK->ctceyCmd = 0x00;
 
     // We initialize the device buffer selector variables.
@@ -2770,7 +2770,7 @@ static void*  CTCE_RecvThread( void* argp )
 
         // As CTCE Reset received from the other (y-)side will cause our (x-)side
         // sense byte 0 bit 1 (Intervention Required) to be set,
-        // and also bit 7 (Interface Discconect / Operation Check).
+        // and also bit 7 (Interface Disconnect / Operation Check).
         if( IS_CTCE_RST( pSokBuf->CmdReg ) )
         {
             pDEVBLK->sense[0] |= ( SENSE_IR | SENSE_OC );
@@ -2783,7 +2783,7 @@ static void*  CTCE_RecvThread( void* argp )
 
         }
 
-        // As SAS / SID commands are never sent accross, anything else we receive
+        // As SAS / SID commands are never sent across, anything else we receive
         // from the y-side will cause a reset of sense byte 0 bits 1 and 7.
         else
         {
@@ -3085,7 +3085,7 @@ static void CTCE_Reset( DEVBLK* pDEVBLK )
 
     // A system reset at power up initialisation must result in
     // sense byte 0 bit 1 (Intervention Required) to be set,
-    // and also bit 7 (Interface Discconect / Operation Check).
+    // and also bit 7 (Interface Disconnect / Operation Check).
     if( pDEVBLK->ctce_system_reset )
     {
         pDEVBLK->sense[0] = ( SENSE_IR | SENSE_OC );
@@ -3112,10 +3112,10 @@ static void CTCE_Reset( DEVBLK* pDEVBLK )
     }
 
     // The CTCE_Reset is being signaled to our (x-)side as the result of
-    // a Halt or Clear subchannel instruction.  We procees this using a
-    // synthetic reset (RST) command, which is encdoded as CCW command 0x00
+    // a Halt or Clear subchannel instruction.  We process this using a
+    // synthetic reset (RST) command, which is encoded as CCW command 0x00
     // because that's what the y command register needs to be set to.  This 0x00
-    // comamnd however would be an invalid "bCode" argument for CTCE_ExecuteCCW.
+    // command however would be an invalid "bCode" argument for CTCE_ExecuteCCW.
     // Our FSM table however caters for (part of) the work to be done :
     pDEVBLK->ctcexCmd = bCode_reset;
     CTCE_Info.fsm         = CTCE_Fsm[CTCE_CMD( bCode_reset )][CTCE_X_STATE_FSM_IDX];
@@ -3196,7 +3196,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     BYTE           ctce_Cmd;                   // CTCE command being traced
     BYTE           ctce_PktSeq;                // Packet Sequence number traced
     CTCE_SOKPFX   *pSokBuf;                    // overlay for buf inside DEVBLK
-    BYTE           ctce_state_verify;          // CTCE state to be verfified
+    BYTE           ctce_state_verify;          // CTCE state to be verified
     char           ctce_state_l_xy[2];         // CTCE X+Y states, left
     char           ctce_state_r_xy[2];         // CTCE X+Y stares, right
     char           ctce_trace_stat[24];        // to contain " Stat=.. CC=. w=.,r=."
@@ -3204,7 +3204,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     char           ctce_trace_xtra_temp[256];  // temporary work area for the above
     char           ctce_devnum[8];             // for ccwtrace packet trace information
 
-    // The source for reporting dependings on the Command X-fer
+    // The source for reporting depending on the Command X-fer
     // direction.  The CTCE states are reported in lower case,
     // but a changed state is highlighted in upper case.
     if( eCTCE_Cmd_Xfr == CTCE_RCV )
@@ -3440,7 +3440,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
         STRLCAT( ctce_trace_xtra, " RESET" );
     }
 
-    // Temporarily triggered trace will end prematureley on a matching
+    // Temporarily triggered trace will end prematurely on a matching
     // Read or Write command.
     if( ( pDEVBLK->ctce_trace_cntr > 0 ) && IS_CTCE_MATCH( pCTCE_Info->actions ) &&
         ( IS_CTCE_CCW_RED( ctce_Cmd ) || IS_CTCE_CCW_WRT( ctce_Cmd ) ) )
@@ -3522,7 +3522,7 @@ static int  CTCE_Start_ConnectThread( DEVBLK *dev )
         dev->ctcxmode = (*(dev->devid+6) == 0x00 ) ? 1 : 0 ;
         dev->ctce_remote_xmode = dev->ctcxmode;
 
-        // Enhanced CTC adapter intiialization for y-side command register.
+        // Enhanced CTC adapter initialization for y-side command register.
         dev->ctceyCmd = 0x00;
 
         // Enhanced CTC adapter sides are state-aware, with initial
@@ -3551,7 +3551,7 @@ static int  CTCE_Start_ConnectThread( DEVBLK *dev )
     }
 
 
-    // Enhanced CTC adapter intiialization for command register and CB.
+    // Enhanced CTC adapter initialization for command register and CB.
     dev->ctcexCmd = 0x00;
 
     // Enhanced CTC adapter sides are state-aware, with initial

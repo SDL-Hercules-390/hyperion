@@ -43,7 +43,7 @@
 /*                                                                   */
 /*                                                                   */
 /* zLinux defines which three devices addresses are used for what    */
-/* purpose depending on on the distribution.                         */
+/* purpose depending on the distribution.                            */
 /* Debian, in a file named, for example, config-ccw-0.0.0800, in the */
 /* /etc/sysconfig/hardware directory, has the CCWGROUP_CHANS         */
 /* statement. An example CCWGROUP_CHANS statement is:-               */
@@ -76,7 +76,7 @@
 /*                                                                   */
 /* z/OS defines which devices addresses are used for what purpose in */
 /* a VTAM 'Transport resource list major node' (a TRLE, see 'z/OS    */
-/* Communication Server: SNA Reource Definition Guide'). One read    */
+/* Communication Server: SNA Resource Definition Guide'). One read   */
 /* device address, one write device address, and up to 238 data      */
 /* device addresses must be specified. The read device address must  */
 /* be an even number, and the write device address must be an odd    */
@@ -1169,7 +1169,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         ASSERT( grp->ttmtu );
         ASSERT( grp->uMTU  );
 
-        /* Decrease their requested MTU if neccessary */
+        /* Decrease their requested MTU if necessary */
         if (ttmtu)
         {
             if (uMTU > grp->uMTU)
@@ -1740,7 +1740,7 @@ U16 offph;
                       FETCH_FW(flags,ipa_sip->data.ip4.flags);
                       /* Note: whether an address is flagged as default */
                       /* or vipa appear to depend on what the guest is, */
-                      /* and how the inferface is defined in the guest. */
+                      /* and how the interface is defined in the guest. */
                       if (0
                           || flags == IPA_SIP_DEFAULT
                           || flags == IPA_SIP_VIPA
@@ -2292,7 +2292,7 @@ U16 offph;
                     /* Display the request MPC_TH etc., maybe. */
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
-                    /* Return the values that the guest wiil use to create   */
+                    /* Return the values that the guest will use to create   */
                     /* the low-order 64-bits of the IPv6 link local address. */
                     memcpy( ip6+0, grp->iMAC, IFHWADDRLEN );
                     ip6[6] = 0xFF;
@@ -3405,7 +3405,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Verify Block is long enough to hold the full OSA header.
            FIXME: there is nothing in the specs that requires the
            header to not span multiple Storage Blocks so we should
-           should probably support it, but at the moment we do not. */
+           probably support it, but at the moment we do not. */
         if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
             WRMSG( HHC03983, "W", LCSS_DEVNUM,
                 dev->typname, "** FIXME ** OSA_HDR spans multiple storage blocks." );
@@ -3486,7 +3486,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
 
         /* I know the following looks pretty weird but it seems to be         */
         /* necessary when using IPv6 over layer 3. IPv6 uses ICMPv6 Neighbor  */
-        /* Solicitation (NS) & Neighbor Advertisment (NA) to determine the    */
+        /* Solicitation (NS) & Neighbor Advertisement (NA) to determine the   */
         /* link layer address (i.e. Ethernet MAC) for an IPv6 address. When   */
         /* the guest sends out a NS, this function sends the packet over the  */
         /* tun to the host, whereupon the host duly ignores the packet. Hence */
@@ -3500,7 +3500,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /*                                                                    */
         /* Originally the whole of this section was surrounded by             */
         /* '#if defined(ENABLE_IPV6)'/'#endif'. However, implementing zLinux  */
-        /* layer 3 support showed that zLinux emmitted IPv4 ARP frames, which */
+        /* layer 3 support showed that zLinux emitted IPv4 ARP frames, which  */
         /* if sent to the tun interface upset the tun. Subsequent exposure to */
         /* layer 3 VSWITCH prompted a revamp to make checks less specific.    */
         /*                                                                    */
@@ -3818,7 +3818,7 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
                             slsb->slsbe[bn] = SLSBE_OUTPUT_COMPLETED;
                     }
 
-                    /* Packets written or an error has ocurred */
+                    /* Packets written or an error has occurred */
                     ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.o_slsbla[qn], (STORKEY_REF | STORKEY_CHANGE) );
 
                     /* Handle errors */
@@ -4112,7 +4112,7 @@ static int qeth_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
     NEQ *gen_neq = (NEQ*)tkn_ned+1; /* General NEQ always last   */
     DEVBLK *cua;                    /* Our Control Unit device   */
 
-    /* Copy configuration data from tempate */
+    /* Copy configuration data from template */
     memcpy (work, configuration_data, sizeof( work ));
 
     /* The first device in the group is the control unit */
@@ -5288,7 +5288,7 @@ U32 num;                                /* Number of bytes to move   */
         if ((grp->iir & 0x00030000) != 0)
             len = sizeof(ND);
 
-        /* Copy configuration data from tempate */
+        /* Copy configuration data from template */
         memcpy (iobuf, node_data, len);
 
         /* Insert the CHPID of the node into the Node Descriptor ND */
@@ -5359,7 +5359,7 @@ U32 num;                                /* Number of bytes to move   */
         if(!(accerr = STORCHK(dev->qdio.qiba,sizeof(QDIO_QIB)-1,dev->qdio.qibk,STORKEY_CHANGE,dev)))
         {
         QDIO_QIB *qib = (QDIO_QIB*)(dev->mainstor + dev->qdio.qiba);
-            qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
+            qib->ac |= QIB_AC_PCI; // Indicate PCI on output is supported
 #if defined( _FEATURE_QEBSM )
             if (FACILITY_ENABLED_DEV( HERC_QEBSM ))
                 qib->rflags |= QIB_RFLAGS_QEBSM;
@@ -6979,7 +6979,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
         ip6re_payload_size = 32;
         ip6re_packet_size = ip6re_header_size + ip6re_payload_size;
 
-        // Allocate a buffer in which the ICMPv6 Neighbor Advertisment message
+        // Allocate a buffer in which the ICMPv6 Neighbor Advertisement message
         // will be built. Note: the message will be 72 bytes.
         // The source address is the target address, the destination
         // address is the Link-Local Scope All Nodes multicast address,
@@ -7000,7 +7000,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
         memcpy( ip6re->bDstAddr, ip6->bSrcAddr, 16 );
 
         // Prepare response ICMPv6 data
-        icmpre[0] = 0x88;                    /* Neighbor Advertisment  0x88 = 136 */
+        icmpre[0] = 0x88;                    /* Neighbor Advertisement  0x88 = 136 */
         icmpre[4] = 0x60;                    /* Solicited & Override flags */
         memcpy( &icmpre[8], &icmp[8], 16 );  /* Target IP address */
         icmpre[24] = 0x02;                   /* Target link local option */
@@ -7069,7 +7069,7 @@ void  calculate_icmpv6_checksum( IP6FRM* pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
     // Clear the checksum in the ICMP header before calculating the checksum.
     STORE_HW( pIcmpHdr+2, 0x0000 );
 
-    // Construct the Psuedo-Header for the checksum calcuation.
+    // Construct the Psuedo-Header for the checksum calculation.
     memcpy( bPseudoHeader+0, pIP6FRM->bSrcAddr, 16 );
     memcpy( bPseudoHeader+16, pIP6FRM->bDstAddr, 16 );
     STORE_FW( bPseudoHeader+32, iIcmpLen );
@@ -7153,7 +7153,7 @@ static DEVHND qeth_device_hndinfo =
         NULL                           /* Hercules resume            */
 };
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 #if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdtqeth_LTX_hdl_ddev

@@ -1126,7 +1126,7 @@ static inline U128 S128_div( U128 a, U128 b)
 
     tempquo = U128_divrem( temp_a, temp_b, &temprem);
 
-    /* quotant is negative if either dividend/divisor is negative and the other operand is positive */
+    /* quotient is negative if either dividend/divisor is negative and the other operand is positive */
     if( neg_a ^ neg_b )
     {
         tempquo = S128_neg (tempquo);
@@ -1375,8 +1375,8 @@ static inline U64 gf_mul_32( U32 m1, U32 m2)
 
         accu64 = 0;
 
-        /* select muliplier with fewest 'right most' bits */
-        /* to exit loop soonest                           */
+        /* select multiplier with fewest 'right most' bits */
+        /* to exit loop soonest                            */
         if (m1 < m2)
         {
             mcandU64 = m2;
@@ -1443,16 +1443,16 @@ static inline void gf_mul_64( U64 m1, U64 m2, U64* accu128h, U64* accu128l)
         // "PCLMULQDQ" instruction unavailable
     {
         /* portable C: GF 64-bit multiply */
-        int     i;                    /* loop index                      */
-        U64     myerU64;              /* doublewword multiplier          */
-        U64     mcandU128h;           /* doublewword multiplicand - high */
-        U64     mcandU128l;           /* doublewword multiplicand - low  */
+        int     i;                    /* loop index                     */
+        U64     myerU64;              /* doubleword multiplier          */
+        U64     mcandU128h;           /* doubleword multiplicand - high */
+        U64     mcandU128l;           /* doubleword multiplicand - low  */
 
         *accu128h = 0;
         *accu128l = 0;
 
-        /* select muliplier with fewest 'right most' bits */
-        /* to exit loop soonest                           */
+        /* select multiplier with fewest 'right most' bits */
+        /* to exit loop soonest                            */
         if (m1 < m2)
         {
             mcandU128h  = 0;

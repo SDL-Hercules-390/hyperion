@@ -55,7 +55,7 @@ int main( int argc, char* argv[] )
 {
 char           *pgm;                    /* less any extension (.ext) */
 int             rc;                     /* Return code               */
-int             i=0;                    /* Arument index             */
+int             i=0;                    /* Argument index            */
 U16             len;                    /* Record length             */
 U32             cyl;                    /* Cylinder number           */
 U8              head;                   /* Head number               */

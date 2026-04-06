@@ -301,7 +301,7 @@
 // 24-27, but for the RRF-a and -b formats they are in the complete
 // opposite position: in RRF-a and -b "r1" is in bit position 24-27
 // and "r3" is in bit positions 16-19 (i.e. r1 and r3 operands are
-// in the oppsoite position in the RRD and RRF formats).
+// in the opposite position in the RRD and RRF formats).
 //
 // This is confusing since Hercules's ORIGINAL "RRF_R" format decoder
 // was originally written to decode the S/390 "RRF" format which is
@@ -348,7 +348,7 @@
 /*                     Programming Note                              */
 /*-------------------------------------------------------------------*/
 //
-// Altough there are only two basic RRF instruction formats (RRF_RM
+// Although there are only two basic RRF instruction formats (RRF_RM
 // and RRF_MM), z/Architecture defines 5 variations (RRF-a and RRF-b,
 // and RRF-c to RRF-e) because of the different assembler-language
 // syntaxes that are used for the many different RRF instructions:

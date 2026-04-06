@@ -416,7 +416,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // For SNA, the LCS_Startup command seems to be not used.
         pLCSDev->iMaxFrameBufferSize = sizeof(pLCSDev->bFrameBuffer);
 
-        // Indicate that the DEVBLK(s) have been create sucessfully
+        // Indicate that the DEVBLK(s) have been create successfully
         pLCSDev->fDevCreated = 1;
 
         // Initialize locking and event mechanisms
@@ -812,7 +812,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
         // SET BASIC MODE
         // -----------------------------------------------------------
-        // Also called Enable Compatability Mode (ECM) by SNA,
+        // Also called Enable Compatibility Mode (ECM) by SNA,
         // ECM is the last CCW issued after the XCA is inactivated.
         // -----------------------------------------------------------
 
@@ -837,7 +837,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
         // SET EXTENDED MODE
         // -----------------------------------------------------------
-        // Also called Disable Compatability Mode (DCM) by SNA.
+        // Also called Disable Compatibility Mode (DCM) by SNA.
         // DCM is the first CCW issued after the XCA is activated.
         // -----------------------------------------------------------
 
@@ -2814,7 +2814,7 @@ static void LCS_EnqueueEthFrame( PLCSPORT pLCSPORT, PLCSDEV pLCSDEV, BYTE* pData
 // Places the provided ethernet frame in the next available frame
 // slot in the adapter buffer.
 //
-//   pData       points the the Ethernet packet just received
+//   pData       points the Ethernet packet just received
 //   iSize       is the size of the Ethernet packet
 //
 // Returns:
@@ -3989,7 +3989,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             if (c == '\0' || c == '\r')
                 continue;
 
-            // Check that statement does not overflow bufffer
+            // Check that statement does not overflow buffer
             if (iLen >= OAT_STMT_BUFSZ)
             {
                 // "CTC: error in file %s: line %d is too long"
@@ -6551,8 +6551,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // The Z bit indicates that the NR that the control field carries
         // indicated in bytes 0 and 1 does not refer to either the next I frame
         // or an I frame that has already been transmitted but not acknowledged.
-        //   Note: It is all right to receive the the same NR count multiple
-        //   times.
+        //   Note: It is all right to receive the same NR count multiple times.
         //   The NR count is only invalid if the count references an I frame
         //   that has already been acknowledged or if the count skips ahead to
         //   one that has not been transmitted yet. The former is the most
@@ -6934,7 +6933,7 @@ msg970_return:
 // probably should if real LCS devices do (I was unable
 // to determine whether they do or not). -- Fish
 
-// FixMe: It would be much more efficent to skip the frame buffer entriely,
+// FixMe: It would be much more efficient to skip the frame buffer entirely,
 //        and move the data directly to the pIOBuf area.
 //        We could them dispose of the frame buffer, and only allocate it
 //        for IP devices.
@@ -7919,7 +7918,7 @@ DEVHND lcs_device_hndinfo =
 };
 
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

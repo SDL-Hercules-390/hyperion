@@ -196,7 +196,7 @@ char    *strtok_str = NULL;             /* last position             */
         }
     }
 
-    /* Set suported compression */
+    /* Set supported compression */
     dev->rmtcomps = 0;
 #if defined( HAVE_ZLIB )
     dev->rmtcomps |= SHRD_LIBZ;
@@ -518,7 +518,7 @@ char    *strtok_str = NULL;             /* last token                */
             return rc;
     }
 
-    /* Set suported compression */
+    /* Set supported compression */
     dev->rmtcomps = 0;
 #if defined( HAVE_ZLIB )
     dev->rmtcomps |= SHRD_LIBZ;

@@ -566,7 +566,7 @@ comp_restart:
         l2area += CCKD64_L2TAB_SIZE;
     }
 
-    /* quick return if all l2 tables are orderered and no free space */
+    /* quick return if all l2 tables are ordered and no free space */
     if (!relocate)
     {
         for (i = 1; spctab[i].spc_typ != SPCTAB_EOF; i++)

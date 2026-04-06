@@ -42,7 +42,7 @@
 /*                                                                   */
 /* Note: An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialization (that is, no data is       */
-/* actually transfered). In this case, IL is not indicated for a     */
+/* actually transferred). In this case, IL is not indicated for a    */
 /* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -242,7 +242,7 @@ static void pipe_signal_handler(int signum)
         else
         {
              // "%1d:%04X %s: error in function %s: %s"
-             // Note: device is set to 0000:0000 as we do not have accesss
+             // Note: device is set to 0000:0000 as we do not have access
              //       to the actual device number here
              WRMSG( HHC01250, "E", 0, 0,
                  "Printer", "dup2()", strerror( errno ));
@@ -2354,7 +2354,7 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
                 /* Save channel number for this line */
                 dev->fcb[f] = (b & (0xFF-0x10));
 
-                /* Specifed channel greater than 12? */
+                /* Specified channel greater than 12? */
                 if (dev->fcb[f] > 12)
                     break;
 
@@ -2656,7 +2656,7 @@ DEVHND prt3203_device_hndinfo = {
         NULL                           /* Hercules resume            */
 };
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

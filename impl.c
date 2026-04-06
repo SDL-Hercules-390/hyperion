@@ -257,7 +257,7 @@ static BOOL WINAPI console_ctrl_handler( DWORD signo )
     //  we only have a maximum of 5 seconds to return TRUE from
     //  the CTRL_CLOSE_EVENT signal. Thus, as normal shutdowns
     //  may likely take longer than 5 seconds and our goal is
-    //  to try hard to shutdown Hercules as gracfully as we can,
+    //  to try hard to shutdown Hercules as gracefully as we can,
     //  we are left with little choice but to always perform
     //  an immediate/emergency shutdown for CTRL_CLOSE_EVENT.
     //
@@ -331,7 +331,7 @@ static LRESULT CALLBACK MainWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
     //  TRUE from WM_QUERYENDSESSION or return 0 from WM_ENDSESSION,
     //  and since a normal shutdown may likely take longer than 5
     //  seconds and our goal is to try hard to shutdown Hercules as
-    //  gracfully as possible, we are left with little choice but to
+    //  gracefully as possible, we are left with little choice but to
     //  perform an immediate emergency shutdown once we receive the
     //  WM_ENDSESSION message with a WPARAM value of TRUE.
     //
@@ -1155,7 +1155,7 @@ int     rc;
     sysblk.lparmode = 1;                /* LPARNUM 1    # LPAR ID 01 */
     sysblk.lparnum  = 1;                /* ...                       */
     sysblk.cpuidfmt = 0;                /* CPUIDFMT 0                */
-    sysblk.operation_mode = om_mif;     /* Default to MIF operaitons */
+    sysblk.operation_mode = om_mif;     /* Default to MIF operations */
 
     /* set default CPU identifier */
     sysblk.cpumodel = 0x0586;

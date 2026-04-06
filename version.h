@@ -23,12 +23,12 @@
 
 #if !defined( _MSVC_ )
 
-  // Due to autotool's insistance of defining 'VERSION' for us
+  // Due to autotool's insistence of defining 'VERSION' for us
   // via a #define within the 'config.h' header (the value of
   // which it derives from the 'configure.ac's "AM_INIT_AUTOMAKE"
   // statement) instead of letting us define it ourselves, we
   // must undefine it to the value that our '_dynamic_version'
-  // script determied it should be (which it saved for us in the
+  // script determined it should be (which it saved for us in the
   // 'DYNAMIC_VERSION' variable for obvious reasons).
 
   #undef  VERSION

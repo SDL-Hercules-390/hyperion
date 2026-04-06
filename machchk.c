@@ -255,7 +255,7 @@ U32 crw = 0;
 /* Return code:                                                      */
 /*      0=No machine check, 1=Machine check presented                */
 /*                                                                   */
-/* Generic machine check function.  At the momement the only         */
+/* Generic machine check function.  At the moment the only           */
 /* supported machine check is the channel report.                    */
 /*                                                                   */
 /* This routine must be called with the sysblk.intlock held          */

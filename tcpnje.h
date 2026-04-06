@@ -158,7 +158,7 @@ struct TCPNJE
     BYTE   curpending;          /* Current pending operation                */
     BYTE   fastopen;            /* FASTOPEN flag specified for this stream  */
     BYTE   listening;           /* Listening attempted or in progress       */
-    u_int  enabled:1;           /* An ENABLE CCW has been sucesfully issued */
+    u_int  enabled:1;           /* ENABLE CCW has been successfully issued  */
     u_int  eibmode:1;           /* EIB Setmode issued                       */
     u_int  dialin:1;            /* This is a SWITCHED DIALIN line           */
     u_int  dialout:1;           /* This is a SWITCHED DIALOUT line          */

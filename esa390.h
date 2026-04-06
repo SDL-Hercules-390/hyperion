@@ -150,7 +150,7 @@ struct  PSW
              zeroilc:1;         /* 1=Zero ILC                        */
 
     U32      zeroword;          /* esame only              (33 - 63) */
-    DW       ia;                /* Instruction addrress    (33 - 63) */
+    DW       ia;                /* Instruction address     (33 - 63) */
                                 /* or (esame)              (64 -127) */
 
     DW       amask;             /* Address wraparound mask           */
@@ -332,12 +332,12 @@ typedef struct DAT  DAT;
 #define CR0_MCX_AUTH    0x0001000000000000ULL   /* Measurement Counter
                                                    Extraction Authority       */
 
-#define CR0_TXC         0x0080000000000000ULL   /* Tranactional-Execution
+#define CR0_TXC         0x0080000000000000ULL   /* Transactional-Execution
                                                    Control                    */
 
-#define CR0_PIFO        0x0040000000000000ULL   /* Tranactional-Execution
+#define CR0_PIFO        0x0040000000000000ULL   /* Transactional-Execution
                                                    Program-Interruption-
-                                                   Filtering Overide          */
+                                                   Filtering Override         */
 
 #define CR0_TRACE_TOD           0x80000000      /* TRACE TOD-clock control    */
 #define CR0_BMPX                0x80000000      /* Block multiplex ctl  S/370 */
@@ -392,8 +392,8 @@ typedef struct DAT  DAT;
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 2 */
 
-#define CR2_TDS         0x0000000000000004ULL /* Tranaction Diagnostic Scope   */
-#define CR2_TDC         0x0000000000000003ULL /* Tranaction Diagnostic Control */
+#define CR2_TDS         0x0000000000000004ULL /* Transaction Diagnostic Scope   */
+#define CR2_TDC         0x0000000000000003ULL /* Transaction Diagnostic Control */
 
 #define TDC_NORMAL          0     /* Normal operation                */
 #define TDC_ALWAYS_RANDOM   1     /* Abort all transactions randomly */
@@ -1118,7 +1118,7 @@ typedef struct PSA_900  PSA_900;
 
 #define MCIC_IE  0x0000000080000000ULL  /* Indirect storage error    */
 #define MCIC_AR  0x0000000040000000ULL  /* Access register validity  */
-#define MCIC_DA  0x0000000020000000ULL  /* Delayed access exeption   */
+#define MCIC_DA  0x0000000020000000ULL  /* Delayed access exception   */
 
 #define MCIC_PR  0x0000000000200000ULL  /* TOD prog. reg. validity   */
 #define MCIC_XF  0x0000000000100000ULL  /* Extended float reg val.   */
@@ -2134,7 +2134,7 @@ struct SIE2BK
 /*068*/ FWORD  resv068f;
 /*06C*/ HWORD  todpfh;                  /* TOD pf high half          */
 /*06E*/ HWORD  todpf;                   /* TOD programmable field    */
-/*070*/ HWORD  gisa;                    /* GISA Absolute Adress      */
+/*070*/ HWORD  gisa;                    /* GISA Absolute Address     */
 /*072*/ HWORD  resv72h;
 /*074*/ BYTE   zone;                    /* Zone Number               */
 /*075*/ BYTE   resv075;

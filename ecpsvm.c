@@ -1014,7 +1014,7 @@ BYTE B_IOBSPEC2;
                 }
                 else
                 {
-                    /* unlock the page pointed to by the CCW data addresss */
+                    /* unlock the page pointed to by the CCW data address */
                     regs->GR_L(2)=regs->GR_L(5);
                     if(!(B_RCWCTL & RCWIO))
                     {
@@ -1863,7 +1863,7 @@ DEF_INST(ecpsvm_tpage)
 /* TRLOK : Translate a page address and lock */
 /* TRLOK D1(R1,B1),D2(R2,B2) */
 /* See TRBRG. */
-/* If sucessfull, the page is also locked in the core table */
+/* If successful, the page is also locked in the core table */
 /*-------------------------------------------------------------------*/
 /* E609 TRLOK - Translate Page Address and Lock                [SSE] */
 /*-------------------------------------------------------------------*/
@@ -2229,7 +2229,7 @@ DEF_INST(ecpsvm_dispatch_main)
         }
         /* Load VMDSTAT */
         B_VMDSTAT=EVM_IC(vmb+VMDSTAT);
-        /* Check if I/O Old PSW has tranlation on */
+        /* Check if I/O Old PSW has translation on */
         if(regs->mainstor[0x38] & 0x04)
         {
             DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : I/O Old as XLATE on"));
@@ -2484,14 +2484,14 @@ DEF_INST(ecpsvm_dispatch_main)
 /* the RCHBLOK, R7 Contains the RCUBLOK and R8 cont-  */
 /* ains the RDVBLOK. Condition code 0 is set          */
 /*                                                    */
-/* If the instruction is sucesfull, control is        */
+/* If the instruction is successful, control is       */
 /* returned at the address specified by GPR14.        */
 /* Otherwise, the next sequential instruction is      */
 /* executed, and no GPR or condition code is changed. */
 /*                                                    */
 /* Exceptions :                                       */
 /*       Operation Exception : ECPS:VM Disabled       */
-/*       Priviledged Exception : PSW in problem state */
+/*       Privileged Exception : PSW in problem state  */
 /*                                                    */
 /* Note : no access exception is generated for        */
 /*        the second operand.                         */
@@ -3213,7 +3213,7 @@ DEF_INST(ecpsvm_extended_freex)
     DEBUG_CPASSISTX(FREEX,WRMSG(HHC90000, "D", buf));
     if(freeblock==0)
     {
-        /* Can't fullfill request here */
+        /* Can't fulfill request here */
         return;
     }
     nextblk=EVM_L(freeblock);
@@ -3395,7 +3395,7 @@ DEF_INST(ecpsvm_prefmach_assist)
 /* Not sure about the current processing ..                       */
 /* *MAYBE* we need to invoke DMKDSPCH when the newly loaded PSW   */
 /* does not need further checking. Now.. I wonder what the point  */
-/* is to return to CP anyway, as we have entirelly validated the  */
+/* is to return to CP anyway, as we have entirely validated the   */
 /* new PSW (i.e. for most of it, this is essentially a BRANCH     */
 /* However...                                                     */
 /* Maybe we should call DMKDSPCH (from the DMKPRVMA list)         */
@@ -3507,7 +3507,7 @@ int ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
         return(1);
     }
     /* Load the requested SSM Mask */
-    /* USE Normal vfetchb here ! not only do we want tranlsation */
+    /* USE Normal vfetchb here ! not only do we want translation */
     /* but also fetch protection control, ref bit, etc.. */
     reqmask=ARCH_DEP(vfetchb) (effective_addr2,b2,regs);
 
@@ -3796,7 +3796,7 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     }
     if(e2&0x03)
     {
-        DEBUG_SASSISTX(LPSW,MSGBUF(buf, "SASSIST LPSW %6.6X - Alignement error",e2));
+        DEBUG_SASSISTX(LPSW,MSGBUF(buf, "SASSIST LPSW %6.6X - Alignment error",e2));
         DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf));
         return(1);
 
@@ -3900,7 +3900,7 @@ int ecpsvm_dostnsm(REGS *regs,int b1,VADR effective_addr1,int imm2)
     }
 
     /* Set the old system  mask byte in the byte designated by the STNSM instruction */
-    /* USE Normal vstoreb here! not only do we want tranlsation */
+    /* USE Normal vstoreb here! not only do we want translation */
     /* but also store protection, change bit, etc.. */
     ARCH_DEP(vstoreb) (oldmask,effective_addr1,b1,regs);
 
@@ -3954,7 +3954,7 @@ int ecpsvm_dostosm(REGS *regs,int b1,VADR effective_addr1,int imm2)
     }
 
     /* Set the old system  mask byte in the byte designated by the STOSM instruction */
-    /* USE Normal vstoreb here! not only do we want tranlsation */
+    /* USE Normal vstoreb here! not only do we want translation */
     /* but also store protection, change bit, etc.. */
     ARCH_DEP(vstoreb) (oldmask,effective_addr1,b1,regs);
 
@@ -4303,7 +4303,7 @@ int ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     bypass assist is not active, then LRA simulation proceeds using virtual and real DAT
     tables as described above.
 
-    The simulation of LRA is vey complicated, and it is extremely helpful to refer to
+    The simulation of LRA is very complicated, and it is extremely helpful to refer to
     the IBM documentation GA22-7074-0 Virtual Machine Assist and Shadow Table Bypass Assist.
     */
 int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
@@ -4555,7 +4555,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
         }
     }
 
-    /* Compute the real address of the real STE that tranlates the virtual STE address. */
+    /* Compute the real address of the real STE that translates the virtual STE address. */
     offset_ste = (v_ste_ptr & segmask) >> segshift;
     r_ste_ptr = r_sto + offset_ste;
 
@@ -4662,7 +4662,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
         }
     }
 
-    /* Compute the real address of the real STE that tranlates the virtual PTE address. */
+    /* Compute the real address of the real STE that translates the virtual PTE address. */
     offset_ste = (v_pte_ptr & segmask) >> segshift;
     r_ste_ptr = r_sto + offset_ste;
 
@@ -5133,7 +5133,7 @@ int ecpsvm_command( int ac, char **av )
 
 /* Note : The following forces inclusion for S/390 & z/ARCH */
 /*        This is necessary just in order to properly define */
-/*        S/390 auxialiary routines invoked by S/370 routines */
+/*        S/390 auxiliary routines invoked by S/370 routines */
 /*        because of SIE                                     */
 
 #if !defined(_GEN_ARCH)

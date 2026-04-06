@@ -7,7 +7,7 @@
 /*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
-/* This program reads a Hercules intruction trace file and produces  */
+/* This program reads a Hercules instruction trace file and produces */
 /* the corresponding textual printout.                               */
 /*-------------------------------------------------------------------*/
 
@@ -61,7 +61,7 @@ DISABLE_GCC_WARNING( "-Waddress-of-packed-member" )
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/*  Mulitple Options array entry -- used by parse_opt_str function   */
+/*  Multiple Options array entry -- used by parse_opt_str function   */
 /*-------------------------------------------------------------------*/
 struct mopt
 {
@@ -945,7 +945,7 @@ static bool is_wanted_opcode( BYTE* p )
         for (n=0; n < 6; ++n)
             masked_inst[n] = p[n] & pInstMOPT[i].imask[n];
 
-        // Compare masked copy with what they're intrested in */
+        // Compare masked copy with what they're interested in */
         if (memcmp( &masked_inst[0], &pInstMOPT[i].icode[0], 6 ) == 0)
             return true;
     }
@@ -2107,7 +2107,7 @@ static INLINE char* format_data( char* buff, const u_int bufflen,
     // multi-line dump, with each line consisting of only 16 bytes
     // of the dump per line (which is 4 groups of 4-bytes-per-group).
     //
-    // If we're formatting only the the first 'x' bytes of a CCW's
+    // If we're formatting only the first 'x' bytes of a CCW's
     // I/O buffer for a CCW trace message however, then we want all
     // of it formatted into one long line, so the number of 4-byte-
     // groups-per-line will vary depending on how much data we will
@@ -2673,7 +2673,7 @@ static void process_TF02324( TF02324* rec )
     if (nocpus)
         return;
 
-    /* (just a more covenient shorter variable name) */
+    /* (just a more convenient shorter variable name) */
     cpuad = (BYTE) rec->rhdr.cpuad;
 
     /* Perform storage address filtering if requested */
@@ -2713,7 +2713,7 @@ static void process_TF02324( TF02324* rec )
 
        PLEASE NOTE that we wish to treat each instruction that is
        printed as if it were a single line (even though multiple
-       lines are always ptinted for each).
+       lines are always printed for each).
 
        Thus the "print_all_available_regs" function prints the blank
        line for us before it prints the registers, but only does so
@@ -3561,7 +3561,7 @@ static void parse_option_msglvl( const char* optname )
 typedef bool CNVOPT( bool, const char*, U64*, MOPT* );
 
 /*-------------------------------------------------------------------*/
-/*  Convert numeric or hexadecimal charater string to binary         */
+/*  Convert numeric or hexadecimal character string to binary        */
 /*-------------------------------------------------------------------*/
 static bool convert_opt_str( bool ishex, const char* str, U64* pU64, MOPT* pMOPT )
 {

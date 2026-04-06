@@ -490,7 +490,7 @@ static INLINE U32 float32_class( float32_t op )
         ieee_cond_trap( _regs, _ieee_trap_conds)
 
 
-/* Test FPC against Softfloat execptions; return field whose bits    */
+/* Test FPC against Softfloat exceptions; return field whose bits    */
 /* identify those exceptions that a) were reported by Softfloat,     */
 /* and b) are enabled for trapping by FPC byte zero. Only overflow,  */
 /* underflow, and inexact are tested; invalid and divide by zero     */
@@ -558,7 +558,7 @@ struct sbfp
 /*           'SoftFloat' IEEE Binary Floating Point package                  */
 
 
-/* Macro and funtion to validate rounding mode specified on M3 or M4 field   */
+/* Macro and function to validate rounding mode specified on M3 or M4 field  */
 /* of selected instructions. Note that this table is architecture dependent. */
 
 static INLINE void ARCH_DEP( BFP_RM_check )( REGS* regs, BYTE mask )
@@ -5132,7 +5132,7 @@ DEF_INST( test_data_class_bfp_ext )
 /* Softfloat 3a does not have a Divide to Integer equivalent.           */
 /*                                                                      */
 /* Of the 64 possible combinations of operand class (NaN, Inf, etc),    */
-/* only four actually require calculation of a quotent and remainder.   */
+/* only four actually require calculation of a quotient and remainder.  */
 /*                                                                      */
 /* So we will focus on those four cases first, followed by tests of     */
 /* of operand classes to sort out results for the remaining 60 cases.   */
@@ -5183,7 +5183,7 @@ DEF_INST( divide_integer_bfp_long_reg )
     /*                                                                                  */
     /*  1. Addresses what is likely to be the most frequent case first                  */
     /*  2. Removes the bottom two rows and the right-hand two columns                   */
-    /*  3. Removes the center two colums and the top and new bottom rows                */
+    /*  3. Removes the center two columns and the top and new bottom rows               */
     /*  4. Leaves only those cases that involve returning a zero or operand as a result.*/
     /*                                                                                  */
     /************************************************************************************/
@@ -5240,7 +5240,7 @@ DEF_INST( divide_integer_bfp_long_reg )
         }
         else                                                        /* Exception flagged...we have work to do.          */
         {
-            if (softfloat_exceptionFlags & softfloat_flag_overflow) /* on oveflow, scale result and set cc=1 or 3       */
+            if (softfloat_exceptionFlags & softfloat_flag_overflow) /* on overflow, scale result and set cc=1 or 3      */
                                                                     /* and recalculate the remainder using a scaled     */
                                                                     /* quotient in 64-bit precision                     */
             {
@@ -5413,7 +5413,7 @@ DEF_INST( divide_integer_bfp_short_reg )
     /*                                                                                  */
     /*  1. Addresses what is likely to be the most frequent case first                  */
     /*  2. Removes the bottom two rows and the right-hand two columns                   */
-    /*  3. Removes the center two colums and the top and new bottom rows                */
+    /*  3. Removes the center two columns and the top and new bottom rows               */
     /*  4. Leaves only those cases that involve returning a zero or operand as a result.*/
     /*                                                                                  */
     /************************************************************************************/
@@ -5473,7 +5473,7 @@ DEF_INST( divide_integer_bfp_short_reg )
         }
         else                                                        /* Exception flagged...we have work to do.          */
         {
-            if (softfloat_exceptionFlags & softfloat_flag_overflow) /* on oveflow, scale result and set cc=1 or 3       */
+            if (softfloat_exceptionFlags & softfloat_flag_overflow) /* on overflow, scale result and set cc=1 or 3      */
                                                                     /* and recalculate the remainder using a scaled     */
                                                                     /* quotient in 64-bit precision                     */
                                                                     /* Note that there is no fractional part to the     */
@@ -5631,7 +5631,7 @@ DEF_INST( divide_integer_bfp_short_reg )
   // Now we need to build the same architecture dependent "ARCH_DEP"
   // functions for all of the OTHER build architectures that remain
   // (usually S/390 and z/Arch), so we #include ourselves again but
-  // with the next build archiecture #defined instead...
+  // with the next build architecture #defined instead...
 
   #if defined(              _ARCH_NUM_1 )
     #define   _GEN_ARCH     _ARCH_NUM_1

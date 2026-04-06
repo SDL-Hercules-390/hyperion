@@ -358,7 +358,7 @@ static INLINE U32 float32_class( float32_t op )
       _ieee_trap_conds = (_regs->fpc & FPC_MASKS) & (((U32)softfloat_exceptionFlags) << FPC_MASK_SHIFT) & (_exceptions)
 
 
-/* Test FPC against Softfloat execptions; return field whose bits    */
+/* Test FPC against Softfloat exceptions; return field whose bits    */
 /* identify those exceptions that a) were reported by Softfloat,     */
 /* and b) are enabled for trapping by FPC byte zero. Only overflow,  */
 /* underflow, and inexact are tested; invalid and divide by zero     */
@@ -6080,7 +6080,7 @@ DEF_INST( vector_fp_maximum )
   // Now we need to build the same architecture dependent "ARCH_DEP"
   // functions for all of the OTHER build architectures that remain
   // (usually S/390 and z/Arch), so we #include ourselves again but
-  // with the next build archiecture #defined instead...
+  // with the next build architecture #defined instead...
 
   #if defined(              _ARCH_NUM_1 )
     #define   _GEN_ARCH     _ARCH_NUM_1

@@ -1511,7 +1511,7 @@ static void cancel_wait_for_guest_quiesce()
 /*  (or return back to the caller to let them exit instead).         */
 /*                                                                   */
 /*  If there are any stray threads still running when that happens,  */
-/*  they will be automatically terminated by the operating sytem as  */
+/*  they will be automatically terminated by the operating system as */
 /*  is normal whenever a process exits.                              */
 /*                                                                   */
 /*  So if there are any threads that must be terminated completely   */
@@ -1524,7 +1524,7 @@ static void cancel_wait_for_guest_quiesce()
 /*  completely exited beforehand.                                    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-/*  Shutdown initialation steps:                                     */
+/*  Shutdown initialization steps:                                   */
 /*     1. set shutbegin=TRUE to notify logger to synchronize it's    */
 /*        shutdown steps and set system shutdown request             */
 /*     2. short spin-wait for logger to set system shutdown request  */

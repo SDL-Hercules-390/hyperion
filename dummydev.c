@@ -14,13 +14,13 @@
    - Provide an exercising tool for the hercules I/O subsystems
 
    As such it is encouraged to use this "emulator" as a template
-   for other developpers who wish to implement devices for their own
+   for other developers who wish to implement devices for their own
    use or for the benefit of others should they see fit.
 */
 
 /********************************************************************* */
 
-/* This include gives acccess to standard OS and C standard types used in hercules */
+/* This include gives access to standard OS and C standard types used in hercules */
 #include "hstdinc.h"
 /* This include gives access to hercules types, structures, macros, etc.. */
 #include "hercules.h"
@@ -46,7 +46,7 @@
 /*                                                                   */
 /* Note: An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialization (that is, no data is       */
-/* actually transfered). In this case, IL is not indicated for a     */
+/* actually transferred). In this case, IL is not indicated for a    */
 /* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
 /*                                                                   */
 /* This table is currently necessary because of a design flaw in the */
@@ -191,7 +191,7 @@ static void dummydev_query_device (DEVBLK *dev, char **devclass,
     /* This is to make it look pretty */
     BEGIN_DEVICE_CLASS_QUERY( "DUMB", dev, devclass, buflen, buffer );
 
-    /* and then some device specifiic stuff */
+    /* and then some device specific stuff */
 
     snprintf(buffer,buflen,"%s","DUMMY DEVICE");
 }
@@ -236,7 +236,7 @@ static int dummydev_close_device( DEVBLK* dev )
 /*     checks, channel addressing check and/or overwriting data      */
 /*     when it should not occur.                                     */
 /* more simply indicates on a read tpe operation that there is more  */
-/*     information to be read and the the count was too low.         */
+/*     information to be read and the count was too low.             */
 /* unitstat is the device unit status such as CE, DE, UC, UX, etc..  */
 /* Residual indicates that the read or write operation was short     */
 /*     and there are "residual" bytes left                           */
@@ -356,7 +356,7 @@ static DEVHND dummydev_device_hndinfo =
 };
 
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

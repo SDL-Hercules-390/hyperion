@@ -229,7 +229,7 @@ static int him_init_handler( DEVBLK *dev, int argc, char *argv[] )
     }
 
     /* If this is a reinit and the previous incarnation
-       is a server waiting for a call, teminate the wait. */
+       is a server waiting for a call, terminate the wait. */
     if ( dev->reinit )
     {
         cb_ptr = (struct io_cb *)dev->dev_data;
@@ -886,7 +886,7 @@ static DEVHND him_device_hndinfo =
 };
 
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 #if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
 #define hdl_ddev hdttcph_LTX_hdl_ddev
@@ -943,7 +943,7 @@ static void config_subchan( DEVBLK *dev, struct io_cb *cb_ptr, BYTE *config_data
         /* This really should be an error, but MTS is bad about not properly
            closing Him devices when it's done with them (especially MSource
            devices */
-           debug_pf( "Config record in active state, reseting device\n" );
+           debug_pf( "Config record in active state, resetting device\n" );
            reset_io_cb( cb_ptr );
     }
 
@@ -1021,7 +1021,7 @@ failed:
 
 
 /*-------------------------------------------------------------------*/
-/* This routine resets the HIM data to the intial state              */
+/* This routine resets the HIM data to the initial state             */
 /*-------------------------------------------------------------------*/
 static void reset_io_cb( struct io_cb *cb_ptr )
 {
@@ -1178,7 +1178,7 @@ static int parse_config_data( struct io_cb *cb_ptr,
 
 /*-------------------------------------------------------------------*/
 /* Get_Socket - allocate & bind a socket using TCP or UDP            */
-/* Returns -2 for adrress in use error and -1 for any other error    */
+/* Returns -2 for address in use error and -1 for any other error    */
 /*-------------------------------------------------------------------*/
 static int get_socket( DEVBLK *dev, int protocol, in_addr_t bind_addr, int port,
     struct sockaddr_in *sin, int qlen )

@@ -58,7 +58,7 @@
 /* you CANNOT use GREG, RADR, VADR, etc. anywhere in your function!  */
 /*                                                                   */
 /* Basically you MUST NOT use any architecture dependent macro that  */
-/* is #defined in the "feature.h" header.  If you you need to use    */
+/* is #defined in the "feature.h" header.  If you need to use        */
 /* any of them, then your function MUST be an "ARCH_DEP" function    */
 /* that is placed within the ARCH_DEP section at the beginning of    */
 /* this module where it can be compiled multiple times, once for     */
@@ -131,7 +131,7 @@ bool hopen_CSRNG( HRANDHAND* randhand )
         int fd, ioctl_code, entropy, rc;
 
         /* PROGRAMMING NOTE: we purposely use "dev/urandom" and NOT
-           "/dev/random" in order to to prevent us from blocking while
+           "/dev/random" in order to prevent us from blocking while
            we wait for entropy, and doing so is *NOT* any less secure
            than always using "/dev/random"! (for our purposes)
 

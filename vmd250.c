@@ -33,7 +33,7 @@
 /*  - BIOE operation being performed                                 */
 /*  - List processor status code                                     */
 /*  - Read/Write I/O operation                                       */
-/*  - Syncronous or asynchronous request information                 */
+/*  - Synchronous or asynchronous request information                */
 /*  - Address checking results                                       */
 /*  - Device driver results                                          */
 /*  - Block I/O environment removed                                  */
@@ -412,7 +412,7 @@ U32     blksize;                     /* Blocksize                    */
 S32     offset;                      /* Offset                       */
 
 /* Returned by generic INIT function */
-struct VMBIOENV *bioenv;            /* -->allocated environement     */
+struct VMBIOENV *bioenv;            /* -->allocated environment      */
 int     rc;                         /* return code                   */
 int     cc;                         /* Condition code to return      */
 
@@ -468,7 +468,7 @@ U32     blksize;                     /* Blocksize                    */
 S64     offset;                      /* Offset                       */
 
 /* Returned by generic INIT function */
-struct VMBIOENV *bioenv;             /* -->allocated environement    */
+struct VMBIOENV *bioenv;             /* -->allocated environment     */
 int     rc;                          /* return code                  */
 int     cc;                          /* condition code               */
 
@@ -524,8 +524,8 @@ int      numblks;       /* Number of blocks on the device            */
 S32      begblk;        /* Starting block number                     */
 S32      endblk;        /* Ending block number                       */
 BLKTAB  *blktab;     /* Pointer to device std block-to-physical info */
-/* Established environement                                          */
-struct VMBIOENV *bioenv;  /* -->allocated environement               */
+/* Established environment                                           */
+struct VMBIOENV *bioenv;  /* -->allocated environment                */
 
    /* Return with an error if the device does not exist */
    if (!dev)
@@ -535,11 +535,11 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
       return 0;
    }
 
-   /* Look up the block-to-phyical mapping information */
+   /* Look up the block-to-physical mapping information */
    blktab=dasd_lookup(DASD_STDBLK,NULL,(U32)dev->devtype,0);
    if (!blktab)
    {
-       *rc = RC_NOSUPP; /* Set the return code for unsuppored device */
+       *rc = RC_NOSUPP; /* Set the return code for unsupported device */
        *cc = CC_FAILED; /* Indicate the function failed      */
        return NULL;
    }
@@ -649,7 +649,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
        /* If an environment already exists, this is an error:    */
        /*   1. Release the device block                          */
        /*   2. free the environment just built                   */
-       /*   3. Reset the retuned environment to NULL and         */
+       /*   3. Reset the returned environment to NULL and        */
        /*   4. Reset return and condition codes to reflect       */
        /*      the error condition                               */
        RELEASE_DEVLOCK( dev );
@@ -770,7 +770,7 @@ static void d250_restore(DEVBLK *dev)
 static int d250_remove(DEVBLK *dev, int *rc, BIOPL_REMOVE * biopl, REGS *regs)
 {
 BIOPL_REMOVE bioplx00;               /* Use to check reserved fields */
-struct VMBIOENV *bioenv;             /* -->allocated environement    */
+struct VMBIOENV *bioenv;             /* -->allocated environment     */
 int       cc;                        /* Condition code to return     */
 
    /* Clear the reserved BIOPL */
@@ -986,7 +986,7 @@ static int   ARCH_DEP(d250_list64)(IOCTL64 *, int);
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(vm_blockio) (int r1, int r2, REGS *regs)
 {
-/* Guest related paramters and values                                */
+/* Guest related parameters and values                               */
 RADR    biopaddr;                      /* BIOPL address              */
 
 union   parmlist{                      /* BIOPL formats that         */
@@ -1641,7 +1641,7 @@ RADR   bufend;    /* Last byte read or written                 */
 
    /* If an access exception occurred:                                 */
    /*   If this is a synchronous request, generate a program exception */
-   /*   or if this is asynchrnous, just return with a storage error    */
+   /*   or if this is asynchronous, just return with a storage error   */
    if ( xcode )
    {
       if (async)
@@ -1669,7 +1669,7 @@ RADR   bufend;    /* Last byte read or written                 */
 } /* end function d250_list32 */
 
 /*-------------------------------------------------------------------*/
-/*  Absolue Address Checking without Reference and Change Recording  */
+/*  Absolute Address Checking without Reference and Change Recording */
 /*-------------------------------------------------------------------*/
 static U16 ARCH_DEP(d250_addrck)
             (RADR beg, RADR end, int acctype, BYTE key, REGS *regs)
@@ -2213,7 +2213,7 @@ RADR   bufend;    /* Last byte read or written                 */
 
    /* If an access exception occurred:                                 */
    /*   If this is a synchronous request, generate a program exception */
-   /*   or if this is asynchrnous, just return with a storage error    */
+   /*   or if this is asynchronous, just return with a storage error   */
    if ( xcode )
    {
       if (async)

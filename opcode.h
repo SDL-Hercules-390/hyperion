@@ -4628,7 +4628,7 @@ DEF_INST( zero_and_add );
 /* so allows the instruction's decoder and execution logic to use    */
 /* pre-known constant values resulting in much shorter and simpler   */
 /* code, thus allowing the C compiler to more efficiently optimize   */
-/* the code even further, resulting in a much faster intruction.     */
+/* the code even further, resulting in a much faster instruction.    */
 /*-------------------------------------------------------------------*/
 
 #ifdef OPTION_OPTINST

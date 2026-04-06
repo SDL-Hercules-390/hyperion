@@ -47,7 +47,7 @@
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
 
 /*===================================================================*/
-/* Achitecture Independent Routines                                  */
+/* Architecture Independent Routines                                 */
 /*===================================================================*/
 
 #if !defined(_ZVECTOR_ARCH_INDEPENDENT_)
@@ -77,7 +77,7 @@ static void vector_processing_trap( REGS *regs, int vix, U32 vic )
 #endif /*!defined(_ZVECTOR_ARCH_INDEPENDENT_)*/
 
 /*===================================================================*/
-/* Achitecture Dependent Routines / Instructions                     */
+/* Architecture Dependent Routines / Instructions                    */
 /*===================================================================*/
 
 /*-------------------------------------------------------------------*/
@@ -111,7 +111,7 @@ DEF_INST( vector_load_element_16 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 7)                    /* M3 > 7 => Specficitcation excp */
+    if (m3 > 7)                    /* M3 > 7 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     regs->VR_H( v1, m3 ) = ARCH_DEP( vfetch2 )( effective_addr2, b2, regs );
@@ -132,7 +132,7 @@ DEF_INST( vector_load_element_64 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 1)                    /* M3 > 1 => Specficitcation excp */
+    if (m3 > 1)                    /* M3 > 1 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     regs->VR_D( v1, m3 ) = ARCH_DEP( vfetch8 )( effective_addr2, b2, regs );
@@ -153,7 +153,7 @@ DEF_INST( vector_load_element_32 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 3)                    /* M3 > 3 => Specficitcation excp */
+    if (m3 > 3)                    /* M3 > 3 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     regs->VR_F( v1, m3 ) = ARCH_DEP( vfetch4 )( effective_addr2, b2, regs );
@@ -275,7 +275,7 @@ DEF_INST( vector_load_to_block_boundary )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 6)                    /* M3 > 6 => Specficitcation excp */
+    if (m3 > 6)                    /* M3 > 6 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
@@ -327,7 +327,7 @@ DEF_INST( vector_store_element_16 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 7)                    /* M3 > 7 => Specficitcation excp */
+    if (m3 > 7)                    /* M3 > 7 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     ARCH_DEP( vstore2 )( regs->VR_H( v1, m3 ), effective_addr2, b2, regs );
@@ -348,7 +348,7 @@ DEF_INST( vector_store_element_64 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 1)                    /* M3 > 1 => Specficitcation excp */
+    if (m3 > 1)                    /* M3 > 1 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     ARCH_DEP( vstore8 )( regs->VR_D( v1, m3 ), effective_addr2, b2, regs );
@@ -369,7 +369,7 @@ DEF_INST( vector_store_element_32 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 3)                    /* M3 > 3 => Specficitcation excp */
+    if (m3 > 3)                    /* M3 > 3 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     ARCH_DEP( vstore4 )( regs->VR_F( v1, m3 ), effective_addr2, b2, regs );
@@ -638,7 +638,7 @@ DEF_INST( load_count_to_block_boundary )
 
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 6)                    /* M3 > 6 => Specficitcation excp */
+    if (m3 > 6)                    /* M3 > 6 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     boundary = 64 << m3; /* 0: 64 Byte, 1: 128 Byte, 2: 256 Byte, 3: 512 Byte,
@@ -3444,11 +3444,11 @@ DEF_INST( vector_shift_right_double_by_bit )
 /*-------------------------------------------------------------------*/
 /* VEVAL implements the boolean operations defined in Principles of  */
 /* Operation SA22-7832-14, Figure 22-3 Parts 1 and 2. The majority   */
-/* of the enties in Figure 22-3 are marked as either "a duplicate    */
+/* of the entries in Figure 22-3 are marked as either "a duplicate   */
 /* function of an existing vector instruction" or "a duplicate of    */
 /* another entry in the table for a boolean operation with a         */
 /* different order of A, B, C". Fortunately, the Intel VPTERNLOGQ    */
-/* instructon is the equivalent of VEVAL, and the VPTERNLOGQ         */
+/* instruction is the equivalent of VEVAL, and the VPTERNLOGQ        */
 /* instructions table of boolean logic operations is complete.       */
 /* As the known entries in VEVAL's big endian table match the        */
 /* equivalent entries in VPTERNLOGQ's little endian table, it is     */
@@ -6426,8 +6426,8 @@ DEF_INST( vector_galois_field_multiply_sum )
     U16     accu16[16];           /* byte accumulator                */
     U32     accu32[8];            /* halfword accumulator            */
     U64     accu64[4];            /* word accumulator                */
-    U64     accu128h[2];          /* doublewword accumulator  - high */
-    U64     accu128l[2];          /* doublewword accumulator  - low  */
+    U64     accu128h[2];          /* doubleword accumulator  - high  */
+    U64     accu128l[2];          /* doubleword accumulator  - low   */
 
     VRR_C( inst, regs, v1, v2, v3, m4, m5, m6 );
 
@@ -6630,8 +6630,8 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
     U16     accu16[16];               /* byte accumulator                */
     U32     accu32[8];                /* halfword accumulator            */
     U64     accu64[4];                /* word accumulator                */
-    U64     accu128h[2];              /* doublewword accumulator  - high */
-    U64     accu128l[2];              /* doublewword accumulator  - low  */
+    U64     accu128h[2];              /* doubleword accumulator  - high  */
+    U64     accu128l[2];              /* doubleword accumulator  - low   */
 
     VRR_D( inst, regs, v1, v2, v3, v4, m5, m6 );
 
@@ -6691,7 +6691,7 @@ DEF_INST( vector_galois_field_multiply_sum_and_accumulate )
 }
 
 //------------------------------------------------------------------------------
-// PROGRAMMING NOTE: the "potentially incorrect code/bevaior" that Microsoft's
+// PROGRAMMING NOTE: the "potentially incorrect code/behavior" that Microsoft's
 // C4319 warning is reporting us about was thoroughly researched and determined
 // to be unwarranted IN THIS PARTICULAR SPECIFIC CASE. Thus the disablement of
 // the warning, as the code, as written, was determined to be 100% correct.
@@ -6743,7 +6743,7 @@ POP_MSVC_WARNINGS()
 
 
 //------------------------------------------------------------------------------
-// PROGRAMMING NOTE: the "potentially incorrect code/bevaior" that Microsoft's
+// PROGRAMMING NOTE: the "potentially incorrect code/behavior" that Microsoft's
 // C4319 warning is reporting us about was thoroughly researched and determined
 // to be unwarranted IN THIS PARTICULAR SPECIFIC CASE. Thus the disablement of
 // the warning, as the code, as written, was determined to be 100% correct.

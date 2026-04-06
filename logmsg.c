@@ -292,7 +292,7 @@ static void _flog_write_pipe( FILE* f, const char* msg )
         // logfile write in order to prevent duplicate messages.
         //
         // If no external GUI exists however, then we need to
-        // write the message to the logfile WITH a timstamp.
+        // write the message to the logfile WITH a timestamp.
 
         if (1
             && sysblk.shutdown      // (shutting down?)
@@ -313,7 +313,7 @@ static void _flog_write_pipe( FILE* f, const char* msg )
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* The "flog_write" function is the function responsible for either  */
-/* sending a formatted message through the Hercules logger facilty   */
+/* sending a formatted message through the Hercules logger facility  */
 /* pipe to panel.c for display to the user (handled by logger.c),    */
 /* for optionally capturing messages issued by the DIAG8 interface,  */
 /* or for printing the message directly to the terminal in the case  */
@@ -413,7 +413,7 @@ static void vfwritemsg( BYTE panel, FILE* f,
 
         // Special handling for multi-line messages: insert the
         // debug prefix (prefix) before each line except the first
-        // (which is is handled automatically further below)
+        // (which is handled automatically further below)
 
         for (nl = strchr( bfr, '\n' ); nl && nl[1]; nl = strchr( nl, '\n' ))
         {

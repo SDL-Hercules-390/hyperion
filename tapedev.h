@@ -252,9 +252,9 @@ static inline bool is_tape_feat( const BYTE* feats, U32 flags )
                                            or /reload required       */
 #define TAPE_BSENSE_BADALGORITHM   11   /* Bad compression - HET
                                            tape compressed with an
-                                           unsuported method         */
+                                           unsupported method        */
 #define TAPE_BSENSE_RUN_SUCCESS    12   /* Rewind Unload success     */
-#define TAPE_BSENSE_STATUSONLY     13   /* No exception occured      */
+#define TAPE_BSENSE_STATUSONLY     13   /* No exception occurred     */
 #define TAPE_BSENSE_LOCATEERR      14   /* Can't find block or TM    */
 #define TAPE_BSENSE_READTM         15   /* A Tape Mark was read      */
 
@@ -896,7 +896,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_SNS5_3480_MO_CHAN_LOG_BLK_ID    0xFF
 
 // Sense bytes 4-5 for NTP: Byte 4 is Reason Code (RC)
-//                          Byte 5 is Reason Qualifer Code (RQC)
+//                          Byte 5 is Reason Qualifier Code (RQC)
 
 #define  TAPE_SNS4_5_NTP_RC_11_UA_RQC_11_DEV_LOG      0x1110      // UNIT ATTENTION/Device Log
 

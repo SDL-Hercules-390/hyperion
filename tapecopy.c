@@ -186,7 +186,7 @@ static int print_usage()
         MSGNUM "If the input file is a SCSI tape, it is read and processed until physical EOD\n"
         MSGNUM "(end-of-data) is reached (i.e. it does not stop whenever multiple tapemarks or\n"
         MSGNUM "filemarks are read; it continues processing until the SCSI tape drive says\n"
-        MSGNUM "there is no more data on the tape). The resulting AWS eumulated tape O/P file,\n"
+        MSGNUM "there is no more data on the tape). The resulting AWS emulated tape O/P file,\n"
         MSGNUM "when specified for the filename on a Hercules tape device configuration\n"
         MSGNUM "statement, can then be used instead in order for the Hercules guest O/S to\n"
         MSGNUM "read the exact same data without having to have a SCSI tape drive physically\n"
@@ -333,7 +333,7 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         if (rc < (int)sizeof(AWSTAPE_BLKHDR))
         {
             // "File %s: Error reading %s header: rc=%d, errno=%d: %s"
-            FWRMSG( stderr, HHC02707, "E", filenamein, "AWS eumulated tape file",
+            FWRMSG( stderr, HHC02707, "E", filenamein, "AWS emulated tape file",
                 rc, errno, strerror( errno ));
             DELAYED_EXIT( RC_ERROR_READING_AWS_HEADER );
         } /* end if(rc) */

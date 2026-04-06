@@ -171,7 +171,7 @@ facility  code  test#   Instruction                                             
 //  intrinsics are defined for X64.
 
 //  future option for aarch64:
-//  sse2neon.h adds aarch64 Neon impelementations of X64 intrisics
+//  sse2neon.h adds aarch64 Neon implementations of X64 intrinsics
 //  to allow a single intrinsic implementation to be used.
 //  https://github.com/DLTcollab/sse2neon
 //
@@ -247,7 +247,7 @@ typedef struct
     LOCAL_REGS* lregs = &locals;
 
 /*===================================================================*/
-/* Achitecture Independent Routines                                  */
+/* Architecture Independent Routines                                 */
 /*===================================================================*/
 
 #if !defined(_ZVECTOR2_ARCH_INDEPENDENT_)
@@ -303,7 +303,7 @@ static inline void dc_logmsg( const char * msg, decContext* set  )
 /* and function but with different register locations!               */
 /*                                                                   */
 /* The Local Vertor Register (copied VR) routines use 'lregs; as the */
-/* context and LV1, LV2, or LV3 coresponding to the instruction      */
+/* context and LV1, LV2, or LV3 corresponding to the instruction     */
 /* v1, v2, or v3.                                                    */
 /*                                                                   */
 /* The LOCALS() macro provides 3 local vector register saved areas   */
@@ -745,7 +745,7 @@ static inline bool  vr_packed_valid ( REGS* regs, int v1 )
 /*      regs    CPU register context for VR access                   */
 /*      v1      vector register to check                             */
 /*      un      pointer to U128 field                                */
-/*      forcePositive   boolean to inicate whether the value should  */
+/*      forcePositive   boolean to indicate whether the value should */
 /*              forced to a positive value                           */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -773,9 +773,9 @@ static inline U128 vr_to_U128( REGS* regs, int v1, bool forcePositive )
         else
             digit = PACKED_HIGH ( regs->VR_B( v1, packedix-- ) ) ;
 
-        /* increment curent digit and adjust scale */
-        /*      result += scale * digit;           */
-        /*      scale  *= 10;                      */
+        /* increment current digit and adjust scale */
+        /*      result += scale * digit;            */
+        /*      scale  *= 10;                       */
 
         if (digit != 0)
         {
@@ -920,7 +920,7 @@ static inline int vr_leading_zero(REGS* regs, int v1)
 /*      regs    CPU register context for VR access                   */
 /*      v1      vector register to check                             */
 /*      dn      pointer to decNumber to save vector packed value     */
-/*      forcePositive   boolean to inicate whether the value should  */
+/*      forcePositive   boolean to indicate whether the value should */
 /*              forced to a positive value                           */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -934,7 +934,7 @@ static inline void vr_to_decNumber( REGS* regs, int v1, decNumber* pdn, bool for
     decPackedToNumber(  (uint8_t *) &vr_bigEndian, sizeof( QW ), &scale, pdn );
 
     if (forcePositive && decNumberIsNegative( pdn ) )
-       pdn->bits &= ~( DECNEG );                   /* efficieny hack */
+       pdn->bits &= ~( DECNEG );                   /* efficiency hack */
 }
 
 /*-------------------------------------------------------------------*/
@@ -945,7 +945,7 @@ static inline void vr_to_decNumber( REGS* regs, int v1, decNumber* pdn, bool for
 /*      regs    CPU register context for VR access                   */
 /*      v1      vector register to check                             */
 /*      dn      pointer to decNumber to save vector packed value     */
-/*      forcePositive   boolean to inicate whether the value should  */
+/*      forcePositive   boolean to indicate whether the value should */
 /*              forced to a positive value                           */
 /*      rdc     result digit count: the number of rightmost digits   */
 /*              to load                                              */
@@ -1378,7 +1378,7 @@ static inline void hexNumberRound( hexNumber* hn, hexNumber* rhs, int numDigits 
     int hexTemp;                    /* temp hex digit                */
     int hnIndex;                    /* index to hn digit             */
 
-    if ( rhs->digits <= numDigits)    /* is rounding requied */
+    if ( rhs->digits <= numDigits)    /* is rounding required */
     {
         hexNumberCopy( hn, rhs);
         return;
@@ -1594,7 +1594,7 @@ static inline bool  zoned_valid_sign_enhanced (
 
     if (zsf == SS_BYTE)
     {
-        /* SS formated sign */
+        /* SS formatted sign */
         switch (stc)
         {
             case 2: /* STC = 010 */
@@ -1619,7 +1619,7 @@ static inline bool  zoned_valid_sign_enhanced (
 
     else
     {
-        /* SD formated sign */
+        /* SD formatted sign */
         sign = ZONED_SIGN( sign ) ;
         switch (stc)
         {
@@ -1685,7 +1685,7 @@ static inline bool  zoned_valid_sign_enhanced (
 
 
 /*===================================================================*/
-/* Achitecture Dependent Routines / Instructions                     */
+/* Architecture Dependent Routines / Instructions                    */
 /*===================================================================*/
 
 #if defined( FEATURE_148_VECTOR_ENH_FACILITY_2 )
@@ -1702,7 +1702,7 @@ DEF_INST( vector_load_byte_reversed_element_16 )
     ZVECTOR_CHECK (regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 7)         /* M3 > 7 => Specficitcation excp */
+    if (m3 > 7)         /* M3 > 7 => Specification excp */
         ARCH_DEP(program_interrupt) ( regs, PGM_SPECIFICATION_EXCEPTION );
 
     regs->VR_H( v1, m3 ) = bswap_16( ARCH_DEP( vfetch2 )( effective_addr2, b2, regs ) );
@@ -1723,7 +1723,7 @@ DEF_INST( vector_load_byte_reversed_element_64 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 1)                    /* M3 > 1 => Specficitcation excp */
+    if (m3 > 1)                    /* M3 > 1 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     regs->VR_D( v1, m3 ) = bswap_64( ARCH_DEP( vfetch8 )( effective_addr2, b2, regs ) );
@@ -1744,7 +1744,7 @@ DEF_INST( vector_load_byte_reversed_element_32 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 3)                    /* M3 > 3 => Specficitcation excp */
+    if (m3 > 3)                    /* M3 > 3 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     regs->VR_F( v1, m3 ) = bswap_32( ARCH_DEP( vfetch4 )( effective_addr2, b2, regs ) );
@@ -1765,7 +1765,7 @@ DEF_INST( vector_load_byte_reversed_element_and_zero )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    /* M3= 0, 4, 5, 7-15 => Specficitcation excp */
+    /* M3= 0, 4, 5, 7-15 => Specification excp */
     if (m3 == 0 || m3 == 4 || m3 == 5 || m3 >=7 )
         ARCH_DEP(program_interrupt) ( regs, PGM_SPECIFICATION_EXCEPTION );
 
@@ -1861,7 +1861,7 @@ DEF_INST( vector_load_byte_reversed_elements )
         regs->VR_Q( v1 ) = bswap_128( ARCH_DEP( vfetch16 )( effective_addr2, b2, regs ) );
         break;
 
-    default:    /* M3= 0, 5-15 => Specficitcation excp */
+    default:    /* M3= 0, 5-15 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
@@ -1883,7 +1883,7 @@ DEF_INST( vector_load_elements_reversed )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    /* M3= 0, 5-15 => Specficitcation excp */
+    /* M3= 0, 5-15 => Specification excp */
     if (m3 == 0 || m3 >=5 )
         ARCH_DEP(program_interrupt) ( regs, PGM_SPECIFICATION_EXCEPTION );
 
@@ -1904,7 +1904,7 @@ DEF_INST( vector_load_elements_reversed )
             regs->VR_D( v1, (1 - i) ) = ARCH_DEP( vfetch8 )( effective_addr2 + i*8, b2, regs );
         break;
 
-    default:    /* M3= 0, 4-15 => Specficitcation excp */
+    default:    /* M3= 0, 4-15 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
@@ -1925,7 +1925,7 @@ DEF_INST( vector_store_byte_reversed_element_16 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 7)                    /* M3 > 7 => Specficitcation excp */
+    if (m3 > 7)                    /* M3 > 7 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     ARCH_DEP( vstore2 )( bswap_16( regs->VR_H( v1, m3 ) ), effective_addr2, b2, regs );
@@ -1946,7 +1946,7 @@ DEF_INST( vector_store_byte_reversed_element_64 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 1)                    /* M3 > 1 => Specficitcation excp */
+    if (m3 > 1)                    /* M3 > 1 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     ARCH_DEP( vstore8 )( bswap_64( regs->VR_D( v1, m3 ) ), effective_addr2, b2, regs );
@@ -1967,7 +1967,7 @@ DEF_INST( vector_store_byte_reversed_element_32 )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    if (m3 > 3)                    /* M3 > 3 => Specficitcation excp */
+    if (m3 > 3)                    /* M3 > 3 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     ARCH_DEP( vstore4 )( bswap_32( regs->VR_F( v1, m3 ) ), effective_addr2, b2, regs );
@@ -2010,7 +2010,7 @@ DEF_INST( vector_store_byte_reversed_elements )
         ARCH_DEP( vstore16 )( bswap_128( regs->VR_Q( v1 ) ), effective_addr2, b2, regs );
         break;
 
-    default:    /* M3= 0, 5-15 => Specficitcation excp */
+    default:    /* M3= 0, 5-15 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
@@ -2049,7 +2049,7 @@ DEF_INST( vector_store_elements_reversed )
             ARCH_DEP( vstore8 )( regs->VR_D( v1, i ), effective_addr2 + (8 - i*8), b2, regs );
         break;
 
-    default:    /* M3= 0, 4-15 => Specficitcation excp */
+    default:    /* M3= 0, 4-15 => Specification excp */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
         break;
     }
@@ -2079,12 +2079,12 @@ DEF_INST( vector_pack_zoned )
     ZVECTOR_CHECK( regs );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-                                      /* i3 reserved bits 0-2 must be zero    */
-    if ( ( i3 & 0xE0 ) != 0 )         /*  not zero => Specficitcation excp    */
+                                      /* i3 reserved bits 0-2 must be zero  */
+    if ( ( i3 & 0xE0 ) != 0 )         /*  not zero => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     l2 = i3 & 0x1F;            /* Operand 2 Length Code (L2): Bits 3-7 */
-    if ( l2 > 30 )             /* L2 > 30 => Specficitcation excp      */
+    if ( l2 > 30 )             /* L2 > 30 => Specification excp        */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* get local copy; note: l2 is zoned length -1 */
@@ -2128,7 +2128,7 @@ DEF_INST( vector_load_rightmost_with_length )
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     l2 = i3 & 0xF0;           /* i3 reserved bits 0-3 must be zero    */
-    if ( l2 != 0 )            /*  not zero => Specficitcation excp    */
+    if ( l2 != 0 )            /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     l2 = i3 & 0x0F;          /* Operand 2 Length Code (L2): Bits 4-7 */
@@ -2203,11 +2203,11 @@ DEF_INST( vector_unpack_zoned )
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     l2 = i3 & 0xE0;           /* i3 reserved bits 0-2 must be zero    */
-    if ( l2 != 0 )             /*  not zero => Specficitcation excp    */
+    if ( l2 != 0 )             /*  not zero => Specification excp     */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     l2 = i3 & 0x1F;          /* Operand 2 Length Code (L2): Bits 3-7 */
-    if ( l2 > 30 )             /* L2 > 30 => Specficitcation excp      */
+    if ( l2 > 30 )             /* L2 > 30 => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* handle last zoned field - sign  & digit */
@@ -2251,7 +2251,7 @@ DEF_INST( vector_store_rightmost_with_length )
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     l2 = i3 & 0xF0;           /* i3 reserved bits 0-3 must be zero    */
-    if ( l2 != 0 )            /*  not zero => Specficitcation excp    */
+    if ( l2 != 0 )            /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     l2 = i3 & 0x0F;          /* Operand 2 Length Code (L2): Bits 4-7 */
@@ -2401,14 +2401,14 @@ DEF_INST( vector_convert_to_decimal_128 )
     ZVECTOR_CHECK( regs );
 
                               /* i3 reserved bits 1-2 must be zero    */
-    if ( i3 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i3 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i3 parts */
     iom = (i3 & 0x80) ? true : false;
     rdc = (i3 & 0x1F);
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* m4 parts */
@@ -2444,7 +2444,7 @@ DEF_INST( vector_convert_to_decimal_128 )
     // U128_logmsg("VECTOR CONVERT TO DECIMAL (128): tempv2    ", tempv2);
     // U128_logmsg("VECTOR CONVERT TO DECIMAL (128): convert128", convert128);
 
-    /* do convertion to decimal digits */
+    /* do conversion to decimal digits */
     ten128 = U128_U64( 10 );
 
     for (i = 30, temp = rdc; temp >0 && i >= 0 && !U128_isZero( convert128 ); i--, temp--)
@@ -2852,7 +2852,7 @@ DEF_INST( vector_unpack_zoned_high )
     /* local v2 */
     VR_SAVE_LOCAL( LV2, v2 );
 
-    /* set siggnificant zone digit to zero */
+    /* set significant zone digit to zero */
     regs->VR_B( v1, 0 )  = 0xF0;
 
     /* 14 decimals */
@@ -2899,7 +2899,7 @@ DEF_INST( vector_convert_to_decimal_32 )
     ZVECTOR_CHECK( regs );
 
                               /* i3 reserved bits 1-2 must be zero    */
-    if ( i3 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i3 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i3 parts */
@@ -2909,7 +2909,7 @@ DEF_INST( vector_convert_to_decimal_32 )
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
 
@@ -2948,7 +2948,7 @@ DEF_INST( vector_convert_to_decimal_32 )
     /* start with zero vector */
     SET_VR_ZERO( v1 );
 
-    /* do convertion to decimal digits */
+    /* do conversion to decimal digits */
     for (i = 30, temp = rdc; temp > 0 && i >= 0 && convert > 0; i--, temp--)
     {
         digit = convert % 10;
@@ -2957,7 +2957,7 @@ DEF_INST( vector_convert_to_decimal_32 )
         regs->VR_B( v1, i / 2) |=  ( i & 1) ? digit : digit << 4;
     }
 
-    overflow = convert > 0;     /* did not convert all (rdc limited rersult) */
+    overflow = convert > 0;     /* did not convert all (rdc limited result) */
 
     /* set sign */
     if (p1)
@@ -3010,7 +3010,7 @@ DEF_INST( vector_shift_and_round_decimal )
     ZVECTOR_CHECK( regs );
 
                                   /* i3 reserved bits 1-2 must be zero    */
-    if ( i3 & 0x60 )              /*  not zero => Specficitcation excp    */
+    if ( i3 & 0x60 )              /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i3 parts */
@@ -3138,7 +3138,7 @@ DEF_INST( vector_convert_to_decimal_64 )
     ZVECTOR_CHECK( regs );
 
                               /* i3 reserved bits 1-2 must be zero    */
-    if ( i3 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i3 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i3 parts */
@@ -3148,7 +3148,7 @@ DEF_INST( vector_convert_to_decimal_64 )
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* m4 parts */
@@ -3183,7 +3183,7 @@ DEF_INST( vector_convert_to_decimal_64 )
 
     //logmsg("VECTOR CONVERT TO DECIMAL (64): lb=%d, reg64=%lX, convert=%ld, convert=%lx \n", lb, reg64, convert, convert);
 
-    /* do convertion to decimal digits */
+    /* do conversion to decimal digits */
     for (i = 30, temp = rdc; temp >0 && i >= 0 && convert > 0; i--, temp--)
     {
         digit = convert % 10;
@@ -3192,7 +3192,7 @@ DEF_INST( vector_convert_to_decimal_64 )
         regs->VR_B( v1, i / 2) |=  ( i & 1) ? digit : digit << 4;
     }
 
-    overflow = convert > 0;     /* did not convert all (rdc limited rersult) */
+    overflow = convert > 0;     /* did not convert all (rdc limited result) */
 
     /* set sign */
     if (p1)
@@ -3248,7 +3248,7 @@ DEF_INST( vector_perform_sign_operation_decimal )
     ZVECTOR_CHECK( regs );
 
                               /* i3 reserved bits 1-2 must be zero    */
-    if ( i3 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i3 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i3 parts */
@@ -3258,7 +3258,7 @@ DEF_INST( vector_perform_sign_operation_decimal )
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -3315,7 +3315,7 @@ DEF_INST( vector_perform_sign_operation_decimal )
         case 0x00:                     /* 00 (maintain)       */
         {
             if (ps)
-            {   /* PS==1; Perserve Sign*/
+            {   /* PS==1; Preserve Sign*/
                 if (isZero)
                 {
                         { cc = 0; break;  }
@@ -3333,7 +3333,7 @@ DEF_INST( vector_perform_sign_operation_decimal )
                 }
             }
             else
-            {   /* PS==0; Perserve Sign*/
+            {   /* PS==0; Preserve Sign*/
                 if (isZero)
                 {
                 if ( LV_HAS_PLUS_SIGN( LV2 ) && pc )
@@ -3621,7 +3621,7 @@ DEF_INST( vector_pack_zoned_register )
     int     temp_rdc;          /* temp of rdc                        */
     U8      zoned[32];         /* intermediate zoned decimal         */
     U8      packed_sign;       /* sign for packed vector             */
-    QW      tempVR;            /* temp vector regiter sized field    */
+    QW      tempVR;            /* temp vector register sized field   */
     bool    valid_sign;        /* is sign valid?                     */
     bool    valid_decimals;    /* are decimals valid?                */
     BYTE    cc;                /* condition code                     */
@@ -3631,14 +3631,14 @@ DEF_INST( vector_pack_zoned_register )
     ZVECTOR_CHECK( regs );
 
                               /* i4 reserved bits 1-2 must be zero    */
-    if ( i4 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
     iom = (i4 & 0x80) ? true : false;
     rdc = (i4 & 0x1F);
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* m5 parts */
@@ -3751,14 +3751,14 @@ DEF_INST( vector_add_decimal )
     decNumber dnv1;            /* v1 as decNumber                    */
     decNumber dnv2;            /* v2 as decNumber                    */
     decNumber dnv3;            /* v3 as decNumber                    */
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
 
                                /* i4 reserved bits 1-2 must be zero    */
-    if ( i4 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x60 )          /*  not zero => Specification excp       */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -3768,7 +3768,7 @@ DEF_INST( vector_add_decimal )
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* m5 parts */
@@ -3856,14 +3856,14 @@ DEF_INST( vector_shift_and_round_decimal_register )
     decNumber dnv2;            /* v2 as decNumber                    */
     decNumber dntemp;          /* temp decNumber                     */
     decNumber dnshift;         /* -shamt as decNumber (note:negative)*/
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
 
                                   /* i3 reserved bit 2 must be zero      */
-    if ( i4 & 0x20 )              /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x20 )              /*  not zero => Specification excp     */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -3992,14 +3992,14 @@ DEF_INST( vector_subtract_decimal )
     decNumber dnv1;            /* v1 as decNumber                    */
     decNumber dnv2;            /* v2 as decNumber                    */
     decNumber dnv3;            /* v3 as decNumber                    */
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
 
                               /* i4 reserved bits 1-2 must be zero    */
-    if ( i4 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -4009,7 +4009,7 @@ DEF_INST( vector_subtract_decimal )
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* m5 parts */
@@ -4159,7 +4159,7 @@ DEF_INST( decimal_scale_and_convert_to_hfp )
             case 2: roundDigits = SHORT_FLOAT_NUM_DIGITS; break;        /* short HFP    */
             case 3: roundDigits = LONG_FLOAT_NUM_DIGITS; break;         /* long HFP     */
             case 4: roundDigits = EXTENDED_FLOAT_NUM_DIGITS; break;     /* extended HFP */
-                                                             /* avoid compiler warining */
+                                                             /* avoid compiler warning */
             default: roundDigits = DECNUMDIGITS;                        /* reserved     */
         }
         hexNumberRound(&hNum, &htemp, roundDigits);
@@ -4225,7 +4225,7 @@ DEF_INST( vector_compare_decimal )
     decNumber dnv1;            /* v1 as decNumber                    */
     decNumber dnv2;            /* v2 as decNumber                    */
     decNumber dncompared;      /* compared as decNumber              */
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRR_H(inst, regs, v1, v2, m3);
 
@@ -4286,14 +4286,14 @@ DEF_INST( vector_multiply_decimal )
     decNumber dnv1;            /* v1 as decNumber                    */
     decNumber dnv2;            /* v2 as decNumber                    */
     decNumber dnv3;            /* v3 as decNumber                    */
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
 
                               /* i4 reserved bits 1-2 must be zero    */
-    if ( i4 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -4303,7 +4303,7 @@ DEF_INST( vector_multiply_decimal )
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* m5 parts */
@@ -4388,14 +4388,14 @@ DEF_INST( vector_multiply_and_shift_decimal )
     decNumber dnv3;            /* v3 as decNumber                    */
     decNumber dnproduct;       /* (v2 * v3) as decNumber             */
     decNumber dnshift;         /* -shamt as decNumber (note:negative)*/
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
 
                               /* i4 reserved bits 1-2 must be zero    */
-    if ( i4 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -4491,14 +4491,14 @@ DEF_INST( vector_divide_decimal )
     decNumber dnv1;            /* v1 as decNumber                    */
     decNumber dnv2;            /* v2 as decNumber                    */
     decNumber dnv3;            /* v3 as decNumber                    */
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
 
                               /* i4 reserved bits 1-2 must be zero    */
-    if ( i4 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -4508,7 +4508,7 @@ DEF_INST( vector_divide_decimal )
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* m5 parts */
@@ -4594,14 +4594,14 @@ DEF_INST( vector_remainder_decimal )
     decNumber dnv1;            /* v1 as decNumber                    */
     decNumber dnv2;            /* v2 as decNumber                    */
     decNumber dnv3;            /* v3 as decNumber                    */
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
 
                               /* i4 reserved bits 1-2 must be zero    */
-    if ( i4 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -4611,7 +4611,7 @@ DEF_INST( vector_remainder_decimal )
     if (iom && !FACILITY_ENABLED( 152_VECT_PACKDEC_ENH, regs ))
         ARCH_DEP(program_interrupt)( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    if ( rdc == 0 )          /* zero rdc => Specficitcation excp    */
+    if ( rdc == 0 )          /* zero rdc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* m5 parts */
@@ -4641,7 +4641,7 @@ DEF_INST( vector_remainder_decimal )
     if ( decNumberIsZero( &dnv3 ) )
         ARCH_DEP(program_interrupt) (regs, PGM_DECIMAL_DIVIDE_EXCEPTION);
 
-    /* get remander */
+    /* get remainder */
     zn_ContextDefault( &set );
     decNumberRemainder( &dnv1,  &dnv2, &dnv3, &set );
 
@@ -4872,14 +4872,14 @@ DEF_INST( vector_shift_and_divide_decimal )
     decNumber dnv3;            /* v3 as decNumber                    */
     decNumber dnshift;         /* shamt as decNumber                 */
     decNumber dntemp;          /* temp decNumber                     */
-    decContext set;            /* zn default contect                 */
+    decContext set;            /* zn default context                 */
 
     VRI_F( inst, regs, v1, v2, v3, m5, i4 );
 
     ZVECTOR_CHECK( regs );
 
                               /* i4 reserved bits 1-2 must be zero    */
-    if ( i4 & 0x60 )          /*  not zero => Specficitcation excp    */
+    if ( i4 & 0x60 )          /*  not zero => Specification excp      */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* i4 parts */
@@ -5001,7 +5001,7 @@ DEF_INST( vector_test_zoned )
 
     // logmsg("VTZ: i3=%d, ssc: %d, ls: %d, dsc: %d, stc: %d, dc: %d\n", i3, ssc, ls, dsc, stc, dc);
 
-    if ( dc == 0 )          /* zero dc => Specficitcation excp    */
+    if ( dc == 0 )          /* zero dc => Specification excp    */
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* validation depends on the type of zoned format   */

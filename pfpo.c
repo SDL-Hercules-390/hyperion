@@ -1013,7 +1013,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
     }
   }
 /***************************************************************/
-/*   convert the exponent bits to the acutal exponent value    */
+/*   convert the exponent bits to the actual exponent value    */
 /***************************************************************/
   if (nan)
   {
@@ -1076,7 +1076,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   }
 /***************************************************************/
 /*   if the input is not a number (nan), format the binary     */
-/*   output.  if the output is hex, we have alread done this   */
+/*   output.  if the output is hex, we have already done this  */
 /***************************************************************/
   if (nan)
   {
@@ -1613,7 +1613,7 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
     }
     else
     /***************************************************************/
-    /*   if the exponent is negaive, we need to convert the hex    */
+    /*   if the exponent is negative, we need to convert the hex   */
     /*   fraction to decimal, so we need to divide by 16 for each  */
     /*   significant digit, minus the exponent value.  If the      */
     /*   exponent itself is negative, this means more divides,     */
@@ -1778,7 +1778,7 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
     rbe = dexp % dflrbefac[dflwords];
     exp1 = dexp / dflrbefac[dflwords];
     /***************************************************************/
-    /*   calcuate the exponent control bits (bits 1-5)             */
+    /*   calculate the exponent control bits (bits 1-5)            */
     /***************************************************************/
     if (lmd < 8)
       cbits = exp1 * 8 + lmd;
@@ -1904,7 +1904,7 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, B
   }
   zeroctr -= 8;     //   reduce for the exponent byte
 /***************************************************************/
-/*   The nummber of bits to shift is the difference between    */
+/*   The number of bits to shift is the difference between     */
 /*   the number of bits for the hex exponent (always 8) minus  */
 /*   the number of bits for the binary exponent. plus the      */
 /*   number of leading zero bits (adjusted for the exponent    */
@@ -2016,7 +2016,7 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, B
   return cc;
 }
 /******************************************************************************/
-/*         bfl2hfl  -  convert a binary (IEEE) floating point numeber to hex  */
+/*         bfl2hfl  -  convert a binary (IEEE) floating point number to hex   */
 /*                     float.  The binary float number must be shifted to     */
 /*                     make the binary exponent a multiple of four, so that   */
 /*                     it can be converted to a hex exponent.                 */
@@ -2123,7 +2123,7 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
 /***************************************************************/
   bitctr = bflexpbits[nwordin] - 9 - (bexpround - bexp);
 /***************************************************************/
-/* for long and extented binary float, the net shift will be to*/
+/* for long and extended binary float, the net shift will be to*/
 /* the left.  For short, it will be to the right.              */
 /***************************************************************/
   if (bitctr > 0)
@@ -2525,7 +2525,7 @@ DEF_INST( perform_floating_point_operation )
         /* If GR0 says suppress inexact errors, then turn off the FPC bit */
         if (fpc & FPC_FLAG_SFX) // inexact
         {
-            /* Generate a Program Interuption if the mask is in place
+            /* Generate a Program Interruption if the mask is in place
                and the error is not being purposely suppressed.
             */
             if ((fpc & FPC_MASK_IMX) && !GR0_IS( optbits ))

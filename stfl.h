@@ -14,7 +14,7 @@
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* The below are all known facility bits defined by IBM as of the    */
-/* latest z/Architecture Pinciples of Operation.  They correspond    */
+/* latest z/Architecture Principles of Operation.  They correspond   */
 /* to similarly named 'FEATURE_XXX" #defines listed in featall.h.    */
 /*                                                                   */
 /* Their names (minus the 'STFL_' prefix) are used by the FT macro   */
@@ -39,7 +39,7 @@
                                                are installed             */
 #define STFL_001_ZARCH_INSTALLED       1    /* z/Arch mode is available on
                                                this processor            */
-#define STFL_002_ZARCH_ACTIVE          2    /* z/Architecture architecural
+#define STFL_002_ZARCH_ACTIVE          2    /* z/Architecture architectural
                                                mode active. When bit 2 and
                                                168 are both zero, ESA/390
                                                mode is active. When bit 2

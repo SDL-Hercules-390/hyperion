@@ -8088,7 +8088,7 @@ DLL_EXPORT void* the_real_replace_opcode( int arch, INSTR_FUNC inst, int opcode1
 /* for each table entry (i.e. for each and every instruction).       */
 /*                                                                   */
 /* The end result of this is a RUNTIME opcode table for each build   */
-/* architectue whose entries point DIRECTLY to that instruction for  */
+/* architecture whose entries point DIRECTLY to that instruction for */
 /* that particular architecture. This resulting runtime opcode table */
 /* can then later be further modified/patched (if needed) for only   */
 /* specific instructions whenever a facility is enabled/disabled.    */
@@ -8246,8 +8246,8 @@ void init_runtime_opcode_tables()
 /*                                                                   */
 /* The below function simply copies the pointers to our previously   */
 /* built "runtime" opcode table (of which there is one for each of   */
-/* our build architectures, each one of which which were previously  */
-/* initialzed by "init_runtime_opcode_tables" called during impl),   */
+/* our build architectures, each one of which were previously        */
+/* initialized by "init_runtime_opcode_tables" called during impl),  */
 /* to the appropriately named variable defined in REGS.              */
 /*                                                                   */
 /* The "run_cpu" function then simply uses the appropriate runtime   */

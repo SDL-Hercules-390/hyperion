@@ -185,7 +185,7 @@ static inline void ARCH_DEP( nnpa_qaf ) ( VADR pb_addr, REGS* regs);
 // static inline void ARCH_DEP( nnpa_matmul-opbcast23 ) ( VADR pb_addr, REGS* regs);
 
 /*===================================================================*/
-/* Achitecture Independent Routines                                  */
+/* Architecture Independent Routines                                 */
 /*===================================================================*/
 
 #if !defined(_NNPA_ARCH_INDEPENDENT_)
@@ -610,7 +610,7 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
 
 
 /*===================================================================*/
-/* Achitecture Dependent Routines / Instructions                     */
+/* Architecture Dependent Routines / Instructions                    */
 /*===================================================================*/
 
 /*================================================================================*/
@@ -636,7 +636,7 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
 /* Github project: https://github.com/IBM/zDNN                                    */
 /*   IBM Z Deep Neural Network Library (zDNN) provides an interface for           */
 /*   applications making use of Neural Network Processing Assist Facility (NNPA). */
-/*   A function decription for zdnn_is_nnpa_installed indicates DLFOAT16 as an    */
+/*   A function description for zdnn_is_nnpa_installed indicates DLFOAT16 as an   */
 /*   NNP-internal data type.                                                      */
 /*        Description                                                             */
 /*              Interrogates the hardware to determine if the NNPA and            */

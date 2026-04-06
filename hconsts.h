@@ -418,7 +418,7 @@
 #define SIE_INTERCEPT_EXTREQ    (-6)    /* External interrupt        */
 #define SIE_INTERCEPT_IOREQ     (-7)    /* I/O interrupt             */
 #define SIE_INTERCEPT_WAIT      (-8)    /* Wait state loaded         */
-#define SIE_INTERCEPT_STOPREQ   (-9)    /* STOP reqeust              */
+#define SIE_INTERCEPT_STOPREQ   (-9)    /* STOP request              */
 #define SIE_INTERCEPT_RESTART  (-10)    /* Restart interrupt         */
 #define SIE_INTERCEPT_MCK      (-11)    /* Machine Check interrupt   */
 #define SIE_INTERCEPT_EXT      (-12)    /* External interrupt pending*/

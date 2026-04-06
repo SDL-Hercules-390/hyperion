@@ -601,7 +601,7 @@
   "'facility' is the SHORT facility name to be enabled, disabled or queried.\n"  \
   "The facility may also be specified by explicit bit number or via 'BITnnn'.\n" \
   "ALL is a synonym for SHORT. RAW displays the hex string. ENABLED displays\n"  \
-  "only facilities which are enabled. DISABLED shows only disabled failities.\n" \
+  "only facilities which are enabled. DISABLED shows only disabled facilities.\n" \
   "LONG sorts the display by Long Description. SHORT is the default.\n"
 
 #define fcb_cmd_desc            "Display a printer's current FCB"
@@ -680,7 +680,7 @@
 #define xxxprio_cmd_desc        "(deprecated)"
 #define xxxprio_cmd_help        \
                                 \
-  "This command is no longer supported and and will be removed in the future.\n"
+  "This command is no longer supported and will be removed in the future.\n"
 
 #define hst_cmd_desc            "History of commands"
 #define hst_cmd_help            \
@@ -798,7 +798,7 @@
   "Specifies the default eight-character IPL 'LOADPARM' parameter used by\n"    \
   "some operating systems to select certain initialization options. The\n"      \
   "value specified here can be overridden by specifying a different value\n"   \
-  "on the the IPL command itself. The LOADPARM command simply defines the\n"    \
+  "on the IPL command itself. The LOADPARM command simply defines the\n"       \
   "default value that is used if not overridden on the IPL command itself.\n"
 
 #define loadtext_cmd_desc       "Load a text deck file"
@@ -871,7 +871,7 @@
   "        mmmm    - define main storage size mmmm Megabytes\n"                 \
   "\n"                                                                          \
   "        nnnS    - define main storage size nnn S where S is the\n"           \
-  "                  multipler:\n"                                              \
+  "                  multiplier:\n"                                             \
   "                  B = no multiplier\n"                                       \
   "                  K = 2**10 (kilo/kibi)\n"                                   \
   "                  M = 2**20 (mega/mebi)\n"                                   \
@@ -905,7 +905,7 @@
                                 \
   "Format: \"message * text\". The 'text' field is variable in size.\n"         \
   "A 'VM' message similar to: \"13:02:41 * MSG FROM HERCULES: hello\" is\n"     \
-  "diplayed on the console panel as a result of the panel command\n"            \
+  "displayed on the console panel as a result of the panel command\n"           \
   "'message * hello'.  (See also the \"msgnoh\" command)\n"
 
 #define model_cmd_desc          "Set/Query STSI model code"
@@ -1217,7 +1217,7 @@
   "registered with the device identified by <devnum> or for all QETH (OSA)\n"   \
   "device groups if <devnum> is not specified or specified as 'ALL'.  The\n"    \
   "optional 'mask' value may be specified more than once. Mask values are\n"    \
-  "'Ccw', 'DAta', 'DRopped', 'Expand', 'Interupts', 'Packet', 'Queues',\n"      \
+  "'Ccw', 'DAta', 'DRopped', 'Expand', 'Interrupts', 'Packet', 'Queues',\n"     \
   "'SBale', 'SIga', 'Updown' or 0xhhhhhhhh hexadecimal value.\n"
 
 #define qpfkeys_cmd_desc        "Display the current PF Key settings"
@@ -1408,7 +1408,7 @@
 #define savecore_cmd_help       \
                                 \
   "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and\n"     \
-  "'end' define the starting and ending addresss of the range of real\n"        \
+  "'end' define the starting and ending address of the range of real\n"         \
   "storage to be saved to file 'filename'. An '*' for either the start\n"       \
   "address or end address (the default) means: \"the first/last byte of\n"      \
   "the first/last modified page as determined by the storage-key\n"             \
@@ -1424,7 +1424,7 @@
   "disables SCLP disk I/O. If no operand is specified, sclproot displays\n"     \
   "the current setting.\n"
 
-#define scpecho_cmd_desc        "Set/Display option to echo to console and history of scp replys"
+#define scpecho_cmd_desc        "Set/Display option to echo to console and history of scp replies"
 #define scpecho_cmd_help        \
                                 \
   "Format: \"scpecho [ on | off ]\"\n"                                          \
@@ -1579,7 +1579,7 @@
   "via the DIAG 8 interface.\n"                                                 \
   "\n"                                                                          \
   "If the optional NODIAG8 option is specified, then only the programmatic\n"   \
-  "execution of commands via the the Diagnose 8 interface are disabled, but\n"  \
+  "execution of commands via the Diagnose 8 interface are disabled, but\n"      \
   "shell and Rexx commands entered directly via the Hercules command line\n"    \
   "still work.\n"                                                               \
   "\n"                                                                          \

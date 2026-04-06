@@ -41,7 +41,7 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
     if (!sysblk.hicpu)
       return;
 
-    /* Access the diffent register contexts with the intlock held */
+    /* Access the different register contexts with the intlock held */
     OBTAIN_INTLOCK(NULL);
 
     /* Check for [1] clock comparator, [2] cpu timer, and

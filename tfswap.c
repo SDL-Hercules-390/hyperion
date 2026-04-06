@@ -6,7 +6,7 @@
 /*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
-/*  This program reads a Hercules intruction trace file and swaps    */
+/*  This program reads a Hercules instruction trace file and swaps   */
 /*  the endianness of each field in each record so that it can be    */
 /*  processed more efficiently by the tfprint utility.               */
 /*-------------------------------------------------------------------*/
@@ -308,7 +308,7 @@ int main( int argc, char* argv[] )
 
         /* Swap the TF record just read. PROGRAMMING NOTE:
            we adjust the TFHDR pointer that we pass to the
-           the tf_swap_rec function so that the actual rec
+           tf_swap_rec function so that the actual rec
            fields line up, and thus get swapped properly.
 
            This is safe to do since tf_swap_rec never ever

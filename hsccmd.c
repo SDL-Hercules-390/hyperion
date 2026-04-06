@@ -12,7 +12,7 @@
 /*-------------------------------------------------------------------*/
 /* This module implements the various Hercules System Console        */
 /* (i.e. hardware console) commands that the emulator supports.      */
-/* To define a new commmand, add an entry to the "Commands" CMDTAB   */
+/* To define a new command, add an entry to the "Commands" CMDTAB    */
 /* table pointing to the command processing function, and optionally */
 /* add additional help text to the HelpTab HELPTAB. Both tables are  */
 /* near the end of this module.                                      */
@@ -2825,7 +2825,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                 // PLEASE KEEP THESE IN ALPHABETICAL ORDER!
                 // PLEASE NOTE THE MINIMUM ABBREVIATIONS!
 
-                // 'Ccw', 'DAta', 'DRopped', 'Expand', 'Interupts',
+                // 'Ccw', 'DAta', 'DRopped', 'Expand', 'Interrupts',
                 // 'Packet', 'Queues', 'SBale', 'SIga', 'Updown',
 
                 // 0xhhhhhhhh hexadecimal value
@@ -6108,7 +6108,7 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
     // immune from the actual order/sequence of the actual DEVBLK chain.
 
     // Note too that there is no lock to lock access to ALL device blocks
-    // (even though there really SHOULD be). The only lock there is is one
+    // (even though there really SHOULD be). The only lock there is one
     // to lock an individual DEVBLK (which doesn't do us much good here).
 
     if (!(orig_pDevBlkPtrs = malloc( sizeof( DEVBLK* ) * MAX_DEVLIST_DEVICES )))

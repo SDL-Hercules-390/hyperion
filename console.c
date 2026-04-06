@@ -128,7 +128,7 @@ static void dumpbuf( const char* pfx, const void* addr, int len, BYTE ebcdic )
 /*                                                                   */
 /* Note: An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialization (that is, no data is       */
-/* actually transfered). In this case, IL is not indicated for a     */
+/* actually transferred). In this case, IL is not indicated for a    */
 /* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -238,10 +238,10 @@ static const telnet_telopt_t   telnet_opts[] =
     // PROGRAMMING NOTE: the TELNET_TELOPT_BINARY, TELNET_TELOPT_EOR
     // and TELNET_TELOPT_ECHO options are negotiated manually for each
     // connection (via the libtelnet "telnet_negotiate" function) once
-    // the terminal type (TTYPE) is known. For 3270 terminals begining
+    // the terminal type (TTYPE) is known. For 3270 terminals beginning
     // with "IBM-" we operate in BINARY+EOR mode. For all other types
     // we don't and negotiate the TELNET_TELOPT_ECHO option instead.
-    // Refer the the "negotiate_ttype" function for more information.
+    // Refer the "negotiate_ttype" function for more information.
     //--------------------------------------------------------------
 
     //     (option)               (us)        (them)
@@ -587,7 +587,7 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
         break;
 
 
-    /* Recoverable error has occured */
+    /* Recoverable error has occurred */
     case TELNET_EV_WARNING:
 
         LOG_WARNING_OR_ERROR_EVENT( "WARNING", tn, ev );
@@ -606,7 +606,7 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
         break;
 
 
-    /* Non-recoverable error has occured */
+    /* Non-recoverable error has occurred */
     case TELNET_EV_ERROR:
 
         LOG_WARNING_OR_ERROR_EVENT( "ERROR", tn, ev );
@@ -1526,7 +1526,7 @@ static BYTE* buffer_addsf     ( BYTE* bfr, size_t* buflen, size_t* alloc_len, BY
 static BYTE* build_logo( char** logo_stmts, size_t num_stmts,
                          size_t* buflen, const char** errmsg )
 {
-    char     msgbuf[ 128 ];             /* Used only if error oocurs */
+    char     msgbuf[ 128 ];             /* Used only if error occurs */
 
     BYTE    *bfr        = NULL;
     char    *stmt       = NULL;

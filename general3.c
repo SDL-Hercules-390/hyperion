@@ -4890,7 +4890,7 @@ DEF_INST( compare_and_load_long_fullword )
 /*                                                                   */
 /* and is being included to avoid a Linux kernel panic on an IPL     */
 /* for some distributions which have KVM built into the kernel.      */
-/* A Kernel panic was observered with Ubuntu 25.04 and 25.10.        */
+/* A Kernel panic was observed with Ubuntu 25.04 and 25.10.          */
 /*                                                                   */
 /* The instruction uses R0 to define the function as follows         */
 /*    pfcr-qaf,   0, "PFCR Query-Available-Functions"                */

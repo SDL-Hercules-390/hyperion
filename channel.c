@@ -636,7 +636,7 @@ format_data(       BYTE* buff, const u_int bufflen,
     // multi-line dump, with each line consisting of only 16 bytes
     // of the dump per line (which is 4 groups of 4-bytes-per-group).
     //
-    // If we're formatting only the the first 'x' bytes of a CCW's
+    // If we're formatting only the first 'x' bytes of a CCW's
     // I/O buffer for a CCW trace message however, then we want all
     // of it formatted into one long line, so the number of 4-byte-
     // groups-per-line will vary depending on how much data we will
@@ -2386,7 +2386,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     /* If the device is busy then signal the subchannel to halt,
        UNLESS it's suspended (in which case signal it to resume;
        the halt will occur when resumed). If it's startpending,
-       remove the I/O from the queue and then halt subhchannel.
+       remove the I/O from the queue and then halt subchannel.
        Otherwise (not busy/startpending/suspended) do nothing.
     */
     if (0
@@ -4330,8 +4330,8 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
             {
                 /* Set SCSW for attention interrupt                              */
                 /* SA22-7201-05:                                                 */
-                /*  p. 16-3, Unsolicited Interuption Condition                   */
-                /*           Solicited Interuption Condition                     */
+                /*  p. 16-3, Unsolicited Interruption Condition                  */
+                /*           Solicited Interruption Condition                    */
                 /*           Figure 16-1, Interruption Condition for Status-     */
                 /*                        Control-Bit Combinations               */
                 /*  p. 16-4, Alert Interruption Condition                        */
@@ -5096,7 +5096,7 @@ execute_halt:
 
         /* Validate suppress length indication (SLI) flag            */
         /* SA22-7201-05:                                             */
-        /*  p. 15-24, Supress-Length-Indication (SLI) Flag           */
+        /*  p. 15-24, Suppress-Length-Indication (SLI) Flag          */
         /*-------------------------------------------------------------
         //
         // Note: With CD check first, this test will always be false.
@@ -5795,7 +5795,7 @@ prefetch:
                     /* Immediate operation. If Format-1 WITHOUT the
                        ORB 'L' flag, then Incorrect Length. Otherwise
                        if Format-0, or Format-1 WITH Incorrect Length
-                       Suppresion enabled, then IL is NOT indicated
+                       Suppression enabled, then IL is NOT indicated
                        (i.e. is SUPPRESSED).
                     */
                     || (1
@@ -6119,7 +6119,7 @@ breakchain:
 /* the channel masks in control register 2 determine whether the     */
 /* device is enabled.  When configured for the XA or ESA channel     */
 /* subsystem, the interrupt subclass masks in control register 6     */
-/* determine eligability; the PSW system mask is not tested, because */
+/* determine eligibility; the PSW system mask is not tested, because */
 /* the TPI instruction can operate with I/O interrupts masked off.   */
 /* Returns non-zero if interrupts enabled, 0 if interrupts disabled. */
 /*-------------------------------------------------------------------*/

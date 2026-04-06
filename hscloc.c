@@ -207,7 +207,7 @@ int locate_sysblk( int argc, char* argv[], char* cmdline )
             return -1;
         }
         start_adj = x % 16;
-        start = x - ( x % 16 );      /* round to a 16 byte boundry */
+        start = x - ( x % 16 );      /* round to a 16 byte boundary */
         if ( start + length + start_adj > (int)sizeof(SYSBLK) )
             length = (int)sizeof(SYSBLK) - start;
     }
@@ -352,7 +352,7 @@ int locate_regs( int argc, char* argv[], char* cmdline )
             return -1;
         }
         start_adj = x % 16;
-        start = x - ( x % 16 );      /* round to a 16 byte boundry */
+        start = x - ( x % 16 );      /* round to a 16 byte boundary */
         if ( start + length + start_adj > (int)sizeof(REGS) )
             length = (int)sizeof(REGS) - start;
     }

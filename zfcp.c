@@ -501,7 +501,7 @@ static int zfcp_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
     NEQ *gen_neq = (NEQ*)tkn_ned+1; /* General NEQ always last   */
     DEVBLK *cua;                    /* Our Control Unit device   */
 
-    /* Copy configuration data from tempate */
+    /* Copy configuration data from template */
     memcpy (work, configuration_data, sizeof( work ));
 
     /* The first device in the group is the control unit */
@@ -559,14 +559,14 @@ int i;
             initialize_lock(&grp->qlock);
 
             /* Open write signalling pipe */
-            /* Check your retrun codes, Jan.                         */
+            /* Check your return codes, Jan.                         */
             VERIFY(!create_pipe(grp->ppfd));
             grp->ttfd = grp->ppfd[0]; // ZZ TEMP
 
             /* Set Non-Blocking mode */
             socket_set_blocking_mode(grp->ppfd[0],0);
 
-            /* Allocate reponse buffer */
+            /* Allocate response buffer */
             grp->rspbf = malloc(RSP_BUFSZ);
             grp->rspsz = 0;
 
@@ -1078,7 +1078,7 @@ U32 num;                                /* Number of bytes to move   */
         if ((grp->iir & 0x00030000) != 0)
             len = sizeof(ND);
 
-        /* Copy configuration data from tempate */
+        /* Copy configuration data from template */
         memcpy (iobuf, node_data, len);
 
         /* Insert the CHPID of the node into the Node Descriptor ND */
@@ -1133,7 +1133,7 @@ U32 num;                                /* Number of bytes to move   */
         if(!(accerr = STORCHK(dev->qdio.qiba,sizeof(QDIO_QIB)-1,dev->qdio.qibk,STORKEY_CHANGE,dev)))
         {
         QDIO_QIB *qib = (QDIO_QIB*)(dev->mainstor + dev->qdio.qiba);
-            qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
+            qib->ac |= QIB_AC_PCI; // Indicate PCI on output is supported
 #if defined(_FEATURE_QEBSM)
             if (FACILITY_ENABLED_DEV( HERC_QEBSM ))
                 qib->rflags |= QIB_RFLAGS_QEBSM;
@@ -1266,7 +1266,7 @@ U32 num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-        DBGTRC( dev, "Unkown CCW dev(%4.4x) code(%2.2x)\n", dev->devnum, code );
+        DBGTRC( dev, "Unknown CCW dev(%4.4x) code(%2.2x)\n", dev->devnum, code );
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1416,7 +1416,7 @@ static DEVHND zfcp_device_hndinfo =
         NULL                           /* Hercules resume            */
 };
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 #if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdtzfcp_LTX_hdl_ddev

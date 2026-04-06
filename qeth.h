@@ -24,7 +24,7 @@
 
 
 /*-------------------------------------------------------------------*/
-/* Other miscellanous constants                                      */
+/* Other miscellaneous constants                                     */
 /*-------------------------------------------------------------------*/
 #define OSA_GROUP_SIZE          3     /* Devices per OSA Adapter     */
 #define OSA_PORTNO              0     /* OSA Port Number             */
@@ -219,14 +219,14 @@ typedef struct _OSA_GRP {
                                     /* (i.e. the messages presented  */
                                     /* to or accepted from the QETH  */
                                     /* devices in network byte order */
-                                    /* Note: a maximun of 256 bytes  */
+                                    /* Note: a maximum of 256 bytes  */
                                     /* is displayed)                 */
 #define DBGQETHEXPAND   0x00000004  /* Data expanded                 */
                                     /* (i.e. the messages presented  */
                                     /* to or accepted from the QETH  */
                                     /* devices in network byte order */
                                     /* showing the MPC_TH etc.       */
-                                    /* Note: a maximun of 64 bytes   */
+                                    /* Note: a maximum of 64 bytes   */
                                     /* of data is displayed)         */
 #define DBGQETHUPDOWN   0x00000010  /* Connection up and down        */
 #define DBGQETHCCW      0x00000020  /* CCWs executed                 */

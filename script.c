@@ -12,8 +12,8 @@
 /* This module contains all hercules specific config and command     */
 /* scripting routines.                                               */
 
-/* All hercules specific language contructs, keywords and semantics  */
-/* are defined in this modeule                                       */
+/* All hercules specific language constructs, keywords and semantics */
+/* are defined in this module                                        */
 
 #include "hstdinc.h"
 
@@ -946,7 +946,7 @@ int script_cmd( int argc, char* argv[], char* cmdline )
         return 0;
     }
 
-    /* Find script processing control entry for this thead */
+    /* Find script processing control entry for this thread */
     if ((pCtl = FindSCRCTL( tid )) != NULL)
     {
         /* This script command is issued from a script.  It does not */

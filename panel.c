@@ -3322,7 +3322,7 @@ PANMSG* p;
     {
         set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
         //clear_screen( stderr );
-        // progremmers note: clear_screen appears to have side-efect of flushing the screen.
+        // programmer note: clear_screen appears to have side-effect of flushing the screen.
         // So use, blank_panel which directly clears the screen with spaces.
         blank_panel();
 

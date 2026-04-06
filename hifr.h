@@ -70,9 +70,9 @@
 //          The INTERNAL Hercules 'hifr' structure
 //---------------------------------------------------------------------
 /*
-  The Hercules ifr (hifr) structure. Why? Because an ifreq stucture is
+  The Hercules ifr (hifr) structure. Why? Because an ifreq structure is
   not large enough to hold inet6 addresses, an in6_ifreq structure is
-  needed for them. The hifr structure contains both an ifreq stucture
+  needed for them. The hifr structure contains both an ifreq structure
   and an in6_ifreq structure.
 
   The ifreq structure is the parameter to most of the ioctl requests

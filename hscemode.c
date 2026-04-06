@@ -82,7 +82,7 @@ int ARCH_DEP( archdep_pr_cmd )( REGS *regs, int argc, char *argv[] )
 
 
 /*-------------------------------------------------------------------*/
-/*       NON-architecure-dependent code from here onward             */
+/*       NON-architecture-dependent code from here onward             */
 /*-------------------------------------------------------------------*/
 
 static inline int devnotfound_msg( const U16 lcss, const U16 devnum )

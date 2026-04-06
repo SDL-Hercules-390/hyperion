@@ -77,7 +77,7 @@ typedef struct _hetb
     u_int           truncated:1;        /* TRUE=file truncated              */
     u_int           compress:1;         /* TRUE=compress written data       */
     u_int           decompress:1;       /* TRUE=decompress read data        */
-    u_int           method:2;           /* 1=ZLIB, 2=BZLIB compresion       */
+    u_int           method:2;           /* 1=ZLIB, 2=BZLIB compression      */
     u_int           level:4;            /* 1=<n<=9 compression level        */
     u_int           created:1;          /* TRUE = CREATED                   */
 } HETB;
@@ -129,7 +129,7 @@ typedef struct _hetb
 || Function codes for het_cntl()
 */
 #define HETCNTL_COMPRESS        1       /* TRUE=write compression on        */
-#define HETCNTL_DECOMPRESS      2       /* TRUE=read decomporession on      */
+#define HETCNTL_DECOMPRESS      2       /* TRUE=read decompression on       */
 #define HETCNTL_METHOD          3       /* Compression method               */
 #define HETCNTL_LEVEL           4       /* Compression level                */
 #define HETCNTL_CHUNKSIZE       5       /* Chunk size                       */

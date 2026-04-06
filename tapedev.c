@@ -70,7 +70,7 @@
 /*              Support for HET is in the "HETTAPE.C" member.        */
 /*                                                                   */
 /* 5. FAKETAPE  This is the format used by Fundamental Software      */
-/*              on their FLEX-ES systems. It it similar to the AWS   */
+/*              on their FLEX-ES systems. It is similar to the AWS   */
 /*              format. The entire tape is contained in a single     */
 /*              flat file. A tape block is preceded by a 12-ASCII-   */
 /*              hex-characters header which indicate the size of     */
@@ -91,7 +91,7 @@
 /*      HET format support by Leland Lucius                      v209*/
 /*      JCS - minor changes by John Summerfield                  2003*/
 /*      PERFORM SUBSYSTEM FUNCTION / CONTROL ACCESS support by       */
-/*      Adrian Trenkwalder (with futher enhancements by Fish)        */
+/*      Adrian Trenkwalder (with further enhancements by Fish)       */
 /*      **INCOMPLETE** 3590 support by Fish (David B. Trout)         */
 /*-------------------------------------------------------------------*/
 /*-------------------------------------------------------------------*/
@@ -187,7 +187,7 @@ DEVHND  tape_3590_devhnd   =
 };
 
 /*-------------------------------------------------------------------*/
-/* Libtool static name colision resolution...                        */
+/* Libtool static name collision resolution...                       */
 /* Note: lt_dlopen will look for symbol & modulename_LTX_symbol      */
 /*-------------------------------------------------------------------*/
 
@@ -404,7 +404,7 @@ TAPEMEDIA_HANDLER  tmh_scsi   =
    NOTE: only models 3480, 3490 and 3590 support the RDC (Read
    Device Characteristics) channel command, and thus they're the
    only ones we must know the MDR/OBR codes for (since the MDR/OBR
-   codes are only used in the RDC CCW and not anwhere else). That
+   codes are only used in the RDC CCW and not anywhere else). That
    is to say, NONE of the Channel Commands (CCWs) that all the
    OTHER models happen to support have an MDR/OBR code anywhere
    in their data. Only models 3480, 3490 and 3590 have MDR/OBR
@@ -1305,7 +1305,7 @@ enum
 /*    idrc|compress    0|1: Write tape blocks with compression       */
 /*                     (std deviation: Read backward allowed on      */
 /*                     compressed HET tapes while it is not on       */
-/*                     IDRC formated 3480 tapes)                     */
+/*                     IDRC formatted 3480 tapes)                    */
 /*                                                                   */
 /*    --no-erg         for SCSI tape only, means the hardware does   */
 /*                     not support the "Erase Gap" command and all   */
@@ -2680,7 +2680,7 @@ DEVBLK  *dev  =  (DEVBLK*) db;
 /*                     autoload_mount_first                          */
 /*-------------------------------------------------------------------*/
 /*  mount in the drive the tape which is                             */
-/*  positionned in the 1st autoloader slot                           */
+/*  positioned in the 1st autoloader slot                            */
 /*-------------------------------------------------------------------*/
 int autoload_mount_first(DEVBLK *dev)
 {
@@ -2692,8 +2692,8 @@ int autoload_mount_first(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /*                     autoload_mount_next                           */
 /*-------------------------------------------------------------------*/
-/*  mount in the drive the tape whch is                              */
-/*  positionned in the slot after the currently mounted tape.        */
+/*  mount in the drive the tape which is                             */
+/*  positioned in the slot after the currently mounted tape.         */
 /*  if this is the last tape, close the autoloader                   */
 /*-------------------------------------------------------------------*/
 int autoload_mount_next(DEVBLK *dev)
@@ -2712,7 +2712,7 @@ int autoload_mount_next(DEVBLK *dev)
 /*                     autoload_mount_tape                           */
 /*-------------------------------------------------------------------*/
 /*  mount in the drive the tape which is                             */
-/*  positionned in the autoloader slot #alix                         */
+/*  positioned in the autoloader slot #alix                         */
 /*-------------------------------------------------------------------*/
 int autoload_mount_tape( DEVBLK *dev, int alix )
 {
@@ -2888,7 +2888,7 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
                     )
                     {
                         // 'hetb' SHOULDN'T suddenly disappear but
-                        // apparently sometimes occassionally does!
+                        // apparently sometimes occasionally does!
                         // See GitHub Issue #515!
 
                         if (dev->blockid < blockid && !dev->hetb)

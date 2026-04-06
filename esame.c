@@ -1567,7 +1567,7 @@ ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED Quadword workarea */
     main2 = MADDRL(effective_addr2, 16, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* Store R1 and R1+1 registers to second operand
-       Provide storage consistancy by means of obtaining
+       Provide storage consistency by means of obtaining
        the main storage access lock */
     OBTAIN_MAINLOCK( regs );
     {
@@ -1607,7 +1607,7 @@ ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED Quadword workarea */
     main2 = MADDRL(effective_addr2, 16, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     /* Load R1 and R1+1 registers contents from second operand
-       Provide storage consistancy by means of obtaining
+       Provide storage consistency by means of obtaining
        the main storage access lock */
     OBTAIN_MAINLOCK( regs );
     {
@@ -5731,7 +5731,7 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
     case 2:                     /* Check topology-change status */
         if(SIE_MODE(regs))
         {
-            /* Not chnaged (cannot be changed) */
+            /* Not changed (cannot be changed) */
             regs->psw.cc=0;
         }
         else

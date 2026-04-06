@@ -49,7 +49,7 @@
 //  since it should thus *always* end up being defined as a U64.
 //
 //  Using any OTHER type of build architecture dependent constant
-//  in any of the below strutures would be a SERIOUS ARCHITECTURE
+//  in any of the below structures would be a SERIOUS ARCHITECTURE
 //  DEPENDENCY VIOLATION!
 //
 //---------------------------------------------------------------------
@@ -113,7 +113,7 @@
 /*       Structure definition for CPU register context               */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* Note: REGS is very susceptable to performance problems due to     */
+/* Note: REGS is very susceptible to performance problems due to     */
 /*       key fields either crossing or split across cache line       */
 /*       boundaries. In addition, if allocated in the stack, the     */
 /*       allocation unit is frequently on an 8-byte boundary rather  */
@@ -160,7 +160,7 @@ struct REGS {                           /* Processor registers       */
         PSW     psw;                    /* Program status word       */
 
         ALIGN_128
-        BYTE    malfcpu                 /* Malfuction alert flags    */
+        BYTE    malfcpu                 /* Malfunction alert flags   */
                     [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
 
         ALIGN_128
@@ -367,7 +367,7 @@ struct REGS {                           /* Processor registers       */
         RADR    sie_xso;                /* eXpanded Storage Origin   */
         RADR    sie_xsl;                /* eXpanded Storage Limit    */
         RADR    sie_rcpo;               /* Ref and Change Preserv.   */
-        RADR    sie_scao;               /* System Contol Area        */
+        RADR    sie_scao;               /* System Control Area       */
         S64     sie_epoch;              /* TOD offset in state desc. */
 #endif
         unsigned int
@@ -678,7 +678,7 @@ struct SYSBLK {
         time_t  impltime;               /* TOD system was IMPL'ed    */
         LOCK    bindlock;               /* Sockdev bind lock         */
         LOCK    config;                 /* (Re)Configuration Lock    */
-        int     arch_mode;              /* Architecturual mode       */
+        int     arch_mode;              /* Architectural mode        */
                                         /* 0 == S/370   (ARCH_370_IDX)   */
                                         /* 1 == ESA/390 (ARCH_390_IDX)   */
                                         /* 2 == ESAME   (ARCH_900_IDX)   */
@@ -1424,7 +1424,7 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  device i/o scheduling fields...                          */
 
         TID     tid;                    /* Thread-id executing CCW   */
-        int     priority;               /* I/O q scehduling priority */
+        int     priority;               /* I/O q scheduling priority */
         DEVBLK *nextioq;                /* -> next device in I/O q   */
         IOINT   ioint;                  /* Normal i/o interrupt
                                                queue entry           */
@@ -1667,7 +1667,7 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ctce_attn_delay;        /* CTCE pre-ATTN delay       */
         TID     ctce_listen_tid;        /* CTCE_ListenThread ID      */
         u_int   ctce_contention_loser:1;/* CTCE cmd collision        */
-        u_int   ctce_ccw_flags_cc:1;    /* CTCE ccw in progres       */
+        u_int   ctce_ccw_flags_cc:1;    /* CTCE ccw in progress      */
         u_int   ctce_ficon:1;           /* CTCE type FICON           */
         u_int   ctce_remote_xmode:1;    /* CTCE y-side Ext mode      */
         u_int   ctce_system_reset:1;    /* CTCE initialized          */
@@ -1777,7 +1777,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   sns_pending:1;          /* Contingency Allegiance    */
                                         /* - means : don't build a   */
                                         /* sense on X'04' : it's     */
-                                        /* aleady there              */
+                                        /* already there             */
                                         /* NOTE : flag cleared by    */
                                         /*        sense command only */
                                         /*        or a device init   */

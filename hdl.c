@@ -44,7 +44,7 @@ static HDLDEP*      hdl_depend   = NULL;    /* struct version/size   */
 static const char*  hdl_modpath  = NULL;    /* modules load path     */
 static bool         hdl_arg_p    = false;   /* -p cmdline opt given  */
 static HDLSHUT*     hdl_shutlist = NULL;    /* Shutdown call list    */
-static bool         hdl_shutting = false;   /* shutdown in progesss  */
+static bool         hdl_shutting = false;   /* shutdown in progress  */
 
 /*-------------------------------------------------------------------*/
 /*             Pointers pass to hdl_main by impl.c                   */
@@ -136,7 +136,7 @@ DLL_EXPORT int hdl_main
     VERIFY( hdl_check_depends_ep( &hdl_check_depends_cb ) == 0);
 
     /*
-    **  Create an initial symbols list by manualy registering
+    **  Create an initial symbols list by manually registering
     **  and resolving all symbols needed for proper HDL support.
     */
     obtain_lock( &hdl_lock );
@@ -843,7 +843,7 @@ DLL_EXPORT void hdl_initpath( const char* path )
 DLL_EXPORT const char* hdl_getpath()
 {
     if (!hdl_modpath)           // (if default not set yet)
-        hdl_initpath( NULL );   // (then initilize default)
+        hdl_initpath( NULL );   // (then initialize default)
     return hdl_modpath;         // (return current value)
 }
 

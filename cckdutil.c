@@ -637,7 +637,7 @@ comp_restart:
         l2area += CCKD_L2TAB_SIZE;
     }
 
-    /* quick return if all l2 tables are orderered and no free space */
+    /* quick return if all l2 tables are ordered and no free space */
     if (!relocate)
     {
         for (i = 1; spctab[i].spc_typ != SPCTAB_EOF; i++)
@@ -3043,7 +3043,7 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
            are NOT required to match the actual CC and HH of the Home
            Address record! They can be any value the user wants, as
            long as they're valid: the HH value MUST be < the number
-           number of heads the device supports, and the R field can't
+           of heads the device supports, and the R field can't
            be 0 (there can be only ONE r0 and we already processed it).
         */
         if (0

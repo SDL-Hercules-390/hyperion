@@ -201,7 +201,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             }
         } /* end for(cpuad) */
 
-// /*debug*/ LOGMSG( "External interrupt: Malfuction Alert from CPU %d\n",
+// /*debug*/ LOGMSG( "External interrupt: Malfunction Alert from CPU %d\n",
 // /*debug*/    cpuad );
 
         /* Reset the indicator for the CPU which was found */
@@ -597,7 +597,7 @@ PSA     *sspsa;                         /* -> Store status area      */
     /* Store Floating Point Control Register */
     STORE_FW(sspsa->storefpc,ssreg->fpc);
 
-    /* Store TOD Programable register */
+    /* Store TOD Programmable register */
     STORE_FW(sspsa->storetpr,ssreg->todpr);
 #endif
 

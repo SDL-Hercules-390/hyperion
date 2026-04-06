@@ -32,7 +32,7 @@
             and value using the "=" as a delimiter.  The pp table is then
             scanned for the keyword.  If found and the table entry specifies
             a format string, then parser() will use sscanf() to store the
-            value at the location specifed by res.
+            value at the location specified by res.
 
             The PARSER table entries consist of a string pointer that
             designates the keyword and a string pointer that designates the

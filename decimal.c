@@ -1033,7 +1033,7 @@ BYTE    rbyte;                          /* Result byte               */
 
             /* If pattern byte is field separator (X'22') then
                replace it by the fill character, turn off the
-               significance indicator, and zeroize conditon code  */
+               significance indicator, and zeroize condition code  */
             else if (pbyte == 0x22)
             {
                 if(!trial_run)

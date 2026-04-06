@@ -15,13 +15,13 @@
 #define CMD_SIZE        256         /* 32767 is way toooooo much!    */
 
 /*-------------------------------------------------------------------*/
-/*                   Hisotry public variables                        */
+/*                   History public variables                        */
 /*-------------------------------------------------------------------*/
 extern int    history_requested;
 extern char*  historyCmdLine;
 
 /*-------------------------------------------------------------------*/
-/*                   Hisotry public function                         */
+/*                   History public function                         */
 /*-------------------------------------------------------------------*/
 int history_init();
 int history_add( char* cmdline );

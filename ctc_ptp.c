@@ -191,7 +191,7 @@ static void     calculate_icmpv6_checksum( PIP6FRM pIP6FRM, BYTE* pIcmpHdr, int 
 /* 1 : Command is an immediate command                                */
 /* Note : An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialisation (that is, no data is        */
-/* actually transfered). In this case, IL is not indicated for a CCW  */
+/* actually transferred). In this case, IL is not indicated for a CCW */
 /* Format 0 or for a CCW Format 1 when IL Suppression Mode is in      */
 /* effect                                                             */
 /* ------------------------------------------------------------------ */
@@ -264,14 +264,14 @@ static const BYTE VTAM_ebcdic[4] = { 0xE5,0xE3,0xC1,0xD4 };
 
 
 /* ------------------------------------------------------------------ */
-/* Process Identifers                                                 */
+/* Process Identifiers                                                */
 /* ------------------------------------------------------------------ */
 // When the connection is being started it seems that the connecting
 // VTAMs set up a pair of processes (or channels or threads or
 // subtasks or paths or ...). I don't know what they should be called,
 // but I have called them processes, hence process identifiers.
 //
-// All of the identifers that have been seen are 5-bytes in length,
+// All of the identifiers that have been seen are 5-bytes in length,
 // with the first byte containing 0x05, the second and third bytes
 // containing 0x0001, and the fourth and fifth bytes containing a
 // non-consecutive value that increases with each restart of the
@@ -312,7 +312,7 @@ static  U32   uTokenUlpConnection  = 0x00011005;
 
 // ptp_init is called once for each of the device addresses specified
 // on the configuration statement. When ptp_init is called the number
-// of device addresses specified on the configuation statement or
+// of device addresses specified on the configuration statement or
 // whether the device addresses are contiguous is unknown to ptp_init.
 // ptp_init is called by function attach_device() in config.c
 
@@ -408,7 +408,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     pPTPATHwr->pPTPBLK = pPTPBLK;                       // to the PTPBLK.
 
     pPTPATHre->pDEVBLK = pPTPBLK->pDEVBLKRead;          // Make each PTPATH point
-    pPTPATHwr->pDEVBLK = pPTPBLK->pDEVBLKWrite;         // to the apprpriate DEVBLK
+    pPTPATHwr->pDEVBLK = pPTPBLK->pDEVBLKWrite;         // to the appropriate DEVBLK
 
     pPTPBLK->pDEVBLKRead->dev_data = pPTPATHre;         // Make each DEVBLK point
     pPTPBLK->pDEVBLKWrite->dev_data = pPTPATHwr;        // to the appropriate PTPATH.
@@ -733,7 +733,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
 
         // We will assume that we (i.e. the x-side) raised an Attention
         // interrupt earlier and that the y-side is determining why.
-        // Normally this will only occur during the handshke sequence.
+        // Normally this will only occur during the handshake sequence.
         // Return CCW opcode, residual byte count and unit status.
         *pIOBuf = pPTPATH->bAttnCode;
         *pResidual = uCount - 1;
@@ -1065,7 +1065,7 @@ void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
         WRMSG(HHC03931, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
 
         // Display up to 128-bytes of data, if debug is not active.
-        // If debug is active, the data has already been diplayed.
+        // If debug is active, the data has already been displayed.
         if (!(pPTPBLK->uDebugMask & DBGPTPDATA))
         {
             iTraceLen = uCount;
@@ -1079,9 +1079,9 @@ void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
             net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'I', "data", 0 );
         }
 
-        // None of the accepted data was sucessfully processed, and it will
+        // None of the accepted data was successfully processed, and it will
         // now be dropped as though it never existed. Inform the guest that
-        // the data was sucessfully processed.
+        // the data was successfully processed.
         *pMore     = 0;
         *pResidual = 0;
         *pUnitStat = CSW_CE | CSW_DE;
@@ -1195,7 +1195,7 @@ void  write_th( DEVBLK* pDEVBLK, U32  uCount,
 
         }
 
-        // If the MPC_RRH processing was not sucessful, let's stop.
+        // If the MPC_RRH processing was not successful, let's stop.
         if (rv != 0)
             break;
 
@@ -1207,20 +1207,20 @@ void  write_th( DEVBLK* pDEVBLK, U32  uCount,
     }
 
     // Set the residual byte count and unit status depending on
-    // whether the MPC_RRHs have been processed sucessfully or not.
+    // whether the MPC_RRHs have been processed successfully or not.
     switch( rv )
     {
 
     //    0   Successful
-    //        All of the accepted data was sucessfully processed.
+    //        All of the accepted data was successfully processed.
     //   -1   No storage available
     //   -2   Data problem (i.e. incomplete IP packet)
-    //        None of the accepted data was sucessfully processed,
-    //        or some of the accepted data may have been sucessfully
+    //        None of the accepted data was successfully processed,
+    //        or some of the accepted data may have been successfully
     //        processed. Either way there is some data that was not
-    //        sucessfully processed, and it will now be dropped as
+    //        successfully processed, and it will now be dropped as
     //        though it never existed. Inform the guest that the
-    //        data was sucessfully processed.
+    //        data was successfully processed.
     case  0:
     case -1:
     case -2:
@@ -1307,12 +1307,12 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
     else
     {
         // More than one MPC_PH. Allocate a buffer in which all of
-        // the data referenced by the MPC_PHs will be concatanated.
+        // the data referenced by the MPC_PHs will be concatenated.
         pDataBuf = alloc_storage( pDEVBLK, iDataLen );   // Allocate buffer
         if (!pDataBuf)               // if the allocate was not successful...
             return -1;
 
-        // Copy and concatanate the data referenced by the MPC_PHs.
+        // Copy and concatenate the data referenced by the MPC_PHs.
         pData = pDataBuf;
         for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
         {
@@ -2005,12 +2005,12 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
 // specified in the TRLE definition. A MAXBFRU value from 1 to 16 can
 // be specified. If MAXBFRU is not specified, a default value of 5 is
 // used. The MAXBFRU value specifies the number of 4K buffer pages
-// used to receive data. The resulting buffer size (and maximun read
+// used to receive data. The resulting buffer size (and maximum read
 // length) is number_of_pages multiplied by 4096, minus 4 (the
 // 4-bytes are used for an eye-catcher of 'WrHP' at the start of the
 // first page), i.e. (MAXBFRU*4096)-4 .
 //
-// Note: VTAM automatically substitues a value of 16 for any coded
+// Note: VTAM automatically substitutes a value of 16 for any coded
 // MAXBFRU value higher than 16 without issuing a warning message.
 // Empirical evidence also suggests that VTAM substitutes a value of
 // 5 (the default value) for any coded MAXBFRU value lower than 5
@@ -2023,7 +2023,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
 // used on the MPCPTP/MPCPTP6 connection. The resulting maximum MTU
 // is number_of_pages minus 1, multiplied by 4096, minus 2048.
 //   i.e. ((MAXBFRU-1)*4096)-2048
-// Alternativley, starting with the maximum read length, the
+// Alternatively, starting with the maximum read length, the
 // resulting maximum MTU is maximum_read_length minus 4092, minus
 // 2048.
 //   i.e. (Maximum_read_length-4092)-2048
@@ -2748,7 +2748,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             // of 14336. The MTU value that will be used for packets
             // sent from the y-side to this side will depend on the MTU
             // value specified on the y-side's route statement(s). If the
-            // y-side's route statement(s) pecify an MTU value greater
+            // y-side's route statement(s) specify an MTU value greater
             // than the actual MTU value the route statement value is
             // ignored and the actual MTU value is used. If the y-side's
             // route statement(s) specify an MTU value less than or equal
@@ -2775,7 +2775,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //          // The number of 4K pages used by VTAM to receive data. The
 //          // resulting buffer size is number_of_pages multiplied by
 //          // 4096, minus 4 bytes for an eye-catcher of 'WrHP'. VTAM
-//          // automatically substitues a value of 16 for any coded
+//          // automatically substitutes a value of 16 for any coded
 //          // value higher than 16 without issuing a warning message.
 //          // Note: Empirical evidence suggests that VTAM ignores any
 //          // coded value lower than 5 and substitutes a value of 5
@@ -2925,10 +2925,10 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     //    case the TUN interface is configured by PTP.
     // b) One parameter when the -x option has not been specified.
     //    The single parameter specifies the name of a pre-configured
-    //    TUN inferface that PTP will use.
+    //    TUN interface that PTP will use.
     // c) Zero parameters when the -x option has been specified. The
     //    The -x option specified the name of a pre-configured TUN
-    //    inferface that PTP will use..
+    //    interface that PTP will use..
     // For Windows there can be:-
     // a) Two parameters (a pair of IPv4 or IPv6 addresses), or four
     //    parameters (a pair of IPv4 addresses and a pair of IPv6
@@ -3095,7 +3095,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 }
                 else
                 {
-                    // Something that isn't very useful has been specifed..
+                    // Something that isn't very useful has been specified..
                     // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                     WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                          "IP address", *argv );
@@ -3998,13 +3998,13 @@ void     ptp_get_tod_clock( BYTE* TodClock )
 /* ------------------------------------------------------------------ */
 // Note: the returned SAaddress (4-bytes) is in network byte order.
 // VTAM creates a 4-byte subarea address from a combination of the
-// output of a STIDP instuction and the output of a STCK
+// output of a STIDP instruction and the output of a STCK
 // instruction. The first 2-bytes of the subarea address come from
-// bits 28 to 43 of the output of the STIDP instuction, which is the
+// bits 28 to 43 of the output of the STIDP instruction, which is the
 // last 4-bits of the 'CPU Identification Number' and the first
 // 12-bits of the 'Machine-Type Number'. The last 2-bytes of the
 // subarea address come from bits 31 to 46 of the output of the STCK
-// instuction.
+// instruction.
 
 void     get_subarea_address( BYTE* SAaddress )
 {
@@ -4067,7 +4067,7 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U32  uCount,
         // was not in progress on the path; we will assume that the y-side
         // has initiated handshaking and that the PTPHX0 is the start of
         // handshake one.
-        pPTPATH->fHandshaking = TRUE;                  // Hanshakining in progress
+        pPTPATH->fHandshaking = TRUE;                  // Handshaking in progress
         pPTPATH->fHandshakeCur = HANDSHAKE_ONE;        // Handshake one in progress
         pPTPATH->fHandshakeSta |= HANDSHAKE_ONE;       // handshake one started
 
@@ -7890,7 +7890,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     BYTE*      pIcmpHdr;      // ICMPv6 header follows IPv6 header or Hop-by-Hop
 
 
-    // Allocate a buffer in which the ICMPv6 Neighbor Advertisment message
+    // Allocate a buffer in which the ICMPv6 Neighbor Advertisement message
     // will be built. Note: the message will be 128 bytes.
     // The source address is the drive link local address, the destination
     // address is the Link-Local Scope All Nodes multicast address, i.e.
@@ -7961,7 +7961,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
-        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisement" );
     }
 
     // Add PTPHDR to chain.
@@ -8046,7 +8046,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     add_buffer_to_chain_and_signal_event( pPTPATHre, pPTPHDRre );
 
 
-    // Allocate a buffer in which the ICMPv6 Neighbor Advertisment message
+    // Allocate a buffer in which the ICMPv6 Neighbor Advertisement message
     // will be built. Note: the message will be 128 bytes.
     // The source address is the drive address, the destination address
     // is the Link-Local Scope All Nodes multicast address, i.e.
@@ -8117,7 +8117,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
-        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisement" );
     }
 
     // Add PTPHDR to chain.
@@ -9574,7 +9574,7 @@ void  calculate_icmpv6_checksum( PIP6FRM pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
     // Clear the checksum in the ICMP header before calculating the checksum.
     STORE_HW( pIcmpHdr+2, 0x0000 );
 
-    // Construct the Psuedo-Header for the checksum calcuation.
+    // Construct the Psuedo-Header for the checksum calculation.
     memcpy( bPseudoHeader+0, pIP6FRM->bSrcAddr, 16 );
     memcpy( bPseudoHeader+16, pIP6FRM->bDstAddr, 16 );
     STORE_FW( bPseudoHeader+32, iIcmpLen );
@@ -9626,7 +9626,7 @@ void  calculate_icmpv6_checksum( PIP6FRM pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
 /* HDL stuff                                                          */
 /* ------------------------------------------------------------------ */
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

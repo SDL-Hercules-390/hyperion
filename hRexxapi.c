@@ -254,7 +254,7 @@ static HR_REXXRC_T  SetVar
        then it's not really an error. Our objective was achieved.
     */
     if (RexxRC == RXSHV_NEWV)   // (if variable was newly created)
-        RexxRC =  RXSHV_OK;     // (then we condider that success)
+        RexxRC =  RXSHV_OK;     // (then we consider that success)
 
     /* Check for error */
     if (RexxRC != RXSHV_OK && MLVL( DEBUG ))
@@ -1414,7 +1414,7 @@ BYTE REXX_DEP( Load )( BYTE verbose )
     /* library load//unload logic (like OORexx does) where if two    */
     /* threads both require the same extension DLL (hostemu.dll),    */
     /* the library ends up being unloaded by the first thread before */
-    /* the second thread has had a chance to excecute, leading to a  */
+    /* the second thread has had a chance to execute, leading to a   */
     /* fatal Hercules crash when the second thread tries calling a   */
     /* rexx function within a library that has just been unloaded!   */
     /*                                                               */

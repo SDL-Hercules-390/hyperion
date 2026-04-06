@@ -317,7 +317,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                 {
                     u_int n   = ((((buf[5] << 8) | buf[6])<<8) | buf[7]);        // Relative address (positive)
                     u_int len = (buf[10] << 8) | buf[11];                        // Byte count
-                    if (len <= 56)                                              // Process if useable count
+                    if (len <= 56)                                              // Process if usable count
                     {
                        RADR lastbyte = aaddr + n + len - 1;
                        if (lastbyte >= sysblk.mainsize)                         // Bytes must fit into storage
@@ -326,7 +326,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                           rc = -1;
                           break;
                        }
-                       ahighaddr = MAX(ahighaddr, lastbyte);                    // Keep track of highsest byte used
+                       ahighaddr = MAX(ahighaddr, lastbyte);                    // Keep track of highest byte used
                        memcpy(regs->mainstor + aaddr + n, &buf[16], len);
                     }
                 }

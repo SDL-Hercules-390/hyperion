@@ -326,7 +326,7 @@ struct  _CTCBLK
                                           // 1 - Write subchannel
 
 #define CTC_READ_SUBCHANN    0            // 0 - Read subchannel
-#define CTC_WRITE_SUBCHANN   1            // 1 - Write cubchannel
+#define CTC_WRITE_SUBCHANN   1            // 1 - Write subchannel
 
     U16         iMaxFrameBufferSize;      // Device Buffer Size
     BYTE        bFrameBuffer[CTC_DEF_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
@@ -392,7 +392,7 @@ struct _CTCISEG                         // CTCI Segment Header
                                         //   this header
     HWORD   hwType;                     // Ethernet packet type
     HWORD   _reserved;                  // Unused, set to zeroes
-    BYTE    bData[FLEXIBLE_ARRAY];      // Start of data (IP pakcet)
+    BYTE    bData[FLEXIBLE_ARRAY];      // Start of data (IP packet)
 } ATTRIBUTE_PACKED;
 
 
@@ -677,10 +677,10 @@ struct  _LCSDEV
 
     PLCSBLK     pLCSBLK;                // -> LCSBLK
     DEVBLK*     pDEVBLK[2];             // 0 - Read subchannel
-                                        // 1 - Write cubchannel
+                                        // 1 - Write subchannel
 
 #define LCS_READ_SUBCHANN    0          // 0 - Read subchannel
-#define LCS_WRITE_SUBCHANN   1          // 1 - Write cubchannel
+#define LCS_WRITE_SUBCHANN   1          // 1 - Write subchannel
 
     U16         sAddr;                  // Device Base Address
     BYTE        bMode;                  // (see below #defines)
@@ -1078,7 +1078,7 @@ struct  _LCSETHFRM
 \**********************************************************************/
 
 //
-// The LLC layer provides connectionless and conection-oriented data
+// The LLC layer provides connectionless and connection-oriented data
 // transfer.
 //
 // Connectionless data transfer is commonly referred to as LLC type 1,

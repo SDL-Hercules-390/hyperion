@@ -871,7 +871,7 @@ U16     eax;                            /* Authorization index       */
 /*          is not set; exception code is X'0038' through X'003B'.   */
 /*          The LRA instruction converts this to condition code 3.   */
 /*      5 = For ACCTYPE_EMC (Enhanced MC access only):               */
-/*          A translation specification exception occured            */
+/*          A translation specification exception occurred           */
 /*                                                                   */
 /*                                                                   */
 /*      For ACCTYPE_LPTEA, the return value is set to facilitate     */

@@ -357,7 +357,7 @@ static void tell_gui_our_version()
     // by means of the MAINSIZE value!
     //
     // Later releases of HercGUI know to interpret mainsize values of
-    // less than 1000 as a Hercule's version number.
+    // less than 1000 as a Hercules version number.
     // 
     // Earlier versions of HercGUI will simply try to interpret it as
     // the actual mainsize, but no real harm is done since we  send it
@@ -380,7 +380,7 @@ static void tell_gui_our_version()
     //
     // The makefile.bat file on Windows guarantees this and also ensures
     // that none of them have any leading zeroes (which would cause them
-    // to be intrepreted by the 'C' compiler as invalid octal numbers!
+    // to be interpreted by the 'C' compiler as invalid octal numbers!
     // (e.g. 3.08, etc).
 
 
@@ -391,7 +391,7 @@ static void tell_gui_our_version()
     // VERSION is set in configure.ac as x.xx. (why we insist on using
     // two digits for the second part is unclear).
     //
-    // However, if 'xx' is greater than '07' (as it would be for Hercule
+    // However, if 'xx' is greater than '07' (as it would be for Hercules
     // versions 3.08 and 3.09 for example) then printing VERS_INT with
     // a %d format fails with a compiler error about it being an invalid
     // octal constant.
@@ -2173,7 +2173,7 @@ void gui_panel_display ()
 // was when Hercules was built MUST MATCH the layout as it was when THIS DLL
 // was built)
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

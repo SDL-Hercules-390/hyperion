@@ -322,7 +322,7 @@ static bool ARCH_DEP( walk_table )( CREG rto, int fd, U32 *pages, int tables )
 
 #if defined( FEATURE_HARDWARE_LOADER )
 /*-------------------------------------------------------------------*/
-/* Funtion to load file to main storage                              */
+/* Function to load file to main storage                             */
 /*-------------------------------------------------------------------*/
 static void      s390_hwl_loadfile  ( SCCB_HWL_BK* hwl_bk ); // (fwd ref)
 static void ARCH_DEP( hwl_loadfile )( SCCB_HWL_BK *hwl_bk )
@@ -420,7 +420,7 @@ SCCB_HWL_BK *hwl_bk = (SCCB_HWL_BK*) arg;
         }
     }
     else
-        // "Hardware loader file type %d not not supported"
+        // "Hardware loader file type %d not supported"
         WRMSG( HHC00653, "E", hwl_bk->file );
 
     hwl_tid = 0;

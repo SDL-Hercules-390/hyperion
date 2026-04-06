@@ -71,7 +71,7 @@ typedef struct _ECPSVM_MICBLOK
 #define MICRRBE  0x08   /* IPTE/TPRT Sim */
 #define MICSSKE  0x04   /* V Page Fault Sim */
     /* Bits defined in MICEVMA4 */
-#define MICSVC4  0x40   /* SVC/LPSW/LCTL Assists Extentions */
+#define MICSVC4  0x40   /* SVC/LPSW/LCTL Assists Extensions */
 #define MICSPT4  0x20   /* SPT Assist Extension */
 #define MICIUCV  0x10   /* IUCV ASSIST */
 } ECPSVM_MICBLOK;
@@ -81,9 +81,9 @@ typedef struct _ECPSVM_MICBLOK
 #define IOOPSW   0x038
 #define PGMINT   0x08C
 
-#define QUANTUMR 0x04C  /* Usefull little unused space for MVCing NEW ITIMER */
+#define QUANTUMR 0x04C  /* Useful little unused space for MVCing NEW ITIMER */
 #define INTTIMER 0x050
-#define QUANTUM  0x054  /* Usefull little unused space for MVCing OLD ITIMER */
+#define QUANTUM  0x054  /* Useful little unused space for MVCing OLD ITIMER */
 
 /* PSA Displacements used by ECPS:VM */
 /* PSA Entries used by DISPx Instructions */

@@ -22,10 +22,10 @@
 /*-------------------------------------------------------------------*/
 /*                   PASS 1: remember features                       */
 /*-------------------------------------------------------------------*/
-/*  In this section of code we simply (for ther most part) #define   */
+/*  In this section of code we simply (for the most part) #define    */
 /*  the underscore '_FEATURE_XXXX' constant if the non-underscored   */
 /* 'FEATURE_XXX' constant is #defined.  This allows us to detect     */
-/*  the need for a given feature if ANY of the build archtectures    */
+/*  the need for a given feature if ANY of the build architectures   */
 /*  should need it.  That is to say, if at least ONE of the build    */
 /*  architectures needs support for a given feature, then we must    */
 /*  enable the code that provides support for that feature regard-   */
@@ -799,7 +799,7 @@
 //
 //  Finally also notice the definition of the "GENx370x390x900" macro
 //  in opcode.h, which defines opcode table entries for each opcode:
-//  it defines not only a pointer to the intruction function for each
+//  it defines not only a pointer to the instruction function for each
 //  architecture, but also defines those 2 extra pointers as the last
 //  two entries for each opcode table entry:
 //

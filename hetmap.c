@@ -675,7 +675,7 @@ Print_Standard_Labels (void )
         case    1:
         {
             char    volser[7];                              /* ( 5-10) Volume ID                */
-            char    vsec[2]                                 /* (   11) Volume Accessability     */
+            char    vsec[2]                                 /* (   11) Volume Accessibility     */
             /* 5 bytes  */                                  /* (12-16) VTOC Pointer (not used)  */
             ;/* 21 bytes */                                 /* (17-37) Reserved                 */
             char    owner[15]                               /* (38-51) Owner ID                 */

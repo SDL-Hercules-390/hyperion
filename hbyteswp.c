@@ -7,10 +7,10 @@
 /*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
-/* These definitions are only nessesary when running on older        */
+/* These definitions are only necessary when running on older        */
 /* versions of linux that do not have /usr/include/byteswap.h.       */
 /* Compile option -DNO_ASM_BYTESWAP will expand 'C' code.            */
-/* Otherwise custom assember will be generated.  (Jan Jaeger)        */
+/* Otherwise custom assembler will be generated.  (Jan Jaeger)       */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"

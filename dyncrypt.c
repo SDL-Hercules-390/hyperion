@@ -209,7 +209,7 @@ void crypto_secure0( void* p, size_t n )
 
 /* Remarks Bernard van der Helm & JW: Strongly adjusted for
  * Hercules-390. We need the internal functions gcm_gf_mult
- * and xts_mult_x. The rest of of the code is deleted.
+ * and xts_mult_x. The rest of the code is deleted.
  *
  * Thanks Tom!
 */
@@ -3868,12 +3868,12 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
     /* Check intermediate block index (t) > 127 */
     if(memcmp(ibi, zero, 15) || ibi[15] > 127)
     {
-      /* Invalid imtermediate block index, return with cc2 */
+      /* Invalid intermediate block index, return with cc2 */
       regs->psw.cc = 2;
       return;
     }
 
-    /* Intitial execution? */
+    /* Initial execution? */
     if(!ibi[15]) memcpy(xts, tweak, 16);
 
     /* Calculate xts parameter */

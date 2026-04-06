@@ -29,7 +29,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // Global data...
 
-#define  W32STAPE_MAX_FDNUMS  (32)      // (admitedly low, but easily increased)
+#define  W32STAPE_MAX_FDNUMS  (32)      // (admittedly low, but easily increased)
 
 typedef int  ifd_t;     // (internal fd)
 typedef int  ufd_t;     // (user fd)
@@ -979,7 +979,7 @@ int w32_internal_mtop ( HANDLE hFile, U32* pStat, struct mtop* mtop, ifd_t ifd )
             else
             {
                 // PROGRAMMING NOTE: We prefer "long" filemarks over any other type
-                // because, according to the SDK documentaion:
+                // because, according to the SDK documentation:
                 //
                 //    "A short filemark contains a short erase gap that cannot be
                 //     overwritten unless the write operation is performed from the
@@ -1161,12 +1161,12 @@ int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwLogPos,
     ASSERT( pStat && pdwLogPos );    // (sanity check)
 
     // PROGRAMMING NOTE: the SDK docs state that for the 'lpdwOffsetHigh'
-    // parameter (i.e. dwDummyPositionHigh, the 5th paramater):
+    // parameter (i.e. dwDummyPositionHigh, the 5th parameter):
     //
     //    "This parameter can be NULL if the
     //     high-order bits are not required."
     //
-    // But it LIES! Simple expirical observation reveals that ALL parameters
+    // But it LIES! Simple empirical observation reveals that ALL parameters
     // are in fact required. If any are NULL then 'GetTapePosition' crashes
     // and burns (which is unusual since usually when you pass invalid args
     // to an API it usually just returns an error code, but in this case it

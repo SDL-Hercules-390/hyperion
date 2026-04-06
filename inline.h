@@ -511,7 +511,7 @@ static inline U64 bit_deposit_64( U64 a, U64 mask )
 }
 
 /*-------------------------------------------------------------------*/
-/*                 Index adressing functions                         */
+/*                 Index addressing functions                        */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -548,7 +548,7 @@ static inline U64 get_address_from_logical_index( REGS* regs, int x2, int b2, in
     U64 temp64;
     U32 idx;                          // unsigned int index
 
-    // intermediate unsigbed x2 (bits 32 to 63) plus signed dx2 displacement
+    // intermediate unsigned x2 (bits 32 to 63) plus signed dx2 displacement
     idx =  ( x2 ) ? regs->GR_L( x2 ) : 0;
     idx += dx2 ;
 
@@ -737,7 +737,7 @@ inline bool ARCH_DEP( is_store_protected )( VADR addr,
 {
     /* [3.4.4] Low-address protection prohibits stores into certain
        locations in the prefixed storage area of non-private address
-       address spaces, if the low-address control bit in CR0 is set,
+       spaces, if the low-address control bit in CR0 is set,
        regardless of the access key and storage key */
     if (ARCH_DEP( is_low_address_protected )( addr, regs ))
         return true;

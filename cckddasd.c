@@ -177,7 +177,7 @@ void cckd_dasd_term_if_appropriate()
             broadcast_condition( &cckdblk.racond );
             wait_condition( &cckdblk.termcond, &cckdblk.ralock );
         }
-        cckdblk.ramax = max;    /* Restore orignal value */
+        cckdblk.ramax = max;    /* Restore original value */
     }
     release_lock( &cckdblk.ralock );
 
@@ -193,7 +193,7 @@ void cckd_dasd_term_if_appropriate()
                 broadcast_condition( &cckdblk.dhcond );
                 wait_condition( &cckdblk.termcond, &cckdblk.dhlock );
             }
-            cckdblk.dhmax = max;    /* Restore orignal value */
+            cckdblk.dhmax = max;    /* Restore original value */
         }
         release_lock( &cckdblk.dhlock );
     }
@@ -208,7 +208,7 @@ void cckd_dasd_term_if_appropriate()
             broadcast_condition( &cckdblk.gccond );
             wait_condition( &cckdblk.termcond, &cckdblk.gclock );
         }
-        cckdblk.gcmax = max;    /* Restore orignal value */
+        cckdblk.gcmax = max;    /* Restore original value */
     }
     release_lock( &cckdblk.gclock );
 
@@ -222,7 +222,7 @@ void cckd_dasd_term_if_appropriate()
             broadcast_condition( &cckdblk.wrcond );
             wait_condition( &cckdblk.termcond, &cckdblk.wrlock );
         }
-        cckdblk.termwr = max;    /* Restore orignal value */
+        cckdblk.termwr = max;    /* Restore original value */
     }
     release_lock( &cckdblk.wrlock );
 
@@ -566,7 +566,7 @@ CCKD_EXT       *cckd;                   /* -> cckd extension         */
 /* Open a cckd file                                                  */
 /*                                                                   */
 /* If O_CREAT is not set and mode is non-zero then the error message */
-/* will be supressed.                                                */
+/* will be suppressed.                                               */
 /*-------------------------------------------------------------------*/
 int cckd_open (DEVBLK *dev, int sfx, int flags, mode_t mode)
 {
@@ -1306,7 +1306,7 @@ cckd_read_trk_retry:
 
         release_lock (&cckd->cckdiolock);
 
-        /* Asynchrously schedule readaheads */
+        /* Asynchronously schedule readaheads */
         if (curtrk > 0 && trk > curtrk && trk <= curtrk + 2)
             cckd_readahead (dev, trk);
 
@@ -2042,7 +2042,7 @@ void* cckd_writer( void* arg )
 {
 int             writer;                 /* Writer identifier         */
 int             o;                      /* Cache entry found         */
-TID             tid;                    /* Writer thead id           */
+TID             tid;                    /* Writer thread id          */
 char            threadname[40];
 int             rc;
 int             wrs;
@@ -5216,8 +5216,8 @@ void add_dev_to_cckd_chain_locked( DEVBLK* new_dev )
         // is reached, saving the ptr to each device's CCKD_EXT along
         // the way.
         //
-        // When we're done, our CCKD_EXT pointer will alway point to
-        // the CCKD_EXT of the device that was previosuly AS the last
+        // When we're done, our CCKD_EXT pointer will always point to
+        // the CCKD_EXT of the device that was previously AS the last
         // device in the chain (as its 'devnext' is currently NULL).
 
         for (dev = cckdblk.dev1st; dev; cckd = dev->cckd_ext,
@@ -5275,7 +5275,7 @@ void remove_dev_from_cckd_chain_locked( DEVBLK* old_dev )
     // Otherwise we need to locate the device in the chain that
     // currently points to US (our PREVIOUS link in the chain).
 
-    for (prev_dev = cckdblk.dev1st,         // (start at begining)
+    for (prev_dev = cckdblk.dev1st,         // (start at beginning)
          prev_ext = prev_dev->cckd_ext;     // (save its ext pointer)
          
          prev_ext->devnext != old_dev;      // (until our prev found)
@@ -7294,7 +7294,7 @@ DLL_EXPORT DEVHND cckd_dasd_device_hndinfo = {
         NULL,                          /* Device Attention           */
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
-        NULL,                          /* Signal Adapter Ouput       */
+        NULL,                          /* Signal Adapter Output      */
         NULL,                          /* Signal Adapter Sync        */
         NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
@@ -7322,7 +7322,7 @@ DLL_EXPORT DEVHND cfba_dasd_device_hndinfo = {
         NULL,                          /* Device Attention           */
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
-        NULL,                          /* Signal Adapter Ouput       */
+        NULL,                          /* Signal Adapter Output      */
         NULL,                          /* Signal Adapter Sync        */
         NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */

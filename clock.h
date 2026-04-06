@@ -290,11 +290,11 @@ void ETOD_shift( ETOD* result, const ETOD a, int shift )
         high = a.high;
         low  = a.low;
     }
-    else if (shift < 0)             /* Negtative: shift LEFT */
+    else if (shift < 0)             /* Negative: shift LEFT */
     {
         shift = -shift;             /* (get positive shift amount) */
 
-        if (shift >= 64)            /* Negtative: shift LEFT >= 64 */
+        if (shift >= 64)            /* Negative: shift LEFT >= 64 */
         {
             shift -= 64;            /* (get shift amount 0-64) */
 
@@ -307,7 +307,7 @@ void ETOD_shift( ETOD* result, const ETOD a, int shift )
 
             low = 0;
         }
-        else                        /* Negtative: shift LEFT < 64 */
+        else                        /* Negative: shift LEFT < 64 */
         {
             high = a.high << shift | a.low >> (64 - shift);
             low  = a.low << shift;

@@ -41,7 +41,7 @@ static DEVHND con1052_device_hndinfo;
 /*                                                                   */
 /* Note: An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialization (that is, no data is       */
-/* actually transfered). In this case, IL is not indicated for a     */
+/* actually transferred). In this case, IL is not indicated for a    */
 /* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/

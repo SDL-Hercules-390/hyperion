@@ -1267,7 +1267,7 @@ void cgibin_api_v1(WEBBLK *webblk)
     "\"psw\":\"Returns the PSW\","
     "\"version\":\"Returns version and build information\","
     "\"syslog\":\"Returns the hercules log as an array in `syslog:`. Can take two optional parameters:\\n"
-                "- command: the command submitted will be interepreted by hercules"
+                "- command: the command submitted will be interpreted by hercules"
                 "similar to the hercules console, the default is an empty string\\n"
                 "- msgcount: is a variable and can be changed via get/post/cookie"
                 "and controls the number of lines returned the default is 22 lines\","
@@ -1645,7 +1645,7 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /*-------------------------------------------------------------------*/
 /* Notes:                                                            */
 /* - command is a variable and can be changed via get/post/cookie,   */
-/*   the command submitted will be interepreted by hercules          */
+/*   the command submitted will be interpreted by hercules           */
 /*   similar to the hercules console, the default is an empty string */
 /* - msgcount is a variable and can be changed via get/post/cookie   */
 /*   and controls the number of lines returned in "syslog",          */

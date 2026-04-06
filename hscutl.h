@@ -209,7 +209,7 @@ HUT_DLL_IMPORT const char* trimloc( const char* loc );
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
 /* being exactly 26 characters long (27 bytes with null terminator). */
 /* pTV points to the TIMEVAL to be formatted. If NULL is passed then */
-/* the curent time of day as returned by a call to 'gettimeofday' is */
+/* the current time of day returned by a call to 'gettimeofday' is   */
 /* used instead. buf must point to a char work buffer where the time */
 /* is formatted into and must not be NULL. bufsz is the size of buf  */
 /* and must be >= 2. If successful then the value of buf is returned */
@@ -279,7 +279,7 @@ HUT_DLL_IMPORT char*   trim ( char* str, const char* dlm ); // (trim both)
 
 #if defined( HAVE_PTHREAD_SETNAME_NP ) // !defined( _MSVC_ ) implied
 /*-------------------------------------------------------------------*/
-/* Set thead name           (nonstandard GNU extension)              */
+/* Set thread name          (nonstandard GNU extension)              */
 /*                          (note: retcode is error code, NOT errno) */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT int nix_set_thread_name( pthread_t tid, const char* name );

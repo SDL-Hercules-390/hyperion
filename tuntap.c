@@ -481,7 +481,7 @@ int             TUNTAP_Close( int fd, int internal )
         return -1;
     }
 
-    // Only remove the device from the OS if we created it outselves
+    // Only remove the device from the OS if we created it ourselves
     if (internal) {
         int sock = socket(AF_INET, SOCK_DGRAM, 0);
         if (sock < 0) {
@@ -1607,7 +1607,7 @@ BYTE ip[4];
         IANA ETHERNET ADDRESS BLOCK - UNICAST USE
 
         The IANA owns an Ethernet address block which may be used for
-        unicast address asignments or other special purposes.
+        unicast address assignments or other special purposes.
 
         The IANA may assign unicast global IEEE 802 MAC address from it's
         assigned OUI (00-00-5E) for use in IETF standard track protocols.  The

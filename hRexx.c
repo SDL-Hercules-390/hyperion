@@ -16,8 +16,8 @@
 /* the HAVE_OBJECT_REXX *and* HAVE_REGINA_REXX build macros are  */
 /* BOTH #defined at build time, which provides the ability to choose */
 /* at runtime which interpreter should be used. If only one of the   */
-/* build constants is #defined then support for that intrepreter     */
-/* and ONLY that intrepreter is generated and the ability to choose  */
+/* build constants is #defined then support for that interpreter     */
+/* and ONLY that interpreter is generated and the ability to choose  */
 /* at runtime which one to use is disabled.                          */
 /*-------------------------------------------------------------------*/
 
@@ -483,7 +483,7 @@ static int Enable( char* wPackage )
     }
 
     /* Can't Enable a different Rexx package until the
-       the currently enabled package is disabled first. */
+       currently enabled package is disabled first. */
     if (IsEnabled( NULL ))
     {
         // "REXX(%s) Rexx already started/enabled"
@@ -1361,7 +1361,7 @@ static void* exec_async_thread( void* p )
 }
 
 /*-------------------------------------------------------------------*/
-/* Execute a Rexx script asyncronously                               */
+/* Execute a Rexx script asynchronously                              */
 /*-------------------------------------------------------------------*/
 static int exec_async
 (
@@ -1677,7 +1677,7 @@ int exec_cmd( int argc, char* argv[], char* cmdline )
     }
 
     /* If they specified a specific location then
-       it obviously doesn't doesn't exist there.
+       it obviously doesn't exist there.
     */
     if (strcmp( basename( scriptname ), pscriptname ) != 0)
         goto resolved;
@@ -1816,7 +1816,7 @@ resolved:
            are not important to the Rexx script being called).  Thus
            we instead simply point to the original unmodified Hercules
            "cmdline" string indexed to where the script's argument(s)
-           string actully begins.
+           string actually begins.
 
         -------------------------------------------------------------*/
 

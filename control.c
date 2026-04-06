@@ -2563,7 +2563,7 @@ CREG    pte;                            /* Page Table Entry          */
         }
         else
         {
-            /* Unlock reguest */
+            /* Unlock request */
             if (pte & PAGETAB_PGLOCK)
             {
                 pte &= ~((U64)PAGETAB_PGLOCK);
@@ -6186,7 +6186,7 @@ char    log_buf[128];                   /* Log buffer                */
                 break;
             }
 
-            /* Put the the target CPU into the stopping state */
+            /* Put the target CPU into the stopping state */
             tregs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT( tregs );
 
@@ -6220,7 +6220,7 @@ char    log_buf[128];                   /* Log buffer                */
             /* Indicate store status is required when stopped */
             ON_IC_STORSTAT( tregs );
 
-            /* Put the the target CPU into the stopping state */
+            /* Put the target CPU into the stopping state */
             tregs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT( tregs );
 

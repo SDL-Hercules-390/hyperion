@@ -14,7 +14,7 @@
 
 struct COMMADPT
 {
-    DEVBLK *dev;                /* the devblk to which this CA is attched   */
+    DEVBLK *dev;                /* the devblk to which this CA is attached  */
     TID  cthread;               /* Thread used to control the socket        */
     TID  tthread;               /* Thread used to control the socket        */
     U16  lport;                 /* Local listening port                     */
@@ -38,7 +38,7 @@ struct COMMADPT
         telnet_opt:1,           /* expecting telnet option char             */
         telnet_iac:1,           /* expecting telnet command char            */
         telnet_int:1,           /* telnet interrupt received                */
-        hangup:1,               /* host initated shutdown                   */
+        hangup:1,               /* host initiated shutdown                  */
         is_3270:1,              /* 0=tty 1=3270                             */
         eol_flag:1,             /* 1 = CR has been received                 */
         debug_sna:1,            /* 1 = write debug messages                 */

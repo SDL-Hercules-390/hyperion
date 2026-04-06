@@ -208,7 +208,7 @@ static const struct signal_info signal_table[] =
   ENTRY(SIGGRANT, "SIGGRANT", "Monitor mode granted"),
 #endif
 #if defined (SIGRETRACT)
-  ENTRY(SIGRETRACT, "SIGRETRACT", "Need to relinguish monitor mode"),
+  ENTRY(SIGRETRACT, "SIGRETRACT", "Need to relinquish monitor mode"),
 #endif
 #if defined (SIGMSG)
   ENTRY(SIGMSG, "SIGMSG", "Monitor mode data available"),
