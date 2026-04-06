@@ -2036,11 +2036,6 @@ int auto_trace_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 
-#if defined( SUPPRESS_128BIT_PRINTF_FORMAT_WARNING )
-PUSH_GCC_WARNINGS()
-DISABLE_GCC_WARNING( "-Wformat" )
-#endif
-
 /*-------------------------------------------------------------------*/
 /* ipending command - display pending interrupts                     */
 /*-------------------------------------------------------------------*/
@@ -2235,10 +2230,10 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     }
 
     // "config mask "F_CPU_BITMAP" started mask "F_CPU_BITMAP" waiting mask "F_CPU_BITMAP
-    WRMSG( HHC00870, "I", sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask );
+    WRMSG( HHC00870, "I", F_CPU_BITARG(sysblk.config_mask), F_CPU_BITARG(sysblk.started_mask), F_CPU_BITARG(sysblk.waiting_mask) );
 
     // "syncbc mask "F_CPU_BITMAP" %s"
-    WRMSG( HHC00871, "I", sysblk.sync_mask, sysblk.syncing ? "sync in progress" : "" );
+    WRMSG( HHC00871, "I", F_CPU_BITARG(sysblk.sync_mask), sysblk.syncing ? "sync in progress" : "" );
 
     WRMSG( HHC00872, "I", test_lock(&sysblk.sigplock) ? "" : "not ");
     WRMSG( HHC00873, "I", test_lock(&sysblk.todlock) ? "" : "not ");
@@ -2364,11 +2359,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
-#if defined( SUPPRESS_128BIT_PRINTF_FORMAT_WARNING )
-POP_GCC_WARNINGS()
-#endif
-
 
 /*-------------------------------------------------------------------*/
 /* bear command - display or alter BEAR register                     */

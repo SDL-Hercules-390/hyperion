@@ -90,6 +90,10 @@
 /*  bits.  ... There is no support in GCC for expressing an integer  */
 /*  constant of type __int128 for targets with long long integer     */
 /*  less than 128 bits wide."                                        */
+/*                                                                   */
+/* In addition to not having adequate __uint128_t s/p-rintf format   */
+/* support, the macro F_CPU_BITARG is introduced for values used by  */
+/* F_CPU_BITMAP. Decomposing 128-bit types to 64-bit when required.  */
 /*-------------------------------------------------------------------*/
 
 #if MAX_CPU_ENGS <= 0
@@ -97,14 +101,15 @@
 #elif MAX_CPU_ENGS <= 32
     typedef U32                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%8.8"PRIX32
+    #define F_CPU_BITARG(X)     (CPU_BITMAP)(X)
 #elif MAX_CPU_ENGS <= 64
     typedef U64                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%16.16"PRIX64
+    #define F_CPU_BITARG(X)     (CPU_BITMAP)(X)
 #elif MAX_CPU_ENGS <= 128
-  typedef __uint128_t         CPU_BITMAP;
-  // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
-  #define SUPPRESS_128BIT_PRINTF_FORMAT_WARNING
-  #define F_CPU_BITMAP        "%16.16"PRIX64
+    typedef __uint128_t         CPU_BITMAP;
+    #define F_CPU_BITMAP        "%016"PRIx64 "%016"PRIx64
+    #define F_CPU_BITARG(X)     (U64)((X) >> 64), (U64)(X)
 #else
   #error MAX_CPU_ENGS cannot exceed 128
 #endif
