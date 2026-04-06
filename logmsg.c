@@ -14,76 +14,6 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/*                Helper macro "BFR_VSNPRINTF"                       */
-/*-------------------------------------------------------------------*/
-/* Original design by Fish                                           */
-/* Modified by Jay Maynard                                           */
-/* Further modification by Ivan Warren                               */
-/*                                                                   */
-/* Purpose:                                                          */
-/*                                                                   */
-/*  set 'bfr' to contain a C string based on a message format        */
-/*  and va_list of args. NOTE: 'bfr' must be free()d when done.      */
-/*                                                                   */
-/* Local variables referenced:                                       */
-/*                                                                   */
-/*  char*    bfr;     must be originally defined                     */
-/*  int      siz;     must be defined and contain a start size       */
-/*  va_list  vl;      must be defined and initialised with va_start  */
-/*  char*    fmt;     is the message format                          */
-/*  int       rc;     will contain final size                        */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-
-#define  BFR_CHUNKSIZE    (256)
-
-#define  BFR_VSNPRINTF()                                            \
-                                                                    \
-    do                                                              \
-    {                                                               \
-        va_list  original_vl;                                       \
-                                                                    \
-        bfr = (char*) calloc( 1, siz );                             \
-        rc = -1;                                                    \
-                                                                    \
-        va_copy( original_vl, vl );                                 \
-        while (bfr && rc < 0)                                       \
-        {                                                           \
-            rc = vsnprintf( bfr, siz, fmt, original_vl );           \
-                                                                    \
-            if (rc >= 0 && rc < siz)                                \
-                break;                                              \
-                                                                    \
-            rc = -1;                                                \
-            siz += BFR_CHUNKSIZE;                                   \
-                                                                    \
-            if (siz > 65536)                                        \
-                break;                                              \
-                                                                    \
-            bfr = realloc( bfr, siz );                              \
-            va_end( original_vl );                                  \
-            va_copy( original_vl, vl ); /* traverse 'vl' again */   \
-        }                                                           \
-        va_end( original_vl  );                                     \
-                                                                    \
-        if (bfr && strlen( bfr ) == 0 && strlen( fmt) != 0)         \
-        {                                                           \
-            free( bfr );                                            \
-            bfr = strdup( fmt );                                    \
-        }                                                           \
-        else                                                        \
-        {                                                           \
-            if (bfr)                                                \
-            {                                                       \
-                char* p = strdup( bfr );                            \
-                free( bfr );                                        \
-                bfr = p;                                            \
-            }                                                       \
-        }                                                           \
-    }                                                               \
-    while (0)
-
-/*-------------------------------------------------------------------*/
 /*       panel_command message capturing structs and vars            */
 /*-------------------------------------------------------------------*/
 
@@ -384,7 +314,6 @@ static void vfwritemsg( BYTE panel, FILE* f,
     char     prefix[ 32 ]  =  {0};
     char*    bfr           =  NULL;
     int      rc            =  1;
-    int      siz           =  1024;
     char*    msgbuf;
     size_t   msglen, bufsiz;
 
@@ -393,12 +322,11 @@ static void vfwritemsg( BYTE panel, FILE* f,
   #endif
 
     // Format just the message part, without the filename and line number
-
-    BFR_VSNPRINTF();  // Note: uses 'vl', 'bfr', 'siz', 'fmt' and 'rc'.
-    if (!bfr)         // If BFR_VSNPRINTF runs out of memory,
+    rc = vasprintf( &bfr, fmt, vl );
+    if (rc < 0)       // If vasprintf runs out of memory,
         return;       // then there's nothing more we can do.
 
-    bufsiz = msglen = strlen( bfr ) + 2;
+    bufsiz = msglen = ((size_t)rc) + 2;
 
     // Prefix message with filename and line number, if requested
 
@@ -484,14 +412,13 @@ static void vflogmsg( BYTE panel, FILE* f, const char* fmt, va_list vl )
 {
     char    *bfr =   NULL;
     int      rc;
-    int      siz =   1024;
 
 #ifdef NEED_LOGMSG_FFLUSH
     fflush(f);
 #endif
 
-    BFR_VSNPRINTF();  // Note: uses 'vl', 'bfr', 'siz', 'fmt' and 'rc'.
-    if (!bfr)         // If BFR_VSNPRINTF runs out of memory,
+    rc = vasprintf( &bfr, fmt, vl );
+    if (rc < 0)       // If vasprintf runs out of memory,
         return;       // then there's nothing more we can do.
 
     flog_write( panel, f, bfr );

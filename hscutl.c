@@ -251,6 +251,57 @@ strlcat(char *dst, const char *src, size_t siz)
 }
 #endif // !defined(HAVE_STRLCAT)
 
+#if !defined( HAVE_VASPRINTF )
+
+DLL_EXPORT int
+vasprintf(char **strp, const char *fmt, va_list ap)
+{
+    va_list vcopy;
+    int expectedLen, actualLen;
+    size_t bufCount;
+    char *buf;
+
+    va_copy( vcopy, ap );
+  #if defined(_MSVC_) /* See w32_vsnprintf documentation */
+    expectedLen = _vscprintf( fmt, vcopy );
+  #else
+    expectedLen = vsnprintf( NULL, 0, fmt, vcopy );
+  #endif
+    va_end(vcopy);
+    if (expectedLen < 0)
+    {
+        *strp = NULL;
+        return -1;
+    }
+
+    bufCount = ((size_t)expectedLen) + 1;
+    if ((buf = (char *)malloc( bufCount )) == NULL)
+    {
+        *strp = NULL;
+        errno = ENOMEM;
+        return -1;
+    }
+
+  #if defined(_MSVC_)
+    actualLen = _vsnprintf_s( buf, bufCount, bufCount - 1, fmt, ap );
+  #else
+    actualLen = vsprintf( buf, fmt, ap );
+  #endif
+    if (actualLen != expectedLen)
+    {
+        free(buf);
+
+        *strp = NULL;
+        errno = EINVAL;
+        return -1;
+    }
+
+    *strp = buf;
+    return expectedLen;
+}
+
+#endif // !defined(HAVE_VASPRINTF)
+
 /* The following structures are defined herein because they are private structures */
 /* that MUST be opaque to the outside world                                        */
 typedef struct _SYMBOL_TOKEN
@@ -1089,29 +1140,19 @@ DLL_EXPORT int hwrite(int s,const char *bfr,size_t sz)
 
 DLL_EXPORT int hprintf(int s,char *fmt,...)
 {
-    char *bfr;
-    size_t bsize=1024;
-    int rc;
     va_list vl;
+    int rc;
+    char *bfr = NULL;
 
-    bfr=malloc(bsize);
-    while(1)
+    va_start( vl, fmt );
+    rc = vasprintf( &bfr, fmt, vl );
+    va_end( vl );
+    if (rc < 0)
     {
-        if(!bfr)
-        {
-            return -1;
-        }
-        va_start(vl,fmt);
-        rc=vsnprintf(bfr,bsize,fmt,vl);
-        va_end(vl);
-        if(rc<(int)bsize)
-        {
-            break;
-        }
-        bsize+=1024;
-        bfr=realloc(bfr,bsize);
+        return -1;
     }
-    rc=hwrite(s,bfr,strlen(bfr));
+
+    rc = hwrite(s, bfr, rc + 1);
     free(bfr);
     return rc;
 }
@@ -2736,49 +2777,22 @@ DLL_EXPORT void send2gui( const char* pszFormat, ... )
 {
     if (extgui)
     {
-        va_list  vl, original_vl;
-        int      size  = 1024;
-        int      rc    = -1;
+        va_list  vl;
+        int      rc;
         char*    msg   = NULL;
 
-        // CRASH if invalid function arguments or Out of Memory
-
-        if (0
-            || !pszFormat
-            || !(msg = malloc( size ))
-        )
-            CRASH();
-
         // Format the message...
-
         va_start( vl, pszFormat );
-        va_copy( original_vl, vl );
+        rc = vasprintf( &msg, pszFormat, vl );
+        va_end( vl );
 
-        while( rc < 0 )
-        {
-            va_start( vl, pszFormat );
-
-            rc = vsnprintf( msg, size, pszFormat, vl );
-
-            if (0
-                || (rc > 0 && rc < size)    // success
-                || (size >= 4096)           // too big
-            )
-                break;
-
-            if (!(msg = realloc( msg, size += 1024 )))
-                CRASH(); // (Out of Memory)
-            va_copy( vl, original_vl );
-        }
-        va_end(original_vl);
-
+        // CRASH if invalid function arguments or Out of Memory
         // CRASH if unable to successfully format a message
-
-        if (0
-            || rc <= 0
-            || rc >= size
-        )
+        if (rc < 0)
+        {
             CRASH(); // (WTF?!)
+            return;
+        }
 
         // Send the message to HercGUI...
 

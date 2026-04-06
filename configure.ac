@@ -1172,6 +1172,7 @@ AC_CHECK_FUNCS( pvalloc )
 AC_CHECK_FUNCS( valloc )
 AC_CHECK_FUNCS( posix_memalign )
 
+AC_CHECK_FUNCS( vasprintf )
 AC_CHECK_FUNCS( vsscanf,
     [hc_cv_have_vsscanf=yes],
     [hc_cv_have_vsscanf=no] )

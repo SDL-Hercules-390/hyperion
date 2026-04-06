@@ -146,6 +146,24 @@ HUT_DLL_IMPORT size_t
 strlcat(char *dst, const char *src, size_t siz);
 #endif
 
+#if !defined( HAVE_VASPRINTF )
+
+/*
+ * The functions asprintf() and vasprintf() are analogs of sprintf(3) and
+ * vsprintf(3), except that they allocate a string large enough to hold the
+ * output including the terminating null byte, and return a pointer to it via
+ * the first argument. This pointer should be passed to free(3) to release the
+ * allocated storage when it is no longer needed.
+ *
+ * When successful, these functions return the number of bytes printed, just
+ * like sprintf(3).  On error, -1 is returned, errno is set to indicate the
+ * error, and the contents of strp are undefined.
+ */
+HUT_DLL_IMPORT int
+vasprintf(char **strp, const char *fmt, va_list ap) ATTR_PRINTF(2,0);
+
+#endif // !defined(HAVE_VASPRINTF)
+
 /* The following helper macros can be used in place of direct calls
  * to either the strlcpy or strlcat functions ONLY when the destination
  * buffer is an array. They must NEVER be used whenever the destination

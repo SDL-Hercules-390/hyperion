@@ -3973,34 +3973,35 @@ DLL_EXPORT int w32_snprintf( char* bfr, size_t cnt, const char* fmt, ... )
 DLL_EXPORT int w32_fprintf( FILE* stream, const char* format, ... )
 {
     char* buff = NULL;
-    int bytes = 0, rc;
+    int bytes, rc;
     va_list vl;
     SOCKET sock;
 
     ASSERT( stream && format );
 
-    va_start( vl, format );
-
     {
         int sd = fileno( stream );
         if ( !socket_is_socket( sd ) )
-            return vfprintf( stream, format, vl );
+        {
+            va_start( vl, format );
+            rc = vfprintf( stream, format, vl );
+            va_end( vl );
+
+            return rc;
+        }
         sock = (SOCKET) _get_osfhandle( sd );
     }
 
-    do
+    va_start( vl, format );
+    bytes = vasprintf( &buff, format, vl );
+    va_end( vl );
+    if (bytes < 0)
     {
-        free( buff );
-
-        if ( !( buff = malloc( bytes += 1000 ) ) )
-        {
-            errno = ENOMEM;
-            return -1;
-        }
+        errno = ENOMEM;
+        return -1;
     }
-    while ( ( rc = vsnprintf( buff, bytes, format, vl ) ) < 0 );
 
-    rc = send( sock, buff, bytes = rc, 0 );
+    rc = send( sock, buff, bytes + 1, 0 );
 
     free( buff );
 

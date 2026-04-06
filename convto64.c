@@ -95,28 +95,24 @@ static int syntax( const char* pgm, const char* msgfmt, ... )
 
     if (msgfmt)
     {
-        const int  chunksize  = 128;
-        int        rc         = -1;
-        int        buffsize   =  0;
-        char*      msgbuf     = NULL;
         va_list    vargs;
+        int        rc;
+        char*      msgbuf     = NULL;
 
-        do
+        va_start( vargs, msgfmt );
+        rc = vasprintf( &msgbuf, msgfmt, vargs );
+        va_end( vargs );
+
+        if (rc >= 0)
         {
-            if (msgbuf) free( msgbuf );
-            if (!(msgbuf = calloc( 1, buffsize += chunksize )))
-                BREAK_INTO_DEBUGGER();
-
-            va_end(   vargs );
-            va_start( vargs, msgfmt );
-
-            rc = vsnprintf( msgbuf, buffsize, msgfmt, vargs );
+            // "Syntax error: %s"
+            FWRMSG( stderr, HHC02959, "E", msgbuf );
+            free( msgbuf );
         }
-        while (rc < 0 || rc >= buffsize);
-
-        // "Syntax error: %s"
-        FWRMSG( stderr, HHC02959, "E", msgbuf );
-        free( msgbuf );
+        else
+        {
+            BREAK_INTO_DEBUGGER();
+        }
     }
 
     // "Usage: %s [-r] [-c] [-q] [-v] infile outfile"

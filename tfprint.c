@@ -3266,7 +3266,7 @@ static void print_args( int argc, char* argv[] )
     // into a buffer and then do one printf of that buffer since we do
     // not know how big that buffer should be. Some arguments could be
     // quite long! (Yeah, yeah, we COULD use malloc/realloc much like
-    // BFR_VSNPRINTF does, but that would be overkill IMHO).
+    // vasprintf does, but that would be overkill IMHO).
 
     // HHC03217 "Args: %s"
     printf( "HHC03217I Args:" );
