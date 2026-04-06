@@ -779,8 +779,8 @@ static INLINE BYTE ARCH_DEP( float32_signaling_compare )( float32_t op1, float32
 
 #if !defined( _IEEE_NONARCHDEP_ )
 
-#if !defined( HAVE_MATH_H ) && (_MSC_VER < VS2015)
-/* Avoid double definition for VS2015 (albeit with different values). */
+#if !defined( HAVE_MATH_H ) && (_MSC_VER < VS2013)
+/* Avoid double definition for VS2013 (albeit with different values). */
 /* All floating-point numbers can be put in one of these categories.  */
 enum
 {
@@ -790,7 +790,7 @@ enum
     FP_SUBNORMAL    =  3,
     FP_NORMAL       =  4
 };
-#endif /*!defined( HAVE_MATH_H ) && (_MSC_VER < VS2015) */
+#endif /*!defined( HAVE_MATH_H ) && (_MSC_VER < VS2013) */
 
 /*
  * Classify emulated fp values
