@@ -364,6 +364,7 @@ struct _ECPSVM_SASTATS
     BYTE micevma2; \
     BYTE micevma3; \
     BYTE micevma4; \
+    buf[0] = '\0'; /* Ensure null delimited for STRLCAT */ \
     if(SIE_STATE(regs)) \
         return(1); \
     if(!PROBSTATE(&regs->psw)) \
