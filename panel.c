@@ -240,10 +240,10 @@ static FILE *confp   = NULL;            /* Console file pointer      */
 
 typedef struct _PANMSG      /* Panel message control block structure */
 {
-    struct _PANMSG*     next;           /* --> next entry in chain   */
-    struct _PANMSG*     prev;           /* --> prev entry in chain   */
-    int                 msgnum;         /* msgbuf 0-relative entry#  */
-    char                msg[MSG_SIZE];  /* text of panel message     */
+    struct _PANMSG*     next;               /* --> next entry in chain   */
+    struct _PANMSG*     prev;               /* --> prev entry in chain   */
+    int                 msgnum;             /* msgbuf 0-relative entry#  */
+    char                msg[MSG_SIZE + 1];  /* text of panel message     */
 }
 PANMSG;                     /* Panel message control block structure */
 
@@ -1793,6 +1793,7 @@ size_t  loopcount;                      /* Number of iterations done */
         curmsg->prev = curmsg - 1;
         curmsg->msgnum = i;
         memset(curmsg->msg,SPACE,MSG_SIZE);
+        curmsg->msg[MSG_SIZE] = '\0';
     }
 
     /* Complete the circle */
@@ -2920,6 +2921,7 @@ FinishShutdown:
 
                 /* Copy message into next available PANMSG slot */
                 memcpy( curmsg->msg, readbuf, MSG_SIZE );
+                curmsg->msg[MSG_SIZE] = '\0';
 
             } /* end if (!readoff || readoff >= MSG_SIZE) */
         } /* end Read message bytes until newline... */
