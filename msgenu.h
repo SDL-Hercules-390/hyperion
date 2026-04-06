@@ -216,10 +216,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define MSG( id, sev, ... )     #id "%s " id "\n", sev,           ## __VA_ARGS__
 #define MSG_C( id, sev, ... )   #id "%s " id "",   sev,           ## __VA_ARGS__
 
-#if defined( _MSVC_ )// MS Windows
+#if defined( _MSVC_ ) && !defined(__clang__) // MS Windows
   #define EXTGUIMSG( ... )      send2gui(                         ## __VA_ARGS__ )
 #else // fucking linux
-  #define EXTGUIMSG( ... )      send2gui(                          # __VA_ARGS__ )
+  #define EXTGUIMSG( ... )      send2gui(                            __VA_ARGS__ )
 #endif
 
 /*-------------------------------------------------------------------*/

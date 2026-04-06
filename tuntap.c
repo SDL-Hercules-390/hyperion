@@ -177,6 +177,8 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         waitpid (pid, &status, 0);
         errno = sv_err;
     }
+#else
+    UNREFERENCED(iFlags);
 #endif /* if !defined( OPTION_W32_CTCI ) */
 
     return rc;

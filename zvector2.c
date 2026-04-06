@@ -211,17 +211,6 @@ facility  code  test#   Instruction                                             
     #endif
 #endif
 
-/*-------------------------------------------------------------------*/
-/* 128 bit types                                                     */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/* are the compiler 128 bit types available?                         */
-/*-------------------------------------------------------------------*/
-#if defined( __SIZEOF_INT128__ )
-    #define _USE_128_
-#endif
-
 /*===================================================================*/
 /* LOCAL Registers (saved vector registers)                          */
 /*     local vector registers ensure source input of a vector        */

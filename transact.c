@@ -237,6 +237,8 @@ bool        per_tend = false;           /* true = check for PER TEND */
 
     S( inst, regs, b2, effective_addr2 );
 
+    UNREFERENCED( effective_addr2 );
+
     TXF_SIE_INTERCEPT( regs, TEND );
 
     TXF_EXECUTE_INSTR_CHECK( regs );
@@ -708,6 +710,8 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
     SIL( inst, regs, i2, b1, effective_addr1 );
+
+    UNREFERENCED( effective_addr1 );
 
     TXF_SIE_INTERCEPT( regs, TBEGINC );
 

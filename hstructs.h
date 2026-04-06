@@ -1931,6 +1931,12 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdlcount;              /* Locate record count       */
         BYTE    ckdextcd;               /* extended code             */
         void   *cckd_ext;               /* -> CCKD_EXT, else NULL    */
+        /* 
+         * #TODO: MSVC handles bit-field packing by aligning members to the
+         * boundary of their underlying type, inserting padding to ensure fields
+         * do not split across boundaries defined by the type size. Change to
+         * u_int when bumping HDL_VERS_DEVBLK.
+         */
         BYTE    cckd64:1;               /* 1=CCKD64/CFBA64           */
         BYTE    devcache:1;             /* 0 = device cache off
                                            1 = device cache on       */
@@ -1961,6 +1967,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   ckdUCnxt:1;             /* 1=CMDREJ next chained CCW     :AE: */
         u_int   ckdPostRSSD:1;          /* 1=Prev CCW was RSSD           :AE: */
         u_int   ckdPostSSM:1;           /* 1=Prev CCW was SSM            :AE: */
+        /* See #TODO above */
         BYTE    ckdnvs:1;               /* 1=NVS defined             */
         BYTE    ckdraid:1;              /* 1=RAID device             */
         U16     ckdssdlen;              /* #of bytes of data prepared

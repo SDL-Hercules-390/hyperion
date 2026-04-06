@@ -4239,7 +4239,7 @@ static void parse_option_codepage( const char* optname )
 /*-------------------------------------------------------------------*/
 static void parse_tracefile( const char* filename )
 {
-    off_t  off_size;    // (file size)
+    off_t  off_size = 0; // (file size)
 
     /* ALWAYS save the filename if it was provided to us */
     hostpath( pathname, filename, sizeof( pathname ));

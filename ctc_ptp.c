@@ -2579,7 +2579,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     HRB             hrb;
     char            *argn[MAX_ARGS];
     char            **argv = argn;
+#if !defined(OPTION_W32_CTCI)
     int             saw_if = 0;        /* -x (or --if) specified */
+#endif
     int             saw_conf = 0;      /* Other configuration flags present */
 
 

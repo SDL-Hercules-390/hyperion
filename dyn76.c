@@ -355,13 +355,13 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
 #endif
 
     /* Pseudo register contents are cached here once retrieved */
-    U32    R0;
-    U32    R1;
-    U32    R2;
-    U32    R3;
-    U32    R4;
-    U32    R5;
-    U32    R15;
+    U32    R0 = 0;
+    U32    R1 = 0;
+    U32    R2 = 0;
+    U32    R3 = 0;
+    U32    R4 = 0;
+    U32    R5 = 0;
+    U32    R15 = 0;
 
     /* Initialise the LOCK on our first use */
     if (nfile_init_req)

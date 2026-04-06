@@ -1280,7 +1280,7 @@ DLL_EXPORT const char* trimloc( const char* loc )
     ** The below implementation avoids both issues by just returning
     ** a pointer indexed into the current string constant.
     */
-    char* p = strrchr( loc, '\\' );         /* Windows */
+    const char* p = strrchr( loc, '\\' );   /* Windows */
     if (!p) p = strrchr( loc, '/' );        /* non-Windows */
     if (p)
         loc = p+1;

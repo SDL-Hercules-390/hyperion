@@ -1658,7 +1658,7 @@ void cgibin_api_v1_psw(WEBBLK *webblk)
 /*  /cgi-bin/api/v1/syslog?msgcount=0                                */
 /*  FOREVER                                                          */ 
 /*      /cgi-bin/api/v1/syslog?index=<value_returned_in_JSON_index>  */
-/*      PAUSE a_few_seconds
+/*      PAUSE a_few_seconds                                          */
 /*-------------------------------------------------------------------*/
 void cgibin_api_v1_syslog(WEBBLK *webblk)
 {

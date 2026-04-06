@@ -41,8 +41,8 @@
         const char*  func  = __FUNCTION__;                          \
         int          line  = __LINE__;                              \
                                                                     \
-        char*   p = strrchr( file, '\\' );   /* Windows */          \
-        if (!p) p = strrchr( file, '/' );    /* non-Windows */      \
+        const char* p = strrchr( file, '\\' ); /* Windows */        \
+        if (!p) p = strrchr( file, '/' );      /* non-Windows */    \
         if (p) ++p;                                                 \
         if (p) file = p;                                            \
                                                                     \

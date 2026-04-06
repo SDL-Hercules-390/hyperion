@@ -1195,7 +1195,9 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
 static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                        int argc, char** argx )
 {
+#if !defined( OPTION_W32_CTCI )
     int             saw_if = 0;       /* -if specified               */
+#endif
     int             saw_conf = 0; /* Other configuration flags present */
     struct in_addr  addr;               // Work area for addresses
     int             iMTU;

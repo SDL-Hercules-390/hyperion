@@ -3314,7 +3314,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     /* Program check if basic program call is attempting
        to switch into or out of 64-bit addressing mode */
     if ((ete[4] & ETE4_T) == 0
-        && ((ete[4] & ETE4_G) ? 1 : 0) != regs->psw.amode64)
+        && ((ete[4] & ETE4_G) ? 1u : 0u) != regs->psw.amode64)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
 #endif
     /* Program check if resulting addressing mode is 24 and the
@@ -3476,7 +3476,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
 #if defined( FEATURE_TRACING )
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* Add a mode trace entry when switching in/out of 64 bit mode */
-        if ((regs->CR( 12 ) & CR12_MTRACE) && (regs->psw.amode64 != ((ete[4] & ETE4_G) ? 1 : 0)))
+        if ((regs->CR( 12 ) & CR12_MTRACE) && (regs->psw.amode64 != ((ete[4] & ETE4_G) ? 1u : 0u)))
         {
             /* since ASN trace might be made already, need to save
                current CR12 and use newcr12 for this second entry */

@@ -172,8 +172,9 @@
 /*-------------------------------------------------------------------*/
 inline void concpy( REGS* regs, void* d, void* s, int n )
 {
-    BYTE* u8d = d;
-    BYTE* u8s = s;
+    BYTE* u8d = (BYTE*)d;
+    BYTE* u8s = (BYTE*)s;
+    ptrdiff_t d1;
 
     /* Copy until ready or 8 byte integral boundary */
     while (n && ((uintptr_t) u8d & 7))
@@ -212,7 +213,7 @@ inline void concpy( REGS* regs, void* d, void* s, int n )
 #endif // end code for 32-bit builds
 
     /* Copy double words on enough length and src - dst distance */
-    if (n && labs( u8d - u8s ) > 7)
+    if (n && (d1 = u8d - u8s, d1 > 7 || d1 < -7))
     {
         while(n > 7)
         {
@@ -244,6 +245,7 @@ inline void concpy_rl( REGS* regs, void* d, void* s, int n )
 {
     BYTE* u8d = (BYTE*)d + n;
     BYTE* u8s = (BYTE*)s + n;
+    ptrdiff_t d1;
 
     /* Copy until ready or 8 byte integral boundary */
     while (n && ((uintptr_t) u8d & 7))
@@ -282,7 +284,7 @@ inline void concpy_rl( REGS* regs, void* d, void* s, int n )
 #endif // end code for 32-bit builds
 
     /* Copy double words on enough length and (src - dst) distance */
-    if (n && labs( u8d - u8s ) > 7)
+    if (n && (d1 = u8d - u8s, d1 > 7 || d1 < -7))
     {
         while (n > 7)
         {

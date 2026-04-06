@@ -99,34 +99,34 @@ REGS *regs;
 /*-------------------------------------------------------------------*/
 int loadtext_cmd(int argc, char *argv[], char *cmdline)
 {
-    const char blanks[8]     = {"\x40\x40\x40\x40\x40\x40\x40\x40"};
+    const BYTE blanks[8]     = { 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40 };
 
 
     /* Object deck record format headers                             */
     /* (names chosen not to conflict with future GOFF support)       */
 
-    const char c_ObjectESD[9] = {"\xC5\xE2\xC4\x40\x40\x40\x40\x40\x40"};       // ESD - External Symbol Dictionary
-    const char c_ObjectTXT[4]  = {"\xE3\xE7\xE3\x40"};                          // TXT - Text
-    const char c_ObjectRLD[9] = {"\xD9\xD3\xC4\x40\x40\x40\x40\x40\x40"};       // RLD - Relocation Dictionary
-    const char c_ObjectEND[4]  = {"\xC5\xD5\xC4\x40"};                          // END - End
-    const char c_ObjectSYM[9] = {"\xE2\xE8\xD4\x40\x40\x40\x40\x40\x40"};       // SYM - Symbol
+    const BYTE c_ObjectESD[9] = { 0xC5, 0xE2, 0xC4, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40 }; // ESD - External Symbol Dictionary
+    const BYTE c_ObjectTXT[4] = { 0xE3, 0xE7, 0xE3, 0x40 };                               // TXT - Text
+    const BYTE c_ObjectRLD[9] = { 0xD9, 0xD3, 0xC4, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40 }; // RLD - Relocation Dictionary
+    const BYTE c_ObjectEND[4] = { 0xC5, 0xD5, 0xC4, 0x40 };                               // END - End
+    const BYTE c_ObjectSYM[9] = { 0xE2, 0xE8, 0xD4, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40 }; // SYM - Symbol
 
 
     /* Special control directives from VM                            */
 
-    const char c_ObjectCPB[3]  = {"\xC3\xD7\xC2"};                              // CPB - Conditional Page Boundary
-    const char c_ObjectDEL[3]  = {"\xC4\xD5\xD3"};                              // DEL - Delete
-    const char c_ObjectICS[3]  = {"\xC9\xC3\xE2"};                              // ICS - Include Control Section
-    const char c_ObjectLDT[3]  = {"\xD3\xC4\xE3"};                              // LDT - Loader Termination
-    const char c_ObjectPAD[3]  = {"\xD7\xC1\xC4"};                              // PAD - Padding
-    const char c_ObjectPRT[3]  = {"\xD7\xD8\xE3"};                              // PRT - Printer
-    const char c_ObjectPRM[3]  = {"\xD7\xD8\xD4"};                              // PRM - Parameter
-    const char c_ObjectREP[3]  = {"\xD9\xC5\xD7"};                              // REP - Replace
-    const char c_ObjectSLC[3]  = {"\xE2\xD3\xC3"};                              // SLC - Set Location Counter
-    const char c_ObjectSPB[3]  = {"\xE1\xD7\xC2"};                              // SPB - Set Page Boundary
-    const char c_ObjectSYS[3]  = {"\xE1\xE8\xE1"};                              // SYS - Subsystem
-    const char c_ObjectUPB[3]  = {"\xE4\xD7\xC2"};                              // UPB - Unconditional Page Boundary
-    const char c_ObjectVER[3]  = {"\xE5\xC5\xD8"};                              // VER - Verify
+    const BYTE c_ObjectCPB[3]  = { 0xC3, 0xD7, 0xC2 };                          // CPB - Conditional Page Boundary
+    const BYTE c_ObjectDEL[3]  = { 0xC4, 0xD5, 0xD3 };                          // DEL - Delete
+    const BYTE c_ObjectICS[3]  = { 0xC9, 0xC3, 0xE2 };                          // ICS - Include Control Section
+    const BYTE c_ObjectLDT[3]  = { 0xD3, 0xC4, 0xE3 };                          // LDT - Loader Termination
+    const BYTE c_ObjectPAD[3]  = { 0xD7, 0xC1, 0xC4 };                          // PAD - Padding
+    const BYTE c_ObjectPRT[3]  = { 0xD7, 0xD8, 0xE3 };                          // PRT - Printer
+    const BYTE c_ObjectPRM[3]  = { 0xD7, 0xD8, 0xD4 };                          // PRM - Parameter
+    const BYTE c_ObjectREP[3]  = { 0xD9, 0xC5, 0xD7 };                          // REP - Replace
+    const BYTE c_ObjectSLC[3]  = { 0xE2, 0xD3, 0xC3 };                          // SLC - Set Location Counter
+    const BYTE c_ObjectSPB[3]  = { 0xE1, 0xD7, 0xC2 };                          // SPB - Set Page Boundary
+    const BYTE c_ObjectSYS[3]  = { 0xE1, 0xE8, 0xE1 };                          // SYS - Subsystem
+    const BYTE c_ObjectUPB[3]  = { 0xE4, 0xD7, 0xC2 };                          // UPB - Unconditional Page Boundary
+    const BYTE c_ObjectVER[3]  = { 0xE5, 0xC5, 0xD8 };                          // VER - Verify
 
 
     /* Define byte tests for general record types                    */

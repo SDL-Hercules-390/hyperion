@@ -3272,7 +3272,9 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 #endif
     char            *argn[MAX_ARGS];
     char            **argv = argn;
+#if !defined(OPTION_W32_CTCI)
     int             saw_if = 0;        /* -x (or --if) specified */
+#endif
     int             saw_conf = 0;      /* Other configuration flags present */
     BYTE            bMode = LCSDEV_MODE_IP;      /* Default mode is IP */
 

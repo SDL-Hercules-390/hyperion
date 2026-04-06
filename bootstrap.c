@@ -636,11 +636,11 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
             );
         }
         else
-            _tprintf( _T("\nMiniDumpWriteDump failed! Error: %u\n\n"), GetLastError() );
+            _tprintf( _T("\nMiniDumpWriteDump failed! Error: %lu\n\n"), GetLastError() );
     }
     else
     {
-        _tprintf( _T("\nCreateFile failed! Error: %u\n\n"), GetLastError() );
+        _tprintf( _T("\nCreateFile failed! Error: %lu\n\n"), GetLastError() );
     }
 
     return bSuccess;
