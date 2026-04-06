@@ -1741,8 +1741,6 @@ size_t  loopcount;                      /* Number of iterations done */
     // panel cleanup is now handled directly in the panel thread.
     //hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
 
-    history_init();
-
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
     init_HHC_regexp();
 #endif

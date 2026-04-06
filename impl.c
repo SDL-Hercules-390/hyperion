@@ -1558,6 +1558,9 @@ int     rc;
     /* Initialize runtime opcode tables */
     init_runtime_opcode_tables();
 
+    /* Initialize command line history */
+    history_init();
+
     /* Initialize the Hercules Dynamic Loader (HDL) */
     rc = hdl_main
     (
