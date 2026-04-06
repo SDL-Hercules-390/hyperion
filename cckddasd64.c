@@ -2551,7 +2551,7 @@ int             sfx,L1idx,l2x;          /* Lookup table indices      */
     L1idx = trk >> 8;
     l2x = trk & 0xff;
 
-    if (l2 != NULL) l2->L2_trkoff = l2->L2_len = l2->L2_size = 0;
+    if (l2 != NULL) l2->L2_trkoff = l2->L2_len = l2->L2_size = l2->L2_pad = 0;
 
     for (sfx = cckd->sfn; sfx >= 0; sfx--)
     {
@@ -2732,6 +2732,7 @@ int             size;                   /* Size of new track         */
         l2.L2_trkoff = off;
         l2.L2_len    = (U16)len;
         l2.L2_size   = (U16)size;
+        l2.L2_pad    = 0;
 
         if (1
             && oldl2.L2_trkoff != CCKD64_NOSIZE
@@ -2753,6 +2754,7 @@ int             size;                   /* Size of new track         */
     {
         l2.L2_trkoff = 0;
         l2.L2_len = l2.L2_size = (U16)len;
+        l2.L2_pad    = 0;
     }
 
     /* Update the level 2 entry */
