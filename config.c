@@ -1384,6 +1384,8 @@ int     i;                              /* Loop index                */
         */
         if (dev->buf && dev->buf == dev->prev_buf)
             free_aligned( dev->buf );
+        else if (dev->prev_buf)
+            free_aligned( dev->prev_buf );
 
         dev->buf = dev->prev_buf = malloc_aligned( dev->bufsize, _4K );
 
