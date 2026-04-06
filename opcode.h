@@ -2996,7 +2996,7 @@ DEF_INST( move_long_unicode );
 DEF_INST( compare_logical_long_unicode );
 #endif
 
-#if defined( FEATURE_017_MSA_FACILITY )
+#if defined( FEATURE_017_MSA_FACILITY ) && !defined( DYNINST_017_MSA_FACILITY )
 DEF_INST( cipher_message );
 DEF_INST( cipher_message_with_chaining );
 DEF_INST( compute_intermediate_message_digest );
@@ -3491,7 +3491,7 @@ DEF_INST( load_logical_and_zero_rightmost_byte );
 DEF_INST( load_and_zero_rightmost_byte );
 #endif
 
-#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) && !defined( DYNINST_057_MSA_EXTENSION_FACILITY_5 )
 DEF_INST( perform_random_number_operation );
 #endif
 
@@ -3557,11 +3557,11 @@ DEF_INST( transaction_begin );
 DEF_INST( store_hypervisor_information );
 #endif
 
-#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) && !defined( DYNINST_076_MSA_EXTENSION_FACILITY_3 )
 DEF_INST( perform_cryptographic_key_management_operation );
 #endif
 
-#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
+#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) && !defined( DYNINST_077_MSA_EXTENSION_FACILITY_4 )
 DEF_INST( perform_cryptographic_computation );
 DEF_INST( cipher_message_with_cipher_feedback );
 DEF_INST( cipher_message_with_output_feedback );
