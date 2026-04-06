@@ -7208,6 +7208,7 @@ DLL_EXPORT void cckd_print_itrace()
 /*-------------------------------------------------------------------*/
 void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
 {
+    int rc;
     va_list vl;
     char trcmsg[ CCKD_TRACE_SIZE ];
 
@@ -7217,9 +7218,10 @@ void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
 
     /* Build the cckd trace message */
     va_start( vl, fmt );
-    if (vsnprintf( trcmsg, sizeof( trcmsg ), fmt, vl ) < 0)
-        return;
+    rc = vsnprintf( trcmsg, sizeof( trcmsg ), fmt, vl );
     va_end( vl );
+    if (rc < 0)
+        return;
 
     /* Add the message to our internal trace table (if we have one) */
     OBTAIN_TRACE_LOCK();

@@ -753,6 +753,7 @@ int w32_ioctl_tape ( ufd_t ufd, int request, ... )
 
     va_start ( vl, request );
     ptr = va_arg( vl, void* );
+    va_end( vl );
 
     if ( !ptr )
     {

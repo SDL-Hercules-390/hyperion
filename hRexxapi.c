@@ -145,10 +145,13 @@ static int rx_sprintf( PRXSTRING prx, const char* fmt, ... )
     static const HR_MEMSIZE_T maxlen = (64 * 1024);     // (64K)
 
     len = 0;
-    va_start( vargs, fmt );
 
     if (RXVALIDSTRING( *prx ))
+    {
+        va_start( vargs, fmt );
         len = vsnprintf( prx->strptr, prx->strlength, fmt, vargs );
+        va_end( vargs );
+    }
 
     /* PROGRAMMING NOTE: we use '>=' comparison to ensure there
        will always be room for a terminating NULL, even though
@@ -171,7 +174,9 @@ static int rx_sprintf( PRXSTRING prx, const char* fmt, ... )
                 break;
             }
 
+            va_start( vargs, fmt );
             len = vsnprintf( prx->strptr, prx->strlength, fmt, vargs );
+            va_end( vargs );
         }
         while (len >= prx->strlength && prx->strlength < maxlen);
 
@@ -179,7 +184,6 @@ static int rx_sprintf( PRXSTRING prx, const char* fmt, ... )
             len = maxlen;   // (then set final len to the maximum)
     }
 
-    va_end( vargs );
     prx->strlength = len;
     return len;
 }

@@ -80,34 +80,40 @@ static int cchh_colhdr_width;
 static void prtcchhseg( const char* fmt, ... )
 {
     va_list   vl;
+
     va_start( vl, fmt );
-
-    vsnprintf( segbuf, sizeof( segbuf ), fmt, vl );
-
-    lcchhtab = realloc( lcchhtab, (numcchh + 1) * sizeof( char* ));
-    lcchhtab[ numcchh++ ] = strdup( segbuf );
+    if (vsnprintf( segbuf, sizeof( segbuf ), fmt, vl ) >= 0)
+    {
+        lcchhtab = realloc( lcchhtab, (numcchh + 1) * sizeof( char* ));
+        lcchhtab[ numcchh++ ] = strdup( segbuf );
+    }
+    va_end( vl );
 }
 
 static void prtseg( const char* fmt, ... )
 {
     va_list   vl;
+
     va_start( vl, fmt );
-
-    vsnprintf( segbuf, sizeof( segbuf ), fmt, vl );
-
-    lsegstab = realloc( lsegstab, (numsegs + 1) * sizeof( char* ));
-    lsegstab[ numsegs++ ] = strdup( segbuf );
+    if (vsnprintf( segbuf, sizeof( segbuf ), fmt, vl ) >= 0)
+    {
+        lsegstab = realloc( lsegstab, (numsegs + 1) * sizeof( char* ));
+        lsegstab[ numsegs++ ] = strdup( segbuf );
+    }
+    va_end( vl );
 }
 
 static void prtline( const char* fmt, ... )
 {
     va_list   vl;
+
     va_start( vl, fmt );
-
-    vsnprintf( linebuf, sizeof( linebuf ), fmt, vl );
-
-    linestab = realloc( linestab, (numlines + 1) * sizeof( char* ));
-    linestab[ numlines++ ] = strdup( linebuf );
+    if (vsnprintf( linebuf, sizeof( linebuf ), fmt, vl ) >= 0)
+    {
+        linestab = realloc( linestab, (numlines + 1) * sizeof( char* ));
+        linestab[ numlines++ ] = strdup( linebuf );
+    }
+    va_end( vl );
 }
 
 static void print_line_from_segs()

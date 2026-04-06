@@ -174,14 +174,15 @@ static void dbgtrc( const char* file, int line, const char* func,
     OSA_GRP* grp = devgrp->grp_data;
     if (grp && grp->debugmask)
     {
-      char buf[256];
+      char buf[256] = "";
       va_list   vargs;
       va_start( vargs, fmt );
       vsnprintf( buf, sizeof(buf), fmt, vargs );
+      va_end( vargs );
+
       // HHC03991D "%1d:%04X %s: %s"
       fwritemsg( file, line, func, WRMSG_NORMAL, stdout,
         "HHC03991D " HHC03991 "\n", LCSS_DEVNUM, dev->typname, buf );
-      va_end( vargs );
     }
   }
 }
@@ -205,14 +206,15 @@ static void dbgupd( const char* file, int line, const char* func,
     OSA_GRP* grp = devgrp->grp_data;
     if (grp && (grp->debugmask & DBGQETHUPDOWN))
     {
-      char buf[256];
+      char buf[256] = "";
       va_list   vargs;
       va_start( vargs, fmt );
       vsnprintf( buf, sizeof(buf), fmt, vargs );
+      va_end( vargs );
+
       // HHC03991D "%1d:%04X %s: %s"
       fwritemsg( file, line, func, WRMSG_NORMAL, stdout,
         "HHC03991D " HHC03991 "\n", LCSS_DEVNUM, dev->typname, buf );
-      va_end( vargs );
       if (what == 3) {
         mpc_display_osa_iear( dev, adr, dir, len );
       } else if (what == 2) {

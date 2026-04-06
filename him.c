@@ -1999,7 +1999,7 @@ static void dumpdata( char *label, BYTE *data, int len )
 static void debug_pf( const char* __fmt, ... )
 {
 #if _ENABLE_TRACING_STMTS_IMPL
-    char write_buf[2000];             /* big enough for an IP packet */
+    char write_buf[2000] = "";        /* big enough for an IP packet */
     int writebuf_len;
     va_list arglist;
 

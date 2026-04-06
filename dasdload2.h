@@ -168,6 +168,7 @@ va_list vl;
     {
         va_start(vl, msg);
         vprintf (msg, vl);
+        va_end(vl);
     }
 } /* end function info_msg */
 

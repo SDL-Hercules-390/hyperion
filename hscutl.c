@@ -1031,6 +1031,7 @@ DLL_EXPORT  int hopen( const char* path, int oflag, ... )
         va_list vargs;
         va_start( vargs, oflag );
         pmode = va_arg( vargs, int );
+        va_end( vargs );
     }
     return open( path, oflag, pmode );
 }
@@ -2019,6 +2020,7 @@ DLL_EXPORT int  idx_snprintf( int idx, char* buffer, size_t bufsiz, const char* 
 
     va_start( vargs, fmt );
     rc = vsnprintf( buffer+idx, bufsiz-idx, fmt, vargs );
+    va_end( vargs );
     return rc;
 }
 
@@ -2768,6 +2770,7 @@ DLL_EXPORT void send2gui( const char* pszFormat, ... )
                 CRASH(); // (Out of Memory)
             va_copy( vl, original_vl );
         }
+        va_end(original_vl);
 
         // CRASH if unable to successfully format a message
 

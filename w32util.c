@@ -3929,10 +3929,19 @@ DLL_EXPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, FILE
 // the number of bytes (excluding the terminating null byte) that would
 // be written had count been sufficiently large, 2) ALWAYS appending a
 // terminating null byte REGARDLESS of whether count is large enough.
+//
+// With older MSVC versions, passing a NULL buffer with a zero count to
+// vsnprintf were considered invalid and invoked the error handler or returned
+// -1. C99 and POSIX explicitly define this behavior so the function is updated
+// to match.
+//
+// Since this is MSVC-only we are also ignoring va_copy.
 
 DLL_EXPORT int w32_vsnprintf( char* bfr, size_t cnt, const char* fmt, va_list vargs )
 {
-    int rc = _vsnprintf_s( bfr, cnt, _TRUNCATE, fmt, vargs );
+    int rc = -1;
+    if (bfr != NULL) // ASSERT( cnt > 0 );
+        rc = _vsnprintf_s( bfr, cnt, _TRUNCATE, fmt, vargs );
     if (rc < 0)
         rc = _vscprintf( fmt, vargs );
     return rc;
@@ -4904,6 +4913,7 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
         va_list vargs;
         va_start( vargs, oflag );
         pmode = va_arg( vargs, int );
+        va_end( vargs );
     }
 
     err = _sopen_s( &fh, path, oflag, sh_flg, pmode );

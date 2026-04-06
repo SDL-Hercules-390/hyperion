@@ -42,14 +42,14 @@
     do                                                              \
     {                                                               \
         va_list  original_vl;                                       \
-        va_copy( original_vl, vl );                                 \
                                                                     \
         bfr = (char*) calloc( 1, siz );                             \
         rc = -1;                                                    \
                                                                     \
+        va_copy( original_vl, vl );                                 \
         while (bfr && rc < 0)                                       \
         {                                                           \
-            rc = vsnprintf( bfr, siz, fmt, vl );                    \
+            rc = vsnprintf( bfr, siz, fmt, original_vl );           \
                                                                     \
             if (rc >= 0 && rc < siz)                                \
                 break;                                              \
@@ -61,8 +61,10 @@
                 break;                                              \
                                                                     \
             bfr = realloc( bfr, siz );                              \
-            va_copy( vl, original_vl );                             \
+            va_end( original_vl );                                  \
+            va_copy( original_vl, vl ); /* traverse 'vl' again */   \
         }                                                           \
+        va_end( original_vl  );                                     \
                                                                     \
         if (bfr && strlen( bfr ) == 0 && strlen( fmt) != 0)         \
         {                                                           \
@@ -517,6 +519,7 @@ DLL_EXPORT void fwritemsg( const char* filename, int line, const char* func,
     va_list   vl;
     va_start( vl, fmt );
     vfwritemsg( panel, f, filename, line, func, fmt, vl );
+    va_end( vl );
 }
 
 DLL_EXPORT void logmsg( const char* fmt, ... )
@@ -524,4 +527,5 @@ DLL_EXPORT void logmsg( const char* fmt, ... )
     va_list   vl;
     va_start( vl, fmt );
     vflogmsg( WRMSG_NORMAL, stdout, fmt, vl );
+    va_end( vl );
 }

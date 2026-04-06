@@ -2786,6 +2786,7 @@ static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
     va_start( vl, fmt );
     vsnprintf( (char*) tracemsg + strlen( tracemsg ),
         sizeof( tracemsg ) - strlen( tracemsg ), fmt, vl );
+    va_end( vl );
 
     /* Log the trace message directly to the panel (WITHOUT the
        timestamp prefix) if the device is being traced/stepped. */
@@ -2828,6 +2829,7 @@ static void shrdgentrc( const char* fmt, ... )
     va_start( vl, fmt );
     vsnprintf( (char*) tracemsg + strlen( tracemsg ),
         sizeof( tracemsg ) - strlen( tracemsg ), fmt, vl );
+    va_end( vl );
 
     /* Copy the trace message into the trace table (if it exists) */
     shrdtrclog_locked( tracemsg );
