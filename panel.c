@@ -1838,6 +1838,7 @@ size_t  loopcount;                      /* Number of iterations done */
         curr_int_start_time = time( NULL );
 
     prev_int_start_time = curr_int_start_time;
+    memset( prev_psw, 0, sizeof( prev_psw ) );
 
     /* Process messages and commands */
     for (loopcount = 0; ; loopcount++)
