@@ -53,11 +53,10 @@ static  LOCK    g_lock; // (master global access lock)
 
 static void obtain_w32stape_lock()
 {
-    static int bDidInit  = 0;
-    static int bInitBusy = 1;
-    if (!bDidInit)
+    static LONG bDidInit  = 0;
+    static LONG bInitBusy = 1;
+    if (!InterlockedCompareExchange(&bDidInit, 1, 0))
     {
-        bDidInit = 1;
         initialize_lock ( &g_lock );
         memset( g_ifds,    0,    sizeof ( g_ifds    ) );
         memset( g_handles, 0,    sizeof ( g_handles ) );
