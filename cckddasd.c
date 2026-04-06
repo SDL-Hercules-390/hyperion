@@ -4130,6 +4130,8 @@ void cckd_sf_parse_sfn( DEVBLK* dev, char* sfn )
     char pathname[MAX_PATH];
     if ('\"' == sfn[0]) sfn++;
     hostpath(pathname, sfn, sizeof(pathname));
+
+    if (dev->dasdsfn) free (dev->dasdsfn);
     dev->dasdsfn = strdup(pathname);
     if (dev->dasdsfn)
     {
