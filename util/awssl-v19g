@@ -215,7 +215,7 @@
 *                                                                     *
 * August 16, 2002   - V1.2 Release (Internal Only)                    *
 *   - added automatic staging (unload) of PDS(E) datasets.            *
-*   - corrected RECFM=U ommission from HDR2/EOF2.                     *
+*   - corrected RECFM=U omission from HDR2/EOF2.                      *
 *   - corrected RDJFCB end of list indicator.                         *
 *   - converted input I/O from BSAM to QSAM for performance.          *
 *                                                                     *
@@ -238,7 +238,7 @@
 * September 23, 2002- V1.9E Release Candidate (public)                *
 *   - Incompatibility between AWSSL and VTT2TAPE.  VTT2TAPE expects:  *
 *     1) the last text record to be padded with x'20' characters, and *
-*     2) that an additional record be written completedly filled with *
+*     2) that an additional record be written completely filled with  *
 *        x'20' bytes.                                                 *
 *     Modified AWSSL accordingly when producing fixed length output.  *
 *                                                                     *
@@ -287,7 +287,7 @@
 *           OWNER=(1 to 10 byte argument placed into VOL1 owner),     *
 *           COMPRESS=0:1, (compress and IDRC control whether or not   *
 *                   compression is to be used.  IDRC and COMPRESS     *
-*                   are durrently synomyms of each other).            *
+*                   are currently synonyms of each other).            *
 *           METHOD=1:2, (1 = gzip, 2=bzip2)                           *
 *           LEVEL=1-9, (specifies the degree of compression required) *
 *           IDRC=0:1,  (currently a synonym of COMPRESS)              *
@@ -351,7 +351,7 @@
 *           INDSN=(dsname to be dynamically allocated and placed into *
 *                 the virtual tape file),                             *
 *           OUTDSN=(44 byte dataset name to be placed into the labels *
-*                 which preceed and follow the file on virtual tape), *
+*                 which precede and follow the file on virtual tape), *
 *           TAPEDSN=(17 byte dataset name to be placed in label),     *
 *           UNLOAD=IEBCOPY:IDCAMS, (the utility called to stage the   *
 *                 input dataset prior to insertion into the virtual   *
@@ -389,7 +389,7 @@
 * Implementation Conventions                                          *
 * --------------------------                                          *
 * An effort was made to structure the code such that a nearly endless *
-* set of new features can be added without becoming unwieldly.  For   *
+* set of new features can be added without becoming unwieldy.  For    *
 * that reason functions tend to be implemented as small discrete      *
 * CSECTS.                                                             *
 *                                                                     *
@@ -651,7 +651,7 @@ R15      EQU   15
 &LBL     DS    0H
 .A010    ANOP
          AIF   ('&FUN' NE 'AWSDYNE').A020
-         L     R15,CSAWSDYE        dynamic allocatione error handler
+         L     R15,CSAWSDYE        dynamic allocation error handler
          AGO   .A999
 .A020    AIF   ('&FUN' NE 'AWSEPUT').A030
          L     R15,CSAWSEPT        put text to virtual tape
@@ -785,7 +785,7 @@ AWSINIT  CSECT ,                   initialization logic
          AWSENTRY ,                csect entry
          SPACE 1
          L     R2,=A(AWSRELOC)     start  of relocatable storage
-         L     R3,=A(DSENDL)       length of relocateable storage
+         L     R3,=A(DSENDL)       length of relocatable storage
          LR    R1,R3               origin length = destination
          LA    R0,AWSRELOC-AWSDYNAM(,R11) target of move
          MVCL  R0,R2               copy storage model into dynamic area
@@ -2002,7 +2002,7 @@ AWSJOBNM CSECT ,                   Capture job and step name info
          AWSENTRY ,
          USING PSA,R0
          L     R3,PSATOLD          current TCB location
-         USING TCB,R3              TCB addressasbility
+         USING TCB,R3              TCB addressability
          L     R4,TCBTIO           TIOT location
          USING TIOT,R4
          MVC   DSJOBNM,TIOCNJOB    set job  name
@@ -2121,7 +2121,7 @@ AWSALCI  CSECT ,                   Dynamically allocate input
          CLC   S99ERROR,=X'0410'   ddname already allocated?
          BE    ALOCI030            yes, branch
          SPACE 1
-ALOCI010 DS    0H                  allocation error occured
+ALOCI010 DS    0H                  allocation error occurred
          LR    R1,R3               set rb location
          LR    R0,R15              return code
          AWSCALL AWSDYNE           format dynalloc error messages
@@ -2160,7 +2160,7 @@ AWSALCT  CSECT ,                   Dynamically allocate temporary work
          CLC   S99ERROR,=X'0410'   ddname already allocated?
          BE    ALOCT030            yes, branch
          SPACE 1
-ALOCT010 DS    0H                  allocation error occured
+ALOCT010 DS    0H                  allocation error occurred
          LR    R1,R3               set rb location
          LR    R0,R15              return code
          AWSCALL AWSDYNE           format dynalloc error messages
@@ -2199,7 +2199,7 @@ AWSALCS  CSECT ,                   Dynamically allocate temporary work
          CLC   S99ERROR,=X'0410'   ddname already allocated?
          BE    ALOCS030            yes, branch
          SPACE 1
-ALOCS010 DS    0H                  allocation error occured
+ALOCS010 DS    0H                  allocation error occurred
          LR    R1,R3               set rb location
          LR    R0,R15              return code
          AWSCALL AWSDYNE           format dynalloc error messages
@@ -2238,7 +2238,7 @@ AWSALCP  CSECT ,                   Dynamically allocate sysprint
          CLC   S99ERROR,=X'0410'   ddname already allocated?
          BE    ALOCP030            yes, branch
          SPACE 1
-ALOCP010 DS    0H                  allocation error occured
+ALOCP010 DS    0H                  allocation error occurred
          LR    R1,R3               set rb location
          LR    R0,R15              return code
          AWSCALL AWSDYNE           format dynalloc error messages
@@ -2257,7 +2257,7 @@ ALOCPXIT DS    0H                  return to caller
          SPACE 1
          LTORG ,
          DROP
-         TITLE 'AWSDYNE - Dyanamic allocation error'
+         TITLE 'AWSDYNE - Dynamic allocation error'
 ***********************************************************************
 * AWSDYNE - Dynamic allocation error, on entry r1 = s99rb, r0=rc      *
 *           msg AWS18n                                                *
@@ -2770,7 +2770,7 @@ EPUT230  DS    0H                  flush short text
          ICM   R1,3,AWSFILE+(DCBLRECL-IHADCB) length of target
          SLR   R15,R15             zero length source
          ICM   R15,8,=X'20'        padding required b y vtt2tape
-         MVCL  R0,R14              propogate through entire record
+         MVCL  R0,R14              propagate through entire record
          PUT   AWSFILE,(R2)
          SPACE 1
 EPUT900  DS    0H                  all data has been written
@@ -2915,7 +2915,7 @@ ICOPY070 DS    0H                  open files
                 recfm=u'
          AWSMSG ,
 ICOPY080 DS    0H                  spanned, force to RECFM=U
-         OI    DCBRECFM,DCBRECU    indciate undefined lrecl
+         OI    DCBRECFM,DCBRECU    indicate undefined lrecl
          NI    DCBRECFM,255-DCBRECSB reset spanned indicator
          SPACE 1
 ICOPY090 DS    0H
@@ -3640,7 +3640,7 @@ AWSIGET  CSECT ,                   import (get) a block
 IGET010  DS    0H                  retrieve aws header
          AWSCALL AWSGTXT           get some text
          BNZ   IGETEOF             if eof, branch
-         ALR   R4,R0               amount of text accumlated
+         ALR   R4,R0               amount of text accumulated
          ALR   R1,R0               r1=put text here
          LR    R0,R5               compute amount still needed
          SR    R0,R4               r0=amount of text still needed
@@ -3658,7 +3658,7 @@ IGET010  DS    0H                  retrieve aws header
 IGET020  DS    0H                  retrieve data block
          AWSCALL AWSGTXT           get some text
          BNZ   IGETEOF             if eof, branch
-         ALR   R4,R0               amount of text accumlated
+         ALR   R4,R0               amount of text accumulated
          ALR   R1,R0               r1=put text here
          LR    R0,R5               compute amount still needed
          SR    R0,R4               r0=amount of text still needed
@@ -3699,7 +3699,7 @@ AWSGTXT  CSECT ,                   get AWS text
          STCM  R0,7,DCBEODA        ... set into dcb
          SPACE 1
          SLR   R2,R2               clear register
-         LR    R15,R2              clear registger
+         LR    R15,R2              clear register
          ICM   R15,3,DSGTXTL       r15=length of source
          ICM   R14,15,DSGTXTP      r14=current location in input buffer
          ST    R2,DSGTXTP          assume all text will be used
@@ -4112,7 +4112,7 @@ AWSDATAL EQU   *-AWSDATA           data areas length
          SPACE 1
 AWSREC   DSECT ,                   AWS block header
 AWSLENC  DS    H                   block length
-AWSLENP  DS    H                   file data preceeding this block
+AWSLENP  DS    H                   file data preceding this block
 AWSFLGS  DS    H                   block flags
 AWSDBLK  DS    0X                  data block origin
          END

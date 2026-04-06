@@ -188,7 +188,7 @@ executable file formats.
 Building from the distributed hercules source tree does not by default
 incorporate ZLIB as a compression mechanism, since
 
-1) ZLIB is an external project, completelly separate from the hercules
+1) ZLIB is an external project, completely separate from the hercules
    project itself.
 2) MS Windows (tm) does not provide any well known location (if at all) for
    the ZLIB library runtime and/or header files.
@@ -203,7 +203,7 @@ the source directory.
 You may extract the file to an alternate location, and then set the ZLIB_DIR
 environment variable accordingly (as explained above).
 
-The hercules project is currently known to succesfully build with
+The hercules project is currently known to successfully build with
 version 1.2.2 (current at the time of writing) of the ZLIB compression library.
 
 ZLIB is a compression algorithm written by Jean Loup Gailly and Mark Adler.
@@ -249,7 +249,7 @@ executable file formats.
 Building from the distributed Hercules source tree does not by default
 incorporate BZIP2 as a compression mechanism, since
 
-1) BZIP2 is an external project, completelly separate from the Hercules
+1) BZIP2 is an external project, completely separate from the Hercules
    project itself.
 2) MS Windows (tm) does not provide any well known location (if at all) for
    the BZIP2 library runtime and/or header files.

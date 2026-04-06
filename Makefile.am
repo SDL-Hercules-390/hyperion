@@ -50,12 +50,12 @@ VERS_INT := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_INT)
 VERS_MIN := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_MIN)
 VERS_BLD := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_BLD)
 
-  # PROGRAMMING NOTE: Due to autotool's insistance of defining 'VERSION'
+  # PROGRAMMING NOTE: Due to autotool's insistence of defining 'VERSION'
   # for us via a #define within the 'config.h' header (the value of which
   # is derives from the 'configure.ac's "AM_INIT_AUTOMAKE" statement)
   # instead of letting us define it ourselves (which we would prefer),
   # we must undefine it here and then redefine it to the value that our
-  # '_dynamic_version' script determied it should be set to (which it saved
+  # '_dynamic_version' script determined it should be set to (which it saved
   # for us in the 'DYNAMIC_VERSION' variable for obvious reasons).
 
 DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERSION )
@@ -84,7 +84,7 @@ endif
 
 #------------------------------------------------------------------------------
 #  We need to still include the source for the dynamic modules
-#  in with the distribution regardless of whether or not the dyanmic
+#  in with the distribution regardless of whether or not the dynamic
 #  modules themselves are to be built so if dynamic load not possible,
 #  then we need to include the source on the EXTRA_hercules_SOURCES
 #  statement so even though they won't/don't actually get built, they

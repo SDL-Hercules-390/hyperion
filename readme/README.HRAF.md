@@ -7,7 +7,7 @@
 
 1. [About](#About)
 2. [General Register Usage](#General-Register-Usage)
-3. [Enabling the Host Resouce Access Facility](#Enabling-the-Host-Resouce-Access-Facility)
+3. [Enabling the Host Resource Access Facility](#Enabling-the-Host-Resource-Access-Facility)
 4. [DIAGNOSE X'F18' Subcodes](#DIAGNOSE-XF18-Subcodes)
 5. [Documentation](#Documentation)
 
@@ -15,7 +15,7 @@
 
 The Host Resource Access Facility (HRAF) provides direct access to host resources by a Hercules guest program operating in privileged operation state via a Hercules supplied DIAGNOSE code X'F18'.
 
-DIAGNOSE X'F18' utilizes a set of subcodes for selection of the type of resource and the mechanism in use by the program.  Additionally, a subcode allows the DIAGNOSE X'F18' functionality to be queried for the capabilitites provided.  As the functionality is enhanced over time, the query subcode will report a new version number.
+DIAGNOSE X'F18' utilizes a set of subcodes for selection of the type of resource and the mechanism in use by the program.  Additionally, a subcode allows the DIAGNOSE X'F18' functionality to be queried for the capabilities provided.  As the functionality is enhanced over time, the query subcode will report a new version number.
 
 ## General Register Usage
 
@@ -38,7 +38,7 @@ _Compatibility mode_ is intended to ease the migration from the original Jason W
 The _native mode_ parameter block will use a different format allowing functional extensions and compatibility mode limitations to be eliminated.
 
 
-## Enabling the Host Resouce Access Facility
+## Enabling the Host Resource Access Facility
 
 By default, the Host Resource Access Facility is disabled.  Use the `archlvl` command to enable the facility:
 

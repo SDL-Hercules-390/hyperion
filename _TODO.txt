@@ -20,7 +20,7 @@
         ***  STOP WASTING VALUABLE HOST INSTRUCTION CACHE!  ***
 
   Redesign instruction decoding and dispatch to eliminate the need for
-  each intruction function to decode it's own damn instruction!
+  each instruction function to decode it's own damn instruction!
 
   Instead, decode each instruction by INTRUCTION FORMAT, and place the
   results into a UNION somewhere (such as somewhere in REGS) so that
@@ -116,7 +116,7 @@
   macro. We don't want to call INTERRUPT_PENDING() macro TOO often, but we
   should MAYBE be calling it more frequently than we are. The trick is to
   determine HOW often it should be called for best performance ON A GIVEN
-  HOST SYSTEM. It should be a dynamially calculated value that is calculated
+  HOST SYSTEM. It should be a dynamically calculated value that is calculated
   during startup to prevent our current defined fixed value from unfairly
   penalizing those users with slower/faster Hercules host systems.
 

@@ -33,7 +33,7 @@
 --      infile     The name of the file used as input to the test.
 --
 --      indict     The name of the dictionary used as input to the
---                 test. The file's extention is used to determine
+--                 test. The file's extension is used to determine
 --                 the dictionary format, the compressed data symbol
 --                 size and whether this will be a compression test
 --                 or an expansion test. If the extension is '.01E'

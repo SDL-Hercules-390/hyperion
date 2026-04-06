@@ -368,7 +368,7 @@
   )
 
   @REM ----------------------------------------------------------------
-  @REM   Now to calulate a NUMERIC value for 'VERS_BLD' based on the
+  @REM   Now to calculate a NUMERIC value for 'VERS_BLD' based on the
   @REM   SVN/GIT repository revision number.  Note that the revision
   @REM   number for SVN repositories is always numeric anyway but for
   @REM   GIT repositories we must calculate it based on total number

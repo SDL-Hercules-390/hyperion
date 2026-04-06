@@ -30,7 +30,7 @@ Support for either package can be enabled or disabled (Linux only) by simply spe
 * `--disable-object-rexx` and/or  
 * `--enable-regina-rexx`  
 
-configure option at build time. Note that enabling both packages requires them to be installed in different paths, for example ooRexx in /usr/local and Regina Rexx in /usr. If both packages are installed in the same path, scripts transfering data from and to Rexx variables or stems may produce incorrect results or hang the whole Hercules system, particularly if they are executed in the background.
+configure option at build time. Note that enabling both packages requires them to be installed in different paths, for example ooRexx in /usr/local and Regina Rexx in /usr. If both packages are installed in the same path, scripts transferring data from and to Rexx variables or stems may produce incorrect results or hang the whole Hercules system, particularly if they are executed in the background.
   
 On Windows, the only way to purposely disable support is to rename the header file(s) to prevent Hercules from finding them.
 
@@ -41,7 +41,7 @@ Hercules runtime support for Rexx is completely dynamic based the availability o
 When both packages are found to be available then **OORexx** will be chosen as the default Rexx interpreter unless overridden by the `HREXX_PACKAGE` environment variable.  The only valid values for `HREXX_PACKAGE` are "none", "auto", "OORexx" or "Regina".  The default (preferred) Rexx package when "auto" is specified is **Object Rexx (OORexx)**.  Use "none" to prevent Rexx support for either package
 from being automatically enabled at startup, thereby requiring you to manually enable (start) Rexx yourself via the Hercules `rexx` command's "start" option (see just below).
 
-Other environment variables can be used to define your own defaults values for some of Hercules Rexx's runtime options.  The `HREXX_PATH` environment variable for example defines a default value for the `rexx` command's "rexxpath" option. Similarly the `HREXX_MODE` and `HREXX_EXTENSIONS` environment variables define default values for the `rexx` comamnd's "mode" and "extensions" options.
+Other environment variables can be used to define your own defaults values for some of Hercules Rexx's runtime options.  The `HREXX_PATH` environment variable for example defines a default value for the `rexx` command's "rexxpath" option. Similarly the `HREXX_MODE` and `HREXX_EXTENSIONS` environment variables define default values for the `rexx` command's "mode" and "extensions" options.
 
 
 ## rexx Command

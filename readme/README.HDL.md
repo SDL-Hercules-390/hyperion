@@ -527,7 +527,7 @@ HDL_INSTRUCTION_SECTION;
 
 (our `DLL_EXPORT` and `DLL_IMPORT` design)
 
-Here's the poop. Any function that needs to be exported/imported to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc), _**MUST**_ have its functon declaration defined in the [hexterns.h](../hexterns.h) header and _ONLY_ in the [hexterns.h](../hexterns.h) header!
+Here's the poop. Any function that needs to be exported/imported to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc), _**MUST**_ have its function declaration defined in the [hexterns.h](../hexterns.h) header and _ONLY_ in the [hexterns.h](../hexterns.h) header!
 
 That is to say, you _must **NOT**_ declare the function in a separate header file! _(That might be the way you normally do things for a normal project, but that is NOT the way you do it with Hercules)_
 

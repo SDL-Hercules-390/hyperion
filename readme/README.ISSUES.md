@@ -60,7 +60,7 @@ as described in section 17.2.2.2 of the Principles of Operation. If an I/O is in
 when the reset occurs, it will _not_ be terminated.
 
 Subsequently, if status is stacked after the I/O reset, the device may be left in an unusable state,
-with status pending and E bit off, effectivelly preventing an MSCH to be issued with the E bit on,
+with status pending and E bit off, effectively preventing an MSCH to be issued with the E bit on,
 requiring a Power On Reset (Hercules poweroff and restart of the emulator).
 Only ESA/390 and ESAME are affected.
 

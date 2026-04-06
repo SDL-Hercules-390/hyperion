@@ -25,7 +25,7 @@ Hercules: Release Notes
   <dt>Critical flaw in CCKD Garbage Collector / Dasd Hardener logic fixed
   <dd>
   <p>
-    Unknown to the Hercules team at the time, there existed a critcal flaw (bug)
+    Unknown to the Hercules team at the time, there existed a critical flaw (bug)
     in the CCKD "Garbage Collector" and "Dasd Hardener" logic that would, if allowed
     to execute simultaneously with each other, cause one to unexpectedly interfere
     with the other, resulting in Hercules potentially hanging or crashing.
@@ -36,7 +36,7 @@ Hercules: Release Notes
     point in its logic at the end of its "pass", before then allowing the other to
     execute until it too reaches a stable point in its own logic at the end of its
     own corresponding "pass". Processing continues in this alternating fashion for
-    for as long as each are enabled.
+    as long as each are enabled.
   <p>
     With this fix (workaround) now in place, it is now
     once again safe to have both the CCKD Garbage Collector and Dasd Hardener
@@ -64,7 +64,7 @@ Hercules: Release Notes
   <dt><i><u><b>WARNING!</b></u></i> &nbsp;Critical flaw discovered in CCKD Garbage Collector / Dasd Hardener logic
   <dd>
   <p>
-    Unknown to the Hercules team at the time, there existed a critcal flaw (bug)
+    Unknown to the Hercules team at the time, there existed a critical flaw (bug)
     in the CCKD "Garbage Collector" and "Dasd Hardener" logic in Hercules 4.9
     that would, if allowed to execute
     simultaneously with each other, cause one to unexpectedly interfere with the other,
@@ -347,7 +347,7 @@ Hercules: Release Notes
   <dd>
   <p>
     A potentially serious long standing bug in Hercules's compressed CKD (i.e. CCKD/CFBA/CCKD64/CFBA64)
-    dasd emulation logic was recently discovered and quickly fixed. Due to the natue of the bug,
+    dasd emulation logic was recently discovered and quickly fixed. Due to the nature of the bug,
     Locate Record channel commands (opcodes X'47' or X'E7') would incorrectly prematurely fail in
     an unusual way causing unexpected guest behavior <i>(e.g. the guest might end up looping or hanging
     waiting for the I/O to complete for example. See e.g. GitHub Issue
@@ -378,7 +378,7 @@ Hercules: Release Notes
   <p>
     Hercules now reports its version using the format "V.M.R.nnnnn-SDL-ghhhhhhhh"
     where V.M.R is the major Version, Modification and Revision level (e.g. 4.4.1),
-    nnnnn is an ever increasing internal build number (to ensure strictly sequentally
+    nnnnn is an ever increasing internal build number (to ensure strictly sequentially
     ascending version strings), and hhhhhhhh is the first eight characters of the hash
     of the most recent commit made to the git source code repository <i>(which identifies
     <u>exactly</u> which fixes/changes are present in your build and which are not,
@@ -1200,7 +1200,7 @@ Hercules: Release Notes
   <p>
     Hercules's Diagnose X'F14' functionality was designed to allow
     a Hercules guest to call into any host system DLL (Dynamic Link
-    Library). Since its use (dubius to begin with) was determined to be
+    Library). Since its use (dubious to begin with) was determined to be
     a potential security risk (and the code didn't appear to be used
     anywhere anyway), support for it was removed.
   </p>
@@ -1319,7 +1319,7 @@ Hercules: Release Notes
     is "IBM compatible" support in their SCSI command set/behavior in order to
     work properly with Hercules. Furthermore, the Hercules device-type used on
     your device statement in your Hercules configuration file should match the
-    the level of support/behavior that they provide.
+    level of support/behavior that they provide.
   </p><p>
     For example, all SCSI tape drives used with Hercules must provide the ability
     to set variable-length blocks as well as long erase-gaps (long erase-gaps
@@ -1383,7 +1383,7 @@ Hercules: Release Notes
               CPUPRIO      0        Normal        Thread priority</pre>
   </p><p>
     which caused acceptable performance/functioning on most, but not all, guest
-    operating systems. Beginning with version 3.05 however, the prioriries now
+    operating systems. Beginning with version 3.05 however, the priorities now
     default to:
     </p><pre>
               ***  3.05 (and later) Default  Priorities  ***
@@ -1397,7 +1397,7 @@ Hercules: Release Notes
               CPUPRIO     15        Lowest         Thread priority</pre>
   </p><p>
     which may on more modern guest operating systems (which handle the TOD clock
-    differently than do older less sophticated versions) cause a slight decrease
+    differently than do older less sophisticated versions) cause a slight decrease
     in overall performance. If such is the case, the original default priorities
     (and thus the original behavior) can be obtained via addition of appropriate
     HERCPRIO, TODPRIO, DEVPRIO and CPUPRIO control file statements with values

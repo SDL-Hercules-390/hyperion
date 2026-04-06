@@ -472,7 +472,7 @@ opt_warning_types=all
 #
 # It's entirely deliberate that calling these functions can set
 # variables that don't obey the namespace limitations obeyed by the rest
-# of this file, in order that that they be as useful as possible to
+# of this file, in order that they be as useful as possible to
 # callers.
 
 
@@ -696,7 +696,7 @@ eval 'func_dirname ()
 #             to NONDIR_REPLACEMENT.
 #             value returned in "$func_dirname_result"
 #   basename: Compute filename of FILE.
-#             value retuned in "$func_basename_result"
+#             value returned in "$func_basename_result"
 # For efficiency, we do not delegate to the functions above but instead
 # duplicate the functionality here.
 eval 'func_dirname_and_basename ()
@@ -1476,7 +1476,7 @@ fatal_help="Try '\$progname --help' for more information."
 ## ------------------------- ##
 
 # This section contains functions for adding, removing, and running hooks
-# to the main code.  A hook is just a named list of of function, that can
+# to the main code.  A hook is just a named list of function, that can
 # be run in order later on.
 
 # func_hookable FUNC_NAME
@@ -1649,7 +1649,7 @@ func_options ()
 # All initialisations required before starting the option parse loop.
 # Note that when calling hook functions, we pass through the list of
 # positional parameters.  If a hook function modifies that list, and
-# needs to propogate that back to rest of this script, then the complete
+# needs to propagate that back to rest of this script, then the complete
 # modified list must be put in 'func_run_hooks_result' before
 # returning.
 func_hookable func_options_prep
@@ -5772,7 +5772,7 @@ EOF
         {
           /* however, if there is an option in the LTWRAPPER_OPTION_PREFIX
              namespace, but it is not one of the ones we know about and
-             have already dealt with, above (inluding dump-script), then
+             have already dealt with, above (including dump-script), then
              report an error. Otherwise, targets might begin to believe
              they are allowed to use options in the LTWRAPPER_OPTION_PREFIX
              namespace. The first time any user complains about this, we'll

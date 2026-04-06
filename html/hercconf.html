@@ -987,7 +987,7 @@ a real System/390.  The configuration file is an ASCII text file.
     or within the range 1024 - 65535 inclusive. The server is not started until a subsequent
     <code><a href="#HTTPSTRT">HTTP START</a></code> statement is found.
     <p>
-    <tt>AUTH</tt> indictates that a userid and password are required to access
+    <tt>AUTH</tt> indicates that a userid and password are required to access
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
     <p>
@@ -1476,7 +1476,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     <b>Note:</b> neither the <code>MSGCOLOR=</code> nor the <code>TITLE=</code> option
     has any effect when Hercules is run under the control of an external GUI since
-    since Hercules's console window is hidden in favor of using the external GUI's
+    Hercules's console window is hidden in favor of using the external GUI's
     window instead (and the GUI is in control of its own colors). The <code>RATE=</code>
     option however, controls how often the external GUI will refresh its own window
     and other user-interface controls. Similarly, the <code>FULLPATH</code> and
@@ -1573,7 +1573,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     If the optional <code>NODIAG8</code> option is specified, then only the
-    programmatic execution of commands via the the Diagnose 8 interface are disabled,
+    programmatic execution of commands via the Diagnose 8 interface are disabled,
     but shell and <a href="rexx.html">Rexx commands</a> entered directly via the
     Hercules command line still work. This includes commands entered via the
     <a href="#HTTPROOT">HTTP server facility</a> as well as commands issued by
@@ -1886,7 +1886,7 @@ a real System/390.  The configuration file is an ASCII text file.
     defined) symbols separate from the host operating system's environment variable pool,
     whereas the enhanced symbol substitution does not and instead only allows read-only
     access to the host's environment variable pool with no support for modifying an already
-    defined symbol (environment variable) but a nonethless convenient means of defining
+    defined symbol (environment variable) but a nonetheless convenient means of defining
     a default value to be used should the specified host environment variable be currently
     undefined.
     <p>
@@ -2768,7 +2768,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <dd><p>
         Specifies that the file contains variable length lines of
         ASCII characters delimited by LF (line feed) sequences or CRLF
-        (carraige return line feed) sequences at the end of each line.
+        (carriage return line feed) sequences at the end of each line.
         <p>
 
         If neither EBCDIC nor ASCII is specified, then the device handler
@@ -3443,7 +3443,7 @@ a real System/390.  The configuration file is an ASCII text file.
         initrd.debian    FIXED RECSIZE 80</pre>
 
         The filename on each record can be either absolute or relative and must be
-        enclosed within double quotes it it contains any spaces. If relative, the
+        enclosed within double quotes it contains any spaces. If relative, the
         name is appended to the path of the primary OMA (TDF) to create the full
         path filename of the file being referenced.
         <p>
@@ -4258,7 +4258,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dd><p>
                     where <em>netmask</em> is the netmask to use for the
                     automatically added point-to-point route in standard
-                    dotted internet noitation (e.g. 255.255.255.0)
+                    dotted internet notation (e.g. 255.255.255.0)
                     <p>
 
                 <dt><code>-x <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--if <em>name</em></code>
@@ -4393,7 +4393,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dt><code><em>delay</em></code>
                 <dd>The number of msec ATTN signals will be delayed for in order
                     to circumvent a VM/SP bug causing SIO timeout errors.
-                    Override the default of 0, e.g. with 200 or or some smaller value
+                    Override the default of 0, e.g. with 200 or some smaller value
                     for faster Hercules hosts, but only when needed.
 
                 <p>
@@ -4456,7 +4456,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
             <pre>
     0E40.4 CTCE       1=192.168.1.200        </pre>
             <p>
-            The above is axactly the same as this specification:
+            The above is exactly the same as this specification:
             <pre>
     0E40   CTCE    0E41=192.168.1.200
     0E41   CTCE    0E40=192.168.1.200
@@ -5206,7 +5206,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
     <dt><code>KA=NO &#124; <em>(idle,intv,count)</em></code>
     <dd><p>
         Defines the TCP/IP keepalive settings for this line's connections.
-        Refer the the <a href="#CONKPALV">CONKPALV</a> statement for details.
+        Refer the <a href="#CONKPALV">CONKPALV</a> statement for details.
         <p>
 
     <dt><code>LNCTL=TELE2 &#124; IBM1 &#124; BSC</code>

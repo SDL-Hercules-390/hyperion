@@ -33,7 +33,7 @@ S/370 architecture.  Although they are not present in the [S/370 Principle of Op
 they are not in contradiction with the reference manual. 
 
 
-For example, there is no contradication for an instruction such as LHI (Load Halfword Immediate) to be
+For example, there is no contradiction for an instruction such as LHI (Load Halfword Immediate) to be
 included as part of the S/370 architecture presented by Hercules. 
 
 
@@ -67,7 +67,7 @@ or disablement of a specifically named "facility", accompanied with an appropria
 
 For the 370 architecture, opcode.c's `GEN...` macro specifies `GENx370x...` for each instruction
 that is formal part of the original 370 instruction set, and `GENx___x...` for those instructions
-which were _not_ part of the original 370 insstruction set. 
+which were _not_ part of the original 370 instruction set. 
 
 
 For each instruction that is _not_ part of the original formal 370 instruction set, but which is

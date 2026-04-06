@@ -283,7 +283,7 @@ Short |      Long    | Argument(s)
 </dl>
 
 It should be noted that some of the options support multiple arguments
-separated by commas (most notibly the `--cpu`, `--msg` and `--opcode`
+separated by commas (most notably the `--cpu`, `--msg` and `--opcode`
 options), allowing you to print only trace records for more than one
 CPU, more than one message number and/or more than one instruction
 opcode. Simply follow an option's argument with a comma with no intervening

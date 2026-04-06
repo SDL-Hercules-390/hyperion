@@ -194,7 +194,7 @@
 27 Sep 2010 Code page user table support - Paul Gorlinsky
 27 Sep 2010 IPTE Range Facility - Jan Jaeger
 22 Sep 2010 Load Program Parameter Facility - Paul Gorlinsky
-19 Sep 2010 Process Panel started scripts in a seperate thread. - Paul Gorlinsky
+19 Sep 2010 Process Panel started scripts in a separate thread. - Paul Gorlinsky
 19 Sep 2010 Message Security Assist Extension 4 - Bernard van der Helm
 19 Sep 2010 Change SYMBOL processing to use either $() or ${} syntax and support
             default assignment if SYMBOL is not defined. - Paul Gorlinsky
@@ -281,7 +281,7 @@
 
 
 21 Jul 2010 PF KEY support enhancement. New variable '&*'. '&*' represents all of the remaining tokens
-            beyond the last subtitution variable used. This is a recursive implementation. A single space
+            beyond the last substitution variable used. This is a recursive implementation. A single space
             is added between each token. Token can be enclosed in paired single or double quotes. Quotes
             are included as part of the token string.
 
@@ -401,14 +401,14 @@
 29 Mar 2010 Add support for cmdlevel to limit console commands to the requested
             command set. Effects only user input commands, not panel, HAO or diagnose.
             Default works as before. - Paul G.
-26 Mar 2010 Prelimiary AIX support - Alexey Bozrikov, Harold Grovesteen and Fish by Fish
+26 Mar 2010 Preliminary AIX support - Alexey Bozrikov, Harold Grovesteen and Fish by Fish
 26 Mar 2010 Improved(?) PTT trace display format - Fish
 23 Mar 2010 Fix cckd fsync=1 shutdown problem - Ivan Warren
 18 Mar 2010 Remove requirement to install SDK7. It will be used only if installed. - Paul G.
 18 Mar 2010 Windows changes. Add handlers for CTRL-C, CTRL-Break, CLOSE, SHUTDOWN
             and LOGOFF. CTRL-C does not do anything (yet), CTRL-Break simulates the
             External Interrupt Key being pressed, CLOSE, SHUTDOWN and LOGOFF all
-            initate an immediate shutdown of hercules in order to close all files
+            initiate an immediate shutdown of hercules in order to close all files
             correctly. An orderly SHUTDOWN is not possible for the GUEST OS because
             Windows allows just 5 seconds to complete any cleanup (when using the
             cmd terminal interface). - Paul G.
@@ -596,7 +596,7 @@
             Roger Bowler
 28 Nov 2007 Allow ALLOW DATA CHECK to precede LOAD UCS AND FOLD on 1403 for
             TSS/370 - Jay Maynard
-22 Nov 2007 Store Doubleword Monitor Code for z/Arch on succesful MC -
+22 Nov 2007 Store Doubleword Monitor Code for z/Arch on successful MC -
             Ivan Warren
 20 Nov 2007 LRE support (try #1) - Greg
 18 Nov 2007 Activate Message-Security-Assist-Extension-1 facility in ESA/390 -
@@ -701,7 +701,7 @@
 20 Dec 2006 Clear FPC register during Initial CPU Reset - Roger Bowler
 20 Dec 2006 Clear AR,FPR,VR regs during Clear Reset - Roger Bowler
 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-19 Dec 2006 Backout mainlockx.pat - possible SMP problmes - Greg Smith
+19 Dec 2006 Backout mainlockx.pat - possible SMP problems - Greg Smith
 19 Dec 2006 New FPC command to display FPC register - Roger Bowler
 17 Dec 2006 Modify FPR command to display FP registers in pairs - Roger Bowler
 17 Dec 2006 Display DXC in msg HHCCP014I for PIC7 - Roger Bowler
@@ -1111,7 +1111,7 @@
             by Fish
 17 Aug 2005 3390-54/3390-JJ support (65520 cyls) - beta - Greg Smith
 16 Aug 2005 Added code to try and fix the old "console: DBG028: select:
-            Bad file number" problem that still occassionally occurs,
+            Bad file number" problem that still occasionally occurs,
             and added some code to try and detect what I believe to be
             the conditional that might be causing it (will this problem
             never end?!) - Fish
@@ -1240,7 +1240,7 @@
             John Decker (and Andy Styles) by Fish (thanks guys!)
 03 Feb 2005 MinGW port finally works! (static only; no HercGUI (yet)) - Fish
 22 Jan 2005 Added '*' comment command as official do-nothing command - Fish
-13 Jan 2005 Optmization to instruction fetch for unrolled execute - Greg Smith
+13 Jan 2005 Optimization to instruction fetch for unrolled execute - Greg Smith
 13 Jan 2005 AMD64 assembler assists - Bob Deblier by Greg
 05 Jan 2005 Fix dasdcopy bug for output ckd file - Greg Smith
 02 Jan 2005 Bug fix 14dec05 fixed - Bernard van der Helm
@@ -1345,9 +1345,9 @@ ler
             to a change/decision made by Jan back on 2003/03/20 that I
             was unaware of - Fish
 02 Sep 2004 Re-enable build without dynamic loading suppt - Ivan Warren
-28 Aug 2004 SCSI tape mods part 1 (cont'd): don't retreive tape status
+28 Aug 2004 SCSI tape mods part 1 (cont'd): don't retrieve tape status
             until it's actually needed for error determination - Fish
-27 Aug 2004 Removed all conditional and cast lvalues to accomodate for
+27 Aug 2004 Removed all conditional and cast lvalues to accommodate for
             gcc 3.4 and beyond - Ivan Warren
 19 Aug 2004 Suspend/resume loadparm value - Christopher by Greg Smith
 19 Aug 2004 cckd fix: Honor readonly option on sf- to base file - Greg Smith
@@ -1358,7 +1358,7 @@ ler
             Also fix code limit for ESTA - Ivan Warren
 30 Jul 2004 SCSI tape mods part 1: Auto-detect SCSI tape mounts - Fish
 30 Jul 2004 Fix bug in bldcfg that was causing device initialization
-            failures to not abort Herc statup as they should -- Fish
+            failures to not abort Herc startup as they should -- Fish
 30 Jul 2004 Make config symbol sub more generalized - Ivan Warren
 30 Jul 2004 SIE Perf boost patch correction for pending irpts - Ivan Warren
 28 Jul 2004 Remove opctab from run_cpu stack - Greg Smith
@@ -1548,7 +1548,7 @@ parovic
 22 Oct 2003 shared_server tolerates unix socket problems - Greg
 20 Oct 2003 Prevent dyngui unload when gui active - Jan Jaeger
 17 Oct 2003 Make sure 'init_hostinfo' called BEFORE 'display_version' - Fish
-16 Oct 2003 Always updagte `ints_state' (except PER) with `intlock' held - Greg
+16 Oct 2003 Always update `ints_state' (except PER) with `intlock' held - Greg
 13 Oct 2003 fix 'ipending' cmd to display ALL pending interrupts - Fish
 13 Oct 2003 dequeue ALL i/o ints in device_reset - Fish
 13 Oct 2003 impl.c: terminate w/HHCIN008S if dyngui.dll load fails - Fish
@@ -1874,7 +1874,7 @@ n
 15 Dec 2002 Streamlining Windows build processing, add P4 support - Volker Bandk
 e
 12 Dec 2002 Main storage addressing cleanup - Jan Jaeger
-09 Dec 2002 Fix windows comiple errors in hsccmd.c - Jim Pierson
+09 Dec 2002 Fix windows compile errors in hsccmd.c - Jim Pierson
 05 Dec 2002 Various fixes and roll back of 30/6 performance mods - Jan Jaeger
 26 Nov 2002 Missing devtype.c FBA entries - Greg Smith and Ivan
 23 Nov 2002 Remove cckd/het zlib dependency - Greg Smith
@@ -1918,7 +1918,7 @@ e
 16 Jul 2002 New 'hmccmds.c' source module #included by 'panel.c'. - Fish
 14 Jul 2002 UNTABBED all .c/.h source files (NO EMBEDDED TABS, please!) - Fish
 14 Jul 2002 ** MAJOR CLEANUP ** Added -W compile option to see ALL warnings and
-            corrected most signed/unisgned and unreferenced warnings; only
+            corrected most signed/unsigned and unreferenced warnings; only
             'ckddasd', 'cckddasd' and 'cckdutil' remain to be cleaned up - Fish
 13 Jul 2002 Fix dasdutil.c to correctly detecte write error in
             created_ckd_file - Volker Bandke
@@ -1952,7 +1952,7 @@ e
 23 Jun 2002 Gabor Hoffer's performance patch: parts 1 & 2 -- Fish
 23 Jun 2002 Fixes/enhancements for cckd chkdsk - Greg Smith
 20 Jun 2002 Fix arch mode id in store status function - Jan Jaeger
-19 Jun 2002 Set manufacterer to HRC for STSI - Jan Jaeger
+19 Jun 2002 Set manufacturer to HRC for STSI - Jan Jaeger
 18 Jun 2002 FBA dasdtab updates - Tomas Masek by Greg Smith
 18 Jun 2002 Fix NRF condition for CKD dasd - Greg Smith
 17 Jun 2002 Fix segmentation fault during cckd compress - Greg Smith
@@ -1980,7 +1980,7 @@ h: Hax 28 by Hackules)
 13 May 2002 NLS support for cckd utilities - Jan Jaeger
 11 May 2002 NLS support - Jan Jaeger
 08 May 2002 Fixes for 3350 dasdload - Greg Smith
-08 May 2002 CodePage converion table 850/273 - Gerd Petermann
+08 May 2002 CodePage conversion table 850/273 - Gerd Petermann
 05 May 2002 Add some NLS definitions - Jan Jaeger
 05 May 2002 Merge Debian patch to ckd2cckd.c to permit compilation with
             gcc 3.0, where printf may be a macro - Matt Zimmerman
@@ -2051,7 +2051,7 @@ ke
 01 Mar 2002 Fix priority of PIC 13 for PT - Paul Leisy
 01 Mar 2002 Fix cancel_subchan if OPTION_FISHIO - Greg Smith
 28 Feb 2002 Allow for cr/lf in 3215 code and change ebcdic to ascii
-            convertion table entry x'15' from x'b4' to x'0a' - Jan Jaeger
+            conversion table entry x'15' from x'b4' to x'0a' - Jan Jaeger
 26 Feb 2002 `sf-xxx nomerge' rebuilds current shadow file if previous
             file is `read-only' - Greg Smith
 26 Feb 2002 Set ILC=4 when an EX with PER is to an SVC - Paul Leisy
@@ -2128,7 +2128,7 @@ ke
 14 Dec 2001 Fix BSM instruction for z/OS - Greg Smith
 12 Dec 2001 Correct SIE intercept with concurrent PER indication - Jan Jaeger
 09 Dec 2001 SIE PER enhancements - Jan Jaeger
-06 Dec 2001 Basic PER implemention - Jan Jaeger
+06 Dec 2001 Basic PER implementation - Jan Jaeger
 05 Dec 2001 Corrected ref and change bits on loadtext - Jan Jaeger
 04 Dec 2001 Rewrite of trace including full 64 bit support - Jan Jaeger
 28 Nov 2001 Reset device status in device_reset() for ckd dev - Jan Jaeger
@@ -2215,7 +2215,7 @@ y
 28 Aug 2001 Change FPR display so if BASIC FP EXTENSIONS all displayed - Paul Le
 isy
 28 Aug 2001 Change MVCLE cpu-determined length - Paul Leisy
-26 Aug 2001 Added test for file-existance in cardrdr.c (code suggested by Richar
+26 Aug 2001 Added test for file-existence in cardrdr.c (code suggested by Richar
 d Snow) - Volker Bandke
 24 Aug 2001 Add optional address parm to loadcore panel command - Michael Ackers
 on
@@ -2299,11 +2299,11 @@ Leisy
 20 Jun 2001 Remove subchannel enabled check from console - Jan Jaeger
 19 Jun 2001 Correct check for MVCL in different spaces - Jan Jaeger
 19 Jun 2001 Prevent msg HHC611I during machine check - Jan Jaeger
-19 Jun 2001 Enhance MVCL cc3 diagostics - Jan Jaeger
+19 Jun 2001 Enhance MVCL cc3 diagnostics - Jan Jaeger
 18 Jun 2001 Add missing obtain_lock(devlock) to halt function - Fish
 18 Jun 2001 Reset channel path function - Jan Jaeger
 17 Jun 2001 Address limit checking - Jan Jaeger
-16 Jun 2001 Correctons to LPGFR/LNGFR/LCGFR - Jan Jaeger
+16 Jun 2001 Corrections to LPGFR/LNGFR/LCGFR - Jan Jaeger
 16 Jun 2001 Fix index-symbol translation - Bernard van der Helm
 16 Jun 2001 TLB implementation for z/Architecture - Jan Jaeger
 15 Jun 2001 Fix interrupt key processing - Jan Jaeger
@@ -2393,7 +2393,7 @@ Leisy
 22 Apr 2001 cmpsc fixes for expansion - Greg Smith
 22 Apr 2001 Correct prefix alignment for ESA/390
             guest in 64 bit mode SIE - Jan Jaeger
-21 Apr 2001 Added support for muliple files in card reader
+21 Apr 2001 Added support for multiple files in card reader
 21 Apr 2001 Added support auto-padding of ebcdic files in card reader
 21 Apr 2001 Added support for builtin tun driver of linux kernel 2.4.x
 17 Apr 2001 Fix SSKE rcp guest ref and change bits - Paul Leisy
@@ -2519,7 +2519,7 @@ Leisy
 11 Feb 2001 Correction to LRAG - Jan Jaeger
 11 Feb 2001 Allow use of environment variables to override filenames
             of hercules.rc hercules.cnf and hercifc - Jan Jaeger
-11 Feb 2001 Various floating additions inclusing EFPC/SRNM
+11 Feb 2001 Various floating additions including EFPC/SRNM
             instructions, and data exception code specs - Roger Bowler
 11 Feb 2001 Correction to pgmint instruction nullification - Jan Jaeger
 10 Feb 2001 NLS support - Roger Bowler
@@ -2636,7 +2636,7 @@ Leisy
 20 Nov 2000 Revised instruction counting feature and
             icount panel command - Jan Jaeger
 15 Nov 2000 Small fix to CHI - Jan Jaeger
-11 Nov 2000 Prevent ESAME mode when ESA/390 is specifed - Jan Jaeger
+11 Nov 2000 Prevent ESAME mode when ESA/390 is specified - Jan Jaeger
 5  Nov 2000 Added various new instructions in A5xx range - Jan Jaeger
 29 Oct 2000 Correct AXR and SXR instruction results when significance
             exception raised (Peter Kuschnerus, with help from Mario Bezzi)

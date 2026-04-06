@@ -10,7 +10,7 @@
 
 AC_INIT(hercules.h)           # (package, version, bugreport email, etc)
 AC_REVISION($Revision$)       # (the version of this configure.ac)
-AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxillary build tools)
+AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxiliary build tools)
 
 # -----------------------------------------------------------------------------
 #  PROGRAMMING NOTE: The below VERS_MAJ, VERS_INT and VERS_MIN assignment
@@ -42,7 +42,7 @@ AC_CANONICAL_HOST()           # (sets $host_cpu, $host_vendor, and $host_os)
 AC_CANONICAL_TARGET()         # (sets $target_cpu, $target_vendor, and $target_os)
 
 # FORTRAN detection scanning can goof up our shared libraries.
-# So we diable checking for it.  And C++, too, while we're at it.
+# So we disable checking for it.  And C++, too, while we're at it.
 #
 # Idea from https://stackoverflow.com/questions/4292683
 #
@@ -798,7 +798,7 @@ AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_s
 #
 #  in6_*.h files are strictly for library separation and should not normally
 #  be directly #included. This is enforced on FreeBSD and to a lesser degree
-#  on OS/X where you you can get away with it by #including netinet/in_var.h
+#  on OS/X where you can get away with it by #including netinet/in_var.h
 #  first.
 
 AC_CHECK_HEADERS( linux/ipv6.h,   [hc_cv_have_linux_ipv6_h=yes],   [hc_cv_have_linux_ipv6_h=no],
@@ -2091,7 +2091,7 @@ fi
 #    for Apple's GCC 3.3 compiler, the standard GNU
 #    meaning of -traditional-cpp has been restored. By
 #    default, the GCC 3.3 preprocessor conforms to the
-#    ISO C standard. Using the -tradtional-cpp option
+#    ISO C standard. Using the -traditional-cpp option
 #    means the C preprocessor should instead try to
 #    emulate the old "K&R C".
 #

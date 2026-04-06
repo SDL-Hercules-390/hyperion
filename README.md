@@ -58,7 +58,7 @@ to our **bug report tracking system** by adding/creating a new
 [**Building "External Packages"**](readme/README.EXTPKG.md) &nbsp; _(Important!)_  
 [Building Hercules under AIX](readme/README.AIX.md)  
 [Building Hercules under BSD/OSX](readme/README.BSD.md)  
-[Budiling Hercules for OSX](readme/README.OSX.md)  
+[Building Hercules for OSX](readme/README.OSX.md)  
 [Building Hercules under 64-bit Windows](readme/README.WIN64.md) &nbsp; _(obsolete)_  
 [Building Hercules with MinGW](readme/README.MINGW.md) &nbsp; _(obsolete)_  
 [Building Hercules for Windows with Visual C](readme/README.MSVC.md) &nbsp; _(obsolete)_  

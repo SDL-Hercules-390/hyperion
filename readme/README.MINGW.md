@@ -22,7 +22,7 @@ Once we got Herc to build successfully using MSVC, I/we stopped all effort on tr
   it should be noted that building Herc with MinGW may no longer
   work. (It hasn't been tested in a long time).
 
-  The prefered method (and indeed the only SUPPORTED method) for
+  The preferred method (and indeed the only SUPPORTED method) for
   building the Win32 version of Hercules is via Microsoft's free
   compiler toolkit as explained in the README.MSVC document. The
   below information is mostly for historical purposes.
@@ -117,7 +117,7 @@ which I explain how to do in the next step just below))))...
 
 
 Make a copy of the 'msys.bat' file in "d:\msys\1.0" and update it
-with your prefered colors and window geometry settings:
+with your preferred colors and window geometry settings:
 
 
 rem (deleted by Fish)                      if "x%MINGW32BGCOLOR%" == "x" set MINGW32BGCOLOR=LightYellow
@@ -134,7 +134,7 @@ rem (replaced with the following instead)
 
               *** IMPORTANT NOTE! ***
 
-Be VERY CAREFUL when modifiying the above "start rxvt..." line!
+Be VERY CAREFUL when modifying the above "start rxvt..." line!
 The actual .BAT file contains an embedded backspace character
 which does not appear on the above example statements! Do NOT
 use the above example statements as-is! Instead, use notepad

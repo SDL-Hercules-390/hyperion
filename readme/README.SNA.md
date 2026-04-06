@@ -148,7 +148,7 @@ iface eth0 inet manual
     pre-up ifconfig $IFACE up
     post-down ifconfig $IFACE down
 
-# Three tap devices are defined for Hercules to use as LCS interrfaces.
+# Three tap devices are defined for Hercules to use as LCS interfaces.
 auto tap0
 iface tap0 inet manual
     pre-up ip tuntap add tap0 mode tap user jmaynard
@@ -205,7 +205,7 @@ nmcli connection add type tun ifname tap2 con-name tap2 slave-type bridge \
 Jeff Snyder provided the following example configuration for a newly installed
 Ubuntu 20.04.3 server:
 
-Set up the initial bridge to the ethernet inteface by updating the
+Set up the initial bridge to the ethernet interface by updating the
 `/etc/netplan/00-installer-config.yaml` file to contain:
 
 

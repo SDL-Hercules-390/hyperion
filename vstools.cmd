@@ -168,7 +168,7 @@
   ::--------------------------------------------------------
   ::   Set the target Visual Studio build environment
   ::--------------------------------------------------------
-  ::  Note that we must set the build enviroment OUTSIDE
+  ::  Note that we must set the build environment OUTSIDE
   ::  the scope of our setlocal/endlocal to ensure that
   ::  whatever build environment gets set ends up being
   ::  passed back to the caller.

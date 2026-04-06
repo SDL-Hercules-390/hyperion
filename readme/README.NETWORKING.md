@@ -499,7 +499,7 @@ The TUN interface could then be used with a PTP specified as:-
 
 The QETH (or OSA) device type emulates an OSA Express card running in QDIO mode. Both layer-2 and layer-3 are currently supported. The mode of operation is selected by the emulated workload and cannot be configured from Hercules.
 
-For more information please refer to the the QETH/OSA section of the Hercules Configuration File web page, [hercconf.html](https://sdl-hercules-390.github.io/html/hercconf.html#QETH).
+For more information please refer to the QETH/OSA section of the Hercules Configuration File web page, [hercconf.html](https://sdl-hercules-390.github.io/html/hercconf.html#QETH).
 
 ## Notes
 
@@ -509,7 +509,7 @@ Fish's [CTCI-WIN](http://www.softdevlabs.com/ctci-win) package includes the requ
 
 Also note that it is _highly recommended_ that you stick with using _only_ the current official _RELEASE_ version of WinPCap and _**NOT**_ any type of 'alpha' OR 'beta' version! _ALPHA AND BETA VERSIONS OF WINPCAP ARE **NOT SUPPORTED!** Only official RELEASE versions are supported!_
 
-When you visit the WinPCap download web page, you need need to scroll down the page a bit to reach the OFFICIAL RELEASE VERSION of WinPcap. They usually put their Beta versions at the top of the page, and BETA versions ARE NOT SUPPORTED. *Please* scroll down the page and use and official RELEASE version. Thanks.
+When you visit the WinPCap download web page, you need to scroll down the page a bit to reach the OFFICIAL RELEASE VERSION of WinPcap. They usually put their Beta versions at the top of the page, and BETA versions ARE NOT SUPPORTED. *Please* scroll down the page and use and official RELEASE version. Thanks.
 
 You may, if you want, use a beta version of WinPCap, but if you do, then you're on your own if you have any problems with it!
 
