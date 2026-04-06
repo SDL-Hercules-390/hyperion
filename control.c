@@ -3739,6 +3739,10 @@ int     rc;                             /* return code from load_psw */
 
     /* Now INVALIDATE ALL TLB ENTRIES in our working copy.. */
     memset( &newregs.tlb.vaddr, 0, TLBN * sizeof(DW) );
+
+    /* Including the Address Space Designator checks */
+    memset( &newregs.tlb.asd, 0, TLBN * sizeof(DW) );
+    memset( &newregs.tlb.common, 0, TLBN * sizeof(BYTE) );
     newregs.tlbID = 1;
 
     /* Set the breaking event address register in the copy */
