@@ -2622,6 +2622,9 @@ cdsk_fsperr_retry:
 
             if (off)
             {
+                /* Zero entire block to avoid writing garbage to underlying file */
+                memset (fsp, 0, CCKD64_FREEBLK_SIZE);
+
                 /* new format free space */
                 memcpy (fsp, "FREE_BLK", 8);
                 for (i = 0, j = 1; spctab[i].spc_typ != SPCTAB_EOF; i++)

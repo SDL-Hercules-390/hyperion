@@ -2267,6 +2267,9 @@ CCKD64_FREEBLK *fsp = NULL;             /* -> new format free space  */
 
         if (fpos)
         {
+            /* Zero entire block to avoid writing garbage to underlying file */
+            memset (&fsp[0], 0, CCKD64_FREEBLK_SIZE);
+
             /* New format free space */
             memcpy (&fsp[0], "FREE_BLK", 8);
             ppos = cckd->cdevhdr[sfx].free_off;
