@@ -215,7 +215,7 @@ void cgibin_psw(WEBBLK *webblk)
         hprintf(webblk->sock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
         hprintf(webblk->sock, "Refresh Interval: ");
         hprintf(webblk->sock, "<INPUT type=\"text\" size=\"2\" name=\"refresh_interval\" "
-           "pattern=\"[1-9][0-9]*\" value=\"%d\" title=\"Must be an integer > 0\">\n",
+           "pattern=\"[1-9][0-9]*\" value=\"%d\" title=\"Must be an integer &gt; 0\">\n",
            refresh_interval);
     }
     else
@@ -390,7 +390,7 @@ int     msgcount = 22;
         hprintf(webblk->sock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
         hprintf(webblk->sock, "Refresh Interval: ");
         hprintf(webblk->sock, "<INPUT type=text name=\"refresh_interval\" size=2 value=%d "
-                              "pattern=\"[1-9][0-9]*\" title=\"Must be an integer > 0\">\n",
+                              "pattern=\"[1-9][0-9]*\" title=\"Must be an integer &gt; 0\">\n",
            refresh_interval);
     }
     else
@@ -798,7 +798,7 @@ U32 doipl;
         if( load_ipl(0, ipldev, iplcpu,0) )
         {
             hprintf(webblk->sock,"<h3>IPL failed, see the "
-                                  "<a href=\"syslog#bottom\">system log</a> "
+                                  "system log "
                                   "for details</h3>\n");
         }
         else
@@ -1260,24 +1260,37 @@ static void json_escape_string(int sock, const char *str)
 void cgibin_api_v1(WEBBLK *webblk)
 {
     json_header( webblk );
-    hprintf(webblk->sock,"{"
-    "\"desc\":\"lists and describes available APIs. The below APIs are under cgibin/api/v1/\","
-    "\"APIs\":{"
-    "\"cpus\":\"Returns information about the configured CPUs\","
-    "\"psw\":\"Returns the PSW\","
-    "\"version\":\"Returns version and build information\","
-    "\"syslog\":\"Returns the hercules log as an array in `syslog:`. Can take two optional parameters:\\n"
-                "- command: the command submitted will be interpreted by hercules"
-                "similar to the hercules console, the default is an empty string\\n"
-                "- msgcount: is a variable and can be changed via get/post/cookie"
-                "and controls the number of lines returned the default is 22 lines\","
-    "\"devices\":\"Returns configured device information\","
-    "\"maxrates\":\"Returns maxrates\","
-    "\"rates\":\"Returns current MIPS and IO rates\","
-    "\"storage\":\"Returns fullwords from memory. Takes two parameters:\\n"
-                "- address: the starting address, default 0x00\\n"
-                "- fullwords: the number of fullwords to return, default 32\""
-    "}}");
+    hprintf(webblk->sock, 
+    "{"
+        "\"desc\": \"lists and describes available APIs. The below APIs are under cgibin/api/v1/\","
+        "\"APIs\": {"
+            "\"cpus\": { \"desc\": \"Returns information about the configured CPUs\"},"
+            "\"psw\": { \"desc\": \"Returns the PSW\"},"
+            "\"version\": { \"desc\": \"Returns version and build information\"},"
+            "\"syslog\": { \"desc\": \"Returns the hercules log as an array in `syslog:`\","
+            "\"params\":"
+                "{"
+                "\"command\": \"the command submitted will be interpreted by hercules similar "
+                "to the hercules console, the default is an empty string\", "
+                "\"index\": \"is the index value from a previous call allowing for additions "
+                "since the previous call to be returned, if any\","
+                "\"msgcount\": \"is a variable and can be changed via get/post/cookie and "
+                "controls the number of lines returned, the default is 22 lines\""
+                "},"
+            "\"note\": \"index, if set, ignores msgbuf and returns ALL newly available lines\""
+            "},"
+            "\"devices\": { \"desc\": \"Returns configured device information\"},"
+            "\"maxrates\": { \"desc\": \"Returns maxrates\"},"
+            "\"rates\": { \"desc\": \"Returns current MIPS and IO rates\"},"
+            "\"storage\": { \"desc\": \"Returns fullwords from memory.\"},"
+            "\"params\":"
+                "{"
+                "\"address\": \"the starting address, default 0x00\","
+                "\"fullwords\": \"the number of fullwords to return, default 32\""
+                "}"
+            "}"
+        "}"
+    );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1689,8 +1702,10 @@ void cgibin_api_v1_syslog(WEBBLK *webblk)
     if((value = cgi_variable(webblk,"msgcount")))
         msgcount = atoi(value);
 
-    if((value = cgi_variable(webblk,"index")))
+    if((value = cgi_variable(webblk,"index"))) {
         index = atoi(value);
+        msgcount = 0;   // index always gives ALL new lines
+    }
 
     hprintf(webblk->sock,"\"msgcount\": %d,",msgcount);
     hprintf(webblk->sock,"\"syslog\": [");
@@ -1979,7 +1994,8 @@ void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
         return;             /* command is all blank, ignore */
     }
 
-    panel_command_capture( command, &response, false );
+    // NB: true forces quiet mode to prevent duplicate logging
+    panel_command_capture( command, &response, true );
 
     if (response == NULL)
     {
