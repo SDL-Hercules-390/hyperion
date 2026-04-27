@@ -1,6 +1,7 @@
 
 dist_pkgdata_DATA =   \
     cckddasd.html     \
+    cmd.html          \
     fishgui.html      \
     hercconf.html     \
     hercfaq.html      \
@@ -55,6 +56,7 @@ dist_pkgdata_DATA =   \
     index.html        \
     rexx.html         \
     shared.html       \
+    syslog.html       \
     tasks.html        \
     telnet.html
 
