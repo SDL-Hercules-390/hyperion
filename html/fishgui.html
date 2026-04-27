@@ -1,112 +1,128 @@
+<!DOCTYPE html>
 <html>
 <head>
 </head>
-<script language="Javascript">
-<!--
-function confirm_quit() {
-  if(confirm('Are you sure you want to Power Off?\n'
-     + 'This will terminate Hercules!!'))
-    return true
-  else
-    return false
-}
-//-->
-</script>
 <body>
 
-<center>
+<iframe name="syslog_null" style="display:none;"></iframe>
 
-<table bgcolor="#000000">
-    <tr>
-    <td>
-    <table border=0 cellspacing=0>
-    <tr valign=bottom>
-    <td>
-        <table border=0 cellspacing=0>
-
-            <tr>
-                <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
-                    <input type=image src="images/storeu.gif" alt="Store Status" title="Store Status"></td>
-                    <input type=hidden name=command value=store>
-                </form>
-                <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
-                    <input type=image src="images/restartu.gif" alt="Restart" title="Restart"></td>
-                    <input type=hidden name=command value=restart>
-                </form>
-            </tr>
-
-            <tr>
-                <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
-                    <input type=image src="images/startu.gif" alt="Start" title="Start"></td>
-                    <input type=hidden name=command value=startall>
-                </form>
-
-                <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
-                    <input type=image src="images/stopu.gif" alt="Stop" title="Stop"></td>
-                    <input type=hidden name=command value=stopall>
-                </form>
-            </tr>
-
-        </table>
-    </td>
-
-    <td></td>
-
-    <td>
-        <table border=0 cellspacing=0>
-            <tr>
-                <td><img src="images/dial1.gif" alt="Dial 1" title="Dial 1"></td>
-                <td><img src="images/dial1.gif" alt="Dial 2" title="Dial 2"></td>
-                <td><img src="images/dial1.gif" alt="Dial 3" title="Dial 3"></td>
-                <td><img src="images/dial1.gif" alt="Dial 4" title="Dial 4"></td>
-            </tr>
-        </table>
-    </td>
-
-    <td>
-        <table border=0 cellspacing=0>
-            <tr>
-                <td><img src="images/sysonu.gif"  alt="Sys"  title="Sys"></td>
-                <td><img src="images/manonu.gif"  alt="Man"  title="Man"></td>
-                <td><img src="images/waitonu.gif" alt="Wait" title="Wait"></td>
-                <td><img src="images/loadonu.gif" alt="Load" title="Load"></td>
-            </tr>
-        </table>
-    </td>
-
-    <td>
-    <table border=0 cellspacing=0>
-    <tr>
-        <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
-            <input type=image src="images/powerononu.gif" alt="Power On" title="Power On"></td>
-            <input type=hidden name=command value="* * * Already Powered On! * * *">
+<table bgcolor="#000000" >
+ <tr>
+  <td>
+   <table border=0 cellspacing=0>
+    <tr valign="bottom">
+     <td>
+      <table border=0 cellspacing=0>
+       <tr>
+        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+         <td><input type="image" src="images/storeu.gif" alt="Store Status" title="Store Status"></td>
+         <input type="hidden" name="cmd" value="store">
         </form>
-        <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main" onSubmit="return confirm_quit()"><td>
-            <input type=image src="images/poweroffu.gif" alt="Power Off" title="Power Off"></td>
-            <input type=hidden name=command value=quit>
+        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+         <td><input type="image" src="images/restartu.gif" alt="Restart" title="Restart"></td>
+         <input type="hidden" name="cmd" value="restart">
         </form>
-    </tr>
-
-    <tr>
-        <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
-            <input type=image src="images/interruptu.gif" alt="Interrupt" title="Interrupt"></td>
-            <input type=hidden name=command value=ext>
+       </tr>
+       <tr>
+        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+         <td><input type="image" src="images/startu.gif" alt="Start" title="Start"></td>
+         <input type="hidden" name="cmd" value="startall">
         </form>
-        <form method=get action="/cgi-bin/tasks/ipl" target="main"><td>
-            <input type=image src="images/loadu.gif" alt="Load" title="Load"></td>
-            <input type=hidden name=command value=ipl>
+        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+         <td><input type="image" src="images/stopu.gif" alt="Stop" title="Stop"></td>
+         <input type="hidden" name="cmd" value="stopall">
         </form>
+       </tr>
+      </table>
+     </td>
+     <td>
+      <div id="meter"></div>
+     </td>
+     <td>
+      <table border=0 cellspacing=0>
+       <tr>
+        <td><img src="images/dial1.gif" alt="Dial 1" title="Dial 1"></td>
+        <td><img src="images/dial1.gif" alt="Dial 2" title="Dial 2"></td>
+        <td><img src="images/dial1.gif" alt="Dial 3" title="Dial 3"></td>
+        <td><img src="images/dial1.gif" alt="Dial 4" title="Dial 4"></td>
+       </tr>
+      </table>
+     </td>
+     <td>
+      <table border=0 cellspacing=0>
+       <tr>
+        <td><img src="images/sysonu.gif" alt="Sys" title="Sys"></td>
+        <td><img src="images/manonu.gif" alt="Man" title="Man"></td>
+        <td><img src="images/waitonu.gif" alt="Wait" title="Wait"></td>
+        <td><img src="images/loadonu.gif" alt="Load" title="Load"></td>
+       </tr>
+      </table>
+     </td>
+     <td>
+      <table border=0 cellspacing=0>
+       <tr>
+        <form class="send_reload" method="post" action="/cgi-bin/tasks/cmd" target="syslog_null">
+         <td><input type="image" src="images/powerononu.gif" alt="Power On" title="Power On"></td>
+         <input type="hidden" name="cmd" value="* * * Already Powered On! * * *">
+        </form>
+        <form method="post" action="cgi-bin/tasks/cmd" target="syslog_null" onSubmit="return confirm_quit()">
+         <td><input type="image" src="images/poweroffu.gif" alt="Power Off" title="Power Off"></td>
+         <input type="hidden" name="cmd" value="quit">
+        </form>
+       </tr>
+       <tr>
+        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+         <td><input type="image" src="images/interruptu.gif" alt="Interrupt" title="Interrupt"></td>
+         <input type="hidden" name="cmd" value="ext">
+        </form>
+        <form method="get" action="/cgi-bin/tasks/ipl" target="main">
+         <td><input type="image" src="images/loadu.gif" alt="Load" title="Load"></td>
+         <input type="hidden" name="cmd" value="ipl">
+        </form>
+       </tr>
+      </table>
+     </td>
     </tr>
-
-    </table>
-    </td>
-    </tr>
-    </table>
-    </td>
-    </tr>
+   </table>
+  </td>
+ </tr>
 </table>
+<script language="Javascript">
+function confirm_quit() {
+  if (confirm('Are you sure you want to Power Off?\n'
+     + 'This will terminate Hercules!!')) {
+        // note very short delay as Hercules is exiting.....
+        // .. and may not respond in time....
+        reloadViewer(1);
+        return true;
+  } else {
+        return false;
+  }
+}
 
-</center>
+function reloadViewer(delay) {
+    // delay (ms) to allow caller to send command and log to become available
+    setTimeout(function() {
+        try {
+            parent.frames["main"].syslogViewer.reloadSoon();
+            console.log("sent");
+        } catch (ignore) {
+            // maybe viewer not loaded.. don't worry
+        }        
+    }, delay);
+}
 
+// after certain buttons we request the syslog viewer to reload 
+function hookReload() {
+    // only buttons in class send_reload
+    document.querySelectorAll("form.send_reload").forEach(form => {
+        form.addEventListener("submit", function() {
+            reloadViewer(200);
+        });
+    });
+}
+
+window.addEventListener("load", hookReload);
+</script>
 </body>
 </html>
