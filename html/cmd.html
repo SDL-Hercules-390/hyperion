@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Entry</title>
+</head>
+<body>
+
+<iframe name="syslog_action" style="display:none;"></iframe>
+<style>
+.send_btn, .clear_btn {
+    color:white;font-weight:bold;border:none;padding:4px 8px;
+    border-radius:3px;cursor:pointer;
+}
+
+.clear_btn {
+    background-color:#2943C2;
+}
+
+.send_btn {
+    background-color:#008000;
+}
+</style>
+
+<form method="post" action="cgi-bin/tasks/cmd" id="commandForm" target="syslog_action">
+  <b>Command:</b>
+  <input type="text" id="command" name="cmd" size="80" autofocus autocomplete="off">
+  <input class="send_btn" type="submit" name="send" value="Send">
+</form>
+<div style="height:0.3em;"></div>
+<button class="clear_btn" type="button" onclick="clearHistory()">
+Clear History
+</button>
+
+<script>
+// handles the command processing element for the console
+(function () {
+  const HISTORY_KEY = "commandHistory";
+  const HISTORY_LIMIT = 100;
+
+  const commandForm = document.getElementById("commandForm");
+  const commandInput = document.getElementById("command");
+
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch {
+    history = [];
+  }
+
+  let historyIndex = history.length;
+  let currentDraft = "";
+
+  function saveHistory() {
+    const cmd = commandInput.value.trim();
+    if (!cmd) return;
+
+    if (history.length === 0 || history[history.length - 1] !== cmd) {
+      history.push(cmd);
+      if (history.length > HISTORY_LIMIT) {
+        history.shift();
+      }
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    historyIndex = history.length;
+    currentDraft = "";
+  }
+
+  window.clearHistory = function () {
+    history = [];
+    historyIndex = 0;
+    currentDraft = "";
+    localStorage.removeItem(HISTORY_KEY);
+    commandInput.value = "";
+    commandInput.focus();
+  };
+
+  commandForm.addEventListener("submit", function (e) {
+    if (!commandInput.value.trim()) {
+      e.preventDefault();
+      commandInput.focus();
+      return;
+    }
+    saveHistory();
+
+    try {
+      const viewer = parent.frames["main"].syslogViewer;
+      if (viewer && typeof viewer.reloadSoon === "function") {
+        viewer.reloadSoon();
+      }
+    } catch (ignore) {
+       // if notify fails don't worry as window may not be loaded
+    }
+
+    setTimeout(function () {
+      commandInput.value = "";
+      commandInput.focus();
+      historyIndex = history.length;
+      currentDraft = "";
+    }, 0);
+  });
+
+  commandInput.addEventListener("keydown", function (e) {
+    if (e.ctrlKey && e.key.toLowerCase() === "e") {
+      e.preventDefault();
+      commandInput.value = "";
+      currentDraft = "";
+      historyIndex = history.length;
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (history.length === 0) return;
+
+      if (historyIndex === history.length) {
+        currentDraft = commandInput.value;
+      }
+
+      if (historyIndex > 0) {
+        historyIndex--;
+        commandInput.value = history[historyIndex];
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (history.length === 0) return;
+
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        commandInput.value = history[historyIndex];
+      } else {
+        historyIndex = history.length;
+        commandInput.value = currentDraft;
+      }
+    }
+  });
+
+  commandInput.focus();
+})();
+</script>
+</body>
+</html>
