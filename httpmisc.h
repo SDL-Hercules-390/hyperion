@@ -38,8 +38,6 @@
 
 /*-------------------------------------------------------------------*/
 
-#define HTML_EXPIRE_SECS        (60*60*24*7)
-
 #define HTTP_WELCOME "hercules.html"
 #define HTML_HEADER  "include/header.htmlpart"
 #define HTML_FOOTER  "include/footer.htmlpart"
@@ -90,6 +88,7 @@ struct WEBBLK
     char* request;
     char* baseurl;
     char* user;
+    time_t mod_time;    // file modification time for downloads
 
     CGIVAR* cgivar;
 };
