@@ -252,10 +252,12 @@ static void http_error(WEBBLK *webblk, char *err, char *header, char *info)
 /*-------------------------------------------------------------------*/
 /*                      http_timestring                              */
 /*-------------------------------------------------------------------*/
+static char *http_tfmt = "%a, %d %b %Y %H:%M:%S %Z";
+
 static char *http_timestring(char *time_buff,int buff_size, time_t t)
 {
-    struct tm *tm = localtime(&t);
-    strftime(time_buff, buff_size, "%a, %d %b %Y %H:%M:%S %Z", tm);
+    struct tm *tm = gmtime(&t); // HTTP standard defines GMT
+    strftime(time_buff, buff_size, http_tfmt, tm);
     return time_buff;
 }
 
@@ -523,21 +525,29 @@ static void http_download(WEBBLK *webblk, char *filename)
     if (fd == -1)
         http_error(webblk, "404 File Not Found","",
                            strerror(errno));
+            
+    if (webblk->mod_time == st.st_mtime)
+    {   
+        // browser copy still valid in cache
+        hprintf(webblk->sock, "HTTP/1.0 304 Not Modified\n");
+    } 
+    else 
+    {
+        hprintf(webblk->sock,"HTTP/1.0 200 OK\n");
+        if ((filetype = strrchr(filename,'.')))
+            for(mime_type++;mime_type->suffix
+              && strcasecmp(mime_type->suffix,filetype + 1);
+              mime_type++);
+        if(mime_type->type)
+            hprintf(webblk->sock,"Content-Type: %s\n", mime_type->type);
 
-    hprintf(webblk->sock,"HTTP/1.0 200 OK\n");
-    if ((filetype = strrchr(filename,'.')))
-        for(mime_type++;mime_type->suffix
-          && strcasecmp(mime_type->suffix,filetype + 1);
-          mime_type++);
-    if(mime_type->type)
-        hprintf(webblk->sock,"Content-Type: %s\n", mime_type->type);
+        hprintf(webblk->sock,"Last-Modified: %s\n",
+          http_timestring(tbuf,sizeof(tbuf), st.st_mtime));
 
-    hprintf(webblk->sock,"Expires: %s\n",
-      http_timestring(tbuf,sizeof(tbuf),time(NULL)+HTML_EXPIRE_SECS));
-
-    hprintf(webblk->sock,"Content-Length: %d\n\n", (int)st.st_size);
-    while ((length = read(fd, buffer, sizeof(buffer))) > 0)
-            hwrite(webblk->sock,buffer, length);
+        hprintf(webblk->sock,"Content-Length: %d\n\n", (int)st.st_size);
+        while ((length = read(fd, buffer, sizeof(buffer))) > 0)
+                hwrite(webblk->sock,buffer, length);
+    }
     close(fd);
     http_exit(webblk);
 }
@@ -611,6 +621,18 @@ static void *http_request(void* arg)
             {
                 if((pointer = strtok_r(NULL," \t\r\n",&strtok_str)))
                     content_length = atoi(pointer);
+            }
+            else
+            if(!strcasecmp(pointer,"If-Modified-Since:"))
+            {
+                // save browser sent file last modification time, if any
+                struct tm browser_mod_time;
+
+                // memset required as mktime queries full structure
+                memset(&browser_mod_time, 0, sizeof(struct tm));
+
+                if (strptime(strtok_str, http_tfmt, &browser_mod_time))
+                    webblk->mod_time = mktime(&browser_mod_time);   
             }
         }
     }
