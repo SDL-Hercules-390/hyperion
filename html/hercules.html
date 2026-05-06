@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
@@ -5,16 +6,14 @@
 <link rel="shortcut icon" href="images/favicon.ico" />
 <link rel="icon" href="images/favicon.ico" />
 </head>
-  <frameset cols="15%,*" border="0" frameborder="1" framespacing="0">
+  <frameset id="tasksFrame" cols="15%,*" border="0" frameborder="1" framespacing="0">
     <frame name="tasks" src="tasks.html">
-  <frameset rows="95,*" border="0" frameborder="1" framespacing="0">
-    <frame name="gui" src="fishgui.html" scrolling="no">
-    <frame name="main" src="cgi-bin/tasks/syslog#bottom">
+    <frame name="console" src="console.html">
+
     <noframes>
       <body>
         <p>Hercules uses frames. Your browser does not support frames.</p>
       </body>
     </noframes>
-  </frameset>
   </frameset>
 </html>
