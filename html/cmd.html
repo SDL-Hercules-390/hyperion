@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Entry</title>
+</head>
+<body>
+
+<iframe name="syslog_action" style="display:none;"></iframe>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, Courier, monospace;
+  font-size: 16px;
+}
+
+/* Command entry styling */
+#command {
+  font-family: inherit;
+  font-size: 16px;
+  border: 1px solid #666;
+  padding: 4px 6px;
+  outline: none;
+}
+
+/* Dark mode */
+body.theme-dark #command {
+  background: #000;
+  color: #66ff99;
+  border-color: #333;
+}
+
+/* Light mode */
+body.theme-light #command {
+  background: #f5f5f5;
+  color: #000;
+  border-color: #999;
+}
+.send_btn {
+    color:white;font-weight:bold;border:none;padding:4px 8px;
+    border-radius:3px;cursor:pointer;
+}
+
+.send_btn {
+    background-color:#008000;
+}
+</style>
+
+<form method="post" action="cgi-bin/tasks/cmd" id="commandForm" target="syslog_action">
+  <div style="height: 5px;"></div>
+  <b>Command:</b>
+  <input type="text" id="command" name="cmd" size="80" autocomplete="off">
+  <input class="send_btn" type="submit" name="send" value="Send">
+  <div style="height: 5px;"></div>
+</form>
+
+<script>
+function getSyslogViewer() {
+  try {
+    return parent.frames["main"].syslogViewer || null;
+  } catch (e) {
+    return null;
+  }
+}
+// handle theme from syslog theme
+const THEME_KEY = "syslogViewerTheme";
+
+function applyTheme(theme) {
+  document.body.classList.remove("theme-dark", "theme-light");
+
+  if (theme === "light") {
+    document.body.classList.add("theme-light");
+  } else {
+    document.body.classList.add("theme-dark");
+  }
+}
+
+function loadTheme() {
+  applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+}
+
+window.addEventListener("storage", function (e) {
+  if (e.key === THEME_KEY) {
+    loadTheme();
+  }
+});
+
+loadTheme();
+
+// handles the command processing element for the console
+(function () {
+  const HISTORY_KEY = "commandHistory";
+  const HISTORY_LIMIT = 100;
+
+  const commandForm = document.getElementById("commandForm");
+  const commandInput = document.getElementById("command");
+
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch {
+    history = [];
+  }
+
+  let historyIndex = history.length;
+  let currentDraft = "";
+
+  function saveHistory() {
+    const cmd = commandInput.value.trim();
+    if (!cmd) return;
+
+    if (history.length === 0 || history[history.length - 1] !== cmd) {
+      history.push(cmd);
+      if (history.length > HISTORY_LIMIT) {
+        history.shift();
+      }
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    historyIndex = history.length;
+    currentDraft = "";
+  }
+
+  window.clearHistory = function () {
+    history = [];
+    historyIndex = 0;
+    currentDraft = "";
+    localStorage.removeItem(HISTORY_KEY);
+    commandInput.value = "";
+    commandInput.focus();
+  };
+
+  commandForm.addEventListener("submit", function (e) {
+    if (!commandInput.value.trim()) {
+      e.preventDefault();
+      commandInput.focus();
+      return;
+    }
+    saveHistory();
+
+    try {
+      const viewer = parent.frames["main"].syslogViewer;
+      if (viewer && typeof viewer.reloadSoon === "function") {
+        viewer.reloadSoon();
+      }
+    } catch (ignore) {
+       // if notify fails don't worry as window may not be loaded
+    }
+
+    setTimeout(function () {
+      commandInput.value = "";
+      commandInput.focus();
+      historyIndex = history.length;
+      currentDraft = "";
+    }, 0);
+  });
+
+  commandInput.addEventListener("keydown", function (e) {
+    // handle syslog scrolling if window visible
+    const viewer = getSyslogViewer();
+    if (viewer) {
+      if (e.key === "Home" && typeof viewer.scrollToTop === "function") {
+        e.preventDefault();
+        viewer.scrollToTop();
+        return;
+      }
+
+      if (e.key === "End" && typeof viewer.scrollToBottom === "function") {
+        e.preventDefault();
+        viewer.scrollToBottom();
+        return;
+      }
+
+      if (e.key === "PageUp" && typeof viewer.scrollPageUp === "function") {
+        e.preventDefault();
+        viewer.scrollPageUp();
+        return;
+      }
+
+      if (e.key === "PageDown" && typeof viewer.scrollPageDown === "function") {
+        e.preventDefault();
+        viewer.scrollPageDown();
+        return;
+      }
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === "e") {
+      e.preventDefault();
+      commandInput.value = "";
+      currentDraft = "";
+      historyIndex = history.length;
+      return;
+    }
+    
+    if (e.altKey && e.key.toLowerCase() === "t") {
+      e.preventDefault();
+      parent.herculesLayout.setCommandTop();
+      return
+    }
+    
+    if (e.altKey && e.key.toLowerCase() === "b") {
+      e.preventDefault();
+      parent.herculesLayout.setCommandBottom();
+      return
+    }
+    
+    if (e.altKey && e.key.toLowerCase() === "c") {
+      e.preventDefault();
+      clearHistory();
+    }
+    
+    if (e.altKey && e.key.toLowerCase() === "h") {
+      e.preventDefault();
+      toggleHelpPopup();
+      return;
+    }
+    if (e.key === "Escape") {
+      hideHelpPopup();
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (history.length === 0) return;
+
+      if (historyIndex === history.length) {
+        currentDraft = commandInput.value;
+      }
+
+      if (historyIndex > 0) {
+        historyIndex--;
+        commandInput.value = history[historyIndex];
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (history.length === 0) return;
+
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        commandInput.value = history[historyIndex];
+      } else {
+        historyIndex = history.length;
+        commandInput.value = currentDraft;
+      }
+    }
+  });
+  // allow things to settle then get focus back
+  window.addEventListener("load", function () {
+  setTimeout(function () {
+    commandInput.focus();
+  }, 100);
+});
+  
+})();
+
+// help functions
+function showHelpPopup() {
+  const doc = parent.document;
+
+  let overlay = doc.getElementById("commandHelpOverlay");
+
+  if (!overlay) {
+    overlay = doc.createElement("div");
+    overlay.id = "commandHelpOverlay";
+
+    overlay.innerHTML = `
+      <div id="commandHelpBox">
+        <h3>Command Help</h3>
+        <table>
+          <tr><td><b>Enter</b></td><td>Send command</td></tr>
+          <tr><td><b>Up / Down</b></td><td>Command history</td></tr>
+          <tr><td><b>Ctrl+E</b></td><td>Clear command line</td></tr>
+          <tr><td><b>Alt+T / Alt+B</b></td><td>Move command entry dialog to Top / Bottom</td></tr>
+          <tr><td><b>Home / End / PgUp / PgDn</b></td><td>Scroll syslog window</td></tr>
+          <tr><td><b>Alt+H</b></td><td>Show / hide this help</td></tr>
+          <tr><td><b>Esc</b></td><td>Close help</td></tr>
+        </table>
+        <br>
+        <button type="button" id="commandHelpCloseBtn">Close</button>
+      </div>
+    `;
+
+    doc.body.appendChild(overlay);
+
+    const style = doc.createElement("style");
+    style.textContent = `
+      #commandHelpOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(0,0,0,0.65);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Arial, Courier, monospace;
+      }
+
+      #commandHelpBox {
+        background: #111;
+        color: #66ff99;
+        border: 1px solid #333;
+        border-radius: 6px;
+        padding: 16px;
+        min-width: 360px;
+        max-width: 600px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      }
+
+      #commandHelpBox h3 {
+        margin-top: 0;
+      }
+
+      #commandHelpBox table {
+        border-collapse: collapse;
+      }
+
+      #commandHelpBox td {
+        padding: 4px 12px 4px 0;
+      }
+
+      #commandHelpCloseBtn {
+        background: #111;
+        color: #66ff99;
+        border: 1px solid #333;
+        padding: 4px 8px;
+        font-family: inherit;
+      }
+    `;
+    doc.head.appendChild(style);
+
+    doc.getElementById("commandHelpCloseBtn").addEventListener("click", hideHelpPopup);
+  }
+
+  overlay.style.display = "flex";
+}
+
+function hideHelpPopup() {
+  const doc = parent.document;
+  const overlay = doc.getElementById("commandHelpOverlay");
+
+  if (overlay) {
+    overlay.style.display = "none";
+  }
+
+  document.getElementById("command").focus();
+}
+
+function toggleHelpPopup() {
+  const doc = parent.document;
+  const overlay = doc.getElementById("commandHelpOverlay");
+
+  if (!overlay || overlay.style.display === "none") {
+    showHelpPopup();
+  } else {
+    hideHelpPopup();
+  }
+}
+
+</script>
+</body>
+</html>
