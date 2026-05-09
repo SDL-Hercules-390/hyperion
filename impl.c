@@ -1109,7 +1109,8 @@ int     rc, maxprio, minprio;
     sysblk.sysgroup = DEFAULT_SYSGROUP;
 
     /* set default console port addresses */
-    sysblk.cnslport = strdup("3270");
+    sysblk.cnslport   = strdup("3270");
+    sysblk.wscnslport = NULL;       /* WebSocket console: opt-in only */
 
     /* Initialize automatic creation of missing tape file to default */
     sysblk.auto_tape_create = DEF_AUTO_TAPE_CREATE;
