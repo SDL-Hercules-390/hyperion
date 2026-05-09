@@ -354,6 +354,9 @@
     <ClCompile Include="console.c">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wscnsl.c">
+      <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="comm3705.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
@@ -4052,6 +4055,9 @@
       <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
     <ClInclude Include="cnsllogo.h">
+      <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wscnsl.h">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="comm3705.h">

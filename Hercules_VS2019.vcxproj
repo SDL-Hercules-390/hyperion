@@ -320,6 +320,7 @@
     <ClCompile Include="con1052c.c" />
     <ClCompile Include="config.c" />
     <ClCompile Include="console.c" />
+    <ClCompile Include="wscnsl.c" />
     <ClCompile Include="conspawn.c" />
     <ClCompile Include="control.c" />
     <ClCompile Include="cpu.c" />
@@ -1688,6 +1689,7 @@
     <ClInclude Include="w32mtio.h" />
     <ClInclude Include="w32stape.h" />
     <ClInclude Include="w32util.h" />
+    <ClInclude Include="wscnsl.h" />
     <ClInclude Include="x75.h" />
     <ClInclude Include="zfcp.h" />
     <ClInclude Include="zvector.h" />

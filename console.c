@@ -41,6 +41,7 @@
 #include "sr.h"
 #include "cnsllogo.h"
 #include "hexdumpe.h"
+#include "wscnsl.h"
 
 /*-------------------------------------------------------------------*/
 /*                 Tweakable build constants                         */
@@ -309,7 +310,7 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
         CONDEBUG2( HHC90500, "D", tn->clientid, ev->data.size );
         DUMPBUF(   HHC90500, ev->data.buffer, ev->data.size, tn->do_tn3270 ? 1 : 0 );
 
-        if (write_socket( tn->csock, ev->data.buffer, ev->data.size ) <= 0)
+        if (ws_send( tn, ev->data.buffer, (int) ev->data.size ) <= 0)
         {
             tn->send_err = TRUE;
             // "%s COMM: send() failed: %s"
@@ -743,6 +744,7 @@ static void  disconnect_telnet_client( TELNET* tn )
     */
     if (tn)
     {
+        ws_free_state( tn );
         telnet_closesocket( tn->csock );
         telnet_free( tn->ctl );
 
@@ -2603,7 +2605,7 @@ BYTE    buf[ BUFLEN_3270 ];             /* Temporary recv() buffer   */
     dev->tn->overflow = FALSE;
 
     /* Read bytes from client */
-    rc = recv( dev->fd, buf, sizeof( buf ), 0 );
+    rc = ws_recv( dev->tn, buf, sizeof( buf ));
 
     /* Check for I/O error */
     if (rc < 0)
@@ -2775,7 +2777,7 @@ BYTE    buf[BUFLEN_1052];               /* Receive buffer            */
     dev->tn->overrun   = FALSE;
 
     /* Read bytes from client */
-    num = recv( dev->fd, buf, sizeof( buf ), 0 );
+    num = ws_recv( dev->tn, buf, sizeof( buf ));
 
     /* Return unit check if error on receive */
     if (num < 0)
@@ -2955,7 +2957,7 @@ size_t                  logoheight;     /* Logo file number of lines */
     do
     {
         /* Read client telnet negotiation data */
-        if ((rc = recv( csock, buf, sizeof( buf ), 0 )) > 0)
+        if ((rc = ws_recv( tn, buf, sizeof( buf ))) > 0)
         {
             // "%s COMM: received %d bytes"
             CONDEBUG2( HHC90501, "D", tn->clientid, rc );
@@ -3387,8 +3389,10 @@ static void* console_connection_handler( void* arg )
 int           rc = 0;                   /* Return code               */
 int           lsock;                    /* Console listening socket  */
 int           lsock2 = 0;               /* SYSG listening socket     */
+int           lsock_ws = 0;             /* WebSocket listening socket*/
 int           csock;                    /* Socket for conversation   */
 bool          sysg = false;             /* SYSG port connection      */
+bool          ws_conn = false;          /* WebSocket port connection */
 fd_set        readset;                  /* Read bit map for pselect  */
 int           maxfd;                    /* Highest fd for pselect    */
 int           scan_complete;            /* DEVBLK scan complete      */
@@ -3399,6 +3403,7 @@ BYTE          unitstat;                 /* Status after receive data */
 TELNET*       tn;                       /* Telnet Control Block      */
 const char*   curr_cnslport;            /* Current sysblk.cnslport   */
 const char*   curr_sysgport = NULL;     /* Current sysblk.sysgport   */
+const char*   curr_wscnslport = NULL;   /* Current sysblk.wscnslport */
 
 int prev_rlen3270;
 
@@ -3428,6 +3433,16 @@ int prev_rlen3270;
            and create starting listening socket */
         curr_sysgport = strdup( sysblk.sysgport );
         lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
+    }
+
+    if (sysblk.wscnslport)
+    {
+        /* Save starting sysblk.wscnslport value
+           and create starting listening socket */
+        curr_wscnslport = strdup( sysblk.wscnslport );
+        lsock_ws = get_listening_socket( "WSCNSLPORT", "WebSocket ",
+                                         sysblk.wscnslport );
+        if (lsock_ws < 0) lsock_ws = 0;
     }
 
     /* Handle connection requests and attention interrupts */
@@ -3460,6 +3475,27 @@ int prev_rlen3270;
             lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
         }
 
+        /* Did they enable, change or disable WSCNSLPORT? */
+        if (sysblk.wscnslport == NULL && curr_wscnslport != NULL)
+        {
+            /* User disabled the WebSocket listener via 'wscnslport NO' */
+            if (lsock_ws) close_socket( lsock_ws );
+            lsock_ws = 0;
+            free( curr_wscnslport );
+            curr_wscnslport = NULL;
+        }
+        else if (sysblk.wscnslport != NULL
+            && (curr_wscnslport == NULL
+                || strcmp( curr_wscnslport, sysblk.wscnslport ) != 0))
+        {
+            if (lsock_ws) close_socket( lsock_ws );
+            free( curr_wscnslport );
+            curr_wscnslport = strdup( sysblk.wscnslport );
+            lsock_ws = get_listening_socket( "WSCNSLPORT", "WebSocket ",
+                                             sysblk.wscnslport );
+            if (lsock_ws < 0) lsock_ws = 0;
+        }
+
         /* Initialize scan flags */
         scan_complete = TRUE;
         scan_retries = 0;
@@ -3478,6 +3514,14 @@ int prev_rlen3270;
             {
                 FD_SET( lsock2, &readset );     // (add SYSG port too)
                 maxfd = MAX( lsock, lsock2 );   // (then adjust maxfd)
+            }
+
+            /* If WSCNSLPORT defined, also watch the WebSocket port */
+            if (lsock_ws)
+            {
+                FD_SET( lsock_ws, &readset );
+                if (lsock_ws > maxfd)
+                    maxfd = lsock_ws;
             }
 
             SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, &readset );
@@ -3640,12 +3684,21 @@ int prev_rlen3270;
 
         /* Accept incoming client connections */
         if (0
-            || (lsock2 && FD_ISSET( lsock2, &readset ))
+            || (lsock_ws && FD_ISSET( lsock_ws, &readset ))
+            || (lsock2   && FD_ISSET( lsock2,   &readset ))
             || FD_ISSET( lsock,  &readset )
         )
         {
             /* Accept a connection and create conversation socket */
-            if (lsock2 && FD_ISSET( lsock2, &readset ))
+            ws_conn = false;
+            sysg    = false;
+
+            if (lsock_ws && FD_ISSET( lsock_ws, &readset ))
+            {
+                csock = accept( lsock_ws, NULL, NULL );
+                ws_conn = true;
+            }
+            else if (lsock2 && FD_ISSET( lsock2, &readset ))
             {
                 csock = accept( lsock2, NULL, NULL );
                 sysg = true;
@@ -3653,7 +3706,6 @@ int prev_rlen3270;
             else
             {
                 csock = accept( lsock,  NULL, NULL );
-                sysg = false;
             }
 
             if (csock < 0)
@@ -3701,6 +3753,19 @@ int prev_rlen3270;
                 continue;
             }
 
+            /* If this is a WebSocket connection, perform the HTTP
+               Upgrade handshake before any telnet activity. The
+               handshake function logs failures and (when possible)
+               sends an HTTP error response back to the client. */
+            if (ws_conn)
+            {
+                if (ws_handshake( csock ) < 0)
+                {
+                    close_socket( csock );
+                    continue;
+                }
+            }
+
             /* Allocate Telnet Control Block for this client */
             if (!(tn = (TELNET*) calloc( 1, sizeof( TELNET ))))
             {
@@ -3711,9 +3776,14 @@ int prev_rlen3270;
             else
             {
                 static U32 clid = 0;
-                tn->csock = csock;
-                tn->sysg  = sysg;
+                tn->csock        = csock;
+                tn->sysg         = sysg;
+                tn->is_websocket = ws_conn ? 1 : 0;
                 MSGBUF( tn->clientid, "client %u", clid++ );
+
+                if (ws_conn)
+                    // "%s COMM: WebSocket handshake complete"
+                    WRMSG( HHC02919, "I", tn->clientid );
 
                 /* Initialize libtelnet package */
                 tn->ctl = telnet_init( telnet_opts,
@@ -3890,6 +3960,7 @@ int prev_rlen3270;
 
     free( curr_cnslport );
     free( curr_sysgport );
+    free( curr_wscnslport );
 
     /* Initialize scan flags */
     scan_complete = TRUE;
@@ -3960,7 +4031,8 @@ int prev_rlen3270;
 
     /* Close the listening sockets */
     close_socket( lsock  );
-    if (lsock2) close_socket( lsock2 );
+    if (lsock2)   close_socket( lsock2   );
+    if (lsock_ws) close_socket( lsock_ws );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
     LOG_THREAD_END( CON_CONN_THREAD_NAME  );
