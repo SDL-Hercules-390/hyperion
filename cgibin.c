@@ -1590,18 +1590,32 @@ void cgibin_api_v1_maxrates(WEBBLK *webblk)
 /*-------------------------------------------------------------------*/
 /*                      cgibin_api_v1_rates                          */
 /*-------------------------------------------------------------------*/
-/* Returns MIPS and IO rates                                         */
+/* Returns MIPS, IO rates and aggregated CPUPCT%                     */
 /* Example:                                                          */
 /* {                                                                 */
 /*     "mipsrate":0,                                                 */
-/*     "siosrate":0                                                  */
+/*     "siosrate":0,                                                 */
+/*     "cpupct":0                                                    */
 /* }                                                                 */
 /*-------------------------------------------------------------------*/
 void cgibin_api_v1_rates(WEBBLK *webblk)
 {
+    int cpu, cpupct = 0, started = 0;
+   
+    for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+    {
+        if (IS_CPU_ONLINE( cpu ) &&
+            CPUSTATE_STARTED == sysblk.regs[ cpu ]->cpustate)
+        {
+            started++;
+            cpupct += sysblk.regs[ cpu ]->cpupct;
+        }
+    }
+
     json_header(webblk);
-    hprintf(webblk->sock, "{\"mipsrate\":%d,\"siosrate\":%d}",
-        sysblk.mipsrate, sysblk.siosrate );
+    
+    hprintf(webblk->sock, "{\"mipsrate\":%d,\"siosrate\":%d,\"cpupct\":%d}",
+        sysblk.mipsrate, sysblk.siosrate, started ? (cpupct / started) : 0 );
 }
 
 /*-------------------------------------------------------------------*/
