@@ -2,91 +2,126 @@
 <html>
 <head>
 </head>
+<style>
+body{
+  margin:0;
+  padding:0;
+  background:transparent;
+  overflow:hidden;
+  font-family:Arial,Courier;
+}
+
+.control-panel {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: black;
+}
+
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 3px;
+}
+
+.indicator-row {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+}
+
+.control-panel form {
+    margin: 0;
+    padding: 2px;
+}
+
+.control-panel input[type="image"],
+.control-panel img {
+    display: block;
+    border: 0;
+}
+
+.meter{
+  width:115px;
+  margin:0;
+  padding:10px;
+}
+
+canvas{
+  display:block;
+  cursor:pointer;
+  background:transparent;
+}
+
+</style>
 <body>
 
 <iframe name="syslog_null" style="display:none;"></iframe>
 
-<table bgcolor="#000000" >
- <tr>
-  <td>
-   <table border=0 cellspacing=0>
-    <tr valign="bottom">
-     <td>
-      <table border=0 cellspacing=0>
-       <tr>
-        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
-         <td><input type="image" src="images/storeu.gif" alt="Store Status" title="Store Status"></td>
-         <input type="hidden" name="cmd" value="store">
-        </form>
-        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
-         <td><input type="image" src="images/restartu.gif" alt="Restart" title="Restart"></td>
-         <input type="hidden" name="cmd" value="restart">
-        </form>
-       </tr>
-       <tr>
-        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
-         <td><input type="image" src="images/startu.gif" alt="Start" title="Start"></td>
-         <input type="hidden" name="cmd" value="startall">
-        </form>
-        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
-         <td><input type="image" src="images/stopu.gif" alt="Stop" title="Stop"></td>
-         <input type="hidden" name="cmd" value="stopall">
-        </form>
-       </tr>
-      </table>
-     </td>
-     <td>
-      <div id="meter"></div>
-     </td>
-     <td>
-      <table border=0 cellspacing=0>
-       <tr>
-        <td><img src="images/dial1.gif" alt="Dial 1" title="Dial 1"></td>
-        <td><img src="images/dial1.gif" alt="Dial 2" title="Dial 2"></td>
-        <td><img src="images/dial1.gif" alt="Dial 3" title="Dial 3"></td>
-        <td><img src="images/dial1.gif" alt="Dial 4" title="Dial 4"></td>
-       </tr>
-      </table>
-     </td>
-     <td>
-      <table border=0 cellspacing=0>
-       <tr>
-        <td><img src="images/sysonu.gif" alt="Sys" title="Sys"></td>
-        <td><img src="images/manonu.gif" alt="Man" title="Man"></td>
-        <td><img src="images/waitonu.gif" alt="Wait" title="Wait"></td>
-        <td><img src="images/loadonu.gif" alt="Load" title="Load"></td>
-       </tr>
-      </table>
-     </td>
-     <td>
-      <table border=0 cellspacing=0>
-       <tr>
-        <form class="send_reload" method="post" action="/cgi-bin/tasks/cmd" target="syslog_null">
-         <td><input type="image" src="images/powerononu.gif" alt="Power On" title="Power On"></td>
-         <input type="hidden" name="cmd" value="* * * Already Powered On! * * *">
-        </form>
-        <form method="post" action="cgi-bin/tasks/cmd" target="syslog_null" onSubmit="return confirm_quit()">
-         <td><input type="image" src="images/poweroffu.gif" alt="Power Off" title="Power Off"></td>
-         <input type="hidden" name="cmd" value="quit">
-        </form>
-       </tr>
-       <tr>
-        <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
-         <td><input type="image" src="images/interruptu.gif" alt="Interrupt" title="Interrupt"></td>
-         <input type="hidden" name="cmd" value="ext">
-        </form>
-        <form method="get" action="/cgi-bin/tasks/ipl" target="main">
-         <td><input type="image" src="images/loadu.gif" alt="Load" title="Load"></td>
-         <input type="hidden" name="cmd" value="ipl">
-        </form>
-       </tr>
-      </table>
-     </td>
-    </tr>
-   </table>
-  </td>
- </tr>
-</table>
+<div class="control-panel">
+
+  <div class="button-grid">
+    <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+      <input type="image" src="images/storeu.gif" alt="Store Status" title="Store Status">
+      <input type="hidden" name="cmd" value="store">
+    </form>
+
+    <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+      <input type="image" src="images/restartu.gif" alt="Restart" title="Restart">
+      <input type="hidden" name="cmd" value="restart">
+    </form>
+
+    <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+      <input type="image" src="images/startu.gif" alt="Start" title="Start">
+      <input type="hidden" name="cmd" value="startall">
+    </form>
+
+    <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+      <input type="image" src="images/stopu.gif" alt="Stop" title="Stop">
+      <input type="hidden" name="cmd" value="stopall">
+    </form>
+  </div>
+
+  <div class="meter" id="meter"></div>
+
+  <div class="indicator-row">
+    <img src="images/dial1.gif" alt="Dial 1" title="Dial 1">
+    <img src="images/dial1.gif" alt="Dial 2" title="Dial 2">
+    <img src="images/dial1.gif" alt="Dial 3" title="Dial 3">
+    <img src="images/dial1.gif" alt="Dial 4" title="Dial 4">
+  </div>
+
+  <div class="indicator-row">
+    <img src="images/sysonu.gif" alt="Sys" title="Sys">
+    <img src="images/manonu.gif" alt="Man" title="Man">
+    <img src="images/waitonu.gif" alt="Wait" title="Wait">
+    <img src="images/loadonu.gif" alt="Load" title="Load">
+  </div>
+
+  <div class="button-grid">
+    <form class="send_reload" method="post" action="/cgi-bin/tasks/cmd" target="syslog_null">
+      <input type="image" src="images/powerononu.gif" alt="Power On" title="Power On">
+      <input type="hidden" name="cmd" value="* * * Already Powered On! * * *">
+    </form>
+
+    <form method="post" action="cgi-bin/tasks/cmd" target="syslog_null" onsubmit="return confirm_quit()">
+      <input type="image" src="images/poweroffu.gif" alt="Power Off" title="Power Off">
+      <input type="hidden" name="cmd" value="quit">
+    </form>
+
+    <form class="send_reload" method="post" action="cgi-bin/tasks/cmd" target="syslog_null">
+      <input type="image" src="images/interruptu.gif" alt="Interrupt" title="Interrupt">
+      <input type="hidden" name="cmd" value="ext">
+    </form>
+
+    <form method="get" action="/cgi-bin/tasks/ipl" target="main">
+      <input type="image" src="images/loadu.gif" alt="Load" title="Load">
+      <input type="hidden" name="cmd" value="ipl">
+    </form>
+  </div>
+
+</div>
+
 <script language="Javascript">
 function confirm_quit() {
   if (confirm('Are you sure you want to Power Off?\n'
@@ -95,9 +130,8 @@ function confirm_quit() {
         // .. and may not respond in time....
         reloadViewer(1);
         return true;
-  } else {
-        return false;
   }
+  return false;
 }
 
 function reloadViewer(delay) {
@@ -105,7 +139,6 @@ function reloadViewer(delay) {
     setTimeout(function() {
         try {
             parent.frames["main"].syslogViewer.reloadSoon();
-            console.log("sent");
         } catch (ignore) {
             // maybe viewer not loaded.. don't worry
         }        
@@ -123,6 +156,586 @@ function hookReload() {
 }
 
 window.addEventListener("load", hookReload);
+
+// Meter showing MIPS, CPU Busy% or Start IO rate using analogue meter
+//
+// Table for user selector - note linkage to JSON API provided values
+// the created meter hooks into the "meter" div above using the CSS sizing.
+const METER_SELECTOR = [
+  {
+    key: "cpupct",              // internal use for selection
+    label: "CPU Busy %",        // label on meter
+    min: 0,                     // minimum scale value
+    max: 100,                   // maximum scale value
+    scale: "percent",           // type of display - logarithmic, % or linear
+    valueFromApi: data => data.cpupct,  // which JSON API field is used
+    readout: v => Math.round(v) + "%"   // conversion to human readable
+  },
+  {
+    key: "mips",
+    label: "MIPS",
+    min: 0.001,
+    max: 1000,
+    scale: "log",
+    valueFromApi: data => data.mipsrate / 1000000,
+    readout: v => v.toFixed(3)
+  },
+  {
+    key: "siosrate",
+    label: "SIOs",
+    min: 0,
+    max: 5000,
+    scale: "linear",
+    valueFromApi: data => data.siosrate,
+    readout: v => Math.round(v)
+  }
+];
+
+window.addEventListener("load", function() {
+  startHerculesMeter("meter", "/cgi-bin/api/v1/rates", METER_SELECTOR);
+});
+
+// PROGRAMMMING NOTE: Technically the following JS code should be moved to a
+// separate meter.js file but for simplicity within Hercules we've chosen to
+// keep the fisghui UI in one file.
+//
+// Generate an analogue meter displaying various Hercules host values
+// the main meter code focusses on the analogue display which is 
+// scaled to fit into the provided host window.
+//
+// Helper functions  control display selection persistence, refresh from
+// host and screen event handling.
+
+const METER_WIDTH  = 430;   // don't change as used internally 
+const METER_HEIGHT = 220;   // and then scaled to fit
+
+const STORAGE_MODE_KEY = "MeterMode";
+const STORAGE_REFRESH_KEY = "MeterRefreshSeconds";
+
+class HerculesMeter {
+  constructor(container, options = {}, mode) {
+    
+    this.canvas = document.createElement("canvas");
+
+    this.canvas.title =
+      "click in left 1/3 => slower refresh\n" +
+      "click in right 1/3 => faster refresh\n" +
+      "click in middle => toggle display";
+
+    container.appendChild(this.canvas);
+
+    this.ctx = this.canvas.getContext("2d");
+
+    this.width  = options.width  ?? METER_WIDTH;
+    this.height = options.height ?? METER_HEIGHT;
+    
+    // size scaled to fit in allocated div
+    this.scaler = Math.min(
+      this.width / METER_WIDTH,
+      this.height/ METER_HEIGHT
+    );
+
+    this.canvas.width  = this.width;
+    this.canvas.height = this.height;
+
+    this.mode = mode;
+    this.min   = this.mode.min;
+    this.max   = this.mode.max;
+    this.scale = this.mode.scale;
+    this.label = this.mode.label;
+    
+    this.displayValue = this.min;
+    this.targetValue  = this.min;
+    this.velocity = 0;
+    this.needleColor = "#111";
+
+    this.startAngle = Math.PI * 1.16;
+    this.endAngle   = Math.PI * 1.84;
+
+    this.stiffness = 14;        // how quickly needle reacts
+    this.damping   = 6;         // control over/under shoot
+    this.frameInterval = 100;   // ms (10fps) - default is 60fps+ !
+    this.lastDrawTime = 0;
+
+    this.lastFrame = performance.now();
+
+    requestAnimationFrame(() => this.loop());
+  }
+
+  setMode(mode) {
+    this.mode = mode;
+    this.min   = mode.min;
+    this.max   = mode.max;
+    this.scale = mode.scale;
+    this.label = mode.label;
+
+    this.displayValue = this.clamp(this.displayValue);
+    this.targetValue  = this.clamp(this.targetValue);
+  }
+
+  clamp(v) {
+    const n = Number(v);
+
+    if (!Number.isFinite(n)) {
+      return this.min;
+    }
+
+    return Math.max(this.min, Math.min(this.max, n));
+  }
+
+  // convert meter scale to range 0..1 for subsequent angle conversion
+  valueToT(v) {
+    v = this.clamp(v);
+
+    if (this.scale === "linear" || this.scale === "percent") {
+      return (v - this.min) / (this.max - this.min);
+    }
+
+    return (
+      (Math.log10(v) - Math.log10(this.min)) /
+      (Math.log10(this.max) - Math.log10(this.min))
+    );
+  }
+
+  valueToAngle(v) {
+    return this.startAngle +
+      this.valueToT(v) *
+      (this.endAngle - this.startAngle);
+  }
+
+  setValue(v) {
+    this.targetValue = this.clamp(v);
+  }
+
+  setErrorState(enabled) {
+    this.needleColor = enabled ? "red" : "#111";
+  }
+
+loop(){
+
+  const now = performance.now();
+
+  const dt = Math.min(
+    (now - this.lastFrame) / 1000,
+    0.05
+  );
+
+  this.lastFrame = now;
+
+  const force =
+    (this.targetValue - this.displayValue) *
+    this.stiffness;
+
+  this.velocity += force * dt;
+  this.velocity *= Math.exp( -this.damping * dt);
+
+  this.displayValue += this.velocity * dt;
+  this.displayValue = this.clamp(this.displayValue);
+
+  // only redraw at requested frame rate to reduce browser load
+  if(now - this.lastDrawTime >= this.frameInterval){
+      this.draw();
+      this.lastDrawTime = now;
+  }
+
+  requestAnimationFrame(() => this.loop());
+}
+
+  formatLabel(v) {
+    if (v < 1 && v > 0) {
+      return v
+        .toFixed(3)
+        .replace(/0+$/,'')
+        .replace(/\.$/,'');
+    }
+    return String(v);
+  }
+
+  makeLabels() {
+    if (this.scale === "percent") {
+      return [0, 25, 50, 75, 100];
+    }
+
+    if (this.scale === "linear") {
+      const out = [];
+      const step = this.max / 5;
+
+      for (let i = 0; i <= 5; i++) {
+        out.push(Math.round(i * step));
+      }
+      return out;
+    }
+
+    const out = [];
+    let v = this.min;
+
+    while (v <= this.max) {
+      out.push(v);
+      v *= 10;
+    }
+    return out;
+  }
+
+  draw() {
+    const ctx = this.ctx;
+
+    ctx.clearRect(0, 0, this.width, this.height);
+
+    ctx.save();
+    ctx.scale(this.scaler, this.scaler);
+
+    ctx.fillStyle = "#d8d8d8";
+    ctx.fillRect(0, 0, METER_WIDTH, METER_HEIGHT);
+
+    ctx.fillStyle = "black";
+    ctx.font = "30px Arial";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+
+    ctx.fillText(
+      "Host Poll " + window.herculesMeterPollSeconds.toFixed(1) + "s",
+      10,
+      8
+    );
+
+    const cx = 225;
+    const cy = 280;
+    const radius = 222;
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.rect(0, 0, METER_WIDTH, METER_HEIGHT);
+    ctx.clip();
+
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, this.startAngle, this.endAngle);
+    ctx.stroke();
+
+    const labels = this.makeLabels();
+
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 25px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    for (const value of labels) {
+      const a = this.valueToAngle(value);
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        cx + Math.cos(a) * radius,
+        cy + Math.sin(a) * radius
+      );
+
+      ctx.lineTo(
+        cx + Math.cos(a) * (radius - 18),
+        cy + Math.sin(a) * (radius - 18)
+      );
+
+      ctx.stroke();
+
+      ctx.fillText(
+        this.formatLabel(value),
+        cx + Math.cos(a) * (radius - 45),
+        cy + Math.sin(a) * (radius - 45)
+      );
+    }
+
+    if (this.scale === "log") {
+      let decade = this.min;
+
+      while (decade < this.max) {
+        for (let i = 2; i < 10; i++) {
+          const value = decade * i;
+
+          if (value > this.max) {
+            continue;
+          }
+
+          const a = this.valueToAngle(value);
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            cx + Math.cos(a) * radius,
+            cy + Math.sin(a) * radius
+          );
+
+          ctx.lineTo(
+            cx + Math.cos(a) * (radius - 10),
+            cy + Math.sin(a) * (radius - 10)
+          );
+
+          ctx.stroke();
+        }
+
+        decade *= 10;
+      }
+
+    } else {
+      const subdivisions =
+        this.scale === "percent" ? 10 : 25;
+
+      const step = this.max / subdivisions;
+
+      for (let value = step; value < this.max; value += step) {
+        if (this.scale === "percent") {
+          if (value % 25 === 0) {
+            continue;
+          }
+        } else {
+          if (value % (this.max / 5) === 0) {
+            continue;
+          }
+        }
+
+        const a = this.valueToAngle(value);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+          cx + Math.cos(a) * radius,
+          cy + Math.sin(a) * radius
+        );
+
+        ctx.lineTo(
+          cx + Math.cos(a) * (radius - 10),
+          cy + Math.sin(a) * (radius - 10)
+        );
+
+        ctx.stroke();
+      }
+    }
+
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 30px Arial";
+    ctx.fillText(this.label, 225, 155);
+
+    const a = this.valueToAngle(this.displayValue);
+
+    ctx.save();
+
+    ctx.shadowColor = "rgba(0,0,0,.25)";
+    ctx.shadowBlur = 4;
+    ctx.strokeStyle = this.needleColor;
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+
+    ctx.moveTo(cx, cy + 18);
+    ctx.lineTo(
+      cx + Math.cos(a) * 225,
+      cy + Math.sin(a) * 225
+    );
+    ctx.stroke();
+
+    ctx.restore();
+    ctx.restore();
+
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 30px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // this is a kludge. On log scale (e.g. MIPS) we want the min value displayed to be 0
+    let dv = (this.scale == "log" && this.displayValue <= this.min) ? 0 : this.displayValue;
+        
+    ctx.fillText(
+      this.mode.readout(dv),
+      225,
+      205
+    );
+
+    ctx.restore();
+  }
+}
+
+// following functions control type of meter shown, persistence and
+// refresh of values from the host.
+// NOTE: modes here means "type of meter display available/selected"
+//
+
+// containerID - holding div for meter, must have CSS specified size
+// url - JSON API in hercules returning required values
+// modes - array containing the meter settings available - CPUbusy/MIPS/SIOs etc.
+//
+
+function startHerculesMeter(containerId, url, modes) {
+  const container = document.getElementById(containerId);
+  const pollurl = url;
+
+  if (!container) {
+    return null;
+  }
+  const guiScaler = getScaler(container, METER_WIDTH);
+  const MODES = modes;
+
+  window.herculesMeterPollSeconds = loadRefreshSeconds();
+
+  const meter = new HerculesMeter(
+    container,
+    {
+      width:  METER_WIDTH * guiScaler,
+      height: METER_HEIGHT * guiScaler
+    },
+    loadMode()
+  );
+
+  let pollTimer = null;
+  let lastRatesData = null;
+  
+  function getScaler(container, default_width) {
+  // We size the meter to fit into the containing div by WIDTH
+  // less any padding around meter window
+
+    const cw = window.getComputedStyle(container, null);
+    const p =  parseFloat(cw.getPropertyValue('padding-left')) +
+               parseFloat(cw.getPropertyValue('padding-right'));
+    const w =  container.clientWidth;
+    // in case container width comes up as 0 (not a pre-sized div)
+  
+    return (w ? (w - p) / default_width : 1);
+  }
+
+  function loadMode() {
+    const saved = localStorage.getItem(STORAGE_MODE_KEY);
+    return MODES.find(m => m.key === saved) || MODES[0];
+  }
+
+  function saveMode(mode) {
+    localStorage.setItem(STORAGE_MODE_KEY, mode.key);
+  }
+
+  function loadRefreshSeconds() {
+    const saved = Number(localStorage.getItem(STORAGE_REFRESH_KEY));
+
+    if (Number.isFinite(saved) && saved >= 0.5) {
+      return saved;
+    }
+    return 1;
+  }
+
+  function saveRefreshSeconds(seconds) {
+    localStorage.setItem(STORAGE_REFRESH_KEY, String(seconds));
+  }
+
+  function currentModeIndex() {
+    return MODES.findIndex(m => m.key === meter.mode.key);
+  }
+
+  function applyCurrentModeValue() {
+    if (!lastRatesData) {
+      meter.setValue(meter.min);
+      return;
+    }
+
+    meter.setValue(
+      meter.mode.valueFromApi(lastRatesData)
+    );
+  }
+
+  function toggleMode() {
+    const next =
+      (currentModeIndex() + 1) % MODES.length;
+
+    meter.setMode(MODES[next]);
+    saveMode(MODES[next]);
+    applyCurrentModeValue();
+  }
+
+  async function pollRates() {
+    try {
+      const response = await fetch(
+        pollurl,
+        { cache:"no-store" }
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+
+      const data = await response.json();
+
+      if (
+        typeof data.mipsrate !== "number" ||
+        typeof data.cpupct  !== "number" ||
+        typeof data.siosrate !== "number"
+      ) {
+        throw new Error("Missing rate data");
+      }
+
+      lastRatesData = data;
+
+      meter.setErrorState(false);
+      applyCurrentModeValue();
+
+    } catch(err) {
+      meter.setErrorState(true);
+      meter.setValue(meter.min);
+    }
+  }
+
+  function restartPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+    }
+
+    pollRates();
+
+    pollTimer = setInterval(
+      pollRates,
+      window.herculesMeterPollSeconds * 1000
+    );
+  }
+
+  function canvasPoint(event) {
+    const rect = meter.canvas.getBoundingClientRect();
+
+    return {
+      x: (event.clientX - rect.left) *
+         (METER_WIDTH / rect.width),
+
+      y: (event.clientY - rect.top) *
+         (METER_HEIGHT / rect.height)
+    };
+  }
+
+  meter.canvas.addEventListener("click", event => {
+    const p = canvasPoint(event);
+
+    if (p.x < METER_WIDTH / 3) {
+      window.herculesMeterPollSeconds *= 2;
+      saveRefreshSeconds(window.herculesMeterPollSeconds);
+      restartPolling();
+      return;
+    }
+
+    if (p.x > (METER_WIDTH / 3 * 2)) {
+      window.herculesMeterPollSeconds =
+        Math.max(0.5, window.herculesMeterPollSeconds / 2);
+
+      saveRefreshSeconds(window.herculesMeterPollSeconds);
+      restartPolling();
+      return;
+    }
+
+    toggleMode();
+  });
+
+  meter.canvas.addEventListener(
+    "contextmenu",
+    event => event.preventDefault()
+  );
+
+  restartPolling();
+
+  return meter;
+}
 </script>
 </body>
 </html>
