@@ -97,8 +97,11 @@ will work. The handshake accepts any URL path, and no
 
 Examples of clients people have used in this pattern:
 
-- A browser-based 3270 emulator that speaks tn3270 over WebSocket
-  natively.
+- [**IronTerm**](https://github.com/bencz/IronTerm) &mdash; a
+  browser-based 3270 / 5250 web terminal that connects directly to a
+  Hercules `WSCNSLPORT` listener.
+- Any other browser-based 3270 emulator that speaks tn3270 over
+  WebSocket natively.
 - A traditional tn3270 client wrapped by `websocat`, `wstunnel`, or
   similar (see below).
 - A custom JavaScript client built around the tn3270 byte stream.
