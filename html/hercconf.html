@@ -97,6 +97,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270             Listening port for 3270 device connections
+    <a href="#WSCNSLPORT">WSCNSLPORT</a> 6080             Listening port for WebSocket console connections
     <a href="#SYSGPORT">SYSGPORT</a>   3278             Listening port for SYSG device connections
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
@@ -1724,6 +1725,39 @@ a real System/390.  The configuration file is an ASCII text file.
     For timezones east of Greenwich, specify a positive value
     (example: <code>+0100</code> for Central European Time,
     <code>+0930</code> for South Australian Time).
+    <p>
+
+<a name="WSCNSLPORT"></a>
+<dt><code>WSCNSLPORT &nbsp; <i><u>6080</u></i> &nbsp;<i>-or-</i> &nbsp;<i>nnnn</i> &nbsp;<i>-or-</i> &nbsp;<i>host:port</i> &nbsp;<i>-or-</i> &nbsp;<code>NO</code></code>
+<dd><p>
+    Specifies the port number (in decimal) on which the WebSocket
+    console server should listen for incoming connections from
+    browser-based 3270 clients. If an invalid value is specified
+    Hercules defaults to port number <u>6080</u>.
+    Specifying <code>NO</code> disables the WebSocket console server.
+    <p>
+    The WebSocket console runs alongside the traditional telnet/tn3270
+    console controlled by <a href="#CNSLPORT"><code>CNSLPORT</code></a>;
+    it does <em>not</em> replace it. WebSocket clients use the same
+    3270 device pool, so the same restriction applies: no listening
+    port is opened unless at least one
+    <a href="#device_types_table">3270 device</a> is defined in your
+    configuration.
+    <p>
+    The <code>WSCNSLPORT</code> statement may also be specified as
+    <code>host:port</code>, where <code>host</code> identifies the
+    IP address of the host interface the WebSocket console server
+    should bind to. If not specified the server will accept
+    connections on the port from any host interface.
+    <p>
+    The chosen port must differ from
+    <a href="#CNSLPORT"><code>CNSLPORT</code></a> and
+    <a href="#SYSGPORT"><code>SYSGPORT</code></a>; valid range is
+    <code>0&ndash;65535</code>.
+    <p>
+    See the
+    <a href="../readme/README.WebSocket.md">WebSocket Console How-To</a>
+    for details on configuring and connecting browser-based clients.
     <p>
 
 <a name="XPNDSIZE"></a>

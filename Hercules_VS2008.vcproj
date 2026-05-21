@@ -434,6 +434,10 @@
 								RelativePath=".\cnsllogo.h"
 								>
 							</File>
+							<File
+								RelativePath=".\wscnsl.h"
+								>
+							</File>
 						</Filter>
 						<Filter
 							Name="Source Files"
@@ -444,6 +448,10 @@
 							</File>
 							<File
 								RelativePath=".\console.c"
+								>
+							</File>
+							<File
+								RelativePath=".\wscnsl.c"
 								>
 							</File>
 						</Filter>

@@ -4518,7 +4518,7 @@ int sysgport_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int wscnslport_cmd( int argc, char* argv[], char* cmdline )
 {
-    static char const* def_port = "3271";
+    static char const* def_port = "6080";
     bool disabled = false;
     int rc = 0;
     int i;
