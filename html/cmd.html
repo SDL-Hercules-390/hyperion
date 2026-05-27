@@ -49,8 +49,10 @@ body.theme-light #command {
 
 <form method="post" action="cgi-bin/tasks/cmd" id="commandForm" target="syslog_action">
   <div style="height: 5px;"></div>
-  <b>Command:</b>
-  <input type="text" id="command" name="cmd" size="80" autocomplete="off">
+  <b>&nbsp;Command:</b>
+  <input type="text" id="command" name="cmd" size="80" autocomplete="off"
+         autocorrect="off" autocapitalize="off" spellcheck="false" 
+  >
   <input class="send_btn" type="submit" name="send" value="Send">
   <div style="height: 5px;"></div>
 </form>
@@ -132,6 +134,7 @@ loadTheme();
   };
 
   commandForm.addEventListener("submit", function (e) {
+    commandInput.value = forceAsciiCommand(commandInput.value);
     if (!commandInput.value.trim()) {
       e.preventDefault();
       commandInput.focus();
@@ -252,6 +255,17 @@ loadTheme();
 });
   
 })();
+
+// some mobile browsers do smart quoting, convert any 
+// "smart" quotes back to simple ascii for Hercules
+function forceAsciiCommand(s) {
+  return s
+    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/\u00A0/g, " ")
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u2026/g, "...");
+}
 
 // help functions
 function showHelpPopup() {
