@@ -107,6 +107,12 @@ case "$target_os" in
         else
             hc_cv_build_apple_m1=no
         fi
+        # added for utun support
+        if $release | cut -d . -f 1 >= 11 then
+           hc_cv_build_hercutun=yes
+        else
+           hc_cv_build_hercutun=no
+        fi
         ;;
     *bsd*)
         hc_cv_is_aix=no
@@ -636,6 +642,7 @@ AH_TEMPLATE( [HAVE_PTHREAD_SETNAME_NP],      [Define if 'pthread_setname_np()' i
 AH_TEMPLATE( [PTHREAD_SET_NAME_ONLY],        [Define if 'pthread_setname_np()' takes only name argument] )
 AH_TEMPLATE( [PTHREAD_SET_NAME_3ARGS],       [Define if 'pthread_setname_np()' takes 3 arguments like NetBSD] )
 AH_TEMPLATE( [HAVE_PTHREAD_RWLOCKATTR_SETPSHARED], [Define if 'pthread_rwlockattr_setpshared()' is available] )
+AH_TEMPLATE( [BUILD_HERCUTUN],               [Define if herctutun is to be built] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -3034,6 +3041,7 @@ test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP
 test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
 test "$hc_cv_build_apple_m1"              = "yes"  &&  AC_DEFINE(BUILD_APPLE_M1)
+test "$hc_cv_build_hercutun"              = "yes"  &&  AC_DEFINE(BUILD_HERCUTUN)
 test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILITIES)
 test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(HAVE_OBJECT_REXX)
 test "$hc_cv_ena_regina_rexx"             = "yes"  &&  AC_DEFINE(HAVE_REGINA_REXX)

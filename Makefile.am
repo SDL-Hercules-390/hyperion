@@ -72,6 +72,12 @@ else
 HERCIFC =
 endif
 
+if BUILD_HERCUTUN
+HERCUTUN = hercutun
+else
+HERCUTUN =
+endif
+
 HERCLIN = herclin
 
 fthreads_SRC  = fthreads.c
@@ -132,6 +138,7 @@ dyndev_SRC =  \
   tapeccws.c  \
   tapedev.c   \
   tuntap.c    \
+  utun.c      \
   him.c       \
   dummydev.c  \
   zfcp.c
@@ -257,9 +264,10 @@ bin_PROGRAMS = \
   card2txt     \
   vmfplc2      \
   $(HERCIFC)   \
+  $(HERCUTUN)  \
   $(HERCLIN)
 
-EXTRA_PROGRAMS = hercifc
+EXTRA_PROGRAMS = hercifc hercutun
 
 #----------------------------------------------------------------------------
 # For each module:
@@ -302,7 +310,7 @@ hdt3705_la_SOURCES  = comm3705.c
 hdt3705_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3705_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c tuntap.c netsupp.c
+hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c utun.c tuntap.c netsupp.c
 hdt3088_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3088_la_LIBADD   = $(DYNMOD_LD_ADD)
 
@@ -322,7 +330,7 @@ hdt3525_la_SOURCES  = cardpch.c sockdev.c
 hdt3525_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3525_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-hdtqeth_la_SOURCES  = qeth.c mpc.c resolve.c tuntap.c
+hdtqeth_la_SOURCES  = qeth.c mpc.c resolve.c utun.c tuntap.c
 hdtqeth_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdtqeth_la_LIBADD   = $(DYNMOD_LD_ADD)
 
@@ -334,7 +342,7 @@ hdt1052c_la_SOURCES = con1052c.c
 hdt1052c_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c tuntap.c netsupp.c
+hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c utun.c tuntap.c netsupp.c
 hdtptp_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
 
@@ -758,6 +766,15 @@ card2txt_LDADD     = $(tools_ADDLIBS)
 card2txt_LDFLAGS   = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
+# macOS hercutun side binary
+#------------------------------------------------------------------------------
+if BUILD_HERCUTUN
+hercutun_SOURCES = hercutun.c
+hercutun_LDADD = $(tools_ADDLIBS)
+hercutun_LDFLAGS = $(tools_LD_FLAGS)
+endif
+
+#------------------------------------------------------------------------------
 # Files that are not 'built' per-se
 # Also contains some WIN32 only source files
 #------------------------------------------------------------------------------
@@ -1065,6 +1082,7 @@ noinst_HEADERS =          \
   herc_getopt.h           \
   hercifc.h               \
   hercules.h              \
+  hercutun.h			  \
   hercwind.h              \
   herror.h                \
   hetlib.h                \
@@ -1123,6 +1141,7 @@ noinst_HEADERS =          \
   tt32api.h               \
   tt32if.h                \
   tuntap.h                \
+  utun.h				  \
   version.h               \
   vmd250.h                \
   vstore.h                \
@@ -1298,6 +1317,11 @@ if BUILD_HERCIFC
 else
 	@echo '  BUILD_HERCIFC        Undefined'
 endif
+if BUILD_HERCUTUN
+	@echo '  BUILD_HERCUTUN       Defined'
+else
+	@echo '  BUILD_HERCUTUN       Undefined'
+endif
 if BUILD_FTHREADS
 	@echo '  BUILD_FTHREADS       Defined'
 else
@@ -1337,6 +1361,7 @@ endif
 	@echo '  $$HDEPS               $(HDEPS)'
 	@echo '  $$HDLFLAGS            $(HDLFLAGS)'
 	@echo '  $$HERCIFC             $(HERCIFC)'
+	@echo '  $$HERCUTUN            $(HERCUTUN)'
 	@echo '  $$HERCLIBS            $(HERCLIBS)'
 	@echo '  $$HERCLIBS2           $(HERCLIBS2)'
 	@echo '  $$HERCLIN             $(HERCLIN)'
