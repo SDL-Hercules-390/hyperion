@@ -107,8 +107,8 @@ case "$target_os" in
         else
             hc_cv_build_apple_m1=no
         fi
-        # added for utun support
-        if $release | cut -d . -f 1 >= 11 then
+        # added for utun support on versions of macOS greater than Big Sur (11.0)
+        if test "`echo $release | cut -d . -f 1`" -ge 11; then
            hc_cv_build_hercutun=yes
         else
            hc_cv_build_hercutun=no
@@ -3170,6 +3170,7 @@ AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] 
 AM_CONDITIONAL( OPTION_CAPABILITIES, [ test "$hc_cv_opt_capabilities" = "yes" ] )
 AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )
 AM_CONDITIONAL( HERCIFC_GROUPSET,    [ test "x$hc_cv_hercifc_groupname" != "x"] )
+AM_CONDITIONAL( BUILD_HERCUTUN, [ test "$hc_cv_build_hercutun"        = "yes" ] )
 
 if test "x$hc_cv_hercifc_groupname" != "x"; then
     HERCIFC_GROUPNAME=${hc_cv_hercifc_groupname}
