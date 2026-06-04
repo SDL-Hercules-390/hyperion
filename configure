@@ -719,6 +719,8 @@ BUILD_HERCUTUN_FALSE
 BUILD_HERCUTUN_TRUE
 HERCIFC_GROUPSET_FALSE
 HERCIFC_GROUPSET_TRUE
+SETUID_HERCUTUN_FALSE
+SETUID_HERCUTUN_TRUE
 SETUID_HERCIFC_FALSE
 SETUID_HERCIFC_TRUE
 OPTION_CAPABILITIES_FALSE
@@ -5721,8 +5723,11 @@ case "$target_os" in
             hc_cv_build_apple_m1=no
         fi
         # added for utun support on versions of macOS greater than Big Sur (11.0)
+        # for hercutun to work properly need to setuid hercifc and hercutun
         if test "`echo $release | cut -d . -f 1`" -ge 11; then
            hc_cv_build_hercutun=yes
+           hc_cv_setuid_hercifc=yes
+           hc_cv_setuid_hercutun=yes
         else
            hc_cv_build_hercutun=no
         fi
@@ -23408,6 +23413,14 @@ else
   SETUID_HERCIFC_FALSE=
 fi
 
+ if  test "$hc_cv_setuid_herutun"   = "yes"  ; then
+  SETUID_HERCUTUN_TRUE=
+  SETUID_HERCUTUN_FALSE='#'
+else
+  SETUID_HERCUTUN_TRUE='#'
+  SETUID_HERCUTUN_FALSE=
+fi
+
  if  test "x$hc_cv_hercifc_groupname" != "x" ; then
   HERCIFC_GROUPSET_TRUE=
   HERCIFC_GROUPSET_FALSE='#'
@@ -23416,7 +23429,7 @@ else
   HERCIFC_GROUPSET_FALSE=
 fi
 
- if  test "$hc_cv_build_hercutun"        = "yes"  ; then
+ if  test "$hc_cv_build_hercutun"   = "yes"  ; then
   BUILD_HERCUTUN_TRUE=
   BUILD_HERCUTUN_FALSE='#'
 else
@@ -23883,6 +23896,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${SETUID_HERCIFC_TRUE}" && test -z "${SETUID_HERCIFC_FALSE}"; then
   as_fn_error $? "conditional \"SETUID_HERCIFC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${SETUID_HERCUTUN_TRUE}" && test -z "${SETUID_HERCUTUN_FALSE}"; then
+  as_fn_error $? "conditional \"SETUID_HERCUTUN\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HERCIFC_GROUPSET_TRUE}" && test -z "${HERCIFC_GROUPSET_FALSE}"; then

@@ -1231,6 +1231,12 @@ endif
 	chmod +s   $(DESTDIR)$(bindir)/hercifc
 	rm                             hercifc
 endif
+if SETUID_HERCUTUN
+	chown root $(DESTDIR)$(bindir)/hercutun
+	chmod 0750 $(DESTDIR)$(bindir)/hercutun
+	chmod +s   $(DESTDIR)$(bindir)/hercutun
+	rm                             hercutun
+endif
 if OPTION_CAPABILITIES
 	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./hercules$(EXEEXT))
 	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./herclin$(EXEEXT))

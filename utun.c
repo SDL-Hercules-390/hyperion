@@ -18,13 +18,42 @@
 
 #include <net/if_utun.h>
 #include "hercules.h"
-#include "devtype.h"
-#include "ctcadpt.h"
 #include "utun.h"
 #include "hercutun.h"
 
-int
-UTUN_Initialize(int *pUnit,
+/*
+ * Function UTUN_Initialize
+ * Uses the external hercutun program to create an utun interface and configure
+ * it.
+ *
+ * Parameters:
+ *    pUnit - a pointer to the unit number. (eg. 5 would mean utun5)
+ *
+ *    pszDriveIPAddr - A pointer to the size of the IP address assigned to the
+ *    host net adapter.
+ *
+ *    pszGuestIPAddr - A pointer to the size of the IP address assigned to the
+ *    guest OS.
+ *
+ *    pszNetMask - A pointer to the size of the network mask.
+ *
+ *    pfd - A pointer to the file descriptor assigned to the utun device.
+ *
+ *
+ * Returns:
+ *    A signed integer return code.
+ *
+ *    0 if successful.
+ *
+ *    1 if there is an error in the arguments passed.
+ *    2 if there is an error while trying to open the utun interface.
+ *    3 if there is an error trying to assign an IP/netmask to the utun interface.
+ *    4 if there is an error getting the file descriptor of the utun interface.
+ *    -1 if there is an error while trying to execute hercutun.
+ *
+ */
+
+int UTUN_Initialize(int *pUnit,
                 const char *pszDriveIPAddr,
                 const char *pszGuestIPAddr,
                 const char *pszNetMask,
@@ -40,12 +69,12 @@ UTUN_Initialize(int *pUnit,
 
     if (snprintf(pszUnit, sizeof(pszUnit), "%d", *pUnit) >
         (long)sizeof(pszUnit)-1) {
-        WRMSG( HHCXU001E, "E", *pUnit);
+        WRMSG( HHCXU001E, "E", *pUnit); // Too many digits in the device name.
         return(-1);
     }
 
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, fd) < 0) {
-        WRMSG( HHCXU002E, "E", strerror(errno));
+        WRMSG( HHCXU002E, "E", strerror(errno)); // Socket pair failed.
         return(-1);
     }
 
@@ -53,25 +82,25 @@ UTUN_Initialize(int *pUnit,
         hercutun = HERCUTUN_CMD;
     }
 
-    WRMSG(HHCXU901I, "I",hercutun, pszUnit, pszDriveIPAddr, pszGuestIPAddr, pszNetMask);
+    WRMSG(HHCXU901I, "I",hercutun, pszUnit, pszDriveIPAddr, pszGuestIPAddr, pszNetMask); // Before device init.
 
     if ((pid = fork()) < 0) {
-        WRMSG(HHCXU003E, "E", strerror(errno));
+        WRMSG(HHCXU003E, "E", strerror(errno)); // Executing hercutun failed.
         return(-1);
     } else if (pid == 0) {
         /* in child process*/
         close(fd[0]);
         if (fd[1] != STDIN_FILENO &&
             dup2(fd[1], STDIN_FILENO) != STDIN_FILENO) {
-            exit(HERCUTUN_IPC_ERROR);
+            exit(HERCUTUN_IPC_ERROR); // Couldn't pass file descriptor to parent.
         }
         if (fd[1] != STDOUT_FILENO &&
             dup2(fd[1], STDOUT_FILENO) != STDOUT_FILENO) {
-            exit(HERCUTUN_IPC_ERROR);
+            exit(HERCUTUN_IPC_ERROR); // Couldnt pass file descriptor to parent.
         }
         if (execlp(hercutun, hercutun, pszUnit, pszDriveIPAddr,
                   pszGuestIPAddr, pszNetMask, (char *)0) < 0) {
-            exit(HERCUTUN_IPC_ERROR);
+            exit(HERCUTUN_IPC_ERROR); // Couldn't pass file descriptor to parent.
         }
     }
 
@@ -80,7 +109,7 @@ UTUN_Initialize(int *pUnit,
 
     cmsg = malloc(CMSG_LEN(sizeof(int)));
     if (cmsg == NULL) {
-        WRMSG(HHCXU004E, "E");
+        WRMSG(HHCXU004E, "E"); // Couldn't alloc memory.
         goto err2;
     }
 
@@ -96,53 +125,52 @@ UTUN_Initialize(int *pUnit,
     msg.msg_flags = 0;
 
     if ((nr = recvmsg(fd[0], &msg, 0)) < 0) {
-        WRMSG(HHCXU005E, "E", strerror(errno));
+        WRMSG(HHCXU005E, "E", strerror(errno)); // Failed to receive message.
         goto err1;
     }
 
     if (nr == 0) {
-        WRMSG(HHCXU006E, "E");
+        WRMSG(HHCXU006E, "E"); // Connection to hercutun broken.
         goto err1;
     }
 
     if (msg.msg_controllen != CMSG_LEN(sizeof(int))) {
-        WRMSG(HHCXU007E, "E");
+        WRMSG(HHCXU007E, "E"); // No file descriptor from hercutun process.
         goto err1;
     }
 
     *pfd = *(int *)CMSG_DATA(cmsg);
     free(cmsg);
-    waitpid(pid, &status, 0);
+    waitpid(pid, &status, 0); // Wait for change in hercutun process to exit.
 
     return 0;
 
  err1:
     free(cmsg);
  err2:
-    waitpid(pid, &status, 0);
+    waitpid(pid, &status, 0); // Wait for exit status from hercutun.
     switch (WEXITSTATUS(status)) {
     case HERCUTUN_OK:
-        WRMSG(HHCXU020I, "I");
+        WRMSG(HHCXU020I, "I"); // Hercutun process exited normally.
         break;
     case HERCUTUN_ARG_ERROR:
-        WRMSG(HHCXU021E, "E");
+        WRMSG(HHCXU021E, "E"); // Error in arguments passed to hercutun.
         break;
     case HERCUTUN_UTUN_ERROR:
-        WRMSG(HHCXU022E, "E");
+        WRMSG(HHCXU022E, "E"); // Hercutun encountered an error trying to open the interface.
         break;
     case HERCUTUN_IFCONFIG_ERROR:
-        WRMSG(HHCXU023E, "E");
+        WRMSG(HHCXU023E, "E"); // Hercutun encountered an error trying to set the address configuration.
         break;
     case HERCUTUN_IPC_ERROR:
-        WRMSG(HHCXU024E, "E");
+        WRMSG(HHCXU024E, "E"); // Inter-procces communication error in hercutun.
         break;
     }
     return -1;
 }
 
 /* same prototype as read(2) */
-ssize_t
-UTUN_Read(int fildes, void *buf, size_t nbyte)
+ssize_t UTUN_Read(int fildes, void *buf, size_t nbyte)
 {
     struct iovec iov[2];
     uint32_t header;
@@ -155,7 +183,7 @@ UTUN_Read(int fildes, void *buf, size_t nbyte)
     iov[1].iov_len = nbyte;
 
     for (;;) {
-        rc = readv(fildes, iov, 2);
+        rc = read(fildes, iov, 2);
         if (rc <= 0) {
             return rc;
         } else if (rc >= (long)sizeof(header) &&
@@ -168,8 +196,7 @@ UTUN_Read(int fildes, void *buf, size_t nbyte)
 }
 
 /* same prototype as write(2) */
-ssize_t
-UTUN_Write(int fildes, void *buf, size_t nbyte)
+ssize_t UTUN_Write(int fildes, void *buf, size_t nbyte)
 {
     struct iovec iov[2];
     uint32_t header = htonl(AF_INET); /* Assume it's an IPv4 datagram;
@@ -181,7 +208,7 @@ UTUN_Write(int fildes, void *buf, size_t nbyte)
     iov[1].iov_base = buf;
     iov[1].iov_len = nbyte;
 
-    return writev(fildes, iov, 2);
+    return write(fildes, iov, 2);
 }
 
 //#endif /* defined(HAVE_NET_IF_UTUN_H) */
